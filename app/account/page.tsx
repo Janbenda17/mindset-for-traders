@@ -10,10 +10,11 @@ import { Separator } from "@/components/ui/separator"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import { Loader2 } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Loader2, RefreshCw } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle } from "lucide-react"
+import { BarChart, Brain, DollarSign, PercentIcon } from "lucide-react"
 
 export default function AccountPage() {
   const { user, isLoading, logout } = useAuth()
@@ -21,6 +22,73 @@ export default function AccountPage() {
   const router = useRouter()
   const searchParams = new URLSearchParams(window.location.search)
   const upgradeSuccess = searchParams.get("upgrade") === "success"
+  const [resetSuccess, setResetSuccess] = useState(false)
+  const [userData, setUserData] = useState({
+    metrics: {
+      totalProfit: 0,
+      mentalStability: 0,
+      winRate: 0,
+      totalTrades: 0,
+    },
+  })
+
+  // Load user data from localStorage
+  useEffect(() => {
+    const storedData = localStorage.getItem("user-data")
+    if (storedData) {
+      const parsedData = JSON.parse(storedData)
+      setUserData({
+        metrics: {
+          totalProfit: parsedData.metrics?.totalProfit || 0,
+          mentalStability: parsedData.metrics?.mentalStability || 0,
+          winRate: parsedData.metrics?.winRate || 0,
+          totalTrades: parsedData.metrics?.totalTrades || 0,
+        },
+      })
+    }
+  }, [])
+
+  // Function to reset all user analytics
+  const resetAnalytics = () => {
+    // Reset metrics in localStorage
+    const userData = JSON.parse(localStorage.getItem("user-data") || "{}")
+    userData.metrics = {
+      totalProfit: 0,
+      totalTrades: 0,
+      winRate: 0,
+      averageProfit: 0,
+      averageLoss: 0,
+      profitFactor: 0,
+      mentalStability: 0,
+      consecutiveWins: 0,
+      consecutiveLosses: 0,
+    }
+    userData.mentalScores = []
+    userData.journalEntries = []
+    userData.affirmations = []
+    userData.tradingHistory = []
+
+    // Save the reset data
+    localStorage.setItem("user-data", JSON.stringify(userData))
+
+    // Update the UI
+    setUserData({
+      metrics: {
+        totalProfit: 0,
+        mentalStability: 0,
+        winRate: 0,
+        totalTrades: 0,
+      },
+    })
+
+    // Show success message
+    setResetSuccess(true)
+
+    // Hide success message after 3 seconds
+    setTimeout(() => {
+      setResetSuccess(false)
+    }, 3000)
+  }
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -48,11 +116,61 @@ export default function AccountPage() {
         <p className="text-muted-foreground">Manage your account settings and subscription</p>
       </div>
 
+      {resetSuccess && (
+        <Alert className="mb-6 border-green-500 text-green-500">
+          <CheckCircle className="h-4 w-4" />
+          <AlertTitle>Analytics Reset</AlertTitle>
+          <AlertDescription className="text-green-500">
+            All your analytics data has been reset successfully.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Profit</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${userData?.metrics?.totalProfit || 0}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Mental Stability</CardTitle>
+            <Brain className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userData?.metrics?.mentalStability || 0}%</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
+            <PercentIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userData?.metrics?.winRate || 0}%</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Trades</CardTitle>
+            <BarChart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{userData?.metrics?.totalTrades || 0}</div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="data">Data Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -162,7 +280,32 @@ export default function AccountPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="data" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Management</CardTitle>
+              <CardDescription>Manage your trading data and analytics</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Reset Analytics</Label>
+                <p className="text-sm text-muted-foreground">
+                  This will reset all your trading metrics, mental scores, and history. This action cannot be undone.
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <Button variant="destructive" onClick={resetAnalytics}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Reset My Analysis
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
       {upgradeSuccess && (
         <div className="mb-6">
           <Alert className="border-green-500 text-green-500">

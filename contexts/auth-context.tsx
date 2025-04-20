@@ -11,6 +11,21 @@ export interface User {
   name: string
   email: string
   plan?: string
+  metrics?: {
+    totalProfit: number
+    totalTrades: number
+    winRate: number
+    averageProfit: number
+    averageLoss: number
+    profitFactor: number
+    mentalStability: number
+    consecutiveWins: number
+    consecutiveLosses: number
+  }
+  journalEntries?: any[]
+  affirmations?: any[]
+  tradingHistory?: any[]
+  mentalScores?: any[]
 }
 
 // Define auth context type
@@ -51,16 +66,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check if there's a stored subscription plan
       const storedPlan = localStorage.getItem("subscription-plan") || "FREE"
 
-      // Create a mock user
+      // Create a mock user with all metrics initialized to zero
       const newUser: User = {
         id: Math.random().toString(36).substring(2, 9),
         name: email.split("@")[0], // Use part of email as name if not provided
         email,
         plan: storedPlan as string, // Use stored plan or default to FREE
+        metrics: {
+          totalProfit: 0,
+          totalTrades: 0,
+          winRate: 0,
+          averageProfit: 0,
+          averageLoss: 0,
+          profitFactor: 0,
+          mentalStability: 0,
+          consecutiveWins: 0,
+          consecutiveLosses: 0,
+        },
       }
 
       // Save user to localStorage
       localStorage.setItem("user", JSON.stringify(newUser))
+
+      // Always initialize with empty data for new users
+      localStorage.setItem(
+        "user-data",
+        JSON.stringify({
+          journalEntries: [],
+          affirmations: [],
+          tradingHistory: [],
+          mentalScores: [],
+          metrics: {
+            totalProfit: 0,
+            totalTrades: 0,
+            winRate: 0,
+            averageProfit: 0,
+            averageLoss: 0,
+            profitFactor: 0,
+            mentalStability: 0,
+            consecutiveWins: 0,
+            consecutiveLosses: 0,
+          },
+        }),
+      )
+
       setUser(newUser)
 
       // Redirect to dashboard
@@ -80,13 +129,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // In a real app, this would be an API call to create a user
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Create a new user
+      // Create a new user with all metrics reset to zero/default values
       const newUser: User = {
         id: Math.random().toString(36).substring(2, 9),
         name,
         email,
         plan: "FREE", // Default plan
+        metrics: {
+          totalProfit: 0,
+          totalTrades: 0,
+          winRate: 0,
+          averageProfit: 0,
+          averageLoss: 0,
+          profitFactor: 0,
+          mentalStability: 0,
+          consecutiveWins: 0,
+          consecutiveLosses: 0,
+        },
+        // Reset all other user data
+        journalEntries: [],
+        affirmations: [],
+        tradingHistory: [],
+        mentalScores: [],
       }
+
+      // Store the initial user data in localStorage
+      localStorage.setItem(
+        "user-data",
+        JSON.stringify({
+          journalEntries: [],
+          affirmations: [],
+          tradingHistory: [],
+          mentalScores: [],
+          metrics: newUser.metrics,
+        }),
+      )
 
       // For demo purposes, we'll just redirect to login
       router.push("/login?signup=success")

@@ -100,6 +100,8 @@ export function MindTraderPro() {
       freeTimeHours: 1,
       didExercise: false,
       tradingResult: 0,
+      finalSummary: "",
+      winningCriteria: "",
     },
   })
 
@@ -191,10 +193,101 @@ export function MindTraderPro() {
     return () => subscription.unsubscribe()
   }, [form.watch])
 
+  // Update the useEffect to ensure data is reset for all users, not just new sessions
+
+  // Replace the existing useEffect for resetting data with this:
+  React.useEffect(() => {
+    // Always reset for all users
+    // Reset the mental stability score
+    setMentalStability(0)
+
+    // Reset the form to default values
+    form.reset({
+      date: new Date(),
+      morningFeeling: 5,
+      sleepHours: 7,
+      sleepQuality: 5,
+      mealQuality: 5,
+      mealCount: 3,
+      hydration: 5,
+      movement: false,
+      currentMood: 5,
+      dominantEmotion: "",
+      freeTimeHours: 1,
+      didExercise: false,
+      tradingResult: 0,
+      finalSummary: "",
+      winningCriteria: "",
+    })
+
+    // Clear any stored form data
+    localStorage.removeItem("mindtrader-form-data")
+
+    // Force reset user metrics in localStorage to ensure they start at zero
+    const userData = JSON.parse(localStorage.getItem("user-data") || "{}")
+    userData.metrics = {
+      totalProfit: 0,
+      totalTrades: 0,
+      winRate: 0,
+      averageProfit: 0,
+      averageLoss: 0,
+      profitFactor: 0,
+      mentalStability: 0,
+      consecutiveWins: 0,
+      consecutiveLosses: 0,
+    }
+    userData.mentalScores = []
+    localStorage.setItem("user-data", JSON.stringify(userData))
+  }, [])
+
+  // Also update the onSubmit function to ensure it properly handles new users
   function onSubmit(values: z.infer<typeof formSchema>) {
     const stability = calculateMentalStability(values)
     setMentalStability(stability)
-    console.log(values)
+
+    // Get user data from localStorage, initialize with empty object and metrics if not exists
+    const userData = JSON.parse(localStorage.getItem("user-data") || "{}")
+    if (!userData.metrics) {
+      userData.metrics = {
+        totalProfit: 0,
+        totalTrades: 0,
+        winRate: 0,
+        averageProfit: 0,
+        averageLoss: 0,
+        profitFactor: 0,
+        mentalStability: 0,
+        consecutiveWins: 0,
+        consecutiveLosses: 0,
+      }
+    }
+
+    // Add this entry to the mental scores
+    const mentalEntry = {
+      date: values.date,
+      stability: stability,
+      morningFeeling: values.morningFeeling,
+      currentMood: values.currentMood,
+      sleepQuality: values.sleepQuality,
+      tradingResult: values.tradingResult || 0,
+    }
+
+    // Initialize arrays if they don't exist
+    userData.mentalScores = userData.mentalScores || []
+
+    // Update user data
+    userData.mentalScores.push(mentalEntry)
+
+    // Update metrics
+    userData.metrics.mentalStability = stability
+
+    // If trading result is provided, update profit metrics
+    if (values.tradingResult) {
+      userData.metrics.totalProfit = (userData.metrics.totalProfit || 0) + values.tradingResult
+      userData.metrics.totalTrades = (userData.metrics.totalTrades || 0) + 1
+    }
+
+    // Save updated user data
+    localStorage.setItem("user-data", JSON.stringify(userData))
 
     // In a real app, you would save this to a database
     alert(`Mental training form saved successfully! Your mental stability score is ${stability}%`)
@@ -491,7 +584,7 @@ export function MindTraderPro() {
                               <FormControl>
                                 <Textarea
                                   placeholder="Any factors affecting your sleep..."
-                                  defaultValue={field.value}
+                                  value={field.value || ""}
                                   onChange={field.onChange}
                                 />
                               </FormControl>
@@ -604,7 +697,7 @@ export function MindTraderPro() {
                               <FormControl>
                                 <Textarea
                                   placeholder="What type of movement did you do? How did it make you feel?"
-                                  defaultValue={field.value}
+                                  value={field.value || ""}
                                   onChange={field.onChange}
                                 />
                               </FormControl>
@@ -944,7 +1037,7 @@ export function MindTraderPro() {
                               <FormControl>
                                 <Textarea
                                   placeholder="Summarize your overall mental preparation for trading today..."
-                                  defaultValue={field.value}
+                                  value={field.value || ""}
                                   onChange={field.onChange}
                                 />
                               </FormControl>

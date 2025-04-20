@@ -14,9 +14,32 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Loader2, User, CheckCircle } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export function UserNav() {
   const { user, isLoading, logout } = useAuth()
+  const [userData, setUserData] = useState({
+    metrics: {
+      totalProfit: 0,
+      totalTrades: 0,
+      winRate: 0,
+    },
+  })
+
+  // Load user data from localStorage
+  useEffect(() => {
+    const storedData = localStorage.getItem("user-data")
+    if (storedData) {
+      const parsedData = JSON.parse(storedData)
+      setUserData({
+        metrics: {
+          totalProfit: parsedData.metrics?.totalProfit || 0,
+          totalTrades: parsedData.metrics?.totalTrades || 0,
+          winRate: parsedData.metrics?.winRate || 0,
+        },
+      })
+    }
+  }, [])
 
   if (isLoading) {
     return <Loader2 className="h-5 w-5 animate-spin" />
@@ -73,6 +96,19 @@ export function UserNav() {
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <div className="flex items-center justify-between py-2">
+          <span className="text-sm font-medium">Total Profit:</span>
+          <span className="text-sm">${userData?.metrics?.totalProfit || 0}</span>
+        </div>
+        <div className="flex items-center justify-between py-2">
+          <span className="text-sm font-medium">Total Trades:</span>
+          <span className="text-sm">{userData?.metrics?.totalTrades || 0}</span>
+        </div>
+        <div className="flex items-center justify-between py-2">
+          <span className="text-sm font-medium">Win Rate:</span>
+          <span className="text-sm">{userData?.metrics?.winRate || 0}%</span>
+        </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
