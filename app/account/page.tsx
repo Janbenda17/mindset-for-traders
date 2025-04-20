@@ -32,62 +32,93 @@ export default function AccountPage() {
     },
   })
 
-  // Load user data from localStorage
-  useEffect(() => {
+  // Function to load user data
+  const loadUserData = () => {
     const storedData = localStorage.getItem("user-data")
     if (storedData) {
-      const parsedData = JSON.parse(storedData)
-      setUserData({
-        metrics: {
-          totalProfit: parsedData.metrics?.totalProfit || 0,
-          mentalStability: parsedData.metrics?.mentalStability || 0,
-          winRate: parsedData.metrics?.winRate || 0,
-          totalTrades: parsedData.metrics?.totalTrades || 0,
-        },
-      })
+      try {
+        const parsedData = JSON.parse(storedData)
+        setUserData({
+          metrics: {
+            totalProfit: parsedData.metrics?.totalProfit || 0,
+            mentalStability: parsedData.metrics?.mentalStability || 0,
+            winRate: parsedData.metrics?.winRate || 0,
+            totalTrades: parsedData.metrics?.totalTrades || 0,
+          },
+        })
+      } catch (error) {
+        console.error("Error parsing user data:", error)
+        // If there's an error, reset to defaults
+        setUserData({
+          metrics: {
+            totalProfit: 0,
+            mentalStability: 0,
+            winRate: 0,
+            totalTrades: 0,
+          },
+        })
+      }
     }
+  }
+
+  // Load user data from localStorage
+  useEffect(() => {
+    loadUserData()
   }, [])
 
   // Function to reset all user analytics
   const resetAnalytics = () => {
-    // Reset metrics in localStorage
-    const userData = JSON.parse(localStorage.getItem("user-data") || "{}")
-    userData.metrics = {
-      totalProfit: 0,
-      totalTrades: 0,
-      winRate: 0,
-      averageProfit: 0,
-      averageLoss: 0,
-      profitFactor: 0,
-      mentalStability: 0,
-      consecutiveWins: 0,
-      consecutiveLosses: 0,
+    try {
+      // Create a fresh empty data structure
+      const emptyUserData = {
+        metrics: {
+          totalProfit: 0,
+          totalTrades: 0,
+          winRate: 0,
+          averageProfit: 0,
+          averageLoss: 0,
+          profitFactor: 0,
+          mentalStability: 0,
+          consecutiveWins: 0,
+          consecutiveLosses: 0,
+        },
+        mentalScores: [],
+        journalEntries: [],
+        affirmations: [],
+        tradingHistory: [],
+      }
+
+      // Save the reset data
+      localStorage.setItem("user-data", JSON.stringify(emptyUserData))
+
+      // Also reset session data
+      sessionStorage.removeItem("session-initialized")
+      localStorage.removeItem("mindtrader-form-data")
+
+      // Update the UI with the reset data
+      setUserData({
+        metrics: {
+          totalProfit: 0,
+          mentalStability: 0,
+          winRate: 0,
+          totalTrades: 0,
+        },
+      })
+
+      // Show success message
+      setResetSuccess(true)
+
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setResetSuccess(false)
+      }, 3000)
+
+      // Force reload the page to ensure all components update
+      window.location.reload()
+    } catch (error) {
+      console.error("Error resetting analytics:", error)
+      alert("There was an error resetting your data. Please try again.")
     }
-    userData.mentalScores = []
-    userData.journalEntries = []
-    userData.affirmations = []
-    userData.tradingHistory = []
-
-    // Save the reset data
-    localStorage.setItem("user-data", JSON.stringify(userData))
-
-    // Update the UI
-    setUserData({
-      metrics: {
-        totalProfit: 0,
-        mentalStability: 0,
-        winRate: 0,
-        totalTrades: 0,
-      },
-    })
-
-    // Show success message
-    setResetSuccess(true)
-
-    // Hide success message after 3 seconds
-    setTimeout(() => {
-      setResetSuccess(false)
-    }, 3000)
   }
 
   // Redirect to login if not authenticated
@@ -300,6 +331,30 @@ export default function AccountPage() {
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Reset My Analysis
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Data</CardTitle>
+              <CardDescription>View your current data values</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="rounded-md border p-4">
+                  <h3 className="font-medium mb-2">Metrics</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>Total Profit:</div>
+                    <div>${userData?.metrics?.totalProfit || 0}</div>
+                    <div>Mental Stability:</div>
+                    <div>{userData?.metrics?.mentalStability || 0}%</div>
+                    <div>Win Rate:</div>
+                    <div>{userData?.metrics?.winRate || 0}%</div>
+                    <div>Total Trades:</div>
+                    <div>{userData?.metrics?.totalTrades || 0}</div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
