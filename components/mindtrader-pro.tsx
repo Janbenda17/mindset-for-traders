@@ -29,6 +29,9 @@ import { MindTraderHelpers } from "./mindtrader-helpers"
 import { MindTraderNotifications } from "./mindtrader-notifications"
 import { MindTraderExport } from "./mindtrader-export"
 import { MindTraderBehavior } from "./mindtrader-behavior"
+import { useSubscription } from "@/contexts/subscription-context"
+import { LockedFeature } from "./locked-feature"
+import { PlanSelector } from "./plan-selector"
 
 const formSchema = z.object({
   date: z.date(),
@@ -79,6 +82,7 @@ export function MindTraderPro() {
   const [showEndOfDayReflection, setShowEndOfDayReflection] = useState(false)
   const [quickMode, setQuickMode] = useState(false)
   const [activeTab, setActiveTab] = useState("form")
+  const { hasAccess } = useSubscription()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -249,6 +253,11 @@ export function MindTraderPro() {
   return (
     <TooltipProvider>
       <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">MindTrader Pro</h1>
+          <PlanSelector />
+        </div>
+
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-7">
             <TabsTrigger value="form">Denní formulář</TabsTrigger>
@@ -1146,10 +1155,17 @@ export function MindTraderPro() {
                         </Button>
                       )}
 
-                      <Button type="button" variant="outline" onClick={exportToPDF}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Export to PDF
-                      </Button>
+                      {hasAccess("pdf-export") ? (
+                        <Button type="button" variant="outline" onClick={exportToPDF}>
+                          <Download className="mr-2 h-4 w-4" />
+                          Export to PDF
+                        </Button>
+                      ) : (
+                        <Button type="button" variant="outline" disabled>
+                          <Download className="mr-2 h-4 w-4" />
+                          Export to PDF (BASIC+)
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </form>
@@ -1158,31 +1174,67 @@ export function MindTraderPro() {
           </TabsContent>
 
           <TabsContent value="history">
-            <MindTraderHistory />
+            <LockedFeature
+              featureId="history"
+              title="Historie a grafy"
+              description="Sledujte svůj mentální vývoj v čase a identifikujte vzorce"
+            >
+              <MindTraderHistory />
+            </LockedFeature>
           </TabsContent>
 
           <TabsContent value="reflection">
-            <MindTraderReflection />
+            <LockedFeature
+              featureId="weekly-overview"
+              title="Denní reflexe"
+              description="Porovnejte své očekávání s realitou a zlepšete svou mentální přípravu"
+            >
+              <MindTraderReflection />
+            </LockedFeature>
           </TabsContent>
 
           <TabsContent value="behavior">
-            <MindTraderBehavior />
+            <LockedFeature
+              featureId="trading-behavior"
+              title="Obchodní chování"
+              description="Analyzujte své obchodní chování a identifikujte vzorce"
+            >
+              <MindTraderBehavior />
+            </LockedFeature>
           </TabsContent>
 
           <TabsContent value="helpers">
-            <MindTraderHelpers />
+            <LockedFeature
+              featureId="motivation"
+              title="Mentální pomocníci"
+              description="Nástroje pro zlepšení vaší mentální přípravy a obchodního výkonu"
+            >
+              <MindTraderHelpers />
+            </LockedFeature>
           </TabsContent>
 
           <TabsContent value="notifications">
-            <MindTraderNotifications />
+            <LockedFeature
+              featureId="notifications"
+              title="Notifikace"
+              description="Nastavte si připomínky pro důležité obchodní rutiny"
+            >
+              <MindTraderNotifications />
+            </LockedFeature>
           </TabsContent>
 
           <TabsContent value="export">
-            <MindTraderExport />
+            <LockedFeature
+              featureId="pdf-export"
+              title="Export"
+              description="Exportujte své záznamy do PDF nebo sdílejte s mentorem"
+            >
+              <MindTraderExport />
+            </LockedFeature>
           </TabsContent>
         </Tabs>
 
-        {showEndOfDayReflection && !quickMode && (
+        {showEndOfDayReflection && !quickMode && hasAccess("weekly-overview") && (
           <Card className="mt-8">
             <CardHeader>
               <CardTitle>End of Day Reflection</CardTitle>
