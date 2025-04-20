@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Loader2, User } from "lucide-react"
+import { Loader2, User, CheckCircle } from "lucide-react"
 
 export function UserNav() {
   const { user, isLoading, logout } = useAuth()
@@ -67,9 +67,9 @@ export function UserNav() {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/pricing">
-              <User className="mr-2 h-4 w-4" />
-              <span>Subscription</span>
+            <Link href="/upgrade">
+              <CheckCircle className="mr-2 h-4 w-4" />
+              <span>Upgrade Plan</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

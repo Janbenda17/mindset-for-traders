@@ -19,6 +19,8 @@ export function MindTraderReflection() {
   const [emotionalControl, setEmotionalControl] = useState<string>("good")
   const [learningPoints, setLearningPoints] = useState<string>("")
   const [tomorrowFocus, setTomorrowFocus] = useState<string>("")
+  const [customLearningPoints, setCustomLearningPoints] = useState<string>("")
+  const [customTomorrowFocus, setCustomTomorrowFocus] = useState<string>("")
 
   // Sample data - in a real app, this would come from the morning form
   const morningData = {
@@ -149,7 +151,13 @@ export function MindTraderReflection() {
                 </SelectContent>
               </Select>
               {learningPoints === "custom" && (
-                <Textarea className="mt-2" placeholder="Napište, co jste se dnes naučili..." rows={3} />
+                <Textarea
+                  className="mt-2"
+                  placeholder="Napište, co jste se dnes naučili..."
+                  rows={3}
+                  value={customLearningPoints}
+                  onChange={(e) => setCustomLearningPoints(e.target.value)}
+                />
               )}
             </div>
 
@@ -172,7 +180,13 @@ export function MindTraderReflection() {
                 </SelectContent>
               </Select>
               {tomorrowFocus === "custom" && (
-                <Textarea className="mt-2" placeholder="Napište, na co se zaměříte zítra..." rows={3} />
+                <Textarea
+                  className="mt-2"
+                  placeholder="Napište, na co se zaměříte zítra..."
+                  rows={3}
+                  value={customTomorrowFocus}
+                  onChange={(e) => setCustomTomorrowFocus(e.target.value)}
+                />
               )}
             </div>
           </div>

@@ -12,11 +12,15 @@ import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { CheckCircle } from "lucide-react"
 
 export default function AccountPage() {
   const { user, isLoading, logout } = useAuth()
   const { currentPlan } = useSubscription()
   const router = useRouter()
+  const searchParams = new URLSearchParams(window.location.search)
+  const upgradeSuccess = searchParams.get("upgrade") === "success"
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -159,6 +163,17 @@ export default function AccountPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      {upgradeSuccess && (
+        <div className="mb-6">
+          <Alert className="border-green-500 text-green-500">
+            <CheckCircle className="h-4 w-4" />
+            <AlertTitle>Subscription Updated</AlertTitle>
+            <AlertDescription className="text-green-500">
+              Your subscription has been successfully updated to the {currentPlan} plan.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
     </div>
   )
 }

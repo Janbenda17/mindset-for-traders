@@ -48,12 +48,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // For demo purposes, we'll simulate a successful login
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
+      // Check if there's a stored subscription plan
+      const storedPlan = localStorage.getItem("subscription-plan") || "FREE"
+
       // Create a mock user
       const newUser: User = {
         id: Math.random().toString(36).substring(2, 9),
         name: email.split("@")[0], // Use part of email as name if not provided
         email,
-        plan: "FREE", // Default plan
+        plan: storedPlan as string, // Use stored plan or default to FREE
       }
 
       // Save user to localStorage

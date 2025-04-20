@@ -44,7 +44,7 @@ export function LockedFeature({ featureId, title, description, children }: Locke
         </p>
       </CardContent>
       <CardFooter className="flex justify-center">
-        <Button onClick={() => router.push("/pricing")}>Upgradovat plán</Button>
+        <Button onClick={() => router.push("/upgrade")}>Upgrade Plan</Button>
       </CardFooter>
     </Card>
   )

@@ -137,7 +137,7 @@ export function MindTraderPro() {
     mentalScore += (values.morningFeeling / 10) * 10
 
     // Gratitude + daily intention (5%)
-    mentalScore += (values.dailyIntention ? 1 : 0.5) * 5
+    mentalScore += 0.75 * 5 // Default to 75% since we removed the field
 
     // Routine adherence (5%) - we'll use focus area as a proxy
     mentalScore += (values.focusArea === "discipline" ? 1 : 0.8) * 5
@@ -386,49 +386,6 @@ export function MindTraderPro() {
                         )}
                       />
 
-                      {!quickMode && (
-                        <FormField
-                          control={form.control}
-                          name="morningNote"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Notes about your morning (optional)</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Any specific thoughts or feelings when you woke up..."
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-
-                      {!quickMode && (
-                        <FormField
-                          control={form.control}
-                          name="dailyIntention"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>What is your intention for today? (optional)</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Be specific about what you want to accomplish mentally today..."
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                Setting a clear intention helps focus your mind throughout the trading day
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-
                       <FormField
                         control={form.control}
                         name="focusArea"
@@ -534,7 +491,7 @@ export function MindTraderPro() {
                               <FormControl>
                                 <Textarea
                                   placeholder="Any factors affecting your sleep..."
-                                  value={field.value}
+                                  defaultValue={field.value}
                                   onChange={field.onChange}
                                 />
                               </FormControl>
@@ -647,7 +604,7 @@ export function MindTraderPro() {
                               <FormControl>
                                 <Textarea
                                   placeholder="What type of movement did you do? How did it make you feel?"
-                                  value={field.value}
+                                  defaultValue={field.value}
                                   onChange={field.onChange}
                                 />
                               </FormControl>
@@ -761,121 +718,8 @@ export function MindTraderPro() {
                           )}
                         />
                       )}
-
-                      {!quickMode && (
-                        <FormField
-                          control={form.control}
-                          name="stayingCentered"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>What will help you stay centered today? (optional)</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select your centering technique" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {centeringOptions.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                      {option}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormDescription>
-                                Having a plan for emotional balance improves decision quality
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
                     </CardContent>
                   </Card>
-
-                  {!quickMode && (
-                    <Card>
-                      <CardHeader>
-                        <div className="flex justify-between items-center">
-                          <CardTitle>📊 Market Readiness</CardTitle>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Info className="h-4 w-4 text-muted-foreground" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="max-w-xs">
-                                Preparing for market conditions and having contingency plans improves your ability to
-                                stay disciplined.
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                        <CardDescription>Prepare for market conditions and potential challenges</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="marketExpectation"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>What do you expect from the markets today? (optional)</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select your market expectation" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="trending_up">Trending Up</SelectItem>
-                                  <SelectItem value="trending_down">Trending Down</SelectItem>
-                                  <SelectItem value="ranging">Ranging/Sideways</SelectItem>
-                                  <SelectItem value="volatile">Volatile</SelectItem>
-                                  <SelectItem value="quiet">Quiet/Low Volume</SelectItem>
-                                  <SelectItem value="uncertain">Uncertain</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormDescription>
-                                Setting expectations helps you adapt to changing conditions
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="disruptionPlan"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>
-                                What's your plan if the market disrupts your emotional balance? (optional)
-                              </FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select your disruption plan" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="take_break">Take a 15-minute break</SelectItem>
-                                  <SelectItem value="reduce_size">Reduce position size</SelectItem>
-                                  <SelectItem value="stop_trading">Stop trading for the day</SelectItem>
-                                  <SelectItem value="review_plan">Review my trading plan</SelectItem>
-                                  <SelectItem value="journal">Write in my journal</SelectItem>
-                                  <SelectItem value="breathing">Do breathing exercises</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormDescription>
-                                Having a pre-planned response prevents impulsive decisions
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </CardContent>
-                    </Card>
-                  )}
 
                   {/* Free Time Section */}
                   <Card>
@@ -1100,7 +944,7 @@ export function MindTraderPro() {
                               <FormControl>
                                 <Textarea
                                   placeholder="Summarize your overall mental preparation for trading today..."
-                                  value={field.value}
+                                  defaultValue={field.value}
                                   onChange={field.onChange}
                                 />
                               </FormControl>
@@ -1322,7 +1166,7 @@ export function MindTraderPro() {
                           <CardTitle className="text-sm">Morning Intention</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-sm">{form.watch("dailyIntention") || "Not set"}</p>
+                          <p className="text-sm">Not set</p>
                         </CardContent>
                       </Card>
 

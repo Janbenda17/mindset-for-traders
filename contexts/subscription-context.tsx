@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
+import { useAuth } from "./auth-context"
 
 // Define subscription plans
 export type SubscriptionPlan = "FREE" | "BASIC" | "PRO" | "PRO_PLUS"
@@ -54,19 +55,33 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan>("FREE")
+  const { user } = useAuth()
 
-  // Load subscription from localStorage on client side
+  // Load subscription from user data or localStorage
   useEffect(() => {
-    const savedPlan = localStorage.getItem("subscription-plan") as SubscriptionPlan
-    if (savedPlan && Object.keys(PLAN_FEATURES).includes(savedPlan)) {
-      setCurrentPlan(savedPlan)
+    if (user && user.plan) {
+      // If user is logged in and has a plan, use that
+      setCurrentPlan(user.plan as SubscriptionPlan)
+    } else {
+      // Otherwise, try to load from localStorage as fallback
+      const savedPlan = localStorage.getItem("subscription-plan") as SubscriptionPlan
+      if (savedPlan && Object.keys(PLAN_FEATURES).includes(savedPlan)) {
+        setCurrentPlan(savedPlan)
+      }
     }
-  }, [])
+  }, [user])
 
-  // Save subscription to localStorage when it changes
+  // Save subscription to localStorage and update user data when it changes
   useEffect(() => {
     localStorage.setItem("subscription-plan", currentPlan)
-  }, [currentPlan])
+
+    // If user is logged in, update their plan in localStorage
+    if (user) {
+      const userData = JSON.parse(localStorage.getItem("user") || "{}")
+      userData.plan = currentPlan
+      localStorage.setItem("user", JSON.stringify(userData))
+    }
+  }, [currentPlan, user])
 
   // Check if user has access to a specific feature
   const hasAccess = (feature: string) => {
