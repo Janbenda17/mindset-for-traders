@@ -9,7 +9,7 @@ import { PlanSelector } from "@/components/plan-selector"
 import { Separator } from "@/components/ui/separator"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Loader2, RefreshCw } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -20,8 +20,8 @@ export default function AccountPage() {
   const { user, isLoading, logout } = useAuth()
   const { currentPlan } = useSubscription()
   const router = useRouter()
-  const searchParams = new URLSearchParams(window.location.search)
-  const upgradeSuccess = searchParams.get("upgrade") === "success"
+  const searchParams = useSearchParams()
+  const upgradeSuccess = searchParams?.get("upgrade") === "success"
   const [resetSuccess, setResetSuccess] = useState(false)
   const [userData, setUserData] = useState({
     metrics: {
@@ -34,29 +34,31 @@ export default function AccountPage() {
 
   // Function to load user data
   const loadUserData = () => {
-    const storedData = localStorage.getItem("user-data")
-    if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData)
-        setUserData({
-          metrics: {
-            totalProfit: parsedData.metrics?.totalProfit || 0,
-            mentalStability: parsedData.metrics?.mentalStability || 0,
-            winRate: parsedData.metrics?.winRate || 0,
-            totalTrades: parsedData.metrics?.totalTrades || 0,
-          },
-        })
-      } catch (error) {
-        console.error("Error parsing user data:", error)
-        // If there's an error, reset to defaults
-        setUserData({
-          metrics: {
-            totalProfit: 0,
-            mentalStability: 0,
-            winRate: 0,
-            totalTrades: 0,
-          },
-        })
+    if (typeof window !== "undefined") {
+      const storedData = localStorage.getItem("user-data")
+      if (storedData) {
+        try {
+          const parsedData = JSON.parse(storedData)
+          setUserData({
+            metrics: {
+              totalProfit: parsedData.metrics?.totalProfit || 0,
+              mentalStability: parsedData.metrics?.mentalStability || 0,
+              winRate: parsedData.metrics?.winRate || 0,
+              totalTrades: parsedData.metrics?.totalTrades || 0,
+            },
+          })
+        } catch (error) {
+          console.error("Error parsing user data:", error)
+          // If there's an error, reset to defaults
+          setUserData({
+            metrics: {
+              totalProfit: 0,
+              mentalStability: 0,
+              winRate: 0,
+              totalTrades: 0,
+            },
+          })
+        }
       }
     }
   }
@@ -69,6 +71,8 @@ export default function AccountPage() {
   // Function to reset all user analytics
   const resetAnalytics = () => {
     try {
+      if (typeof window === "undefined") return
+
       // Create a fresh empty data structure
       const emptyUserData = {
         metrics: {
