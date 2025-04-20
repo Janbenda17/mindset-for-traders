@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -13,6 +12,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
 
 const formSchema = z
   .object({
@@ -36,9 +36,8 @@ const formSchema = z
   })
 
 export function SignupForm() {
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const { signup, isLoading } = useAuth()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -52,23 +51,13 @@ export function SignupForm() {
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true)
     setError(null)
 
     try {
-      // In a real app, this would be an API call to create the user
-      console.log("Creating user:", values)
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Redirect to login page after successful signup
-      router.push("/login?signup=success")
+      await signup(values.name, values.email, values.password)
     } catch (err) {
       setError("An error occurred during signup. Please try again.")
       console.error("Signup error:", err)
-    } finally {
-      setIsLoading(false)
     }
   }
 
