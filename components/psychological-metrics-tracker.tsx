@@ -18,10 +18,17 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
+
+const metrics = [
+  { name: "Disciplína", value: 85 },
+  { name: "Trpělivost", value: 70 },
+  { name: "Emocionální kontrola", value: 90 },
+  { name: "Odolnost vůči stresu", value: 75 },
+]
 
 export function PsychologicalMetricsTracker() {
   const [period, setPeriod] = useState("month")
@@ -67,6 +74,24 @@ export function PsychologicalMetricsTracker() {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Sledování psychologických metrik</CardTitle>
+          <CardDescription>Vizualizujte svůj pokrok v klíčových psychologických oblastech.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {metrics.map((metric) => (
+            <div key={metric.name} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">{metric.name}</p>
+                <span className="text-sm text-muted-foreground">{metric.value}%</span>
+              </div>
+              <Progress value={metric.value} className="h-2" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Psychological Metrics Tracker</h3>
         <Select value={period} onValueChange={setPeriod}>

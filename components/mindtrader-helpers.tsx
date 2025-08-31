@@ -6,7 +6,21 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, Brain, Clock, Pause, Play, RefreshCw, Timer, Volume2, VolumeX, Download } from "lucide-react"
+import {
+  AlertCircle,
+  Brain,
+  Clock,
+  Pause,
+  Play,
+  RefreshCw,
+  Timer,
+  Volume2,
+  VolumeX,
+  Download,
+  Lightbulb,
+  BookOpen,
+  MessageSquare,
+} from "lucide-react"
 
 export function MindTraderHelpers() {
   const [activeTab, setActiveTab] = useState("emergency")
@@ -134,6 +148,7 @@ export function MindTraderHelpers() {
           <TabsTrigger value="emergency">Nouzový režim</TabsTrigger>
           <TabsTrigger value="meditation">Meditace</TabsTrigger>
           <TabsTrigger value="affirmations">Afirmace</TabsTrigger>
+          <TabsTrigger value="ai">AI Pomocníci</TabsTrigger>
         </TabsList>
 
         <TabsContent value="emergency" className="space-y-4 pt-4">
@@ -246,22 +261,22 @@ export function MindTraderHelpers() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button variant="outline" className="h-auto py-4 flex flex-col">
+                <Button variant="outline" className="h-auto py-4 flex flex-col bg-transparent">
                   <span className="font-medium">Ukončit obchodování na dnes</span>
                   <span className="text-xs text-muted-foreground mt-1">Doporučeno při silných emocích</span>
                 </Button>
 
-                <Button variant="outline" className="h-auto py-4 flex flex-col">
+                <Button variant="outline" className="h-auto py-4 flex flex-col bg-transparent">
                   <span className="font-medium">Snížit velikost pozic</span>
                   <span className="text-xs text-muted-foreground mt-1">Doporučeno při mírných emocích</span>
                 </Button>
 
-                <Button variant="outline" className="h-auto py-4 flex flex-col">
+                <Button variant="outline" className="h-auto py-4 flex flex-col bg-transparent">
                   <span className="font-medium">Přehodnotit strategii</span>
                   <span className="text-xs text-muted-foreground mt-1">Doporučeno při nejistotě</span>
                 </Button>
 
-                <Button variant="outline" className="h-auto py-4 flex flex-col">
+                <Button variant="outline" className="h-auto py-4 flex flex-col bg-transparent">
                   <span className="font-medium">Pokračovat dle plánu</span>
                   <span className="text-xs text-muted-foreground mt-1">Pouze pokud jste zcela klidní</span>
                 </Button>
@@ -406,7 +421,7 @@ export function MindTraderHelpers() {
                   </CardHeader>
                   <CardContent className="pt-2">
                     <p className="text-sm text-muted-foreground">Nádech 4s, zadržení 4s, výdech 4s, pauza 4s</p>
-                    <Button variant="outline" size="sm" className="mt-4" onClick={toggleBreathing}>
+                    <Button variant="outline" size="sm" className="mt-4 bg-transparent" onClick={toggleBreathing}>
                       {breathingActive ? "Zastavit" : "Začít"}
                     </Button>
                   </CardContent>
@@ -418,7 +433,7 @@ export function MindTraderHelpers() {
                   </CardHeader>
                   <CardContent className="pt-2">
                     <p className="text-sm text-muted-foreground">Nádech 4s, zadržení 7s, výdech 8s</p>
-                    <Button variant="outline" size="sm" className="mt-4" onClick={toggleBreathing}>
+                    <Button variant="outline" size="sm" className="mt-4 bg-transparent" onClick={toggleBreathing}>
                       {breathingActive ? "Zastavit" : "Začít"}
                     </Button>
                   </CardContent>
@@ -498,6 +513,29 @@ export function MindTraderHelpers() {
                   <span>Nikdy neriskuji více než 1% účtu na jeden obchod</span>
                 </li>
               </ul>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ai" className="space-y-4 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>MindTrader AI Pomocníci</CardTitle>
+              <CardDescription>Rychlý přístup k nástrojům pro zlepšení vašeho myšlení.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <Button variant="outline" className="flex flex-col h-auto py-4 bg-transparent">
+                <Lightbulb className="h-6 w-6 mb-2" />
+                Získejte tipy
+              </Button>
+              <Button variant="outline" className="flex flex-col h-auto py-4 bg-transparent">
+                <BookOpen className="h-6 w-6 mb-2" />
+                Prozkoumejte cvičení
+              </Button>
+              <Button variant="outline" className="flex flex-col h-auto py-4 md:col-span-2 bg-transparent">
+                <MessageSquare className="h-6 w-6 mb-2" />
+                Chat s MindTrader AI
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

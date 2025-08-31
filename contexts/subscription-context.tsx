@@ -1,121 +1,96 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
-import { useAuth } from "./auth-context"
-
-// Define subscription plans
-export type SubscriptionPlan = "FREE" | "BASIC" | "PRO" | "PRO_PLUS"
-
-// Define features available for each plan
-export const PLAN_FEATURES: Record<SubscriptionPlan, string[]> = {
-  FREE: ["basic-diary", "mental-score", "daily-records"],
-  BASIC: ["basic-diary", "mental-score", "daily-records", "history", "weekly-overview", "pdf-export", "motivation"],
-  PRO: [
-    "basic-diary",
-    "mental-score",
-    "daily-records",
-    "history",
-    "weekly-overview",
-    "pdf-export",
-    "motivation",
-    "behavior-analysis",
-    "notifications",
-    "trading-behavior",
-    "custom-weights",
-  ],
-  PRO_PLUS: [
-    "basic-diary",
-    "mental-score",
-    "daily-records",
-    "history",
-    "weekly-overview",
-    "pdf-export",
-    "motivation",
-    "behavior-analysis",
-    "notifications",
-    "trading-behavior",
-    "custom-weights",
-    "metatrader-integration",
-    "ai-coach",
-    "mentor-sharing",
-    "stress-strategies",
-  ],
-}
+import { createContext, useContext, useEffect, useState } from "react"
+import { toast } from "@/hooks/use-toast"
 
 interface SubscriptionContextType {
-  currentPlan: SubscriptionPlan
-  setPlan: (plan: SubscriptionPlan) => void
-  hasAccess: (feature: string) => boolean
-  isFeatureLocked: (feature: string) => boolean
-  getRequiredPlan: (feature: string) => SubscriptionPlan | null
+  plan: "free" | "premium"
+  daysRemaining: number
+  isActive: boolean
+  upgradeToPremium: () => void
+  cancelSubscription: () => void
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan>("FREE")
-  const { user } = useAuth()
+  const [plan, setPlan] = useState<"free" | "premium">("free")
+  const [daysRemaining, setDaysRemaining] = useState(0)
+  const [isActive, setIsActive] = useState(false)
 
-  // Load subscription from user data or localStorage
   useEffect(() => {
-    if (user && user.plan) {
-      // If user is logged in and has a plan, use that
-      setCurrentPlan(user.plan as SubscriptionPlan)
-    } else {
-      // Otherwise, try to load from localStorage as fallback
-      const savedPlan = localStorage.getItem("subscription-plan") as SubscriptionPlan
-      if (savedPlan && Object.keys(PLAN_FEATURES).includes(savedPlan)) {
-        setCurrentPlan(savedPlan)
+    // Check subscription status on mount
+    const subscription = localStorage.getItem("trader-mindset-subscription")
+    if (subscription) {
+      try {
+        const parsed = JSON.parse(subscription)
+        setPlan(parsed.plan)
+
+        if (parsed.plan === "premium" && parsed.endDate) {
+          const endDate = new Date(parsed.endDate)
+          const now = new Date()
+          const diffTime = endDate.getTime() - now.getTime()
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+          if (diffDays > 0) {
+            setDaysRemaining(diffDays)
+            setIsActive(true)
+          } else {
+            // Subscription expired
+            setPlan("free")
+            setDaysRemaining(0)
+            setIsActive(false)
+            localStorage.removeItem("trader-mindset-subscription")
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing subscription data:", error)
       }
     }
-  }, [user])
+  }, [])
 
-  // Save subscription to localStorage and update user data when it changes
-  useEffect(() => {
-    localStorage.setItem("subscription-plan", currentPlan)
+  const upgradeToPremium = () => {
+    const endDate = new Date()
+    endDate.setDate(endDate.getDate() + 7) // 7 days free trial
 
-    // If user is logged in, update their plan in localStorage
-    if (user) {
-      const userData = JSON.parse(localStorage.getItem("user") || "{}")
-      userData.plan = currentPlan
-      localStorage.setItem("user", JSON.stringify(userData))
+    const subscription = {
+      plan: "premium",
+      startDate: new Date().toISOString(),
+      endDate: endDate.toISOString(),
     }
-  }, [currentPlan, user])
 
-  // Check if user has access to a specific feature
-  const hasAccess = (feature: string) => {
-    return PLAN_FEATURES[currentPlan].includes(feature)
+    localStorage.setItem("trader-mindset-subscription", JSON.stringify(subscription))
+    setPlan("premium")
+    setDaysRemaining(7)
+    setIsActive(true)
+
+    toast({
+      title: "Premium aktivován!",
+      description: "Premium přístup na 7 dní zdarma!",
+    })
   }
 
-  // Check if a feature is locked (requires upgrade)
-  const isFeatureLocked = (feature: string) => {
-    return !hasAccess(feature)
-  }
+  const cancelSubscription = () => {
+    localStorage.removeItem("trader-mindset-subscription")
+    setPlan("free")
+    setDaysRemaining(0)
+    setIsActive(false)
 
-  // Get the required plan for a specific feature
-  const getRequiredPlan = (feature: string): SubscriptionPlan | null => {
-    for (const [plan, features] of Object.entries(PLAN_FEATURES)) {
-      if (features.includes(feature)) {
-        return plan as SubscriptionPlan
-      }
-    }
-    return null
-  }
-
-  // Set the current plan
-  const setPlan = (plan: SubscriptionPlan) => {
-    setCurrentPlan(plan)
+    toast({
+      title: "Předplatné zrušeno",
+      description: "Vaše předplatné bylo úspěšně zrušeno.",
+    })
   }
 
   return (
     <SubscriptionContext.Provider
       value={{
-        currentPlan,
-        setPlan,
-        hasAccess,
-        isFeatureLocked,
-        getRequiredPlan,
+        plan,
+        daysRemaining,
+        isActive,
+        upgradeToPremium,
+        cancelSubscription,
       }}
     >
       {children}
@@ -123,7 +98,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   )
 }
 
-// Hook to use the subscription context
 export function useSubscription() {
   const context = useContext(SubscriptionContext)
   if (context === undefined) {

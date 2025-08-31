@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
@@ -21,6 +23,7 @@ export function MindTraderReflection() {
   const [tomorrowFocus, setTomorrowFocus] = useState<string>("")
   const [customLearningPoints, setCustomLearningPoints] = useState<string>("")
   const [customTomorrowFocus, setCustomTomorrowFocus] = useState<string>("")
+  const [reflection, setReflection] = useState("")
 
   // Sample data - in a real app, this would come from the morning form
   const morningData = {
@@ -32,7 +35,10 @@ export function MindTraderReflection() {
     tradingResult: 350,
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log("Reflection submitted:", reflection)
+    setReflection("")
     // In a real app, this would save the reflection to a database
     alert("Denní reflexe byla úspěšně uložena!")
   }
@@ -291,6 +297,30 @@ export function MindTraderReflection() {
               </div>
             </TabsContent>
           </Tabs>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Denní reflexe MindTrader AI</CardTitle>
+          <CardDescription>Zaznamenejte své myšlenky a pocity po interakci s AI.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reflection">Vaše reflexe</Label>
+              <Textarea
+                id="reflection"
+                placeholder="Jak se cítíte po dnešní interakci s MindTrader AI? Co jste se naučili?"
+                value={reflection}
+                onChange={(e) => setReflection(e.target.value)}
+                rows={5}
+              />
+            </div>
+            <Button type="submit" className="w-full">
+              Uložit reflexi
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>

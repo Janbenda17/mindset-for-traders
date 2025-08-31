@@ -1,22 +1,34 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-// This function can be marked `async` if using `await` inside
 export function middleware(request: NextRequest) {
-  // Check if the user is authenticated by looking for a token in localStorage
-  // Note: This is a client-side check, so we can't do it in the middleware
-  // In a real app, you would use a server-side session or JWT token
-
-  // For now, we'll just redirect unauthenticated users from specific protected routes
-  const protectedPaths = ["/account"]
-
+  // Get the pathname of the request (e.g. /, /login, /signup)
   const path = request.nextUrl.pathname
 
-  if (protectedPaths.some((protectedPath) => path.startsWith(protectedPath))) {
-    // We'll let the client-side auth check handle the redirect
-    // This is just a fallback in case someone tries to access the URL directly
+  // Define public paths that don't require authentication
+  const publicPaths = ["/login", "/signup"]
+
+  // Check if the path is public
+  const isPublicPath = publicPaths.includes(path)
+
+  // For client-side routing, we'll let the client handle auth checks
+  // This middleware just handles basic routing
+  if (isPublicPath) {
     return NextResponse.next()
   }
 
   return NextResponse.next()
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
 }

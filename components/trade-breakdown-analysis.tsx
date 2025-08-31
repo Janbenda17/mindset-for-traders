@@ -19,9 +19,16 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+const data = [
+  { name: "Long Trades", value: 3000, color: "#8884d8" },
+  { name: "Short Trades", value: 2000, color: "#82ca9d" },
+  { name: "Scalping", value: 1500, color: "#ffc658" },
+  { name: "Swing Trades", value: 2500, color: "#ff7300" },
+]
 
 export function TradeBreakdownAnalysis() {
   const [period, setPeriod] = useState("month")
@@ -62,6 +69,26 @@ export function TradeBreakdownAnalysis() {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Analýza rozdělení obchodů</CardTitle>
+          <CardDescription>Rozdělení zisku/ztráty podle typu obchodu nebo strategie.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie data={data} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value">
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Trade Breakdown Analysis</h3>
         <Select value={period} onValueChange={setPeriod}>

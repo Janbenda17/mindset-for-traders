@@ -1,176 +1,309 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
-import Link from "next/link"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Eye, EyeOff, Mail, User, Lock, CheckCircle, Gift } from "lucide-react"
+import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
-
-const formSchema = z
-  .object({
-    name: z.string().min(2, {
-      message: "Name must be at least 2 characters.",
-    }),
-    email: z.string().email({
-      message: "Please enter a valid email address.",
-    }),
-    password: z.string().min(8, {
-      message: "Password must be at least 8 characters.",
-    }),
-    confirmPassword: z.string(),
-    termsAccepted: z.boolean().refine((val) => val === true, {
-      message: "You must accept the terms and conditions.",
-    }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match.",
-    path: ["confirmPassword"],
-  })
+import { useRouter } from "next/navigation"
 
 export function SignupForm() {
-  const [error, setError] = useState<string | null>(null)
-  const { signup, isLoading } = useAuth()
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      termsAccepted: false,
-    },
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    acceptTerms: false,
+    acceptMarketing: false,
   })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isLoading, setIsLoading] = useState(false)
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setError(null)
+  const { register } = useAuth()
+  const router = useRouter()
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Jméno je povinné"
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email je povinný"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Neplatný formát emailu"
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Heslo je povinné"
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Heslo musí mít alespoň 6 znaků"
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Hesla se neshodují"
+    }
+
+    if (!formData.acceptTerms) {
+      newErrors.acceptTerms = "Musíte souhlasit s podmínkami použití"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!validateForm()) {
+      return
+    }
+
+    setIsLoading(true)
 
     try {
-      await signup(values.name, values.email, values.password)
-    } catch (err) {
-      setError("An error occurred during signup. Please try again.")
-      console.error("Signup error:", err)
+      const success = await register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      })
+
+      if (success) {
+        router.push("/")
+      } else {
+        setErrors({ general: "Registrace se nezdařila. Zkuste to prosím znovu." })
+      }
+    } catch (error) {
+      setErrors({ general: "Došlo k chybě. Zkuste to prosím znovu." })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData({ ...formData, [field]: value })
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: "" })
     }
   }
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Premium Trial Banner */}
+        <div className="mb-6 p-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg text-white text-center shadow-lg">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Gift className="w-5 h-5" />
+            <span className="font-semibold">7 dní Premium zdarma!</span>
+          </div>
+          <p className="text-sm text-green-100">Získejte přístup ke všem funkcím včetně MindTrader AI</p>
+        </div>
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+        <Card className="shadow-xl border-0">
+          <CardHeader className="space-y-1 text-center">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Vytvořit účet
+            </CardTitle>
+            <CardDescription className="text-gray-600">Začněte svou cestu k lepšímu tradingu</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {errors.general && (
+                <Alert className="border-red-200 bg-red-50">
+                  <AlertDescription className="text-red-800">{errors.general}</AlertDescription>
+                </Alert>
               )}
-            />
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="john.doe@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium">
+                  Celé jméno
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Vaše jméno"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    className={`pl-10 ${errors.name ? "border-red-300 focus:border-red-500" : ""}`}
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
+              </div>
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" {...field} />
-                  </FormControl>
-                  <FormDescription>Must be at least 8 characters</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="vas@email.cz"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    className={`pl-10 ${errors.email ? "border-red-300 focus:border-red-500" : ""}`}
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
+              </div>
 
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Heslo
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Alespoň 6 znaků"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    className={`pl-10 pr-10 ${errors.password ? "border-red-300 focus:border-red-500" : ""}`}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-sm text-red-600">{errors.password}</p>}
+              </div>
 
-            <FormField
-              control={form.control}
-              name="termsAccepted"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      I accept the{" "}
-                      <Link href="/terms" className="text-primary underline">
-                        terms and conditions
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                  Potvrdit heslo
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Zopakujte heslo"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                    className={`pl-10 pr-10 ${errors.confirmPassword ? "border-red-300 focus:border-red-500" : ""}`}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <p className="text-sm text-red-600">{errors.confirmPassword}</p>}
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="acceptTerms"
+                    checked={formData.acceptTerms}
+                    onCheckedChange={(checked) => handleInputChange("acceptTerms", checked as boolean)}
+                    className={errors.acceptTerms ? "border-red-300" : ""}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <Label htmlFor="acceptTerms" className="text-sm font-normal cursor-pointer">
+                      Souhlasím s{" "}
+                      <Link href="/terms" className="text-blue-600 hover:underline">
+                        podmínkami použití
+                      </Link>{" "}
+                      a{" "}
+                      <Link href="/privacy" className="text-blue-600 hover:underline">
+                        zásadami ochrany osobních údajů
                       </Link>
-                    </FormLabel>
-                    <FormMessage />
+                    </Label>
                   </div>
-                </FormItem>
-              )}
-            />
+                </div>
+                {errors.acceptTerms && <p className="text-sm text-red-600">{errors.acceptTerms}</p>}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
-                </>
-              ) : (
-                "Create Account"
-              )}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-      <CardFooter className="flex justify-center border-t px-6 py-4">
-        <p className="text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href="/login" className="text-primary underline">
-            Sign in
-          </Link>
-        </p>
-      </CardFooter>
-    </Card>
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="acceptMarketing"
+                    checked={formData.acceptMarketing}
+                    onCheckedChange={(checked) => handleInputChange("acceptMarketing", checked as boolean)}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <Label htmlFor="acceptMarketing" className="text-sm font-normal cursor-pointer text-gray-600">
+                      Chci dostávat novinky a tipy pro lepší trading
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2.5"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Vytvářím účet...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Vytvořit účet zdarma
+                  </div>
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Už máte účet?{" "}
+                <Link href="/login" className="text-blue-600 hover:underline font-medium">
+                  Přihlásit se
+                </Link>
+              </p>
+            </div>
+
+            {/* Features Preview */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-xs text-gray-500 text-center mb-3">Co získáte zdarma:</p>
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                <div className="flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3 text-green-500" />
+                  <span>Trading deník</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3 text-green-500" />
+                  <span>Analýzy výkonnosti</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3 text-green-500" />
+                  <span>MindTrader AI</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3 text-green-500" />
+                  <span>Team Club</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }

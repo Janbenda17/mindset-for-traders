@@ -1,77 +1,97 @@
 "use client"
 
-import { useState } from "react"
+import type React from "react"
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Smile, Meh, Frown, ThumbsUp, ThumbsDown } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { useState, useEffect } from "react"
+import { saveMoodEntry, getMoodEntries } from "@/utils/storage-utils"
+import { useToast } from "@/components/ui/use-toast"
+import { getTodayDateString } from "@/utils/date-utils"
 
 export function MoodTracker() {
-  const [selectedMood, setSelectedMood] = useState<string | null>(null)
-  const [selectedConfidence, setSelectedConfidence] = useState<string | null>(null)
+  const [mood, setMood] = useState(3) // Default mood
+  const [notes, setNotes] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
 
-  const moods = [
-    { value: "optimistic", icon: Smile, label: "Optimistic" },
-    { value: "neutral", icon: Meh, label: "Neutral" },
-    { value: "anxious", icon: Frown, label: "Anxious" },
-  ]
+  useEffect(() => {
+    // Load today's mood if it exists
+    const today = getTodayDateString()
+    const entries = getMoodEntries()
+    const todayEntry = entries.find((entry) => entry.date === today)
+    if (todayEntry) {
+      setMood(todayEntry.mood)
+      setNotes(todayEntry.notes || "")
+    }
+  }, [])
 
-  const confidenceLevels = [
-    { value: "high", icon: ThumbsUp, label: "High" },
-    { value: "low", icon: ThumbsDown, label: "Low" },
-  ]
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    const today = getTodayDateString()
+    const newMoodEntry = {
+      date: today,
+      mood: mood,
+      notes: notes,
+    }
+
+    saveMoodEntry(newMoodEntry)
+    setIsLoading(false)
+    toast({
+      title: "Nálada uložena",
+      description: "Vaše denní nálada byla úspěšně zaznamenána.",
+    })
+  }
 
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="mood" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="mood">Current Mood</TabsTrigger>
-          <TabsTrigger value="confidence">Trading Confidence</TabsTrigger>
-        </TabsList>
-      </Tabs>
+    <Card>
+      <CardHeader>
+        <CardTitle>Sledování nálady</CardTitle>
+        <CardDescription>Zaznamenejte svou denní náladu a pocity.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="grid gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="mood">Jaká je dnes vaše nálada?</Label>
+            <Slider
+              id="mood"
+              min={1}
+              max={5}
+              step={1}
+              value={[mood]}
+              onValueChange={(val) => setMood(val[0])}
+              className="w-full"
+              disabled={isLoading}
+            />
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>1 (Špatná)</span>
+              <span>5 (Výborná)</span>
+            </div>
+            <p className="text-center text-lg font-semibold mt-2">Aktuální nálada: {mood}</p>
+          </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        {moods.map((mood) => {
-          const Icon = mood.icon
-          return (
-            <Card
-              key={mood.value}
-              className={`p-4 cursor-pointer flex flex-col items-center justify-center transition-all ${
-                selectedMood === mood.value ? "border-2 border-primary" : ""
-              }`}
-              onClick={() => setSelectedMood(mood.value)}
-            >
-              <Icon className="h-10 w-10 mb-2" />
-              <span>{mood.label}</span>
-            </Card>
-          )
-        })}
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="notes">Poznámky (volitelné)</Label>
+            <Textarea
+              id="notes"
+              placeholder="Zaznamenejte, co ovlivnilo vaši náladu dnes..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              disabled={isLoading}
+            />
+          </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {confidenceLevels.map((level) => {
-          const Icon = level.icon
-          return (
-            <Card
-              key={level.value}
-              className={`p-4 cursor-pointer flex flex-col items-center justify-center transition-all ${
-                selectedConfidence === level.value ? "border-2 border-primary" : ""
-              }`}
-              onClick={() => setSelectedConfidence(level.value)}
-            >
-              <Icon className="h-10 w-10 mb-2" />
-              <span>{level.label}</span>
-            </Card>
-          )
-        })}
-      </div>
-
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">
-          Tracking your mood helps correlate emotional states with trading performance
-        </p>
-        <Button>Log Mood</Button>
-      </div>
-    </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Ukládání..." : "Uložit náladu"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

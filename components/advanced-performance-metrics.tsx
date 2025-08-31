@@ -14,9 +14,19 @@ import {
   ComposedChart,
   Area,
 } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+
+const metrics = [
+  { name: "Profit Factor", value: "1.85x" },
+  { name: "Expectancy", value: "$125" },
+  { name: "Sharpe Ratio", value: "1.2" },
+  { name: "Max Drawdown", value: "-8.5%" },
+  { name: "Recovery Factor", value: "2.1x" },
+  { name: "Win Rate", value: "62%" },
+]
 
 export function AdvancedPerformanceMetrics() {
   const [timeframe, setTimeframe] = useState("month")
@@ -48,6 +58,31 @@ export function AdvancedPerformanceMetrics() {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Pokročilé metriky výkonu</CardTitle>
+          <CardDescription>Klíčové ukazatele pro hodnocení vaší obchodní strategie.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Metrika</TableHead>
+                <TableHead className="text-right">Hodnota</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {metrics.map((metric) => (
+                <TableRow key={metric.name}>
+                  <TableCell>{metric.name}</TableCell>
+                  <TableCell className="text-right font-medium">{metric.value}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Performance Overview</h3>
         <Select value={timeframe} onValueChange={setTimeframe}>

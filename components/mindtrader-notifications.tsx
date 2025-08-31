@@ -19,6 +19,9 @@ export function MindTraderNotifications() {
   const [smsNotifications, setSmsNotifications] = useState(false)
   const [morningTime, setMorningTime] = useState("08:00")
   const [eveningTime, setEveningTime] = useState("17:00")
+  const [dailyAssessment, setDailyAssessment] = useState(true)
+  const [strategyRecommendations, setStrategyRecommendations] = useState(false)
+  const [emotionalAlerts, setEmotionalAlerts] = useState(true)
 
   const handleSaveSettings = () => {
     // In a real app, this would save the settings to a database
@@ -167,6 +170,36 @@ export function MindTraderNotifications() {
                   </p>
                 </div>
                 <Switch id="pattern-alerts" defaultChecked />
+              </div>
+
+              <div className="flex items-center justify-between space-x-2">
+                <div className="flex flex-col space-y-1">
+                  <Label htmlFor="daily-assessment">Denní hodnocení</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Dostávejte denní hodnocení vašich obchodních a mentálních výsledků
+                  </p>
+                </div>
+                <Switch id="daily-assessment" checked={dailyAssessment} onCheckedChange={setDailyAssessment} />
+              </div>
+
+              <div className="flex items-center justify-between space-x-2">
+                <div className="flex flex-col space-y-1">
+                  <Label htmlFor="strategy-recommendations">Doporučení strategie</Label>
+                  <p className="text-sm text-muted-foreground">Dostávejte doporučení pro vaši obchodní strategii</p>
+                </div>
+                <Switch
+                  id="strategy-recommendations"
+                  checked={strategyRecommendations}
+                  onCheckedChange={setStrategyRecommendations}
+                />
+              </div>
+
+              <div className="flex items-center justify-between space-x-2">
+                <div className="flex flex-col space-y-1">
+                  <Label htmlFor="emotional-alerts">Upozornění na emoce</Label>
+                  <p className="text-sm text-muted-foreground">Dostávejte upozornění na vaše emoce a mentální stav</p>
+                </div>
+                <Switch id="emotional-alerts" checked={emotionalAlerts} onCheckedChange={setEmotionalAlerts} />
               </div>
             </CardContent>
             <CardFooter>

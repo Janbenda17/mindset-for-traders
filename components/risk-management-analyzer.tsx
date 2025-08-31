@@ -16,10 +16,11 @@ import {
   Scatter,
   ZAxis,
 } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 export function RiskManagementAnalyzer() {
   const [period, setPeriod] = useState("month")
@@ -54,8 +55,41 @@ export function RiskManagementAnalyzer() {
     { emotionalScore: 3, riskTaken: 3.5, performance: -1.5, trades: 25 },
   ]
 
+  const riskData = [
+    { metric: "Průměrné R-násobky", value: "1.5R" },
+    { metric: "Největší ztráta (R)", value: "-2.5R" },
+    { metric: "Největší zisk (R)", value: "5.0R" },
+    { metric: "Risk/Reward Ratio", value: "1:2.5" },
+    { metric: "Počet po sobě jdoucích ztrát", value: "4" },
+  ]
+
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Analyzátor řízení rizik</CardTitle>
+          <CardDescription>Vyhodnoťte efektivitu vašeho řízení rizik.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Metrika</TableHead>
+                <TableHead className="text-right">Hodnota</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {riskData.map((item) => (
+                <TableRow key={item.metric}>
+                  <TableCell>{item.metric}</TableCell>
+                  <TableCell className="text-right font-medium">{item.value}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Risk Management Analysis</h3>
         <Select value={period} onValueChange={setPeriod}>

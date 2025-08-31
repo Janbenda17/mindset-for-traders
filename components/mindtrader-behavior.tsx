@@ -88,6 +88,13 @@ const generateTradeData = () => {
   return data
 }
 
+const behaviorData = [
+  { date: "2023-10-26", emotion: "Klid", action: "Dodržel plán", outcome: "Pozitivní" },
+  { date: "2023-10-25", emotion: "Frustrace", action: "Předčasný vstup", outcome: "Negativní" },
+  { date: "2023-10-24", emotion: "Sebevědomí", action: "Agresivní pozice", outcome: "Pozitivní" },
+  { date: "2023-10-23", emotion: "Strach", action: "Předčasný výstup", outcome: "Negativní" },
+]
+
 export function MindTraderBehavior() {
   const [activeTab, setActiveTab] = useState("entry")
   const [date, setDate] = useState<Date>(new Date())
@@ -120,18 +127,22 @@ export function MindTraderBehavior() {
   const filteredData = timeframe === "week" ? tradeData.slice(-7) : timeframe === "month" ? tradeData : tradeData
 
   // Calculate statistics
-  const matchedPlanPercentage = Math.round(
-    (filteredData.filter((trade) => trade.matchedPlan).length / filteredData.length) * 100,
-  )
-  const exitedEarlyPercentage = Math.round(
-    (filteredData.filter((trade) => trade.exitedEarly).length / filteredData.length) * 100,
-  )
-  const missedDueToHesitationPercentage = Math.round(
-    (filteredData.filter((trade) => trade.missedDueToHesitation).length / filteredData.length) * 100,
-  )
-  const revengeTradePercentage = Math.round(
-    (filteredData.filter((trade) => trade.revengeTrade).length / filteredData.length) * 100,
-  )
+  const matchedPlanPercentage =
+    filteredData.length > 0
+      ? Math.round((filteredData.filter((trade) => trade.matchedPlan).length / filteredData.length) * 100)
+      : 0
+  const exitedEarlyPercentage =
+    filteredData.length > 0
+      ? Math.round((filteredData.filter((trade) => trade.exitedEarly).length / filteredData.length) * 100)
+      : 0
+  const missedDueToHesitationPercentage =
+    filteredData.length > 0
+      ? Math.round((filteredData.filter((trade) => trade.missedDueToHesitation).length / filteredData.length) * 100)
+      : 0
+  const revengeTradePercentage =
+    filteredData.length > 0
+      ? Math.round((filteredData.filter((trade) => trade.revengeTrade).length / filteredData.length) * 100)
+      : 0
 
   // Calculate tag statistics
   const tagStats = availableTags
@@ -157,7 +168,7 @@ export function MindTraderBehavior() {
     .sort((a, b) => b.count - a.count)
 
   // Prepare data for charts
-  const behaviorData = [
+  const behaviorChartData = [
     { name: "Dle plánu", value: matchedPlanPercentage },
     { name: "Brzy vystoupeno", value: exitedEarlyPercentage },
     { name: "Váhání", value: missedDueToHesitationPercentage },
@@ -173,28 +184,6 @@ export function MindTraderBehavior() {
     name: stat.tag,
     avgResult: stat.avgResult,
   }))
-
-  // Add a function to calculate the behavior score based on the user's answers
-  function calculateBehaviorScore() {
-    let score = 0
-    const totalWeight = 20 // Total weight for trading behavior is 20%
-
-    // Matched plan (5%)
-    if (matchedPlan === "yes") score += 5
-    else if (matchedPlan === "partially") score += 2.5
-
-    // Early exit (5%)
-    if (exitedEarly === "no") score += 5
-
-    // Hesitation (5%)
-    if (missedDueToHesitation === "no") score += 5
-
-    // Revenge trading (5%)
-    if (revengeTrade === "no") score += 5
-    else if (revengeTrade === "tempted") score += 2.5
-
-    return score
-  }
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
@@ -336,7 +325,7 @@ export function MindTraderBehavior() {
                     <Label htmlFor="date">Datum obchodu</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <Button variant="outline" className="w-full justify-start text-left font-normal bg-transparent">
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {date ? format(date, "PPP") : <span>Vyberte datum</span>}
                         </Button>
@@ -646,7 +635,7 @@ export function MindTraderBehavior() {
             <CardContent>
               <div className="h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={behaviorData}>
+                  <BarChart data={behaviorChartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis domain={[0, 100]} />
@@ -690,11 +679,7 @@ export function MindTraderBehavior() {
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip formatter={(value) => `$${value}`} />
-                    <Bar
-                      dataKey="avgResult"
-                      name="Průměrný výsledek"
-                      fill={(datum) => (datum.avgResult >= 0 ? "#82ca9d" : "#ff7675")}
-                    />
+                    <Bar dataKey="avgResult" name="Průměrný výsledek" fill="#82ca9d" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -742,6 +727,39 @@ export function MindTraderBehavior() {
                   výstupu mají průměrný zisk $320.
                 </AlertDescription>
               </Alert>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Analýza chování MindTrader AI</CardTitle>
+              <CardDescription>Přehled vašich emocionálních reakcí a obchodních akcí.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Datum</TableHead>
+                    <TableHead>Emoce</TableHead>
+                    <TableHead>Akce</TableHead>
+                    <TableHead>Výsledek</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {behaviorData.map((entry, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{entry.date}</TableCell>
+                      <TableCell>{entry.emotion}</TableCell>
+                      <TableCell>{entry.action}</TableCell>
+                      <TableCell>
+                        <Badge variant={entry.outcome === "Pozitivní" ? "default" : "destructive"}>
+                          {entry.outcome}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

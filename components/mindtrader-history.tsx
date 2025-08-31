@@ -56,34 +56,42 @@ const generateHistoryData = () => {
   return data
 }
 
+const historyData = [
+  { date: "2023-10-26", mood: 4, experience: "Soustředěný", recommendation: "Pokračovat v plánu" },
+  { date: "2023-10-25", mood: 3, experience: "Mírně frustrovaný", recommendation: "Pauza, re-evaluace" },
+  { date: "2023-10-24", mood: 5, experience: "Sebevědomý", recommendation: "Zvýšit pozici" },
+  { date: "2023-10-23", mood: 2, experience: "Přehnaně sebevědomý", recommendation: "Snížit riziko" },
+]
+
 export function MindTraderHistory() {
   const [timeframe, setTimeframe] = useState("month")
   const [date, setDate] = useState<Date>()
-  const historyData = generateHistoryData()
+  const generatedData = generateHistoryData()
 
   // Calculate best and worst days
-  const bestDay = [...historyData].sort((a, b) => b.mentalScore - a.mentalScore)[0]
-  const worstDay = [...historyData].sort((a, b) => a.mentalScore - b.mentalScore)[0]
-  const mostProfitableDay = [...historyData].sort((a, b) => b.tradingResult - a.tradingResult)[0]
+  const bestDay = [...generatedData].sort((a, b) => b.mentalScore - a.mentalScore)[0]
+  const worstDay = [...generatedData].sort((a, b) => a.mentalScore - b.mentalScore)[0]
+  const mostProfitableDay = [...generatedData].sort((a, b) => b.tradingResult - a.tradingResult)[0]
 
   // Calculate correlations
   const sleepCorrelation =
-    historyData.filter((day) => day.sleepHours >= 7).reduce((sum, day) => sum + day.tradingResult, 0) /
-    historyData.filter((day) => day.sleepHours >= 7).length
+    generatedData.filter((day) => day.sleepHours >= 7).reduce((sum, day) => sum + day.tradingResult, 0) /
+    generatedData.filter((day) => day.sleepHours >= 7).length
 
   const exerciseCorrelation =
-    historyData.filter((day) => day.exercise).reduce((sum, day) => sum + day.tradingResult, 0) /
-    historyData.filter((day) => day.exercise).length
+    generatedData.filter((day) => day.exercise).reduce((sum, day) => sum + day.tradingResult, 0) /
+    generatedData.filter((day) => day.exercise).length
 
   const noExerciseCorrelation =
-    historyData.filter((day) => !day.exercise).reduce((sum, day) => sum + day.tradingResult, 0) /
-    historyData.filter((day) => !day.exercise).length
+    generatedData.filter((day) => !day.exercise).reduce((sum, day) => sum + day.tradingResult, 0) /
+    generatedData.filter((day) => !day.exercise).length
 
   // Filter data based on timeframe
-  const filteredData = timeframe === "week" ? historyData.slice(-7) : timeframe === "month" ? historyData : historyData
+  const filteredData =
+    timeframe === "week" ? generatedData.slice(-7) : timeframe === "month" ? generatedData : generatedData
 
   // Prepare correlation data for scatter plot
-  const correlationData = historyData.map((day) => ({
+  const correlationData = generatedData.map((day) => ({
     mentalScore: day.mentalScore,
     tradingResult: day.tradingResult,
     date: day.shortDate,
@@ -111,7 +119,7 @@ export function MindTraderHistory() {
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+              <Button variant="outline" className="w-[240px] justify-start text-left font-normal bg-transparent">
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {date ? format(date, "PPP") : <span>Pick a specific date</span>}
               </Button>
@@ -164,6 +172,7 @@ export function MindTraderHistory() {
           <TabsTrigger value="charts">Grafy</TabsTrigger>
           <TabsTrigger value="correlations">Korelace</TabsTrigger>
           <TabsTrigger value="table">Tabulka</TabsTrigger>
+          <TabsTrigger value="aiHistory">Historie AI</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -215,7 +224,7 @@ export function MindTraderHistory() {
                       Dny se spánkem 7+ hodin mají o{" "}
                       {Math.round(
                         (sleepCorrelation /
-                          (historyData.reduce((sum, day) => sum + day.tradingResult, 0) / historyData.length) -
+                          (generatedData.reduce((sum, day) => sum + day.tradingResult, 0) / generatedData.length) -
                           1) *
                           100,
                       )}
@@ -539,11 +548,46 @@ export function MindTraderHistory() {
               </Table>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full bg-transparent">
                 <Download className="mr-2 h-4 w-4" />
                 Exportovat jako PDF
               </Button>
             </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="aiHistory" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Historie MindTrader AI</CardTitle>
+              <CardDescription>Přehled vašich denních hodnocení a doporučení od AI.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Datum</TableHead>
+                    <TableHead>Nálada</TableHead>
+                    <TableHead>Zkušenost</TableHead>
+                    <TableHead>Doporučení</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {historyData.map((entry, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{entry.date}</TableCell>
+                      <TableCell>
+                        <Badge variant={entry.mood >= 4 ? "default" : entry.mood >= 3 ? "secondary" : "destructive"}>
+                          {entry.mood}/5
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{entry.experience}</TableCell>
+                      <TableCell>{entry.recommendation}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>

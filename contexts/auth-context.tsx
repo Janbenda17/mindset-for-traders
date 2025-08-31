@@ -1,191 +1,220 @@
 "use client"
 
-import type React from "react"
-
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "@/hooks/use-toast"
 
-// Define user type
-export interface User {
+interface User {
   id: string
-  name: string
   email: string
-  plan?: string
-  metrics?: {
-    totalProfit: number
-    totalTrades: number
-    winRate: number
-    averageProfit: number
-    averageLoss: number
-    profitFactor: number
-    mentalStability: number
-    consecutiveWins: number
-    consecutiveLosses: number
-  }
-  journalEntries?: any[]
-  affirmations?: any[]
-  tradingHistory?: any[]
-  mentalScores?: any[]
+  name: string
+  isOwner?: boolean
 }
 
-// Define auth context type
 interface AuthContextType {
   user: User | null
-  isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
-  signup: (name: string, email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<boolean>
+  register: (email: string, password: string, name: string) => Promise<boolean>
   logout: () => void
+  isLoading: boolean
 }
 
-// Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Auth provider component
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+const OWNER_EMAIL = "honza.newage@gmail.com"
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
-  // Check for existing user session on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem("user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    // Check if user is logged in on mount
+    const savedUser = localStorage.getItem("trader-mindset-user")
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser)
+        // Check if it's the owner
+        if (parsedUser.email === OWNER_EMAIL) {
+          parsedUser.isOwner = true
+        }
+        setUser(parsedUser)
+      } catch (error) {
+        console.error("Error parsing saved user:", error)
+        localStorage.removeItem("trader-mindset-user")
+      }
     }
     setIsLoading(false)
   }, [])
 
-  // Login function
-  const login = async (email: string, password: string) => {
-    setIsLoading(true)
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // In a real app, this would be an API call to authenticate
-      // For demo purposes, we'll simulate a successful login
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // Special handling for owner account
+      if (email === OWNER_EMAIL) {
+        const userData = {
+          id: "owner",
+          email: OWNER_EMAIL,
+          name: "Honza (Owner)",
+          isOwner: true,
+        }
 
-      // Check if there's a stored subscription plan
-      const storedPlan = localStorage.getItem("subscription-plan") || "FREE"
+        setUser(userData)
+        localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
 
-      // Create a mock user with all metrics initialized to zero
-      const newUser: User = {
-        id: Math.random().toString(36).substring(2, 9),
-        name: email.split("@")[0], // Use part of email as name if not provided
-        email,
-        plan: storedPlan as string, // Use stored plan or default to FREE
-        metrics: {
-          totalProfit: 0,
-          totalTrades: 0,
-          winRate: 0,
-          averageProfit: 0,
-          averageLoss: 0,
-          profitFactor: 0,
-          mentalStability: 0,
-          consecutiveWins: 0,
-          consecutiveLosses: 0,
-        },
+        // Set premium subscription automatically for owner
+        const subscriptionData = {
+          plan: "premium",
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
+        }
+        localStorage.setItem("trader-mindset-subscription", JSON.stringify(subscriptionData))
+
+        toast({
+          title: "Vítejte zpět, Honza!",
+          description: "Přihlášen jako Owner s plnými právy",
+        })
+
+        router.push("/")
+        return true
       }
 
-      // Save user to localStorage
-      localStorage.setItem("user", JSON.stringify(newUser))
+      // Regular user login
+      const registeredUsers = JSON.parse(localStorage.getItem("trader-mindset-registered-users") || "[]")
+      const foundUser = registeredUsers.find((u: any) => u.email === email && u.password === password)
 
-      // Always initialize with empty data for new users
-      localStorage.setItem(
-        "user-data",
-        JSON.stringify({
-          journalEntries: [],
-          affirmations: [],
-          tradingHistory: [],
-          mentalScores: [],
-          metrics: {
-            totalProfit: 0,
-            totalTrades: 0,
-            winRate: 0,
-            averageProfit: 0,
-            averageLoss: 0,
-            profitFactor: 0,
-            mentalStability: 0,
-            consecutiveWins: 0,
-            consecutiveLosses: 0,
-          },
-        }),
-      )
+      if (foundUser) {
+        const userData = {
+          id: foundUser.id,
+          email: foundUser.email,
+          name: foundUser.name,
+          isOwner: false,
+        }
 
-      setUser(newUser)
+        setUser(userData)
+        localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
 
-      // Redirect to dashboard
-      router.push("/account")
+        // Set premium subscription automatically for regular users
+        const subscriptionData = {
+          plan: "premium",
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        }
+        localStorage.setItem("trader-mindset-subscription", JSON.stringify(subscriptionData))
+
+        toast({
+          title: "Přihlášení úspěšné",
+          description: "Vítejte zpět!",
+        })
+
+        router.push("/")
+        return true
+      } else {
+        toast({
+          title: "Chyba přihlášení",
+          description: "Nesprávný email nebo heslo",
+          variant: "destructive",
+        })
+        return false
+      }
     } catch (error) {
       console.error("Login error:", error)
-      throw error
-    } finally {
-      setIsLoading(false)
+      toast({
+        title: "Chyba přihlášení",
+        description: "Došlo k neočekávané chybě",
+        variant: "destructive",
+      })
+      return false
     }
   }
 
-  // Signup function
-  const signup = async (name: string, email: string, password: string) => {
-    setIsLoading(true)
+  const register = async (email: string, password: string, name: string): Promise<boolean> => {
     try {
-      // In a real app, this would be an API call to create a user
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Create a new user with all metrics reset to zero/default values
-      const newUser: User = {
-        id: Math.random().toString(36).substring(2, 9),
-        name,
-        email,
-        plan: "FREE", // Default plan
-        metrics: {
-          totalProfit: 0,
-          totalTrades: 0,
-          winRate: 0,
-          averageProfit: 0,
-          averageLoss: 0,
-          profitFactor: 0,
-          mentalStability: 0,
-          consecutiveWins: 0,
-          consecutiveLosses: 0,
-        },
-        // Reset all other user data
-        journalEntries: [],
-        affirmations: [],
-        tradingHistory: [],
-        mentalScores: [],
+      // Prevent registration with owner email
+      if (email === OWNER_EMAIL) {
+        toast({
+          title: "Chyba registrace",
+          description: "Tento email je rezervován",
+          variant: "destructive",
+        })
+        return false
       }
 
-      // Store the initial user data in localStorage
-      localStorage.setItem(
-        "user-data",
-        JSON.stringify({
-          journalEntries: [],
-          affirmations: [],
-          tradingHistory: [],
-          mentalScores: [],
-          metrics: newUser.metrics,
-        }),
-      )
+      // Get existing users
+      const registeredUsers = JSON.parse(localStorage.getItem("trader-mindset-registered-users") || "[]")
 
-      // For demo purposes, we'll just redirect to login
-      router.push("/login?signup=success")
+      // Check if user already exists
+      if (registeredUsers.some((u: any) => u.email === email)) {
+        toast({
+          title: "Chyba registrace",
+          description: "Uživatel s tímto emailem již existuje",
+          variant: "destructive",
+        })
+        return false
+      }
+
+      // Create new user
+      const newUser = {
+        id: Date.now().toString(),
+        email,
+        password,
+        name,
+      }
+
+      // Save to registered users
+      registeredUsers.push(newUser)
+      localStorage.setItem("trader-mindset-registered-users", JSON.stringify(registeredUsers))
+
+      // Auto login
+      const userData = {
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        isOwner: false,
+      }
+
+      setUser(userData)
+      localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
+
+      // Set premium subscription automatically
+      const subscriptionData = {
+        plan: "premium",
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+      }
+      localStorage.setItem("trader-mindset-subscription", JSON.stringify(subscriptionData))
+
+      toast({
+        title: "Registrace úspěšná",
+        description: "Váš účet byl vytvořen a máte 30 dní Premium zdarma!",
+      })
+
+      router.push("/")
+      return true
     } catch (error) {
-      console.error("Signup error:", error)
-      throw error
-    } finally {
-      setIsLoading(false)
+      console.error("Registration error:", error)
+      toast({
+        title: "Chyba registrace",
+        description: "Došlo k neočekávané chybě",
+        variant: "destructive",
+      })
+      return false
     }
   }
 
-  // Logout function
   const logout = () => {
-    localStorage.removeItem("user")
     setUser(null)
+    localStorage.removeItem("trader-mindset-user")
+    localStorage.removeItem("trader-mindset-subscription")
+    toast({
+      title: "Odhlášení úspěšné",
+      description: "Nashledanou!",
+    })
     router.push("/login")
   }
 
-  return <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
 }
 
-// Custom hook to use auth context
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {

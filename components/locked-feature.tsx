@@ -2,49 +2,46 @@
 
 import type React from "react"
 
-import { useSubscription, type SubscriptionPlan } from "@/contexts/subscription-context"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useSubscription } from "@/contexts/subscription-context"
+import { Card, CardDescription, CardFooter, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Lock } from "lucide-react"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 interface LockedFeatureProps {
-  featureId: string
+  feature: string
   title: string
   description: string
-  children?: React.ReactNode
+  children: React.ReactNode
 }
 
-export function LockedFeature({ featureId, title, description, children }: LockedFeatureProps) {
-  const { hasAccess, getRequiredPlan } = useSubscription()
-  const router = useRouter()
+export function LockedFeature({ feature, title, description, children }: LockedFeatureProps) {
+  const { subscription, isLoading } = useSubscription()
 
-  const requiredPlan = getRequiredPlan(featureId)
-  const planNames: Record<SubscriptionPlan, string> = {
-    FREE: "Free",
-    BASIC: "Basic",
-    PRO: "Pro",
-    PRO_PLUS: "Pro+",
+  if (isLoading) {
+    return (
+      <Card className="flex flex-col items-center justify-center p-8 text-center">
+        <Lock className="h-12 w-12 text-muted-foreground mb-4" />
+        <CardTitle className="text-xl">Načítání...</CardTitle>
+        <CardDescription>Kontrola stavu předplatného.</CardDescription>
+      </Card>
+    )
   }
 
-  if (hasAccess(featureId)) {
+  if (subscription?.plan === "premium") {
     return <>{children}</>
   }
 
   return (
-    <Card className="border-dashed border-2 bg-muted/50">
-      <CardHeader className="text-center">
-        <Lock className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="text-center">
-        <p className="text-sm text-muted-foreground mb-4">
-          Tato funkce je dostupná pouze v plánu {requiredPlan ? planNames[requiredPlan] : "vyšším"} a vyšším.
-        </p>
-      </CardContent>
-      <CardFooter className="flex justify-center">
-        <Button onClick={() => router.push("/upgrade")}>Upgrade Plan</Button>
+    <Card className="flex flex-col items-center justify-center p-8 text-center">
+      <Lock className="h-12 w-12 text-muted-foreground mb-4" />
+      <CardTitle className="text-xl">{title}</CardTitle>
+      <CardDescription className="mb-4">{description}</CardDescription>
+      <CardFooter className="flex flex-col gap-2">
+        <Button asChild>
+          <Link href="/upgrade">Upgrade na Premium</Link>
+        </Button>
+        <p className="text-sm text-muted-foreground">Odemkněte tuto a mnoho dalších funkcí.</p>
       </CardFooter>
     </Card>
   )

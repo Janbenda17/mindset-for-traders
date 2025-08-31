@@ -1,98 +1,53 @@
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { ExternalLink } from "lucide-react"
+
+const resources = [
+  {
+    title: "Kniha: Obchodování v zóně",
+    description: "Klasika pro rozvoj psychologie obchodování.",
+    link: "#",
+  },
+  {
+    title: "Článek: 10 tipů pro zvládání emocí",
+    description: "Praktické strategie pro udržení klidu na trzích.",
+    link: "#",
+  },
+  {
+    title: "Video: Meditace pro obchodníky",
+    description: "Vedená meditace pro zlepšení soustředění a snížení stresu.",
+    link: "#",
+  },
+  {
+    title: "Podcast: Psychologie trhů",
+    description: "Rozhovory s předními obchodními psychology.",
+    link: "#",
+  },
+]
 
 export default function ResourcesPage() {
   return (
-    <div className="container py-10">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Trading Psychology Resources</h1>
-        <p className="text-muted-foreground">Practical exercises to strengthen your trading mindset</p>
-      </div>
+    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+      <h1 className="text-3xl font-bold">Zdroje</h1>
+      <p className="text-muted-foreground">Doporučené zdroje pro další rozvoj vašeho obchodního myšlení.</p>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Pre-Market Routine</CardTitle>
-            <CardDescription>Prepare your mind before trading</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ol className="list-decimal pl-5 space-y-2">
-              <li>5 minutes of mindful breathing</li>
-              <li>Review your trading plan and rules</li>
-              <li>Set clear intentions for the day</li>
-              <li>Visualize successful execution of your strategy</li>
-              <li>Repeat your daily affirmation</li>
-            </ol>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" className="w-full">
-              Download Worksheet
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Post-Loss Recovery</CardTitle>
-            <CardDescription>Regain emotional balance after losses</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ol className="list-decimal pl-5 space-y-2">
-              <li>Step away from the screen for 10 minutes</li>
-              <li>Practice deep breathing to calm your nervous system</li>
-              <li>Write down what happened objectively</li>
-              <li>Identify if you followed your trading plan</li>
-              <li>Reframe the loss as a learning opportunity</li>
-            </ol>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" className="w-full">
-              Download Worksheet
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Weekly Trading Review</CardTitle>
-            <CardDescription>Reflect on your psychological performance</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ol className="list-decimal pl-5 space-y-2">
-              <li>Review your emotional states during the week</li>
-              <li>Identify patterns in your decision-making</li>
-              <li>Assess adherence to your trading plan</li>
-              <li>Note psychological improvements and challenges</li>
-              <li>Set specific mindset goals for next week</li>
-            </ol>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" className="w-full">
-              Download Worksheet
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Fear & Greed Exercise</CardTitle>
-            <CardDescription>Manage the two primary trading emotions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ol className="list-decimal pl-5 space-y-2">
-              <li>Identify your personal fear triggers</li>
-              <li>Document situations that activate greed</li>
-              <li>Create specific response plans for each trigger</li>
-              <li>Practice visualization of calm responses</li>
-              <li>Implement a "pause and reflect" protocol</li>
-            </ol>
-          </CardContent>
-          <CardFooter>
-            <Button variant="outline" size="sm" className="w-full">
-              Download Worksheet
-            </Button>
-          </CardFooter>
-        </Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {resources.map((resource, index) => (
+          <Card key={index}>
+            <CardHeader>
+              <CardTitle>{resource.title}</CardTitle>
+              <CardDescription>{resource.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" asChild>
+                <a href={resource.link} target="_blank" rel="noopener noreferrer">
+                  Zobrazit zdroj
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   )

@@ -1,52 +1,36 @@
-"use client"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+const data = [
+  { week: "1", trades: 10, wins: 7, losses: 3 },
+  { week: "2", trades: 12, wins: 8, losses: 4 },
+  { week: "3", trades: 8, wins: 6, losses: 2 },
+  { week: "4", trades: 15, wins: 10, losses: 5 },
+  { week: "5", trades: 11, wins: 9, losses: 2 },
+  { week: "6", trades: 13, wins: 7, losses: 6 },
+]
 
 export function TradingConsistencyChart() {
-  const data = [
-    {
-      name: "Week 1",
-      planAdherence: 65,
-      profitability: 40,
-    },
-    {
-      name: "Week 2",
-      planAdherence: 78,
-      profitability: 55,
-    },
-    {
-      name: "Week 3",
-      planAdherence: 90,
-      profitability: 75,
-    },
-    {
-      name: "Week 4",
-      planAdherence: 81,
-      profitability: 60,
-    },
-  ]
-
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart
-        width={500}
-        height={300}
-        data={data}
-        margin={{
-          top: 5,
-          right: 30,
-          left: 20,
-          bottom: 5,
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="planAdherence" name="Plan Adherence %" fill="#8884d8" />
-        <Bar dataKey="profitability" name="Profitability %" fill="#82ca9d" />
-      </BarChart>
-    </ResponsiveContainer>
+    <Card>
+      <CardHeader>
+        <CardTitle>Konzistence obchodování</CardTitle>
+        <CardDescription>Sledujte počet obchodů a poměr výher/proher v průběhu času.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="week" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="trades" stroke="#8884d8" name="Celkem obchodů" />
+            <Line type="monotone" dataKey="wins" stroke="#82ca9d" name="Výhry" />
+            <Line type="monotone" dataKey="losses" stroke="#ffc658" name="Prohry" />
+          </LineChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
   )
 }

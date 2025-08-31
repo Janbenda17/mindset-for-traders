@@ -1,305 +1,237 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
-import { useSubscription, type SubscriptionPlan } from "@/contexts/subscription-context"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useSubscription } from "@/contexts/subscription-context"
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
+import { Crown, Check, Zap, Star, Brain, BarChart3, Target, Calendar } from "lucide-react"
 
 export default function UpgradePage() {
-  const [billingCycle, setBillingCycle] = useState("monthly")
-  const [isLoading, setIsLoading] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null)
   const { user } = useAuth()
-  const { currentPlan, setPlan } = useSubscription()
+  const { subscribe, upgradeToPremium, startTrial, isPremium, isLoading } = useSubscription()
   const router = useRouter()
+  const { toast } = useToast()
 
-  const handleUpgrade = async (plan: SubscriptionPlan) => {
-    setIsLoading(true)
-    setSelectedPlan(plan)
+  const freeFeatures = ["Základní deník tradingu", "Jednoduché analýzy", "Denní afirmace", "Základní MindTrader AI"]
+
+  const premiumFeatures = [
+    "Neomezený deník s pokročilými funkcemi",
+    "Detailní analýzy a reporty",
+    "Personalizované afirmace",
+    "Pokročilý MindTrader AI Pro",
+    "Export dat a reportů",
+    "Prioritní zákaznická podpora",
+    "Pokročilé psychologické metriky",
+    "Osobní cíle a sledování pokroku",
+  ]
+
+  const handleUpgrade = async () => {
+    if (!user) {
+      toast({
+        title: "Přihlášení nutné",
+        description: "Pro upgrade se musíte nejprve přihlásit.",
+        variant: "destructive",
+      })
+      router.push("/login")
+      return
+    }
 
     try {
-      // In a real app, this would be an API call to upgrade the subscription
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Update the user's plan
-      setPlan(plan)
-
-      // Update user plan in localStorage
-      if (user) {
-        const userData = JSON.parse(localStorage.getItem("user") || "{}")
-        userData.plan = plan
-        localStorage.setItem("user", JSON.stringify(userData))
+      const success = await subscribe("premium")
+      if (success) {
+        toast({
+          title: "Upgrade úspěšný!",
+          description: "Vítejte v Premium! Všechny funkce jsou nyní odemčené.",
+        })
+        router.push("/")
       }
-
-      // Redirect to account page
-      router.push("/account?upgrade=success")
     } catch (error) {
-      console.error("Upgrade error:", error)
-    } finally {
-      setIsLoading(false)
-      setSelectedPlan(null)
+      toast({
+        title: "Chyba",
+        description: "Při upgradu došlo k chybě. Zkuste to prosím znovu.",
+        variant: "destructive",
+      })
     }
   }
 
+  const handleStartTrial = () => {
+    if (!user) {
+      toast({
+        title: "Přihlášení nutné",
+        description: "Pro trial se musíte nejprve přihlásit.",
+        variant: "destructive",
+      })
+      router.push("/login")
+      return
+    }
+
+    startTrial()
+    toast({
+      title: "Trial aktivován!",
+      description: "Váš 3-denní Premium trial byl úspěšně aktivován.",
+    })
+    router.push("/")
+  }
+
+  if (isPremium) {
+    return (
+      <div className="max-w-2xl mx-auto text-center space-y-8">
+        <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto">
+          <Crown className="w-10 h-10 text-white" />
+        </div>
+        <h1 className="text-4xl font-bold text-gray-900">Jste Premium člen!</h1>
+        <p className="text-xl text-gray-600">Děkujeme za vaši podporu. Máte přístup ke všem funkcím.</p>
+        <Button asChild size="lg">
+          <a href="/">Zpět na dashboard</a>
+        </Button>
+      </div>
+    )
+  }
+
   return (
-    <div className="container mx-auto py-10 px-4">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Upgrade Your Plan</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">Choose the plan that best fits your trading needs</p>
+    <div className="space-y-8">
+      <div className="text-center">
+        <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <Crown className="w-8 h-8 text-white" />
+        </div>
+        <h1 className="text-3xl font-bold text-gray-900">Upgrade na Premium</h1>
+        <p className="text-gray-600 mt-2">Odemkněte plný potenciál své trading psychologie</p>
       </div>
 
-      <Tabs defaultValue="monthly" className="w-full max-w-3xl mx-auto mb-8">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="monthly" onClick={() => setBillingCycle("monthly")}>
-            Monthly
-          </TabsTrigger>
-          <TabsTrigger value="yearly" onClick={() => setBillingCycle("yearly")}>
-            Yearly <Badge className="ml-2 bg-green-500/20 text-green-700">Save 20%</Badge>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-        {/* FREE Plan */}
-        <Card className={`flex flex-col border-2 ${currentPlan === "FREE" ? "border-primary" : ""}`}>
-          <CardHeader>
-            <CardTitle>FREE</CardTitle>
-            <CardDescription>Basic journal for beginner traders</CardDescription>
-            <div className="mt-4 text-3xl font-bold">0 Kč</div>
-            <p className="text-sm text-muted-foreground">Forever free</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        {/* Free Plan */}
+        <Card className="border-gray-200">
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl">Free plán</CardTitle>
+            <CardDescription>Základní funkce zdarma</CardDescription>
+            <div className="text-3xl font-bold text-gray-900 mt-4">$0</div>
+            <p className="text-sm text-gray-600">navždy zdarma</p>
           </CardHeader>
-          <CardContent className="flex-grow">
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Basic journal (mood, sleep, food)</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Mental score calculation</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Daily records</span>
-              </li>
+          <CardContent>
+            <ul className="space-y-3">
+              {freeFeatures.map((feature, index) => (
+                <li key={index} className="flex items-center space-x-3">
+                  <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">{feature}</span>
+                </li>
+              ))}
             </ul>
-          </CardContent>
-          <CardFooter>
-            <Button
-              className="w-full"
-              variant={currentPlan === "FREE" ? "secondary" : "default"}
-              disabled={currentPlan === "FREE" || isLoading}
-              onClick={() => handleUpgrade("FREE")}
-            >
-              {isLoading && selectedPlan === "FREE" ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : currentPlan === "FREE" ? (
-                "Current Plan"
-              ) : (
-                "Downgrade"
-              )}
+            <Button variant="outline" className="w-full mt-6 bg-transparent" disabled>
+              Aktuální plán
             </Button>
-          </CardFooter>
+          </CardContent>
         </Card>
 
-        {/* BASIC Plan */}
-        <Card className={`flex flex-col border-2 ${currentPlan === "BASIC" ? "border-primary" : ""}`}>
-          <CardHeader>
-            <CardTitle>BASIC</CardTitle>
-            <CardDescription>For traders who want to track their progress</CardDescription>
-            <div className="mt-4 text-3xl font-bold">
-              {billingCycle === "monthly" ? "9 €" : "86 €"}
-              <span className="text-sm font-normal text-muted-foreground">
-                {" "}
-                / {billingCycle === "monthly" ? "month" : "year"}
-              </span>
+        {/* Premium Plan */}
+        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 relative">
+          <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1">
+            <Star className="w-3 h-3 mr-1" />
+            Nejpopulárnější
+          </Badge>
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl text-blue-800">Premium plán</CardTitle>
+            <CardDescription className="text-blue-700">Všechny funkce a pokročilé analýzy</CardDescription>
+            <div className="text-3xl font-bold text-blue-900 mt-4">$59</div>
+            <p className="text-sm text-blue-600">za měsíc</p>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {premiumFeatures.map((feature, index) => (
+                <li key={index} className="flex items-center space-x-3">
+                  <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <span className="text-blue-800">{feature}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="space-y-3 mt-6">
+              <Button
+                onClick={handleStartTrial}
+                className="w-full bg-green-600 hover:bg-green-700"
+                disabled={isLoading}
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                {isLoading ? "Načítání..." : "Začít 3-denní trial zdarma"}
+              </Button>
+              <Button onClick={handleUpgrade} variant="outline" className="w-full bg-transparent" disabled={isLoading}>
+                <Crown className="w-4 h-4 mr-2" />
+                {isLoading ? "Načítání..." : "Upgradovat za $59/měsíc"}
+              </Button>
             </div>
-            <p className="text-sm text-muted-foreground">~{billingCycle === "monthly" ? "220 Kč" : "2 100 Kč"}</p>
-          </CardHeader>
-          <CardContent className="flex-grow">
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Everything in FREE plan</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>History records</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Weekly overview</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Export to PDF</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Motivation + quotes</span>
-              </li>
-            </ul>
           </CardContent>
-          <CardFooter>
-            <Button
-              className="w-full"
-              variant={currentPlan === "BASIC" ? "secondary" : "default"}
-              disabled={currentPlan === "BASIC" || isLoading}
-              onClick={() => handleUpgrade("BASIC")}
-            >
-              {isLoading && selectedPlan === "BASIC" ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : currentPlan === "BASIC" ? (
-                "Current Plan"
-              ) : currentPlan === "FREE" ? (
-                "Upgrade"
-              ) : (
-                "Downgrade"
-              )}
-            </Button>
-          </CardFooter>
         </Card>
+      </div>
 
-        {/* PRO Plan */}
-        <Card className={`flex flex-col border-2 ${currentPlan === "PRO" ? "border-primary" : ""} relative`}>
-          <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-2">
-            <Badge className="bg-primary text-primary-foreground">Most Popular</Badge>
+      {/* Feature Comparison */}
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">Porovnání funkcí</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="text-center">
+            <CardContent className="p-6">
+              <Brain className="w-8 h-8 text-purple-600 mx-auto mb-4" />
+              <h3 className="font-semibold text-gray-900 mb-2">AI Asistent</h3>
+              <p className="text-sm text-gray-600">Pokročilé AI analýzy a personalizované rady</p>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardContent className="p-6">
+              <BarChart3 className="w-8 h-8 text-green-600 mx-auto mb-4" />
+              <h3 className="font-semibold text-gray-900 mb-2">Detailní analýzy</h3>
+              <p className="text-sm text-gray-600">Pokročilé reporty a psychologické metriky</p>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardContent className="p-6">
+              <Target className="w-8 h-8 text-blue-600 mx-auto mb-4" />
+              <h3 className="font-semibold text-gray-900 mb-2">Osobní cíle</h3>
+              <p className="text-sm text-gray-600">Nastavte a sledujte své trading cíle</p>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardContent className="p-6">
+              <Calendar className="w-8 h-8 text-orange-600 mx-auto mb-4" />
+              <h3 className="font-semibold text-gray-900 mb-2">Export dat</h3>
+              <p className="text-sm text-gray-600">Exportujte své data a reporty</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white max-w-4xl mx-auto">
+        <CardContent className="p-8 text-center">
+          <Crown className="w-12 h-12 text-white mx-auto mb-4" />
+          <h3 className="text-2xl font-bold mb-4">Připraveni na upgrade?</h3>
+          <p className="text-blue-100 mb-6 text-lg">
+            Odemkněte všechny Premium funkce a posuňte svou trading psychologii na další úroveň
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              onClick={handleStartTrial}
+              size="lg"
+              className="bg-green-600 hover:bg-green-700"
+              disabled={isLoading}
+            >
+              <Zap className="w-5 h-5 mr-2" />
+              Začít trial zdarma
+            </Button>
+            <Button
+              onClick={handleUpgrade}
+              size="lg"
+              className="bg-white text-blue-600 hover:bg-gray-100"
+              disabled={isLoading}
+            >
+              <Crown className="w-5 h-5 mr-2" />
+              Upgradovat za $59/měsíc
+            </Button>
           </div>
-          <CardHeader>
-            <CardTitle>PRO</CardTitle>
-            <CardDescription>For advanced traders who want to analyze their behavior</CardDescription>
-            <div className="mt-4 text-3xl font-bold">
-              {billingCycle === "monthly" ? "19 €" : "182 €"}
-              <span className="text-sm font-normal text-muted-foreground">
-                {" "}
-                / {billingCycle === "monthly" ? "month" : "year"}
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground">~{billingCycle === "monthly" ? "460 Kč" : "4 400 Kč"}</p>
-          </CardHeader>
-          <CardContent className="flex-grow">
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Everything in BASIC plan</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Behavior pattern analysis</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Notifications / reminders</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Trading behavior reflection</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Custom weights and overviews</span>
-              </li>
-            </ul>
-          </CardContent>
-          <CardFooter>
-            <Button
-              className="w-full"
-              variant={currentPlan === "PRO" ? "secondary" : "default"}
-              disabled={currentPlan === "PRO" || isLoading}
-              onClick={() => handleUpgrade("PRO")}
-            >
-              {isLoading && selectedPlan === "PRO" ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : currentPlan === "PRO" ? (
-                "Current Plan"
-              ) : currentPlan === "PRO_PLUS" ? (
-                "Downgrade"
-              ) : (
-                "Upgrade"
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
-
-        {/* PRO+ Plan */}
-        <Card className={`flex flex-col border-2 ${currentPlan === "PRO_PLUS" ? "border-primary" : ""}`}>
-          <CardHeader>
-            <CardTitle>PRO+</CardTitle>
-            <CardDescription>For professional traders and mentors</CardDescription>
-            <div className="mt-4 text-3xl font-bold">
-              {billingCycle === "monthly" ? "29 €" : "278 €"}
-              <span className="text-sm font-normal text-muted-foreground">
-                {" "}
-                / {billingCycle === "monthly" ? "month" : "year"}
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground">~{billingCycle === "monthly" ? "700 Kč" : "6 700 Kč"}</p>
-          </CardHeader>
-          <CardContent className="flex-grow">
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Everything in PRO plan</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>MetaTrader integration</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Mental AI coach</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Sharing with mentor / coach</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="mr-2 h-4 w-4 text-green-500 mt-0.5" />
-                <span>Personalized stress management strategies</span>
-              </li>
-            </ul>
-          </CardContent>
-          <CardFooter>
-            <Button
-              className="w-full"
-              variant={currentPlan === "PRO_PLUS" ? "secondary" : "default"}
-              disabled={currentPlan === "PRO_PLUS" || isLoading}
-              onClick={() => handleUpgrade("PRO_PLUS")}
-            >
-              {isLoading && selectedPlan === "PRO_PLUS" ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : currentPlan === "PRO_PLUS" ? (
-                "Current Plan"
-              ) : (
-                "Upgrade"
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-
-      <div className="mt-16 text-center">
-        <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
-          All plans include a 14-day money-back guarantee. No questions asked.
-        </p>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

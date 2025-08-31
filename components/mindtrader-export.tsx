@@ -41,8 +41,8 @@ export function MindTraderExport() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Export dat</CardTitle>
-            <CardDescription>Exportujte své údaje v různých formátech</CardDescription>
+            <CardTitle>Export dat MindTrader AI</CardTitle>
+            <CardDescription>Stáhněte si svá data a analýzy pro offline použití.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -50,7 +50,7 @@ export function MindTraderExport() {
               <div className="flex items-center gap-4 mt-2">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    <Button variant="outline" className="w-full justify-start text-left font-normal bg-transparent">
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dateRange?.length === 2 ? (
                         <>
@@ -116,7 +116,7 @@ export function MindTraderExport() {
           <CardFooter>
             <Button onClick={handleExport} className="w-full">
               <Download className="mr-2 h-4 w-4" />
-              Exportovat
+              Exportovat data
             </Button>
           </CardFooter>
         </Card>
@@ -146,7 +146,7 @@ export function MindTraderExport() {
               <div className="flex items-center gap-4 mt-2">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    <Button variant="outline" className="w-full justify-start text-left font-normal bg-transparent">
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dateRange?.length === 2 ? (
                         <>
@@ -168,12 +168,12 @@ export function MindTraderExport() {
               <Label className="text-base">Způsob sdílení</Label>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
-                <Button variant="outline" className="justify-start">
+                <Button variant="outline" className="justify-start bg-transparent">
                   <Mail className="mr-2 h-4 w-4" />
                   Poslat emailem
                 </Button>
 
-                <Button variant="outline" className="justify-start">
+                <Button variant="outline" className="justify-start bg-transparent">
                   <FileText className="mr-2 h-4 w-4" />
                   Generovat odkaz
                 </Button>

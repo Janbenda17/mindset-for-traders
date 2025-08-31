@@ -14,10 +14,17 @@ import {
   Pie,
   Cell,
 } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+
+const patterns = [
+  { name: "Reversal na podpoře", frequency: "Vysoká", impact: "Pozitivní" },
+  { name: "Breakout selhání", frequency: "Střední", impact: "Negativní" },
+  { name: "Trend pokračování (flag)", frequency: "Vysoká", impact: "Pozitivní" },
+  { name: "Dvojitý vrchol", frequency: "Nízká", impact: "Negativní" },
+]
 
 export function TradingPatternsDetector() {
   const [period, setPeriod] = useState("month")
@@ -256,6 +263,28 @@ export function TradingPatternsDetector() {
           <li>High volatility markets correlate with lower emotional scores and performance</li>
         </ul>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Detektor obchodních vzorců</CardTitle>
+          <CardDescription>Identifikujte opakující se vzorce ve vašem obchodování.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {patterns.map((pattern) => (
+              <div key={pattern.name} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{pattern.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Frekvence: {pattern.frequency} | Dopad: {pattern.impact}
+                  </p>
+                </div>
+                <Badge variant={pattern.impact === "Pozitivní" ? "default" : "destructive"}>{pattern.impact}</Badge>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
