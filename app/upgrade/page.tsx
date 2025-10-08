@@ -1,237 +1,216 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
-import { useToast } from "@/hooks/use-toast"
-import { Crown, Check, Zap, Star, Brain, BarChart3, Target, Calendar } from "lucide-react"
+import { Crown, Check, Zap, BarChart3, Brain, FileText, Download, Headphones, ArrowLeft, Gift } from "lucide-react"
+import Link from "next/link"
 
 export default function UpgradePage() {
+  const { upgradeToPremium, isLoading, isPremium } = useSubscription()
   const { user } = useAuth()
-  const { subscribe, upgradeToPremium, startTrial, isPremium, isLoading } = useSubscription()
-  const router = useRouter()
-  const { toast } = useToast()
-
-  const freeFeatures = ["Základní deník tradingu", "Jednoduché analýzy", "Denní afirmace", "Základní MindTrader AI"]
-
-  const premiumFeatures = [
-    "Neomezený deník s pokročilými funkcemi",
-    "Detailní analýzy a reporty",
-    "Personalizované afirmace",
-    "Pokročilý MindTrader AI Pro",
-    "Export dat a reportů",
-    "Prioritní zákaznická podpora",
-    "Pokročilé psychologické metriky",
-    "Osobní cíle a sledování pokroku",
-  ]
+  const [isUpgrading, setIsUpgrading] = useState(false)
 
   const handleUpgrade = async () => {
     if (!user) {
-      toast({
-        title: "Přihlášení nutné",
-        description: "Pro upgrade se musíte nejprve přihlásit.",
-        variant: "destructive",
-      })
-      router.push("/login")
+      window.location.href = "/signup"
       return
     }
 
-    try {
-      const success = await subscribe("premium")
-      if (success) {
-        toast({
-          title: "Upgrade úspěšný!",
-          description: "Vítejte v Premium! Všechny funkce jsou nyní odemčené.",
-        })
-        router.push("/")
-      }
-    } catch (error) {
-      toast({
-        title: "Chyba",
-        description: "Při upgradu došlo k chybě. Zkuste to prosím znovu.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleStartTrial = () => {
-    if (!user) {
-      toast({
-        title: "Přihlášení nutné",
-        description: "Pro trial se musíte nejprve přihlásit.",
-        variant: "destructive",
-      })
-      router.push("/login")
-      return
-    }
-
-    startTrial()
-    toast({
-      title: "Trial aktivován!",
-      description: "Váš 3-denní Premium trial byl úspěšně aktivován.",
-    })
-    router.push("/")
+    setIsUpgrading(true)
+    await upgradeToPremium()
+    setIsUpgrading(false)
   }
 
   if (isPremium) {
     return (
-      <div className="max-w-2xl mx-auto text-center space-y-8">
-        <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto">
-          <Crown className="w-10 h-10 text-white" />
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center mb-8">
+            <Crown className="h-16 w-16 text-yellow-600 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Už máte Premium!</h1>
+            <p className="text-gray-600">Užívejte si všechny premium funkce.</p>
+            <Link href="/" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mt-4">
+              <ArrowLeft className="h-4 w-4" />
+              Zpět na dashboard
+            </Link>
+          </div>
         </div>
-        <h1 className="text-4xl font-bold text-gray-900">Jste Premium člen!</h1>
-        <p className="text-xl text-gray-600">Děkujeme za vaši podporu. Máte přístup ke všem funkcím.</p>
-        <Button asChild size="lg">
-          <a href="/">Zpět na dashboard</a>
-        </Button>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <Crown className="w-8 h-8 text-white" />
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900">Upgrade na Premium</h1>
-        <p className="text-gray-600 mt-2">Odemkněte plný potenciál své trading psychologie</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-        {/* Free Plan */}
-        <Card className="border-gray-200">
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl">Free plán</CardTitle>
-            <CardDescription>Základní funkce zdarma</CardDescription>
-            <div className="text-3xl font-bold text-gray-900 mt-4">$0</div>
-            <p className="text-sm text-gray-600">navždy zdarma</p>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {freeFeatures.map((feature, index) => (
-                <li key={index} className="flex items-center space-x-3">
-                  <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="text-gray-700">{feature}</span>
-                </li>
-              ))}
-            </ul>
-            <Button variant="outline" className="w-full mt-6 bg-transparent" disabled>
-              Aktuální plán
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Premium Plan */}
-        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 relative">
-          <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1">
-            <Star className="w-3 h-3 mr-1" />
-            Nejpopulárnější
-          </Badge>
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl text-blue-800">Premium plán</CardTitle>
-            <CardDescription className="text-blue-700">Všechny funkce a pokročilé analýzy</CardDescription>
-            <div className="text-3xl font-bold text-blue-900 mt-4">$59</div>
-            <p className="text-sm text-blue-600">za měsíc</p>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {premiumFeatures.map((feature, index) => (
-                <li key={index} className="flex items-center space-x-3">
-                  <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                  <span className="text-blue-800">{feature}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="space-y-3 mt-6">
-              <Button
-                onClick={handleStartTrial}
-                className="w-full bg-green-600 hover:bg-green-700"
-                disabled={isLoading}
-              >
-                <Zap className="w-4 h-4 mr-2" />
-                {isLoading ? "Načítání..." : "Začít 3-denní trial zdarma"}
-              </Button>
-              <Button onClick={handleUpgrade} variant="outline" className="w-full bg-transparent" disabled={isLoading}>
-                <Crown className="w-4 h-4 mr-2" />
-                {isLoading ? "Načítání..." : "Upgradovat za $59/měsíc"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Feature Comparison */}
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">Porovnání funkcí</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="text-center">
-            <CardContent className="p-6">
-              <Brain className="w-8 h-8 text-purple-600 mx-auto mb-4" />
-              <h3 className="font-semibold text-gray-900 mb-2">AI Asistent</h3>
-              <p className="text-sm text-gray-600">Pokročilé AI analýzy a personalizované rady</p>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center">
-            <CardContent className="p-6">
-              <BarChart3 className="w-8 h-8 text-green-600 mx-auto mb-4" />
-              <h3 className="font-semibold text-gray-900 mb-2">Detailní analýzy</h3>
-              <p className="text-sm text-gray-600">Pokročilé reporty a psychologické metriky</p>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center">
-            <CardContent className="p-6">
-              <Target className="w-8 h-8 text-blue-600 mx-auto mb-4" />
-              <h3 className="font-semibold text-gray-900 mb-2">Osobní cíle</h3>
-              <p className="text-sm text-gray-600">Nastavte a sledujte své trading cíle</p>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center">
-            <CardContent className="p-6">
-              <Calendar className="w-8 h-8 text-orange-600 mx-auto mb-4" />
-              <h3 className="font-semibold text-gray-900 mb-2">Export dat</h3>
-              <p className="text-sm text-gray-600">Exportujte své data a reporty</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white max-w-4xl mx-auto">
-        <CardContent className="p-8 text-center">
-          <Crown className="w-12 h-12 text-white mx-auto mb-4" />
-          <h3 className="text-2xl font-bold mb-4">Připraveni na upgrade?</h3>
-          <p className="text-blue-100 mb-6 text-lg">
-            Odemkněte všechny Premium funkce a posuňte svou trading psychologii na další úroveň
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              onClick={handleStartTrial}
-              size="lg"
-              className="bg-green-600 hover:bg-green-700"
-              disabled={isLoading}
-            >
-              <Zap className="w-5 h-5 mr-2" />
-              Začít trial zdarma
-            </Button>
-            <Button
-              onClick={handleUpgrade}
-              size="lg"
-              className="bg-white text-blue-600 hover:bg-gray-100"
-              disabled={isLoading}
-            >
-              <Crown className="w-5 h-5 mr-2" />
-              Upgradovat za $59/měsíc
-            </Button>
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Welcome message for new users */}
+        {user && (
+          <div className="mb-8 p-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-center">
+            <Gift className="h-12 w-12 mx-auto mb-3" />
+            <h2 className="text-2xl font-bold mb-2">Vítejte, {user.name}! 🎉</h2>
+            <p className="text-lg">Váš účet je připraven. Nyní spusťte 7-denní Premium trial zdarma!</p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {user ? "Spusťte Premium Trial" : "Upgradujte na Premium"}
+          </h1>
+          <p className="text-xl text-gray-600 mb-8">Odemkněte pokročilé funkce pro profesionální trading</p>
+
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-6 mb-8">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Zap className="h-6 w-6" />
+              <span className="text-2xl font-bold">Speciální nabídka!</span>
+            </div>
+            <p className="text-lg">7 dní zdarma, poté €59/měsíc</p>
+            <p className="text-sm opacity-90 mt-1">Zrušte kdykoli během trialu bez poplatků</p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          {/* Free Plan */}
+          <Card className="relative">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Free
+              </CardTitle>
+              <div className="text-3xl font-bold">€0</div>
+              <p className="text-gray-600">Základní funkce</p>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  Základní obchodní deník
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  Jednoduché analýzy
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  Mood tracking
+                </li>
+                <li className="flex items-center gap-2 text-gray-400">
+                  <span className="h-4 w-4 rounded-full border-2 border-gray-300"></span>
+                  Omezeno na 10 záznamů/měsíc
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Premium Plan */}
+          <Card className="relative border-2 border-yellow-500 shadow-lg">
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+              <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-1">
+                Nejpopulárnější
+              </Badge>
+            </div>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-yellow-600" />
+                Premium
+              </CardTitle>
+              <div className="text-3xl font-bold">
+                €59<span className="text-lg text-gray-600">/měsíc</span>
+              </div>
+              <p className="text-gray-600">Všechny pokročilé funkce</p>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <span className="font-medium">Neomezený obchodní deník</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <BarChart3 className="h-4 w-4 text-blue-600" />
+                  Pokročilé analýzy a reporty
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <Brain className="h-4 w-4 text-purple-600" />
+                  MindTrader AI Pro
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <Download className="h-4 w-4 text-green-600" />
+                  Export dat a reportů
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <Headphones className="h-4 w-4 text-orange-600" />
+                  Prioritní zákaznická podpora
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  Pokročilé psychologické metriky
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  Risk management nástroje
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  Trading pattern detection
+                </li>
+              </ul>
+
+              {user ? (
+                <Button
+                  onClick={handleUpgrade}
+                  disabled={isLoading || isUpgrading}
+                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-3"
+                >
+                  {isLoading || isUpgrading ? "Zpracovávám..." : "Začít 7-denní trial zdarma"}
+                </Button>
+              ) : (
+                <Button
+                  asChild
+                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-3"
+                >
+                  <Link href="/signup">Registrovat se a začít trial</Link>
+                </Button>
+              )}
+
+              <p className="text-xs text-gray-500 text-center mt-3">Po 7 dnech €59/měsíc. Zrušte kdykoli.</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Proč Premium?</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <BarChart3 className="h-12 w-12 text-blue-600 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">Pokročilé analýzy</h3>
+              <p className="text-sm text-gray-600">Detailní reporty a insights pro lepší trading rozhodnutí</p>
+            </div>
+            <div className="text-center">
+              <Brain className="h-12 w-12 text-purple-600 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">AI asistent</h3>
+              <p className="text-sm text-gray-600">Personalizované doporučení a psychologická podpora</p>
+            </div>
+            <div className="text-center">
+              <Crown className="h-12 w-12 text-yellow-600 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">Profesionální nástroje</h3>
+              <p className="text-sm text-gray-600">Vše co potřebujete pro úspěšný trading</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 text-center">
+          <Link href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800">
+            <ArrowLeft className="h-4 w-4" />
+            Zpět na dashboard
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

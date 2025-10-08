@@ -9,12 +9,13 @@ interface User {
   email: string
   name: string
   isOwner?: boolean
+  stripeCustomerId?: string
 }
 
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
-  register: (email: string, password: string, name: string) => Promise<boolean>
+  register: (data: { email: string; password: string; name: string }) => Promise<boolean>
   logout: () => void
   isLoading: boolean
 }
@@ -88,18 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: foundUser.email,
           name: foundUser.name,
           isOwner: false,
+          stripeCustomerId: foundUser.stripeCustomerId,
         }
 
         setUser(userData)
         localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
-
-        // Set premium subscription automatically for regular users
-        const subscriptionData = {
-          plan: "premium",
-          startDate: new Date().toISOString(),
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-        }
-        localStorage.setItem("trader-mindset-subscription", JSON.stringify(subscriptionData))
 
         toast({
           title: "Přihlášení úspěšné",
@@ -127,8 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const register = async (email: string, password: string, name: string): Promise<boolean> => {
+  const register = async (data: { email: string; password: string; name: string }): Promise<boolean> => {
     try {
+      const { email, password, name } = data
+
       // Prevent registration with owner email
       if (email === OWNER_EMAIL) {
         toast({
@@ -152,12 +148,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
+      // Create Stripe customer
+      const stripeResponse = await fetch("/api/stripe/create-customer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name }),
+      })
+
+      if (!stripeResponse.ok) {
+        toast({
+          title: "Chyba registrace",
+          description: "Nepodařilo se vytvořit účet. Zkuste to znovu.",
+          variant: "destructive",
+        })
+        return false
+      }
+
+      const { customerId } = await stripeResponse.json()
+
       // Create new user
       const newUser = {
         id: Date.now().toString(),
         email,
         password,
         name,
+        stripeCustomerId: customerId,
       }
 
       // Save to registered users
@@ -170,25 +185,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: newUser.email,
         name: newUser.name,
         isOwner: false,
+        stripeCustomerId: customerId,
       }
 
       setUser(userData)
       localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
-
-      // Set premium subscription automatically
-      const subscriptionData = {
-        plan: "premium",
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-      }
-      localStorage.setItem("trader-mindset-subscription", JSON.stringify(subscriptionData))
+      localStorage.setItem("stripe-customer-id", customerId)
 
       toast({
         title: "Registrace úspěšná",
-        description: "Váš účet byl vytvořen a máte 30 dní Premium zdarma!",
+        description: "Váš účet byl vytvořen! Nyní můžete spustit 7-denní trial.",
       })
 
-      router.push("/")
+      // Redirect to upgrade page to start trial
+      router.push("/upgrade")
       return true
     } catch (error) {
       console.error("Registration error:", error)
@@ -205,6 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     localStorage.removeItem("trader-mindset-user")
     localStorage.removeItem("trader-mindset-subscription")
+    localStorage.removeItem("stripe-customer-id")
     toast({
       title: "Odhlášení úspěšné",
       description: "Nashledanou!",

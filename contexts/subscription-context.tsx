@@ -8,8 +8,17 @@ interface SubscriptionContextType {
   plan: "free" | "premium"
   daysRemaining: number
   isActive: boolean
-  upgradeToPremium: () => void
-  cancelSubscription: () => void
+  isPremium: boolean
+  isLoading: boolean
+  trialEndsAt: string | null
+  subscriptionId: string | null
+  customerId: string | null
+  subscribe: (plan: "free" | "premium") => Promise<boolean>
+  startTrial: () => Promise<boolean>
+  upgradeToPremium: () => Promise<boolean>
+  cancelSubscription: () => Promise<boolean>
+  openBillingPortal: () => Promise<void>
+  checkSubscriptionStatus: () => Promise<void>
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
@@ -18,69 +27,168 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [plan, setPlan] = useState<"free" | "premium">("free")
   const [daysRemaining, setDaysRemaining] = useState(0)
   const [isActive, setIsActive] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
+  const [subscriptionId, setSubscriptionId] = useState<string | null>(null)
+  const [customerId, setCustomerId] = useState<string | null>(null)
+
+  const isPremium = plan === "premium" && isActive
 
   useEffect(() => {
-    // Check subscription status on mount
-    const subscription = localStorage.getItem("trader-mindset-subscription")
-    if (subscription) {
-      try {
-        const parsed = JSON.parse(subscription)
-        setPlan(parsed.plan)
+    checkSubscriptionStatus()
+  }, [])
 
-        if (parsed.plan === "premium" && parsed.endDate) {
-          const endDate = new Date(parsed.endDate)
+  const checkSubscriptionStatus = async () => {
+    try {
+      // V reálné aplikaci byste získali customer ID z databáze
+      const storedCustomerId = localStorage.getItem("stripe-customer-id")
+
+      const response = await fetch("/api/subscription/status", {
+        headers: {
+          "x-customer-id": storedCustomerId || "",
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setPlan(data.plan)
+        setIsActive(data.isActive)
+        setTrialEndsAt(data.trialEndsAt)
+        setSubscriptionId(data.subscriptionId)
+        setCustomerId(data.customerId)
+
+        if (data.trialEndsAt) {
+          const endDate = new Date(data.trialEndsAt)
           const now = new Date()
           const diffTime = endDate.getTime() - now.getTime()
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-          if (diffDays > 0) {
-            setDaysRemaining(diffDays)
-            setIsActive(true)
-          } else {
-            // Subscription expired
-            setPlan("free")
-            setDaysRemaining(0)
-            setIsActive(false)
-            localStorage.removeItem("trader-mindset-subscription")
-          }
+          setDaysRemaining(Math.max(0, diffDays))
         }
-      } catch (error) {
-        console.error("Error parsing subscription data:", error)
       }
+    } catch (error) {
+      console.error("Error checking subscription status:", error)
     }
-  }, [])
-
-  const upgradeToPremium = () => {
-    const endDate = new Date()
-    endDate.setDate(endDate.getDate() + 7) // 7 days free trial
-
-    const subscription = {
-      plan: "premium",
-      startDate: new Date().toISOString(),
-      endDate: endDate.toISOString(),
-    }
-
-    localStorage.setItem("trader-mindset-subscription", JSON.stringify(subscription))
-    setPlan("premium")
-    setDaysRemaining(7)
-    setIsActive(true)
-
-    toast({
-      title: "Premium aktivován!",
-      description: "Premium přístup na 7 dní zdarma!",
-    })
   }
 
-  const cancelSubscription = () => {
-    localStorage.removeItem("trader-mindset-subscription")
-    setPlan("free")
-    setDaysRemaining(0)
-    setIsActive(false)
+  const subscribe = async (planType: "free" | "premium"): Promise<boolean> => {
+    if (planType === "free") return true
 
-    toast({
-      title: "Předplatné zrušeno",
-      description: "Vaše předplatné bylo úspěšně zrušeno.",
-    })
+    setIsLoading(true)
+    try {
+      const response = await fetch("/api/subscription/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: planType }),
+      })
+
+      const data = await response.json()
+
+      if (data.url) {
+        window.location.href = data.url
+        return true
+      }
+
+      return false
+    } catch (error) {
+      console.error("Subscription error:", error)
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se vytvořit platbu. Zkuste to znovu.",
+        variant: "destructive",
+      })
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const startTrial = async (): Promise<boolean> => {
+    setIsLoading(true)
+    try {
+      const response = await fetch("/api/subscription/start-trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setPlan("premium")
+        setIsActive(true)
+        setTrialEndsAt(data.trialEndsAt)
+        setDaysRemaining(7)
+
+        toast({
+          title: "Trial aktivován!",
+          description: "Váš 7-denní Premium trial byl úspěšně aktivován.",
+        })
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error("Trial start error:", error)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const upgradeToPremium = async (): Promise<boolean> => {
+    return subscribe("premium")
+  }
+
+  const cancelSubscription = async (): Promise<boolean> => {
+    if (!subscriptionId) return false
+
+    setIsLoading(true)
+    try {
+      const response = await fetch("/api/subscription/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscriptionId }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Předplatné zrušeno",
+          description: "Vaše předplatné bude zrušeno na konci aktuálního období.",
+        })
+        await checkSubscriptionStatus()
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error("Cancel subscription error:", error)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const openBillingPortal = async () => {
+    if (!customerId) return
+
+    setIsLoading(true)
+    try {
+      const response = await fetch("/api/subscription/billing-portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId }),
+      })
+
+      const data = await response.json()
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (error) {
+      console.error("Billing portal error:", error)
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se otevřít správu plateb.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -89,8 +197,17 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         plan,
         daysRemaining,
         isActive,
+        isPremium,
+        isLoading,
+        trialEndsAt,
+        subscriptionId,
+        customerId,
+        subscribe,
+        startTrial,
         upgradeToPremium,
         cancelSubscription,
+        openBillingPortal,
+        checkSubscriptionStatus,
       }}
     >
       {children}

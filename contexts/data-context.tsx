@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { toast } from "@/hooks/use-toast"
+import { useAuth } from "@/contexts/auth-context"
 
 // Demo trades data for virtual mode
 const DEMO_TRADES = [
@@ -174,6 +175,48 @@ const DEMO_JOURNAL_ENTRIES = [
   },
 ]
 
+// Demo stats for virtual mode
+const DEMO_STATS = {
+  totalPnL: 1630,
+  totalTrades: 7,
+  winningTrades: 5,
+  losingTrades: 2,
+  winRate: 71.4,
+  averageWin: 434,
+  averageLoss: -280,
+  profitFactor: 1.55,
+  maxDrawdown: -320,
+  averageMood: 7.4,
+  bestDay: 840,
+  worstDay: -320,
+  consecutiveWins: 3,
+  consecutiveLosses: 1,
+  riskRewardRatio: 1.8,
+  sharpeRatio: 1.2,
+}
+
+// Function to generate random trading stats for virtual mode
+const generateRandomTradingStats = () => {
+  return {
+    totalPnL: Math.floor(Math.random() * 20000) - 5000, // Random P&L between -5000 and 15000
+    totalTrades: Math.floor(Math.random() * 200), // Random number of trades up to 200
+    winningTrades: Math.floor(Math.random() * 150), // Random number of winning trades up to 150
+    losingTrades: Math.floor(Math.random() * 50), // Random number of losing trades up to 50
+    winRate: Math.floor(Math.random() * 100), // Random win rate
+    averageWin: Math.floor(Math.random() * 1000), // Random average win
+    averageLoss: -Math.floor(Math.random() * 500), // Random average loss
+    profitFactor: Math.random() * 3, // Random profit factor
+    maxDrawdown: -Math.floor(Math.random() * 1000), // Random max drawdown
+    averageMood: Math.floor(Math.random() * 10), // Random average mood
+    bestDay: Math.floor(Math.random() * 2000), // Random best day
+    worstDay: -Math.floor(Math.random() * 1000), // Random worst day
+    consecutiveWins: Math.floor(Math.random() * 10), // Random consecutive wins
+    consecutiveLosses: Math.floor(Math.random() * 5), // Random consecutive losses
+    riskRewardRatio: Math.random() * 5, // Random risk reward ratio
+    sharpeRatio: Math.random() * 2, // Random sharpe ratio
+  }
+}
+
 interface DataContextType {
   isLiveMode: boolean
   hasEverSwitchedToLive: boolean
@@ -183,7 +226,11 @@ interface DataContextType {
   switchToVirtual: () => void
   getAllTrades: () => any[]
   getAllJournalEntries: () => any[]
+  getTradingStats: () => any
   clearAllData: () => void
+  resetAllScores: () => void
+  isOwner: boolean
+  canSwitchModes: boolean
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -192,6 +239,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [isLiveMode, setIsLiveMode] = useState(false)
   const [hasEverSwitchedToLive, setHasEverSwitchedToLive] = useState(false)
   const [showLiveWarning, setShowLiveWarning] = useState(false)
+  const { user } = useAuth()
+
+  // Check if current user is owner or can switch modes
+  const isOwner = user?.email === "owner@tradermindset.com"
+  const canSwitchModes = user?.email === "honza.newage@gmail.com" || isOwner
 
   useEffect(() => {
     // Check if we're in live mode on mount
@@ -242,6 +294,80 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const getTradingStats = () => {
+    if (isLiveMode) {
+      // Calculate stats from user's real data only
+      const userTrades = getAllTrades()
+      if (userTrades.length === 0) {
+        return {
+          totalPnL: 0,
+          totalTrades: 0,
+          winningTrades: 0,
+          losingTrades: 0,
+          winRate: 0,
+          averageWin: 0,
+          averageLoss: 0,
+          profitFactor: 0,
+          maxDrawdown: 0,
+          averageMood: 0,
+          bestDay: 0,
+          worstDay: 0,
+          consecutiveWins: 0,
+          consecutiveLosses: 0,
+          riskRewardRatio: 0,
+          sharpeRatio: 0,
+        }
+      }
+
+      // Calculate real stats from user trades
+      const totalPnL = userTrades.reduce((sum: number, trade: any) => sum + (trade.pnl || 0), 0)
+      const totalTrades = userTrades.length
+      const winningTrades = userTrades.filter((trade: any) => (trade.pnl || 0) > 0).length
+      const losingTrades = userTrades.filter((trade: any) => (trade.pnl || 0) < 0).length
+      const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0
+
+      const wins = userTrades.filter((trade: any) => (trade.pnl || 0) > 0).map((trade: any) => trade.pnl || 0)
+      const losses = userTrades.filter((trade: any) => (trade.pnl || 0) < 0).map((trade: any) => trade.pnl || 0)
+
+      const averageWin = wins.length > 0 ? wins.reduce((sum: number, win: number) => sum + win, 0) / wins.length : 0
+      const averageLoss =
+        losses.length > 0 ? losses.reduce((sum: number, loss: number) => sum + loss, 0) / losses.length : 0
+
+      const profitFactor = averageLoss !== 0 ? Math.abs(averageWin / averageLoss) : 0
+      const maxDrawdown = Math.min(...userTrades.map((trade: any) => trade.pnl || 0), 0)
+
+      const averageMood =
+        userTrades.length > 0
+          ? userTrades.reduce((sum: number, trade: any) => sum + (trade.mood || 0), 0) / userTrades.length
+          : 0
+
+      const bestDay = Math.max(...userTrades.map((trade: any) => trade.pnl || 0), 0)
+      const worstDay = Math.min(...userTrades.map((trade: any) => trade.pnl || 0), 0)
+
+      return {
+        totalPnL,
+        totalTrades,
+        winningTrades,
+        losingTrades,
+        winRate,
+        averageWin,
+        averageLoss,
+        profitFactor,
+        maxDrawdown,
+        averageMood,
+        bestDay,
+        worstDay,
+        consecutiveWins: 0, // Would need more complex calculation
+        consecutiveLosses: 0, // Would need more complex calculation
+        riskRewardRatio: profitFactor,
+        sharpeRatio: 0, // Would need more complex calculation
+      }
+    } else {
+      // Return demo stats in virtual mode
+      return generateRandomTradingStats()
+    }
+  }
+
   const clearAllData = () => {
     // Clear all user data (but keep demo data available for virtual mode)
     localStorage.removeItem("user-trades")
@@ -253,6 +379,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   const switchToLive = () => {
+    if (!canSwitchModes) {
+      toast({
+        title: "Přístup odepřen",
+        description: "Nemáte oprávnění přepínat mezi režimy.",
+        variant: "destructive",
+        duration: 5000,
+      })
+      return
+    }
+
     localStorage.setItem("trader-mindset-live-mode", "true")
     localStorage.setItem("trader-mindset-ever-switched-live", "true")
     setIsLiveMode(true)
@@ -275,12 +411,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   const switchToVirtual = () => {
+    if (!canSwitchModes) {
+      toast({
+        title: "Přístup odepřen",
+        description: "Nemáte oprávnění přepínat mezi režimy.",
+        variant: "destructive",
+        duration: 5000,
+      })
+      return
+    }
+
     localStorage.setItem("trader-mindset-live-mode", "false")
     setIsLiveMode(false)
 
     toast({
       title: "Přepnuto na Virtual režim",
-      description: "Nyní pracujete s demo daty pro testování funkcí.",
+      description: "Nyní pracujete s demo daty pro testování funkcí. Vaše reálná data zůstávají zachována.",
       duration: 5000,
     })
 
@@ -301,7 +447,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         switchToVirtual,
         getAllTrades,
         getAllJournalEntries,
+        getTradingStats,
         clearAllData,
+        isOwner,
+        canSwitchModes,
       }}
     >
       {children}

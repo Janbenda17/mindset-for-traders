@@ -143,6 +143,31 @@ export interface MindTraderNotificationSettings {
   strategyRecommendations: boolean
 }
 
+export interface ProfileSettings {
+  nickname?: string
+  bio?: string
+  mentor?: string
+  experienceLevel?: "beginner" | "intermediate" | "pro"
+  updatedAt?: string
+}
+
+export interface TradingSettings {
+  style?: "scalper" | "day-trader" | "swing-trader"
+  riskLevel?: "conservative" | "moderate" | "aggressive"
+  timezone?: string
+  updatedAt?: string
+}
+
+export interface NotificationSettings {
+  email?: boolean
+  push?: boolean
+  weeklyReport?: boolean
+  tradingAlerts?: boolean
+  dailyReminder?: boolean
+  psychologyInsights?: boolean
+  updatedAt?: string
+}
+
 export interface UserData {
   user: User | null
   registeredUsers: RegisteredUser[]
@@ -153,6 +178,11 @@ export interface UserData {
   subscription: Subscription | null
   mindTraderHistory: MindTraderDailyAssessment[]
   mindTraderNotifications: MindTraderNotificationSettings
+  profile?: ProfileSettings
+  settings?: {
+    trading?: TradingSettings
+    notifications?: NotificationSettings
+  }
 }
 
 const STORAGE_KEY = "trader-mindset-data"
@@ -403,9 +433,9 @@ function getSampleMoodEntries(): MoodEntry[] {
     entries.push({
       id: `mood-sample-${i}`,
       date: date.toISOString().split("T")[0],
-      mood: Math.floor(Math.random() * 4) + 6, // 6-9 for good demo data
+      mood: Math.floor(Math.random() * 4) + 6,
       confidence: Math.floor(Math.random() * 4) + 6,
-      stress: Math.floor(Math.random() * 4) + 2, // 2-5 for reasonable stress
+      stress: Math.floor(Math.random() * 4) + 2,
       notes:
         i === 0
           ? "Dobrý den, ziskový obchod"
@@ -526,6 +556,24 @@ function getDefaultUserData(): UserData {
     subscription: { plan: "free" },
     mindTraderHistory: [],
     mindTraderNotifications: { dailyAssessment: true, strategyRecommendations: true },
+    profile: {
+      experienceLevel: "intermediate",
+    },
+    settings: {
+      trading: {
+        style: "day-trader",
+        riskLevel: "moderate",
+        timezone: "Europe/Prague",
+      },
+      notifications: {
+        email: true,
+        push: true,
+        weeklyReport: true,
+        tradingAlerts: true,
+        dailyReminder: false,
+        psychologyInsights: true,
+      },
+    },
   }
 }
 
@@ -548,7 +596,6 @@ export function getUserData(): UserData {
     if (!data) {
       const defaultData = getDefaultUserData()
 
-      // Add sample data only if NOT in live mode
       if (!liveMode) {
         defaultData.journalEntries = getSampleJournalEntries()
         defaultData.moodEntries = getSampleMoodEntries()
@@ -562,7 +609,6 @@ export function getUserData(): UserData {
     const parsedData: Partial<UserData> = JSON.parse(data)
     const fullData = { ...getDefaultUserData(), ...parsedData }
 
-    // If in virtual mode and no data exists, add sample data
     if (!liveMode) {
       if (!fullData.journalEntries || fullData.journalEntries.length === 0) {
         fullData.journalEntries = getSampleJournalEntries()
@@ -574,7 +620,6 @@ export function getUserData(): UserData {
         fullData.tradingData = getSampleTradingData()
       }
     } else {
-      // In live mode, ensure we don't have sample data
       if (fullData.journalEntries && fullData.journalEntries.some((entry) => entry.id.startsWith("sample-"))) {
         fullData.journalEntries = fullData.journalEntries.filter((entry) => !entry.id.startsWith("sample-"))
       }
@@ -589,7 +634,6 @@ export function getUserData(): UserData {
     localStorage.removeItem(STORAGE_KEY)
     const defaultData = getDefaultUserData()
 
-    // Add sample data only if NOT in live mode
     if (!isLiveMode()) {
       defaultData.journalEntries = getSampleJournalEntries()
       defaultData.moodEntries = getSampleMoodEntries()
@@ -608,7 +652,6 @@ export function setUserData(data: UserData): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 
-    // Dispatch custom event for components to listen to
     window.dispatchEvent(
       new CustomEvent("storage-updated", {
         detail: { key: STORAGE_KEY },
@@ -630,13 +673,11 @@ export function clearUserData(): void {
   localStorage.removeItem(STORAGE_KEY)
 }
 
-// Clear all data when switching to live mode
 export function clearAllDemoData(): void {
   if (typeof window === "undefined") {
     return
   }
 
-  // Clear all demo data storage keys
   const keysToRemove = [
     STORAGE_KEY,
     "trader-mindset-dashboard-stats",
@@ -651,29 +692,26 @@ export function clearAllDemoData(): void {
     "trader-mindset-mindtrader-history",
     "trader-mindset-custom-affirmations",
     "trader-mindset-team-club-data",
+    "daily-tracker-entries",
   ]
 
   keysToRemove.forEach((key) => {
     localStorage.removeItem(key)
   })
 
-  // Initialize empty data for live mode
   const emptyData = getDefaultUserData()
   setUserData(emptyData)
 }
 
-// Journal entries
 export const getJournalEntries = (): JournalEntry[] => {
   if (typeof window === "undefined") return []
 
   const liveMode = isLiveMode()
 
   if (liveMode) {
-    // Live mode - get real user data
     const userData = getUserData()
     return userData.journalEntries || []
   } else {
-    // Virtual mode - return demo data
     return getSampleJournalEntries()
   }
 }
@@ -681,7 +719,6 @@ export const getJournalEntries = (): JournalEntry[] => {
 export const saveJournalEntry = (entry: any): void => {
   if (typeof window === "undefined") return
 
-  // Generate ID if not provided
   if (!entry.id) {
     entry.id = Date.now().toString() + Math.random().toString(36).substr(2, 9)
   }
@@ -689,7 +726,6 @@ export const saveJournalEntry = (entry: any): void => {
   const liveMode = isLiveMode()
 
   if (liveMode) {
-    // Only save in live mode
     const userData = getUserData()
     const entries = userData.journalEntries || []
     const existingIndex = entries.findIndex((e) => e.id === entry.id)
@@ -703,7 +739,6 @@ export const saveJournalEntry = (entry: any): void => {
     userData.journalEntries = entries
     setUserData(userData)
   }
-  // In virtual mode, don't save - just use demo data
 }
 
 export const deleteJournalEntry = (id: string): void => {
@@ -712,15 +747,12 @@ export const deleteJournalEntry = (id: string): void => {
   const liveMode = isLiveMode()
 
   if (liveMode) {
-    // Only delete in live mode
     const userData = getUserData()
     userData.journalEntries = (userData.journalEntries || []).filter((entry) => entry.id !== id)
     setUserData(userData)
   }
-  // In virtual mode, don't delete demo data
 }
 
-// Mood entries
 export const getMoodEntries = (): MoodEntry[] => {
   if (typeof window === "undefined") return []
 
@@ -730,7 +762,6 @@ export const getMoodEntries = (): MoodEntry[] => {
     const userData = getUserData()
     return userData.moodEntries || []
   } else {
-    // Virtual mode - return demo data
     return getSampleMoodEntries()
   }
 }
@@ -756,7 +787,6 @@ export const saveMoodEntry = (entry: MoodEntry): void => {
   }
 }
 
-// Trading data
 export const getTradingData = (): TradingEntry[] => {
   if (typeof window === "undefined") return []
 
@@ -766,7 +796,6 @@ export const getTradingData = (): TradingEntry[] => {
     const userData = getUserData()
     return userData.tradingData || []
   } else {
-    // Virtual mode - return demo data
     return getSampleTradingData()
   }
 }
@@ -820,7 +849,6 @@ export const calculateTradingStats = (): TradingData => {
   return stats
 }
 
-// Analytics data
 export function getAnalyticsData() {
   if (typeof window === "undefined") return null
 
@@ -838,7 +866,6 @@ export function setAnalyticsData(data: any) {
   }
 }
 
-// Dashboard stats
 export function getDashboardStats() {
   if (typeof window === "undefined") return null
 
@@ -856,7 +883,6 @@ export function setDashboardStats(stats: any) {
   }
 }
 
-// MindTrader history
 export function getMindTraderHistory() {
   if (typeof window === "undefined") return []
 
@@ -878,7 +904,6 @@ export function addMindTraderEntry(entry: any) {
   return newEntry
 }
 
-// Team Club data
 export function getTeamClubData() {
   if (typeof window === "undefined") return null
 
@@ -896,7 +921,6 @@ export function setTeamClubData(data: any) {
   }
 }
 
-// Export/Import functions
 export function exportUserData() {
   const userData = getUserData()
   const analyticsData = getAnalyticsData()
@@ -929,12 +953,10 @@ export function importUserData(importData: any) {
   }
 }
 
-// Backup functions
 export function createBackup() {
   const backup = exportUserData()
   const backupString = safeJSONStringify(backup)
 
-  // Create and download backup file
   const blob = new Blob([backupString], { type: "application/json" })
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
@@ -964,7 +986,6 @@ export function restoreBackup(file: File): Promise<boolean> {
   })
 }
 
-// Get today's date string for date utilities
 export function getTodayDateString(): string {
   return new Date().toISOString().split("T")[0]
 }

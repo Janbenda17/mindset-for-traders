@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, EyeOff, Mail, User, Lock, CheckCircle, Gift } from "lucide-react"
+import { Eye, EyeOff, Mail, User, Lock, CheckCircle, Gift, Crown } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
@@ -78,9 +77,7 @@ export function SignupForm() {
         password: formData.password,
       })
 
-      if (success) {
-        router.push("/")
-      } else {
+      if (!success) {
         setErrors({ general: "Registrace se nezdařila. Zkuste to prosím znovu." })
       }
     } catch (error) {
@@ -106,7 +103,7 @@ export function SignupForm() {
             <Gift className="w-5 h-5" />
             <span className="font-semibold">7 dní Premium zdarma!</span>
           </div>
-          <p className="text-sm text-green-100">Získejte přístup ke všem funkcím včetně MindTrader AI</p>
+          <p className="text-sm text-green-100">Po registraci spusťte trial a získejte přístup ke všem funkcím</p>
         </div>
 
         <Card className="shadow-xl border-0">
@@ -279,9 +276,25 @@ export function SignupForm() {
               </p>
             </div>
 
-            {/* Features Preview */}
+            {/* What happens next */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-xs text-gray-500 text-center mb-3">Co získáte zdarma:</p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium text-blue-900">Co bude dál?</span>
+                </div>
+                <ol className="text-sm text-blue-800 space-y-1">
+                  <li>1. Vytvoříme váš účet</li>
+                  <li>2. Přesměrujeme vás na Premium trial</li>
+                  <li>3. Spustíte 7 dní zdarma</li>
+                  <li>4. Po trialu €59/měsíc (zrušitelné kdykoli)</li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Features Preview */}
+            <div className="mt-4">
+              <p className="text-xs text-gray-500 text-center mb-3">Co získáte:</p>
               <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
                 <div className="flex items-center gap-1">
                   <CheckCircle className="w-3 h-3 text-green-500" />

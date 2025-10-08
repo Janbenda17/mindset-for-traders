@@ -6,15 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
-import { Progress } from "@/components/ui/progress"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   TrendingUp,
@@ -25,8 +16,6 @@ import {
   BarChart3,
   Brain,
   Target,
-  AlertTriangle,
-  CheckCircle,
   Edit,
   Trash2,
   Filter,
@@ -35,7 +24,6 @@ import {
   ChevronUp,
   BookOpen,
   Activity,
-  Zap,
 } from "lucide-react"
 import { getJournalEntries, deleteJournalEntry, type JournalEntry } from "@/utils/storage-utils"
 import { formatDate, getRelativeDate, isSameDay } from "@/utils/date-utils"
@@ -46,7 +34,7 @@ interface JournalEntriesProps {
   showFilters?: boolean
 }
 
-export default function JournalEntries({ selectedDate, limit, showFilters = true }: JournalEntriesProps) {
+export function JournalEntries({ selectedDate, limit, showFilters = true }: JournalEntriesProps) {
   const [entries, setEntries] = useState<JournalEntry[]>([])
   const [filteredEntries, setFilteredEntries] = useState<JournalEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -84,17 +72,14 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
   const applyFilters = () => {
     let filtered = [...entries]
 
-    // Filter by selected date
     if (selectedDate) {
       filtered = filtered.filter((entry) => isSameDay(entry.date, selectedDate))
     }
 
-    // Filter by type
     if (filters.type !== "all") {
       filtered = filtered.filter((entry) => entry.type === filters.type)
     }
 
-    // Filter by search
     if (filters.search) {
       const searchLower = filters.search.toLowerCase()
       filtered = filtered.filter(
@@ -106,7 +91,6 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
       )
     }
 
-    // Filter by date range
     if (filters.dateRange !== "all") {
       const now = new Date()
       const cutoffDate = new Date()
@@ -129,7 +113,6 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
       filtered = filtered.filter((entry) => new Date(entry.date) >= cutoffDate)
     }
 
-    // Filter by profitability
     if (filters.profitability !== "all") {
       filtered = filtered.filter((entry) => {
         if (!entry.profitLoss && entry.profitLoss !== 0) return filters.profitability === "neutral"
@@ -139,7 +122,6 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
       })
     }
 
-    // Apply limit
     if (limit) {
       filtered = filtered.slice(0, limit)
     }
@@ -193,13 +175,13 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
   const getEntryTypeColor = (type: string) => {
     switch (type) {
       case "trade":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+        return "bg-blue-50 text-blue-800 border-blue-200"
       case "journal":
-        return "bg-green-100 text-green-800 border-green-200"
+        return "bg-gray-50 text-gray-800 border-gray-200"
       case "behavior":
-        return "bg-purple-100 text-purple-800 border-purple-200"
+        return "bg-blue-50 text-blue-700 border-blue-200"
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return "bg-gray-50 text-gray-800 border-gray-200"
     }
   }
 
@@ -210,10 +192,10 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
 
   const getMoodColor = (mood: number | undefined) => {
     if (!mood) return "bg-gray-200"
-    if (mood >= 8) return "bg-green-500"
-    if (mood >= 6) return "bg-yellow-500"
-    if (mood >= 4) return "bg-orange-500"
-    return "bg-red-500"
+    if (mood >= 8) return "bg-blue-600"
+    if (mood >= 6) return "bg-blue-400"
+    if (mood >= 4) return "bg-blue-300"
+    return "bg-gray-400"
   }
 
   if (isLoading) {
@@ -233,7 +215,6 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
       {showFilters && (
         <Card>
           <CardHeader>
@@ -313,7 +294,6 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
         </Card>
       )}
 
-      {/* Results Summary */}
       {filteredEntries.length > 0 && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -330,7 +310,6 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
         </div>
       )}
 
-      {/* Entries List */}
       <div className="space-y-4">
         {filteredEntries.length === 0 ? (
           <Card>
@@ -349,12 +328,10 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
         ) : (
           filteredEntries.map((entry) => {
             const isExpanded = expandedEntries.has(entry.id)
-            const hasDetails = entry.type === "trade" || entry.moodBefore || entry.tags?.length
 
             return (
               <Card key={entry.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
-                  {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start space-x-3 flex-1">
                       <div className={`p-2 rounded-lg ${getEntryTypeColor(entry.type)}`}>
@@ -409,12 +386,10 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
                     </div>
                   </div>
 
-                  {/* Content Preview */}
                   <div className="mb-4">
                     <p className="text-gray-700 line-clamp-2">{entry.content}</p>
                   </div>
 
-                  {/* Tags */}
                   {entry.tags && entry.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-4">
                       {entry.tags.slice(0, isExpanded ? entry.tags.length : 3).map((tag, index) => (
@@ -431,16 +406,13 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
                     </div>
                   )}
 
-                  {/* Expanded Details */}
                   {isExpanded && (
                     <div className="space-y-4 pt-4 border-t border-gray-200">
-                      {/* Full Content */}
                       <div>
                         <Label className="text-sm font-medium text-gray-700">Obsah:</Label>
                         <p className="text-gray-700 mt-1 whitespace-pre-wrap">{entry.content}</p>
                       </div>
 
-                      {/* Trade Details */}
                       {entry.type === "trade" && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {entry.direction && (
@@ -472,197 +444,10 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
                               <p className="text-gray-900 mt-1">{entry.exitPrice}</p>
                             </div>
                           )}
-
-                          {entry.quantity && (
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700">Velikost pozice:</Label>
-                              <p className="text-gray-900 mt-1">{entry.quantity}</p>
-                            </div>
-                          )}
-
-                          {entry.pips && (
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700">Pipy:</Label>
-                              <p className={`mt-1 ${entry.pips >= 0 ? "text-green-600" : "text-red-600"}`}>
-                                {entry.pips >= 0 ? "+" : ""}
-                                {entry.pips}
-                              </p>
-                            </div>
-                          )}
                         </div>
                       )}
 
-                      {/* Mood & Psychology */}
-                      {(entry.moodBefore ||
-                        entry.moodDuring ||
-                        entry.moodAfter ||
-                        entry.confidence ||
-                        entry.stress) && (
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700 mb-3 block">Psychologický stav:</Label>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {entry.moodBefore && (
-                              <div>
-                                <Label className="text-xs text-gray-600">Nálada před:</Label>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Progress value={entry.moodBefore * 10} className="flex-1 h-2" />
-                                  <span className="text-sm font-medium">{entry.moodBefore}/10</span>
-                                </div>
-                              </div>
-                            )}
-
-                            {entry.moodDuring && (
-                              <div>
-                                <Label className="text-xs text-gray-600">Nálada během:</Label>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Progress value={entry.moodDuring * 10} className="flex-1 h-2" />
-                                  <span className="text-sm font-medium">{entry.moodDuring}/10</span>
-                                </div>
-                              </div>
-                            )}
-
-                            {entry.moodAfter && (
-                              <div>
-                                <Label className="text-xs text-gray-600">Nálada po:</Label>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Progress value={entry.moodAfter * 10} className="flex-1 h-2" />
-                                  <span className="text-sm font-medium">{entry.moodAfter}/10</span>
-                                </div>
-                              </div>
-                            )}
-
-                            {entry.confidence && (
-                              <div>
-                                <Label className="text-xs text-gray-600">Sebedůvěra:</Label>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Progress value={entry.confidence * 10} className="flex-1 h-2" />
-                                  <span className="text-sm font-medium">{entry.confidence}/10</span>
-                                </div>
-                              </div>
-                            )}
-
-                            {entry.stress && (
-                              <div>
-                                <Label className="text-xs text-gray-600">Stres:</Label>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Progress value={entry.stress * 10} className="flex-1 h-2" />
-                                  <span className="text-sm font-medium">{entry.stress}/10</span>
-                                </div>
-                              </div>
-                            )}
-
-                            {entry.discipline && (
-                              <div>
-                                <Label className="text-xs text-gray-600">Disciplína:</Label>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Progress value={entry.discipline * 10} className="flex-1 h-2" />
-                                  <span className="text-sm font-medium">{entry.discipline}/10</span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Behavior Analysis */}
-                      {entry.type === "behavior" && (
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700 mb-3 block">Analýza chování:</Label>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="flex items-center gap-2">
-                              {entry.matchedPlan ? (
-                                <CheckCircle className="w-4 h-4 text-green-600" />
-                              ) : (
-                                <AlertTriangle className="w-4 h-4 text-red-600" />
-                              )}
-                              <span className="text-sm">Dodržení plánu</span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {entry.exitedEarly ? (
-                                <AlertTriangle className="w-4 h-4 text-orange-600" />
-                              ) : (
-                                <CheckCircle className="w-4 h-4 text-green-600" />
-                              )}
-                              <span className="text-sm">Předčasný exit</span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {entry.missedDueToHesitation ? (
-                                <AlertTriangle className="w-4 h-4 text-red-600" />
-                              ) : (
-                                <CheckCircle className="w-4 h-4 text-green-600" />
-                              )}
-                              <span className="text-sm">Váhání</span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {entry.revengeTrade ? (
-                                <AlertTriangle className="w-4 h-4 text-red-600" />
-                              ) : (
-                                <CheckCircle className="w-4 h-4 text-green-600" />
-                              )}
-                              <span className="text-sm">Revenge trade</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Lessons & Notes */}
-                      {(entry.lessons || entry.whatWorked || entry.whatDidntWork) && (
-                        <div className="space-y-3">
-                          {entry.lessons && (
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700">Ponaučení:</Label>
-                              <p className="text-gray-700 mt-1">{entry.lessons}</p>
-                            </div>
-                          )}
-
-                          {entry.whatWorked && (
-                            <div>
-                              <Label className="text-sm font-medium text-green-700">Co fungovalo:</Label>
-                              <p className="text-gray-700 mt-1">{entry.whatWorked}</p>
-                            </div>
-                          )}
-
-                          {entry.whatDidntWork && (
-                            <div>
-                              <Label className="text-sm font-medium text-red-700">Co nefungovalo:</Label>
-                              <p className="text-gray-700 mt-1">{entry.whatDidntWork}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Actions */}
                       <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" onClick={() => setSelectedEntry(entry)}>
-                              <Zap className="w-3 h-3 mr-1" />
-                              Detail
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center gap-2">
-                                {getEntryIcon(entry.type)}
-                                {entry.title}
-                              </DialogTitle>
-                              <DialogDescription>
-                                {getEntryTypeLabel(entry.type)} • {formatDate(entry.date)}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label className="font-medium">Obsah:</Label>
-                                <p className="mt-1 whitespace-pre-wrap text-gray-700">{entry.content}</p>
-                              </div>
-                              {/* Add more detailed view content here */}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-
                         <Button
                           variant="outline"
                           size="sm"
@@ -694,3 +479,5 @@ export default function JournalEntries({ selectedDate, limit, showFilters = true
     </div>
   )
 }
+
+export default JournalEntries
