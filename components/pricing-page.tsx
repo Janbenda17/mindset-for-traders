@@ -1,22 +1,18 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Check, Star, Zap, Crown, Shield, Headphones } from "lucide-react"
 import { useSubscription } from "@/contexts/subscription-context"
 
-export function PricingPage() {
-  const { plan, upgradeToPremium, isActive, daysRemaining } = useSubscription()
-  const [isLoading, setIsLoading] = useState(false)
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/bJe28sguAbri1noczO1B600"
 
-  const handleUpgrade = async () => {
-    setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    upgradeToPremium()
-    setIsLoading(false)
+export function PricingPage() {
+  const { plan, isActive, daysRemaining } = useSubscription()
+
+  const handleUpgrade = () => {
+    window.location.href = STRIPE_PAYMENT_LINK
   }
 
   const features = {
@@ -101,7 +97,7 @@ export function PricingPage() {
             </div>
             <CardDescription>Pro seriózní tradery</CardDescription>
             <div className="mt-4">
-              <span className="text-4xl font-bold">59 Kč</span>
+              <span className="text-4xl font-bold">1499 Kč</span>
               <span className="text-gray-600">/měsíc</span>
             </div>
             {!isActive && (
@@ -124,11 +120,9 @@ export function PricingPage() {
             <Button
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               onClick={handleUpgrade}
-              disabled={isLoading || isActive}
+              disabled={isActive}
             >
-              {isLoading ? (
-                "Aktivuji..."
-              ) : isActive ? (
+              {isActive ? (
                 "Aktivní Premium"
               ) : (
                 <>
@@ -209,7 +203,7 @@ export function PricingPage() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
-                Plný přístup ke všem Premium funkcím po dobu 7 dní zdarma. Žádná platební karta není vyžadována.
+                Plný přístup ke všem Premium funkcím po dobu 7 dní zdarma. Platba začíná až po trial období.
               </p>
             </CardContent>
           </Card>

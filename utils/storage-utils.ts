@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   ANALYTICS_DATA: "trader-mindset-analytics-data",
   MINDTRADER_HISTORY: "trader-mindset-mindtrader-history",
   TEAM_CLUB_DATA: "trader-mindset-team-club-data",
+  ACTIVE_CHALLENGE: "trader-mindset-active-challenge",
 }
 
 // Utility functions
@@ -75,6 +76,7 @@ export interface JournalEntry {
   missedDueToHesitation?: boolean
   revengeTrade?: boolean
   mood?: number
+  challengeId?: string // Associated challenge ID
 }
 
 export interface MoodEntry {
@@ -84,6 +86,7 @@ export interface MoodEntry {
   confidence: number
   stress: number
   notes?: string
+  // Mood entries jsou globální, neváží se k challenge
 }
 
 export interface TradingData {
@@ -118,6 +121,39 @@ export interface TradingEntry {
   profitLoss: number
   outcome: "profit" | "loss" | "breakeven"
   notes?: string
+  challengeId?: string // Associated challenge ID
+}
+
+export interface PropFirmChallenge {
+  id: string
+  name: string
+  firm: string
+  initialBalance: number
+  currentBalance: number
+  status: "active" | "failed" | "passed" | "funded" | "withdrawn"
+  phase: "challenge" | "verification" | "funded"
+  startDate: string
+  endDate?: string
+  profitTarget?: number
+  maxDailyLoss?: number
+  maxTotalLoss?: number
+  notes?: string
+  createdAt: string
+  updatedAt: string
+  // Challenge-specific statistics
+  stats?: {
+    totalTrades: number
+    winningTrades: number
+    losingTrades: number
+    winRate: number
+    totalPnL: number
+    bestTrade: number
+    worstTrade: number
+    averageWin: number
+    averageLoss: number
+    profitFactor: number
+    maxDrawdown: number
+  }
 }
 
 export interface CustomAffirmation {
@@ -147,7 +183,7 @@ export interface ProfileSettings {
   nickname?: string
   bio?: string
   mentor?: string
-  experienceLevel?: "beginner" | "intermediate" | "pro"
+  experienceLevel?: "beginner" | "intermediate" | "advanced"
   updatedAt?: string
 }
 
@@ -155,6 +191,10 @@ export interface TradingSettings {
   style?: "scalper" | "day-trader" | "swing-trader"
   riskLevel?: "conservative" | "moderate" | "aggressive"
   timezone?: string
+  tradingYears?: string
+  mainMarkets?: string[]
+  goals?: string
+  averageTradesPerWeek?: string
   updatedAt?: string
 }
 
@@ -178,6 +218,7 @@ export interface UserData {
   subscription: Subscription | null
   mindTraderHistory: MindTraderDailyAssessment[]
   mindTraderNotifications: MindTraderNotificationSettings
+  propFirmChallenges?: PropFirmChallenge[]
   profile?: ProfileSettings
   settings?: {
     trading?: TradingSettings
@@ -556,6 +597,7 @@ function getDefaultUserData(): UserData {
     subscription: { plan: "free" },
     mindTraderHistory: [],
     mindTraderNotifications: { dailyAssessment: true, strategyRecommendations: true },
+    propFirmChallenges: [],
     profile: {
       experienceLevel: "intermediate",
     },
@@ -693,6 +735,7 @@ export function clearAllDemoData(): void {
     "trader-mindset-custom-affirmations",
     "trader-mindset-team-club-data",
     "daily-tracker-entries",
+    STORAGE_KEYS.ACTIVE_CHALLENGE,
   ]
 
   keysToRemove.forEach((key) => {
@@ -738,6 +781,11 @@ export const saveJournalEntry = (entry: any): void => {
 
     userData.journalEntries = entries
     setUserData(userData)
+
+    // Update challenge stats if this is a trade entry
+    if (entry.type === "trade" && entry.challengeId && entry.pnl !== undefined) {
+      updateChallengeStats(entry.challengeId)
+    }
   }
 }
 
@@ -748,8 +796,14 @@ export const deleteJournalEntry = (id: string): void => {
 
   if (liveMode) {
     const userData = getUserData()
+    const deletedEntry = userData.journalEntries?.find((e) => e.id === id)
     userData.journalEntries = (userData.journalEntries || []).filter((entry) => entry.id !== id)
     setUserData(userData)
+
+    // Update challenge stats if this was a trade entry
+    if (deletedEntry?.type === "trade" && deletedEntry.challengeId) {
+      updateChallengeStats(deletedEntry.challengeId)
+    }
   }
 }
 
@@ -812,22 +866,23 @@ export const saveTradingData = (data: TradingEntry[]): void => {
   }
 }
 
-export const calculateTradingStats = (): TradingData => {
+export const calculateTradingStats = (challengeId?: string): TradingData => {
   const entries = getTradingData()
-  const totalPnL = entries.reduce((sum, entry) => sum + entry.profitLoss, 0)
-  const totalTrades = entries.length
-  const winningTrades = entries.filter((entry) => entry.outcome === "profit").length
-  const losingTrades = entries.filter((entry) => entry.outcome === "loss").length
+  const filteredEntries = challengeId ? entries.filter((e) => e.challengeId === challengeId) : entries
+
+  const totalPnL = filteredEntries.reduce((sum, entry) => sum + entry.profitLoss, 0)
+  const totalTrades = filteredEntries.length
+  const winningTrades = filteredEntries.filter((entry) => entry.outcome === "profit").length
+  const losingTrades = filteredEntries.filter((entry) => entry.outcome === "loss").length
   const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0
 
-  const wins = entries.filter((entry) => entry.outcome === "profit").map((entry) => entry.profitLoss)
-  const losses = entries.filter((entry) => entry.outcome === "loss").map((entry) => entry.profitLoss)
+  const wins = filteredEntries.filter((entry) => entry.outcome === "profit").map((entry) => entry.profitLoss)
+  const losses = filteredEntries.filter((entry) => entry.outcome === "loss").map((entry) => entry.profitLoss)
 
   const averageWin = wins.length > 0 ? wins.reduce((sum, win) => sum + win, 0) / wins.length : 0
   const averageLoss = losses.length > 0 ? losses.reduce((sum, loss) => sum + loss, 0) / losses.length : 0
 
-  const profitFactor = averageLoss !== 0 ? Math.abs(averageWin / averageLoss) : 0
-  const maxDrawdown = Math.min(...entries.map((entry) => entry.profitLoss), 0)
+  const maxDrawdown = Math.min(...filteredEntries.map((entry) => entry.profitLoss), 0)
 
   const moodEntries = getMoodEntries()
   const averageMood =
@@ -841,12 +896,115 @@ export const calculateTradingStats = (): TradingData => {
     winRate,
     averageWin,
     averageLoss,
-    profitFactor,
+    profitFactor: averageLoss !== 0 ? Math.abs(averageWin / averageLoss) : 0,
     maxDrawdown,
     averageMood,
   }
 
   return stats
+}
+
+// Active Challenge Management
+export const getActiveChallenge = (): PropFirmChallenge | null => {
+  if (typeof window === "undefined") return null
+  const activeChallengeId = localStorage.getItem(STORAGE_KEYS.ACTIVE_CHALLENGE)
+  if (!activeChallengeId) return null
+
+  const challenges = getPropFirmChallenges()
+  return challenges.find((c) => c.id === activeChallengeId) || null
+}
+
+export const setActiveChallenge = (challengeId: string | null): void => {
+  if (typeof window === "undefined") return
+  if (challengeId) {
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_CHALLENGE, challengeId)
+  } else {
+    localStorage.removeItem(STORAGE_KEYS.ACTIVE_CHALLENGE)
+  }
+  window.dispatchEvent(new Event("active-challenge-changed"))
+}
+
+// Prop Firm Challenge functions
+export const getPropFirmChallenges = (): PropFirmChallenge[] => {
+  const userData = getUserData()
+  return userData.propFirmChallenges || []
+}
+
+export const savePropFirmChallenge = (challenge: PropFirmChallenge): void => {
+  const userData = getUserData()
+  const challenges = userData.propFirmChallenges || []
+  const existingIndex = challenges.findIndex((c) => c.id === challenge.id)
+
+  if (existingIndex >= 0) {
+    challenges[existingIndex] = challenge
+  } else {
+    challenges.push(challenge)
+    // Set as active if it's the first challenge
+    if (challenges.length === 1) {
+      setActiveChallenge(challenge.id)
+    }
+  }
+
+  userData.propFirmChallenges = challenges
+  setUserData(userData)
+
+  // Calculate and save stats
+  updateChallengeStats(challenge.id)
+}
+
+export const deletePropFirmChallenge = (id: string): void => {
+  const userData = getUserData()
+  userData.propFirmChallenges = (userData.propFirmChallenges || []).filter((c) => c.id !== id)
+  setUserData(userData)
+
+  // If this was the active challenge, clear it
+  const activeChallenge = getActiveChallenge()
+  if (activeChallenge?.id === id) {
+    setActiveChallenge(null)
+  }
+}
+
+export const updateChallengeStats = (challengeId: string): void => {
+  const userData = getUserData()
+  const challenges = userData.propFirmChallenges || []
+  const challengeIndex = challenges.findIndex((c) => c.id === challengeId)
+
+  if (challengeIndex === -1) return
+
+  // Get all trades for this challenge
+  const trades = getJournalEntries().filter(
+    (e) => e.type === "trade" && e.challengeId === challengeId && e.pnl !== undefined,
+  )
+
+  const totalTrades = trades.length
+  const winningTrades = trades.filter((t) => (t.pnl || 0) > 0).length
+  const losingTrades = trades.filter((t) => (t.pnl || 0) < 0).length
+  const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0)
+  const wins = trades.filter((t) => (t.pnl || 0) > 0).map((t) => t.pnl || 0)
+  const losses = trades.filter((t) => (t.pnl || 0) < 0).map((t) => t.pnl || 0)
+
+  challenges[challengeIndex].stats = {
+    totalTrades,
+    winningTrades,
+    losingTrades,
+    winRate: totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0,
+    totalPnL,
+    bestTrade: wins.length > 0 ? Math.max(...wins) : 0,
+    worstTrade: losses.length > 0 ? Math.min(...losses) : 0,
+    averageWin: wins.length > 0 ? wins.reduce((sum, w) => sum + w, 0) / wins.length : 0,
+    averageLoss: losses.length > 0 ? losses.reduce((sum, l) => sum + l, 0) / losses.length : 0,
+    profitFactor:
+      losses.length > 0 && wins.length > 0
+        ? Math.abs(wins.reduce((s, w) => s + w, 0) / losses.reduce((s, l) => s + l, 0))
+        : 0,
+    maxDrawdown: losses.length > 0 ? Math.min(...losses) : 0,
+  }
+
+  // Update current balance
+  challenges[challengeIndex].currentBalance = challenges[challengeIndex].initialBalance + totalPnL
+
+  userData.propFirmChallenges = challenges
+  setUserData(userData)
 }
 
 export function getAnalyticsData() {

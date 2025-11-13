@@ -23,6 +23,8 @@ interface SubscriptionContextType {
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
 
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/bJe28sguAbri1noczO1B600"
+
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [plan, setPlan] = useState<"free" | "premium">("free")
   const [daysRemaining, setDaysRemaining] = useState(0)
@@ -40,7 +42,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const checkSubscriptionStatus = async () => {
     try {
-      // V reálné aplikaci byste získali customer ID z databáze
       const storedCustomerId = localStorage.getItem("stripe-customer-id")
 
       const response = await fetch("/api/subscription/status", {
@@ -73,67 +74,20 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const subscribe = async (planType: "free" | "premium"): Promise<boolean> => {
     if (planType === "free") return true
 
-    setIsLoading(true)
-    try {
-      const response = await fetch("/api/subscription/create-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: planType }),
-      })
-
-      const data = await response.json()
-
-      if (data.url) {
-        window.location.href = data.url
-        return true
-      }
-
-      return false
-    } catch (error) {
-      console.error("Subscription error:", error)
-      toast({
-        title: "Chyba",
-        description: "Nepodařilo se vytvořit platbu. Zkuste to znovu.",
-        variant: "destructive",
-      })
-      return false
-    } finally {
-      setIsLoading(false)
-    }
+    // Přesměrování na Stripe payment link
+    window.location.href = STRIPE_PAYMENT_LINK
+    return true
   }
 
   const startTrial = async (): Promise<boolean> => {
-    setIsLoading(true)
-    try {
-      const response = await fetch("/api/subscription/start-trial", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setPlan("premium")
-        setIsActive(true)
-        setTrialEndsAt(data.trialEndsAt)
-        setDaysRemaining(7)
-
-        toast({
-          title: "Trial aktivován!",
-          description: "Váš 7-denní Premium trial byl úspěšně aktivován.",
-        })
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error("Trial start error:", error)
-      return false
-    } finally {
-      setIsLoading(false)
-    }
+    // Přesměrování na Stripe payment link (trial je součástí Stripe linku)
+    window.location.href = STRIPE_PAYMENT_LINK
+    return true
   }
 
   const upgradeToPremium = async (): Promise<boolean> => {
-    return subscribe("premium")
+    window.location.href = STRIPE_PAYMENT_LINK
+    return true
   }
 
   const cancelSubscription = async (): Promise<boolean> => {

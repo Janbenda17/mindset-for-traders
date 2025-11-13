@@ -100,7 +100,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description: "Vítejte zpět!",
         })
 
-        router.push("/")
+        // Check if onboarding is completed
+        const onboardingCompleted = localStorage.getItem("trader-mindset-onboarding-completed")
+        if (onboardingCompleted === "true") {
+          router.push("/")
+        } else {
+          router.push("/onboarding")
+        }
         return true
       } else {
         toast({
@@ -148,31 +154,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      // Create Stripe customer
-      const stripeResponse = await fetch("/api/stripe/create-customer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name }),
-      })
-
-      if (!stripeResponse.ok) {
-        toast({
-          title: "Chyba registrace",
-          description: "Nepodařilo se vytvořit účet. Zkuste to znovu.",
-          variant: "destructive",
-        })
-        return false
-      }
-
-      const { customerId } = await stripeResponse.json()
-
       // Create new user
       const newUser = {
         id: Date.now().toString(),
         email,
         password,
         name,
-        stripeCustomerId: customerId,
+        stripeCustomerId: `cus_${Date.now()}`,
       }
 
       // Save to registered users
@@ -185,20 +173,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: newUser.email,
         name: newUser.name,
         isOwner: false,
-        stripeCustomerId: customerId,
+        stripeCustomerId: newUser.stripeCustomerId,
       }
 
       setUser(userData)
       localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
-      localStorage.setItem("stripe-customer-id", customerId)
 
       toast({
-        title: "Registrace úspěšná",
-        description: "Váš účet byl vytvořen! Nyní můžete spustit 7-denní trial.",
+        title: "Registrace úspěšná!",
+        description: "Vítejte v Trader Mindset!",
       })
 
-      // Redirect to upgrade page to start trial
-      router.push("/upgrade")
+      // Redirect to onboarding
+      router.push("/onboarding")
       return true
     } catch (error) {
       console.error("Registration error:", error)
@@ -216,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("trader-mindset-user")
     localStorage.removeItem("trader-mindset-subscription")
     localStorage.removeItem("stripe-customer-id")
+    localStorage.removeItem("trader-mindset-onboarding-completed")
     toast({
       title: "Odhlášení úspěšné",
       description: "Nashledanou!",

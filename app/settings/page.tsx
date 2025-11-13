@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { NotificationSettings } from "@/components/notification-settings"
 import {
   User,
   SettingsIcon,
@@ -76,12 +77,6 @@ export default function SettingsPage() {
   const [theme, setTheme] = useState<"light" | "dark" | "auto">("dark")
   const [soundsEnabled, setSoundsEnabled] = useState(true)
   const [animationsEnabled, setAnimationsEnabled] = useState(true)
-
-  // Notifications
-  const [dailyReminder, setDailyReminder] = useState(true)
-  const [weeklyReport, setWeeklyReport] = useState(true)
-  const [readinessAlerts, setReadinessAlerts] = useState(true)
-  const [aiChatUpdates, setAiChatUpdates] = useState(true)
 
   // Privacy
   const [profileVisibility, setProfileVisibility] = useState<"private" | "mentor" | "public">("private")
@@ -188,12 +183,6 @@ export default function SettingsPage() {
         twoFactorEnabled,
         soundsEnabled,
         animationsEnabled,
-        notifications: {
-          dailyReminder,
-          weeklyReport,
-          readinessAlerts,
-          aiChatUpdates,
-        },
         privacy: {
           profileVisibility,
           aiDataAccess,
@@ -580,40 +569,8 @@ export default function SettingsPage() {
                 <CardTitle className="text-white">🔔 Notifikace</CardTitle>
                 <CardDescription className="text-gray-400">Spravuj svá upozornění</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-white">📅 Denní připomínka</p>
-                    <p className="text-sm text-gray-400">Připomínka vyplnit tracker</p>
-                  </div>
-                  <Switch checked={dailyReminder} onCheckedChange={setDailyReminder} />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-white">📊 Týdenní AI report</p>
-                    <p className="text-sm text-gray-400">Shrnutí výkonu a doporučení</p>
-                  </div>
-                  <Switch checked={weeklyReport} onCheckedChange={setWeeklyReport} />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-white">⚠️ Readiness alerty</p>
-                    <p className="text-sm text-gray-400">Upozornění při nízké připravenosti</p>
-                  </div>
-                  <Switch checked={readinessAlerts} onCheckedChange={setReadinessAlerts} />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-white">💬 AI chat update</p>
-                    <p className="text-sm text-gray-400">Nové zprávy od AI kouče</p>
-                  </div>
-                  <Switch checked={aiChatUpdates} onCheckedChange={setAiChatUpdates} />
-                </div>
-
-                <AIHintBox message="🔔 Zapnutí journaling notifikací zvyšuje disciplínu o 15%." />
+              <CardContent>
+                <NotificationSettings />
               </CardContent>
             </Card>
 

@@ -198,22 +198,22 @@ const DEMO_STATS = {
 // Function to generate random trading stats for virtual mode
 const generateRandomTradingStats = () => {
   return {
-    totalPnL: Math.floor(Math.random() * 20000) - 5000, // Random P&L between -5000 and 15000
-    totalTrades: Math.floor(Math.random() * 200), // Random number of trades up to 200
-    winningTrades: Math.floor(Math.random() * 150), // Random number of winning trades up to 150
-    losingTrades: Math.floor(Math.random() * 50), // Random number of losing trades up to 50
-    winRate: Math.floor(Math.random() * 100), // Random win rate
-    averageWin: Math.floor(Math.random() * 1000), // Random average win
-    averageLoss: -Math.floor(Math.random() * 500), // Random average loss
-    profitFactor: Math.random() * 3, // Random profit factor
-    maxDrawdown: -Math.floor(Math.random() * 1000), // Random max drawdown
-    averageMood: Math.floor(Math.random() * 10), // Random average mood
-    bestDay: Math.floor(Math.random() * 2000), // Random best day
-    worstDay: -Math.floor(Math.random() * 1000), // Random worst day
-    consecutiveWins: Math.floor(Math.random() * 10), // Random consecutive wins
-    consecutiveLosses: Math.floor(Math.random() * 5), // Random consecutive losses
-    riskRewardRatio: Math.random() * 5, // Random risk reward ratio
-    sharpeRatio: Math.random() * 2, // Random sharpe ratio
+    totalPnL: Math.floor(Math.random() * 20000) - 5000,
+    totalTrades: Math.floor(Math.random() * 200),
+    winningTrades: Math.floor(Math.random() * 150),
+    losingTrades: Math.floor(Math.random() * 50),
+    winRate: Math.floor(Math.random() * 100),
+    averageWin: Math.floor(Math.random() * 1000),
+    averageLoss: -Math.floor(Math.random() * 500),
+    profitFactor: Math.random() * 3,
+    maxDrawdown: -Math.floor(Math.random() * 1000),
+    averageMood: Math.floor(Math.random() * 10),
+    bestDay: Math.floor(Math.random() * 2000),
+    worstDay: -Math.floor(Math.random() * 1000),
+    consecutiveWins: Math.floor(Math.random() * 10),
+    consecutiveLosses: Math.floor(Math.random() * 5),
+    riskRewardRatio: Math.random() * 5,
+    sharpeRatio: Math.random() * 2,
   }
 }
 
@@ -231,6 +231,8 @@ interface DataContextType {
   resetAllScores: () => void
   isOwner: boolean
   canSwitchModes: boolean
+  portfolioValue: number
+  setPortfolioValue: (value: number) => void
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -239,6 +241,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [isLiveMode, setIsLiveMode] = useState(false)
   const [hasEverSwitchedToLive, setHasEverSwitchedToLive] = useState(false)
   const [showLiveWarning, setShowLiveWarning] = useState(false)
+  const [portfolioValue, setPortfolioValueState] = useState(10000)
   const { user } = useAuth()
 
   // Check if current user is owner or can switch modes
@@ -253,11 +256,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setIsLiveMode(liveMode)
     setHasEverSwitchedToLive(everSwitched)
 
+    // Load portfolio value
+    const savedPortfolio = localStorage.getItem("trader-mindset-portfolio-value")
+    if (savedPortfolio) {
+      setPortfolioValueState(Number.parseFloat(savedPortfolio))
+    }
+
     // If in virtual mode, ensure demo data is available
     if (!liveMode) {
       loadDemoDataIfNeeded()
     }
   }, [])
+
+  const setPortfolioValue = (value: number) => {
+    setPortfolioValueState(value)
+    localStorage.setItem("trader-mindset-portfolio-value", value.toString())
+  }
 
   const loadDemoDataIfNeeded = () => {
     // Check if user has any real data
@@ -357,10 +371,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         averageMood,
         bestDay,
         worstDay,
-        consecutiveWins: 0, // Would need more complex calculation
-        consecutiveLosses: 0, // Would need more complex calculation
+        consecutiveWins: 0,
+        consecutiveLosses: 0,
         riskRewardRatio: profitFactor,
-        sharpeRatio: 0, // Would need more complex calculation
+        sharpeRatio: 0,
       }
     } else {
       // Return demo stats in virtual mode
@@ -369,13 +383,42 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   const clearAllData = () => {
-    // Clear all user data (but keep demo data available for virtual mode)
+    // Clear all user data (trades, journal, mood)
     localStorage.removeItem("user-trades")
     localStorage.removeItem("user-journal-entries")
     localStorage.removeItem("user-mood-entries")
     localStorage.removeItem("user-behavioral-analysis")
     localStorage.removeItem("user-trading-goals")
     localStorage.removeItem("user-risk-settings")
+
+    // Clear MindTrader data
+    localStorage.removeItem("trader-mindset-mindtrader-history")
+    localStorage.removeItem("mindtrader-chat-history")
+    localStorage.removeItem("mindtrader-sessions")
+
+    // Clear Team Club data
+    localStorage.removeItem("trader-mindset-team-club-data")
+    localStorage.removeItem("team-club-mentoring")
+    localStorage.removeItem("team-club-challenges")
+
+    // Clear Daily Tracker data
+    localStorage.removeItem("daily-tracker-entries")
+    localStorage.removeItem("daily-assessments")
+
+    // Clear Analytics data
+    localStorage.removeItem("trader-mindset-analytics-data")
+    localStorage.removeItem("trader-mindset-performance-data")
+    localStorage.removeItem("trader-mindset-emotional-data")
+    localStorage.removeItem("trader-mindset-trading-patterns")
+    localStorage.removeItem("trader-mindset-risk-data")
+
+    // Clear other related data
+    localStorage.removeItem("trader-mindset-dashboard-stats")
+    localStorage.removeItem("trader-mindset-custom-affirmations")
+  }
+
+  const resetAllScores = () => {
+    clearAllData()
   }
 
   const switchToLive = () => {
@@ -400,7 +443,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     toast({
       title: "Přepnuto na Live režim",
-      description: "Nyní pracujete s reálnými daty. Demo data byla vymazána.",
+      description: "Nyní pracujete s reálnými daty. Všechna demo data byla vymazána.",
       duration: 5000,
     })
 
@@ -449,8 +492,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         getAllJournalEntries,
         getTradingStats,
         clearAllData,
+        resetAllScores,
         isOwner,
         canSwitchModes,
+        portfolioValue,
+        setPortfolioValue,
       }}
     >
       {children}

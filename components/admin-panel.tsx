@@ -1,20 +1,49 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Users, TrendingUp, Activity, Shield, BarChart3, UserCheck, CheckCircle, EyeOff, Lock } from "lucide-react"
+import {
+  Users,
+  TrendingUp,
+  Activity,
+  Shield,
+  BarChart3,
+  UserCheck,
+  CheckCircle,
+  EyeOff,
+  Lock,
+  AlertCircle,
+} from "lucide-react"
 import { useData } from "@/contexts/data-context"
 
 interface AdminPanelProps {
   isVisible: boolean
   onClose: () => void
+}
+
+// Demo data for Virtual mode
+const DEMO_ADMIN_DATA = {
+  totalUsers: 1247,
+  activeUsers: 892,
+  totalTrades: 15634,
+  totalVolume: 2847392,
+  avgWinRate: 64.2,
+  topTraders: [
+    { name: "Jan Novák", winRate: 78.5, trades: 234, profit: 15420 },
+    { name: "Marie Svobodová", winRate: 72.1, trades: 189, profit: 12890 },
+    { name: "Petr Dvořák", winRate: 69.8, trades: 156, profit: 9870 },
+  ],
+  recentActivity: [
+    { user: "Jan N.", action: "Nový obchod", time: "2 min", profit: 450 },
+    { user: "Marie S.", action: "Uzavřen obchod", time: "5 min", profit: -120 },
+    { user: "Petr D.", action: "Nový journal", time: "8 min", profit: 0 },
+  ],
 }
 
 export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
@@ -23,6 +52,44 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState("")
   const [passwordError, setPasswordError] = useState("")
+  const [adminStats, setAdminStats] = useState(DEMO_ADMIN_DATA)
+
+  useEffect(() => {
+    if (isAuthenticated && isLiveMode) {
+      // Calculate real stats from Live data
+      const trades = getAllTrades()
+      const journals = getAllJournalEntries()
+
+      const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || t.profitLoss || 0), 0)
+      const winningTrades = trades.filter((t) => (t.pnl || t.profitLoss || 0) > 0).length
+      const avgWinRate = trades.length > 0 ? (winningTrades / trades.length) * 100 : 0
+
+      setAdminStats({
+        totalUsers: 1,
+        activeUsers: 1,
+        totalTrades: trades.length,
+        totalVolume: Math.abs(totalPnL),
+        avgWinRate: Math.round(avgWinRate * 10) / 10,
+        topTraders: [
+          {
+            name: "Ty (Live)",
+            winRate: Math.round(avgWinRate * 10) / 10,
+            trades: trades.length,
+            profit: Math.round(totalPnL),
+          },
+        ],
+        recentActivity: trades.slice(-3).map((trade, i) => ({
+          user: "Ty",
+          action: trade.type === "trade" ? "Nový obchod" : "Journal entry",
+          time: `${i + 1} ${i === 0 ? "min" : "mins"}`,
+          profit: trade.pnl || trade.profitLoss || 0,
+        })),
+      })
+    } else if (isAuthenticated && !isLiveMode) {
+      // Use demo data for Virtual mode
+      setAdminStats(DEMO_ADMIN_DATA)
+    }
+  }, [isAuthenticated, isLiveMode, getAllTrades, getAllJournalEntries])
 
   if (!isVisible) return null
 
@@ -35,25 +102,6 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
       setPasswordError("Nesprávné heslo!")
       setPassword("")
     }
-  }
-
-  // Mock admin data - in real app this would come from backend
-  const adminStats = {
-    totalUsers: 1247,
-    activeUsers: 892,
-    totalTrades: 15634,
-    totalVolume: 2847392,
-    avgWinRate: 64.2,
-    topTraders: [
-      { name: "Jan Novák", winRate: 78.5, trades: 234, profit: 15420 },
-      { name: "Marie Svobodová", winRate: 72.1, trades: 189, profit: 12890 },
-      { name: "Petr Dvořák", winRate: 69.8, trades: 156, profit: 9870 },
-    ],
-    recentActivity: [
-      { user: "Jan N.", action: "Nový obchod", time: "2 min", profit: 450 },
-      { user: "Marie S.", action: "Uzavřen obchod", time: "5 min", profit: -120 },
-      { user: "Petr D.", action: "Nový journal", time: "8 min", profit: 0 },
-    ],
   }
 
   // Password protection screen
@@ -119,7 +167,7 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               <h2 className="text-xl font-bold text-white">Admin Panel</h2>
               <p className="text-sm text-gray-400">Přístup pouze pro administrátory</p>
             </div>
-            <Badge className="bg-red-500/20 text-red-300 border-red-500/30">
+            <Badge className={isLiveMode ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}>
               {isLiveMode ? "LIVE DATA" : "DEMO DATA"}
             </Badge>
           </div>
@@ -261,6 +309,22 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                   </CardContent>
                 </Card>
               </div>
+
+              {!isLiveMode && (
+                <Card className="bg-blue-500/10 border-blue-500/30">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-blue-400 mt-0.5" />
+                      <div>
+                        <p className="text-blue-300 font-semibold mb-1">Virtual Mode Data</p>
+                        <p className="text-sm text-blue-200">
+                          Zobrazuješ demo data. Přepni do Live režimu pro zobrazení reálných statistik.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="users" className="space-y-4">
@@ -269,7 +333,11 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                   <CardTitle className="text-white">👥 Správa uživatelů</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-400">Funkce správy uživatelů bude implementována v plné verzi.</p>
+                  <p className="text-gray-400">
+                    {isLiveMode
+                      ? "Živá data - 1 aktivní uživatel"
+                      : "Demo data - funkce správy uživatelů bude implementována v plné verzi."}
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -280,7 +348,11 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                   <CardTitle className="text-white">💹 Analýza obchodů</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-400">Pokročilá analýza obchodů bude dostupná v plné verzi.</p>
+                  <p className="text-gray-400">
+                    {isLiveMode
+                      ? `Celkem ${adminStats.totalTrades} obchodů v Live režimu`
+                      : "Demo data - pokročilá analýza obchodů bude dostupná v plné verzi."}
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -300,7 +372,7 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                       <Badge
                         className={
                           isLiveMode
-                            ? "bg-red-500/20 text-red-300 border-red-500/30"
+                            ? "bg-green-500/20 text-green-300 border-green-500/30"
                             : "bg-blue-500/20 text-blue-300 border-blue-500/30"
                         }
                       >

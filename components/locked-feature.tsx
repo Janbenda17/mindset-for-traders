@@ -2,47 +2,145 @@
 
 import type React from "react"
 
-import { useSubscription } from "@/contexts/subscription-context"
-import { Card, CardDescription, CardFooter, CardTitle } from "@/components/ui/card"
+import { Lock, Sparkles, Zap } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Lock } from "lucide-react"
-import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
+import { useRouter } from "next/navigation"
+import { useData } from "@/contexts/data-context"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useState } from "react"
 
 interface LockedFeatureProps {
-  feature: string
-  title: string
-  description: string
-  children: React.ReactNode
+  title?: string
+  description?: string
+  features?: string[]
+  icon?: React.ReactNode
+  requiresLive?: boolean
 }
 
-export function LockedFeature({ feature, title, description, children }: LockedFeatureProps) {
-  const { subscription, isLoading } = useSubscription()
+export function LockedFeature({
+  title = "Premium Feature",
+  description = "This feature is available in live mode with Premium subscription",
+  features = ["Real-time AI analysis", "Personalized recommendations", "Advanced insights"],
+  icon,
+  requiresLive = false,
+}: LockedFeatureProps) {
+  const router = useRouter()
+  const { isLiveMode, switchToLive, canSwitchModes } = useData()
+  const [showLiveDialog, setShowLiveDialog] = useState(false)
 
-  if (isLoading) {
-    return (
-      <Card className="flex flex-col items-center justify-center p-8 text-center">
-        <Lock className="h-12 w-12 text-muted-foreground mb-4" />
-        <CardTitle className="text-xl">Načítání...</CardTitle>
-        <CardDescription>Kontrola stavu předplatného.</CardDescription>
-      </Card>
-    )
+  const handleUnlock = () => {
+    if (requiresLive && !isLiveMode && canSwitchModes) {
+      setShowLiveDialog(true)
+    } else {
+      router.push("/upgrade")
+    }
   }
 
-  if (subscription?.plan === "premium") {
-    return <>{children}</>
+  const handleSwitchToLive = () => {
+    switchToLive()
+    setShowLiveDialog(false)
   }
 
   return (
-    <Card className="flex flex-col items-center justify-center p-8 text-center">
-      <Lock className="h-12 w-12 text-muted-foreground mb-4" />
-      <CardTitle className="text-xl">{title}</CardTitle>
-      <CardDescription className="mb-4">{description}</CardDescription>
-      <CardFooter className="flex flex-col gap-2">
-        <Button asChild>
-          <Link href="/upgrade">Upgrade na Premium</Link>
-        </Button>
-        <p className="text-sm text-muted-foreground">Odemkněte tuto a mnoho dalších funkcí.</p>
-      </CardFooter>
-    </Card>
+    <>
+      <div className="flex items-center justify-center min-h-[400px] p-8">
+        <Card className="max-w-2xl w-full bg-slate-900/50 border-slate-700/50 backdrop-blur-xl">
+          <CardHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur-xl opacity-50 animate-pulse" />
+                <div className="relative p-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full">
+                  {icon || <Lock className="w-12 h-12 text-white" />}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-center gap-2">
+                <CardTitle className="text-3xl font-bold text-white">{title}</CardTitle>
+                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-none">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  {requiresLive ? "Live + Premium" : "Premium"}
+                </Badge>
+              </div>
+              <CardDescription className="text-gray-400 text-lg">{description}</CardDescription>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
+              {features.map((feature, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg">
+                  <div className="p-2 bg-purple-500/20 rounded-lg">
+                    <Zap className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <span className="text-gray-300">{feature}</span>
+                </div>
+              ))}
+            </div>
+
+            {requiresLive && !isLiveMode && canSwitchModes && (
+              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                <p className="text-sm text-amber-200">
+                  💡 Tato funkce vyžaduje Live režim. Přepněte do Live režimu pro aktivaci.
+                </p>
+              </div>
+            )}
+
+            <Button
+              onClick={handleUnlock}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-12 text-lg font-semibold"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              {requiresLive && !isLiveMode && canSwitchModes ? "Přepnout do Live režimu" : "Odemknout Premium funkce"}
+            </Button>
+
+            <p className="text-center text-sm text-gray-500">
+              {requiresLive
+                ? "Aktivní Live režim + Premium předplatné vyžadováno"
+                : "Upgrade na Premium pro přístup ke všem funkcím"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <AlertDialog open={showLiveDialog} onOpenChange={setShowLiveDialog}>
+        <AlertDialogContent className="bg-slate-900 border-slate-700">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Přepnout do Live režimu?</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              Pro použití MindTrader AI musíte přepnout do Live režimu. V Live režimu budete pracovat s reálnými daty a
+              všechna demo data budou vymazána.
+              <br />
+              <br />
+              <strong className="text-amber-400">Upozornění:</strong> Tento krok je nevratný. Po přepnutí do Live režimu
+              se již nebudete moci vrátit k demo datům.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700">
+              Zrušit
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSwitchToLive}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              Přepnout do Live
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

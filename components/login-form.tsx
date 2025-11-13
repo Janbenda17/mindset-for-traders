@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Brain, Mail, Lock, LogIn, Crown } from "lucide-react"
+import { Brain, Mail, Lock, LogIn, Sparkles, Shield, Zap } from "lucide-react"
 import Link from "next/link"
 
 export function LoginForm() {
@@ -29,57 +29,64 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-700" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Logo & Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl mb-4 shadow-lg">
-            <Brain className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl mb-6 shadow-2xl shadow-blue-500/50 relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-400 rounded-3xl blur-lg opacity-50 animate-pulse" />
+            <Brain className="w-10 h-10 text-white relative z-10" />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-3 animate-gradient">
             Trader Mindset
           </h1>
-          <p className="text-gray-600 mt-2">Přihlaste se do svého účtu</p>
+          <p className="text-gray-400 text-base">Vítejte zpět! Přihlaste se k vašemu účtu</p>
         </div>
 
-        <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-2xl font-bold text-center">Přihlášení</CardTitle>
-            <CardDescription className="text-center">Zadejte své přihlašovací údaje</CardDescription>
+        <Card className="shadow-2xl border-0 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50">
+          <CardHeader className="space-y-2 pb-6 text-center">
+            <CardTitle className="text-2xl font-bold text-white">Přihlášení</CardTitle>
+            <CardDescription className="text-gray-400">Zadejte své přihlašovací údaje</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-300">
                   Email
                 </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="váš@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-300">
                   Heslo
                 </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                   <Input
                     id="password"
                     type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
                     required
                   />
                 </div>
@@ -87,17 +94,17 @@ export function LoginForm() {
 
               <Button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                className="w-full h-13 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 text-base"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>Přihlašuji...</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
-                    <LogIn className="w-4 h-4" />
+                    <LogIn className="w-5 h-5" />
                     <span>Přihlásit se</span>
                   </div>
                 )}
@@ -105,42 +112,39 @@ export function LoginForm() {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-400">
                 Nemáte účet?{" "}
-                <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
-                  Zaregistrujte se
+                <Link
+                  href="/signup"
+                  className="font-semibold text-blue-400 hover:text-blue-300 transition-colors underline-offset-2 hover:underline"
+                >
+                  Zaregistrujte se zdarma
                 </Link>
               </p>
-            </div>
-
-            {/* Owner info */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
-              <div className="flex items-center space-x-2 mb-2">
-                <Crown className="w-4 h-4 text-amber-600" />
-                <h4 className="text-sm font-semibold text-amber-800">Owner Access</h4>
-              </div>
-              <p className="text-xs text-amber-700">
-                Speciální přístup pro <code className="bg-amber-100 px-1 rounded">honza.newage@gmail.com</code>
-              </p>
-              <p className="text-xs text-amber-600 mt-1">✓ Plná práva ✓ Virtual/Live přepínání ✓ Neomezený přístup</p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Trust indicators */}
-        <div className="mt-8 text-center">
-          <div className="flex items-center justify-center space-x-6 text-sm text-gray-500">
-            <div className="flex items-center space-x-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Bezpečné</span>
+        {/* Features */}
+        <div className="mt-8">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="space-y-2">
+              <div className="w-12 h-12 mx-auto bg-green-500/10 rounded-2xl flex items-center justify-center border border-green-500/30">
+                <Shield className="w-6 h-6 text-green-400" />
+              </div>
+              <p className="text-xs text-gray-400 font-medium">Zabezpečené</p>
             </div>
-            <div className="flex items-center space-x-1">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span>Rychlé</span>
+            <div className="space-y-2">
+              <div className="w-12 h-12 mx-auto bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/30">
+                <Zap className="w-6 h-6 text-blue-400" />
+              </div>
+              <p className="text-xs text-gray-400 font-medium">Rychlé</p>
             </div>
-            <div className="flex items-center space-x-1">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <span>Spolehlivé</span>
+            <div className="space-y-2">
+              <div className="w-12 h-12 mx-auto bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/30">
+                <Sparkles className="w-6 h-6 text-purple-400" />
+              </div>
+              <p className="text-xs text-gray-400 font-medium">Chytré</p>
             </div>
           </div>
         </div>

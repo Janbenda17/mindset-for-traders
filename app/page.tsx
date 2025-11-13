@@ -1,379 +1,335 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DailyTradingAssessment } from "@/components/daily-trading-assessment"
 import { AdminPanel } from "@/components/admin-panel"
+import { TradingStyleBadge } from "@/components/trading-style-badge"
 import {
   Brain,
   TrendingUp,
   Target,
-  BarChart3,
-  Users,
-  Star,
-  ArrowRight,
-  Activity,
   DollarSign,
   Calendar,
-  BookOpen,
-  Lightbulb,
   Crown,
   Shield,
-  Eye,
-  Clock,
-  Flame,
-  Trophy,
-  Zap,
-  Heart,
-  Award,
-  LineChart,
-  PieChart,
   Sparkles,
-  Bell,
-  Settings,
   RefreshCw,
-  MessageCircle,
   TrendingDown,
+  Users,
+  ArrowRight,
+  Check,
+  Rocket,
+  PlayCircle,
+  PlusCircle,
+  AlertTriangle,
+  Zap,
+  Activity,
 } from "lucide-react"
 import Link from "next/link"
 import { getTimeOfDay } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
+import { useSubscription } from "@/contexts/subscription-context"
+import { useLossReset } from "@/contexts/loss-reset-context"
+import { useTradingStyle } from "@/contexts/trading-style-context"
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState("overview")
   const [timeOfDay, setTimeOfDay] = useState("")
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
-  const { isLiveMode, getTradingStats } = useData()
+  const [cachedStats, setCachedStats] = useState(null)
+  const { isLiveMode, getTradingStats, portfolioValue } = useData()
+  const { plan, isActive, daysRemaining } = useSubscription()
+  const { startReset } = useLossReset()
+  const { tradingStyle, config } = useTradingStyle()
+  const router = useRouter()
 
   useEffect(() => {
     setTimeOfDay(getTimeOfDay())
   }, [])
 
-  const handleRefresh = () => {
-    setIsRefreshing(true)
-    setTimeout(() => setIsRefreshing(false), 2000)
+  // Trading style is now set up during live mode onboarding in live-mode-toggle
+  // Users can still manually visit /trading-style-setup if needed
+
+  useEffect(() => {
+    if (!cachedStats) {
+      const tradingStats = getTradingStats()
+      const currentPortfolio = portfolioValue + tradingStats.totalPnL
+      const portfolioChange = ((tradingStats.totalPnL / portfolioValue) * 100).toFixed(1)
+
+      const initialStats = [
+        {
+          title: "Portfolio Value",
+          value: `$${currentPortfolio.toLocaleString()}`,
+          change: `${tradingStats.totalPnL >= 0 ? "+" : ""}${portfolioChange}%`,
+          trend: (tradingStats.totalPnL >= 0 ? "up" : "down") as const,
+          icon: DollarSign,
+          color: "from-emerald-500 to-teal-500",
+          description: "Total account value",
+          progress: Math.min((currentPortfolio / portfolioValue - 1) * 100 + 50, 100),
+        },
+        {
+          title: "Total P&L",
+          value: `${tradingStats.totalPnL >= 0 ? "+" : ""}$${tradingStats.totalPnL.toLocaleString()}`,
+          change: tradingStats.totalPnL >= 0 ? "Profit" : "Loss",
+          trend: (tradingStats.totalPnL >= 0 ? "up" : "down") as const,
+          icon: TrendingUp,
+          color: "from-blue-500 to-cyan-500",
+          description: "All time performance",
+          progress: Math.min(Math.abs(tradingStats.totalPnL / 100), 100),
+        },
+        {
+          title: "Win Rate",
+          value: `${tradingStats.winRate.toFixed(1)}%`,
+          change: `${tradingStats.winningTrades}W / ${tradingStats.losingTrades}L`,
+          trend: (tradingStats.winRate >= 50 ? "up" : "down") as const,
+          icon: Target,
+          color: "from-purple-500 to-pink-500",
+          description: "Success rate",
+          progress: tradingStats.winRate,
+        },
+        {
+          title: "Active Days",
+          value: `${Math.min(tradingStats.totalTrades, 30)}/30`,
+          change: `${((Math.min(tradingStats.totalTrades, 30) / 30) * 100).toFixed(0)}%`,
+          trend: "up" as const,
+          icon: Calendar,
+          color: "from-orange-500 to-red-500",
+          description: "Consistency score",
+          progress: (Math.min(tradingStats.totalTrades, 30) / 30) * 100,
+        },
+      ]
+      setCachedStats(initialStats)
+    }
+  }, [portfolioValue])
+
+  const getStatsForStyle = () => {
+    const tradingStats = getTradingStats()
+    const currentPortfolio = portfolioValue + tradingStats.totalPnL
+
+    // Calculate monthly P/L
+    const now = new Date()
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+    const entries = JSON.parse(localStorage.getItem("journal-entries") || "[]")
+    const monthlyTrades = entries.filter((e: any) => {
+      const entryDate = new Date(e.date)
+      return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear
+    })
+    const monthlyPnL = monthlyTrades.reduce((sum: number, e: any) => sum + (e.profitLoss || 0), 0)
+
+    // Calculate Mental Readiness from morning checks
+    const todayDate = new Date().toISOString().split("T")[0]
+    const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
+    const todayCheck = checks.find((c: any) => c.date === todayDate)
+    const mentalReadiness = todayCheck ? todayCheck.score : 0
+
+    // Calculate Discipline Score (adherence to trading plan in last 7 days)
+    const last7Days = entries.filter((e: any) => {
+      const entryDate = new Date(e.date)
+      const diffTime = Math.abs(now.getTime() - entryDate.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      return diffDays <= 7
+    })
+    const disciplineScore =
+      last7Days.length > 0 ? (last7Days.filter((e: any) => e.followedPlan).length / last7Days.length) * 100 : 0
+
+    return [
+      {
+        title: "Celkový kapitál",
+        value: `$${currentPortfolio.toLocaleString()}`,
+        change: `${tradingStats.totalPnL >= 0 ? "+" : ""}${((tradingStats.totalPnL / portfolioValue) * 100).toFixed(1)}%`,
+        trend: (tradingStats.totalPnL >= 0 ? "up" : "down") as const,
+        icon: DollarSign,
+        color: "from-emerald-500 to-teal-500",
+        description: "Celková hodnota účtu",
+        progress: Math.min((currentPortfolio / portfolioValue - 1) * 100 + 50, 100),
+      },
+      {
+        title: "Měsíční P/L",
+        value: `${monthlyPnL >= 0 ? "+" : ""}$${monthlyPnL.toLocaleString()}`,
+        change: `${monthlyTrades.length} obchodů`,
+        trend: (monthlyPnL >= 0 ? "up" : "down") as const,
+        icon: TrendingUp,
+        color: "from-blue-500 to-cyan-500",
+        description: "Zisk/ztráta tento měsíc",
+        progress: Math.min(Math.abs((monthlyPnL / portfolioValue) * 100 * 10), 100),
+      },
+      {
+        title: "Mental Readiness",
+        value: `${mentalReadiness}%`,
+        change: todayCheck ? `${todayCheck.sleepHours}h spánek` : "Bez check",
+        trend: (mentalReadiness >= 75 ? "up" : mentalReadiness >= 60 ? "neutral" : "down") as const,
+        icon: Brain,
+        color: "from-purple-500 to-pink-500",
+        description: "Psychická připravenost",
+        progress: mentalReadiness,
+      },
+      {
+        title: "Discipline Score",
+        value: `${disciplineScore.toFixed(0)}%`,
+        change: `${last7Days.length} dní`,
+        trend: (disciplineScore >= 75 ? "up" : disciplineScore >= 50 ? "neutral" : "down") as const,
+        icon: Shield,
+        color: "from-orange-500 to-red-500",
+        description: "Dodržování plánu (7 dní)",
+        progress: disciplineScore,
+      },
+    ]
   }
 
-  // Get trading stats based on mode
-  const tradingStats = getTradingStats()
+  const stats = getStatsForStyle()
 
-  const stats = [
-    {
-      title: "Celkový P&L",
-      value: `${tradingStats.totalPnL >= 0 ? "+" : ""}$${tradingStats.totalPnL.toLocaleString()}`,
-      change: "+8.2%",
-      trend: "up",
-      icon: DollarSign,
-      color: "from-green-500 to-emerald-500",
-      description: "Za posledních 30 dní",
-      progress: 85,
-    },
-    {
-      title: "Win Rate",
-      value: `${tradingStats.winRate.toFixed(1)}%`,
-      change: "+2.1%",
-      trend: "up",
-      icon: Target,
-      color: "from-blue-500 to-cyan-500",
-      description: "Úspěšnost obchodů",
-      progress: Math.round(tradingStats.winRate),
-    },
-    {
-      title: "Aktivní dny",
-      value: `${Math.min(tradingStats.totalTrades, 30)}/30`,
-      change: "93.3%",
-      trend: "up",
-      icon: Calendar,
-      color: "from-purple-500 to-pink-500",
-      description: "Konzistence",
-      progress: Math.round((Math.min(tradingStats.totalTrades, 30) / 30) * 100),
-    },
-    {
-      title: "Risk Score",
-      value: `${(tradingStats.riskRewardRatio || 0).toFixed(1)}/10`,
-      change: "+0.8",
-      trend: "up",
-      icon: Shield,
-      color: "from-orange-500 to-red-500",
-      description: "Risk management",
-      progress: Math.round((tradingStats.riskRewardRatio || 0) * 10),
-    },
-  ]
-
-  const recentActivities = [
-    {
-      type: "trade",
-      title: isLiveMode ? "Nový obchod zaznamenán" : "EUR/USD Long pozice uzavřena (DEMO)",
-      description: isLiveMode ? "Zkontrolujte výsledek" : "+$450 profit • 1:2.1 R:R",
-      time: "před 2 hodinami",
-      icon: TrendingUp,
-      color: "text-green-400",
-      bgColor: "bg-green-500/10",
-      priority: "high",
-    },
-    {
-      type: "journal",
-      title: isLiveMode ? "Nový záznam v deníku" : "Nový záznam v deníku (DEMO)",
-      description: isLiveMode ? "Analýza obchodů" : "Analýza dnešních obchodů",
-      time: "před 4 hodinami",
-      icon: BookOpen,
-      color: "text-blue-400",
-      bgColor: "bg-blue-500/10",
-      priority: "medium",
-    },
-    {
-      type: "ai",
-      title: "MindTrader AI doporučení",
-      description: isLiveMode ? "Nové personalizované doporučení" : "Snižte pozici na GBP/JPY (DEMO)",
-      time: "před 6 hodin",
-      icon: Brain,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/10",
-      priority: "high",
-    },
-    {
-      type: "achievement",
-      title: isLiveMode ? "Nový úspěch odemčen" : "Nový úspěch odemčen (DEMO)",
-      description: isLiveMode ? "Zkontrolujte své úspěchy" : "Konzistentní trader - 100 obchodů",
-      time: "včera",
-      icon: Trophy,
-      color: "text-yellow-400",
-      bgColor: "bg-yellow-500/10",
-      priority: "low",
-    },
-    {
-      type: "alert",
-      title: "Market Alert",
-      description: isLiveMode ? "Vysoká volatilita detekována" : "Vysoká volatilita na EUR/USD (DEMO)",
-      time: "před 1 hodinou",
-      icon: Bell,
-      color: "text-red-400",
-      bgColor: "bg-red-500/10",
-      priority: "high",
-    },
-  ]
+  const isPremium = plan === "premium" && isActive
 
   const quickActions = [
     {
-      title: "Nový obchod",
-      description: "Zaznamenat nový obchod",
-      icon: TrendingUp,
-      href: "/analytics",
-      color: "from-green-500 to-emerald-500",
-      category: "trading",
-      popular: true,
+      title: "Začít Daily Flow",
+      description: "Zahájit obchodní den",
+      icon: PlayCircle,
+      href: "/daily-tracker",
+      color: "from-blue-500 to-cyan-500",
+      gradient: "from-blue-500/20 to-cyan-500/20",
     },
     {
-      title: "Deník",
-      description: "Přidat záznam do deníku",
-      icon: BookOpen,
-      href: "/journal",
-      color: "from-blue-500 to-cyan-500",
-      category: "journal",
-      popular: true,
+      title: "Zadat obchod",
+      description: "Zaznamenat poslední obchod",
+      icon: PlusCircle,
+      href: "/record-trades",
+      color: "from-green-500 to-emerald-500",
+      gradient: "from-green-500/20 to-emerald-500/20",
     },
     {
       title: "MindTrader AI",
-      description: "Konzultace s AI",
+      description: "Získat AI analýzu",
       icon: Brain,
-      href: "/mindtrader",
+      href: isPremium ? "/mindtrader" : "/pricing",
       color: "from-purple-500 to-pink-500",
-      category: "ai",
-      badge: "AI",
-      popular: true,
+      gradient: "from-purple-500/20 to-pink-500/20",
+      locked: !isPremium,
     },
     {
-      title: "Analytics",
-      description: "Zobrazit analýzy",
-      icon: BarChart3,
-      href: "/analytics",
+      title: "Loss Reset",
+      description: "Reset po ztrátě",
+      icon: AlertTriangle,
+      href: "/loss-reset",
       color: "from-orange-500 to-red-500",
-      category: "analytics",
-    },
-    {
-      title: "Daily Tracker",
-      description: "Denní sledování",
-      icon: Calendar,
-      href: "/daily-tracker",
-      color: "from-indigo-500 to-purple-500",
-      category: "tracking",
-    },
-    {
-      title: "Team Club",
-      description: "Komunita traderů",
-      icon: Users,
-      href: "/team-club",
-      color: "from-pink-500 to-rose-500",
-      category: "community",
-      badge: "PRO",
+      gradient: "from-orange-500/20 to-red-500/20",
     },
   ]
-
-  const achievements = [
-    {
-      title: "První kroky",
-      description: "Zaznamenal jsi svůj první obchod",
-      icon: Star,
-      unlocked: tradingStats.totalTrades > 0,
-      progress: Math.min(tradingStats.totalTrades * 100, 100),
-      color: "text-yellow-400",
-      points: 100,
-    },
-    {
-      title: "Konzistentní trader",
-      description: "100+ obchodů zaznamenáno",
-      icon: Trophy,
-      unlocked: tradingStats.totalTrades >= 100,
-      progress: Math.min((tradingStats.totalTrades / 100) * 100, 100),
-      color: "text-blue-400",
-      points: 500,
-    },
-    {
-      title: "Profit master",
-      description: "Dosáhl jsi $10k+ zisku",
-      icon: DollarSign,
-      unlocked: tradingStats.totalPnL >= 10000,
-      progress: Math.min((tradingStats.totalPnL / 10000) * 100, 100),
-      color: "text-green-400",
-      points: 1000,
-    },
-    {
-      title: "Disciplinovaný",
-      description: "14 dní streak sledování",
-      icon: Flame,
-      unlocked: false,
-      progress: 85,
-      color: "text-red-400",
-      points: 750,
-    },
-    {
-      title: "AI Expert",
-      description: "50+ konzultací s AI",
-      icon: Brain,
-      unlocked: false,
-      progress: 60,
-      color: "text-purple-400",
-      points: 300,
-    },
-    {
-      title: "Community Leader",
-      description: "Pomohl 10+ traderům",
-      icon: Users,
-      unlocked: false,
-      progress: 30,
-      color: "text-pink-400",
-      points: 2000,
-    },
-  ]
-
-  const aiInsights = [
-    {
-      title: "Optimální trading čas",
-      value: isLiveMode ? "Analyzuji vaše data..." : "9:30 - 11:00 EST",
-      description: isLiveMode ? "Počkejte na analýzu" : "Vaše nejlepší výsledky",
-      icon: Clock,
-      color: "text-cyan-400",
-      confidence: isLiveMode ? 0 : 92,
-    },
-    {
-      title: "Doporučená pozice",
-      value: isLiveMode ? "Kalkuluji..." : "2.5% účtu",
-      description: isLiveMode ? "Analýza probíhá" : "Optimální risk management",
-      icon: Shield,
-      color: "text-green-400",
-      confidence: isLiveMode ? 0 : 88,
-    },
-    {
-      title: "Emocionální pattern",
-      value: isLiveMode ? "Sleduji náladu..." : "Ranní optimismus",
-      description: isLiveMode ? "Potřebuji více dat" : "Nejlepší nálada ráno",
-      icon: Brain,
-      color: "text-purple-400",
-      confidence: isLiveMode ? 0 : 85,
-    },
-    {
-      title: "Preferovaný pár",
-      value: isLiveMode ? "Analyzuji..." : "EUR/USD",
-      description: isLiveMode ? "Čekám na data" : "Nejvyšší úspěšnost",
-      icon: TrendingUp,
-      color: "text-blue-400",
-      confidence: isLiveMode ? 0 : 90,
-    },
-  ]
-
-  const marketAlerts = [
-    {
-      pair: "EUR/USD",
-      type: "volatility",
-      message: isLiveMode ? "Vysoká volatilita detekována" : "Vysoká volatilita očekávána (DEMO)",
-      severity: "high",
-      time: "15:30",
-    },
-    {
-      pair: "GBP/JPY",
-      type: "news",
-      message: isLiveMode ? "Důležité ekonomické zprávy" : "BOJ rozhodnutí za 2 hodiny (DEMO)",
-      severity: "medium",
-      time: "16:00",
-    },
-    {
-      pair: "USD/CAD",
-      type: "technical",
-      message: isLiveMode ? "Technický signál detekován" : "Breakout z consolidace (DEMO)",
-      severity: "low",
-      time: "14:45",
-    },
-  ]
-
-  const totalPoints = achievements.filter((a) => a.unlocked).reduce((sum, a) => sum + a.points, 0)
 
   return (
-    <div className="min-h-screen bg-transparent">
-      <div className="max-w-7xl mx-auto p-6 space-y-8 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/30 via-slate-950 to-slate-950"></div>
+
+      {/* Stars layer 1 - small stars */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `radial-gradient(2px 2px at 20% 30%, white, transparent),
+                         radial-gradient(2px 2px at 60% 70%, white, transparent),
+                         radial-gradient(1px 1px at 50% 50%, white, transparent),
+                         radial-gradient(1px 1px at 80% 10%, white, transparent),
+                         radial-gradient(2px 2px at 90% 60%, white, transparent),
+                         radial-gradient(1px 1px at 33% 80%, white, transparent),
+                         radial-gradient(1px 1px at 15% 90%, white, transparent)`,
+          backgroundSize: "200% 200%",
+          backgroundPosition: "0% 0%",
+          opacity: 0.4,
+        }}
+      ></div>
+
+      {/* Stars layer 2 - medium stars with twinkle */}
+      <div
+        className="absolute inset-0 animate-pulse"
+        style={{
+          backgroundImage: `radial-gradient(3px 3px at 10% 20%, rgba(147, 51, 234, 0.8), transparent),
+                         radial-gradient(2px 2px at 70% 40%, rgba(59, 130, 246, 0.8), transparent),
+                         radial-gradient(3px 3px at 40% 60%, rgba(236, 72, 153, 0.8), transparent),
+                         radial-gradient(2px 2px at 85% 80%, rgba(34, 211, 238, 0.8), transparent)`,
+          backgroundSize: "300% 300%",
+          backgroundPosition: "50% 50%",
+          opacity: 0.6,
+          animation: "twinkle 3s ease-in-out infinite",
+        }}
+      ></div>
+
+      {/* Grid pattern */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLS41IDM5LjVoNDEiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-20"></div>
+
+      <style jsx>{`
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.8; }
+        }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); }
+          50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.8); }
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .animate-glow {
+          animation: glow 2s ease-in-out infinite;
+        }
+      `}</style>
+
+      <div className="max-w-[1800px] mx-auto p-6 space-y-6 pt-6 relative z-10">
         {/* Mode Indicator */}
-        <div className="flex items-center justify-center mb-4">
+        <div className="flex items-center justify-center gap-3 mb-2">
           <Badge
             variant="outline"
-            className={`px-4 py-2 font-semibold ${
+            className={`px-4 py-2 font-semibold shadow-lg ${
               isLiveMode
-                ? "bg-gradient-to-r from-red-500 to-pink-500 text-white border-0"
-                : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0"
+                ? "bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 shadow-red-500/50"
+                : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-blue-500/50"
             }`}
           >
-            {isLiveMode ? "🔴 LIVE MODE - Reálná data" : "🔵 VIRTUAL MODE - Demo data"}
+            {isLiveMode ? "🔴 LIVE MODE - Real Data" : "🔵 VIRTUAL MODE - Demo Data"}
           </Badge>
+          <TradingStyleBadge />
         </div>
 
         {/* Enhanced Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <div className="p-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl border border-purple-500/30 backdrop-blur-sm">
+            <div className="p-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl border border-purple-500/30 backdrop-blur-sm shadow-lg shadow-purple-500/20">
               <Brain className="w-10 h-10 text-purple-400" />
             </div>
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                Dobrý {timeOfDay}! 🚀
+                Good {timeOfDay}! 🚀
               </h1>
               <p className="text-xl text-gray-300 mt-1">
-                {isLiveMode ? "Vítejte zpět v MindTrader AI" : "Vítejte v demo režimu MindTrader AI"}
+                {isLiveMode ? "Welcome back to MindTrader AI" : "Welcome to demo mode"}
               </p>
               <div className="flex items-center space-x-2 mt-2">
                 <Badge className="bg-green-600/20 text-green-400 border-green-500/30">
-                  <Activity className="w-3 h-3 mr-1" />
+                  <Shield className="w-3 h-3 mr-1" />
                   Online
                 </Badge>
-                <Badge className="bg-purple-600/20 text-purple-400 border-purple-500/30">
+                <Badge
+                  className={
+                    isPremium
+                      ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-lg shadow-yellow-500/30"
+                      : "bg-slate-600/20 text-slate-400 border-slate-500/30"
+                  }
+                >
                   <Crown className="w-3 h-3 mr-1" />
-                  Pro Member
-                </Badge>
-                <Badge className="bg-yellow-600/20 text-yellow-400 border-yellow-500/30">
-                  <Star className="w-3 h-3 mr-1" />
-                  {totalPoints} bodů
+                  {isPremium ? `Premium (${daysRemaining} days)` : "Free Plan"}
                 </Badge>
               </div>
             </div>
@@ -383,9 +339,9 @@ export default function DashboardPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleRefresh}
+              onClick={() => setIsRefreshing(true)}
               disabled={isRefreshing}
-              className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50"
+              className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 backdrop-blur-sm"
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
               Refresh
@@ -394,40 +350,47 @@ export default function DashboardPage() {
               variant="outline"
               size="sm"
               onClick={() => setShowAdminPanel(true)}
-              className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50"
+              className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 backdrop-blur-sm"
             >
               <Shield className="w-4 h-4 mr-2" />
-              Admin Panel
-            </Button>
-            <Button variant="outline" size="sm" className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50">
-              <Settings className="w-4 h-4 mr-2" />
-              Nastavení
+              Admin
             </Button>
           </div>
         </div>
 
-        {/* Daily Trading Assessment */}
-        <DailyTradingAssessment />
-
-        {/* Enhanced Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Main Stats Grid */}
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up"
+          style={{ animationDelay: "0.1s" }}
+        >
           {stats.map((stat, index) => (
-            <Card key={index} className="psyche-card group hover:scale-105 transition-all duration-300 overflow-hidden">
+            <Card
+              key={index}
+              className="psyche-card group hover:scale-105 transition-all duration-300 overflow-hidden border-2 border-purple-500/50 bg-slate-900/50 backdrop-blur-sm shadow-xl shadow-purple-500/20 hover:shadow-purple-500/40 animate-fade-in-up"
+              style={{ animationDelay: `${0.2 + index * 0.1}s` }}
+            >
               <div
                 className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-5 group-hover:opacity-10 transition-opacity`}
               ></div>
+              <div
+                className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-20 blur-xl transition-opacity`}
+              ></div>
               <CardContent className="p-6 relative">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 bg-gradient-to-r ${stat.color} rounded-xl shadow-lg`}>
+                  <div className={`p-3 bg-gradient-to-r ${stat.color} rounded-xl shadow-lg shadow-${stat.color}/50`}>
                     <stat.icon className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex items-center space-x-1">
                     {stat.trend === "up" ? (
                       <TrendingUp className="w-4 h-4 text-green-400" />
-                    ) : (
+                    ) : stat.trend === "down" ? (
                       <TrendingDown className="w-4 h-4 text-red-400" />
+                    ) : (
+                      <span className="w-4 h-4"></span>
                     )}
-                    <span className={`text-sm font-medium ${stat.trend === "up" ? "text-green-400" : "text-red-400"}`}>
+                    <span
+                      className={`text-sm font-medium ${stat.trend === "up" ? "text-green-400" : stat.trend === "down" ? "text-red-400" : "text-gray-400"}`}
+                    >
                       {stat.change}
                     </span>
                   </div>
@@ -441,8 +404,8 @@ export default function DashboardPage() {
                   <div className="space-y-2">
                     <Progress value={stat.progress} className="h-2" />
                     <div className="flex justify-between text-xs text-gray-400">
-                      <span>Progress</span>
-                      <span>{stat.progress}%</span>
+                      <span>Pokrok</span>
+                      <span>{Math.round(stat.progress)}%</span>
                     </div>
                   </div>
                 </div>
@@ -451,486 +414,244 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* MindTrader AI Quick Access */}
-        <Card className="psyche-card border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-pink-900/20">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg">
-                  <Brain className="w-8 h-8 text-white" />
+        {/* Quick Actions */}
+        <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <Zap className="w-6 h-6 text-purple-400" />
+            Rychlé akce
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {quickActions.map((action, index) => {
+              return (
+                <Link key={index} href={action.href}>
+                  <Card className="psyche-card group hover:scale-105 transition-all duration-300 cursor-pointer border-slate-700/50 bg-slate-900/50 backdrop-blur-sm shadow-xl overflow-hidden h-full rounded-2xl hover:shadow-2xl hover:border-purple-500/50">
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-50 group-hover:opacity-70 transition-opacity`}
+                    ></div>
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-30 blur-2xl transition-opacity`}
+                    ></div>
+                    <CardContent className="p-4 relative flex flex-col items-center text-center space-y-2">
+                      <div
+                        className={`p-3 bg-gradient-to-br ${action.color} rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}
+                      >
+                        <action.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-semibold mb-1 text-sm">
+                          {action.title}
+                          {action.locked && <Shield className="w-4 h-4 text-yellow-400" />}
+                        </h3>
+                        <p className="text-xs text-gray-400 mt-1">{action.description}</p>
+                      </div>
+                      {action.locked && (
+                        <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 text-xs">
+                          Pouze Premium
+                        </Badge>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* AI Insights & Recommendations */}
+        <Card
+          className="psyche-card border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-pink-900/20 backdrop-blur-sm shadow-xl overflow-hidden animate-fade-in-up animate-glow"
+          style={{ animationDelay: "0.8s" }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5"></div>
+          <CardContent className="p-6 relative">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg shadow-purple-500/50">
+                  <Zap className="w-6 h-6 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-1">MindTrader AI je připraven pomoci</h3>
-                  <p className="text-gray-300">
-                    {isLiveMode
-                      ? "Máte otázky o tradingu nebo potřebujete emocionální podporu?"
-                      : "Vyzkoušejte AI podporu v demo režimu"}
-                  </p>
+                <h3 className="text-2xl font-bold text-white">AI Analýza & Doporučení</h3>
+              </div>
+              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                <Sparkles className="w-3 h-3 mr-1" />
+                AI Powered
+              </Badge>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 backdrop-blur-sm hover:border-green-500/50 transition-colors group">
+                <div className="flex items-start space-x-3">
+                  <Activity className="w-5 h-5 text-green-400 mt-1 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <h4 className="text-white font-semibold mb-1 text-sm">
+                      {(() => {
+                        const todayDate = new Date().toISOString().split("T")[0]
+                        const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
+                        const todayCheck = checks.find((c: any) => c.date === todayDate)
+                        if (todayCheck) {
+                          const score = todayCheck.score
+                          if (score >= 85) return "Připravenost: Výborná ✨"
+                          if (score >= 75) return "Připravenost: Dobrá ✅"
+                          if (score >= 60) return "Připravenost: Střední ⚠️"
+                          return "Připravenost: Nízká 🛑"
+                        }
+                        return "Připravenost: Neznámá"
+                      })()}
+                    </h4>
+                    <p className="text-gray-300 text-xs">
+                      {(() => {
+                        const todayDate = new Date().toISOString().split("T")[0]
+                        const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
+                        const todayCheck = checks.find((c: any) => c.date === todayDate)
+                        if (todayCheck) {
+                          return `Spánek: ${todayCheck.sleepHours}h (${todayCheck.sleepQuality}/10), Stres: ${todayCheck.stressLevel}/10, Focus: ${todayCheck.focus}/10`
+                        }
+                        return "Dokončete Morning Check pro analýzu připravenosti"
+                      })()}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  AI Ready
-                </Badge>
-                <Button
-                  asChild
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <Link href="/mindtrader">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Konzultovat s AI
-                  </Link>
-                </Button>
+              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 backdrop-blur-sm hover:border-blue-500/50 transition-colors group">
+                <div className="flex items-start space-x-3">
+                  <TrendingUp className="w-5 h-5 text-blue-400 mt-1 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <h4 className="text-white font-semibold mb-1 text-sm">Trend výkonu</h4>
+                    <p className="text-gray-300 text-xs">
+                      {(() => {
+                        const entries = JSON.parse(localStorage.getItem("journal-entries") || "[]")
+                        const last7Days = entries.filter((e: any) => {
+                          const entryDate = new Date(e.date)
+                          const today = new Date()
+                          const diffTime = Math.abs(today.getTime() - entryDate.getTime())
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+                          return diffDays <= 7
+                        })
+                        if (last7Days.length > 0) {
+                          const avgMood = (
+                            last7Days.reduce((sum: number, e: any) => sum + (e.mood || 5), 0) / last7Days.length
+                          ).toFixed(1)
+                          return `${last7Days.length} záznamů za 7 dní. Průměrná nálada: ${avgMood}/10. Pokračuj v pravidelném journalingu!`
+                        }
+                        return "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu."
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 backdrop-blur-sm hover:border-purple-500/50 transition-colors group">
+                <div className="flex items-start space-x-3">
+                  <Brain className="w-5 h-5 text-purple-400 mt-1 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <h4 className="text-white font-semibold mb-1 text-sm">Doporučená akce</h4>
+                    <p className="text-gray-300 text-xs">
+                      {(() => {
+                        const todayDate = new Date().toISOString().split("T")[0]
+                        const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
+                        const todayCheck = checks.find((c: any) => c.date === todayDate)
+                        if (!todayCheck) {
+                          return "Začni Morning Check a uzamkni svůj readiness před tradingem."
+                        }
+                        if (todayCheck.score >= 85) {
+                          return "Jsi v top formě! Začni Daily Flow a obchoduj podle plánu."
+                        }
+                        if (todayCheck.score >= 75) {
+                          return "Dobrá připravenost. Zvaž 10min meditaci před prvním obchodem."
+                        }
+                        if (todayCheck.score >= 60) {
+                          return "Střední připravenost. Sniž position sizes a buď extra opatrný."
+                        }
+                        return "Nízká připravenost. Dnes raději studuj nebo paper trade."
+                      })()}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Main Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
-            <TabsTrigger value="overview">
-              <BarChart3 className="w-4 h-4 mr-2" />📊 Přehled
-            </TabsTrigger>
-            <TabsTrigger value="actions">
-              <Zap className="w-4 h-4 mr-2" />⚡ Akce
-            </TabsTrigger>
-            <TabsTrigger value="insights">
-              <Brain className="w-4 h-4 mr-2" />🧠 AI Insights
-            </TabsTrigger>
-            <TabsTrigger value="achievements">
-              <Trophy className="w-4 h-4 mr-2" />🏆 Úspěchy
-            </TabsTrigger>
-            <TabsTrigger value="alerts">
-              <Bell className="w-4 h-4 mr-2" />🔔 Alerts
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Performance Chart */}
-              <div className="lg:col-span-2">
-                <Card className="psyche-card">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center space-x-2">
-                      <LineChart className="w-5 h-5 text-blue-500" />
-                      <span>Výkonnost za posledních 30 dní</span>
-                      <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
-                        {isLiveMode ? "Live Data" : "Demo Data"}
+        {/* Premium Features Banner */}
+        {!isPremium && (
+          <Card className="psyche-card border-yellow-500/50 bg-gradient-to-r from-yellow-900/30 via-orange-900/30 to-yellow-900/30 overflow-hidden relative backdrop-blur-sm shadow-xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-orange-500/5 to-yellow-500/5 animate-pulse"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 blur-xl"></div>
+            <CardContent className="p-6 relative">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+                <div className="flex items-center space-x-4">
+                  <div className="p-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl shadow-2xl shadow-yellow-500/50 animate-pulse">
+                    <Crown className="w-10 h-10 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <h3 className="text-2xl font-bold text-white">Odemkni Premium funkce</h3>
+                      <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 animate-bounce shadow-lg shadow-yellow-500/50">
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        50% SLEVA
                       </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-64 bg-gradient-to-r from-slate-800/50 to-slate-700/50 rounded-lg flex items-center justify-center border border-slate-600/30">
-                      <div className="text-center space-y-4">
-                        <LineChart className="w-12 h-12 text-gray-500 mx-auto" />
-                        <div>
-                          <p className="text-gray-400 mb-2">
-                            {isLiveMode ? "Graf reálné výkonnosti se načítá..." : "Demo graf výkonnosti se načítá..."}
-                          </p>
-                          <div className="flex justify-center space-x-2">
-                            <Button variant="outline" size="sm" className="neon-button bg-transparent">
-                              <Eye className="w-4 h-4 mr-2" />
-                              Zobrazit detaily
-                            </Button>
-                            <Button variant="outline" size="sm" className="neon-button bg-transparent">
-                              <PieChart className="w-4 h-4 mr-2" />
-                              Analytics
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Recent Activity */}
-              <div>
-                <Card className="psyche-card">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center justify-between">
+                    <p className="text-gray-300 text-lg">
+                      Získej neomezené AI konzultace, pokročilou analytiku a prioritní podporu
+                    </p>
+                    <div className="flex items-center space-x-4 mt-3">
                       <div className="flex items-center space-x-2">
-                        <Activity className="w-5 h-5 text-green-500" />
-                        <span>Nedávná aktivita</span>
-                      </div>
-                      <Badge className="bg-green-500/20 text-green-300 border-green-500/30 text-xs">
-                        {recentActivities.filter((a) => a.priority === "high").length} vysoká
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {recentActivities.slice(0, 4).map((activity, index) => (
-                        <div
-                          key={index}
-                          className="flex items-start space-x-3 p-3 bg-slate-800/30 rounded-lg hover:bg-slate-800/50 transition-colors group"
-                        >
-                          <div
-                            className={`p-2 ${activity.bgColor} rounded-lg group-hover:scale-110 transition-transform`}
-                          >
-                            <activity.icon className={`w-4 h-4 ${activity.color}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="text-sm font-medium text-white truncate">{activity.title}</p>
-                              {activity.priority === "high" && (
-                                <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-xs">Vysoká</Badge>
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-400 mb-1">{activity.description}</p>
-                            <p className="text-xs text-gray-500">{activity.time}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <Button variant="outline" className="w-full mt-4 neon-button bg-transparent">
-                      Zobrazit všechny aktivity
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="actions" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {quickActions.map((action, index) => (
-                <Card
-                  key={index}
-                  className="psyche-card group hover:scale-105 transition-all duration-300 overflow-hidden"
-                >
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-r ${action.color} opacity-5 group-hover:opacity-10 transition-opacity`}
-                  ></div>
-                  <CardContent className="p-6 relative">
-                    <div className="flex items-center justify-between mb-4">
-                      <div
-                        className={`p-3 bg-gradient-to-r ${action.color} rounded-xl shadow-lg group-hover:scale-110 transition-transform`}
-                      >
-                        <action.icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex flex-col items-end space-y-1">
-                        {action.badge && (
-                          <Badge
-                            className={`${action.badge === "AI" ? "bg-purple-500/20 text-purple-300" : "bg-orange-500/20 text-orange-300"} border-0`}
-                          >
-                            {action.badge}
-                          </Badge>
-                        )}
-                        {action.popular && (
-                          <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 text-xs">
-                            <Star className="w-3 h-3 mr-1" />
-                            Populární
-                          </Badge>
-                        )}
+                        <Check className="w-4 h-4 text-green-400" />
+                        <span className="text-sm text-gray-300">Zruš kdykoliv</span>
                       </div>
                     </div>
-                    <div className="mb-4">
-                      <h3 className="font-bold text-white text-lg mb-2">{action.title}</h3>
-                      <p className="text-sm text-gray-400">{action.description}</p>
-                    </div>
-                    <Button
-                      asChild
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      <Link href={action.href}>
-                        Spustit
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="insights" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* AI Insights */}
-              <Card className="psyche-card">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center space-x-2">
-                    <Brain className="w-5 h-5 text-purple-500" />
-                    <span>AI Personalizované insights</span>
-                    <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      {isLiveMode ? "LIVE" : "DEMO"}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {aiInsights.map((insight, index) => (
-                      <div
-                        key={index}
-                        className="p-4 bg-gradient-to-r from-slate-800/50 to-slate-700/50 rounded-lg border border-slate-600/30 hover:border-purple-500/30 transition-colors"
-                      >
-                        <div className="flex items-start space-x-3">
-                          <insight.icon className={`w-5 h-5 ${insight.color} mt-0.5`} />
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <p className="text-sm text-gray-300">{insight.title}</p>
-                              {insight.confidence > 0 && (
-                                <Badge className="bg-green-500/20 text-green-300 border-green-500/30 text-xs">
-                                  {insight.confidence}% confidence
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-lg font-bold text-white mb-1">{insight.value}</p>
-                            <p className="text-xs text-gray-400">{insight.description}</p>
-                            {insight.confidence > 0 && <Progress value={insight.confidence} className="h-1 mt-2" />}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* AI Recommendation */}
-              <Card className="psyche-card">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center space-x-2">
-                    <Lightbulb className="w-5 h-5 text-yellow-500" />
-                    <span>Doporučení pro dnes</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="p-6 bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-lg border border-purple-500/20">
-                    <div className="flex items-start space-x-3 mb-4">
-                      <Brain className="w-6 h-6 text-purple-400 mt-0.5" />
-                      <div>
-                        <p className="text-white font-medium mb-2">
-                          {isLiveMode ? "Personalizovaná strategie" : "Demo trading strategie"}
-                        </p>
-                        <p className="text-sm text-gray-300 leading-relaxed mb-4">
-                          {isLiveMode
-                            ? "Analyzuji vaše reálné obchody a náladu pro personalizované doporučení. Počkejte na kompletní analýzu."
-                            : "Vaše emocionální stabilita je dnes na 85%. Doporučuji se zaměřit na swing trading strategie a vyhnout se scalping pozicím. Trh vykazuje vysokou volatilitu, což je ideální pro váš trading styl."}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
-                            {isLiveMode ? "Analýza probíhá" : "Swing Trading"}
-                          </Badge>
-                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                            {isLiveMode ? "Čekám na data" : "EUR/USD"}
-                          </Badge>
-                          <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                            {isLiveMode ? "Live režim" : "Vysoká volatilita"}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      asChild
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      <Link href="/mindtrader">
-                        Konzultovat s AI
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="achievements" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {achievements.map((achievement, index) => (
-                <Card
-                  key={index}
-                  className={`psyche-card ${achievement.unlocked ? "border-green-500/50" : "opacity-60"} group hover:scale-105 transition-all duration-300`}
-                >
-                  <CardContent className="p-6">
-                    <div className="text-center space-y-4">
-                      <div
-                        className={`p-4 rounded-full mx-auto w-fit ${achievement.unlocked ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20" : "bg-gray-500/20"}`}
-                      >
-                        <achievement.icon
-                          className={`w-8 h-8 ${achievement.unlocked ? achievement.color : "text-gray-500"} group-hover:scale-110 transition-transform`}
-                        />
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-center space-x-2 mb-2">
-                          <h3 className={`font-bold ${achievement.unlocked ? "text-white" : "text-gray-500"}`}>
-                            {achievement.title}
-                          </h3>
-                          {achievement.unlocked && (
-                            <Badge className="bg-green-500/20 text-green-300 border-green-500/30 text-xs">
-                              <Award className="w-3 h-3 mr-1" />
-                              {achievement.points}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-400 mb-4">{achievement.description}</p>
-                        <div className="space-y-2">
-                          <Progress value={achievement.progress} className="h-2" />
-                          <div className="flex justify-between text-xs text-gray-400">
-                            <span>{achievement.progress}% dokončeno</span>
-                            <span>{achievement.points} bodů</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="alerts" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="psyche-card">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center space-x-2">
-                    <Bell className="w-5 h-5 text-red-500" />
-                    <span>Market Alerts</span>
-                    <Badge className="bg-red-500/20 text-red-300 border-red-500/30">
-                      {marketAlerts.filter((a) => a.severity === "high").length} kritické
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {marketAlerts.map((alert, index) => (
-                      <div
-                        key={index}
-                        className={`p-4 rounded-lg border ${
-                          alert.severity === "high"
-                            ? "bg-red-500/10 border-red-500/30"
-                            : alert.severity === "medium"
-                              ? "bg-yellow-500/10 border-yellow-500/30"
-                              : "bg-blue-500/10 border-blue-500/30"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            <Badge className="bg-slate-700/50 text-white border-slate-600">{alert.pair}</Badge>
-                            <Badge
-                              className={
-                                alert.severity === "high"
-                                  ? "bg-red-500/20 text-red-300 border-red-500/30"
-                                  : alert.severity === "medium"
-                                    ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-                                    : "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                              }
-                            >
-                              {alert.severity}
-                            </Badge>
-                          </div>
-                          <span className="text-xs text-gray-400">{alert.time}</span>
-                        </div>
-                        <p className="text-sm text-white">{alert.message}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="psyche-card">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center space-x-2">
-                    <Settings className="w-5 h-5 text-blue-500" />
-                    <span>Alert Settings</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg">
-                      <div>
-                        <p className="text-white font-medium">Price Alerts</p>
-                        <p className="text-xs text-gray-400">Upozornění na cenové změny</p>
-                      </div>
-                      <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Zapnuto</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg">
-                      <div>
-                        <p className="text-white font-medium">News Alerts</p>
-                        <p className="text-xs text-gray-400">Důležité ekonomické zprávy</p>
-                      </div>
-                      <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Zapnuto</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg">
-                      <div>
-                        <p className="text-white font-medium">Technical Alerts</p>
-                        <p className="text-xs text-gray-400">Technické signály</p>
-                      </div>
-                      <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">Částečně</Badge>
-                    </div>
-                    <Button className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                      <Settings className="w-4 h-4 mr-2" />
-                      Upravit nastavení
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Community CTA */}
-        <div className="mt-12">
-          <Card className="psyche-card overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10"></div>
-            <CardContent className="p-8 relative">
-              <div className="text-center">
-                <div className="flex justify-center mb-6">
-                  <div className="p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl border border-blue-500/30">
-                    <Users className="w-12 h-12 text-blue-400" />
                   </div>
                 </div>
-                <h3 className="text-3xl font-bold text-white mb-4">Připojte se k naší komunitě</h3>
-                <p className="text-gray-300 mb-8 max-w-2xl mx-auto text-lg">
-                  {isLiveMode
-                    ? "Sdílejte zkušenosti s ostatními tradery, učte se od expertů a rozvíjejte své dovednosti v našem Team Clubu. Více než 10,000+ aktivních členů!"
-                    : "Vyzkoušejte naši demo komunitu s falešnými tradery pro testování funkcí. V live režimu najdete skutečné tradery!"}
-                </p>
-                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <div className="flex flex-col items-center space-y-3">
+                  <div className="text-center">
+                    <p className="text-gray-400 text-sm line-through">2999 Kč/měsíc</p>
+                    <p className="text-4xl font-bold text-white">1499 Kč</p>
+                    <p className="text-yellow-400 text-sm font-semibold">Ušetři 50% dnes!</p>
+                  </div>
                   <Button
                     asChild
                     size="lg"
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0 shadow-lg shadow-yellow-500/30"
                   >
-                    <Link href="/team-club">
-                      <Users className="w-5 h-5 mr-2" />
-                      {isLiveMode ? "Vstoupit do komunity" : "Vyzkoušet demo komunitu"}
+                    <Link href="/pricing">
+                      <Rocket className="w-5 h-5 mr-2" />
+                      Upgradovat nyní
+                      <ArrowRight className="w-5 h-5 ml-2" />
                     </Link>
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    asChild
-                    className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 text-white"
-                  >
-                    <Link href="/analytics">
-                      <BookOpen className="w-5 h-5 mr-2" />
-                      Analytics
-                    </Link>
-                  </Button>
-                </div>
-                <div className="flex justify-center items-center space-x-6 mt-6 text-sm text-gray-400">
-                  <div className="flex items-center space-x-1">
-                    <Users className="w-4 h-4" />
-                    <span>{isLiveMode ? "10,000+ členů" : "Demo komunita"}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Star className="w-4 h-4" />
-                    <span>4.9/5 hodnocení</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Heart className="w-4 h-4" />
-                    <span>24/7 podpora</span>
-                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </div>
+        )}
+
+        {/* Community CTA */}
+        <Card className="psyche-card overflow-hidden border-slate-700/50 bg-slate-900/50 backdrop-blur-sm shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 blur-xl"></div>
+          <CardContent className="p-8 relative">
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                <div className="p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl border border-blue-500/30 shadow-lg shadow-blue-500/20">
+                  <Users className="w-12 h-12 text-blue-400" />
+                </div>
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-4">Join our community</h3>
+              <p className="text-gray-300 mb-8 max-w-2xl mx-auto text-lg">
+                {isLiveMode
+                  ? "Share experiences with other traders and learn from experts. 10,000+ active members!"
+                  : "Try our demo community features in virtual mode"}
+              </p>
+              <Button
+                asChild
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white border-0 shadow-lg shadow-blue-500/30"
+              >
+                <Link href="/team-club">
+                  <Users className="w-5 h-5 mr-2" />
+                  {isLiveMode ? "Join Community" : "Try Demo Community"}
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Admin Panel */}

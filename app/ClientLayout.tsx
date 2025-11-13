@@ -2,41 +2,21 @@
 
 import type React from "react"
 
-import { AuthProvider } from "@/contexts/auth-context"
-import { SubscriptionProvider } from "@/contexts/subscription-context"
-import { DataProvider } from "@/contexts/data-context"
+import { usePathname } from "next/navigation"
 import { TopNavigation } from "@/components/top-navigation"
-import { Toaster } from "@/components/ui/toaster"
-import { useAuth } from "@/contexts/auth-context"
+import { Footer } from "@/components/footer"
 
-function LayoutContent({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth()
+export default function ClientLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
+  // Pages where we don't show navigation
+  const hideNavigation = pathname === "/login" || pathname === "/signup" || pathname === "/onboarding"
 
   return (
-    <>
-      {user && <TopNavigation />}
-      <main className={user ? "" : ""}>{children}</main>
-      <Toaster />
-    </>
-  )
-}
-
-export function ClientLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <AuthProvider>
-      <SubscriptionProvider>
-        <DataProvider>
-          <LayoutContent>{children}</LayoutContent>
-        </DataProvider>
-      </SubscriptionProvider>
-    </AuthProvider>
+    <div className="flex flex-col min-h-screen">
+      {!hideNavigation && <TopNavigation />}
+      <div className={hideNavigation ? "flex-1" : "pt-16 flex-1"}>{children}</div>
+      {!hideNavigation && <Footer />}
+    </div>
   )
 }

@@ -1,83 +1,179 @@
 "use client"
 
-import { useMemo } from "react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import { useData } from "@/contexts/data-context"
+import { TrendingUp, TrendingDown, Activity } from "lucide-react"
 
-interface PerformanceChartProps {
-  data: any[]
-}
+export function PerformanceChart() {
+  const [chartData, setChartData] = useState<any[]>([])
+  const [stats, setStats] = useState({ total: 0, change: 0, trend: "up" })
+  const { isLiveMode, getAllTrades } = useData()
 
-export function PerformanceChart({ data }: PerformanceChartProps) {
-  const chartData = useMemo(() => {
-    if (!data || data.length === 0) return []
+  useEffect(() => {
+    const loadData = () => {
+      if (isLiveMode) {
+        // In live mode, show real data or empty state
+        const trades = getAllTrades()
 
-    // Sort by date and calculate cumulative P&L
-    const sortedData = [...data]
-      .filter((entry) => entry.profitLoss !== undefined)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        if (trades.length === 0) {
+          // Empty state for live mode
+          setChartData([])
+          setStats({ total: 0, change: 0, trend: "neutral" })
+          return
+        }
 
-    let cumulativePnL = 0
-    return sortedData.map((entry, index) => {
-      cumulativePnL += entry.profitLoss || 0
-      return {
-        date: new Date(entry.date).toLocaleDateString("cs-CZ", {
-          month: "short",
-          day: "numeric",
-        }),
-        cumulativePnL: cumulativePnL,
-        dailyPnL: entry.profitLoss || 0,
-        trade: index + 1,
-        pair: entry.pair,
-        type: entry.tradeType,
+        // Calculate cumulative P&L from real trades
+        const sortedTrades = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+        let cumulative = 0
+        const data = sortedTrades.map((trade) => {
+          cumulative += trade.pnl || 0
+          return {
+            date: new Date(trade.date).toLocaleDateString("cs-CZ", {
+              day: "2-digit",
+              month: "2-digit",
+            }),
+            value: cumulative,
+          }
+        })
+
+        setChartData(data)
+
+        const totalPnL = cumulative
+        const firstValue = data[0]?.value || 0
+        const lastValue = data[data.length - 1]?.value || 0
+        const change = lastValue - firstValue
+
+        setStats({
+          total: totalPnL,
+          change: change,
+          trend: change >= 0 ? "up" : "down",
+        })
+      } else {
+        // Virtual mode - show demo data
+        const demoData = generateDemoChartData()
+        setChartData(demoData)
+
+        const totalPnL = demoData[demoData.length - 1]?.value || 0
+        const firstValue = demoData[0]?.value || 0
+        const lastValue = demoData[demoData.length - 1]?.value || 0
+        const change = lastValue - firstValue
+
+        setStats({
+          total: totalPnL,
+          change: change,
+          trend: change >= 0 ? "up" : "down",
+        })
       }
-    })
-  }, [data])
+    }
 
-  if (chartData.length === 0) {
-    return <div className="h-64 flex items-center justify-center text-muted-foreground">Žádná data pro zobrazení</div>
+    loadData()
+  }, [isLiveMode, getAllTrades])
+
+  const generateDemoChartData = () => {
+    const data = []
+    let cumulative = 0
+
+    for (let i = 0; i < 30; i++) {
+      const date = new Date()
+      date.setDate(date.getDate() - (29 - i))
+      const change = (Math.random() - 0.45) * 500 // Slight positive bias
+      cumulative += change
+
+      data.push({
+        date: date.toLocaleDateString("cs-CZ", {
+          day: "2-digit",
+          month: "2-digit",
+        }),
+        value: Math.round(cumulative),
+      })
+    }
+
+    return data
+  }
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("cs-CZ", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value)
+  }
+
+  if (isLiveMode && chartData.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Vývoj výkonnosti</CardTitle>
+          <CardDescription>Kumulativní P&L v čase</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+            <Activity className="h-12 w-12 mb-4 opacity-50" />
+            <p className="text-lg font-medium mb-2">Zatím žádná data</p>
+            <p className="text-sm text-center">Začněte zaznamenávat své obchody, aby se zde zobrazil graf výkonnosti</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
+    <Card>
+      <CardHeader>
+        <CardTitle>Vývoj výkonnosti</CardTitle>
+        <CardDescription>Kumulativní P&L v čase</CardDescription>
+        <div className="flex items-center gap-4 mt-4">
+          <div className="flex items-center gap-2">
+            {stats.trend === "up" ? (
+              <TrendingUp className="h-5 w-5 text-green-500" />
+            ) : stats.trend === "down" ? (
+              <TrendingDown className="h-5 w-5 text-red-500" />
+            ) : (
+              <Activity className="h-5 w-5 text-gray-500" />
+            )}
+            <span className="text-2xl font-bold">{formatCurrency(stats.total)}</span>
+          </div>
+          <div className={`text-sm ${stats.change >= 0 ? "text-green-500" : "text-red-500"}`}>
+            {stats.change >= 0 ? "+" : ""}
+            {formatCurrency(stats.change)} za období
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={300}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" fontSize={12} tick={{ fill: "#666" }} />
-            <YAxis fontSize={12} tick={{ fill: "#666" }} tickFormatter={(value) => `${value} USD`} />
-            <Tooltip
-              formatter={(value: any, name: string) => [
-                `${value} USD`,
-                name === "cumulativePnL" ? "Kumulativní P&L" : "Denní P&L",
-              ]}
-              labelFormatter={(label) => `Datum: ${label}`}
+            <XAxis dataKey="date" />
+            <YAxis
+              tickFormatter={(value) =>
+                new Intl.NumberFormat("cs-CZ", {
+                  notation: "compact",
+                  compactDisplay: "short",
+                }).format(value)
+              }
             />
+            <Tooltip
+              formatter={(value: any) => formatCurrency(value)}
+              labelStyle={{ color: "#000" }}
+              contentStyle={{ backgroundColor: "#fff", border: "1px solid #ccc" }}
+            />
+            <Legend />
             <Line
               type="monotone"
-              dataKey="cumulativePnL"
-              stroke="#2563eb"
+              dataKey="value"
+              stroke="#8884d8"
               strokeWidth={2}
-              dot={{ fill: "#2563eb", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6 }}
+              name="Kumulativní P&L"
+              dot={{ r: 3 }}
+              activeDot={{ r: 5 }}
             />
           </LineChart>
         </ResponsiveContainer>
-      </div>
-
-      <div className="h-48">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" fontSize={12} tick={{ fill: "#666" }} />
-            <YAxis fontSize={12} tick={{ fill: "#666" }} tickFormatter={(value) => `${value} USD`} />
-            <Tooltip
-              formatter={(value: any) => [`${value} USD`, "Denní P&L"]}
-              labelFormatter={(label) => `Datum: ${label}`}
-            />
-            <Bar dataKey="dailyPnL" fill={(entry: any) => (entry.dailyPnL >= 0 ? "#10b981" : "#ef4444")} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

@@ -8,13 +8,15 @@ import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/bJe28sguAbri1noczO1B600"
+
 export function PlanSelector() {
   const { user } = useAuth()
-  const { subscription, subscribe, isLoading: isSubscribing } = useSubscription()
+  const { subscription, isLoading: isSubscribing } = useSubscription()
   const router = useRouter()
   const { toast } = useToast()
 
-  const handleSubscribe = async (plan: "free" | "premium") => {
+  const handleSubscribe = (plan: "free" | "premium") => {
     if (!user) {
       router.push("/login")
       toast({
@@ -33,29 +35,8 @@ export function PlanSelector() {
       return
     }
 
-    try {
-      const success = await subscribe(plan)
-      if (success) {
-        toast({
-          title: "Předplatné úspěšné",
-          description: "Váš plán byl úspěšně aktualizován na Premium!",
-        })
-        router.push("/") // Redirect to dashboard or home page
-      } else {
-        toast({
-          title: "Chyba předplatného",
-          description: "Nepodařilo se aktualizovat váš plán. Zkuste to prosím znovu.",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      console.error("Subscription error:", error)
-      toast({
-        title: "Chyba",
-        description: "Při zpracování vašeho předplatného došlo k chybě.",
-        variant: "destructive",
-      })
-    }
+    // Přesměrování na Stripe payment link
+    window.location.href = STRIPE_PAYMENT_LINK
   }
 
   return (
@@ -76,7 +57,7 @@ export function PlanSelector() {
               Základní nástroje pro začátek
             </CardDescription>
             <div className="text-center text-4xl font-bold text-gray-900 dark:text-gray-50 mt-4">
-              $0<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/měsíc</span>
+              0 Kč<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/měsíc</span>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -117,7 +98,7 @@ export function PlanSelector() {
               Odemkněte plný potenciál pro mistrovství v obchodování
             </CardDescription>
             <div className="text-center text-4xl font-bold text-gray-900 dark:text-gray-50 mt-4">
-              $59<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/měsíc</span>
+              1499 Kč<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/měsíc</span>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -143,7 +124,7 @@ export function PlanSelector() {
             </div>
             <div className="flex items-center text-gray-800 dark:text-gray-200">
               <CheckCircle2 className="h-5 w-5 text-green-500 mr-2" />
-              **3-denní bezplatná zkušební verze**
+              **7-denní bezplatná zkušební verze**
             </div>
           </CardContent>
           <CardFooter>
@@ -152,7 +133,7 @@ export function PlanSelector() {
               onClick={() => handleSubscribe("premium")}
               disabled={isSubscribing}
             >
-              {isSubscribing ? "Přihlašování..." : "Začít 3-denní zkušební verzi"}
+              {isSubscribing ? "Přesměrování..." : "Začít 7-denní zkušební verzi"}
             </Button>
           </CardFooter>
         </Card>
