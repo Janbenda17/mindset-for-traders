@@ -22,23 +22,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User information required" }, { status: 400 })
     }
 
+    const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.vercel.app"
+    const baseUrl = origin.startsWith("http") ? origin : `https://${origin}`
+
+    const priceId = "price_1S59GOL0tgTNaSwwEqyW1brC" // Your MindTrader Premium price
+    
     // Create checkout session with 7-day trial
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
       line_items: [
         {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: "Trader Mindset Premium",
-              description: "Pokročilé funkce pro profesionální trading",
-            },
-            unit_amount: 5900, // €59.00
-            recurring: {
-              interval: "month",
-            },
-          },
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -50,11 +45,12 @@ export async function POST(request: NextRequest) {
           user_email: userEmail,
         },
       },
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/upgrade`,
+      success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/upgrade`,
       metadata: {
         plan: "premium",
         user_email: userEmail,
+        product_id: "prod_T1Bd0pGy0wj1AU",
       },
     })
 

@@ -1,18 +1,21 @@
 "use client"
 
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Check, Star, Zap, Crown, Shield, Headphones } from "lucide-react"
+import { Check, Star, Zap, Crown, Shield, Headphones, Loader2 } from 'lucide-react'
 import { useSubscription } from "@/contexts/subscription-context"
-
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/bJe28sguAbri1noczO1B600"
 
 export function PricingPage() {
   const { plan, isActive, daysRemaining } = useSubscription()
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleUpgrade = () => {
-    window.location.href = STRIPE_PAYMENT_LINK
+    setIsLoading(true)
+    // Open in new window instead of redirect
+    window.open('https://buy.stripe.com/3cI8wQ6U01QIfee8jy1B601', '_blank')
+    setIsLoading(false)
   }
 
   const features = {
@@ -120,9 +123,14 @@ export function PricingPage() {
             <Button
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               onClick={handleUpgrade}
-              disabled={isActive}
+              disabled={isActive || isLoading}
             >
-              {isActive ? (
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Přesměrování...
+                </>
+              ) : isActive ? (
                 "Aktivní Premium"
               ) : (
                 <>

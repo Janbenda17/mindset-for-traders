@@ -9,27 +9,10 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { saveJournalEntry } from "@/utils/storage-utils"
-import {
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Plus,
-  Trash2,
-  Target,
-  BookOpen,
-  XCircle,
-  Brain,
-  Heart,
-  Lock,
-  AlertCircle,
-  Clock,
-  Zap,
-  TrendingUpIcon,
-  Check,
-} from "lucide-react"
+import { DollarSign, TrendingUp, TrendingDown, Plus, Trash2, Target, BookOpen, XCircle, Brain, Heart, Lock, AlertCircle, Clock, Zap, TrendingUpIcon, Check } from 'lucide-react'
 import { format } from "date-fns"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface Trade {
   id: string
@@ -352,33 +335,31 @@ export function RecordTrades() {
   const winRate = trades.length > 0 ? (winningTrades / trades.length) * 100 : 0
 
   return (
-    <div className="min-h-screen pb-12">
-      <div className="mb-12 relative">
+    <div className="min-h-screen pb-12 md:px-8 px-3 md:pt-0 pt-3">
+      <div className="mb-6 md:mb-12 relative">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 rounded-3xl blur-3xl" />
-        <div className="relative bg-gradient-to-br from-slate-900/50 to-slate-800/30 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-5xl font-black bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-                    Přidat Nový Trade
-                  </h1>
-                  <p className="text-muted-foreground">Zaznamenej své obchody s detailní analýzou 💼</p>
-                </div>
+        <div className="relative bg-gradient-to-br from-slate-900/50 to-slate-800/30 backdrop-blur-xl border border-white/10 rounded-3xl md:p-8 p-4">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="md:h-12 md:w-12 h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                <DollarSign className="md:h-6 md:w-6 h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="md:text-5xl text-3xl font-black bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
+                  Přidat Trade
+                </h1>
+                <p className="text-muted-foreground md:block hidden">Zaznamenej své obchody 💼</p>
               </div>
             </div>
-            <Badge className="text-base px-6 py-2 rounded-full bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-              {trades.length} trades dnes
+            <Badge className="text-sm md:text-base px-4 md:px-6 py-1 md:py-2 rounded-full bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+              {trades.length} trades
             </Badge>
           </div>
         </div>
       </div>
 
       {!morningCheck && (
-        <Alert className="mb-8 border-orange-500/30 bg-orange-500/10">
+        <Alert className="mb-4 md:mb-8 border-orange-500/30 bg-orange-500/10 hidden md:block">
           <AlertCircle className="h-5 w-5 text-orange-400" />
           <AlertTitle className="text-orange-400 font-bold">⚠️ Morning Check Není Dokončen</AlertTitle>
           <AlertDescription className="text-muted-foreground">
@@ -388,7 +369,7 @@ export function RecordTrades() {
       )}
 
       {todayPlan && (
-        <Alert className="mb-8 border-blue-500/30 bg-blue-500/10">
+        <Alert className="mb-4 md:mb-8 border-blue-500/30 bg-blue-500/10 hidden md:block">
           <BookOpen className="h-5 w-5 text-blue-400" />
           <AlertTitle className="text-blue-400 font-bold">📋 Tvůj Dnešní Plán</AlertTitle>
           <AlertDescription className="text-muted-foreground space-y-2 mt-2">
@@ -403,90 +384,62 @@ export function RecordTrades() {
       )}
 
       {trades.length > 0 && (
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <Card
-            className={`border-2 ${totalPnL >= 0 ? "border-green-500/30 bg-green-500/10" : "border-red-500/30 bg-red-500/10"}`}
-          >
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground mb-2">Celkový P&L</div>
-              <div className={`text-3xl font-black ${totalPnL >= 0 ? "text-green-400" : "text-red-400"}`}>
+        <div className="grid md:grid-cols-4 grid-cols-2 gap-3 md:gap-6 mb-6 md:mb-8">
+          <Card className={`border-2 ${totalPnL >= 0 ? "border-green-500/30 bg-green-500/10" : "border-red-500/30 bg-red-500/10"}`}>
+            <CardContent className="md:pt-6 pt-4 md:p-6 p-3">
+              <div className="text-xs md:text-sm text-muted-foreground mb-1 md:mb-2">P&L</div>
+              <div className={`md:text-3xl text-xl font-black ${totalPnL >= 0 ? "text-green-400" : "text-red-400"}`}>
                 {totalPnL >= 0 ? "+" : ""}${totalPnL.toFixed(2)}
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-blue-500/30 bg-blue-500/10">
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground mb-2">Win Rate</div>
-              <div className="text-3xl font-black text-blue-400">{winRate.toFixed(0)}%</div>
+            <CardContent className="md:pt-6 pt-4 md:p-6 p-3">
+              <div className="text-xs md:text-sm text-muted-foreground mb-1 md:mb-2">Win Rate</div>
+              <div className="md:text-3xl text-xl font-black text-blue-400">{winRate.toFixed(0)}%</div>
             </CardContent>
           </Card>
 
           <Card className="border-emerald-500/30 bg-emerald-500/10">
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground mb-2">Winning Trades</div>
-              <div className="text-3xl font-black text-emerald-400">{winningTrades}</div>
+            <CardContent className="md:pt-6 pt-4 md:p-6 p-3">
+              <div className="text-xs md:text-sm text-muted-foreground mb-1 md:mb-2">Wins</div>
+              <div className="md:text-3xl text-xl font-black text-emerald-400">{winningTrades}</div>
             </CardContent>
           </Card>
 
           <Card className="border-rose-500/30 bg-rose-500/10">
-            <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground mb-2">Losing Trades</div>
-              <div className="text-3xl font-black text-rose-400">{losingTrades}</div>
+            <CardContent className="md:pt-6 pt-4 md:p-6 p-3">
+              <div className="text-xs md:text-sm text-muted-foreground mb-1 md:mb-2">Losses</div>
+              <div className="md:text-3xl text-xl font-black text-rose-400">{losingTrades}</div>
             </CardContent>
           </Card>
         </div>
       )}
 
-      <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 mb-8 overflow-hidden">
+      <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 md:mb-8 mb-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5 pointer-events-none" />
-        <CardHeader className="relative">
-          <CardTitle className="flex items-center gap-3 text-emerald-400 text-2xl">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-              <Plus className="h-6 w-6 text-white" />
+        <CardHeader className="relative md:p-6 p-4">
+          <CardTitle className="flex items-center gap-3 text-emerald-400 md:text-2xl text-xl">
+            <div className="md:h-10 md:w-10 h-8 w-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+              <Plus className="md:h-6 md:w-6 h-5 w-5 text-white" />
             </div>
-            Přidat Nový Trade
+            Nový Trade
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="md:text-base text-sm md:block hidden">
             Detailní záznam obchodu včetně časování, emocí a chování
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-8 relative">
-          <div className="space-y-6">
+        <CardContent className="space-y-6 md:space-y-8 relative md:p-6 p-4">
+          <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-3 pb-3 border-b border-emerald-500/20">
-              <div className="h-8 w-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                <Target className="h-5 w-5 text-emerald-400" />
+              <div className="h-6 w-6 md:h-8 md:w-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <Target className="h-4 w-4 md:h-5 md:w-5 text-emerald-400" />
               </div>
-              <h3 className="text-xl font-bold text-white">Základní Informace</h3>
+              <h3 className="text-lg md:text-xl font-bold text-white">Základní Info</h3>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="openDate" className="text-white text-sm font-medium">
-                  Datum otevření
-                </Label>
-                <Input
-                  id="openDate"
-                  type="date"
-                  value={currentTrade.openDate}
-                  onChange={(e) => setCurrentTrade({ ...currentTrade, openDate: e.target.value })}
-                  className="bg-slate-900/50 border-emerald-500/30 text-white h-12"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="closeDate" className="text-white text-sm font-medium">
-                  Datum uzavření
-                </Label>
-                <Input
-                  id="closeDate"
-                  type="date"
-                  value={currentTrade.closeDate}
-                  onChange={(e) => setCurrentTrade({ ...currentTrade, closeDate: e.target.value })}
-                  className="bg-slate-900/50 border-emerald-500/30 text-white h-12"
-                />
-              </div>
-
+            <div className="grid md:grid-cols-2 grid-cols-1 gap-4 md:gap-6">
               <div className="space-y-2">
                 <Label htmlFor="pair" className="text-white text-sm font-medium">
                   Měnový pár *
@@ -496,19 +449,19 @@ export function RecordTrades() {
                   value={currentTrade.pair}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, pair: e.target.value.toUpperCase() })}
                   placeholder="EUR/USD"
-                  className="bg-slate-900/50 border-emerald-500/30 text-white h-12 text-base font-bold"
+                  className="bg-slate-900/50 border-emerald-500/30 text-white md:h-12 h-14 text-base font-bold"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="direction" className="text-white text-sm font-medium">
-                  Směr obchodu *
+                  Směr *
                 </Label>
                 <Select
                   value={currentTrade.direction}
                   onValueChange={(v) => setCurrentTrade({ ...currentTrade, direction: v as "LONG" | "SHORT" })}
                 >
-                  <SelectTrigger className="bg-slate-900/50 border-emerald-500/30 text-white h-12">
+                  <SelectTrigger className="bg-slate-900/50 border-emerald-500/30 text-white md:h-12 h-14">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -528,129 +481,224 @@ export function RecordTrades() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="positionSize" className="text-white text-sm font-medium">
-                  Velikost pozice (loty)
+              <div className="space-y-2 md:block hidden">
+                <Label htmlFor="openDate" className="text-white text-sm font-medium">
+                  Datum otevření
                 </Label>
                 <Input
-                  id="positionSize"
-                  type="number"
-                  step="0.01"
-                  value={currentTrade.positionSize}
-                  onChange={(e) =>
-                    setCurrentTrade({ ...currentTrade, positionSize: Number.parseFloat(e.target.value) })
-                  }
-                  className="bg-slate-900/50 border-emerald-500/30 text-white h-12 text-base"
+                  id="openDate"
+                  type="date"
+                  value={currentTrade.openDate}
+                  onChange={(e) => setCurrentTrade({ ...currentTrade, openDate: e.target.value })}
+                  className="bg-slate-900/50 border-emerald-500/30 text-white h-12"
+                />
+              </div>
+
+              <div className="space-y-2 md:block hidden">
+                <Label htmlFor="closeDate" className="text-white text-sm font-medium">
+                  Datum uzavření
+                </Label>
+                <Input
+                  id="closeDate"
+                  type="date"
+                  value={currentTrade.closeDate}
+                  onChange={(e) => setCurrentTrade({ ...currentTrade, closeDate: e.target.value })}
+                  className="bg-slate-900/50 border-emerald-500/30 text-white h-12"
                 />
               </div>
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-3 pb-3 border-b border-cyan-500/20">
-              <div className="h-8 w-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-cyan-400" />
+              <div className="h-6 w-6 md:h-8 md:w-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                <Clock className="h-4 w-4 md:h-5 md:w-5 text-cyan-400" />
               </div>
-              <h3 className="text-xl font-bold text-white">Časování Obchodu</h3>
+              <h3 className="text-lg md:text-xl font-bold text-white">Čas</h3>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 grid-cols-1 gap-4 md:gap-6">
               <div className="space-y-2">
                 <Label htmlFor="openTime" className="text-white text-sm font-medium">
-                  Čas otevření * (24H formát)
+                  Čas otevření *
                 </Label>
                 <Input
                   id="openTime"
                   type="time"
                   value={currentTrade.openTime}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, openTime: e.target.value })}
-                  className="bg-slate-900/50 border-cyan-500/30 text-white h-12 text-base"
+                  className="bg-slate-900/50 border-cyan-500/30 text-white md:h-12 h-14 text-base"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="closeTime" className="text-white text-sm font-medium">
-                  Čas zavření * (24H formát)
+                  Čas zavření *
                 </Label>
                 <Input
                   id="closeTime"
                   type="time"
                   value={currentTrade.closeTime}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, closeTime: e.target.value })}
-                  className="bg-slate-900/50 border-cyan-500/30 text-white h-12 text-base"
+                  className="bg-slate-900/50 border-cyan-500/30 text-white md:h-12 h-14 text-base"
                 />
               </div>
             </div>
-
-            {currentTrade.session && currentTrade.tradeType && (
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
-                <Zap className="h-5 w-5 text-cyan-400" />
-                <div className="flex items-center gap-3">
-                  <div>
-                    <div className="text-xs text-muted-foreground">Session</div>
-                    <Badge className="mt-1 bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-sm">
-                      {currentTrade.session}
-                    </Badge>
-                  </div>
-                  <div className="h-8 w-px bg-cyan-500/30" />
-                  <div>
-                    <div className="text-xs text-muted-foreground">Typ obchodu</div>
-                    <Badge className="mt-1 bg-purple-500/20 text-purple-400 border-purple-500/30 text-sm">
-                      {currentTrade.tradeType}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-3 pb-3 border-b border-yellow-500/20">
-              <div className="h-8 w-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                <TrendingUpIcon className="h-5 w-5 text-yellow-400" />
+              <div className="h-6 w-6 md:h-8 md:w-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                <TrendingUpIcon className="h-4 w-4 md:h-5 md:w-5 text-yellow-400" />
               </div>
-              <h3 className="text-xl font-bold text-white">Výsledek Obchodu</h3>
+              <h3 className="text-lg md:text-xl font-bold text-white">Výsledek</h3>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 grid-cols-1 gap-4 md:gap-6">
               <div className="space-y-2">
-                <Label htmlFor="pips" className="text-white text-sm font-medium flex items-center gap-2">
-                  Počet pips *
-                  <span className="text-xs text-muted-foreground font-normal">(kladné = zisk, záporné = ztráta)</span>
+                <Label htmlFor="pips" className="text-white text-sm font-medium">
+                  Pips *
                 </Label>
-                <div className="relative">
+                <Input
+                  id="pips"
+                  type="number"
+                  step="0.1"
+                  value={currentTrade.pips}
+                  onChange={(e) => setCurrentTrade({ ...currentTrade, pips: Number.parseFloat(e.target.value) })}
+                  placeholder="+25.5"
+                  className="bg-slate-900/50 border-yellow-500/30 text-white md:h-14 h-16 text-lg font-bold"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="pnl" className="text-white text-sm font-medium">
+                  P&L (USD) *
+                </Label>
+                <Input
+                  id="pnl"
+                  type="number"
+                  step="0.01"
+                  value={currentTrade.pnl}
+                  onChange={(e) => setCurrentTrade({ ...currentTrade, pnl: Number.parseFloat(e.target.value) })}
+                  placeholder="+250.00"
+                  className={`md:h-14 h-16 text-lg font-bold ${
+                    (currentTrade.pnl || 0) >= 0
+                      ? "bg-green-500/10 border-green-500/30 text-green-400"
+                      : "bg-red-500/10 border-red-500/30 text-red-400"
+                  }`}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 pb-3 border-b border-cyan-500/20">
+                <div className="h-8 w-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-cyan-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Časování Obchodu</h3>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="openDate" className="text-white text-sm font-medium">
+                    Datum otevření
+                  </Label>
                   <Input
-                    id="pips"
-                    type="number"
-                    step="0.1"
-                    value={currentTrade.pips}
-                    onChange={(e) => setCurrentTrade({ ...currentTrade, pips: Number.parseFloat(e.target.value) })}
-                    placeholder="např. +25.5 nebo -15.0"
-                    className="bg-slate-900/50 border-yellow-500/30 text-white h-14 text-lg font-bold pl-4 pr-16"
+                    id="openDate"
+                    type="date"
+                    value={currentTrade.openDate}
+                    onChange={(e) => setCurrentTrade({ ...currentTrade, openDate: e.target.value })}
+                    className="bg-slate-900/50 border-emerald-500/30 text-white h-12"
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-yellow-400 font-bold">pips</div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="closeDate" className="text-white text-sm font-medium">
+                    Datum uzavření
+                  </Label>
+                  <Input
+                    id="closeDate"
+                    type="date"
+                    value={currentTrade.closeDate}
+                    onChange={(e) => setCurrentTrade({ ...currentTrade, closeDate: e.target.value })}
+                    className="bg-slate-900/50 border-emerald-500/30 text-white h-12"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="openTime" className="text-white text-sm font-medium">
+                    Čas otevření * (24H formát)
+                  </Label>
+                  <Input
+                    id="openTime"
+                    type="time"
+                    value={currentTrade.openTime}
+                    onChange={(e) => setCurrentTrade({ ...currentTrade, openTime: e.target.value })}
+                    className="bg-slate-900/50 border-cyan-500/30 text-white h-12 text-base"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="closeTime" className="text-white text-sm font-medium">
+                    Čas zavření * (24H formát)
+                  </Label>
+                  <Input
+                    id="closeTime"
+                    type="time"
+                    value={currentTrade.closeTime}
+                    onChange={(e) => setCurrentTrade({ ...currentTrade, closeTime: e.target.value })}
+                    className="bg-slate-900/50 border-cyan-500/30 text-white h-12 text-base"
+                  />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="pnl" className="text-white text-sm font-medium flex items-center gap-2">
-                  P&L (USD) *<span className="text-xs text-muted-foreground font-normal">(zadej sám)</span>
-                </Label>
-                <div className="relative">
+              {currentTrade.session && currentTrade.tradeType && (
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
+                  <Zap className="h-5 w-5 text-cyan-400" />
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <div className="text-xs text-muted-foreground">Session</div>
+                      <Badge className="mt-1 bg-cyan-500/20 text-cyan-400 border-cyan-500/30 text-sm">
+                        {currentTrade.session}
+                      </Badge>
+                    </div>
+                    <div className="h-8 w-px bg-cyan-500/30" />
+                    <div>
+                      <div className="text-xs text-muted-foreground">Typ obchodu</div>
+                      <Badge className="mt-1 bg-purple-500/20 text-purple-400 border-purple-500/30 text-sm">
+                        {currentTrade.tradeType}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 pb-3 border-b border-yellow-500/20">
+                <div className="h-8 w-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                  <TrendingUpIcon className="h-5 w-5 text-yellow-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Výsledek Obchodu</h3>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="positionSize" className="text-white text-sm font-medium">
+                    Velikost pozice (loty)
+                  </Label>
                   <Input
-                    id="pnl"
+                    id="positionSize"
                     type="number"
                     step="0.01"
-                    value={currentTrade.pnl}
-                    onChange={(e) => setCurrentTrade({ ...currentTrade, pnl: Number.parseFloat(e.target.value) })}
-                    placeholder="např. +250.00 nebo -150.00"
-                    className={`h-14 text-lg font-bold pl-4 pr-16 ${
-                      (currentTrade.pnl || 0) >= 0
-                        ? "bg-green-500/10 border-green-500/30 text-green-400"
-                        : "bg-red-500/10 border-red-500/30 text-red-400"
-                    }`}
+                    value={currentTrade.positionSize}
+                    onChange={(e) =>
+                      setCurrentTrade({ ...currentTrade, positionSize: Number.parseFloat(e.target.value) })
+                    }
+                    className="bg-slate-900/50 border-emerald-500/30 text-white h-12 text-base"
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">USD</div>
                 </div>
               </div>
             </div>
@@ -954,45 +1002,6 @@ export function RecordTrades() {
               />
             </div>
           </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="tags" className="text-white">
-                Tagy (oddělené čárkou)
-              </Label>
-              <Input
-                id="tags"
-                value={Array.isArray(currentTrade.tags) ? currentTrade.tags.join(", ") : currentTrade.tags}
-                onChange={(e) =>
-                  setCurrentTrade({ ...currentTrade, tags: e.target.value.split(",").map((t) => t.trim()) as any })
-                }
-                placeholder="forex, strategie, emoce..."
-                className="bg-slate-900/50 border-slate-500/30 text-white"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes" className="text-white">
-                Dodatečné poznámky
-              </Label>
-              <Textarea
-                id="notes"
-                value={currentTrade.notes}
-                onChange={(e) => setCurrentTrade({ ...currentTrade, notes: e.target.value })}
-                placeholder="Další poznámky a postřehy..."
-                className="min-h-24 bg-slate-900/50 border-slate-500/30 text-white"
-              />
-            </div>
-          </div>
-
-          <Button
-            type="button"
-            onClick={handleAddTrade}
-            className="w-full h-16 text-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all"
-          >
-            <Plus className="h-6 w-6 mr-2" />
-            Přidat Trade
-          </Button>
         </CardContent>
       </Card>
 

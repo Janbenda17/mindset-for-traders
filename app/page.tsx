@@ -1,34 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { AdminPanel } from "@/components/admin-panel"
 import { TradingStyleBadge } from "@/components/trading-style-badge"
-import {
-  Brain,
-  TrendingUp,
-  Target,
-  DollarSign,
-  Calendar,
-  Crown,
-  Shield,
-  Sparkles,
-  RefreshCw,
-  TrendingDown,
-  Users,
-  ArrowRight,
-  Check,
-  Rocket,
-  PlayCircle,
-  PlusCircle,
-  AlertTriangle,
-  Zap,
-  Activity,
-} from "lucide-react"
+import { Brain, TrendingUp, Target, DollarSign, Calendar, Crown, Shield, Sparkles, RefreshCw, TrendingDown, Users, ArrowRight, Check, Rocket, PlayCircle, PlusCircle, AlertTriangle, Zap, Activity } from 'lucide-react'
 import Link from "next/link"
 import { getTimeOfDay } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
@@ -287,80 +267,78 @@ export default function DashboardPage() {
         }
       `}</style>
 
-      <div className="max-w-[1800px] mx-auto p-6 space-y-6 pt-6 relative z-10">
+      <div className="max-w-[1800px] mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pt-4 sm:pt-6 relative z-10">
         {/* Mode Indicator */}
-        <div className="flex items-center justify-center gap-3 mb-2">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
           <Badge
             variant="outline"
-            className={`px-4 py-2 font-semibold shadow-lg ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold shadow-lg ${
               isLiveMode
                 ? "bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 shadow-red-500/50"
                 : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-blue-500/50"
             }`}
           >
-            {isLiveMode ? "🔴 LIVE MODE - Real Data" : "🔵 VIRTUAL MODE - Demo Data"}
+            {isLiveMode ? "🔴 LIVE MODE" : "🔵 VIRTUAL MODE"}
           </Badge>
           <TradingStyleBadge />
         </div>
 
-        {/* Enhanced Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <div className="p-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl border border-purple-500/30 backdrop-blur-sm shadow-lg shadow-purple-500/20">
-              <Brain className="w-10 h-10 text-purple-400" />
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <div className="p-3 sm:p-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-xl sm:rounded-2xl border border-purple-500/30 backdrop-blur-sm shadow-lg shadow-purple-500/20">
+              <Brain className="w-6 h-6 sm:w-10 sm:h-10 text-purple-400" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
                 Good {timeOfDay}! 🚀
               </h1>
-              <p className="text-xl text-gray-300 mt-1">
-                {isLiveMode ? "Welcome back to MindTrader AI" : "Welcome to demo mode"}
+              <p className="text-sm sm:text-xl text-gray-300 mt-0.5 sm:mt-1">
+                {isLiveMode ? "Welcome back" : "Demo mode"}
               </p>
-              <div className="flex items-center space-x-2 mt-2">
-                <Badge className="bg-green-600/20 text-green-400 border-green-500/30">
+              <div className="flex items-center space-x-2 mt-1 sm:mt-2 flex-wrap gap-1">
+                <Badge className="bg-green-600/20 text-green-400 border-green-500/30 text-xs">
                   <Shield className="w-3 h-3 mr-1" />
                   Online
                 </Badge>
                 <Badge
-                  className={
+                  className={`text-xs ${
                     isPremium
                       ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-lg shadow-yellow-500/30"
                       : "bg-slate-600/20 text-slate-400 border-slate-500/30"
-                  }
+                  }`}
                 >
                   <Crown className="w-3 h-3 mr-1" />
-                  {isPremium ? `Premium (${daysRemaining} days)` : "Free Plan"}
+                  {isPremium ? `Premium (${daysRemaining}d)` : "Free"}
                 </Badge>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 justify-end">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsRefreshing(true)}
               disabled={isRefreshing}
-              className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 backdrop-blur-sm"
+              className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3"
             >
-              <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
-              Refresh
+              <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline ml-2">Refresh</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowAdminPanel(true)}
-              className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 backdrop-blur-sm"
+              className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3"
             >
-              <Shield className="w-4 h-4 mr-2" />
-              Admin
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline ml-2">Admin</span>
             </Button>
           </div>
         </div>
 
-        {/* Main Stats Grid */}
         <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 animate-fade-in-up"
           style={{ animationDelay: "0.1s" }}
         >
           {stats.map((stat, index) => (
@@ -375,34 +353,34 @@ export default function DashboardPage() {
               <div
                 className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-20 blur-xl transition-opacity`}
               ></div>
-              <CardContent className="p-6 relative">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 bg-gradient-to-r ${stat.color} rounded-xl shadow-lg shadow-${stat.color}/50`}>
-                    <stat.icon className="w-6 h-6 text-white" />
+              <CardContent className="p-3 sm:p-6 relative">
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                  <div className={`p-2 sm:p-3 bg-gradient-to-r ${stat.color} rounded-lg sm:rounded-xl shadow-lg`}>
+                    <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div className="flex items-center space-x-1">
                     {stat.trend === "up" ? (
-                      <TrendingUp className="w-4 h-4 text-green-400" />
+                      <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
                     ) : stat.trend === "down" ? (
-                      <TrendingDown className="w-4 h-4 text-red-400" />
+                      <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4 text-red-400" />
                     ) : (
-                      <span className="w-4 h-4"></span>
+                      <span className="w-3 h-3 sm:w-4 sm:h-4"></span>
                     )}
                     <span
-                      className={`text-sm font-medium ${stat.trend === "up" ? "text-green-400" : stat.trend === "down" ? "text-red-400" : "text-gray-400"}`}
+                      className={`text-xs sm:text-sm font-medium ${stat.trend === "up" ? "text-green-400" : stat.trend === "down" ? "text-red-400" : "text-gray-400"}`}
                     >
                       {stat.change}
                     </span>
                   </div>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   <div>
-                    <p className="text-sm text-gray-400 mb-1">{stat.title}</p>
-                    <p className="text-3xl font-bold text-white mb-2">{stat.value}</p>
-                    <p className="text-xs text-gray-500">{stat.description}</p>
+                    <p className="text-xs sm:text-sm text-gray-400 mb-0.5 sm:mb-1">{stat.title}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">{stat.value}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">{stat.description}</p>
                   </div>
-                  <div className="space-y-2">
-                    <Progress value={stat.progress} className="h-2" />
+                  <div className="space-y-1 sm:space-y-2 hidden sm:block">
+                    <Progress value={stat.progress} className="h-1.5 sm:h-2" />
                     <div className="flex justify-between text-xs text-gray-400">
                       <span>Pokrok</span>
                       <span>{Math.round(stat.progress)}%</span>
@@ -414,39 +392,38 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Quick Actions */}
-        <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Zap className="w-6 h-6 text-purple-400" />
+        <div className="space-y-3 sm:space-y-4 animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
+          <h2 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
+            <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
             Rychlé akce
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {quickActions.map((action, index) => {
               return (
                 <Link key={index} href={action.href}>
-                  <Card className="psyche-card group hover:scale-105 transition-all duration-300 cursor-pointer border-slate-700/50 bg-slate-900/50 backdrop-blur-sm shadow-xl overflow-hidden h-full rounded-2xl hover:shadow-2xl hover:border-purple-500/50">
+                  <Card className="psyche-card group hover:scale-105 transition-all duration-300 cursor-pointer border-slate-700/50 bg-slate-900/50 backdrop-blur-sm shadow-xl overflow-hidden h-full rounded-xl sm:rounded-2xl hover:shadow-2xl hover:border-purple-500/50">
                     <div
                       className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-50 group-hover:opacity-70 transition-opacity`}
                     ></div>
                     <div
                       className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-30 blur-2xl transition-opacity`}
                     ></div>
-                    <CardContent className="p-4 relative flex flex-col items-center text-center space-y-2">
+                    <CardContent className="p-3 sm:p-4 relative flex flex-col items-center text-center space-y-1.5 sm:space-y-2">
                       <div
-                        className={`p-3 bg-gradient-to-br ${action.color} rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}
+                        className={`p-2 sm:p-3 bg-gradient-to-br ${action.color} rounded-xl sm:rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}
                       >
-                        <action.icon className="w-6 h-6 text-white" />
+                        <action.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-white font-semibold mb-1 text-sm">
+                        <h3 className="text-white font-semibold mb-0.5 sm:mb-1 text-xs sm:text-sm">
                           {action.title}
-                          {action.locked && <Shield className="w-4 h-4 text-yellow-400" />}
+                          {action.locked && <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 inline ml-1" />}
                         </h3>
-                        <p className="text-xs text-gray-400 mt-1">{action.description}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 hidden sm:block">{action.description}</p>
                       </div>
                       {action.locked && (
-                        <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 text-xs">
-                          Pouze Premium
+                        <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 text-[10px] sm:text-xs">
+                          Premium
                         </Badge>
                       )}
                     </CardContent>
@@ -457,26 +434,26 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI Insights & Recommendations */}
         <Card
           className="psyche-card border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-pink-900/20 backdrop-blur-sm shadow-xl overflow-hidden animate-fade-in-up animate-glow"
           style={{ animationDelay: "0.8s" }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5"></div>
-          <CardContent className="p-6 relative">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg shadow-purple-500/50">
-                  <Zap className="w-6 h-6 text-white" />
+          <CardContent className="p-4 sm:p-6 relative">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl shadow-lg shadow-purple-500/50">
+                  <Zap className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-white">AI Analýza & Doporučení</h3>
+                <h3 className="text-lg sm:text-2xl font-bold text-white">AI Analýza</h3>
               </div>
-              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                <Sparkles className="w-3 h-3 mr-1" />
-                AI Powered
+              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">
+                <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
+                AI
               </Badge>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              {/* AI Insights content - kept the same, just adjusted spacing */}
               <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 backdrop-blur-sm hover:border-green-500/50 transition-colors group">
                 <div className="flex items-start space-x-3">
                   <Activity className="w-5 h-5 text-green-400 mt-1 group-hover:scale-110 transition-transform" />
@@ -569,51 +546,50 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Premium Features Banner */}
         {!isPremium && (
           <Card className="psyche-card border-yellow-500/50 bg-gradient-to-r from-yellow-900/30 via-orange-900/30 to-yellow-900/30 overflow-hidden relative backdrop-blur-sm shadow-xl">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-orange-500/5 to-yellow-500/5 animate-pulse"></div>
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 blur-xl"></div>
-            <CardContent className="p-6 relative">
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-                <div className="flex items-center space-x-4">
-                  <div className="p-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl shadow-2xl shadow-yellow-500/50 animate-pulse">
-                    <Crown className="w-10 h-10 text-white" />
+            <CardContent className="p-4 sm:p-6 relative">
+              <div className="flex flex-col items-center gap-4 sm:gap-6 text-center sm:text-left sm:flex-row sm:justify-between">
+                <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                  <div className="p-3 sm:p-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl sm:rounded-2xl shadow-2xl shadow-yellow-500/50 animate-pulse">
+                    <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                   </div>
                   <div>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h3 className="text-2xl font-bold text-white">Odemkni Premium funkce</h3>
-                      <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 animate-bounce shadow-lg shadow-yellow-500/50">
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        50% SLEVA
+                    <div className="flex items-center justify-center sm:justify-start space-x-2 mb-2">
+                      <h3 className="text-xl sm:text-2xl font-bold text-white">Odemkni Premium</h3>
+                      <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 animate-bounce shadow-lg shadow-yellow-500/50 text-xs">
+                        <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
+                        50% OFF
                       </Badge>
                     </div>
-                    <p className="text-gray-300 text-lg">
-                      Získej neomezené AI konzultace, pokročilou analytiku a prioritní podporu
+                    <p className="text-gray-300 text-sm sm:text-lg">
+                      Neomezené AI konzultace & pokročilá analytika
                     </p>
-                    <div className="flex items-center space-x-4 mt-3">
+                    <div className="flex items-center justify-center sm:justify-start space-x-4 mt-2 sm:mt-3">
                       <div className="flex items-center space-x-2">
-                        <Check className="w-4 h-4 text-green-400" />
-                        <span className="text-sm text-gray-300">Zruš kdykoliv</span>
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
+                        <span className="text-xs sm:text-sm text-gray-300">Zruš kdykoliv</span>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-center space-y-3">
+                <div className="flex flex-col items-center space-y-2 sm:space-y-3">
                   <div className="text-center">
-                    <p className="text-gray-400 text-sm line-through">2999 Kč/měsíc</p>
-                    <p className="text-4xl font-bold text-white">1499 Kč</p>
-                    <p className="text-yellow-400 text-sm font-semibold">Ušetři 50% dnes!</p>
+                    <p className="text-gray-400 text-xs sm:text-sm line-through">2999 Kč/měsíc</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-white">1499 Kč</p>
+                    <p className="text-yellow-400 text-xs sm:text-sm font-semibold">Ušetři 50%!</p>
                   </div>
                   <Button
                     asChild
                     size="lg"
-                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0 shadow-lg shadow-yellow-500/30"
+                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0 shadow-lg shadow-yellow-500/30 text-sm sm:text-base w-full sm:w-auto"
                   >
                     <Link href="/pricing">
-                      <Rocket className="w-5 h-5 mr-2" />
-                      Upgradovat nyní
-                      <ArrowRight className="w-5 h-5 ml-2" />
+                      <Rocket className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                      Upgrade
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                     </Link>
                   </Button>
                 </div>
@@ -622,31 +598,30 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {/* Community CTA */}
         <Card className="psyche-card overflow-hidden border-slate-700/50 bg-slate-900/50 backdrop-blur-sm shadow-xl">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 blur-xl"></div>
-          <CardContent className="p-8 relative">
+          <CardContent className="p-6 sm:p-8 relative">
             <div className="text-center">
-              <div className="flex justify-center mb-6">
-                <div className="p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl border border-blue-500/30 shadow-lg shadow-blue-500/20">
-                  <Users className="w-12 h-12 text-blue-400" />
+              <div className="flex justify-center mb-4 sm:mb-6">
+                <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl sm:rounded-2xl border border-blue-500/30 shadow-lg shadow-blue-500/20">
+                  <Users className="w-8 h-8 sm:w-12 sm:h-12 text-blue-400" />
                 </div>
               </div>
-              <h3 className="text-3xl font-bold text-white mb-4">Join our community</h3>
-              <p className="text-gray-300 mb-8 max-w-2xl mx-auto text-lg">
+              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Join our community</h3>
+              <p className="text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto text-sm sm:text-lg">
                 {isLiveMode
-                  ? "Share experiences with other traders and learn from experts. 10,000+ active members!"
-                  : "Try our demo community features in virtual mode"}
+                  ? "Share experiences with other traders. 10,000+ members!"
+                  : "Try our demo community features"}
               </p>
               <Button
                 asChild
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white border-0 shadow-lg shadow-blue-500/30"
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white border-0 shadow-lg shadow-blue-500/30 text-sm sm:text-base w-full sm:w-auto"
               >
                 <Link href="/team-club">
-                  <Users className="w-5 h-5 mr-2" />
-                  {isLiveMode ? "Join Community" : "Try Demo Community"}
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  {isLiveMode ? "Join Community" : "Try Demo"}
                 </Link>
               </Button>
             </div>

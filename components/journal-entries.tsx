@@ -8,22 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import {
-  Search,
-  Filter,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  Tag,
-  ArrowUpDown,
-  Brain,
-  BookOpen,
-  Target,
-  DollarSign,
-  Zap,
-  Activity,
-  Eye,
-} from "lucide-react"
+import { Search, Filter, TrendingUp, TrendingDown, Calendar, Tag, ArrowUpDown, Brain, BookOpen, Target, DollarSign, Zap, Activity, Eye } from 'lucide-react'
 import { getJournalEntries } from "@/utils/storage-utils"
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
@@ -388,36 +373,36 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                   )}
                   onClick={() => setDetailEntry(entry)}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
+                  <CardContent className="md:p-6 p-4">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
                           <div className={cn("p-2.5 rounded-xl text-white", typeConfig.iconBg)}>{typeConfig.icon}</div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <h3 className="font-bold text-white text-lg">{entry.title}</h3>
+                              <h3 className="font-bold text-white md:text-lg text-base">{entry.title}</h3>
                               <Badge className={cn("text-xs font-semibold border", typeConfig.badge)}>
                                 {typeConfig.label}
                               </Badge>
                             </div>
                             <div className="flex items-center gap-2">
                               <Calendar className="w-3.5 h-3.5 text-gray-300" />
-                              <p className="text-sm text-gray-200 font-medium">{formatDate(entry.date)}</p>
+                              <p className="md:text-sm text-xs text-gray-200 font-medium">{formatDate(entry.date)}</p>
                             </div>
                           </div>
                         </div>
 
                         {entry.content && (
-                          <p className="text-sm text-gray-100 leading-relaxed line-clamp-2 mb-4 bg-black/20 p-3 rounded-lg">
+                          <p className="md:text-sm text-xs text-gray-100 leading-relaxed line-clamp-2 mb-4 bg-black/20 p-3 rounded-lg">
                             {entry.content}
                           </p>
                         )}
 
-                        <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between pt-4 border-t border-white/10 gap-3">
                           <div className="flex items-center gap-2 flex-wrap">
                             {entry.pair && (
                               <Badge className="text-xs font-semibold bg-blue-500 text-white border-blue-400">
-                                💱 {entry.pair}
+                                {entry.pair}
                               </Badge>
                             )}
                             {entry.tradeType && (
@@ -443,7 +428,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                               </Badge>
                             )}
                             {entry.tags &&
-                              entry.tags.slice(0, 3).map((tag, index) => (
+                              entry.tags.slice(0, 2).map((tag, index) => (
                                 <Badge
                                   key={index}
                                   className="text-xs font-semibold bg-slate-600 text-white border-slate-500"
@@ -457,7 +442,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-white hover:text-white hover:bg-white/20 font-semibold"
+                            className="text-white hover:text-white hover:bg-white/20 font-semibold w-full md:w-auto"
                           >
                             <Eye className="w-4 h-4 mr-2" />
                             Detail
@@ -468,7 +453,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                       {pnl !== 0 && (
                         <div
                           className={cn(
-                            "ml-4 px-6 py-3 rounded-xl font-bold text-2xl border-2 shadow-lg",
+                            "md:ml-4 px-4 md:px-6 py-2 md:py-3 rounded-xl font-bold md:text-2xl text-xl border-2 shadow-lg self-start",
                             pnl >= 0
                               ? "bg-emerald-500 text-white border-emerald-400"
                               : "bg-rose-500 text-white border-rose-400",
@@ -637,7 +622,10 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                     {detailEntry.whatWorked && (
                       <Card className="bg-emerald-500/10 border-emerald-500/30">
                         <CardHeader>
-                          <CardTitle className="text-sm text-emerald-300">✅ Co fungovalo</CardTitle>
+                          <CardTitle className="text-sm text-emerald-300 flex items-center gap-2">
+                            <Zap className="w-4 h-4" />
+                            Poučení
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
                           <p className="text-gray-200">{detailEntry.whatWorked}</p>
@@ -647,7 +635,9 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                     {detailEntry.whatDidntWork && (
                       <Card className="bg-rose-500/10 border-rose-500/30">
                         <CardHeader>
-                          <CardTitle className="text-sm text-rose-300">❌ Co nefungovalo</CardTitle>
+                          <CardTitle className="text-sm text-rose-300 flex items-center gap-2">
+                            ❌ Co nefungovalo
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
                           <p className="text-gray-200">{detailEntry.whatDidntWork}</p>

@@ -4,6 +4,7 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { toast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
+import { useSubscription } from "@/contexts/subscription-context"
 
 // Demo trades data for virtual mode
 const DEMO_TRADES = [
@@ -243,10 +244,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [showLiveWarning, setShowLiveWarning] = useState(false)
   const [portfolioValue, setPortfolioValueState] = useState(10000)
   const { user } = useAuth()
+  const { isPremium } = useSubscription()
 
   // Check if current user is owner or can switch modes
   const isOwner = user?.email === "owner@tradermindset.com"
-  const canSwitchModes = user?.email === "honza.newage@gmail.com" || isOwner
+  const canSwitchModes = isPremium
 
   useEffect(() => {
     // Check if we're in live mode on mount
@@ -422,6 +424,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   const switchToLive = () => {
+    if (!isPremium) {
+      toast({
+        title: "Premium vyžadováno",
+        description: "Live režim je dostupný pouze pro premium uživatele.",
+        variant: "destructive",
+        duration: 5000,
+      })
+      return
+    }
+
     if (!canSwitchModes) {
       toast({
         title: "Přístup odepřen",

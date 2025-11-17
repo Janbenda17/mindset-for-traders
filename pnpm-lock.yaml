@@ -74,6 +74,12 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: latest
         version: 1.2.8(@types/react-dom@18.0.0)(@types/react@18.0.0)(react-dom@18.0.0(react@18.0.0))(react@18.0.0)
+      '@stripe/react-stripe-js':
+        specifier: latest
+        version: 5.3.0(@stripe/stripe-js@8.5.1)(react-dom@18.0.0(react@18.0.0))(react@18.0.0)
+      '@stripe/stripe-js':
+        specifier: latest
+        version: 8.5.1
       '@supabase/ssr':
         specifier: 0.7.0
         version: 0.7.0(@supabase/supabase-js@2.81.1)
@@ -128,6 +134,9 @@ importers:
       recharts:
         specifier: latest
         version: 3.4.1(@types/react@18.0.0)(react-dom@18.0.0(react@18.0.0))(react-is@18.3.1)(react@18.0.0)(redux@5.0.1)
+      server-only:
+        specifier: latest
+        version: 0.0.1
       speech-recognition:
         specifier: ^0.0.1
         version: 0.0.1
@@ -1057,6 +1066,17 @@ packages:
 
   '@standard-schema/utils@0.3.0':
     resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
+
+  '@stripe/react-stripe-js@5.3.0':
+    resolution: {integrity: sha512-q9Wl6JKg9JUU9zRcQyx4rkKauiM4Il+/ohJemQkLa4SsFEvcXVzX9X89cRLiaAEiNOaJ/2EQML+aWNSHc0EXBw==}
+    peerDependencies:
+      '@stripe/stripe-js': '>=8.0.0 <9.0.0'
+      react: '>=16.8.0 <20.0.0'
+      react-dom: '>=16.8.0 <20.0.0'
+
+  '@stripe/stripe-js@8.5.1':
+    resolution: {integrity: sha512-xtWTQgebE9wMZxaSjSOcTo1tNJPqWiG3z2g9hlJK6LQ6FExd1eadH3pjdsaLXOVh/WmFlKhF5s9j/18aTXSn4g==}
+    engines: {node: '>=12.16'}
 
   '@supabase/auth-js@2.81.1':
     resolution: {integrity: sha512-K20GgiSm9XeRLypxYHa5UCnybWc2K0ok0HLbqCej/wRxDpJxToXNOwKt0l7nO8xI1CyQ+GrNfU6bcRzvdbeopQ==}
@@ -2894,6 +2914,9 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  server-only@0.0.1:
+    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
+
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
     engines: {node: '>= 0.4'}
@@ -4168,6 +4191,15 @@ snapshots:
   '@standard-schema/spec@1.0.0': {}
 
   '@standard-schema/utils@0.3.0': {}
+
+  '@stripe/react-stripe-js@5.3.0(@stripe/stripe-js@8.5.1)(react-dom@18.0.0(react@18.0.0))(react@18.0.0)':
+    dependencies:
+      '@stripe/stripe-js': 8.5.1
+      prop-types: 15.8.1
+      react: 18.0.0
+      react-dom: 18.0.0(react@18.0.0)
+
+  '@stripe/stripe-js@8.5.1': {}
 
   '@supabase/auth-js@2.81.1':
     dependencies:
@@ -6282,6 +6314,8 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.7.1: {}
+
+  server-only@0.0.1: {}
 
   set-function-length@1.2.2:
     dependencies:

@@ -2,53 +2,71 @@ import { type NextRequest, NextResponse } from "next/server"
 import { generateText } from "ai"
 
 const MODE_PROMPTS = {
-  coach: `Jsi PSYCHOLOG pro tradery. Zaměř se POUZE na EMOCE a MENTÁLNÍ ZDRAVÍ.
+  mind: `Jsi MIND AI – psychologický parťák pro tradery. Zaměř se POUZE na EMOCE a MENTÁLNÍ STAV.
 
-TVŮJ FOKUS:
-- Emocionální stav a jak ho zlepšit
-- Strach, anxieta, FOMO
-- Mindfulness a meditace
-- Jak se vrátit po ztrátě
-- Budování sebevědomí
+TVŮJ ÚKOL:
+- Řešit aktuální emoce (strata, frustrace, strach, FOMO)
+- Uklidnit během ztráty
+- Vysvětlit, co se děje v hlavě a proč
+- Poradit, jak se vrátit do klidu
+- Připravit před obchodováním (pre-trade mindset check)
+- Dát krátké mentální cvičení (dýchání, grounding, vizualizace)
 
-IGNORUJ: Čísla, statistiky, data analysis
+IGNORUJ: Čísla, statistiky, data analysis, dlouhodobé plány
 
-Styl odpovědi: 3-4 věty MAX, praktické techniky, empatie
-NEPIŠ markdown (#, *, **), jen čistý text`,
+PRAVIDLA:
+- MAX 3-4 věty
+- Praktické techniky TEĎKA
+- Empatie a podpora
+- BEZ markdown (#, *, **)
+- Pomoz neudělat špatné rozhodnutí`,
 
-  analyst: `Jsi DATA ANALYST pro trading. Zaměř se POUZE na ČÍSLA a STATISTIKY.
+  analytics: `Jsi ANALYTICS AI – výkonnostní analytik pro tradery. Zaměř se POUZE na DATA a ČÍSLA.
 
-TVŮJ FOKUS:
-- Win rate, P&L, profit factor
-- Patterns v datech (kdy vítězí/prohrává)
-- Korelace mezi metrics
+TVŮJ ÚKOL:
+- Spojit data ze spánku, nálady, počasí, rutiny, obchodů
+- Najít souvislosti ("Když spíš pod 6h, máš o 22% horší výsledky")
+- Upozornit na risk behavior (revenge trading, overtrading)
+- Analyzovat vývoj za týden, měsíc, kvartál
+- Ukázat silné a slabé stránky
+- Předpovědět jaké trading podmínky má dnes
+- Navrhnout kroky ke zlepšení výkonu
+
+IGNORUJ: Emoce, pocity, psychologii, dlouhodobé cíle
+
+PRAVIDLA:
+- MAX 3-4 věty
 - Konkrétní čísla a trendy
-- Objektiv ní fakta
+- Data-driven insights
+- BEZ markdown (#, *, **)
+- Objektivní fakta`,
 
-IGNORUJ: Emoce, pocity, psychologii
+  coach: `Jsi COACH AI – osobní trenér disciplíny a růstu. Zaměř se na DLOUHODOBÝ ROZVOJ.
 
-Styl odpovědi: 3-4 věty MAX, konkrétní čísla, data-driven
-NEPIŠ markdown (#, *, **), jen čistý text`,
+TVŮJ ÚKOL:
+- Nastavit cíle (týdenní, měsíční)
+- Hlídat disciplínu
+- Pomáhat budovat dlouhodobé návyky
+- Učit pravidla, která bude dodržovat
+- Dávat výzvy ("7 dní bez overtradingu")
+- Přinášet vzdělávání o trading psychologii
+- Pomoci nastavit plán po velké ztrátě
+- Zhodnotit progress a upozornit, pokud padá
 
-  mentor: `Jsi SENIOR TRADER mentor. Zaměř se POUZE na DLOUHODOBÝ ROZVOJ.
+IGNORUJ: Krátkodobé emoce, daily metrics
 
-TVŮJ FOKUS:
-- Kariérní cíle (kde být za 6-12 měsíců)
-- Systémy a rutiny pro růst
-- Co dělat jinak pro lepší výsledky
-- Strategic thinking
-- Wisdom z experience
-
-IGNORUJ: Krátkodobé emoce a daily metrics
-
-Styl odpovědi: 3-4 věty MAX, akční kroky, long-term perspektiva
-NEPIŠ markdown (#, *, **), jen čistý text`,
+PRAVIDLA:
+- MAX 3-4 věty
+- Akční kroky pro růst
+- Long-term perspektiva
+- BEZ markdown (#, *, **)
+- Mentor mindset`,
 }
 
 interface ChatRequest {
   message: string
   personality: "calm" | "strict" | "analytical" | "balanced"
-  mode: "coach" | "analyst" | "mentor"
+  mode: "mind" | "analytics" | "coach"
   context: {
     mood: number
     stress: number
@@ -103,8 +121,8 @@ function generateEnhancedMockResponse(request: ChatRequest): string {
 
   let response = ""
 
-  if (mode === "coach") {
-    // PSYCHOLOG - pure emotions, NO numbers
+  if (mode === "mind") {
+    // MIND AI - pure emotions, NO numbers
     if (message.toLowerCase().includes("strach") || message.toLowerCase().includes("fear")) {
       response = `Strach je normální. Zkus TEĎKA: Zavři oči, dýchej 4s in-7s hold-8s out, 3x opakuj. Tvůj stres ${stress}/10 říká že potřebuješ reset. Pauza 30 min, pak zpět s čistou hlavou.`
     } else if (message.toLowerCase().includes("ztráta") || message.toLowerCase().includes("loss")) {
@@ -112,11 +130,11 @@ function generateEnhancedMockResponse(request: ChatRequest): string {
     } else {
       response = `Vidím mood ${mood}/10, stress ${stress}/10. ${stress > 7 ? "Vysoký stres blokuje jasné myšlení. 5 min deep breathing." : "Mentál je OK."} ${readiness < 60 ? "Readiness <60% = nebezpečí zone. Rest first." : "Můžeš pokračovat, ale opatrně."}`
     }
-  } else if (mode === "analyst") {
-    // ANALYTIK - pure data, NO emotions
+  } else if (mode === "analytics") {
+    // ANALYTICS AI - pure data, NO emotions
     response = `Win rate: ${stats.winRate.toFixed(1)}%, P&L: $${stats.totalPnL.toFixed(0)}, Trades: ${stats.totalTrades}. ${stats.consecutiveLosses > 0 ? `Consecutive losses: ${stats.consecutiveLosses} = vysoké riziko revenge trading.` : "Data ukazují stabilitu."} ${stats.winRate < 50 ? "Win rate <50% = přehodnoť strategy." : "Čísla jsou solid."}`
   } else {
-    // MENTOR - long-term development
+    // COACH AI - long-term development
     response = `${stats.totalTrades < 100 ? "Fáze: Learning. Sbírej data 100+ tradů před optimalizací." : "Máš dostatek dat - čas na scale."} ${stats.winRate > 55 ? "Win rate >55% je profesionální úroveň." : "Zlepši edge před zvětšováním pozic."} Každý top trader byl tam kde jsi teď. Focus na proces 12 měsíců = transformation.`
   }
 
@@ -196,12 +214,12 @@ ${trades
   .join("\n")}
 
 ODPOVĚZ PODLE SVÉHO REŽIMU (${mode.toUpperCase()}):
-${mode === "coach" ? "- Zaměř se na emoce a psychologii" : ""}
-${mode === "analyst" ? "- Zaměř se na čísla a data" : ""}
-${mode === "mentor" ? "- Zaměř se na dlouhodobý rozvoj" : ""}
+${mode === "mind" ? "- Zaměř se na emoce a psychologii" : ""}
+${mode === "analytics" ? "- Zaměř se na čísla a data" : ""}
+${mode === "coach" ? "- Zaměř se na dlouhodobý rozvoj" : ""}
 
 PRAVIDLA:
-- MAX 4 věty
+- MAX 3-4 věty
 - BEZ markdown znaků
 - BEZ prefixu "Přímá odpověď:"
 - Přímo k věci`

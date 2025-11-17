@@ -6,32 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import {
-  Sun,
-  CheckCircle,
-  BookOpen,
-  Moon,
-  Target,
-  DollarSign,
-  CalendarIcon,
-  Lock,
-  Unlock,
-  TrendingUp,
-  AlertTriangle,
-  Lightbulb,
-  Activity,
-  Brain,
-  Heart,
-  Zap,
-  ArrowRight,
-  Clock,
-  Shield,
-} from "lucide-react"
+import { Sun, CheckCircle, BookOpen, Moon, Target, DollarSign, CalendarIcon, Lock, Unlock, TrendingUp, AlertTriangle, Lightbulb, Activity, Brain, Heart, Zap, ArrowRight, Clock, Shield } from 'lucide-react'
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useTradingStyle } from "@/contexts/trading-style-context"
 import { generateDemoDailyTrackerData } from "@/data/demo-daily-tracker"
@@ -674,34 +654,34 @@ export default function DailyTrackerPage() {
   const insights = generateInsights(todayEntry?.morningCheck)
 
   return (
-    <div className="min-h-screen pb-12">
-      <div className="mb-12 relative">
+    <div className="min-h-screen p-3 sm:p-6 space-y-4 sm:space-y-6 pt-4 sm:pt-6">
+      <div className="md:mb-12 mb-6 relative">
         <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-pink-500/10 to-rose-500/10 rounded-3xl blur-3xl" />
-        <div className="relative bg-gradient-to-br from-slate-900/50 to-slate-800/30 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500 to-rose-500 flex items-center justify-center">
-                <Target className="h-9 w-9 text-white" />
+        <div className="relative bg-gradient-to-br from-slate-900/50 to-slate-800/30 backdrop-blur-xl border border-white/10 rounded-3xl md:p-8 p-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="md:h-16 md:w-16 h-12 w-12 rounded-2xl bg-gradient-to-br from-orange-500 to-rose-500 flex items-center justify-center">
+                <Target className="md:h-9 md:w-9 h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-7xl font-black bg-gradient-to-r from-orange-400 via-pink-400 to-rose-400 bg-clip-text text-transparent">
+                <h1 className="md:text-7xl text-4xl font-black bg-gradient-to-r from-orange-400 via-pink-400 to-rose-400 bg-clip-text text-transparent">
                   Daily Tracker
                 </h1>
-                <p className="text-lg text-muted-foreground mt-2">
+                <p className="md:text-lg text-sm text-muted-foreground mt-1 md:block hidden">
                   {tradingStyle === "scalper" &&
-                    (isLiveMode ? "Track your scalping sessions 🚀" : "Demo režim - Prozkoumej funkce! 🎮")}
+                    (isLiveMode ? "Track your sessions 🚀" : "Demo režim 🎮")}
                   {tradingStyle === "daytrader" &&
-                    (isLiveMode ? "Tvé kompletní shrnutí všech 5 stages 📊" : "Demo režim - Prozkoumej funkce! 🎮")}
+                    (isLiveMode ? "Tvé shrnutí 📊" : "Demo režim 🎮")}
                   {tradingStyle === "swingtrader" &&
-                    (isLiveMode ? "Monitor your swing positions 📈" : "Demo režim - Prozkoumej funkce! 🎮")}
+                    (isLiveMode ? "Monitor positions 📈" : "Demo režim 🎮")}
                   {!tradingStyle &&
-                    (isLiveMode ? "Tvé kompletní shrnutí všech 5 stages 📊" : "Demo režim - Prozkoumej funkce! 🎮")}
+                    (isLiveMode ? "Tvé shrnutí 📊" : "Demo režim 🎮")}
                 </p>
               </div>
             </div>
             <Badge
               className={cn(
-                "text-base px-6 py-2 rounded-full",
+                "md:text-base text-sm md:px-6 px-4 md:py-2 py-1 rounded-full",
                 isLiveMode
                   ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                   : "bg-sky-500/20 text-sky-400 border-sky-500/30",
@@ -713,58 +693,55 @@ export default function DailyTrackerPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <TabsList className="grid w-full grid-cols-2 h-16 bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 md:space-y-8">
+        <TabsList className="grid w-full grid-cols-2 md:h-16 h-14 bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-2">
           <TabsTrigger
             value="today"
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-pink-500 rounded-xl text-base font-bold"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-pink-500 rounded-xl md:text-base text-sm font-bold"
           >
-            <Target className="h-5 w-5 mr-2" />
-            Dnešní Shrnutí
+            <Target className="md:h-5 md:w-5 h-4 w-4 mr-2" />
+            <span className="md:inline hidden">Dnešní Shrnutí</span>
+            <span className="md:hidden inline">Dnes</span>
           </TabsTrigger>
           <TabsTrigger
             value="history"
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-500 rounded-xl text-base font-bold"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-500 rounded-xl md:text-base text-sm font-bold"
           >
-            <CalendarIcon className="h-5 w-5 mr-2" />
+            <CalendarIcon className="md:h-5 md:w-5 h-4 w-4 mr-2" />
             Historie
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="today" className="space-y-8">
+        <TabsContent value="today" className="space-y-6 md:space-y-8">
           {todayEntry?.morningCheck && (
             <>
-              {/* Readiness Meter */}
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-cyan-500/10 to-teal-500/10 rounded-3xl blur-2xl" />
                 <Card className="relative border-2 border-cyan-500/30 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
+                  <CardHeader className="md:p-6 p-4">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-4 mb-6">
-                          <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/50">
-                            <TrendingUp className="h-12 w-12 text-white" />
+                        <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
+                          <div className="md:h-20 md:w-20 h-14 w-14 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/50">
+                            <TrendingUp className="md:h-12 md:w-12 h-8 w-8 text-white" />
                           </div>
                           <div>
-                            <CardTitle className="text-6xl font-black bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
-                              Readiness Score
+                            <CardTitle className="md:text-6xl text-3xl font-black bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
+                              Readiness
                             </CardTitle>
-                            <CardDescription className="text-xl mt-2">
-                              {tradingStyle === "scalper" && "Tvá připravenost na dnešní scalping sessions"}
-                              {tradingStyle === "daytrader" && "Tvá připravenost na dnešní obchodování"}
-                              {tradingStyle === "swingtrader" && "Tvá připravenost na analýzu a management pozic"}
-                              {!tradingStyle && "Tvá připravenost na dnešní obchodování"}
+                            <CardDescription className="md:text-xl text-sm mt-1 md:block hidden">
+                              Tvá připravenost na dnešní den
                             </CardDescription>
                           </div>
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className={cn("text-8xl font-black", getReadinessColor(readinessScore))}>
+                        <div className={cn("md:text-8xl text-6xl font-black", getReadinessColor(readinessScore))}>
                           {readinessScore}%
                         </div>
                         <Badge
                           className={cn(
-                            "mt-3 text-base px-6 py-2",
+                            "mt-3 md:text-base text-sm md:px-6 px-4 md:py-2 py-1",
                             `bg-gradient-to-r ${getReadinessStatus(readinessScore).color} text-white border-0`,
                           )}
                         >
@@ -773,7 +750,7 @@ export default function DailyTrackerPage() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="md:p-6 p-4">
                     <div className="space-y-6">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-sm">

@@ -259,11 +259,38 @@
 /* Responsive utilities */
 @media (max-width: 768px) {
   .psyche-card {
-    @apply p-4;
+    @apply p-3;
   }
 
   .gradient-text {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+  }
+
+  /* Better mobile spacing */
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.75rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  h3 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Compact cards on mobile */
+  .mobile-compact {
+    padding: 0.75rem !important;
+  }
+
+  /* Touch-friendly buttons */
+  button, a {
+    min-height: 44px;
   }
 }
 
@@ -285,4 +312,14 @@
   .psyche-card:hover {
     transform: none;
   }
+}
+
+/* Added scrollbar-hide utility for clean horizontal scroll on mobile tabs */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

@@ -5,23 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  BookOpen,
-  Calendar,
-  TrendingUp,
-  Plus,
-  Sparkles,
-  BarChart3,
-  Brain,
-  Target,
-  Zap,
-  Download,
-  Eye,
-  Flame,
-  Award,
-  TrendingDown,
-  DollarSign,
-} from "lucide-react"
+import { BookOpen, Calendar, TrendingUp, Plus, Sparkles, BarChart3, Brain, Target, Zap, Download, Eye, Flame, Award, TrendingDown, DollarSign } from 'lucide-react'
 import JournalCalendar from "@/components/journal-calendar"
 import JournalEntries from "@/components/journal-entries"
 import { RecordTrades } from "@/components/record-trades"
@@ -232,64 +216,65 @@ export default function JournalPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <div className="max-w-[1800px] mx-auto p-6 space-y-6 pt-20">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="max-w-[1800px] mx-auto p-3 md:p-6 space-y-4 md:space-y-6 pt-20">
+        <div className="flex items-center justify-between flex-wrap gap-3 md:gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-              <BookOpen className="w-10 h-10 text-purple-400" />
+            <h1 className="text-2xl md:text-4xl font-bold text-white mb-1 md:mb-2 flex items-center gap-2 md:gap-3">
+              <BookOpen className="w-6 h-6 md:w-10 md:h-10 text-purple-400" />
               Trading Deník
-              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
-                <Sparkles className="w-3 h-3 mr-1" />
+              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs md:text-sm">
+                <Sparkles className="w-2 h-2 md:w-3 md:h-3 mr-1" />
                 PRO
               </Badge>
             </h1>
-            <p className="text-gray-300 text-lg">Sleduj své obchody, analyzuj výkon a rozvíjej se jako trader 🚀</p>
+            <p className="text-gray-300 text-sm md:text-lg hidden md:block">Sleduj své obchody, analyzuj výkon a rozvíjej se jako trader 🚀</p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2 md:gap-3 flex-wrap">
             <Button
               onClick={() => setShowInsights(true)}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg text-xs md:text-sm px-3 md:px-4"
             >
-              <Brain className="w-4 h-4 mr-2" />
-              AI Insights
-              {insights.length > 0 && <Badge className="ml-2 bg-white/20 text-white border-0">{insights.length}</Badge>}
+              <Brain className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+              <span className="hidden md:inline">AI Insights</span>
+              <span className="md:hidden">AI</span>
+              {insights.length > 0 && <Badge className="ml-1 md:ml-2 bg-white/20 text-white border-0 text-xs">{insights.length}</Badge>}
             </Button>
             <Button
               onClick={exportData}
               variant="outline"
-              className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700"
+              className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 text-xs md:text-sm px-3 md:px-4 hidden md:flex"
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
               Export
             </Button>
             <Button
               onClick={() => setShowQuickAdd(true)}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-lg"
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-lg text-xs md:text-sm px-3 md:px-4"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Rychlý záznam
+              <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+              <span className="hidden md:inline">Rychlý záznam</span>
+              <span className="md:hidden">+</span>
             </Button>
           </div>
         </div>
 
-        {/* Enhanced Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-4">
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
             <CardContent className="p-0">
-              <div className="p-4 pb-3">
-                <div className="flex items-center justify-between mb-3">
+              <div className="p-2 md:p-4 pb-2 md:pb-3">
+                <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-xs font-medium mb-1">Celkem</p>
-                    <p className="text-3xl font-bold text-white mb-1">{stats.totalEntries}</p>
-                    <p className="text-blue-400 text-xs font-semibold">Záznamů</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Celkem</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.totalEntries}</p>
+                    <p className="text-blue-400 text-[10px] md:text-xs font-semibold">Záznamů</p>
                   </div>
-                  <div className="p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20">
-                    <BookOpen className="w-6 h-6 text-blue-400" />
+                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20">
+                    <BookOpen className="w-4 h-4 md:w-6 md:h-6 text-blue-400" />
                   </div>
                 </div>
               </div>
-              <div className="h-1.5 bg-slate-700">
+              <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-blue-500 to-cyan-500"
                   style={{ width: "100%" }}
@@ -300,21 +285,21 @@ export default function JournalPage() {
 
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
             <CardContent className="p-0">
-              <div className="p-4 pb-3">
-                <div className="flex items-center justify-between mb-3">
+              <div className="p-2 md:p-4 pb-2 md:pb-3">
+                <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-xs font-medium mb-1">Tento týden</p>
-                    <p className="text-3xl font-bold text-white mb-1">{stats.thisWeek}</p>
-                    <p className="text-green-400 text-xs font-semibold flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" /> Nových
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Tento týden</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.thisWeek}</p>
+                    <p className="text-green-400 text-[10px] md:text-xs font-semibold flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3 md:w-4 md:h-4" /> Nových
                     </p>
                   </div>
-                  <div className="p-3 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20">
-                    <Calendar className="w-6 h-6 text-green-400" />
+                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20">
+                    <Calendar className="w-4 h-4 md:w-6 md:h-6 text-green-400" />
                   </div>
                 </div>
               </div>
-              <div className="h-1.5 bg-slate-700">
+              <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-green-500 to-emerald-500"
                   style={{ width: `${Math.min((stats.thisWeek / 10) * 100, 100)}%` }}
@@ -325,22 +310,22 @@ export default function JournalPage() {
 
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
             <CardContent className="p-0">
-              <div className="p-4 pb-3">
-                <div className="flex items-center justify-between mb-3">
+              <div className="p-2 md:p-4 pb-2 md:pb-3">
+                <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-xs font-medium mb-1">Průměr/den</p>
-                    <p className="text-3xl font-bold text-white mb-1">{stats.avgPerDay}</p>
-                    <p className="text-purple-400 text-xs font-semibold">Záznamů</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Průměr/den</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.avgPerDay}</p>
+                    <p className="text-purple-400 text-[10px] md:text-xs font-semibold">Záznamů</p>
                   </div>
-                  <div className="p-3 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-                    <TrendingUp className="w-6 h-6 text-purple-400" />
+                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+                    <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-400" />
                   </div>
                 </div>
               </div>
-              <div className="h-1.5 bg-slate-700">
+              <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-purple-500 to-pink-500"
-                  style={{ width: `${Math.min(Number.parseFloat(stats.avgPerDay) * 20, 100)}%` }}
+                  style={{ width: `${Math.min(parseFloat(stats.avgPerDay) * 20, 100)}%` }}
                 />
               </div>
             </CardContent>
@@ -348,21 +333,21 @@ export default function JournalPage() {
 
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
             <CardContent className="p-0">
-              <div className="p-4 pb-3">
-                <div className="flex items-center justify-between mb-3">
+              <div className="p-2 md:p-4 pb-2 md:pb-3">
+                <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-xs font-medium mb-1">Série</p>
-                    <p className="text-3xl font-bold text-white mb-1">{stats.streak}</p>
-                    <p className="text-orange-400 text-xs font-semibold flex items-center gap-1">
-                      <Flame className="w-3 h-3" /> Dní
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Série</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.streak}</p>
+                    <p className="text-orange-400 text-[10px] md:text-xs font-semibold flex items-center gap-1">
+                      <Flame className="w-3 h-3 md:w-4 md:h-4" /> Dní
                     </p>
                   </div>
-                  <div className="p-3 rounded-full bg-gradient-to-br from-orange-500/20 to-amber-500/20">
-                    <Flame className="w-6 h-6 text-orange-400" />
+                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-orange-500/20 to-amber-500/20">
+                    <Flame className="w-4 h-4 md:w-6 md:h-6 text-orange-400" />
                   </div>
                 </div>
               </div>
-              <div className="h-1.5 bg-slate-700">
+              <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-orange-500 to-amber-500"
                   style={{ width: `${Math.min((stats.streak / 30) * 100, 100)}%` }}
@@ -378,31 +363,31 @@ export default function JournalPage() {
             )}
           >
             <CardContent className="p-0">
-              <div className="p-4 pb-3">
-                <div className="flex items-center justify-between mb-3">
+              <div className="p-2 md:p-4 pb-2 md:pb-3">
+                <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-xs font-medium mb-1">Total P&L</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Total P&L</p>
                     <p
                       className={cn(
-                        "text-3xl font-bold mb-1",
+                        "text-xl md:text-3xl font-bold mb-0.5 md:mb-1",
                         stats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400",
                       )}
                     >
                       {stats.totalPnL >= 0 ? "+" : ""}${stats.totalPnL}
                     </p>
-                    <p className="text-gray-400 text-xs font-semibold">Celkem</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-semibold">Celkem</p>
                   </div>
                   <div
                     className={cn(
-                      "p-3 rounded-full bg-gradient-to-br",
+                      "p-2 md:p-3 rounded-full bg-gradient-to-br",
                       stats.totalPnL >= 0 ? "from-emerald-500/20 to-green-500/20" : "from-rose-500/20 to-red-500/20",
                     )}
                   >
-                    <DollarSign className={cn("w-6 h-6", stats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400")} />
+                    <DollarSign className={cn("w-4 h-4 md:w-6 md:h-6", stats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400")} />
                   </div>
                 </div>
               </div>
-              <div className="h-1.5 bg-slate-700">
+              <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className={cn(
                     "h-full transition-all",
@@ -418,14 +403,14 @@ export default function JournalPage() {
 
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
             <CardContent className="p-0">
-              <div className="p-4 pb-3">
-                <div className="flex items-center justify-between mb-3">
+              <div className="p-2 md:p-4 pb-2 md:pb-3">
+                <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-xs font-medium mb-1">Win Rate</p>
-                    <p className="text-3xl font-bold text-white mb-1">{stats.winRate}%</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Win Rate</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.winRate}%</p>
                     <p
                       className={cn(
-                        "text-xs font-semibold flex items-center gap-1",
+                        "text-[10px] md:text-xs font-semibold flex items-center gap-1",
                         stats.winRate >= 60
                           ? "text-emerald-400"
                           : stats.winRate >= 50
@@ -433,16 +418,16 @@ export default function JournalPage() {
                             : "text-rose-400",
                       )}
                     >
-                      {stats.winRate >= 60 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                      {stats.winRate >= 60 ? <TrendingUp className="w-3 h-3 md:w-4 md:h-4" /> : <TrendingDown className="w-3 h-3 md:w-4 md:h-4" />}
                       {stats.winRate >= 60 ? "Výborný" : stats.winRate >= 50 ? "Dobrý" : "Slabý"}
                     </p>
                   </div>
-                  <div className="p-3 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
-                    <Target className="w-6 h-6 text-cyan-400" />
+                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
+                    <Target className="w-4 h-4 md:w-6 md:h-6 text-cyan-400" />
                   </div>
                 </div>
               </div>
-              <div className="h-1.5 bg-slate-700">
+              <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-cyan-500 to-blue-500"
                   style={{ width: `${stats.winRate}%` }}
@@ -453,19 +438,19 @@ export default function JournalPage() {
 
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
             <CardContent className="p-0">
-              <div className="p-4 pb-3">
-                <div className="flex items-center justify-between mb-3">
+              <div className="p-2 md:p-4 pb-2 md:pb-3">
+                <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-xs font-medium mb-1">Nejlepší</p>
-                    <p className="text-3xl font-bold text-emerald-400 mb-1">+${stats.bestDay}</p>
-                    <p className="text-gray-400 text-xs font-semibold">Den</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Nejlepší</p>
+                    <p className="text-xl md:text-3xl font-bold text-emerald-400 mb-0.5 md:mb-1">+${stats.bestDay}</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-semibold">Den</p>
                   </div>
-                  <div className="p-3 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20">
-                    <Award className="w-6 h-6 text-emerald-400" />
+                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20">
+                    <Award className="w-4 h-4 md:w-6 md:h-6 text-emerald-400" />
                   </div>
                 </div>
               </div>
-              <div className="h-1.5 bg-slate-700">
+              <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-emerald-500 to-green-500"
                   style={{ width: "100%" }}
@@ -476,19 +461,19 @@ export default function JournalPage() {
 
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
             <CardContent className="p-0">
-              <div className="p-4 pb-3">
-                <div className="flex items-center justify-between mb-3">
+              <div className="p-2 md:p-4 pb-2 md:pb-3">
+                <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-xs font-medium mb-1">Nálada</p>
-                    <p className="text-3xl font-bold text-white mb-1">{stats.avgMood}</p>
-                    <p className="text-pink-400 text-xs font-semibold">/10 avg</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Nálada</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.avgMood}</p>
+                    <p className="text-pink-400 text-[10px] md:text-xs font-semibold">/10 avg</p>
                   </div>
-                  <div className="p-3 rounded-full bg-gradient-to-br from-pink-500/20 to-rose-500/20">
-                    <Brain className="w-6 h-6 text-pink-400" />
+                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-pink-500/20 to-rose-500/20">
+                    <Brain className="w-4 h-4 md:w-6 md:h-6 text-pink-400" />
                   </div>
                 </div>
               </div>
-              <div className="h-1.5 bg-slate-700">
+              <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-pink-500 to-rose-500"
                   style={{ width: `${stats.avgMood * 10}%` }}
@@ -505,7 +490,7 @@ export default function JournalPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-xl">
-                    <Sparkles className="w-6 h-6 text-purple-300" />
+                    <Sparkles className="w-6 h-6 text-purple-400" />
                   </div>
                   <div>
                     <h3 className="text-white font-bold text-lg">AI Insights dostupné!</h3>
@@ -527,36 +512,40 @@ export default function JournalPage() {
         )}
 
         <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-          <CardContent className="p-6">
+          <CardContent className="p-3 md:p-6">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-              <TabsList className="bg-slate-800/80 backdrop-blur-sm border border-slate-600 p-1 grid grid-cols-4 mb-6">
+              <TabsList className="bg-slate-800/80 backdrop-blur-sm border border-slate-600 p-1 grid grid-cols-4 mb-4 md:mb-6 w-full">
                 <TabsTrigger
                   value="new"
-                  className="gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300"
+                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
                 >
-                  <Plus className="w-4 h-4" />
-                  Nový záznam
+                  <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden md:inline">Nový záznam</span>
+                  <span className="md:hidden">Nový</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="calendar"
-                  className="gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300"
+                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
                 >
-                  <Calendar className="w-4 h-4" />
-                  Kalendář
+                  <Calendar className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden md:inline">Kalendář</span>
+                  <span className="md:hidden">Cal</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="entries"
-                  className="gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300"
+                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
                 >
-                  <BookOpen className="w-4 h-4" />
-                  Všechny záznamy
+                  <BookOpen className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden md:inline">Všechny záznamy</span>
+                  <span className="md:hidden">List</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="stats"
-                  className="gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300"
+                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
                 >
-                  <BarChart3 className="w-4 h-4" />
-                  Statistiky
+                  <BarChart3 className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden md:inline">Statistiky</span>
+                  <span className="md:hidden">Stats</span>
                 </TabsTrigger>
               </TabsList>
 

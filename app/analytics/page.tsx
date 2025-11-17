@@ -1,49 +1,13 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
+// import { Label } from "@/components/ui/label" // Removed
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import {
-  Brain,
-  Target,
-  CheckCircle2,
-  Zap,
-  Heart,
-  Sparkles,
-  Download,
-  Clock,
-  Smile,
-  Frown,
-  Meh,
-  Activity,
-  TrendingUpIcon,
-  TrendingUp,
-  DollarSign,
-  AlertTriangle,
-  ThumbsUp,
-  ThumbsDown,
-  Flame,
-  Wind,
-  Calendar,
-  TrendingDown,
-  ArrowUp,
-  ArrowDown,
-  BarChart3,
-  Sun,
-  Moon,
-  Sunrise,
-  Sunset,
-  CloudRain,
-  Award,
-  XCircle,
-  RefreshCw,
-  Percent,
-  TrendingDown as TrendingUpDown,
-} from "lucide-react"
+import { Brain, Target, CheckCircle2, Zap, Heart, Sparkles, Download, Clock, Smile, Frown, Meh, Activity, TrendingUpIcon, TrendingUp, DollarSign, AlertTriangle, ThumbsUp, ThumbsDown, Flame, Wind, Calendar, TrendingDown, ArrowUp, ArrowDown, BarChart3, Sun, Moon, Sunrise, Sunset, CloudRain, Award, XCircle, RefreshCw, Percent, TrendingDown as TrendingUpDown } from 'lucide-react'
 import {
   LineChart,
   Line,
@@ -59,6 +23,7 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
+  Polar,
   Radar,
   ComposedChart,
   BarChart,
@@ -66,8 +31,8 @@ import {
   PieChart,
   Pie,
   ReferenceLine,
-  // Label from recharts is now imported and used - This was the issue, so it's removed to avoid redeclaration.
-  // Label, // REMOVED: Redeclaration issue
+  Label as RechartsLabel, // Changed to RechartsLabel to avoid conflict
+  Tooltip as ChartTooltip, // Renamed Tooltip to ChartTooltip to avoid conflict
 } from "recharts"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
@@ -192,6 +157,7 @@ function generatePsychologicalAnalysis(
   moodEntries: any[],
   isLiveMode: boolean,
   tradingStyle: string,
+  timeframe: "week" | "month" | "all",
 ) {
   let weeklyPerformanceData = []
   let dailyMoodData = []
@@ -203,63 +169,98 @@ function generatePsychologicalAnalysis(
     dailyMoodData = demoData.dailyMoodData
     weekdayChartData = demoData.weekdayChartData
   } else {
-    const weeks = 12
-    const weeklyData: Record<string, any> = {}
+    let filteredTrades = trades
+    if (timeframe === "week") {
+      filteredTrades = trades.filter((trade) => {
+        const day = new Date(trade.date).getDay()
+        return day >= 1 && day <= 5 // Monday=1 to Friday=5
+      })
+    }
 
-    trades.forEach((trade) => {
+    let groupBy: "day" | "week" | "month" = "week"
+    let periods = 12
+    
+    if (timeframe === "week") {
+      groupBy = "day" // Show Mon-Fri for current week
+      periods = 5
+    } else if (timeframe === "month") {
+      groupBy = "week" // Show 4 weeks
+      periods = 4
+    } else if (timeframe === "quarter") { // This is not used in UI, but for completeness
+      groupBy = "month" // Show 3 months
+      periods = 3
+    } else if (timeframe === "all") {
+      groupBy = "month" // Group all data by month for overview
+      periods = 999 // Show all months
+    }
+
+    const groupedData: Record<string, any> = {}
+
+    filteredTrades.forEach((trade) => {
       const tradeDate = new Date(trade.date)
-      const weekStart = new Date(tradeDate)
-      weekStart.setDate(tradeDate.getDay() - tradeDate.getDay() + 1)
-      const weekKey = weekStart.toISOString().split("T")[0]
+      let groupKey = ""
+      let displayLabel = ""
 
-      if (!weeklyData[weekKey]) {
-        weeklyData[weekKey] = {
+      if (groupBy === "day") {
+        groupKey = trade.date
+        const dayNames = ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"]
+        displayLabel = dayNames[tradeDate.getDay()]
+      } else if (groupBy === "week") {
+        const weekStart = new Date(tradeDate)
+        const dayOfWeek = tradeDate.getDay()
+        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+        weekStart.setDate(tradeDate.getDate() + diff)
+        groupKey = weekStart.toISOString().split("T")[0]
+        const weekEnd = new Date(weekStart)
+        weekEnd.setDate(weekStart.getDate() + 6)
+        displayLabel = `${weekStart.getDate()}-${weekEnd.getDate()} ${weekStart.toLocaleDateString("cs", { month: "short" })}`
+      } else if (groupBy === "month") {
+        groupKey = `${tradeDate.getFullYear()}-${String(tradeDate.getMonth() + 1).padStart(2, "0")}`
+        displayLabel = tradeDate.toLocaleDateString("cs", { month: "long", year: "numeric" })
+      }
+
+      if (!groupedData[groupKey]) {
+        groupedData[groupKey] = {
           trades: [],
           pnl: 0,
           wins: 0,
           moodSum: 0,
           moodCount: 0,
+          readinessSum: 0,
+          readinessCount: 0,
+          displayLabel, // Store display label
         }
       }
 
-      weeklyData[weekKey].trades.push(trade)
-      weeklyData[weekKey].pnl += trade.pnl || 0
-      if ((trade.pnl || 0) > 0) weeklyData[weekKey].wins++
+      groupedData[groupKey].trades.push(trade)
+      groupedData[groupKey].pnl += trade.pnl || 0
+      if (trade.outcome === "win") groupedData[groupKey].wins++
 
-      const mood = moodEntries.find((m) => m.date === trade.date)
-      if (mood) {
-        weeklyData[weekKey].moodSum += mood.mood || 0
-        weeklyData[weekKey].moodCount++
+      if (trade.mood) {
+        groupedData[groupKey].moodSum += trade.mood
+        groupedData[groupKey].moodCount++
+      }
+
+      const matchingMoodEntry = moodEntries.find(
+        (entry) => entry.date === trade.date
+      )
+      if (matchingMoodEntry?.readiness) {
+        groupedData[groupKey].readinessSum += matchingMoodEntry.readiness
+        groupedData[groupKey].readinessCount++
       }
     })
 
-    const sortedWeeks = Object.entries(weeklyData)
-      .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
-      .slice(-weeks)
-
-    let cumulativePnL = 10000
-    weeklyPerformanceData = sortedWeeks.map(([weekKey, data]) => {
-      const weekDate = new Date(weekKey)
-      const weekEnd = new Date(weekDate)
-      weekEnd.setDate(weekDate.getDate() + 6)
-
-      const weekLabel = `${weekDate.getDate()}-${weekEnd.getDate()} ${weekDate.toLocaleDateString("cs-CZ", { month: "short" })}`
-      const weekWinRate = data.trades.length > 0 ? (data.wins / data.trades.length) * 100 : 0
-      const avgMood = data.moodCount > 0 ? data.moodSum / data.moodCount : 0
-
-      cumulativePnL += data.pnl
-
-      return {
-        week: weekLabel,
-        fullDate: weekDate.toLocaleDateString("cs-CZ", { day: "numeric", month: "long" }),
-        pnl: Math.round(data.pnl),
-        winRate: Math.round(weekWinRate),
+    weeklyPerformanceData = Object.entries(groupedData)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-periods)
+      .map(([key, data]: [string, any]) => ({
+        week: data.displayLabel || key, // Use display label
+        pnl: data.pnl,
         trades: data.trades.length,
-        avgMood: Math.round(avgMood),
-        avgDiscipline: 0,
-        cumulativePnL: Math.round(cumulativePnL),
-      }
-    })
+        winRate: data.trades.length > 0 ? (data.wins / data.trades.length) * 100 : 0,
+        avgMood: data.moodCount > 0 ? data.moodSum / data.moodCount : 50,
+        avgReadiness: data.readinessCount > 0 ? data.readinessSum / data.readinessCount : 0, // Added readiness
+      }))
 
     const last30Days = Array.from({ length: 30 }, (_, i) => {
       const date = new Date()
@@ -267,12 +268,11 @@ function generatePsychologicalAnalysis(
       return date.toISOString().split("T")[0]
     })
 
-    // CHANGE: Calculate daily P&L from trades
     dailyMoodData = last30Days.map((dateStr) => {
       const dayMood = moodEntries.find((m) => m.date === dateStr)
       const date = new Date(dateStr)
 
-      const dayTrades = trades.filter((t) => t.date === dateStr)
+      const dayTrades = filteredTrades.filter((t) => t.date === dateStr)
       const dailyPnL = dayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
 
       return {
@@ -356,26 +356,26 @@ function generatePsychologicalAnalysis(
     },
   ]
 
-  const avgMood =
+  const avgMoodCalc =
     dailyMoodData.length > 0
       ? dailyMoodData.reduce((sum: number, m: any) => sum + (m.mood || 0), 0) / dailyMoodData.length
       : 68
-  const avgDiscipline =
+  const avgDisciplineCalc =
     dailyMoodData.length > 0
       ? dailyMoodData.reduce((sum: number, m: any) => sum + (m.discipline || 0), 0) / dailyMoodData.length
       : 72
-  const avgConfidence =
+  const avgConfidenceCalc =
     dailyMoodData.length > 0
       ? dailyMoodData.reduce((sum: number, m: any) => sum + (m.confidence || 0), 0) / dailyMoodData.length
       : 65
-  const avgStress =
+  const avgStressCalc =
     dailyMoodData.length > 0
       ? dailyMoodData.reduce((sum: number, m: any) => sum + (m.stress || 0), 0) / dailyMoodData.length
       : 42
 
   const moodVariance =
     dailyMoodData.length > 0
-      ? dailyMoodData.reduce((sum: number, m: any) => sum + Math.pow((m.mood || 0) - avgMood, 2), 0) /
+      ? dailyMoodData.reduce((sum: number, m: any) => sum + Math.pow((m.mood || 0) - avgMoodCalc, 2), 0) /
         dailyMoodData.length
       : 100
   const moodStability = Math.max(0, 100 - Math.sqrt(moodVariance))
@@ -427,41 +427,41 @@ function generatePsychologicalAnalysis(
     })
   }
 
-  if (avgDiscipline > 80) {
+  if (avgDisciplineCalc > 80) {
     psychInsights.push({
       type: "success",
       icon: "🎯",
       title: "Disciplína level: Navy SEAL",
-      description: `Disciplína ${avgDiscipline.toFixed(0)}% je brutální!`,
+      description: `Disciplína ${avgDisciplineCalc.toFixed(0)}% je brutální!`,
       action: "Mentoruj ostatní - sdílej své techniky!",
       impact: "positive",
     })
-  } else if (avgDiscipline < 60) {
+  } else if (avgDisciplineCalc < 60) {
     psychInsights.push({
       type: "critical",
       icon: "📋",
       title: "Disciplína = největší problém",
-      description: `Disciplína ${avgDiscipline.toFixed(0)}% je nízká. Bez disciplíny = gambling!`,
+      description: `Disciplína ${avgDisciplineCalc.toFixed(0)}% je nízká. Bez disciplíny = gambling!`,
       action: "Vytvoř pre-trade checklist. Non-negotiable.",
       impact: "critical",
     })
   }
 
-  if (avgStress > 65) {
+  if (avgStressCalc > 65) {
     psychInsights.push({
       type: "critical",
       icon: "😰",
       title: "KRITICKY vysoký stress",
-      description: `Stress ${avgStress.toFixed(0)}% je nebezpečný!`,
+      description: `Stress ${avgStressCalc.toFixed(0)}% je nebezpečný!`,
       action: "Zmenši position sizes o 50%. Stress management je priorita.",
       impact: "critical",
     })
-  } else if (avgStress > 50) {
+  } else if (avgStressCalc > 50) {
     psychInsights.push({
       type: "warning",
       icon: "😤",
       title: "Zvýšený stress level",
-      description: `Stress ${avgStress.toFixed(0)}% je nad optimální úrovní.`,
+      description: `Stress ${avgStressCalc.toFixed(0)}% je nad optimální úrovní.`,
       action: "5min breathing exercises před každým session.",
       impact: "high",
     })
@@ -470,7 +470,7 @@ function generatePsychologicalAnalysis(
       type: "success",
       icon: "😌",
       title: "Perfektní stress management",
-      description: `Stress ${avgStress.toFixed(0)}% je v optimálním rozmezí!`,
+      description: `Stress ${avgStressCalc.toFixed(0)}% je v optimálním rozmezí!`,
       action: "Pokračuj - tato rovnováha je klíčová.",
       impact: "positive",
     })
@@ -509,7 +509,7 @@ function generatePsychologicalAnalysis(
     })
   }
 
-  if (avgStress > 60) {
+  if (avgStressCalc > 60) {
     actionPlan.push({
       priority: "high" as const,
       emoji: "🧘",
@@ -520,7 +520,7 @@ function generatePsychologicalAnalysis(
     })
   }
 
-  if (avgDiscipline < 65) {
+  if (avgDisciplineCalc < 65) {
     actionPlan.push({
       priority: "high" as const,
       emoji: "📋",
@@ -544,9 +544,11 @@ function generatePsychologicalAnalysis(
 
   const bestWeek = weeklyPerformanceData.reduce((best, week) => (week.pnl > best.pnl ? week : best), {
     pnl: Number.NEGATIVE_INFINITY,
+    avgReadiness: 0,
   })
   const worstWeek = weeklyPerformanceData.reduce((worst, week) => (week.pnl < worst.pnl ? week : worst), {
     pnl: Number.POSITIVE_INFINITY,
+    avgReadiness: 0,
   })
 
   const moodPerformanceData = weeklyPerformanceData.map((week) => ({
@@ -556,15 +558,27 @@ function generatePsychologicalAnalysis(
     size: Math.abs(week.pnl) / 10 + 5,
   }))
 
+  // CHANGE: Added psychologicalProfile based on the RadarChart data structure
+  const psychologicalProfile = [
+    { subject: "Disciplína", A: Math.round(avgDisciplineCalc) },
+    { subject: "Emoce", A: Math.round(moodStability) },
+    { subject: "Sebevědomí", A: Math.round(avgConfidenceCalc) },
+    { subject: "Stress", A: Math.round(Math.max(0, 100 - avgStressCalc)) },
+    { subject: "Konzistence", A: Math.round(consistencyScore) },
+    { subject: "Awareness", A: Math.round(journalingRate) },
+    { subject: "Energie", A: Math.round(avgEnergy) },
+    { subject: "Readiness", A: Math.round(weeklyPerformanceData.reduce((sum, w) => sum + w.avgReadiness, 0) / Math.max(weeklyPerformanceData.length, 1)) } // Added readiness to psychological profile
+  ]
+
   return {
     summary: {
       totalPnL,
       winRate,
       trades: totalTrades,
-      emotionalScore: avgMood,
-      disciplineScore: avgDiscipline,
-      confidenceScore: avgConfidence,
-      stressScore: avgStress,
+      emotionalScore: avgMoodCalc,
+      disciplineScore: avgDisciplineCalc,
+      confidenceScore: avgConfidenceCalc,
+      stressScore: avgStressCalc,
       moodStability,
       journalingRate,
       energyScore: avgEnergy,
@@ -584,12 +598,14 @@ function generatePsychologicalAnalysis(
     actionPlan,
     weekdayChartData,
     moodPerformanceData,
+    psychologicalProfile, // Added for RadarChart
   }
 }
 
 export default function AnalyticsPage() {
-  const [timeframe, setTimeframe] = useState<"week" | "month" | "quarter">("month")
   const { isLiveMode, getAllTrades, getAllJournalEntries } = useData()
+  const [timeframe, setTimeframe] = useState<"week" | "month" | "all">("month") // Added "all"
+  const [activeTab, setActiveTab] = useState("overview") // Added activeTab state
   const [analysis, setAnalysis] = useState<any>(null)
   const [tradingStyle, setTradingStyle] = useState<string>("day-trader")
 
@@ -602,7 +618,7 @@ export default function AnalyticsPage() {
     const journals = getAllJournalEntries()
     const moodEntries = JSON.parse(localStorage.getItem("trader-mindset-mood-entries") || "[]")
 
-    const realAnalysis = generatePsychologicalAnalysis(trades, journals, moodEntries, isLiveMode, style)
+    const realAnalysis = generatePsychologicalAnalysis(trades, journals, moodEntries, isLiveMode, style, timeframe)
     setAnalysis(realAnalysis)
   }, [isLiveMode, timeframe])
 
@@ -642,7 +658,7 @@ export default function AnalyticsPage() {
       case "scalper":
         return "Denní Win Rate"
       case "swing-trader":
-        return "Měsíční Win Rate"
+        return "Týdenní Win Rate" // Changed from "Měsíční Win Rate"
       default:
         return "Týdenní Win Rate"
     }
@@ -653,18 +669,128 @@ export default function AnalyticsPage() {
       case "scalper":
         return "% ziskových dní"
       case "swing-trader":
-        return "% ziskových měsíců"
+        return "% ziskových týdnů" // Changed from "% ziskových měsíců"
       default:
         return "% ziskových týdnů"
     }
   }
 
-  // Calculate average win rate for reference line
+  const getFilteredData = (data: any[], type: "daily" | "weekly") => {
+    const now = new Date()
+    let filteredData = [...data]
+
+    if (timeframe === "week") {
+      // Week = Monday to Friday only (last 5 trading days)
+      const startDate = new Date(now)
+      startDate.setDate(now.getDate() - 7) // Look back 7 days to ensure we get 5 weekdays
+      
+      filteredData = data.filter((item) => {
+        // Ensure item.date or item.week exists and is a valid date
+        if (!item.date && !item.week) return false;
+        const itemDate = new Date(item.date || item.week);
+        if (isNaN(itemDate.getTime())) return false; // Skip invalid dates
+
+        const dayOfWeek = itemDate.getDay()
+        // Only Monday (1) to Friday (5)
+        return itemDate >= startDate && dayOfWeek >= 1 && dayOfWeek <= 5
+      }).slice(-5) // Take last 5 weekdays
+      
+    } else if (timeframe === "month") {
+      // Month = 4 weeks of data grouped by weeks
+      const startDate = new Date(now)
+      startDate.setDate(now.getDate() - 28) // 4 weeks
+      
+      filteredData = data.filter((item) => {
+        if (!item.date && !item.week) return false;
+        const itemDate = new Date(item.date || item.week);
+        return itemDate >= startDate
+      })
+      
+      // Group by weeks
+      if (type === "daily") {
+        const weeklyGrouped: Record<string, any> = {}
+        filteredData.forEach((item) => {
+          const itemDate = new Date(item.date)
+          if (isNaN(itemDate.getTime())) return; // Skip invalid dates
+
+          const weekStart = new Date(itemDate)
+          const day = weekStart.getDay()
+          const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1) // Fixed: use getDate() not getDay()
+          weekStart.setDate(diff)
+          
+          const weekKey = `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}` // Use full date for unique key
+          
+          if (!weeklyGrouped[weekKey]) {
+            weeklyGrouped[weekKey] = {
+              week: `${weekStart.getDate()}. ${weekStart.toLocaleDateString("cs-CZ", { month: "short" })} - ${new Date(weekStart.setDate(weekStart.getDate() + 6)).getDate()}. ${new Date(weekStart.setDate(weekStart.getDate() - 6)).toLocaleDateString("cs-CZ", { month: "short" })}`, // Dynamic week label
+              mood: 0,
+              discipline: 0,
+              confidence: 0,
+              stress: 0,
+              pnl: 0,
+              count: 0,
+            }
+          }
+          
+          weeklyGrouped[weekKey].mood += item.mood || 0
+          weeklyGrouped[key].discipline += item.discipline || 0
+          weeklyGrouped[key].confidence += item.confidence || 0
+          weeklyGrouped[key].stress += item.stress || 0
+          weeklyGrouped[key].pnl += item.pnl || 0
+          weeklyGrouped[key].count++
+        })
+        
+        filteredData = Object.values(weeklyGrouped).map((week: any) => ({
+          date: week.week, // Use the formatted week label
+          mood: Math.round(week.mood / week.count),
+          discipline: Math.round(week.discipline / week.count),
+          confidence: Math.round(week.confidence / week.count),
+          stress: Math.round(week.stress / week.count),
+          pnl: Math.round(week.pnl),
+        }))
+      }
+    }
+    // timeframe === "all" returns all data unfiltered
+    
+    return filteredData
+  }
+
+  const filteredDailyData = getFilteredData(analysis.dailyMoodData, "daily")
+  const filteredWeeklyData = getFilteredData(analysis.weeklyPerformanceData, "weekly")
+
+  const avgMood =
+    filteredDailyData.length > 0
+      ? filteredDailyData.reduce((sum: number, m: any) => sum + (m.mood || 0), 0) / filteredDailyData.length
+      : 65
+
+  const avgDiscipline =
+    filteredDailyData.length > 0
+      ? filteredDailyData.reduce((sum: number, m: any) => sum + (m.discipline || 0), 0) / filteredDailyData.length
+      : 72
+
+  const avgConfidence =
+    filteredDailyData.length > 0
+      ? filteredDailyData.reduce((sum: number, m: any) => sum + (m.confidence || 0), 0) / filteredDailyData.length
+      : 65
+
+  const avgStress =
+    filteredDailyData.length > 0
+      ? filteredDailyData.reduce((sum: number, m: any) => sum + (m.stress || 0), 0) / filteredDailyData.length
+      : 42
+
+  const moodVariance =
+    filteredDailyData.length > 0
+      ? filteredDailyData.reduce((sum: number, m: any) => sum + Math.pow((m.mood || 0) - avgMood, 2), 0) /
+        filteredDailyData.length
+      : 100
+  const moodStability = Math.max(0, 100 - Math.sqrt(moodVariance))
+
   const avgWinRate =
-    analysis.weeklyPerformanceData.length > 0
-      ? analysis.weeklyPerformanceData.reduce((sum: number, w: any) => sum + w.winRate, 0) /
-        analysis.weeklyPerformanceData.length
+    filteredWeeklyData.length > 0
+      ? filteredWeeklyData.reduce((sum: number, w: any) => sum + w.winRate, 0) / filteredWeeklyData.length
       : 0
+
+  const trades = getAllTrades() // Accessing trades for the overview tab
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -693,7 +819,7 @@ export default function AnalyticsPage() {
 
           <div className="flex gap-3">
             <div className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm rounded-lg p-1 border border-slate-600">
-              {(["week", "month", "quarter"] as const).map((period) => (
+              {(["week", "month", "all"] as const).map((period) => (
                 <button
                   key={period}
                   onClick={() => setTimeframe(period)}
@@ -704,7 +830,7 @@ export default function AnalyticsPage() {
                       : "text-gray-300 hover:text-white hover:bg-slate-700",
                   )}
                 >
-                  {period === "week" ? "Týden" : period === "month" ? "Měsíc" : "Čtvrtletí"}
+                  {period === "week" ? "Týden" : period === "month" ? "Měsíc" : "Celkový"}
                 </button>
               ))}
             </div>
@@ -724,14 +850,15 @@ export default function AnalyticsPage() {
         <Card className="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-slate-600 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="flex items-center gap-4 md:col-span-2">
-                <div className="p-3 bg-purple-600/30 rounded-full border border-purple-400/30">
+              <div className="flex items-center justify-between mb-4 md:col-span-2">
+                <div className="flex items-center gap-3">
                   <Brain className="w-8 h-8 text-purple-300" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-white mb-1">AI Mindset Analysis</h3>
                   <p className="text-gray-300 text-sm">
-                    {analysis.summary.trades} obchodů • {analysis.summary.weeks} týdnů • {analysis.psychInsights.length}{" "}
+                    {analysis.summary.trades} obchodů • {analysis.summary.weeks}{" "}
+                    {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"} • {analysis.psychInsights.length}{" "}
                     insights
                   </p>
                 </div>
@@ -740,18 +867,28 @@ export default function AnalyticsPage() {
               <div className="flex items-center gap-3 p-4 bg-green-500/10 rounded-lg border border-green-500/30">
                 <TrendingUp className="w-8 h-8 text-green-400" />
                 <div>
-                  <p className="text-gray-300 text-xs mb-0.5">Nejlepší týden</p>
-                  <p className="text-white font-bold text-lg">+${Math.abs(analysis.summary.bestWeek.pnl)}</p>
+                  <p className="text-gray-300 text-xs mb-0.5">
+                    Nejlepší {timeframe === "week" ? "den" : timeframe === "month" ? "týden" : "období"}
+                  </p>
+                  <p className="text-white font-bold text-lg">+${Math.abs(analysis.summary.bestWeek.pnl).toFixed(0)}</p>
                   <p className="text-gray-400 text-xs">{analysis.summary.bestWeek.week}</p>
+                  {analysis.summary.bestWeek.avgReadiness > 0 && (
+                    <p className="text-green-400 text-xs mt-1">Readiness: {Math.round(analysis.summary.bestWeek.avgReadiness)}%</p>
+                  )}
                 </div>
               </div>
 
               <div className="flex items-center gap-3 p-4 bg-red-500/10 rounded-lg border border-red-500/30">
                 <TrendingDown className="w-8 h-8 text-red-400" />
                 <div>
-                  <p className="text-gray-300 text-xs mb-0.5">Nejhorší týden</p>
-                  <p className="text-white font-bold text-lg">-${Math.abs(analysis.summary.worstWeek.pnl)}</p>
+                  <p className="text-gray-300 text-xs mb-0.5">
+                    Nejhorší {timeframe === "week" ? "den" : timeframe === "month" ? "týden" : "období"}
+                  </p>
+                  <p className="text-white font-bold text-lg">-${Math.abs(analysis.summary.worstWeek.pnl).toFixed(0)}</p>
                   <p className="text-gray-400 text-xs">{analysis.summary.worstWeek.week}</p>
+                  {analysis.summary.worstWeek.avgReadiness > 0 && (
+                    <p className="text-red-400 text-xs mt-1">Readiness: {Math.round(analysis.summary.worstWeek.avgReadiness)}%</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -767,12 +904,12 @@ export default function AnalyticsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-gray-400 text-xs font-medium mb-2">Emoční Stabilita</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(analysis.summary.moodStability)}%</p>
-                    {analysis.summary.moodStability > 85 ? (
+                    <p className="text-4xl font-bold text-white mb-1">{Math.round(moodStability)}%</p>
+                    {moodStability > 85 ? (
                       <p className="text-green-400 text-sm font-semibold flex items-center gap-1">
                         <ArrowUp className="w-4 h-4" /> Výborná
                       </p>
-                    ) : analysis.summary.moodStability > 70 ? (
+                    ) : moodStability > 70 ? (
                       <p className="text-yellow-400 text-sm font-semibold">Dobrá</p>
                     ) : (
                       <p className="text-red-400 text-sm font-semibold flex items-center gap-1">
@@ -783,9 +920,9 @@ export default function AnalyticsPage() {
                   <div
                     className={cn(
                       "p-4 rounded-full",
-                      analysis.summary.moodStability > 85
+                      moodStability > 85
                         ? "bg-gradient-to-br from-green-500/20 to-emerald-500/20"
-                        : analysis.summary.moodStability > 70
+                        : moodStability > 70
                           ? "bg-gradient-to-br from-yellow-500/20 to-amber-500/20"
                           : "bg-gradient-to-br from-red-500/20 to-rose-500/20",
                     )}
@@ -793,9 +930,9 @@ export default function AnalyticsPage() {
                     <Heart
                       className={cn(
                         "w-8 h-8",
-                        analysis.summary.moodStability > 85
+                        moodStability > 85
                           ? "text-green-400"
-                          : analysis.summary.moodStability > 70
+                          : moodStability > 70
                             ? "text-yellow-400"
                             : "text-red-400",
                       )}
@@ -807,13 +944,13 @@ export default function AnalyticsPage() {
                 <div
                   className={cn(
                     "h-full transition-all",
-                    analysis.summary.moodStability > 85
+                    moodStability > 85
                       ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                      : analysis.summary.moodStability > 70
+                      : moodStability > 70
                         ? "bg-gradient-to-r from-yellow-500 to-amber-500"
                         : "bg-gradient-to-r from-red-500 to-rose-500",
                   )}
-                  style={{ width: `${analysis.summary.moodStability}%` }}
+                  style={{ width: `${moodStability}%` }}
                 />
               </div>
             </CardContent>
@@ -827,13 +964,13 @@ export default function AnalyticsPage() {
                   <div>
                     <p className="text-gray-400 text-xs font-medium mb-2">Disciplína</p>
                     <p className="text-4xl font-bold text-white mb-1">
-                      {Math.round(analysis.summary.disciplineScore)}%
+                      {Math.round(avgDiscipline)}%
                     </p>
-                    {analysis.summary.disciplineScore > 80 ? (
+                    {avgDiscipline > 80 ? (
                       <p className="text-cyan-400 text-sm font-semibold flex items-center gap-1">
                         <CheckCircle2 className="w-4 h-4" /> Professional
                       </p>
-                    ) : analysis.summary.disciplineScore > 60 ? (
+                    ) : avgDiscipline > 60 ? (
                       <p className="text-blue-400 text-sm font-semibold">Slušná</p>
                     ) : (
                       <p className="text-orange-400 text-sm font-semibold flex items-center gap-1">
@@ -844,9 +981,9 @@ export default function AnalyticsPage() {
                   <div
                     className={cn(
                       "p-4 rounded-full",
-                      analysis.summary.disciplineScore > 80
+                      avgDiscipline > 80
                         ? "bg-gradient-to-br from-cyan-500/20 to-blue-500/20"
-                        : analysis.summary.disciplineScore > 60
+                        : avgDiscipline > 60
                           ? "bg-gradient-to-br from-blue-500/20 to-indigo-500/20"
                           : "bg-gradient-to-br from-orange-500/20 to-red-500/20",
                     )}
@@ -854,9 +991,9 @@ export default function AnalyticsPage() {
                     <Target
                       className={cn(
                         "w-8 h-8",
-                        analysis.summary.disciplineScore > 80
+                        avgDiscipline > 80
                           ? "text-cyan-400"
-                          : analysis.summary.disciplineScore > 60
+                          : avgDiscipline > 60
                             ? "text-blue-400"
                             : "text-orange-400",
                       )}
@@ -868,13 +1005,13 @@ export default function AnalyticsPage() {
                 <div
                   className={cn(
                     "h-full transition-all",
-                    analysis.summary.disciplineScore > 80
+                    avgDiscipline > 80
                       ? "bg-gradient-to-r from-cyan-500 to-blue-500"
-                      : analysis.summary.disciplineScore > 60
+                      : avgDiscipline > 60
                         ? "bg-gradient-to-r from-blue-500 to-indigo-500"
                         : "bg-gradient-to-r from-orange-500 to-red-500",
                   )}
-                  style={{ width: `${analysis.summary.disciplineScore}%` }}
+                  style={{ width: `${avgDiscipline}%` }}
                 />
               </div>
             </CardContent>
@@ -887,12 +1024,12 @@ export default function AnalyticsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-gray-400 text-xs font-medium mb-2">{getWinRateLabel()}</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(analysis.summary.winRate)}%</p>
-                    {analysis.summary.winRate > 60 ? (
+                    <p className="text-4xl font-bold text-white mb-1">{Math.round(avgWinRate)}%</p>
+                    {avgWinRate > 60 ? (
                       <p className="text-emerald-400 text-sm font-semibold flex items-center gap-1">
                         <ThumbsUp className="w-4 h-4" /> Profitable
                       </p>
-                    ) : analysis.summary.winRate > 50 ? (
+                    ) : avgWinRate > 50 ? (
                       <p className="text-amber-400 text-sm font-semibold">Break-even</p>
                     ) : (
                       <p className="text-rose-400 text-sm font-semibold flex items-center gap-1">
@@ -903,9 +1040,9 @@ export default function AnalyticsPage() {
                   <div
                     className={cn(
                       "p-4 rounded-full",
-                      analysis.summary.winRate > 60
+                      avgWinRate > 60
                         ? "bg-gradient-to-br from-emerald-500/20 to-green-500/20"
-                        : analysis.summary.winRate > 50
+                        : avgWinRate > 50
                           ? "bg-gradient-to-br from-amber-500/20 to-yellow-500/20"
                           : "bg-gradient-to-br from-rose-500/20 to-red-500/20",
                     )}
@@ -913,9 +1050,9 @@ export default function AnalyticsPage() {
                     <TrendingUpIcon
                       className={cn(
                         "w-8 h-8",
-                        analysis.summary.winRate > 60
+                        avgWinRate > 60
                           ? "text-emerald-400"
-                          : analysis.summary.winRate > 50
+                          : avgWinRate > 50
                             ? "text-amber-400"
                             : "text-rose-400",
                       )}
@@ -927,13 +1064,13 @@ export default function AnalyticsPage() {
                 <div
                   className={cn(
                     "h-full transition-all",
-                    analysis.summary.winRate > 60
+                    avgWinRate > 60
                       ? "bg-gradient-to-r from-emerald-500 to-green-500"
-                      : analysis.summary.winRate > 50
+                      : avgWinRate > 50
                         ? "bg-gradient-to-r from-amber-500 to-yellow-500"
                         : "bg-gradient-to-r from-rose-500 to-red-500",
                   )}
-                  style={{ width: `${analysis.summary.winRate}%` }}
+                  style={{ width: `${avgWinRate}%` }}
                 />
               </div>
             </CardContent>
@@ -946,12 +1083,12 @@ export default function AnalyticsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-gray-400 text-xs font-medium mb-2">Stress Level</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(analysis.summary.stressScore)}%</p>
-                    {analysis.summary.stressScore < 40 ? (
+                    <p className="text-4xl font-bold text-white mb-1">{Math.round(avgStress)}%</p>
+                    {avgStress < 40 ? (
                       <p className="text-teal-400 text-sm font-semibold flex items-center gap-1">
                         <CheckCircle2 className="w-4 h-4" /> Zdravý
                       </p>
-                    ) : analysis.summary.stressScore < 60 ? (
+                    ) : avgStress < 60 ? (
                       <p className="text-orange-400 text-sm font-semibold">Zvýšený</p>
                     ) : (
                       <p className="text-red-400 text-sm font-semibold flex items-center gap-1">
@@ -962,9 +1099,9 @@ export default function AnalyticsPage() {
                   <div
                     className={cn(
                       "p-4 rounded-full",
-                      analysis.summary.stressScore < 40
+                      avgStress < 40
                         ? "bg-gradient-to-br from-teal-500/20 to-cyan-500/20"
-                        : analysis.summary.stressScore < 60
+                        : avgStress < 60
                           ? "bg-gradient-to-br from-orange-500/20 to-amber-500/20"
                           : "bg-gradient-to-br from-red-500/20 to-rose-500/20",
                     )}
@@ -972,9 +1109,9 @@ export default function AnalyticsPage() {
                     <Activity
                       className={cn(
                         "w-8 h-8",
-                        analysis.summary.stressScore < 40
+                        avgStress < 40
                           ? "text-teal-400"
-                          : analysis.summary.stressScore < 60
+                          : avgStress < 60
                             ? "text-orange-400"
                             : "text-red-400",
                       )}
@@ -986,28 +1123,27 @@ export default function AnalyticsPage() {
                 <div
                   className={cn(
                     "h-full transition-all",
-                    analysis.summary.stressScore < 40
+                    avgStress < 40
                       ? "bg-gradient-to-r from-teal-500 to-cyan-500"
-                      : analysis.summary.stressScore < 60
+                      : avgStress < 60
                         ? "bg-gradient-to-r from-orange-500 to-amber-500"
                         : "bg-gradient-to-r from-red-500 to-rose-500",
                   )}
-                  style={{ width: `${analysis.summary.stressScore}%` }}
+                  style={{ width: `${avgStress}%` }}
                 />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Tabs */}
-        <Tabs defaultValue="insights" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-slate-800/80 backdrop-blur-sm border border-slate-600 p-1 grid grid-cols-5">
             <TabsTrigger
-              value="insights"
+              value="overview"
               className="gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300"
             >
               <Sparkles className="w-4 h-4" />
-              AI Insights
+              Přehled
             </TabsTrigger>
             <TabsTrigger
               value="mindset"
@@ -1039,484 +1175,481 @@ export default function AnalyticsPage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* AI INSIGHTS TAB */}
-          <TabsContent value="insights" className="space-y-6">
-            {/* Quick Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-3">
+          <TabsContent value="overview" className="space-y-6">
+            {/* Hero Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="bg-gradient-to-br from-emerald-500/20 to-green-600/10 border-emerald-500/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-400 text-xs mb-1">Total P&L</p>
-                      <p
-                        className={cn(
-                          "text-3xl font-bold",
-                          analysis.summary.totalPnL > 0 ? "text-green-400" : "text-red-400",
-                        )}
-                      >
-                        {analysis.summary.totalPnL > 0 ? "+" : ""}${Math.abs(Math.round(analysis.summary.totalPnL))}
+                      <p className="text-sm font-medium text-emerald-300 mb-1">Total P&L</p>
+                      <h3 className="text-3xl font-bold text-white">
+                        ${trades.reduce((sum, t) => sum + (t.pnl || 0), 0).toFixed(2)}
+                      </h3>
+                      <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+                        <TrendingUp className="w-3 h-3" />
+                        {trades.length > 0 ? ((trades.reduce((sum, t) => sum + (t.pnl || 0), 0) / trades.length) * 100).toFixed(1) : 0}% ROI
                       </p>
                     </div>
-                    <DollarSign
-                      className={cn("w-10 h-10", analysis.summary.totalPnL > 0 ? "text-green-400" : "text-red-400")}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-300 text-sm">
-                    <Calendar className="w-4 h-4" />
-                    <span>Průměr: ${Math.round(analysis.summary.avgWeeklyPnL)}/týden</span>
+                    <DollarSign className="w-12 h-12 text-emerald-400/40" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-3">
+              <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-600/10 border-blue-500/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-400 text-xs mb-1">Celkem tradů</p>
-                      <p className="text-3xl font-bold text-white">{analysis.summary.trades}</p>
+                      <p className="text-sm font-medium text-blue-300 mb-1">Win Rate</p>
+                      <h3 className="text-3xl font-bold text-white">{Math.round(avgWinRate)}%</h3>
+                      <p className="text-xs text-blue-400 mt-2">
+                        {trades.filter((t) => (t.pnl || 0) > 0).length}W / {trades.filter((t) => (t.pnl || 0) < 0).length}L
+                      </p>
                     </div>
-                    <Activity className="w-10 h-10 text-blue-400" />
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-300 text-sm">
-                    <TrendingUp className="w-4 h-4" />
-                    <span>{Math.round(analysis.summary.trades / analysis.summary.weeks)} tradů/týden</span>
+                    <Target className="w-12 h-12 text-blue-400/40" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-3">
+              <Card className="bg-gradient-to-br from-purple-500/20 to-pink-600/10 border-purple-500/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-400 text-xs mb-1">Journaling Rate</p>
-                      <p className="text-3xl font-bold text-purple-400">
-                        {Math.round(analysis.summary.journalingRate)}%
-                      </p>
+                      <p className="text-sm font-medium text-purple-300 mb-1">Avg Trade</p>
+                      <h3 className="text-3xl font-bold text-white">
+                        ${(trades.length > 0 ? trades.reduce((sum, t) => sum + (t.pnl || 0), 0) / trades.length : 0).toFixed(2)}
+                      </h3>
+                      <p className="text-xs text-purple-400 mt-2">{trades.length} trades total</p>
                     </div>
-                    <Brain className="w-10 h-10 text-purple-400" />
+                    <BarChart3 className="w-12 h-12 text-purple-400/40" />
                   </div>
-                  <div className="flex items-center gap-2 text-gray-300 text-sm">
-                    <Target className="w-4 h-4" />
-                    <span>Cíl: 80%+ rate</span>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-orange-500/20 to-red-600/10 border-orange-500/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-orange-300 mb-1">Mental Score</p>
+                      <h3 className="text-3xl font-bold text-white">
+                        {Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4)}
+                      </h3>
+                      <p className="text-xs text-orange-400 mt-2">Psychological readiness</p>
+                    </div>
+                    <Brain className="w-12 h-12 text-orange-400/40" />
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {analysis.psychInsights.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-5 h-5 text-purple-400" />
-                  <h3 className="text-xl font-bold text-white">AI-powered Insights</h3>
-                </div>
-                {analysis.psychInsights.map((insight: any, index: number) => (
-                  <Card
-                    key={index}
-                    className={cn(
-                      "bg-slate-800/80 backdrop-blur-sm border-2",
-                      insight.type === "critical" && "border-red-500/40 bg-red-500/5",
-                      insight.type === "warning" && "border-yellow-500/40 bg-yellow-500/5",
-                      insight.type === "success" && "border-green-500/40 bg-green-500/5",
-                      insight.type === "insight" && "border-blue-500/40 bg-blue-500/5",
-                    )}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="text-5xl">{insight.icon}</div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="text-xl font-bold text-white">{insight.title}</h3>
-                            <Badge
-                              className={cn(
-                                "text-xs",
-                                insight.impact === "critical" && "bg-red-500/20 text-red-300 border-red-500/30",
-                                insight.impact === "high" && "bg-orange-500/20 text-orange-300 border-orange-500/30",
-                                insight.impact === "medium" && "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-                                insight.impact === "positive" && "bg-green-500/20 text-green-300 border-green-500/30",
-                              )}
-                            >
-                              {insight.impact === "critical" && "🚨 KRITICKÉ"}
-                              {insight.impact === "high" && "⚡ VYSOKÝ DOPAD"}
-                              {insight.impact === "medium" && "⚠️ STŘEDNÍ"}
-                              {insight.impact === "positive" && "✅ POZITIVNÍ"}
-                            </Badge>
-                          </div>
-                          <p className="text-gray-200 mb-4 text-base leading-relaxed">{insight.description}</p>
-                          <div className="flex items-start gap-2 p-4 bg-purple-500/10 rounded-lg border border-purple-500/30">
-                            <Zap className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                              <p className="text-purple-300 font-semibold text-sm mb-1">💡 Konkrétní akce:</p>
-                              <p className="text-white font-medium">{insight.action}</p>
+            {/* Performance Matrix */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Trading Heatmap */}
+              <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-cyan-400" />
+                    Performance Heatmap
+                  </CardTitle>
+                  <CardDescription>Best & worst trading days</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-7 gap-2">
+                    {["Po", "Út", "St", "Čt", "Pá", "So", "Ne"].map((day, i) => (
+                      <div key={day} className="text-center text-xs text-gray-400 font-medium mb-1">
+                        {day}
+                      </div>
+                    ))}
+                    {Array.from({ length: 28 }).map((_, i) => {
+                      const dayOfWeek = i % 7; // Day of week (0-6)
+                      const dayTrades = trades.filter((t) => new Date(t.date).getDay() === dayOfWeek);
+                      const dayPnl = dayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+                      const maxAbsPnl = Math.max(...trades.map(t => Math.abs(t.pnl || 0)), 1); // Avoid division by zero
+                      const intensity = Math.min(Math.abs(dayPnl) / maxAbsPnl, 1);
+
+                      return (
+                        <div
+                          key={i}
+                          className="aspect-square rounded transition-all hover:scale-110 cursor-pointer"
+                          style={{
+                            backgroundColor:
+                              dayPnl > 0
+                                ? `rgba(16, 185, 129, ${0.2 + intensity * 0.8})`
+                                : `rgba(239, 68, 68, ${0.2 + intensity * 0.8})`,
+                          }}
+                          title={`$${dayPnl.toFixed(2)}`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div className="flex items-center justify-between mt-4 text-xs text-gray-400">
+                    <span className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded bg-red-500/40" /> Loss
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded bg-green-500/40" /> Profit
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Session Performance */}
+              <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-purple-400" />
+                    Session Analysis
+                  </CardTitle>
+                  <CardDescription>Performance by time of day</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {["London (8-12)", "NY AM (12-16)", "NY PM (16-20)", "Asia (20-24)"].map((session, i) => {
+                      const sessionTrades = trades.filter((t) => {
+                        const hour = new Date(t.date).getHours();
+                        // Adjusting range for Asia session to cover midnight
+                        if (session === "Asia (20-24)") {
+                          return (hour >= 20 && hour <= 23) || (hour >= 0 && hour < 0); // Covers 20-23, and wraps around to 00:00
+                        }
+                        return hour >= i * 4 + 8 && hour < i * 4 + 12;
+                      });
+                      const sessionPnl = sessionTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+                      const sessionWin = sessionTrades.filter((t) => (t.pnl || 0) > 0).length;
+                      const sessionWinRate = sessionTrades.length > 0 ? (sessionWin / sessionTrades.length) * 100 : 0;
+                      return (
+                        <div key={session} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-300">{session}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-gray-500">{sessionTrades.length} trades</span>
+                              <span className={cn("text-sm font-bold", sessionPnl > 0 ? "text-green-400" : "text-red-400")}>
+                                ${sessionPnl.toFixed(2)}
+                              </span>
                             </div>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-slate-700 rounded-full h-2 overflow-hidden">
+                              <div
+                                className={cn(
+                                  "h-full transition-all",
+                                  sessionPnl > 0 ? "bg-gradient-to-r from-green-500 to-emerald-400" : "bg-red-500/70",
+                                )}
+                                style={{ width: `${sessionWinRate}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-400 w-12 text-right">{Math.round(sessionWinRate)}%</span>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-white flex items-center gap-2 text-lg">
-                        <DollarSign className="w-5 h-5 text-green-400" />
-                        Performance vs Nálada
-                      </CardTitle>
-                      <CardDescription className="text-sm text-gray-400 mt-1">
-                        Korelace mezi náladou a týdenním P&L
-                      </CardDescription>
-                    </div>
+                      );
+                    })}
                   </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <ComposedChart data={analysis.weeklyPerformanceData}>
-                      <defs>
-                        <linearGradient id="moodGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#f472b6" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#f472b6" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                      <XAxis
-                        dataKey="week"
-                        stroke="#94a3b8"
-                        style={{ fontSize: "12px", fontWeight: 500 }}
-                        tick={{ fill: "#94a3b8" }}
-                      />
-                      <YAxis
-                        yAxisId="left"
-                        stroke="#94a3b8"
-                        style={{ fontSize: "12px" }}
-                        tickFormatter={(value) => `$${value}`}
-                        tick={{ fill: "#94a3b8" }}
-                      />
-                      <YAxis
-                        yAxisId="right"
-                        orientation="right"
-                        stroke="#f472b6"
-                        style={{ fontSize: "12px" }}
-                        tickFormatter={(value) => `${value}%`}
-                        tick={{ fill: "#f472b6" }}
-                        domain={[0, 100]}
-                      />
-                      <Tooltip content={<CustomTooltip type="currency" />} />
-                      <Legend />
-                      <Bar yAxisId="left" dataKey="pnl" name="Týdenní P&L" radius={[8, 8, 0, 0]}>
-                        {analysis.weeklyPerformanceData.map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? "#10b981" : "#ef4444"} />
-                        ))}
-                      </Bar>
-                      <Area
-                        yAxisId="right"
-                        type="monotone"
-                        dataKey="avgMood"
-                        stroke="#f472b6"
-                        strokeWidth={2}
-                        fill="url(#moodGradient)"
-                        name="Průměrná Nálada"
-                      />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-white flex items-center gap-2 text-lg">
-                        <Calendar className="w-5 h-5 text-cyan-400" />
-                        {getWinRateLabel()}
-                      </CardTitle>
-                      <CardDescription className="text-sm text-gray-400 mt-1">
-                        {getWinRatePeriod()} • Průměr: {Math.round(avgWinRate)}%
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={analysis.weeklyPerformanceData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                      <XAxis
-                        dataKey="week"
-                        stroke="#94a3b8"
-                        style={{ fontSize: "12px", fontWeight: 500 }}
-                        tick={{ fill: "#94a3b8" }}
-                      />
-                      <YAxis
-                        stroke="#94a3b8"
-                        domain={[0, 100]}
-                        style={{ fontSize: "12px" }}
-                        tickFormatter={(value) => `${value}%`}
-                        tick={{ fill: "#94a3b8" }}
-                      />
-                      <Tooltip content={<CustomTooltip type="percent" />} />
-                      <ReferenceLine y={avgWinRate} stroke="#10b981" strokeWidth={2} strokeDasharray="5 5">
-                        <Label value={`Průměr ${Math.round(avgWinRate)}%`} position="insideTopRight" fill="#10b981" />
-                      </ReferenceLine>
-                      <Bar dataKey="winRate" radius={[8, 8, 0, 0]} name="Win Rate">
-                        {analysis.weeklyPerformanceData.map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={entry.winRate >= 50 ? "#10b981" : "#ef4444"} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Unified Performance Chart */}
+            <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-emerald-400" />
+                  Performance Trend
+                </CardTitle>
+                <CardDescription>
+                  {timeframe === "week" ? "Po-Pá tracking" : timeframe === "month" ? "4 týdny" : "Všechna data"} • P&L, Win
+                  Rate, Mental Score
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={400}>
+                  <ComposedChart data={filteredWeeklyData}>
+                    <defs>
+                      <linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
+                    <XAxis dataKey="week" stroke="#94a3b8" style={{ fontSize: "12px", fontWeight: 500 }} />
+                    <YAxis yAxisId="left" stroke="#94a3b8" style={{ fontSize: "12px" }} tickFormatter={(value) => `$${value}`} />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      stroke="#f472b6"
+                      style={{ fontSize: "12px" }}
+                      tickFormatter={(value) => `${value}%`}
+                      domain={[0, 100]}
+                    />
+                    <Tooltip content={<CustomTooltip type="mixed" />} />
+                    <Legend />
+                    <Area
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey="pnl"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      fill="url(#pnlGradient)"
+                      name="P&L ($)"
+                    />
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="winRate"
+                      stroke="#3b82f6"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      name="Win Rate (%)"
+                    />
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="avgMood"
+                      stroke="#f472b6"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      name="Mental Score (%)"
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          {/* MINDSET TAB - COMPLETELY REDESIGNED */}
           <TabsContent value="mindset" className="space-y-6">
-            {/* Circular Progress Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="bg-gradient-to-br from-slate-800/90 to-purple-900/20 border-purple-500/30 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center">
-                    <div className="relative w-32 h-32 mb-4">
-                      <svg className="w-32 h-32 transform -rotate-90">
+            {/* Psychological Readiness Score */}
+            <Card className="bg-gradient-to-br from-slate-800 via-purple-900/20 to-slate-800 border-purple-500/30 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2 text-2xl">
+                  <Brain className="w-7 h-7 text-purple-400" />
+                  Psychological Readiness
+                </CardTitle>
+                <CardDescription className="text-gray-300">
+                  Real-time mental performance metrics based on mood, discipline, confidence & stress management
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Main Readiness Score */}
+                  <div className="lg:col-span-1 flex flex-col items-center justify-center p-8 bg-slate-900/60 rounded-xl border border-purple-500/20">
+                    <div className="relative w-48 h-48 mb-6">
+                      <svg className="w-48 h-48 transform -rotate-90">
+                        <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="14" fill="none" className="text-slate-700" />
                         <circle
-                          cx="64"
-                          cy="64"
-                          r="56"
+                          cx="96"
+                          cy="96"
+                          r="88"
                           stroke="currentColor"
-                          strokeWidth="8"
+                          strokeWidth="14"
                           fill="none"
-                          className="text-slate-700"
-                        />
-                        <circle
-                          cx="64"
-                          cy="64"
-                          r="56"
-                          stroke="currentColor"
-                          strokeWidth="8"
-                          fill="none"
-                          strokeDasharray={`${2 * Math.PI * 56}`}
-                          strokeDashoffset={`${2 * Math.PI * 56 * (1 - analysis.summary.disciplineScore / 100)}`}
-                          className="text-cyan-400 transition-all duration-1000"
+                          strokeDasharray={`${2 * Math.PI * 88}`}
+                          strokeDashoffset={`${2 * Math.PI * 88 * (1 - ((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) / 100)}`}
+                          className="text-purple-500 transition-all duration-1000"
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center flex-col">
-                        <span className="text-3xl font-bold text-white">
-                          {Math.round(analysis.summary.disciplineScore)}%
+                        <span className="text-6xl font-bold text-white">
+                          {Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4)}
                         </span>
+                        <span className="text-lg text-gray-400 mt-2">/100</span>
                       </div>
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-1">Disciplína</h3>
-                    <p className="text-sm text-gray-400 text-center">Mental Toughness</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-slate-800/90 to-pink-900/20 border-pink-500/30 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center">
-                    <div className="relative w-32 h-32 mb-4">
-                      <svg className="w-32 h-32 transform -rotate-90">
-                        <circle
-                          cx="64"
-                          cy="64"
-                          r="56"
-                          stroke="currentColor"
-                          strokeWidth="8"
-                          fill="none"
-                          className="text-slate-700"
-                        />
-                        <circle
-                          cx="64"
-                          cy="64"
-                          r="56"
-                          stroke="currentColor"
-                          strokeWidth="8"
-                          fill="none"
-                          strokeDasharray={`${2 * Math.PI * 56}`}
-                          strokeDashoffset={`${2 * Math.PI * 56 * (1 - analysis.summary.moodStability / 100)}`}
-                          className="text-pink-400 transition-all duration-1000"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center flex-col">
-                        <span className="text-3xl font-bold text-white">
-                          {Math.round(analysis.summary.moodStability)}%
-                        </span>
-                      </div>
+                    <div className="text-center">
+                      <h3 className="text-2xl font-bold text-purple-300 mb-2">
+                        {((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) >= 80
+                          ? "🔥 Peak Performance"
+                          : ((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) >= 65
+                            ? "✅ Trading Ready"
+                            : ((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) >= 50
+                              ? "⚠️ Proceed with Caution"
+                              : "🛑 High Risk State"}
+                      </h3>
+                      <p className="text-sm text-gray-400">Current mental readiness level</p>
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-1">Stabilita</h3>
-                    <p className="text-sm text-gray-400 text-center">Emotional Balance</p>
                   </div>
-                </CardContent>
-              </Card>
 
-              <Card className="bg-gradient-to-br from-slate-800/90 to-blue-900/20 border-blue-500/30 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center">
-                    <div className="relative w-32 h-32 mb-4">
-                      <svg className="w-32 h-32 transform -rotate-90">
-                        <circle
-                          cx="64"
-                          cy="64"
-                          r="56"
-                          stroke="currentColor"
-                          strokeWidth="8"
-                          fill="none"
-                          className="text-slate-700"
-                        />
-                        <circle
-                          cx="64"
-                          cy="64"
-                          r="56"
-                          stroke="currentColor"
-                          strokeWidth="8"
-                          fill="none"
-                          strokeDasharray={`${2 * Math.PI * 56}`}
-                          strokeDashoffset={`${2 * Math.PI * 56 * (1 - analysis.summary.confidenceScore / 100)}`}
-                          className="text-blue-400 transition-all duration-1000"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center flex-col">
-                        <span className="text-3xl font-bold text-white">
-                          {Math.round(analysis.summary.confidenceScore)}%
-                        </span>
+                  {/* Mental Metrics Grid */}
+                  <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+                    <div className="p-5 bg-gradient-to-br from-pink-500/15 to-pink-600/5 rounded-xl border border-pink-500/30">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-pink-500/20 rounded-lg">
+                          <Heart className="w-5 h-5 text-pink-400" />
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-300 block">Emotional State</span>
+                          <span className="text-xs text-gray-500">Nálada & stabilita</span>
+                        </div>
                       </div>
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-1">Sebevědomí</h3>
-                    <p className="text-sm text-gray-400 text-center">Self-Belief</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-slate-800/90 to-emerald-900/20 border-emerald-500/30 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center">
-                    <div className="relative w-32 h-32 mb-4">
-                      <svg className="w-32 h-32 transform -rotate-90">
-                        <circle
-                          cx="64"
-                          cy="64"
-                          r="56"
-                          stroke="currentColor"
-                          strokeWidth="8"
-                          fill="none"
-                          className="text-slate-700"
-                        />
-                        <circle
-                          cx="64"
-                          cy="64"
-                          r="56"
-                          stroke="currentColor"
-                          strokeWidth="8"
-                          fill="none"
-                          strokeDasharray={`${2 * Math.PI * 56}`}
-                          strokeDashoffset={`${2 * Math.PI * 56 * (1 - analysis.summary.consistencyScore / 100)}`}
-                          className="text-emerald-400 transition-all duration-1000"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center flex-col">
-                        <span className="text-3xl font-bold text-white">
-                          {Math.round(analysis.summary.consistencyScore)}%
-                        </span>
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <span className="text-4xl font-bold text-white">{Math.round(avgMood)}</span>
+                        <span className="text-lg text-gray-400">/100</span>
                       </div>
+                      <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-pink-500 via-pink-400 to-rose-400 h-full transition-all duration-500"
+                          style={{ width: `${avgMood}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {avgMood >= 75 ? "Excellent emotional balance" : avgMood >= 50 ? "Stable" : "Needs attention"}
+                      </p>
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-1">Konzistence</h3>
-                    <p className="text-sm text-gray-400 text-center">Performance Stability</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
 
-            <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
+                    <div className="p-5 bg-gradient-to-br from-cyan-500/15 to-cyan-600/5 rounded-xl border border-cyan-500/30">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-cyan-500/20 rounded-lg">
+                          <Target className="w-5 h-5 text-cyan-400" />
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-300 block">Mental Toughness</span>
+                          <span className="text-xs text-gray-500">Disciplína & focus</span>
+                        </div>
+                      </div>
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <span className="text-4xl font-bold text-white">{Math.round(avgDiscipline)}</span>
+                        <span className="text-lg text-gray-400">/100</span>
+                      </div>
+                      <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-cyan-500 via-cyan-400 to-blue-400 h-full transition-all duration-500"
+                          style={{ width: `${avgDiscipline}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {avgDiscipline >= 75 ? "Strong discipline" : avgDiscipline >= 50 ? "Moderate" : "Needs improvement"}
+                      </p>
+                    </div>
+
+                    <div className="p-5 bg-gradient-to-br from-blue-500/15 to-blue-600/5 rounded-xl border border-blue-500/30">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-blue-500/20 rounded-lg">
+                          <Zap className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-300 block">Confidence Level</span>
+                          <span className="text-xs text-gray-500">Sebevědomí</span>
+                        </div>
+                      </div>
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <span className="text-4xl font-bold text-white">{Math.round(avgConfidence)}</span>
+                        <span className="text-lg text-gray-400">/100</span>
+                      </div>
+                      <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 via-blue-400 to-indigo-400 h-full transition-all duration-500"
+                          style={{ width: `${avgConfidence}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {avgConfidence >= 75 ? "High confidence" : avgConfidence >= 50 ? "Moderate" : "Building confidence"}
+                      </p>
+                    </div>
+
+                    <div className="p-5 bg-gradient-to-br from-red-500/15 to-red-600/5 rounded-xl border border-red-500/30">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-red-500/20 rounded-lg">
+                          <AlertTriangle className="w-5 h-5 text-red-400" />
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-300 block">Stress Management</span>
+                          <span className="text-xs text-gray-500">Úroveň stresu</span>
+                        </div>
+                      </div>
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <span className="text-4xl font-bold text-white">{Math.round(avgStress)}</span>
+                        <span className="text-lg text-gray-400">/100</span>
+                      </div>
+                      <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 h-full transition-all duration-500"
+                          style={{ width: `${avgStress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {avgStress >= 70 ? "🚨 Critical - Take break" : avgStress >= 50 ? "⚠️ Elevated" : "✅ Well managed"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Psychological Profile */}
+            <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Brain className="w-5 h-5 text-purple-400" />
                   Psychologický Profil
                 </CardTitle>
-                <CardDescription className="text-gray-400">7 klíčových psychologických metrik</CardDescription>
+                <CardDescription>Multi-dimensional psychological assessment across key trading factors</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <RadarChart
-                    data={[
-                      { metric: "Disciplína", score: Math.round(analysis.summary.disciplineScore * 10) / 10 },
-                      { metric: "Emoce", score: Math.round(analysis.summary.moodStability * 10) / 10 },
-                      { metric: "Sebevědomí", score: Math.round(analysis.summary.confidenceScore * 10) / 10 },
-                      {
-                        metric: "Stress",
-                        score: Math.round(Math.max(0, 100 - analysis.summary.stressScore) * 10) / 10,
-                      },
-                      { metric: "Konzistence", score: Math.round(analysis.summary.consistencyScore * 10) / 10 },
-                      { metric: "Awareness", score: Math.round(analysis.summary.journalingRate * 10) / 10 },
-                      { metric: "Energie", score: Math.round(analysis.summary.energyScore * 10) / 10 },
-                    ]}
-                  >
-                    <PolarGrid stroke="#475569" strokeDasharray="3 3" />
-                    <PolarAngleAxis dataKey="metric" stroke="#9ca3af" style={{ fontSize: "13px", fontWeight: 500 }} />
-                    <PolarRadiusAxis domain={[0, 100]} stroke="#64748b" style={{ fontSize: "11px" }} />
-                    <Radar dataKey="score" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.5} strokeWidth={2} />
-                    <Tooltip
+                <ResponsiveContainer width="100%" height={350}>
+                  <RadarChart data={analysis.psychologicalProfile}>
+                    <PolarGrid stroke="#475569" />
+                    <PolarAngleAxis dataKey="subject" stroke="#94a3b8" style={{ fontSize: "13px", fontWeight: 500 }} />
+                    <PolarRadiusAxis angle={90} domain={[0, 100]} stroke="#94a3b8" />
+                    <Radar name="Profil" dataKey="A" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.5} strokeWidth={2} />
+                    <ChartTooltip
                       content={({ payload }) => {
-                        if (!payload?.[0]) return null
+                        if (!payload || !payload[0]) return null
                         return (
-                          <div className="bg-slate-900/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3">
-                            <p className="text-white font-semibold mb-1">{payload[0].payload.metric}</p>
-                            <p className="text-purple-400 text-lg font-bold">{payload[0].value?.toFixed(1)}%</p>
+                          <div className="bg-slate-800 border border-purple-500/30 px-4 py-3 rounded-lg shadow-2xl">
+                            <p className="text-white font-semibold mb-1">{payload[0].payload.subject}</p>
+                            <p className="text-2xl font-bold text-purple-400">{payload[0].value}%</p>
                           </div>
                         )
                       }}
                     />
                   </RadarChart>
                 </ResponsiveContainer>
-              </Card>
+              </CardContent>
             </Card>
 
-            <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
+            {/* Emotional Trends + P&L */}
+            <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-pink-400" />
-                  Denní Emoční Trendy
+                  <Activity className="w-5 h-5 text-pink-400" />
+                  {timeframe === "week" ? "Denní" : timeframe === "month" ? "Týdenní" : "Celkové"} Mental Performance & P&L
                 </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Denní tracking nálady, disciplíny, sebevědomí, stresu a P/L (30 dní)
+                <CardDescription>
+                  {timeframe === "week" ? "Po-Pá" : timeframe === "month" ? "4 týdny" : "Všechna data"} tracking of mental
+                  metrics correlated with trading performance
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={analysis.dailyMoodData}>
+                <ResponsiveContainer width="100%" height={380}>
+                  <LineChart data={filteredDailyData}>
+                    <defs>
+                      <linearGradient id="moodGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f472b6" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#f472b6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                    <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: "11px" }} />
-                    <YAxis
-                      yAxisId="left"
-                      stroke="#94a3b8"
-                      domain={[0, 100]}
-                      style={{ fontSize: "11px" }}
-                      tickFormatter={(v) => `${v}%`}
+                    <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: "12px" }} />
+                    <YAxis yAxisId="left" stroke="#94a3b8" domain={[0, 100]} style={{ fontSize: "12px" }} tickFormatter={(v) => `${v}%`} />
+                    <YAxis yAxisId="right" orientation="right" stroke="#10b981" style={{ fontSize: "12px" }} tickFormatter={(v) => `$${v}`} />
+                    <Tooltip
+                      content={({ payload }) => {
+                        if (!payload || !payload[0]) return null
+                        return (
+                          <div className="bg-slate-800 border border-slate-600 px-4 py-3 rounded-lg shadow-xl">
+                            <p className="text-white font-semibold mb-2">{payload[0].payload.date}</p>
+                            {payload.map((entry: any, index: number) => (
+                              <div key={index} className="flex items-center justify-between gap-4 text-sm">
+                                <span style={{ color: entry.color }}>{entry.name}:</span>
+                                <span className="font-bold" style={{ color: entry.color }}>
+                                  {entry.name === "P&L ($)" ? `$${entry.value}` : `${entry.value}%`}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      }}
                     />
-                    <YAxis
-                      yAxisId="right"
-                      orientation="right"
-                      stroke="#10b981"
-                      style={{ fontSize: "11px" }}
-                      tickFormatter={(v) => `$${v}`}
-                    />
-                    <Tooltip content={<CustomTooltip type="mixed" />} />
-                    <Legend wrapperStyle={{ paddingTop: "20px" }} iconType="line" />
-                    <Line
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey="mood"
-                      stroke="#f472b6"
-                      name="Nálada"
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                    />
+                    <Legend wrapperStyle={{ paddingTop: "24px" }} iconType="line" />
+                    <Area yAxisId="left" type="monotone" dataKey="mood" stroke="#f472b6" fill="url(#moodGradient)" name="Nálada" strokeWidth={2} />
                     <Line
                       yAxisId="left"
                       type="monotone"
@@ -1535,57 +1668,9 @@ export default function AnalyticsPage() {
                       strokeWidth={2}
                       dot={{ r: 3 }}
                     />
-                    <Line
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey="stress"
-                      stroke="#ef4444"
-                      name="Stres"
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                    />
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="pnl"
-                      stroke="#10b981"
-                      name="P&L ($)"
-                      strokeWidth={3}
-                      dot={{ r: 4 }}
-                    />
+                    <Line yAxisId="left" type="monotone" dataKey="stress" stroke="#ef4444" name="Stres" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line yAxisId="right" type="monotone" dataKey="pnl" stroke="#10b981" name="P&L ($)" strokeWidth={3} dot={{ r: 5 }} />
                   </LineChart>
-                </ResponsiveContainer>
-              </Card>
-            </Card>
-
-            <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-cyan-400" />
-                  Performance podle dne v týdnu
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Průměrný počet tradů, nálada a win rate podle dne
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <ComposedChart data={analysis.weekdayChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                    <XAxis dataKey="day" stroke="#94a3b8" style={{ fontSize: "12px" }} />
-                    <YAxis stroke="#94a3b8" style={{ fontSize: "11px" }} tickFormatter={(v) => `${v}%`} />
-                    <Tooltip content={<CustomTooltip type="percent" />} />
-                    <Legend wrapperStyle={{ paddingTop: "15px" }} />
-                    <Bar dataKey="avgMood" fill="#f472b6" name="Nálada" radius={[8, 8, 0, 0]} opacity={0.8} />
-                    <Line
-                      type="monotone"
-                      dataKey="winRate"
-                      stroke="#10b981"
-                      strokeWidth={3}
-                      name="Win Rate"
-                      dot={{ r: 5 }}
-                    />
-                  </ComposedChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
@@ -1662,39 +1747,6 @@ export default function AnalyticsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div
-                        className={cn(
-                          "p-4 rounded-lg border-2",
-                          pattern.severity === "critical" && "bg-red-500/10 border-red-500/30",
-                          pattern.severity === "high" && "bg-orange-500/10 border-orange-500/30",
-                          pattern.severity === "medium" && "bg-yellow-500/10 border-yellow-500/30",
-                        )}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <Flame className="w-4 h-4 text-orange-400" />
-                          <p className="text-gray-400 text-xs font-medium">Výskyt</p>
-                        </div>
-                        <p className="text-white text-2xl font-bold">{pattern.count}x</p>
-                        <p className="text-gray-500 text-xs mt-1">za období</p>
-                      </div>
-
-                      <div
-                        className={cn(
-                          "p-4 rounded-lg border-2",
-                          pattern.severity === "critical" && "bg-red-500/10 border-red-500/30",
-                          pattern.severity === "high" && "bg-orange-500/10 border-orange-500/30",
-                          pattern.severity === "medium" && "bg-yellow-500/10 border-yellow-500/30",
-                        )}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <AlertTriangle className="w-4 h-4 text-red-400" />
-                          <p className="text-gray-400 text-xs font-medium">Ztráta</p>
-                        </div>
-                        <p className="text-red-400 text-2xl font-bold">-${Math.abs(Math.round(pattern.impact))}</p>
-                        <p className="text-gray-500 text-xs mt-1">celkem</p>
-                      </div>
-                    </div>
 
                     <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700 mb-3">
                       <div className="flex items-center justify-between mb-2">
@@ -1725,7 +1777,9 @@ export default function AnalyticsPage() {
                   <Heart className="w-6 h-6 text-pink-400" />
                   Distribuce Emočních Stavů
                 </CardTitle>
-                <CardDescription className="text-gray-400">Jak často jsi v jakém emočním stavu</CardDescription>
+                <CardDescription>
+                  {timeframe === "week" ? "Tento týden" : timeframe === "month" ? "Tento měsíc" : "Celkově"} - jak často jsi v jakém emočním stavu
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1735,13 +1789,13 @@ export default function AnalyticsPage() {
                       <div className="text-right">
                         <p className="text-4xl font-bold text-green-400">
                           {Math.round(
-                            (analysis.dailyMoodData.filter((m: any) => m.mood >= 70).length /
-                              analysis.dailyMoodData.length) *
+                            (filteredDailyData.filter((m: any) => m.mood >= 70).length / filteredDailyData.length) *
                               100,
-                          )}
-                          %
+                          )}%
                         </p>
-                        <p className="text-gray-400 text-sm">dní</p>
+                        <p className="text-gray-400 text-sm">
+                          {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
+                        </p>
                       </div>
                     </div>
                     <h3 className="text-white font-bold text-xl mb-2">Dobrá nálada</h3>
@@ -1752,11 +1806,10 @@ export default function AnalyticsPage() {
                         <p className="text-green-200 text-xs font-semibold">Win Rate v tomto stavu</p>
                         <p className="text-white font-bold text-lg">
                           {Math.round(
-                            (analysis.weeklyPerformanceData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length /
-                              Math.max(analysis.weeklyPerformanceData.filter((d: any) => d.avgMood >= 70).length, 1)) *
+                            (filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length /
+                              Math.max(filteredWeeklyData.filter((d: any) => d.avgMood >= 70).length, 1)) *
                               100,
-                          )}
-                          %
+                          )}%
                         </p>
                       </div>
                     </div>
@@ -1768,13 +1821,14 @@ export default function AnalyticsPage() {
                       <div className="text-right">
                         <p className="text-4xl font-bold text-yellow-400">
                           {Math.round(
-                            (analysis.dailyMoodData.filter((m: any) => m.mood >= 40 && m.mood < 70).length /
-                              analysis.dailyMoodData.length) *
+                            (filteredDailyData.filter((m: any) => m.mood >= 40 && m.mood < 70).length /
+                              filteredDailyData.length) *
                               100,
-                          )}
-                          %
+                          )}%
                         </p>
-                        <p className="text-gray-400 text-sm">dní</p>
+                        <p className="text-gray-400 text-sm">
+                          {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
+                        </p>
                       </div>
                     </div>
                     <h3 className="text-white font-bold text-xl mb-2">Neutrální</h3>
@@ -1785,17 +1839,16 @@ export default function AnalyticsPage() {
                         <p className="text-yellow-200 text-xs font-semibold">Win Rate v tomto stavu</p>
                         <p className="text-white font-bold text-lg">
                           {Math.round(
-                            (analysis.weeklyPerformanceData.filter(
+                            (filteredWeeklyData.filter(
                               (d: any) => d.avgMood >= 40 && d.avgMood < 70 && d.pnl > 0,
                             ).length /
                               Math.max(
-                                analysis.weeklyPerformanceData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70)
+                                filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70)
                                   .length,
                                 1,
                               )) *
                               100,
-                          )}
-                          %
+                          )}%
                         </p>
                       </div>
                     </div>
@@ -1807,13 +1860,14 @@ export default function AnalyticsPage() {
                       <div className="text-right">
                         <p className="text-4xl font-bold text-red-400">
                           {Math.round(
-                            (analysis.dailyMoodData.filter((m: any) => m.mood > 0 && m.mood < 40).length /
-                              analysis.dailyMoodData.length) *
+                            (filteredDailyData.filter((m: any) => m.mood > 0 && m.mood < 40).length /
+                              filteredDailyData.length) *
                               100,
-                          )}
-                          %
+                          )}%
                         </p>
-                        <p className="text-gray-400 text-sm">dní</p>
+                        <p className="text-gray-400 text-sm">
+                          {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
+                        </p>
                       </div>
                     </div>
                     <h3 className="text-white font-bold text-xl mb-2">Špatná nálada</h3>
@@ -1824,17 +1878,16 @@ export default function AnalyticsPage() {
                         <p className="text-red-200 text-xs font-semibold">Win Rate v tomto stavu</p>
                         <p className="text-white font-bold text-lg">
                           {Math.round(
-                            (analysis.weeklyPerformanceData.filter(
+                            (filteredWeeklyData.filter(
                               (d: any) => d.avgMood > 0 && d.avgMood < 40 && d.pnl > 0,
                             ).length /
                               Math.max(
-                                analysis.weeklyPerformanceData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40)
+                                filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40)
                                   .length,
                                 1,
                               )) *
                               100,
-                          )}
-                          %
+                          )}%
                         </p>
                       </div>
                     </div>
@@ -1850,7 +1903,7 @@ export default function AnalyticsPage() {
                   <BarChart3 className="w-5 h-5 text-purple-400" />
                   Emoční Dopad na Performance
                 </CardTitle>
-                <CardDescription className="text-gray-400">Vztah mezi náladou a trading výsledky</CardDescription>
+                <CardDescription>Vztah mezi náladou a trading výsledky</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1861,25 +1914,25 @@ export default function AnalyticsPage() {
                           data={[
                             {
                               name: "Dobrá nálada + Profit",
-                              value: analysis.weeklyPerformanceData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0)
+                              value: filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0)
                                 .length,
                               fill: "#10b981",
                             },
                             {
                               name: "Dobrá nálada + Ztráta",
-                              value: analysis.weeklyPerformanceData.filter((d: any) => d.avgMood >= 70 && d.pnl < 0)
+                              value: filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl < 0)
                                 .length,
                               fill: "#eab308",
                             },
                             {
                               name: "Špatná nálada + Profit",
-                              value: analysis.weeklyPerformanceData.filter((d: any) => d.avgMood < 50 && d.pnl > 0)
+                              value: filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl > 0)
                                 .length,
                               fill: "#3b82f6",
                             },
                             {
                               name: "Špatná nálada + Ztráta",
-                              value: analysis.weeklyPerformanceData.filter((d: any) => d.avgMood < 50 && d.pnl < 0)
+                              value: filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl < 0)
                                 .length,
                               fill: "#ef4444",
                             },
@@ -1904,7 +1957,7 @@ export default function AnalyticsPage() {
                         <p className="text-xs text-gray-400">Ideální kombinace pro success</p>
                       </div>
                       <span className="text-lg font-bold text-green-400">
-                        {analysis.weeklyPerformanceData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length}
+                        {filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
@@ -1914,7 +1967,7 @@ export default function AnalyticsPage() {
                         <p className="text-xs text-gray-400">Setup nebo timing problém</p>
                       </div>
                       <span className="text-lg font-bold text-yellow-400">
-                        {analysis.weeklyPerformanceData.filter((d: any) => d.avgMood >= 70 && d.pnl < 0).length}
+                        {filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl < 0).length}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
@@ -1924,7 +1977,7 @@ export default function AnalyticsPage() {
                         <p className="text-xs text-gray-400">Štěstí nebo skill?</p>
                       </div>
                       <span className="text-lg font-bold text-blue-400">
-                        {analysis.weeklyPerformanceData.filter((d: any) => d.avgMood < 50 && d.pnl > 0).length}
+                        {filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl > 0).length}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-red-500/10 rounded-lg border border-red-500/30">
@@ -1934,7 +1987,7 @@ export default function AnalyticsPage() {
                         <p className="text-xs text-gray-400">Nebezpečná kombinace</p>
                       </div>
                       <span className="text-lg font-bold text-red-400">
-                        {analysis.weeklyPerformanceData.filter((d: any) => d.avgMood < 50 && d.pnl < 0).length}
+                        {filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl < 0).length}
                       </span>
                     </div>
                   </div>
@@ -1952,18 +2005,18 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-3">
-                      <h3 className="text-2xl font-bold text-white">💡 Klíčový Insight</h3>
+                      <h3 className="text-2xl font-black text-white mb-2">💡 Klíčový Insight</h3>
                       <Badge className="bg-pink-500/20 text-pink-200 border-pink-400/30">
                         <Sparkles className="w-3 h-3 mr-1" />
                         AI Analysis
                       </Badge>
                     </div>
                     <p className="text-gray-100 text-lg leading-relaxed mb-4">
-                      {analysis.summary.emotionalScore > 70
-                        ? `Tvoje průměrná nálada ${Math.round(analysis.summary.emotionalScore)}% je skvělá! Když se cítíš dobře, tvoje performance je o ${Math.round((analysis.summary.emotionalScore - 50) * 0.8)}% lepší. Udržuj pozitivní mindset! 🚀`
-                        : analysis.summary.emotionalScore > 50
-                          ? `Tvoje průměrná nálada ${Math.round(analysis.summary.emotionalScore)}% je OK, ale data ukazují, že když se dostaneš nad 70%, tvoje win rate roste o 15-25%. Focus na mental health! 🎯`
-                          : `Tvoje průměrná nálada ${Math.round(analysis.summary.emotionalScore)}% je pod optimální úrovní. Data jasně ukazují, že špatná nálada = horší rozhodování = ztráty. Priorita #1: mental health! ⚠️`}
+                      {avgMood > 70
+                        ? `Tvoje průměrná nálada ${Math.round(avgMood)}% je skvělá! Když se cítíš dobře, tvoje performance je o ${Math.round((avgMood - 50) * 0.8)}% lepší. Udržuj pozitivní mindset! 🚀`
+                        : avgMood > 50
+                          ? `Tvoje průměrná nálada ${Math.round(avgMood)}% je OK, ale data ukazují, že když se dostaneš nad 70%, tvoje win rate roste o 15-25%. Focus na mental health! 🎯`
+                          : `Tvoje průměrná nálada ${Math.round(avgMood)}% je pod optimální úrovní. Data jasně ukazují, že špatná nálada = horší rozhodování = ztráty. Priorita #1: mental health! ⚠️`}
                     </p>
                     <div className="flex items-center gap-2 p-3 bg-white/10 rounded-lg border border-white/20">
                       <Target className="w-5 h-5 text-cyan-300" />
@@ -2112,7 +2165,7 @@ export default function AnalyticsPage() {
                     <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/30">
                       <div className="flex items-center gap-2 mb-2">
                         <Award className="w-5 h-5 text-green-400" />
-                        <p className="text-green-300 font-medium text-sm">Winning Streaks</p>
+                        <p className="text-green-300 font-semibold text-sm">Winning Streaks</p>
                       </div>
                       <p className="text-3xl font-bold text-white mb-1">
                         {Math.floor(Math.random() * 5) + 3} <span className="text-lg text-gray-400">tradů</span>
@@ -2282,7 +2335,7 @@ export default function AnalyticsPage() {
                       <div className="flex items-start gap-2">
                         <Zap className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-blue-300 font-semibold text-xs mb-1">Doporučení:</p>
+                          <p className="text-blue-300 font-semibold text-sm mb-1">Doporučení:</p>
                           <p className="text-white text-sm">Soustřeď se na 1:2 R:R trades. Tady máš nejvyšší edge!</p>
                         </div>
                       </div>
@@ -2302,7 +2355,7 @@ export default function AnalyticsPage() {
                 <CardDescription className="text-gray-400">Kdy tradingovat a kdy ne?</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   {[
                     {
                       condition: "Strong Trend",
@@ -2434,26 +2487,32 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-3xl font-black text-white mb-3">🎯 Tvoje Trading Edge - Shrnutí</h3>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
-                        <p className="text-sm text-gray-400 mb-2">Potenciální zlepšení</p>
-                        <p className="text-4xl font-black text-cyan-300">+{15 + analysis.actionPlan.length * 5}%</p>
-                      </div>
-                      <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
-                        <p className="text-sm text-gray-400 mb-2">Časová investice</p>
-                        <p className="text-4xl font-black text-purple-300">{analysis.actionPlan.length * 7} dní</p>
-                      </div>
-                      <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
-                        <p className="text-sm text-gray-400 mb-2">Priorita</p>
-                        <p className="text-4xl font-black text-pink-300">VYSOKÁ</p>
-                      </div>
-                    </div>
 
-                    <p className="text-center text-gray-200 text-xl leading-relaxed mb-8 max-w-3xl mx-auto">
-                      Implementací těchto psychologických změn můžeš výrazně zlepšit svou mentální kondici a trading
-                      performance.
-                      <span className="text-cyan-300 font-bold"> Focus on mindset = focus on results!</span> 🚀
-                    </p>
+                    {/* CHANGE: Upravená Trading Edge Summary - vertikální layout pro lepší přehlednost */}
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
+                          <p className="text-sm text-gray-400 mb-2">Potenciální zlepšení</p>
+                          <p className="text-4xl font-black text-cyan-300">+{15 + analysis.actionPlan.length * 5}%</p>
+                        </div>
+
+                        <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
+                          <p className="text-sm text-gray-400 mb-2">Časová investice</p>
+                          <p className="text-4xl font-black text-purple-300">{analysis.actionPlan.length * 7} dní</p>
+                        </div>
+
+                        <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
+                          <p className="text-sm text-gray-400 mb-2">Priorita</p>
+                          <p className="text-4xl font-black text-pink-300">VYSOKÁ</p>
+                        </div>
+                      </div>
+
+                      <p className="text-center text-gray-200 text-xl leading-relaxed mb-8 max-w-3xl mx-auto">
+                        Implementací těchto psychologických změn můžeš výrazně zlepšit svou mentální kondici a trading
+                        performance.
+                        <span className="text-cyan-300 font-bold"> Focus on mindset = focus on results!</span> 🚀
+                      </p>
+                    </div>
                   </div>
                 </div>
               </CardContent>

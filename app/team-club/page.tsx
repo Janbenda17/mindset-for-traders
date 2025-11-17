@@ -9,44 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Users,
-  TrendingUp,
-  Brain,
-  Target,
-  AlertCircle,
-  Activity,
-  Smile,
-  Trophy,
-  Flame,
-  Bell,
-  Shield,
-  Sparkles,
-  VideoIcon,
-  MessageSquare,
-  UserPlus,
-  Star,
-  Telescope,
-  Gauge,
-  PieChart,
-  ArrowUp,
-  ArrowDown,
-  Send,
-  ThumbsUp,
-  MessageCircle,
-  Share2,
-  TrendingDown,
-  Lightbulb,
-  Plus,
-  XCircle,
-  CheckCircle,
-  Calendar,
-  Clock,
-  PlayCircle,
-  Radio,
-  Eye,
-  Search,
-} from "lucide-react"
+import { Users, TrendingUp, Brain, Target, AlertCircle, Activity, Smile, Trophy, Flame, Bell, Shield, Sparkles, VideoIcon, MessageSquare, UserPlus, Star, Telescope, Gauge, PieChart, ArrowUp, ArrowDown, Send, ThumbsUp, MessageCircle, Share2, TrendingDown, Lightbulb, Plus, XCircle, CheckCircle, Calendar, Clock, PlayCircle, Radio, Eye, Search } from 'lucide-react'
 import { useData } from "@/contexts/data-context"
 
 // Types
@@ -885,62 +848,67 @@ function StudentTeamClubView() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-slate-800/80 backdrop-blur-xl border border-slate-600 p-1.5 grid grid-cols-4 lg:grid-cols-8">
+          <TabsList className="bg-slate-800/80 backdrop-blur-xl border border-slate-600 p-1.5 flex lg:grid lg:grid-cols-8 overflow-x-auto scrollbar-hide">
             <TabsTrigger
               value="overview"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
-              <Telescope className="w-4 h-4 mr-2" />
-              Overview
+              <Telescope className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
+              <span className="hidden sm:inline">Overview</span>
+              <span className="sm:hidden">Over</span>
             </TabsTrigger>
             <TabsTrigger
               value="community"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
-              <Activity className="w-4 h-4 mr-2" />
+              <Activity className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
               Feed
             </TabsTrigger>
             <TabsTrigger
               value="challenges"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
-              <Target className="w-4 h-4 mr-2" />
-              Výzvy
+              <Target className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
+              <span className="hidden sm:inline">Výzvy</span>
+              <span className="sm:hidden">Výz</span>
             </TabsTrigger>
             <TabsTrigger
               value="rooms"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
-              <VideoIcon className="w-4 h-4 mr-2" />
-              Rooms
+              <VideoIcon className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
+              <span className="hidden sm:inline">Rooms</span>
+              <span className="sm:hidden">Live</span>
             </TabsTrigger>
             <TabsTrigger
               value="buddies"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
-              <Users className="w-4 h-4 mr-2" />
-              Buddies
+              <Users className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
+              <span className="hidden sm:inline">Buddies</span>
+              <span className="sm:hidden">Bud</span>
             </TabsTrigger>
             <TabsTrigger
               value="leaderboard"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
-              <Trophy className="w-4 h-4 mr-2" />
+              <Trophy className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
               Top
             </TabsTrigger>
             <TabsTrigger
               value="mentor-qa"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
-              <MessageSquare className="w-4 h-4 mr-2" />
+              <MessageSquare className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
               Q&A
             </TabsTrigger>
             <TabsTrigger
               value="success"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
-              <Star className="w-4 h-4 mr-2" />
-              Success
+              <Star className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
+              <span className="hidden sm:inline">Success</span>
+              <span className="sm:hidden">Succ</span>
             </TabsTrigger>
           </TabsList>
 
@@ -1334,7 +1302,7 @@ function StudentTeamClubView() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleLikePost(post.id)}
-                          className={`rounded-xl text-xs h-8 ${post.isLiked ? "text-pink-400" : "text-slate-400"}`}
+                          className={`rounded-xl text-xs ${post.isLiked ? "text-pink-400" : "text-slate-400"} h-8`}
                         >
                           <ThumbsUp className={`h-3.5 w-3.5 mr-1.5 ${post.isLiked ? "fill-current" : ""}`} />
                           {post.likes}

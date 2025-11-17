@@ -9,26 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import {
-  Brain,
-  Send,
-  Loader2,
-  Heart,
-  Target,
-  Zap,
-  AlertCircle,
-  TrendingUp,
-  Users,
-  FileText,
-  RefreshCw,
-  Sparkles,
-  BarChart2,
-  Wind,
-  Activity,
-  Moon,
-  Utensils,
-  Lock,
-} from "lucide-react"
+import { Brain, Send, Loader2, Heart, Target, Zap, AlertCircle, TrendingUp, Users, FileText, RefreshCw, Sparkles, BarChart2, Wind, Activity, Moon, Utensils, Lock } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { getUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
@@ -92,7 +73,7 @@ export function MindTraderAI() {
   const [isLoading, setIsLoading] = useState(false)
 
   // AI Configuration
-  const [aiMode, setAiMode] = useState<"coach" | "analyst" | "mentor">("coach")
+  const [aiMode, setAiMode] = useState<"mind" | "analytics" | "coach">("mind")
   const [aiPersonality, setAiPersonality] = useState<"calm" | "strict" | "analytical" | "balanced">("calm")
 
   // Readiness Data (loaded from Daily Tracker)
@@ -116,6 +97,8 @@ export function MindTraderAI() {
 
   // Persistent message counter for Virtual Mode
   const [virtualMessageCount, setVirtualMessageCount] = useState(0)
+  const [liveMessageCount, setLiveMessageCount] = useState(0)
+  const [liveMessageDate, setLiveMessageDate] = useState("")
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -181,6 +164,21 @@ export function MindTraderAI() {
       if (stored) {
         setVirtualMessageCount(Number.parseInt(stored, 10))
       }
+    } else {
+      const storedCount = localStorage.getItem("mindtrader-live-message-count")
+      const storedDate = localStorage.getItem("mindtrader-live-message-date")
+      const today = new Date().toISOString().split("T")[0]
+
+      if (storedDate === today && storedCount) {
+        setLiveMessageCount(Number.parseInt(storedCount, 10))
+        setLiveMessageDate(storedDate)
+      } else {
+        // Reset counter for new day
+        setLiveMessageCount(0)
+        setLiveMessageDate(today)
+        localStorage.setItem("mindtrader-live-message-count", "0")
+        localStorage.setItem("mindtrader-live-message-date", today)
+      }
     }
   }, [isLiveMode])
 
@@ -218,22 +216,22 @@ export function MindTraderAI() {
 
   // AI Modes
   const modes = {
-    coach: {
-      name: language === "cs" ? "🧠 Mind Coach" : "🧠 Mind Coach",
-      description: language === "cs" ? "Psychologická podpora s emocemi" : "Psychological support with emotions",
+    mind: {
+      name: language === "cs" ? "🧠 MIND AI" : "🧠 MIND AI",
+      description: language === "cs" ? "Tvůj psychologický parťák - okamžitá pomoc s emocemi" : "Your psychological partner - instant emotional help",
       icon: Brain,
       locked: false,
     },
-    analyst: {
-      name: language === "cs" ? "📊 Trade Analyst" : "📊 Trade Analyst",
-      description: language === "cs" ? "Analyzuje obchody a výsledky" : "Analyzes trades and results",
-      icon: TrendingUp,
+    analytics: {
+      name: language === "cs" ? "📊 ANALYTICS AI" : "📊 ANALYTICS AI",
+      description: language === "cs" ? "Chytrá výkonnostní analýza - rozbor podle dat" : "Smart performance analysis - data-driven insights",
+      icon: BarChart2,
       locked: false,
     },
-    mentor: {
-      name: language === "cs" ? "🎓 Mentor Assistant" : "🎓 Mentor Assistant",
-      description: language === "cs" ? "Pomáhá koučům s mentoring" : "Helps coaches with mentoring",
-      icon: Users,
+    coach: {
+      name: language === "cs" ? "🎯 COACH AI" : "🎯 COACH AI",
+      description: language === "cs" ? "Osobní trenér disciplíny a růstu" : "Personal discipline and growth trainer",
+      icon: Target,
       locked: false,
     },
   }
@@ -310,6 +308,15 @@ export function MindTraderAI() {
     localStorage.setItem("mindtrader-virtual-message-count", newCount.toString())
   }
 
+  const incrementLiveMessageCount = () => {
+    const today = new Date().toISOString().split("T")[0]
+    const newCount = liveMessageCount + 1
+    setLiveMessageCount(newCount)
+    setLiveMessageDate(today)
+    localStorage.setItem("mindtrader-live-message-count", newCount.toString())
+    localStorage.setItem("mindtrader-live-message-date", today)
+  }
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
 
@@ -320,6 +327,18 @@ export function MindTraderAI() {
           language === "cs"
             ? "Virtual Mode má limit 3 zpráv celkově. Přepni na Live Mode pro neomezené zprávy."
             : "Virtual Mode has a 3 message limit total. Switch to Live Mode for unlimited messages.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (isLiveMode && liveMessageCount >= 50) {
+      toast({
+        title: language === "cs" ? "Dočasně nedostupné" : "Temporarily unavailable",
+        description:
+          language === "cs"
+            ? "MindTrader AI je momentálně nedostupný. Zkuste to prosím později."
+            : "MindTrader AI is temporarily unavailable. Please try again later.",
         variant: "destructive",
       })
       return
@@ -339,6 +358,8 @@ export function MindTraderAI() {
 
     if (!isLiveMode) {
       incrementVirtualMessageCount()
+    } else {
+      incrementLiveMessageCount()
     }
 
     try {
@@ -460,7 +481,7 @@ export function MindTraderAI() {
       // Fallback mock response if API fails
       const mockResponse =
         language === "cs"
-          ? `Rozumím tvé situaci. Podle tvých dat vidím, že máš readiness ${readinessScore}%.\n\nTvoje nálada je ${readinessFactors.mood}/10, stres ${readinessFactors.stress}/10.\n\n${readinessFactors.stress > 6 ? "Vysoký stres ovlivňuje tvoje rozhodování." : "Tvůj mentální stav je v pořádku."}\n\n${readinessScore < 60 ? "Dej si pauzu, readiness je pod 60%." : "Můžeš obchodovat, ale buď opatrný."}\n\nPamatuj: každý den je nový start.`
+          ? `Rozumím tvou situaci. Podle tvých dat vidím, že máš readiness ${readinessScore}%.\n\nTvoje nálada je ${readinessFactors.mood}/10, stres ${readinessFactors.stress}/10.\n\n${readinessFactors.stress > 6 ? "Vysoký stres ovlivňuje tvoje rozhodování." : "Tvůj mentální stav je v pořádku."}\n\n${readinessScore < 60 ? "Dej si pauzu, readiness je pod 60%." : "Můžeš obchodovat, ale buď opatrný."}\n\nPamatuj: každý den je nový start.`
           : `I understand your situation. Based on your data, I see your readiness is ${readinessScore}%.\n\nYour mood is ${readinessFactors.mood}/10, stress ${readinessFactors.stress}/10.\n\n${readinessFactors.stress > 6 ? "High stress is affecting your decision-making." : "Your mental state is okay."}\n\n${readinessScore < 60 ? "Take a break, readiness is below 60%." : "You can trade, but be careful."}\n\nRemember: every day is a fresh start.`
 
       const fallbackMessage: Message = {
@@ -552,43 +573,35 @@ export function MindTraderAI() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="space-y-6">
-          {/* Header */}
+      <div className="max-w-7xl mx-auto md:py-6 py-3 md:px-4 px-3">
+        <div className="space-y-4 md:space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl">
-                <Brain className="w-8 h-8 text-white" />
+              <div className="md:p-3 p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl">
+                <Brain className="md:w-8 md:h-8 w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                  {language === "cs" ? "MindTrader AI" : "MindTrader AI"}
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {language === "cs" ? "Tvůj osobní psychologický kouč 24/7" : "Your personal psychology coach 24/7"}
+                <h1 className="md:text-4xl text-2xl font-bold text-gray-900 dark:text-white">MindTrader AI</h1>
+                <p className="text-gray-600 dark:text-gray-400 md:text-base text-xs md:block hidden">
+                  Tvůj osobní psychologický kouč 24/7
                 </p>
               </div>
             </div>
-            <Badge className={isPremium ? "bg-gradient-to-r from-yellow-500 to-orange-500" : "bg-gray-700"}>
-              {isPremium ? (language === "cs" ? "Premium" : "Premium") : language === "cs" ? "Free" : "Free"}
-            </Badge>
           </div>
 
-          {/* Recovery Mode Alert */}
           {isRecoveryMode && (
-            <Alert className="border-orange-500 bg-orange-50 dark:bg-orange-900/20">
-              <AlertCircle className="h-4 w-4 text-orange-600" />
-              <AlertDescription className="text-orange-800 dark:text-orange-200">
+            <Alert className="border-orange-500 bg-orange-50 dark:bg-orange-900/20 p-3 md:p-4">
+              <AlertCircle className="h-3 w-3 md:h-4 md:w-4 text-orange-600" />
+              <AlertDescription className="text-xs md:text-sm text-orange-800 dark:text-orange-200">
                 {language === "cs"
-                  ? "🚨 Recovery Mode aktivní - AI detekoval obtížný den. Následuj doporučení níže."
-                  : "🚨 Recovery Mode active - AI detected a difficult day. Follow recommendations below."}
+                  ? "🚨 Recovery Mode aktivní"
+                  : "🚨 Recovery Mode active"}
               </AlertDescription>
             </Alert>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Sidebar */}
-            <div className="lg:col-span-1 space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="lg:col-span-1 space-y-4 lg:block hidden">
               {/* Readiness Score */}
               <Card>
                 <CardHeader>
@@ -602,6 +615,40 @@ export function MindTraderAI() {
                     </p>
                   </div>
                   <Progress value={readinessScore} className="h-2" />
+
+                  <div className="space-y-3 pt-4 border-t">
+                    <Label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      {language === "cs" ? "Režim AI" : "AI Mode"}
+                    </Label>
+                    <div className="space-y-2">
+                      {Object.entries(modes).map(([key, mode]) => {
+                        const Icon = mode.icon
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => setAiMode(key as any)}
+                            className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                              aiMode === key
+                                ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                                : "border-gray-200 dark:border-gray-700 hover:border-purple-300"
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <Icon className={`w-4 h-4 mt-0.5 ${aiMode === key ? "text-purple-600" : "text-gray-600"}`} />
+                              <div className="flex-1">
+                                <div className={`text-sm font-medium ${aiMode === key ? "text-purple-700 dark:text-purple-400" : "text-gray-900 dark:text-gray-100"}`}>
+                                  {mode.name}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                  {mode.description}
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
 
                   {/* Readiness Factors Display */}
                   <div className="space-y-3 pt-4 border-t">
@@ -652,113 +699,22 @@ export function MindTraderAI() {
                       </div>
                       <Progress value={readinessFactors.nutrition * 10} className="h-1" />
                     </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2 bg-transparent"
-                      onClick={loadReadinessFromTracker}
-                    >
-                      <RefreshCw className="w-3 h-3 mr-2" />
-                      {language === "cs" ? "Obnovit data" : "Refresh data"}
-                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* AI Configuration */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">{language === "cs" ? "AI Nastavení" : "AI Configuration"}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs">{language === "cs" ? "Režim AI" : "AI Mode"}</Label>
-                    <div className="space-y-1">
-                      {Object.entries(modes).map(([key, mode]) => (
-                        <Button
-                          key={key}
-                          variant={aiMode === key ? "default" : "outline"}
-                          size="sm"
-                          className="w-full justify-start text-xs"
-                          onClick={() => !mode.locked && setAiMode(key as any)}
-                          disabled={mode.locked}
-                        >
-                          <mode.icon className="w-3 h-3 mr-2" />
-                          {mode.name}
-                          {mode.locked && <Lock className="w-3 h-3 ml-auto" />}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs">{language === "cs" ? "Osobnost AI" : "AI Personality"}</Label>
-                    <div className="space-y-1">
-                      {Object.entries(personalities).map(([key, personality]) => (
-                        <Button
-                          key={key}
-                          variant={aiPersonality === key ? "default" : "outline"}
-                          size="sm"
-                          className="w-full justify-start text-xs"
-                          onClick={() => !personality.locked && setAiPersonality(key as any)}
-                          disabled={personality.locked}
-                        >
-                          <personality.icon className="w-3 h-3 mr-2" />
-                          {personality.name}
-                          {personality.locked && <Lock className="w-3 h-3 ml-auto" />}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">{language === "cs" ? "Rychlé akce" : "Quick Actions"}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button size="sm" className="w-full" onClick={generateInsights} disabled={isLoading}>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    {language === "cs" ? "Generovat Insights" : "Generate Insights"}
-                  </Button>
-                  <Button size="sm" className="w-full" onClick={generateReport} disabled={isLoading || !isPremium}>
-                    <FileText className="w-4 h-4 mr-2" />
-                    {language === "cs" ? "Generovat Report" : "Generate Report"}
-                    {!isPremium && <Lock className="w-3 h-3 ml-auto" />}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full bg-transparent"
-                    onClick={() => {
-                      setMessages([])
-                      setIsRecoveryMode(false)
-                    }}
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    {language === "cs" ? "Vymazat chat" : "Clear chat"}
-                  </Button>
                 </CardContent>
               </Card>
             </div>
 
             {/* Main Chat Area */}
-            <div className="lg:col-span-3">
-              <Card className="h-[calc(100vh-200px)]">
+            <div className="lg:col-span-3 col-span-1">
+              <Card className="md:h-[calc(100vh-200px)] h-[calc(100vh-150px)]">
                 <CardContent className="p-0 h-full flex flex-col">
                   {/* Messages */}
-                  <ScrollArea className="flex-1 p-6">
-                    <div className="space-y-4">
+                  <ScrollArea className="flex-1 md:p-6 p-3">
+                    <div className="space-y-3 md:space-y-4">
                       {messages.map((message, index) => (
-                        <div
-                          key={index}
-                          className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                        >
+                        <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                           <div
-                            className={`max-w-[80%] rounded-2xl p-4 ${
+                            className={`md:max-w-[80%] max-w-[90%] rounded-2xl md:p-4 p-3 ${
                               message.role === "user"
                                 ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                                 : message.type === "recovery"
@@ -768,14 +724,16 @@ export function MindTraderAI() {
                                     : "bg-slate-100 dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                             }`}
                           >
-                            <div className="flex items-start gap-3">
+                            <div className="flex items-start gap-2 md:gap-3">
                               {message.role === "assistant" && (
-                                <div className="p-2 bg-white/20 rounded-lg mt-1">
+                                <div className="p-2 bg-white/20 rounded-lg mt-1 md:block hidden">
                                   <Brain className="w-4 h-4" />
                                 </div>
                               )}
                               <div className="flex-1">
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                                <p className="md:text-sm text-xs leading-relaxed whitespace-pre-wrap">
+                                  {message.content}
+                                </p>
                                 <span className="text-xs opacity-60 mt-2 block">
                                   {message.timestamp.toLocaleTimeString(language === "cs" ? "cs-CZ" : "en-US", {
                                     hour: "2-digit",
@@ -788,6 +746,7 @@ export function MindTraderAI() {
                         </div>
                       ))}
 
+                      {/* Loading state */}
                       {isLoading && (
                         <div className="flex justify-start">
                           <div className="max-w-[80%] rounded-2xl p-4 bg-slate-100 dark:bg-slate-800">
@@ -810,19 +769,18 @@ export function MindTraderAI() {
                     </div>
                   </ScrollArea>
 
-                  {/* Quick Prompts */}
                   {messages.length <= 1 && (
-                    <div className="px-6 py-3 border-t">
-                      <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block">
-                        {language === "cs" ? "Rychlé dotazy:" : "Quick prompts:"}
+                    <div className="md:px-6 px-3 py-3 border-t">
+                      <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block md:block hidden">
+                        Rychlé dotazy:
                       </Label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid md:grid-cols-2 grid-cols-1 gap-2">
                         {quickPrompts.slice(0, 4).map((prompt, index) => (
                           <Button
                             key={index}
                             variant="outline"
                             size="sm"
-                            className="text-left justify-start h-auto py-2 text-xs bg-transparent"
+                            className="text-left justify-start h-auto py-2 md:text-xs text-xs bg-transparent"
                             onClick={() => setInput(prompt)}
                           >
                             <Zap className="w-3 h-3 mr-2 flex-shrink-0" />
@@ -833,9 +791,8 @@ export function MindTraderAI() {
                     </div>
                   )}
 
-                  {/* Input Area */}
-                  <div className="border-t p-4 bg-slate-50 dark:bg-slate-900">
-                    <div className="flex gap-3">
+                  <div className="border-t md:p-4 p-3 bg-slate-50 dark:bg-slate-900">
+                    <div className="flex gap-2 md:gap-3">
                       <div className="flex-1 relative">
                         <Textarea
                           value={input}
@@ -846,31 +803,40 @@ export function MindTraderAI() {
                               handleSend()
                             }
                           }}
-                          placeholder={
-                            language === "cs"
-                              ? "Napiš zprávu... (Enter = odeslat, Shift+Enter = nový řádek)"
-                              : "Type a message... (Enter = send, Shift+Enter = new line)"
-                          }
-                          className="min-h-[60px] max-h-[120px] resize-none"
+                          placeholder={language === "cs" ? "Napiš zprávu..." : "Type a message..."}
+                          className="md:min-h-[60px] min-h-[80px] md:max-h-[120px] max-h-[150px] resize-none md:text-sm text-base"
                           disabled={isLoading}
                         />
                       </div>
-                      <Button onClick={handleSend} disabled={!input.trim() || isLoading} className="h-[60px] px-6">
-                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                      <Button onClick={handleSend} disabled={!input.trim() || isLoading} className="md:h-[60px] h-[80px] md:px-6 px-4">
+                        {isLoading ? <Loader2 className="md:w-5 md:h-5 w-6 h-6 animate-spin" /> : <Send className="md:w-5 md:h-5 w-6 h-6" />}
                       </Button>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {!isLiveMode && (
-                        <>
-                          {language === "cs"
-                            ? `Virtual Mode: ${virtualMessageCount}/3 zpráv použito`
-                            : `Virtual Mode: ${virtualMessageCount}/3 messages used`}
-                        </>
-                      )}
-                      {isLiveMode && (
-                        <>{language === "cs" ? "Live Mode: Neomezené zprávy" : "Live Mode: Unlimited messages"}</>
-                      )}
-                    </p>
+                    {!isLiveMode && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        {language === "cs"
+                          ? `Virtual: ${virtualMessageCount}/3 zpráv`
+                          : `Virtual: ${virtualMessageCount}/3 messages`}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="lg:hidden border-t md:p-4 p-3 bg-slate-100 dark:bg-slate-900">
+                    <div className="flex items-center gap-2 overflow-x-auto">
+                      <Label className="text-xs whitespace-nowrap">Režim:</Label>
+                      {Object.entries(modes).map(([key, mode]) => (
+                        <Button
+                          key={key}
+                          variant={aiMode === key ? "default" : "outline"}
+                          size="sm"
+                          className="whitespace-nowrap text-xs h-8"
+                          onClick={() => !mode.locked && setAiMode(key as any)}
+                          disabled={mode.locked}
+                        >
+                          {mode.name.split(" ")[1] || mode.name}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
