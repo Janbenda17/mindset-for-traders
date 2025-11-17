@@ -21,6 +21,13 @@ export default function DashboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [cachedStats, setCachedStats] = useState(null)
+  const [isMounted, setIsMounted] = useState(false)
+  const [aiAnalysisData, setAiAnalysisData] = useState({
+    readiness: { text: "Připravenost: Neznámá", description: "Dokončete Morning Check pro analýzu připravenosti" },
+    trend: { description: "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu." },
+    action: { description: "Začni Morning Check a uzamkni svůj readiness před tradingem." }
+  })
+  
   const { isLiveMode, getTradingStats, portfolioValue } = useData()
   const { plan, isActive, daysRemaining } = useSubscription()
   const { startReset } = useLossReset()
@@ -28,14 +35,64 @@ export default function DashboardPage() {
   const router = useRouter()
 
   useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
     setTimeOfDay(getTimeOfDay())
   }, [])
 
-  // Trading style is now set up during live mode onboarding in live-mode-toggle
-  // Users can still manually visit /trading-style-setup if needed
+  useEffect(() => {
+    if (isMounted) {
+      const todayDate = new Date().toISOString().split("T")[0]
+      const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
+      const todayCheck = checks.find((c: any) => c.date === todayDate)
+      
+      const entries = JSON.parse(localStorage.getItem("journal-entries") || "[]")
+      const last7Days = entries.filter((e: any) => {
+        const entryDate = new Date(e.date)
+        const today = new Date()
+        const diffTime = Math.abs(today.getTime() - entryDate.getTime())
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        return diffDays <= 7
+      })
+
+      let readinessText = "Připravenost: Neznámá"
+      let readinessDesc = "Dokončete Morning Check pro analýzu připravenosti"
+      if (todayCheck) {
+        const score = todayCheck.score
+        if (score >= 85) readinessText = "Připravenost: Výborná ✨"
+        else if (score >= 75) readinessText = "Připravenost: Dobrá ✅"
+        else if (score >= 60) readinessText = "Připravenost: Střední ⚠️"
+        else readinessText = "Připravenost: Nízká 🛑"
+        
+        readinessDesc = `Spánek: ${todayCheck.sleepHours}h (${todayCheck.sleepQuality}/10), Stres: ${todayCheck.stressLevel}/10, Focus: ${todayCheck.focus}/10`
+      }
+
+      let trendDesc = "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu."
+      if (last7Days.length > 0) {
+        const avgMood = (last7Days.reduce((sum: number, e: any) => sum + (e.mood || 5), 0) / last7Days.length).toFixed(1)
+        trendDesc = `${last7Days.length} záznamů za 7 dní. Průměrná nálada: ${avgMood}/10. Pokračuj v pravidelném journalingu!`
+      }
+
+      let actionDesc = "Začni Morning Check a uzamkni svůj readiness před tradingem."
+      if (todayCheck) {
+        if (todayCheck.score >= 85) actionDesc = "Jsi v top formě! Začni Daily Flow a obchoduj podle plánu."
+        else if (todayCheck.score >= 75) actionDesc = "Dobrá připravenost. Zvaž 10min meditaci před prvním obchodem."
+        else if (todayCheck.score >= 60) actionDesc = "Střední připravenost. Sniž position sizes a buď extra opatrný."
+        else actionDesc = "Nízká připravenost. Dnes raději studuj nebo paper trade."
+      }
+
+      setAiAnalysisData({
+        readiness: { text: readinessText, description: readinessDesc },
+        trend: { description: trendDesc },
+        action: { description: actionDesc }
+      })
+    }
+  }, [isMounted])
 
   useEffect(() => {
-    if (!cachedStats) {
+    if (!cachedStats && isMounted) {
       const tradingStats = getTradingStats()
       const currentPortfolio = portfolioValue + tradingStats.totalPnL
       const portfolioChange = ((tradingStats.totalPnL / portfolioValue) * 100).toFixed(1)
@@ -84,13 +141,57 @@ export default function DashboardPage() {
       ]
       setCachedStats(initialStats)
     }
-  }, [portfolioValue])
+  }, [portfolioValue, isMounted])
 
   const getStatsForStyle = () => {
+    if (!isMounted) {
+      return [
+        {
+          title: "Celkový kapitál",
+          value: "$0",
+          change: "+0%",
+          trend: "up" as const,
+          icon: DollarSign,
+          color: "from-emerald-500 to-teal-500",
+          description: "Celková hodnota účtu",
+          progress: 0,
+        },
+        {
+          title: "Měsíční P/L",
+          value: "$0",
+          change: "0 obchodů",
+          trend: "up" as const,
+          icon: TrendingUp,
+          color: "from-blue-500 to-cyan-500",
+          description: "Zisk/ztráta tento měsíc",
+          progress: 0,
+        },
+        {
+          title: "Mental Readiness",
+          value: "0%",
+          change: "Bez check",
+          trend: "neutral" as const,
+          icon: Brain,
+          color: "from-purple-500 to-pink-500",
+          description: "Psychická připravenost",
+          progress: 0,
+        },
+        {
+          title: "Discipline Score",
+          value: "0%",
+          change: "0 dní",
+          trend: "neutral" as const,
+          icon: Shield,
+          color: "from-orange-500 to-red-500",
+          description: "Dodržování plánu (7 dní)",
+          progress: 0,
+        },
+      ]
+    }
+    
     const tradingStats = getTradingStats()
     const currentPortfolio = portfolioValue + tradingStats.totalPnL
 
-    // Calculate monthly P/L
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
@@ -101,13 +202,11 @@ export default function DashboardPage() {
     })
     const monthlyPnL = monthlyTrades.reduce((sum: number, e: any) => sum + (e.profitLoss || 0), 0)
 
-    // Calculate Mental Readiness from morning checks
     const todayDate = new Date().toISOString().split("T")[0]
     const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
     const todayCheck = checks.find((c: any) => c.date === todayDate)
     const mentalReadiness = todayCheck ? todayCheck.score : 0
 
-    // Calculate Discipline Score (adherence to trading plan in last 7 days)
     const last7Days = entries.filter((e: any) => {
       const entryDate = new Date(e.date)
       const diffTime = Math.abs(now.getTime() - entryDate.getTime())
@@ -201,11 +300,20 @@ export default function DashboardPage() {
     },
   ]
 
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
+        <div className="max-w-[1800px] mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pt-4 sm:pt-6 relative z-10">
+          <div className="text-center text-white">Loading...</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/30 via-slate-950 to-slate-950"></div>
 
-      {/* Stars layer 1 - small stars */}
       <div
         className="absolute inset-0"
         style={{
@@ -222,7 +330,6 @@ export default function DashboardPage() {
         }}
       ></div>
 
-      {/* Stars layer 2 - medium stars with twinkle */}
       <div
         className="absolute inset-0 animate-pulse"
         style={{
@@ -237,7 +344,6 @@ export default function DashboardPage() {
         }}
       ></div>
 
-      {/* Grid pattern */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLS41IDM5LjVoNDEiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-20"></div>
 
       <style jsx>{`
@@ -268,7 +374,6 @@ export default function DashboardPage() {
       `}</style>
 
       <div className="max-w-[1800px] mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pt-4 sm:pt-6 relative z-10">
-        {/* Mode Indicator */}
         <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
           <Badge
             variant="outline"
@@ -453,37 +558,12 @@ export default function DashboardPage() {
               </Badge>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              {/* AI Insights content - kept the same, just adjusted spacing */}
               <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 backdrop-blur-sm hover:border-green-500/50 transition-colors group">
                 <div className="flex items-start space-x-3">
                   <Activity className="w-5 h-5 text-green-400 mt-1 group-hover:scale-110 transition-transform" />
                   <div>
-                    <h4 className="text-white font-semibold mb-1 text-sm">
-                      {(() => {
-                        const todayDate = new Date().toISOString().split("T")[0]
-                        const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
-                        const todayCheck = checks.find((c: any) => c.date === todayDate)
-                        if (todayCheck) {
-                          const score = todayCheck.score
-                          if (score >= 85) return "Připravenost: Výborná ✨"
-                          if (score >= 75) return "Připravenost: Dobrá ✅"
-                          if (score >= 60) return "Připravenost: Střední ⚠️"
-                          return "Připravenost: Nízká 🛑"
-                        }
-                        return "Připravenost: Neznámá"
-                      })()}
-                    </h4>
-                    <p className="text-gray-300 text-xs">
-                      {(() => {
-                        const todayDate = new Date().toISOString().split("T")[0]
-                        const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
-                        const todayCheck = checks.find((c: any) => c.date === todayDate)
-                        if (todayCheck) {
-                          return `Spánek: ${todayCheck.sleepHours}h (${todayCheck.sleepQuality}/10), Stres: ${todayCheck.stressLevel}/10, Focus: ${todayCheck.focus}/10`
-                        }
-                        return "Dokončete Morning Check pro analýzu připravenosti"
-                      })()}
-                    </p>
+                    <h4 className="text-white font-semibold mb-1 text-sm">{aiAnalysisData.readiness.text}</h4>
+                    <p className="text-gray-300 text-xs">{aiAnalysisData.readiness.description}</p>
                   </div>
                 </div>
               </div>
@@ -492,25 +572,7 @@ export default function DashboardPage() {
                   <TrendingUp className="w-5 h-5 text-blue-400 mt-1 group-hover:scale-110 transition-transform" />
                   <div>
                     <h4 className="text-white font-semibold mb-1 text-sm">Trend výkonu</h4>
-                    <p className="text-gray-300 text-xs">
-                      {(() => {
-                        const entries = JSON.parse(localStorage.getItem("journal-entries") || "[]")
-                        const last7Days = entries.filter((e: any) => {
-                          const entryDate = new Date(e.date)
-                          const today = new Date()
-                          const diffTime = Math.abs(today.getTime() - entryDate.getTime())
-                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-                          return diffDays <= 7
-                        })
-                        if (last7Days.length > 0) {
-                          const avgMood = (
-                            last7Days.reduce((sum: number, e: any) => sum + (e.mood || 5), 0) / last7Days.length
-                          ).toFixed(1)
-                          return `${last7Days.length} záznamů za 7 dní. Průměrná nálada: ${avgMood}/10. Pokračuj v pravidelném journalingu!`
-                        }
-                        return "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu."
-                      })()}
-                    </p>
+                    <p className="text-gray-300 text-xs">{aiAnalysisData.trend.description}</p>
                   </div>
                 </div>
               </div>
@@ -519,26 +581,7 @@ export default function DashboardPage() {
                   <Brain className="w-5 h-5 text-purple-400 mt-1 group-hover:scale-110 transition-transform" />
                   <div>
                     <h4 className="text-white font-semibold mb-1 text-sm">Doporučená akce</h4>
-                    <p className="text-gray-300 text-xs">
-                      {(() => {
-                        const todayDate = new Date().toISOString().split("T")[0]
-                        const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
-                        const todayCheck = checks.find((c: any) => c.date === todayDate)
-                        if (!todayCheck) {
-                          return "Začni Morning Check a uzamkni svůj readiness před tradingem."
-                        }
-                        if (todayCheck.score >= 85) {
-                          return "Jsi v top formě! Začni Daily Flow a obchoduj podle plánu."
-                        }
-                        if (todayCheck.score >= 75) {
-                          return "Dobrá připravenost. Zvaž 10min meditaci před prvním obchodem."
-                        }
-                        if (todayCheck.score >= 60) {
-                          return "Střední připravenost. Sniž position sizes a buď extra opatrný."
-                        }
-                        return "Nízká připravenost. Dnes raději studuj nebo paper trade."
-                      })()}
-                    </p>
+                    <p className="text-gray-300 text-xs">{aiAnalysisData.action.description}</p>
                   </div>
                 </div>
               </div>
@@ -629,7 +672,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Admin Panel */}
       {showAdminPanel && <AdminPanel isVisible={showAdminPanel} onClose={() => setShowAdminPanel(false)} />}
     </div>
   )
