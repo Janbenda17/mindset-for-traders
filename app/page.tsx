@@ -43,52 +43,52 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    if (isMounted) {
-      const todayDate = new Date().toISOString().split("T")[0]
-      const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
-      const todayCheck = checks.find((c: any) => c.date === todayDate)
+    if (!isMounted) return
+    
+    const todayDate = new Date().toISOString().split("T")[0]
+    const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
+    const todayCheck = checks.find((c: any) => c.date === todayDate)
+    
+    const entries = JSON.parse(localStorage.getItem("journal-entries") || "[]")
+    const last7Days = entries.filter((e: any) => {
+      const entryDate = new Date(e.date)
+      const today = new Date()
+      const diffTime = Math.abs(today.getTime() - entryDate.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      return diffDays <= 7
+    })
+
+    let readinessText = "Připravenost: Neznámá"
+    let readinessDesc = "Dokončete Morning Check pro analýzu připravenosti"
+    if (todayCheck) {
+      const score = todayCheck.score
+      if (score >= 85) readinessText = "Připravenost: Výborná ✨"
+      else if (score >= 75) readinessText = "Připravenost: Dobrá ✅"
+      else if (score >= 60) readinessText = "Připravenost: Střední ⚠️"
+      else readinessText = "Připravenost: Nízká 🛑"
       
-      const entries = JSON.parse(localStorage.getItem("journal-entries") || "[]")
-      const last7Days = entries.filter((e: any) => {
-        const entryDate = new Date(e.date)
-        const today = new Date()
-        const diffTime = Math.abs(today.getTime() - entryDate.getTime())
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-        return diffDays <= 7
-      })
-
-      let readinessText = "Připravenost: Neznámá"
-      let readinessDesc = "Dokončete Morning Check pro analýzu připravenosti"
-      if (todayCheck) {
-        const score = todayCheck.score
-        if (score >= 85) readinessText = "Připravenost: Výborná ✨"
-        else if (score >= 75) readinessText = "Připravenost: Dobrá ✅"
-        else if (score >= 60) readinessText = "Připravenost: Střední ⚠️"
-        else readinessText = "Připravenost: Nízká 🛑"
-        
-        readinessDesc = `Spánek: ${todayCheck.sleepHours}h (${todayCheck.sleepQuality}/10), Stres: ${todayCheck.stressLevel}/10, Focus: ${todayCheck.focus}/10`
-      }
-
-      let trendDesc = "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu."
-      if (last7Days.length > 0) {
-        const avgMood = (last7Days.reduce((sum: number, e: any) => sum + (e.mood || 5), 0) / last7Days.length).toFixed(1)
-        trendDesc = `${last7Days.length} záznamů za 7 dní. Průměrná nálada: ${avgMood}/10. Pokračuj v pravidelném journalingu!`
-      }
-
-      let actionDesc = "Začni Morning Check a uzamkni svůj readiness před tradingem."
-      if (todayCheck) {
-        if (todayCheck.score >= 85) actionDesc = "Jsi v top formě! Začni Daily Flow a obchoduj podle plánu."
-        else if (todayCheck.score >= 75) actionDesc = "Dobrá připravenost. Zvaž 10min meditaci před prvním obchodem."
-        else if (todayCheck.score >= 60) actionDesc = "Střední připravenost. Sniž position sizes a buď extra opatrný."
-        else actionDesc = "Nízká připravenost. Dnes raději studuj nebo paper trade."
-      }
-
-      setAiAnalysisData({
-        readiness: { text: readinessText, description: readinessDesc },
-        trend: { description: trendDesc },
-        action: { description: actionDesc }
-      })
+      readinessDesc = `Spánek: ${todayCheck.sleepHours}h (${todayCheck.sleepQuality}/10), Stres: ${todayCheck.stressLevel}/10, Focus: ${todayCheck.focus}/10`
     }
+
+    let trendDesc = "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu."
+    if (last7Days.length > 0) {
+      const avgMood = (last7Days.reduce((sum: number, e: any) => sum + (e.mood || 5), 0) / last7Days.length).toFixed(1)
+      trendDesc = `${last7Days.length} záznamů za 7 dní. Průměrná nálada: ${avgMood}/10. Pokračuj v pravidelném journalingu!`
+    }
+
+    let actionDesc = "Začni Morning Check a uzamkni svůj readiness před tradingem."
+    if (todayCheck) {
+      if (todayCheck.score >= 85) actionDesc = "Jsi v top formě! Začni Daily Flow a obchoduj podle plánu."
+      else if (todayCheck.score >= 75) actionDesc = "Dobrá připravenost. Zvaž 10min meditaci před prvním obchodem."
+      else if (todayCheck.score >= 60) actionDesc = "Střední připravenost. Sniž position sizes a buď extra opatrný."
+      else actionDesc = "Nízká připravenost. Dnes raději studuj nebo paper trade."
+    }
+
+    setAiAnalysisData({
+      readiness: { text: readinessText, description: readinessDesc },
+      trend: { description: trendDesc },
+      action: { description: actionDesc }
+    })
   }, [isMounted])
 
   useEffect(() => {

@@ -1,9 +1,11 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Trophy, Target, TrendingUp } from "lucide-react"
+import { Trophy, Target, TrendingUp } from 'lucide-react'
 import { useMilestoneCelebrations } from "@/contexts/milestone-celebrations-context"
 import { MilestonesDisplay } from "@/components/milestones-display"
+
+export const dynamic = 'force-dynamic'
 
 export default function MilestonesPage() {
   const { milestones } = useMilestoneCelebrations()
