@@ -285,6 +285,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   const getAllTrades = () => {
+    if (typeof window === "undefined") return []
+
     if (isLiveMode) {
       // Return only user's real trades in live mode
       const userTrades = localStorage.getItem("user-trades")
@@ -298,6 +300,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   const getAllJournalEntries = () => {
+    if (typeof window === "undefined") return []
+
     if (isLiveMode) {
       // Return only user's real journal entries in live mode
       const userEntries = localStorage.getItem("user-journal-entries")
@@ -311,6 +315,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   const getTradingStats = () => {
+    if (typeof window === "undefined") {
+      return {
+        totalPnL: 0,
+        totalTrades: 0,
+        winningTrades: 0,
+        losingTrades: 0,
+        winRate: 0,
+        averageWin: 0,
+        averageLoss: 0,
+        profitFactor: 0,
+        maxDrawdown: 0,
+        averageMood: 0,
+        bestDay: 0,
+        worstDay: 0,
+        consecutiveWins: 0,
+        consecutiveLosses: 0,
+        riskRewardRatio: 0,
+        sharpeRatio: 0,
+      }
+    }
+
     if (isLiveMode) {
       // Calculate stats from user's real data only
       const userTrades = getAllTrades()

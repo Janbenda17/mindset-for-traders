@@ -11,8 +11,9 @@ export function MilestonesDisplay() {
   const { milestones } = useMilestoneCelebrations()
   const { level, xp } = useGamification()
 
-  const journalEntries = JSON.parse(localStorage.getItem("journal-entries") || "[]")
-  const streakData = JSON.parse(localStorage.getItem("streak-data") || "{}")
+  const journalEntries =
+    typeof window !== "undefined" ? JSON.parse(localStorage.getItem("journal-entries") || "[]") : []
+  const streakData = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("streak-data") || "{}") : {}
 
   const stats = {
     level,
