@@ -2,595 +2,511 @@
 
 import { useState } from "react"
 import { format, subDays } from "date-fns"
-import { cs } from "date-fns/locale"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Download, TrendingUp, Brain, Moon, Activity } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { TrendingUp, TrendingDown, Target, Zap, Rocket, Trophy, BarChart3 } from "lucide-react"
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   BarChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-  ScatterChart,
-  Scatter,
-  ZAxis,
+  Legend,
+  LineChart,
+  Line,
+  Cell,
 } from "recharts"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 
-// Sample data - in a real app, this would come from an API or database
-const generateHistoryData = () => {
-  const data = []
-  const today = new Date()
+const generateTradingData = () => {
+  let balance = 10000
+  let streak = 0
+  let lastWasWin = true
 
-  for (let i = 30; i >= 0; i--) {
-    const date = subDays(today, i)
-    const mentalScore = Math.floor(Math.random() * 30) + 60 // 60-90
-    const sleepHours = Math.floor(Math.random() * 3) + 6 // 6-8
-    const tradingResult = Math.floor(Math.random() * 2000) - 500 // -500 to 1500
-    const mood = Math.floor(Math.random() * 5) + 5 // 5-10
-    const exercise = Math.random() > 0.3 // 70% chance of exercise
+  return Array.from({ length: 30 }, (_, i) => {
+    const change = (Math.random() - 0.45) * 500
+    balance += change
+    const isWin = change > 0
 
-    data.push({
-      date: format(date, "yyyy-MM-dd"),
-      formattedDate: format(date, "d. MMMM", { locale: cs }),
-      shortDate: format(date, "d. M."),
-      mentalScore,
-      sleepHours,
-      tradingResult,
-      mood,
-      exercise,
-    })
-  }
+    if (isWin === lastWasWin) {
+      streak++
+    } else {
+      streak = 1
+      lastWasWin = isWin
+    }
 
-  return data
+    return {
+      date: format(subDays(new Date(), 29 - i), "d.M."),
+      balance: Math.round(balance),
+      dailyPnl: Math.round(change),
+      isWin,
+      streak: isWin ? streak : -streak,
+    }
+  })
 }
 
-const historyData = [
-  { date: "2023-10-26", mood: 4, experience: "Soustředěný", recommendation: "Pokračovat v plánu" },
-  { date: "2023-10-25", mood: 3, experience: "Mírně frustrovaný", recommendation: "Pauza, re-evaluace" },
-  { date: "2023-10-24", mood: 5, experience: "Sebevědomý", recommendation: "Zvýšit pozici" },
-  { date: "2023-10-23", mood: 2, experience: "Přehnaně sebevědomý", recommendation: "Snížit riziko" },
-]
-
-export function MindTraderHistory() {
-  const [timeframe, setTimeframe] = useState("month")
-  const [date, setDate] = useState<Date>()
-  const generatedData = generateHistoryData()
-
-  // Calculate best and worst days
-  const bestDay = [...generatedData].sort((a, b) => b.mentalScore - a.mentalScore)[0]
-  const worstDay = [...generatedData].sort((a, b) => a.mentalScore - b.mentalScore)[0]
-  const mostProfitableDay = [...generatedData].sort((a, b) => b.tradingResult - a.tradingResult)[0]
-
-  // Calculate correlations
-  const sleepCorrelation =
-    generatedData.filter((day) => day.sleepHours >= 7).reduce((sum, day) => sum + day.tradingResult, 0) /
-    generatedData.filter((day) => day.sleepHours >= 7).length
-
-  const exerciseCorrelation =
-    generatedData.filter((day) => day.exercise).reduce((sum, day) => sum + day.tradingResult, 0) /
-    generatedData.filter((day) => day.exercise).length
-
-  const noExerciseCorrelation =
-    generatedData.filter((day) => !day.exercise).reduce((sum, day) => sum + day.tradingResult, 0) /
-    generatedData.filter((day) => !day.exercise).length
-
-  // Filter data based on timeframe
-  const filteredData =
-    timeframe === "week" ? generatedData.slice(-7) : timeframe === "month" ? generatedData : generatedData
-
-  // Prepare correlation data for scatter plot
-  const correlationData = generatedData.map((day) => ({
-    mentalScore: day.mentalScore,
-    tradingResult: day.tradingResult,
-    date: day.shortDate,
-    size: day.sleepHours * 4, // Size of dot based on sleep
-  }))
+const EmptyStateView = () => {
+  const totalTradesNeeded = 100
+  const currentTrades = 0 // This will be from real data later
+  const tradesRemaining = totalTradesNeeded - currentTrades
+  const progressPercent = (currentTrades / totalTradesNeeded) * 100
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Trading History & Analytics</h2>
-          <p className="text-muted-foreground">Track your mental and trading performance over time</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Select value={timeframe} onValueChange={setTimeframe}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select timeframe" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="week">Last 7 Days</SelectItem>
-              <SelectItem value="month">Last 30 Days</SelectItem>
-              <SelectItem value="quarter">Last 90 Days</SelectItem>
-            </SelectContent>
-          </Select>
+      <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800">
+        <CardContent className="pt-12 pb-12">
+          <div className="text-center space-y-6 max-w-2xl mx-auto">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/50 mb-4">
+              <Rocket className="w-10 h-10 text-emerald-600" />
+            </div>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[240px] justify-start text-left font-normal bg-transparent">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : <span>Pick a specific date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-            </PopoverContent>
-          </Popover>
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold text-emerald-900 dark:text-emerald-100">Začněte svou trading cestu!</h2>
+              <p className="text-lg text-muted-foreground">
+                Vaše analytika čeká na první data. Každý obchod vás přibližuje k lepšímu pochopení sebe sama.
+              </p>
+            </div>
+
+            <div className="bg-white/60 dark:bg-black/20 rounded-xl p-8 space-y-4">
+              <div className="flex items-center justify-center gap-3">
+                <Trophy className="w-8 h-8 text-amber-500" />
+                <div className="text-left">
+                  <p className="text-sm text-muted-foreground">Zbývá zadat</p>
+                  <p className="text-4xl font-black text-emerald-600">{tradesRemaining} obchodů</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Pokrok k plné analýze</span>
+                  <span className="font-semibold text-emerald-600">
+                    {currentTrades}/{totalTradesNeeded}
+                  </span>
+                </div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground pt-2">
+                Po dosažení 100 obchodů se odemknou pokročilé psychologické vzorce a prediktivní nástroje.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+              <div className="bg-white/40 dark:bg-black/10 rounded-lg p-4 border border-emerald-200/50 dark:border-emerald-800/50">
+                <BarChart3 className="w-6 h-6 text-emerald-600 mb-2 mx-auto" />
+                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">Risk/Reward analýza</p>
+                <p className="text-xs text-muted-foreground mt-1">Objevte své nejlepší setupy</p>
+              </div>
+
+              <div className="bg-white/40 dark:bg-black/10 rounded-lg p-4 border border-emerald-200/50 dark:border-emerald-800/50">
+                <Target className="w-6 h-6 text-emerald-600 mb-2 mx-auto" />
+                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">Detekce vzorců</p>
+                <p className="text-xs text-muted-foreground mt-1">AI identifikuje vaše chyby</p>
+              </div>
+
+              <div className="bg-white/40 dark:bg-black/10 rounded-lg p-4 border border-emerald-200/50 dark:border-emerald-800/50">
+                <TrendingUp className="w-6 h-6 text-emerald-600 mb-2 mx-auto" />
+                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">Predikce výkonu</p>
+                <p className="text-xs text-muted-foreground mt-1">Předpověď trading výsledků</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-dashed border-2 border-muted">
+        <CardHeader>
+          <CardTitle className="text-center text-muted-foreground">Jak začít?</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto text-xl font-bold text-blue-600">
+                1
+              </div>
+              <p className="text-sm font-semibold">Vyplňte Daily Assessment</p>
+              <p className="text-xs text-muted-foreground">Zaznamenejte mentální stav před tradingem</p>
+            </div>
+
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mx-auto text-xl font-bold text-purple-600">
+                2
+              </div>
+              <p className="text-sm font-semibold">Přidejte své obchody</p>
+              <p className="text-xs text-muted-foreground">Zapište výsledky a emoce během tradingu</p>
+            </div>
+
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto text-xl font-bold text-emerald-600">
+                3
+              </div>
+              <p className="text-sm font-semibold">Sledujte svůj pokrok</p>
+              <p className="text-xs text-muted-foreground">AI analyzuje vaše data a poskytuje rady</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export function MindTraderHistory() {
+  const [timeframe, setTimeframe] = useState("month")
+
+  const hasData = false // This will be replaced with actual data check later
+
+  if (!hasData) {
+    return <EmptyStateView />
+  }
+
+  const tradingData = generateTradingData()
+
+  const setupAnalysis = [
+    { setup: "Breakout", risk: 80, reward: 240, count: 24, winRate: 68 },
+    { setup: "Pullback", risk: 100, reward: 180, count: 18, winRate: 55 },
+    { setup: "Reversal", risk: 120, reward: 360, count: 12, winRate: 45 },
+    { setup: "Momentum", risk: 70, reward: 190, count: 31, winRate: 72 },
+  ]
+
+  const marketConditions = [
+    { condition: "Trending Up", trades: 45, winRate: 78, avgProfit: 285 },
+    { condition: "Ranging", trades: 32, winRate: 52, avgProfit: 85 },
+    { condition: "Volatile", trades: 28, winRate: 43, avgProfit: -45 },
+    { condition: "Trending Down", trades: 19, winRate: 61, avgProfit: 180 },
+  ]
+
+  const timePerformance = [
+    { time: "8-10h", quality: 92, avgPnl: 320, trades: 42 },
+    { time: "10-12h", quality: 78, avgPnl: 210, trades: 38 },
+    { time: "12-14h", quality: 45, avgPnl: -50, trades: 25 },
+    { time: "14-16h", quality: 65, avgPnl: 140, trades: 31 },
+    { time: "16-18h", quality: 52, avgPnl: 80, trades: 18 },
+  ]
+
+  const totalPnl = tradingData[tradingData.length - 1].balance - 10000
+  const winningDays = tradingData.filter((d) => d.dailyPnl > 0).length
+  const bestTrade = Math.max(...tradingData.map((d) => d.dailyPnl))
+  const worstTrade = Math.min(...tradingData.map((d) => d.dailyPnl))
+  const maxDrawdown = Math.min(...tradingData.map((d) => d.dailyPnl))
+
+  const longestWinStreak = Math.max(...tradingData.filter((d) => d.streak > 0).map((d) => d.streak), 0)
+  const longestLossStreak = Math.abs(Math.min(...tradingData.filter((d) => d.streak < 0).map((d) => d.streak), 0))
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Target className="w-6 h-6 text-emerald-500" />
+            Trading Intelligence Dashboard
+          </h2>
+          <p className="text-muted-foreground">Kompletní přehled vašeho trading výkonu a vzorců.</p>
         </div>
+        <Select value={timeframe} onValueChange={setTimeframe}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Období" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="week">Tento týden</SelectItem>
+            <SelectItem value="month">Tento měsíc</SelectItem>
+            <SelectItem value="quarter">Kvartál</SelectItem>
+            <SelectItem value="year">Tento rok</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Card className="border-l-4 border-l-emerald-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total P&L</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${totalPnl > 0 ? "text-emerald-600" : "text-red-600"}`}>
+              ${totalPnl > 0 ? "+" : ""}
+              {totalPnl}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Za období</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-blue-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Winning Days</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {winningDays}/{tradingData.length}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {Math.round((winningDays / tradingData.length) * 100)}% win rate
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-purple-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Best Trade</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">+${bestTrade}</div>
+            <p className="text-xs text-muted-foreground mt-1">Single day max</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-amber-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Win Streak</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">{longestWinStreak}</div>
+            <p className="text-xs text-muted-foreground mt-1">Longest winning</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-red-500">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Max Drawdown</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">${maxDrawdown}</div>
+            <p className="text-xs text-muted-foreground mt-1">Worst single day</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Balance Progression & Daily Performance</CardTitle>
+          <CardDescription>Celková equity curve s denními P&L výsledky - žádná duplicita.</CardDescription>
+        </CardHeader>
+        <CardContent className="h-[400px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={tradingData}>
+              <defs>
+                <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
+              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(val) => `$${val}`} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(val) => `$${val}`} />
+              <Tooltip
+                contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                formatter={(value: number, name: string) => {
+                  if (name === "Balance") return [`$${value}`, "Celková Balance"]
+                  if (name === "Daily P&L") return [`$${value > 0 ? "+" : ""}${value}`, "Denní P&L"]
+                  return [value, name]
+                }}
+              />
+              <Legend />
+              <Area
+                yAxisId="left"
+                type="monotone"
+                dataKey="balance"
+                name="Balance"
+                stroke="#10b981"
+                strokeWidth={3}
+                fillOpacity={1}
+                fill="url(#balanceGradient)"
+              />
+              <Bar yAxisId="right" dataKey="dailyPnl" name="Daily P&L" radius={[4, 4, 0, 0]}>
+                {tradingData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.dailyPnl > 0 ? "#10b981" : "#ef4444"} />
+                ))}
+              </Bar>
+            </AreaChart>
+          </ResponsiveContainer>
+
+          <div className="grid grid-cols-2 gap-4 mt-6">
+            <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-5 h-5 text-emerald-600" />
+                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">Longest Win Streak</p>
+              </div>
+              <p className="text-3xl font-black text-emerald-600">{longestWinStreak}</p>
+              <p className="text-xs text-muted-foreground mt-1">consecutive winning days</p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingDown className="w-5 h-5 text-red-600" />
+                <p className="text-sm font-semibold text-red-900 dark:text-red-100">Longest Loss Streak</p>
+              </div>
+              <p className="text-3xl font-black text-red-600">{longestLossStreak}</p>
+              <p className="text-xs text-muted-foreground mt-1">consecutive losing days</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Setup Risk vs Reward</CardTitle>
+            <CardDescription>Jasné porovnání: Kolik riskujete vs co získáváte u každého setupu.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={setupAnalysis}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
+                <XAxis dataKey="setup" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(val) => `$${val}`} />
+                <Tooltip
+                  contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                  formatter={(value: number, name: string) => {
+                    if (name === "Avg Risk") return [`$${value}`, "Průměrný Risk"]
+                    if (name === "Avg Reward") return [`$${value}`, "Průměrný Reward"]
+                    return [value, name]
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="risk" name="Avg Risk" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="reward" name="Avg Reward" fill="#10b981" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+
+            <div className="grid grid-cols-4 gap-2 mt-4">
+              {setupAnalysis.map((item, i) => (
+                <div key={i} className="text-center p-3 bg-muted/40 rounded-lg border">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">{item.setup}</p>
+                  <p className="text-lg font-black text-emerald-600">{(item.reward / item.risk).toFixed(1)}:1</p>
+                  <p className="text-xs text-muted-foreground mt-1">{item.winRate}% win</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Performance podle denní doby</CardTitle>
+            <CardDescription>Kdy tradujete nejlépe? Data ukazují jasně.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={timePerformance}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
+                <XAxis dataKey="time" tick={{ fontSize: 11 }} />
+                <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(val) => `$${val}`} />
+                <Tooltip
+                  contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                  formatter={(value: number, name: string) => {
+                    if (name === "Quality Score") return [`${value}%`, "Kvalita"]
+                    if (name === "Avg P&L") return [`$${value}`, "Průměr P&L"]
+                    return [value, name]
+                  }}
+                />
+                <Legend />
+                <Bar yAxisId="left" dataKey="quality" name="Quality Score" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="right" dataKey="avgPnl" name="Avg P&L" radius={[4, 4, 0, 0]}>
+                  {timePerformance.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.avgPnl > 0 ? "#10b981" : "#ef4444"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Performance v různých tržních podmínkách</CardTitle>
+          <CardDescription>Zjistěte, v jakém marketu tradujete nejlépe a kde máte rezervy.</CardDescription>
+        </CardHeader>
+        <CardContent className="h-[320px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={marketConditions}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
+              <XAxis dataKey="condition" tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(val) => `${val}%`} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} tickFormatter={(val) => `$${val}`} />
+              <Tooltip
+                contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                formatter={(value: number, name: string) => {
+                  if (name === "Win Rate") return [`${value}%`, "Win Rate"]
+                  if (name === "Avg Profit") return [`$${value}`, "Průměrný Profit"]
+                  return [value, name]
+                }}
+              />
+              <Legend />
+              <Line
+                yAxisId="left"
+                type="monotone"
+                dataKey="winRate"
+                name="Win Rate"
+                stroke="#8b5cf6"
+                strokeWidth={3}
+                dot={{ r: 6, fill: "#8b5cf6" }}
+              />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="avgProfit"
+                name="Avg Profit"
+                stroke="#10b981"
+                strokeWidth={3}
+                dot={{ r: 6, fill: "#10b981" }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nejlepší mentální den</CardTitle>
-            <Brain className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{bestDay.formattedDate}</div>
-            <p className="text-xs text-muted-foreground">Skóre: {bestDay.mentalScore}%</p>
+        <Card className="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="w-5 h-5 text-emerald-600" />
+              <Badge className="bg-emerald-600">🎯 Peak Performance</Badge>
+            </div>
+            <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+              Ranní trading 8-10h: 92% kvalita
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Vaše nejlepší výsledky. Plánujte hlavní obchody do tohoto času.
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nejziskovější den</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mostProfitableDay.formattedDate}</div>
-            <p className="text-xs text-muted-foreground">Zisk: ${mostProfitableDay.tradingResult}</p>
+        <Card className="bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="w-5 h-5 text-purple-600" />
+              <Badge className="bg-purple-600">📈 Best Setup</Badge>
+            </div>
+            <p className="text-sm font-semibold text-purple-900 dark:text-purple-100">Momentum: 72% win rate</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Nejlepší R:R a konzistence. Hledejte momentum setupy častěji.
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Spánek vs. Výsledky</CardTitle>
-            <Moon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${Math.round(sleepCorrelation)}</div>
-            <p className="text-xs text-muted-foreground">Průměrný zisk při spánku 7+ hodin</p>
+        <Card className="bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingDown className="w-5 h-5 text-red-600" />
+              <Badge className="bg-red-600">⚠️ Avoid Zone</Badge>
+            </div>
+            <p className="text-sm font-semibold text-red-900 dark:text-red-100">12-14h: -$50 průměr</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Nejhorší výsledky. Zvažte pauzu nebo paper trading v tuto dobu.
+            </p>
           </CardContent>
         </Card>
       </div>
-
-      <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Přehled</TabsTrigger>
-          <TabsTrigger value="charts">Grafy</TabsTrigger>
-          <TabsTrigger value="correlations">Korelace</TabsTrigger>
-          <TabsTrigger value="table">Tabulka</TabsTrigger>
-          <TabsTrigger value="aiHistory">Historie AI</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Vývoj mentálního skóre a obchodních výsledků</CardTitle>
-              <CardDescription>Sledujte, jak vaše mentální příprava ovlivňuje vaše obchodování</CardDescription>
-            </CardHeader>
-            <CardContent className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={filteredData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="shortDate" />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="mentalScore"
-                    name="Mentální skóre (%)"
-                    stroke="#8884d8"
-                    activeDot={{ r: 8 }}
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="tradingResult"
-                    name="Obchodní výsledek ($)"
-                    stroke="#82ca9d"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Klíčové poznatky</CardTitle>
-                <CardDescription>Automaticky zjištěné vzorce ve vašich datech</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-green-500">Spánek</Badge>
-                    <span>
-                      Dny se spánkem 7+ hodin mají o{" "}
-                      {Math.round(
-                        (sleepCorrelation /
-                          (generatedData.reduce((sum, day) => sum + day.tradingResult, 0) / generatedData.length) -
-                          1) *
-                          100,
-                      )}
-                      % lepší výsledky
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-blue-500">Cvičení</Badge>
-                    <span>
-                      Dny s cvičením mají o {Math.round((exerciseCorrelation / noExerciseCorrelation - 1) * 100)}% lepší
-                      výsledky než dny bez cvičení
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-purple-500">Nálada</Badge>
-                    <span>Vaše nejlepší dny mají průměrnou náladu {bestDay.mood}/10</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Doporučení pro zlepšení</CardTitle>
-                <CardDescription>Personalizované tipy na základě vašich dat</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <Activity className="h-5 w-5 text-green-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Zaměřte se na cvičení</p>
-                      <p className="text-sm text-muted-foreground">
-                        Vaše data ukazují, že cvičení výrazně zlepšuje vaše výsledky
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2">
-                    <Moon className="h-5 w-5 text-blue-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Prioritizujte spánek</p>
-                      <p className="text-sm text-muted-foreground">
-                        7+ hodin spánku je spojeno s vašimi nejlepšími obchodními dny
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2">
-                    <Brain className="h-5 w-5 text-purple-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Mentální příprava funguje</p>
-                      <p className="text-sm text-muted-foreground">
-                        Dny s mentálním skóre nad 80% mají 2.3x lepší výsledky
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="charts" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Vývoj mentálního skóre</CardTitle>
-                <CardDescription>Sledujte svůj mentální vývoj v čase</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={filteredData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="shortDate" />
-                    <YAxis domain={[0, 100]} />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="mentalScore"
-                      name="Mentální skóre (%)"
-                      stroke="#8884d8"
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Obchodní výsledky</CardTitle>
-                <CardDescription>Vaše zisky a ztráty v průběhu času</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={filteredData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="shortDate" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar
-                      dataKey="tradingResult"
-                      name="Obchodní výsledek ($)"
-                      fill={(datum) => (datum.tradingResult >= 0 ? "#82ca9d" : "#ff7675")}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Spánek a cvičení</CardTitle>
-                <CardDescription>Sledujte své fyzické návyky</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={filteredData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="shortDate" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="sleepHours" name="Hodiny spánku" fill="#8884d8" />
-                    <Bar
-                      dataKey="exercise"
-                      name="Cvičení"
-                      fill="#82ca9d"
-                      // Convert boolean to number for the chart
-                      stackId="a"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Nálada</CardTitle>
-                <CardDescription>Vývoj vaší nálady v průběhu času</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={filteredData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="shortDate" />
-                    <YAxis domain={[0, 10]} />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="mood" name="Nálada (1-10)" stroke="#ff7675" activeDot={{ r: 8 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="correlations" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Korelace mentálního skóre a obchodních výsledků</CardTitle>
-              <CardDescription>Jak vaše mentální příprava ovlivňuje vaše zisky</CardDescription>
-            </CardHeader>
-            <CardContent className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                  <CartesianGrid />
-                  <XAxis
-                    type="number"
-                    dataKey="mentalScore"
-                    name="Mentální skóre"
-                    domain={[50, 100]}
-                    label={{ value: "Mentální skóre (%)", position: "bottom" }}
-                  />
-                  <YAxis
-                    type="number"
-                    dataKey="tradingResult"
-                    name="Obchodní výsledek"
-                    label={{ value: "Obchodní výsledek ($)", angle: -90, position: "left" }}
-                  />
-                  <ZAxis type="number" dataKey="size" range={[50, 400]} name="Spánek" />
-                  <Tooltip
-                    cursor={{ strokeDasharray: "3 3" }}
-                    formatter={(value, name, props) => {
-                      if (name === "Obchodní výsledek") return [`$${value}`, name]
-                      if (name === "Mentální skóre") return [`${value}%`, name]
-                      return [value, name]
-                    }}
-                    labelFormatter={(label) => `Den: ${correlationData[label].date}`}
-                  />
-                  <Legend />
-                  <Scatter name="Mentální skóre vs. Výsledky" data={correlationData} fill="#8884d8" />
-                </ScatterChart>
-              </ResponsiveContainer>
-            </CardContent>
-            <CardFooter>
-              <p className="text-sm text-muted-foreground">
-                Velikost bodu indikuje množství spánku (větší = více spánku)
-              </p>
-            </CardFooter>
-          </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Korelační tabulka</CardTitle>
-                <CardDescription>Jak spolu souvisí různé faktory</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Faktor</TableHead>
-                      <TableHead>Korelace s výsledky</TableHead>
-                      <TableHead>Síla vlivu</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>Mentální skóre</TableCell>
-                      <TableCell>0.78</TableCell>
-                      <TableCell>
-                        <Badge className="bg-green-500">Silná</Badge>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Spánek (7+ hodin)</TableCell>
-                      <TableCell>0.65</TableCell>
-                      <TableCell>
-                        <Badge className="bg-green-500">Silná</Badge>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Cvičení</TableCell>
-                      <TableCell>0.52</TableCell>
-                      <TableCell>
-                        <Badge className="bg-blue-500">Střední</Badge>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Nálada</TableCell>
-                      <TableCell>0.48</TableCell>
-                      <TableCell>
-                        <Badge className="bg-blue-500">Střední</Badge>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Nejsilnější vzorce</CardTitle>
-                <CardDescription>Automaticky zjištěné vzorce ve vašich datech</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="p-3 border rounded-md">
-                    <p className="font-medium">Když máte mentální skóre nad 80% a spíte 7+ hodin:</p>
-                    <p className="text-sm text-green-500 font-medium">+82% lepší obchodní výsledky</p>
-                  </div>
-
-                  <div className="p-3 border rounded-md">
-                    <p className="font-medium">Když cvičíte a máte náladu 8+:</p>
-                    <p className="text-sm text-green-500 font-medium">+65% lepší obchodní výsledky</p>
-                  </div>
-
-                  <div className="p-3 border rounded-md">
-                    <p className="font-medium">Když máte mentální skóre pod 70% a necvičíte:</p>
-                    <p className="text-sm text-red-500 font-medium">-45% horší obchodní výsledky</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="table" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Historie obchodních dnů</CardTitle>
-              <CardDescription>Detailní přehled vašich obchodních dnů</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Datum</TableHead>
-                    <TableHead>Mentální skóre</TableHead>
-                    <TableHead>Spánek</TableHead>
-                    <TableHead>Cvičení</TableHead>
-                    <TableHead>Nálada</TableHead>
-                    <TableHead>Výsledek</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredData.map((day) => (
-                    <TableRow key={day.date}>
-                      <TableCell>{day.formattedDate}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {day.mentalScore}%{day.mentalScore >= 80 && <Badge className="bg-green-500">Vysoké</Badge>}
-                          {day.mentalScore < 60 && <Badge className="bg-red-500">Nízké</Badge>}
-                        </div>
-                      </TableCell>
-                      <TableCell>{day.sleepHours} h</TableCell>
-                      <TableCell>{day.exercise ? "Ano" : "Ne"}</TableCell>
-                      <TableCell>{day.mood}/10</TableCell>
-                      <TableCell className={day.tradingResult >= 0 ? "text-green-500" : "text-red-500"}>
-                        ${day.tradingResult}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full bg-transparent">
-                <Download className="mr-2 h-4 w-4" />
-                Exportovat jako PDF
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="aiHistory" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Historie MindTrader AI</CardTitle>
-              <CardDescription>Přehled vašich denních hodnocení a doporučení od AI.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Datum</TableHead>
-                    <TableHead>Nálada</TableHead>
-                    <TableHead>Zkušenost</TableHead>
-                    <TableHead>Doporučení</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {historyData.map((entry, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{entry.date}</TableCell>
-                      <TableCell>
-                        <Badge variant={entry.mood >= 4 ? "default" : entry.mood >= 3 ? "secondary" : "destructive"}>
-                          {entry.mood}/5
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{entry.experience}</TableCell>
-                      <TableCell>{entry.recommendation}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }

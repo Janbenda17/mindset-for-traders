@@ -8,7 +8,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Search, Filter, TrendingUp, TrendingDown, Calendar, Tag, ArrowUpDown, Brain, BookOpen, Target, DollarSign, Zap, Activity, Eye } from 'lucide-react'
+import {
+  Search,
+  Filter,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+  Tag,
+  ArrowUpDown,
+  Brain,
+  BookOpen,
+  Target,
+  DollarSign,
+  Zap,
+  Activity,
+  Eye,
+} from "lucide-react"
 import { getJournalEntries } from "@/utils/storage-utils"
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
@@ -41,6 +56,13 @@ interface JournalEntry {
   duringTradeEmotion?: string
   postTradeEmotion?: string
   stressLevel?: number
+  moodBefore?: number
+  moodDuring?: number
+  moodAfter?: number
+  discipline?: number
+  stress?: number
+  mistakes?: string
+  improvements?: string
 }
 
 interface JournalEntriesProps {
@@ -657,6 +679,172 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                     </CardHeader>
                     <CardContent>
                       <p className="text-gray-200">{detailEntry.lessonLearned}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Emotional Metrics Section */}
+                {(detailEntry.moodBefore ||
+                  detailEntry.moodDuring ||
+                  detailEntry.moodAfter ||
+                  detailEntry.stress ||
+                  detailEntry.discipline) && (
+                  <Card className="bg-slate-700/50 border-slate-600">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-white flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-pink-400" />
+                        Emoční Analýza
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        {detailEntry.moodBefore && (
+                          <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-600">
+                            <p className="text-xs text-gray-400 mb-1">Nálada před</p>
+                            <div className="flex items-end gap-2">
+                              <span className="text-2xl font-bold text-white">{detailEntry.moodBefore}/10</span>
+                            </div>
+                            <div className="h-1.5 bg-slate-700 rounded-full mt-2 overflow-hidden">
+                              <div
+                                className="h-full bg-blue-500"
+                                style={{ width: `${detailEntry.moodBefore * 10}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {detailEntry.moodDuring && (
+                          <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-600">
+                            <p className="text-xs text-gray-400 mb-1">Nálada během</p>
+                            <div className="flex items-end gap-2">
+                              <span className="text-2xl font-bold text-white">{detailEntry.moodDuring}/10</span>
+                            </div>
+                            <div className="h-1.5 bg-slate-700 rounded-full mt-2 overflow-hidden">
+                              <div
+                                className="h-full bg-purple-500"
+                                style={{ width: `${detailEntry.moodDuring * 10}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {detailEntry.moodAfter && (
+                          <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-600">
+                            <p className="text-xs text-gray-400 mb-1">Nálada po</p>
+                            <div className="flex items-end gap-2">
+                              <span className="text-2xl font-bold text-white">{detailEntry.moodAfter}/10</span>
+                            </div>
+                            <div className="h-1.5 bg-slate-700 rounded-full mt-2 overflow-hidden">
+                              <div className="h-full bg-pink-500" style={{ width: `${detailEntry.moodAfter * 10}%` }} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {detailEntry.stress && (
+                          <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-600">
+                            <div className="flex justify-between items-center mb-2">
+                              <p className="text-sm text-gray-300">Úroveň stresu</p>
+                              <span
+                                className={cn(
+                                  "text-sm font-bold",
+                                  detailEntry.stress > 7
+                                    ? "text-rose-400"
+                                    : detailEntry.stress > 4
+                                      ? "text-yellow-400"
+                                      : "text-emerald-400",
+                                )}
+                              >
+                                {detailEntry.stress}/10
+                              </span>
+                            </div>
+                            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                              <div
+                                className={cn(
+                                  "h-full transition-all",
+                                  detailEntry.stress > 7
+                                    ? "bg-rose-500"
+                                    : detailEntry.stress > 4
+                                      ? "bg-yellow-500"
+                                      : "bg-emerald-500",
+                                )}
+                                style={{ width: `${detailEntry.stress * 10}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {detailEntry.discipline && (
+                          <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-600">
+                            <div className="flex justify-between items-center mb-2">
+                              <p className="text-sm text-gray-300">Disciplína</p>
+                              <span
+                                className={cn(
+                                  "text-sm font-bold",
+                                  detailEntry.discipline >= 8
+                                    ? "text-emerald-400"
+                                    : detailEntry.discipline >= 5
+                                      ? "text-yellow-400"
+                                      : "text-rose-400",
+                                )}
+                              >
+                                {detailEntry.discipline}/10
+                              </span>
+                            </div>
+                            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                              <div
+                                className={cn(
+                                  "h-full transition-all",
+                                  detailEntry.discipline >= 8
+                                    ? "bg-emerald-500"
+                                    : detailEntry.discipline >= 5
+                                      ? "bg-yellow-500"
+                                      : "bg-rose-500",
+                                )}
+                                style={{ width: `${detailEntry.discipline * 10}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Behavioral Analysis Section */}
+                {(detailEntry.marketConditions || detailEntry.mistakes || detailEntry.improvements) && (
+                  <Card className="bg-slate-700/50 border-slate-600">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-white flex items-center gap-2">
+                        <Activity className="w-5 h-5 text-blue-400" />
+                        Behaviorální Analýza
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {detailEntry.marketConditions && (
+                        <div>
+                          <p className="text-xs text-gray-400 mb-1 uppercase tracking-wider">Tržní podmínky</p>
+                          <p className="text-gray-200 bg-slate-800/50 p-3 rounded-lg border border-slate-600">
+                            {detailEntry.marketConditions}
+                          </p>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {detailEntry.mistakes && (
+                          <div>
+                            <p className="text-xs text-rose-400 mb-1 uppercase tracking-wider">Chyby</p>
+                            <p className="text-gray-200 bg-rose-950/20 p-3 rounded-lg border border-rose-900/50">
+                              {detailEntry.mistakes}
+                            </p>
+                          </div>
+                        )}
+                        {detailEntry.improvements && (
+                          <div>
+                            <p className="text-xs text-emerald-400 mb-1 uppercase tracking-wider">Zlepšení</p>
+                            <p className="text-gray-200 bg-emerald-950/20 p-3 rounded-lg border border-emerald-900/50">
+                              {detailEntry.improvements}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 )}

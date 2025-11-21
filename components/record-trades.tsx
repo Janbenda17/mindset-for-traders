@@ -13,6 +13,8 @@ import { DollarSign, TrendingUp, TrendingDown, Plus, Trash2, Target, BookOpen, X
 import { format } from "date-fns"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useRouter } from 'next/navigation'
+import { useDailyStage } from "@/contexts/daily-stage-context" // Správný import pro completeStage
 
 interface Trade {
   id: string
@@ -88,6 +90,8 @@ const EMOTIONS_AFTER = ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Pou
 
 export function RecordTrades() {
   const { toast } = useToast()
+  const router = useRouter()
+  const { completeStage } = useDailyStage() // Použít hook pro získání completeStage funkce
   const [isLoading, setIsLoading] = useState(false)
   const [todayPlan, setTodayPlan] = useState<TradingPlanData | null>(null)
   const [morningCheck, setMorningCheck] = useState<MorningCheckData | null>(null)
@@ -1110,7 +1114,34 @@ export function RecordTrades() {
         </Card>
       )}
 
-      <div className="flex flex-col gap-4"></div>
+      {/* // Přidat tlačítka "Uložit obchod" a "Dnes bez obchodu" na konec komponenty */}
+      <div className="flex flex-col gap-4">
+        <Button
+          onClick={handleAddTrade}
+          className="w-full h-16 text-xl font-black rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-2xl"
+        >
+          <Plus className="w-6 h-6 mr-2" />
+          Uložit obchod
+        </Button>
+        
+        <Button
+          onClick={() => {
+            completeStage(4)
+            toast({
+              title: "✅ Stage Complete!",
+              description: "Dnes bez obchodu. Můžeš pokračovat na další stage.",
+            })
+            setTimeout(() => {
+              router.push("/daily-tracker")
+            }, 1000)
+          }}
+          variant="outline"
+          className="w-full h-16 text-xl font-black rounded-2xl border-2 border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+        >
+          <XCircle className="w-6 h-6 mr-2" />
+          Dnes bez obchodu
+        </Button>
+      </div>
     </div>
   )
 }

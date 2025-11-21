@@ -247,8 +247,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const { isPremium } = useSubscription()
 
   // Check if current user is owner or can switch modes
-  const isOwner = user?.email === "owner@tradermindset.com"
-  const canSwitchModes = isPremium
+  const isOwner = user?.email === "honza.newage@gmail.com"
+  const canSwitchModes = isPremium || isOwner
 
   useEffect(() => {
     // Check if we're in live mode on mount
@@ -424,7 +424,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   const switchToLive = () => {
-    if (!isPremium) {
+    if (!isPremium && !isOwner) {
       toast({
         title: "Premium vyžadováno",
         description: "Live režim je dostupný pouze pro premium uživatele.",

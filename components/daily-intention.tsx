@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
-import { Target, Shield, Brain, TrendingUp, CheckCircle } from "lucide-react"
+import { Target, Shield, Brain, TrendingUp, CheckCircle } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
 interface DailyIntentionData {
@@ -83,9 +83,8 @@ export function DailyIntention() {
       duration: 3000,
     })
 
-    // Vrátit na dashboard
     setTimeout(() => {
-      router.push("/")
+      router.push("/daily-tracker")
     }, 1000)
   }
 

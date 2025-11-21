@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,18 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useDailyStage } from "@/contexts/daily-stage-context"
-import {
-  Target,
-  TrendingUp,
-  ArrowRight,
-  Check,
-  Info,
-  DollarSign,
-  Clock,
-  Activity,
-  BookOpen,
-  ArrowLeft,
-} from "lucide-react"
+import { Target, TrendingUp, ArrowRight, Check, Info, DollarSign, Clock, Activity, BookOpen, ArrowLeft } from 'lucide-react'
 import { format } from "date-fns"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -144,9 +133,8 @@ export function TradingPlan() {
         description: "Tvůj trading plán byl úspěšně uložen. Pokračuj na Stage 4!",
       })
 
-      // Navigate back to dashboard
       setTimeout(() => {
-        router.push("/")
+        router.push("/daily-tracker")
       }, 1500)
     } catch (error) {
       toast({

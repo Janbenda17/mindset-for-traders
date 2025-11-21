@@ -7,11 +7,47 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Brain, Target, CheckCircle2, Zap, Heart, Sparkles, Download, Clock, Smile, Frown, Meh, Activity, TrendingUpIcon, TrendingUp, DollarSign, AlertTriangle, ThumbsUp, ThumbsDown, Flame, Wind, Calendar, TrendingDown, ArrowUp, ArrowDown, BarChart3, Sun, Moon, Sunrise, Sunset, CloudRain, Award, XCircle, RefreshCw, Percent, TrendingDown as TrendingUpDown } from 'lucide-react'
+import {
+  Brain,
+  Target,
+  CheckCircle2,
+  Zap,
+  Heart,
+  Sparkles,
+  Download,
+  Clock,
+  Smile,
+  Frown,
+  Meh,
+  Activity,
+  TrendingUpIcon,
+  TrendingUp,
+  DollarSign,
+  AlertTriangle,
+  ThumbsUp,
+  ThumbsDown,
+  Flame,
+  Wind,
+  Calendar,
+  TrendingDown,
+  ArrowUp,
+  ArrowDown,
+  BarChart3,
+  Sun,
+  Moon,
+  Sunrise,
+  Sunset,
+  CloudRain,
+  Award,
+  XCircle,
+  RefreshCw,
+  Percent,
+  TrendingDown as TrendingUpDown,
+  Rocket,
+} from "lucide-react"
 import {
   LineChart,
   Line,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -23,15 +59,10 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-  Polar,
   Radar,
   ComposedChart,
-  BarChart,
-  Cell,
   PieChart,
   Pie,
-  ReferenceLine,
-  Label as RechartsLabel, // Changed to RechartsLabel to avoid conflict
   Tooltip as ChartTooltip, // Renamed Tooltip to ChartTooltip to avoid conflict
 } from "recharts"
 import { cn } from "@/lib/utils"
@@ -179,14 +210,15 @@ function generatePsychologicalAnalysis(
 
     let groupBy: "day" | "week" | "month" = "week"
     let periods = 12
-    
+
     if (timeframe === "week") {
       groupBy = "day" // Show Mon-Fri for current week
       periods = 5
     } else if (timeframe === "month") {
       groupBy = "week" // Show 4 weeks
       periods = 4
-    } else if (timeframe === "quarter") { // This is not used in UI, but for completeness
+    } else if (timeframe === "quarter") {
+      // This is not used in UI, but for completeness
       groupBy = "month" // Show 3 months
       periods = 3
     } else if (timeframe === "all") {
@@ -241,9 +273,7 @@ function generatePsychologicalAnalysis(
         groupedData[groupKey].moodCount++
       }
 
-      const matchingMoodEntry = moodEntries.find(
-        (entry) => entry.date === trade.date
-      )
+      const matchingMoodEntry = moodEntries.find((entry) => entry.date === trade.date)
       if (matchingMoodEntry?.readiness) {
         groupedData[groupKey].readinessSum += matchingMoodEntry.readiness
         groupedData[groupKey].readinessCount++
@@ -497,6 +527,8 @@ function generatePsychologicalAnalysis(
         )
       : 0
 
+  const uniqueDays = new Set(trades.map((t) => t.date)).size
+
   if (emotionalPatterns.some((p) => p.severity === "critical")) {
     const criticalPattern = emotionalPatterns.find((p) => p.severity === "critical")
     actionPlan.push({
@@ -546,7 +578,7 @@ function generatePsychologicalAnalysis(
     pnl: Number.NEGATIVE_INFINITY,
     avgReadiness: 0,
   })
-  const worstWeek = weeklyPerformanceData.reduce((worst, week) => (week.pnl < worst.pnl ? week : worst), {
+  const worstWeek = weeklyPerformanceData.reduce((worst, week) => (week.pnl < worst.pnl ? worst : worst), {
     pnl: Number.POSITIVE_INFINITY,
     avgReadiness: 0,
   })
@@ -567,7 +599,12 @@ function generatePsychologicalAnalysis(
     { subject: "Konzistence", A: Math.round(consistencyScore) },
     { subject: "Awareness", A: Math.round(journalingRate) },
     { subject: "Energie", A: Math.round(avgEnergy) },
-    { subject: "Readiness", A: Math.round(weeklyPerformanceData.reduce((sum, w) => sum + w.avgReadiness, 0) / Math.max(weeklyPerformanceData.length, 1)) } // Added readiness to psychological profile
+    {
+      subject: "Readiness",
+      A: Math.round(
+        weeklyPerformanceData.reduce((sum, w) => sum + w.avgReadiness, 0) / Math.max(weeklyPerformanceData.length, 1),
+      ),
+    }, // Added readiness to psychological profile
   ]
 
   return {
@@ -575,6 +612,7 @@ function generatePsychologicalAnalysis(
       totalPnL,
       winRate,
       trades: totalTrades,
+      uniqueDays, // Added uniqueDays to summary
       emotionalScore: avgMoodCalc,
       disciplineScore: avgDisciplineCalc,
       confidenceScore: avgConfidenceCalc,
@@ -633,19 +671,89 @@ export default function AnalyticsPage() {
     )
   }
 
-  if (isLiveMode && analysis.summary.trades === 0) {
+  // **START: Update for Live Mode with no trades**
+  const daysGoal = 10 // Goal is 10 trading days to get meaningful data
+
+  if (isLiveMode && analysis.summary.uniqueDays < daysGoal) {
+    const currentDays = analysis.summary.uniqueDays
+    const daysRemaining = daysGoal - currentDays
+    const progressPercent = (currentDays / daysGoal) * 100
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         <div className="max-w-[1800px] mx-auto p-6 space-y-6 pt-20">
-          <div className="text-center py-20">
-            <Brain className="w-20 h-20 text-slate-600 mx-auto mb-6" />
-            <h2 className="text-3xl font-bold text-white mb-4">Psychologická Analytics - Live Mode</h2>
-            <p className="text-slate-400 text-lg mb-8">Začni trackovat pro zobrazení analýzy.</p>
-          </div>
+          <Card className="bg-slate-900/50 border-purple-500/30 backdrop-blur-sm max-w-4xl mx-auto">
+            <CardContent className="pt-12 pb-12">
+              <div className="text-center space-y-6 max-w-2xl mx-auto">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-purple-500/20 mb-4 animate-pulse">
+                  <Rocket className="w-10 h-10 text-purple-400" />
+                </div>
+
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-bold text-white">Začněte svou trading cestu!</h2>
+                  <p className="text-lg text-slate-400">
+                    Vaše analytika se zpřesňuje s každým obchodním dnem. Potřebujeme data z alespoň {daysGoal} dní pro
+                    relevantní psychologický profil.
+                  </p>
+                </div>
+
+                <div className="bg-slate-800/50 rounded-xl p-8 space-y-4 border border-purple-500/20">
+                  <div className="flex items-center justify-center gap-3">
+                    <Calendar className="w-8 h-8 text-amber-500" />
+                    <div className="text-left">
+                      <p className="text-sm text-slate-400">Zbývá odobchodovat</p>
+                      <p className="text-4xl font-black text-purple-400">{daysRemaining} dní</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Pokrok k plné analýze</span>
+                      <span className="font-semibold text-purple-400">
+                        {currentDays}/{daysGoal} dní
+                      </span>
+                    </div>
+                    <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-purple-600 to-blue-600 transition-all duration-500"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-slate-500 pt-2">
+                    Po dosažení {daysGoal} obchodních dní se odemknou pokročilé psychologické vzorce a prediktivní
+                    nástroje.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                  <div className="bg-slate-800/30 rounded-lg p-4 border border-purple-500/10">
+                    <BarChart3 className="w-6 h-6 text-purple-400 mb-2 mx-auto" />
+                    <p className="text-sm font-semibold text-white">Risk/Reward analýza</p>
+                    <p className="text-xs text-slate-500 mt-1">Objevte své nejlepší setupy</p>
+                  </div>
+
+                  <div className="bg-slate-800/30 rounded-lg p-4 border border-purple-500/10">
+                    <Target className="w-6 h-6 text-purple-400 mb-2 mx-auto" />
+                    <p className="text-sm font-semibold text-white">Detekce vzorců</p>
+                    <p className="text-xs text-slate-500 mt-1">AI identifikuje vaše chyby</p>
+                  </div>
+
+                  <div className="bg-slate-800/30 rounded-lg p-4 border border-purple-500/10">
+                    <TrendingUp className="w-6 h-6 text-purple-400 mb-2 mx-auto" />
+                    <p className="text-sm font-semibold text-white">Predikce výkonu</p>
+                    <p className="text-xs text-slate-500 mt-1">Předpověď trading výsledků</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
   }
+  // **END: Update for Live Mode with no trades**
 
   const priorityColors = {
     high: "bg-red-500/20 text-red-300 border-red-500/30",
@@ -683,43 +791,44 @@ export default function AnalyticsPage() {
       // Week = Monday to Friday only (last 5 trading days)
       const startDate = new Date(now)
       startDate.setDate(now.getDate() - 7) // Look back 7 days to ensure we get 5 weekdays
-      
-      filteredData = data.filter((item) => {
-        // Ensure item.date or item.week exists and is a valid date
-        if (!item.date && !item.week) return false;
-        const itemDate = new Date(item.date || item.week);
-        if (isNaN(itemDate.getTime())) return false; // Skip invalid dates
 
-        const dayOfWeek = itemDate.getDay()
-        // Only Monday (1) to Friday (5)
-        return itemDate >= startDate && dayOfWeek >= 1 && dayOfWeek <= 5
-      }).slice(-5) // Take last 5 weekdays
-      
+      filteredData = data
+        .filter((item) => {
+          // Ensure item.date or item.week exists and is a valid date
+          if (!item.date && !item.week) return false
+          const itemDate = new Date(item.date || item.week)
+          if (isNaN(itemDate.getTime())) return false // Skip invalid dates
+
+          const dayOfWeek = itemDate.getDay()
+          // Only Monday (1) to Friday (5)
+          return itemDate >= startDate && dayOfWeek >= 1 && dayOfWeek <= 5
+        })
+        .slice(-5) // Take last 5 weekdays
     } else if (timeframe === "month") {
       // Month = 4 weeks of data grouped by weeks
       const startDate = new Date(now)
       startDate.setDate(now.getDate() - 28) // 4 weeks
-      
+
       filteredData = data.filter((item) => {
-        if (!item.date && !item.week) return false;
-        const itemDate = new Date(item.date || item.week);
+        if (!item.date && !item.week) return false
+        const itemDate = new Date(item.date || item.week)
         return itemDate >= startDate
       })
-      
+
       // Group by weeks
       if (type === "daily") {
         const weeklyGrouped: Record<string, any> = {}
         filteredData.forEach((item) => {
           const itemDate = new Date(item.date)
-          if (isNaN(itemDate.getTime())) return; // Skip invalid dates
+          if (isNaN(itemDate.getTime())) return // Skip invalid dates
 
           const weekStart = new Date(itemDate)
           const day = weekStart.getDay()
           const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1) // Fixed: use getDate() not getDay()
           weekStart.setDate(diff)
-          
+
           const weekKey = `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}` // Use full date for unique key
-          
+
           if (!weeklyGrouped[weekKey]) {
             weeklyGrouped[weekKey] = {
               week: `${weekStart.getDate()}. ${weekStart.toLocaleDateString("cs-CZ", { month: "short" })} - ${new Date(weekStart.setDate(weekStart.getDate() + 6)).getDate()}. ${new Date(weekStart.setDate(weekStart.getDate() - 6)).toLocaleDateString("cs-CZ", { month: "short" })}`, // Dynamic week label
@@ -731,15 +840,15 @@ export default function AnalyticsPage() {
               count: 0,
             }
           }
-          
+
           weeklyGrouped[weekKey].mood += item.mood || 0
-          weeklyGrouped[key].discipline += item.discipline || 0
-          weeklyGrouped[key].confidence += item.confidence || 0
-          weeklyGrouped[key].stress += item.stress || 0
-          weeklyGrouped[key].pnl += item.pnl || 0
-          weeklyGrouped[key].count++
+          weeklyGrouped[weekKey].discipline += item.discipline || 0
+          weeklyGrouped[weekKey].confidence += item.confidence || 0
+          weeklyGrouped[weekKey].stress += item.stress || 0
+          weeklyGrouped[weekKey].pnl += item.pnl || 0
+          weeklyGrouped[weekKey].count++
         })
-        
+
         filteredData = Object.values(weeklyGrouped).map((week: any) => ({
           date: week.week, // Use the formatted week label
           mood: Math.round(week.mood / week.count),
@@ -751,7 +860,7 @@ export default function AnalyticsPage() {
       }
     }
     // timeframe === "all" returns all data unfiltered
-    
+
     return filteredData
   }
 
@@ -858,8 +967,8 @@ export default function AnalyticsPage() {
                   <h3 className="text-xl font-bold text-white mb-1">AI Mindset Analysis</h3>
                   <p className="text-gray-300 text-sm">
                     {analysis.summary.trades} obchodů • {analysis.summary.weeks}{" "}
-                    {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"} • {analysis.psychInsights.length}{" "}
-                    insights
+                    {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"} •{" "}
+                    {analysis.psychInsights.length} insights
                   </p>
                 </div>
               </div>
@@ -873,7 +982,9 @@ export default function AnalyticsPage() {
                   <p className="text-white font-bold text-lg">+${Math.abs(analysis.summary.bestWeek.pnl).toFixed(0)}</p>
                   <p className="text-gray-400 text-xs">{analysis.summary.bestWeek.week}</p>
                   {analysis.summary.bestWeek.avgReadiness > 0 && (
-                    <p className="text-green-400 text-xs mt-1">Readiness: {Math.round(analysis.summary.bestWeek.avgReadiness)}%</p>
+                    <p className="text-green-400 text-xs mt-1">
+                      Readiness: {Math.round(analysis.summary.bestWeek.avgReadiness)}%
+                    </p>
                   )}
                 </div>
               </div>
@@ -884,10 +995,14 @@ export default function AnalyticsPage() {
                   <p className="text-gray-300 text-xs mb-0.5">
                     Nejhorší {timeframe === "week" ? "den" : timeframe === "month" ? "týden" : "období"}
                   </p>
-                  <p className="text-white font-bold text-lg">-${Math.abs(analysis.summary.worstWeek.pnl).toFixed(0)}</p>
+                  <p className="text-white font-bold text-lg">
+                    -${Math.abs(analysis.summary.worstWeek.pnl).toFixed(0)}
+                  </p>
                   <p className="text-gray-400 text-xs">{analysis.summary.worstWeek.week}</p>
                   {analysis.summary.worstWeek.avgReadiness > 0 && (
-                    <p className="text-red-400 text-xs mt-1">Readiness: {Math.round(analysis.summary.worstWeek.avgReadiness)}%</p>
+                    <p className="text-red-400 text-xs mt-1">
+                      Readiness: {Math.round(analysis.summary.worstWeek.avgReadiness)}%
+                    </p>
                   )}
                 </div>
               </div>
@@ -930,11 +1045,7 @@ export default function AnalyticsPage() {
                     <Heart
                       className={cn(
                         "w-8 h-8",
-                        moodStability > 85
-                          ? "text-green-400"
-                          : moodStability > 70
-                            ? "text-yellow-400"
-                            : "text-red-400",
+                        moodStability > 85 ? "text-green-400" : moodStability > 70 ? "text-yellow-400" : "text-red-400",
                       )}
                     />
                   </div>
@@ -963,9 +1074,7 @@ export default function AnalyticsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-gray-400 text-xs font-medium mb-2">Disciplína</p>
-                    <p className="text-4xl font-bold text-white mb-1">
-                      {Math.round(avgDiscipline)}%
-                    </p>
+                    <p className="text-4xl font-bold text-white mb-1">{Math.round(avgDiscipline)}%</p>
                     {avgDiscipline > 80 ? (
                       <p className="text-cyan-400 text-sm font-semibold flex items-center gap-1">
                         <CheckCircle2 className="w-4 h-4" /> Professional
@@ -991,11 +1100,7 @@ export default function AnalyticsPage() {
                     <Target
                       className={cn(
                         "w-8 h-8",
-                        avgDiscipline > 80
-                          ? "text-cyan-400"
-                          : avgDiscipline > 60
-                            ? "text-blue-400"
-                            : "text-orange-400",
+                        avgDiscipline > 80 ? "text-cyan-400" : avgDiscipline > 60 ? "text-blue-400" : "text-orange-400",
                       )}
                     />
                   </div>
@@ -1050,11 +1155,7 @@ export default function AnalyticsPage() {
                     <TrendingUpIcon
                       className={cn(
                         "w-8 h-8",
-                        avgWinRate > 60
-                          ? "text-emerald-400"
-                          : avgWinRate > 50
-                            ? "text-amber-400"
-                            : "text-rose-400",
+                        avgWinRate > 60 ? "text-emerald-400" : avgWinRate > 50 ? "text-amber-400" : "text-rose-400",
                       )}
                     />
                   </div>
@@ -1109,11 +1210,7 @@ export default function AnalyticsPage() {
                     <Activity
                       className={cn(
                         "w-8 h-8",
-                        avgStress < 40
-                          ? "text-teal-400"
-                          : avgStress < 60
-                            ? "text-orange-400"
-                            : "text-red-400",
+                        avgStress < 40 ? "text-teal-400" : avgStress < 60 ? "text-orange-400" : "text-red-400",
                       )}
                     />
                   </div>
@@ -1188,7 +1285,10 @@ export default function AnalyticsPage() {
                       </h3>
                       <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
                         <TrendingUp className="w-3 h-3" />
-                        {trades.length > 0 ? ((trades.reduce((sum, t) => sum + (t.pnl || 0), 0) / trades.length) * 100).toFixed(1) : 0}% ROI
+                        {trades.length > 0
+                          ? ((trades.reduce((sum, t) => sum + (t.pnl || 0), 0) / trades.length) * 100).toFixed(1)
+                          : 0}
+                        % ROI
                       </p>
                     </div>
                     <DollarSign className="w-12 h-12 text-emerald-400/40" />
@@ -1203,7 +1303,8 @@ export default function AnalyticsPage() {
                       <p className="text-sm font-medium text-blue-300 mb-1">Win Rate</p>
                       <h3 className="text-3xl font-bold text-white">{Math.round(avgWinRate)}%</h3>
                       <p className="text-xs text-blue-400 mt-2">
-                        {trades.filter((t) => (t.pnl || 0) > 0).length}W / {trades.filter((t) => (t.pnl || 0) < 0).length}L
+                        {trades.filter((t) => (t.pnl || 0) > 0).length}W /{" "}
+                        {trades.filter((t) => (t.pnl || 0) < 0).length}L
                       </p>
                     </div>
                     <Target className="w-12 h-12 text-blue-400/40" />
@@ -1217,7 +1318,11 @@ export default function AnalyticsPage() {
                     <div>
                       <p className="text-sm font-medium text-purple-300 mb-1">Avg Trade</p>
                       <h3 className="text-3xl font-bold text-white">
-                        ${(trades.length > 0 ? trades.reduce((sum, t) => sum + (t.pnl || 0), 0) / trades.length : 0).toFixed(2)}
+                        $
+                        {(trades.length > 0
+                          ? trades.reduce((sum, t) => sum + (t.pnl || 0), 0) / trades.length
+                          : 0
+                        ).toFixed(2)}
                       </h3>
                       <p className="text-xs text-purple-400 mt-2">{trades.length} trades total</p>
                     </div>
@@ -1261,11 +1366,11 @@ export default function AnalyticsPage() {
                       </div>
                     ))}
                     {Array.from({ length: 28 }).map((_, i) => {
-                      const dayOfWeek = i % 7; // Day of week (0-6)
-                      const dayTrades = trades.filter((t) => new Date(t.date).getDay() === dayOfWeek);
-                      const dayPnl = dayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
-                      const maxAbsPnl = Math.max(...trades.map(t => Math.abs(t.pnl || 0)), 1); // Avoid division by zero
-                      const intensity = Math.min(Math.abs(dayPnl) / maxAbsPnl, 1);
+                      const dayOfWeek = i % 7 // Day of week (0-6)
+                      const dayTrades = trades.filter((t) => new Date(t.date).getDay() === dayOfWeek)
+                      const dayPnl = dayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
+                      const maxAbsPnl = Math.max(...trades.map((t) => Math.abs(t.pnl || 0)), 1) // Avoid division by zero
+                      const intensity = Math.min(Math.abs(dayPnl) / maxAbsPnl, 1)
 
                       return (
                         <div
@@ -1279,7 +1384,7 @@ export default function AnalyticsPage() {
                           }}
                           title={`$${dayPnl.toFixed(2)}`}
                         />
-                      );
+                      )
                     })}
                   </div>
                   <div className="flex items-center justify-between mt-4 text-xs text-gray-400">
@@ -1306,23 +1411,25 @@ export default function AnalyticsPage() {
                   <div className="space-y-3">
                     {["London (8-12)", "NY AM (12-16)", "NY PM (16-20)", "Asia (20-24)"].map((session, i) => {
                       const sessionTrades = trades.filter((t) => {
-                        const hour = new Date(t.date).getHours();
+                        const hour = new Date(t.date).getHours()
                         // Adjusting range for Asia session to cover midnight
                         if (session === "Asia (20-24)") {
-                          return (hour >= 20 && hour <= 23) || (hour >= 0 && hour < 0); // Covers 20-23, and wraps around to 00:00
+                          return (hour >= 20 && hour <= 23) || (hour >= 0 && hour < 0) // Covers 20-23, and wraps around to 00:00
                         }
-                        return hour >= i * 4 + 8 && hour < i * 4 + 12;
-                      });
-                      const sessionPnl = sessionTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
-                      const sessionWin = sessionTrades.filter((t) => (t.pnl || 0) > 0).length;
-                      const sessionWinRate = sessionTrades.length > 0 ? (sessionWin / sessionTrades.length) * 100 : 0;
+                        return hour >= i * 4 + 8 && hour < i * 4 + 12
+                      })
+                      const sessionPnl = sessionTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
+                      const sessionWin = sessionTrades.filter((t) => (t.pnl || 0) > 0).length
+                      const sessionWinRate = sessionTrades.length > 0 ? (sessionWin / sessionTrades.length) * 100 : 0
                       return (
                         <div key={session} className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-300">{session}</span>
                             <div className="flex items-center gap-3">
                               <span className="text-xs text-gray-500">{sessionTrades.length} trades</span>
-                              <span className={cn("text-sm font-bold", sessionPnl > 0 ? "text-green-400" : "text-red-400")}>
+                              <span
+                                className={cn("text-sm font-bold", sessionPnl > 0 ? "text-green-400" : "text-red-400")}
+                              >
                                 ${sessionPnl.toFixed(2)}
                               </span>
                             </div>
@@ -1340,7 +1447,7 @@ export default function AnalyticsPage() {
                             <span className="text-xs text-gray-400 w-12 text-right">{Math.round(sessionWinRate)}%</span>
                           </div>
                         </div>
-                      );
+                      )
                     })}
                   </div>
                 </CardContent>
@@ -1355,8 +1462,8 @@ export default function AnalyticsPage() {
                   Performance Trend
                 </CardTitle>
                 <CardDescription>
-                  {timeframe === "week" ? "Po-Pá tracking" : timeframe === "month" ? "4 týdny" : "Všechna data"} • P&L, Win
-                  Rate, Mental Score
+                  {timeframe === "week" ? "Po-Pá tracking" : timeframe === "month" ? "4 týdny" : "Všechna data"} • P&L,
+                  Win Rate, Mental Score
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1370,7 +1477,12 @@ export default function AnalyticsPage() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
                     <XAxis dataKey="week" stroke="#94a3b8" style={{ fontSize: "12px", fontWeight: 500 }} />
-                    <YAxis yAxisId="left" stroke="#94a3b8" style={{ fontSize: "12px" }} tickFormatter={(value) => `$${value}`} />
+                    <YAxis
+                      yAxisId="left"
+                      stroke="#94a3b8"
+                      style={{ fontSize: "12px" }}
+                      tickFormatter={(value) => `$${value}`}
+                    />
                     <YAxis
                       yAxisId="right"
                       orientation="right"
@@ -1432,7 +1544,15 @@ export default function AnalyticsPage() {
                   <div className="lg:col-span-1 flex flex-col items-center justify-center p-8 bg-slate-900/60 rounded-xl border border-purple-500/20">
                     <div className="relative w-48 h-48 mb-6">
                       <svg className="w-48 h-48 transform -rotate-90">
-                        <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="14" fill="none" className="text-slate-700" />
+                        <circle
+                          cx="96"
+                          cy="96"
+                          r="88"
+                          stroke="currentColor"
+                          strokeWidth="14"
+                          fill="none"
+                          className="text-slate-700"
+                        />
                         <circle
                           cx="96"
                           cy="96"
@@ -1441,7 +1561,7 @@ export default function AnalyticsPage() {
                           strokeWidth="14"
                           fill="none"
                           strokeDasharray={`${2 * Math.PI * 88}`}
-                          strokeDashoffset={`${2 * Math.PI * 88 * (1 - ((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) / 100)}`}
+                          strokeDashoffset={`${2 * Math.PI * 88 * (1 - (avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4 / 100)}`}
                           className="text-purple-500 transition-all duration-1000"
                           strokeLinecap="round"
                         />
@@ -1455,11 +1575,11 @@ export default function AnalyticsPage() {
                     </div>
                     <div className="text-center">
                       <h3 className="text-2xl font-bold text-purple-300 mb-2">
-                        {((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) >= 80
+                        {(avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4 >= 80
                           ? "🔥 Peak Performance"
-                          : ((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) >= 65
+                          : (avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4 >= 65
                             ? "✅ Trading Ready"
-                            : ((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) >= 50
+                            : (avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4 >= 50
                               ? "⚠️ Proceed with Caution"
                               : "🛑 High Risk State"}
                       </h3>
@@ -1515,7 +1635,11 @@ export default function AnalyticsPage() {
                         />
                       </div>
                       <p className="text-xs text-gray-500 mt-2">
-                        {avgDiscipline >= 75 ? "Strong discipline" : avgDiscipline >= 50 ? "Moderate" : "Needs improvement"}
+                        {avgDiscipline >= 75
+                          ? "Strong discipline"
+                          : avgDiscipline >= 50
+                            ? "Moderate"
+                            : "Needs improvement"}
                       </p>
                     </div>
 
@@ -1540,7 +1664,11 @@ export default function AnalyticsPage() {
                         />
                       </div>
                       <p className="text-xs text-gray-500 mt-2">
-                        {avgConfidence >= 75 ? "High confidence" : avgConfidence >= 50 ? "Moderate" : "Building confidence"}
+                        {avgConfidence >= 75
+                          ? "High confidence"
+                          : avgConfidence >= 50
+                            ? "Moderate"
+                            : "Building confidence"}
                       </p>
                     </div>
 
@@ -1565,7 +1693,11 @@ export default function AnalyticsPage() {
                         />
                       </div>
                       <p className="text-xs text-gray-500 mt-2">
-                        {avgStress >= 70 ? "🚨 Critical - Take break" : avgStress >= 50 ? "⚠️ Elevated" : "✅ Well managed"}
+                        {avgStress >= 70
+                          ? "🚨 Critical - Take break"
+                          : avgStress >= 50
+                            ? "⚠️ Elevated"
+                            : "✅ Well managed"}
                       </p>
                     </div>
                   </div>
@@ -1588,7 +1720,14 @@ export default function AnalyticsPage() {
                     <PolarGrid stroke="#475569" />
                     <PolarAngleAxis dataKey="subject" stroke="#94a3b8" style={{ fontSize: "13px", fontWeight: 500 }} />
                     <PolarRadiusAxis angle={90} domain={[0, 100]} stroke="#94a3b8" />
-                    <Radar name="Profil" dataKey="A" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.5} strokeWidth={2} />
+                    <Radar
+                      name="Profil"
+                      dataKey="A"
+                      stroke="#8b5cf6"
+                      fill="#8b5cf6"
+                      fillOpacity={0.5}
+                      strokeWidth={2}
+                    />
                     <ChartTooltip
                       content={({ payload }) => {
                         if (!payload || !payload[0]) return null
@@ -1610,11 +1749,12 @@ export default function AnalyticsPage() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Activity className="w-5 h-5 text-pink-400" />
-                  {timeframe === "week" ? "Denní" : timeframe === "month" ? "Týdenní" : "Celkové"} Mental Performance & P&L
+                  {timeframe === "week" ? "Denní" : timeframe === "month" ? "Týdenní" : "Celkové"} Mental Performance &
+                  P&L
                 </CardTitle>
                 <CardDescription>
-                  {timeframe === "week" ? "Po-Pá" : timeframe === "month" ? "4 týdny" : "Všechna data"} tracking of mental
-                  metrics correlated with trading performance
+                  {timeframe === "week" ? "Po-Pá" : timeframe === "month" ? "4 týdny" : "Všechna data"} tracking of
+                  mental metrics correlated with trading performance
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1628,8 +1768,20 @@ export default function AnalyticsPage() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
                     <XAxis dataKey="date" stroke="#94a3b8" style={{ fontSize: "12px" }} />
-                    <YAxis yAxisId="left" stroke="#94a3b8" domain={[0, 100]} style={{ fontSize: "12px" }} tickFormatter={(v) => `${v}%`} />
-                    <YAxis yAxisId="right" orientation="right" stroke="#10b981" style={{ fontSize: "12px" }} tickFormatter={(v) => `$${v}`} />
+                    <YAxis
+                      yAxisId="left"
+                      stroke="#94a3b8"
+                      domain={[0, 100]}
+                      style={{ fontSize: "12px" }}
+                      tickFormatter={(v) => `${v}%`}
+                    />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      stroke="#10b981"
+                      style={{ fontSize: "12px" }}
+                      tickFormatter={(v) => `$${v}`}
+                    />
                     <Tooltip
                       content={({ payload }) => {
                         if (!payload || !payload[0]) return null
@@ -1649,7 +1801,15 @@ export default function AnalyticsPage() {
                       }}
                     />
                     <Legend wrapperStyle={{ paddingTop: "24px" }} iconType="line" />
-                    <Area yAxisId="left" type="monotone" dataKey="mood" stroke="#f472b6" fill="url(#moodGradient)" name="Nálada" strokeWidth={2} />
+                    <Area
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey="mood"
+                      stroke="#f472b6"
+                      fill="url(#moodGradient)"
+                      name="Nálada"
+                      strokeWidth={2}
+                    />
                     <Line
                       yAxisId="left"
                       type="monotone"
@@ -1668,8 +1828,24 @@ export default function AnalyticsPage() {
                       strokeWidth={2}
                       dot={{ r: 3 }}
                     />
-                    <Line yAxisId="left" type="monotone" dataKey="stress" stroke="#ef4444" name="Stres" strokeWidth={2} dot={{ r: 3 }} />
-                    <Line yAxisId="right" type="monotone" dataKey="pnl" stroke="#10b981" name="P&L ($)" strokeWidth={3} dot={{ r: 5 }} />
+                    <Line
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey="stress"
+                      stroke="#ef4444"
+                      name="Stres"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="pnl"
+                      stroke="#10b981"
+                      name="P&L ($)"
+                      strokeWidth={3}
+                      dot={{ r: 5 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -1747,7 +1923,6 @@ export default function AnalyticsPage() {
                       </div>
                     </div>
 
-
                     <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700 mb-3">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-gray-400 text-sm">Průměrná ztráta/incident</span>
@@ -1778,7 +1953,8 @@ export default function AnalyticsPage() {
                   Distribuce Emočních Stavů
                 </CardTitle>
                 <CardDescription>
-                  {timeframe === "week" ? "Tento týden" : timeframe === "month" ? "Tento měsíc" : "Celkově"} - jak často jsi v jakém emočním stavu
+                  {timeframe === "week" ? "Tento týden" : timeframe === "month" ? "Tento měsíc" : "Celkově"} - jak často
+                  jsi v jakém emočním stavu
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1791,7 +1967,8 @@ export default function AnalyticsPage() {
                           {Math.round(
                             (filteredDailyData.filter((m: any) => m.mood >= 70).length / filteredDailyData.length) *
                               100,
-                          )}%
+                          )}
+                          %
                         </p>
                         <p className="text-gray-400 text-sm">
                           {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
@@ -1809,7 +1986,8 @@ export default function AnalyticsPage() {
                             (filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length /
                               Math.max(filteredWeeklyData.filter((d: any) => d.avgMood >= 70).length, 1)) *
                               100,
-                          )}%
+                          )}
+                          %
                         </p>
                       </div>
                     </div>
@@ -1824,7 +2002,8 @@ export default function AnalyticsPage() {
                             (filteredDailyData.filter((m: any) => m.mood >= 40 && m.mood < 70).length /
                               filteredDailyData.length) *
                               100,
-                          )}%
+                          )}
+                          %
                         </p>
                         <p className="text-gray-400 text-sm">
                           {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
@@ -1839,16 +2018,15 @@ export default function AnalyticsPage() {
                         <p className="text-yellow-200 text-xs font-semibold">Win Rate v tomto stavu</p>
                         <p className="text-white font-bold text-lg">
                           {Math.round(
-                            (filteredWeeklyData.filter(
-                              (d: any) => d.avgMood >= 40 && d.avgMood < 70 && d.pnl > 0,
-                            ).length /
+                            (filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70 && d.pnl > 0)
+                              .length /
                               Math.max(
-                                filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70)
-                                  .length,
+                                filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70).length,
                                 1,
                               )) *
                               100,
-                          )}%
+                          )}
+                          %
                         </p>
                       </div>
                     </div>
@@ -1863,7 +2041,8 @@ export default function AnalyticsPage() {
                             (filteredDailyData.filter((m: any) => m.mood > 0 && m.mood < 40).length /
                               filteredDailyData.length) *
                               100,
-                          )}%
+                          )}
+                          %
                         </p>
                         <p className="text-gray-400 text-sm">
                           {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
@@ -1878,16 +2057,15 @@ export default function AnalyticsPage() {
                         <p className="text-red-200 text-xs font-semibold">Win Rate v tomto stavu</p>
                         <p className="text-white font-bold text-lg">
                           {Math.round(
-                            (filteredWeeklyData.filter(
-                              (d: any) => d.avgMood > 0 && d.avgMood < 40 && d.pnl > 0,
-                            ).length /
+                            (filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40 && d.pnl > 0)
+                              .length /
                               Math.max(
-                                filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40)
-                                  .length,
+                                filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40).length,
                                 1,
                               )) *
                               100,
-                          )}%
+                          )}
+                          %
                         </p>
                       </div>
                     </div>
@@ -1914,26 +2092,22 @@ export default function AnalyticsPage() {
                           data={[
                             {
                               name: "Dobrá nálada + Profit",
-                              value: filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0)
-                                .length,
+                              value: filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length,
                               fill: "#10b981",
                             },
                             {
                               name: "Dobrá nálada + Ztráta",
-                              value: filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl < 0)
-                                .length,
+                              value: filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl < 0).length,
                               fill: "#eab308",
                             },
                             {
                               name: "Špatná nálada + Profit",
-                              value: filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl > 0)
-                                .length,
+                              value: filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl > 0).length,
                               fill: "#3b82f6",
                             },
                             {
                               name: "Špatná nálada + Ztráta",
-                              value: filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl < 0)
-                                .length,
+                              value: filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl < 0).length,
                               fill: "#ef4444",
                             },
                           ]}
@@ -2256,94 +2430,6 @@ export default function AnalyticsPage() {
                 </CardContent>
               </Card>
             </div>
-
-            {/* Risk/Reward Patterns */}
-            <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Target className="w-5 h-5 text-emerald-400" />
-                  Risk/Reward Pattern Analysis
-                </CardTitle>
-                <CardDescription className="text-gray-400">Analýza tvého risk managementu a R:R ratios</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2">
-                    <ResponsiveContainer width="100%" height={300}>
-                      <ComposedChart
-                        data={[
-                          { rr: "1:1", count: Math.floor(Math.random() * 15) + 5, winRate: 45 + Math.random() * 15 },
-                          { rr: "1:1.5", count: Math.floor(Math.random() * 20) + 10, winRate: 50 + Math.random() * 20 },
-                          { rr: "1:2", count: Math.floor(Math.random() * 25) + 15, winRate: 55 + Math.random() * 25 },
-                          { rr: "1:3", count: Math.floor(Math.random() * 20) + 8, winRate: 45 + Math.random() * 20 },
-                          { rr: "1:4+", count: Math.floor(Math.random() * 10) + 3, winRate: 35 + Math.random() * 15 },
-                        ]}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-                        <XAxis dataKey="rr" stroke="#94a3b8" style={{ fontSize: "12px" }} />
-                        <YAxis yAxisId="left" stroke="#94a3b8" style={{ fontSize: "12px" }} />
-                        <YAxis
-                          yAxisId="right"
-                          orientation="right"
-                          stroke="#10b981"
-                          style={{ fontSize: "12px" }}
-                          tickFormatter={(v) => `${v}%`}
-                        />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend />
-                        <Bar yAxisId="left" dataKey="count" fill="#8b5cf6" name="Počet tradů" radius={[8, 8, 0, 0]} />
-                        <Line
-                          yAxisId="right"
-                          type="monotone"
-                          dataKey="winRate"
-                          stroke="#10b981"
-                          strokeWidth={3}
-                          name="Win Rate"
-                          dot={{ r: 5 }}
-                        />
-                      </ComposedChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
-                        <p className="text-green-300 font-semibold text-sm">Sweet Spot</p>
-                      </div>
-                      <p className="text-3xl font-bold text-white mb-1">1:2 R:R</p>
-                      <p className="text-green-400 text-xs mb-2">{Math.floor(Math.random() * 10) + 65}% win rate</p>
-                      <p className="text-gray-300 text-xs">Tvůj nejlepší risk/reward ratio</p>
-                    </div>
-
-                    <div className="p-4 bg-slate-700/50 rounded-lg border border-white/10">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-gray-400 text-xs">Průměrný Risk</p>
-                        <p className="text-white font-bold">{(Math.random() * 1.5 + 0.5).toFixed(1)}%</p>
-                      </div>
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-gray-400 text-xs">Průměrný Reward</p>
-                        <p className="text-white font-bold">{(Math.random() * 3 + 1.5).toFixed(1)}%</p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-gray-400 text-xs">Risk Consistency</p>
-                        <p className="text-purple-400 font-bold">{Math.floor(Math.random() * 20) + 75}%</p>
-                      </div>
-                    </div>
-
-                    <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
-                      <div className="flex items-start gap-2">
-                        <Zap className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-blue-300 font-semibold text-sm mb-1">Doporučení:</p>
-                          <p className="text-white text-sm">Soustřeď se na 1:2 R:R trades. Tady máš nejvyšší edge!</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             {/* Market Conditions Performance */}
             <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">

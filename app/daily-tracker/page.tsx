@@ -188,7 +188,7 @@ export default function DailyTrackerPage() {
           color: "from-violet-500 to-purple-500",
           borderColor: "border-violet-500/30",
           bgColor: "bg-violet-500/10",
-          href: "/journal?mode=review",
+          href: "/daily-summary",
         },
       ]
     } else if (tradingStyle === "daytrader") {
@@ -236,7 +236,7 @@ export default function DailyTrackerPage() {
           color: "from-violet-500 to-purple-500",
           borderColor: "border-violet-500/30",
           bgColor: "bg-violet-500/10",
-          href: "/journal?mode=review",
+          href: "/daily-summary",
         },
       ]
     } else if (tradingStyle === "swingtrader") {
@@ -284,7 +284,7 @@ export default function DailyTrackerPage() {
           color: "from-violet-500 to-purple-500",
           borderColor: "border-violet-500/30",
           bgColor: "bg-violet-500/10",
-          href: "/journal?mode=review",
+          href: "/daily-summary",
         },
       ]
     }
@@ -334,7 +334,7 @@ export default function DailyTrackerPage() {
         color: "from-violet-500 to-purple-500",
         borderColor: "border-violet-500/30",
         bgColor: "bg-violet-500/10",
-        href: "/journal?mode=review",
+        href: "/daily-summary",
       },
     ]
   }
@@ -355,230 +355,95 @@ export default function DailyTrackerPage() {
     return { text: "Zvýšená opatrnost", color: "from-red-500 to-rose-500" }
   }
 
+  // CHANGE: Simplified generateTradingDecision to avoid duplicate tips and added positive reinforcement
   const generateTradingDecision = (morningCheck?: MorningCheckData, readinessScore?: number) => {
     if (!morningCheck || readinessScore === undefined) return null
 
     let message = ""
-    const tips = []
-    const details = []
+    const tips: string[] = []
+    const details: string[] = []
 
-    // Analyze sleep with specific details
+    // Analyze metrics
     const poorSleep = morningCheck.sleepQuality < 6 || morningCheck.sleepHours < 6
+    const highStress = morningCheck.stressLevel > 7
+    const lowFocus = morningCheck.focus < 6
+    const lowEnergy = morningCheck.energyLevel < 5
+    const badMood = morningCheck.emotionalState < 6
+    const goodConditions = readinessScore >= 70
+
+    // Analyze positives for confidence boost
+    const highFocus = morningCheck.focus >= 8
+    const lowStressMetric = morningCheck.stressLevel <= 3
+    const highEnergy = morningCheck.energyLevel >= 8
+    const goodMood = morningCheck.emotionalState >= 8
     const goodSleep = morningCheck.sleepQuality >= 8 && morningCheck.sleepHours >= 7
 
-    // Analyze activity
-    const noActivity = !morningCheck.exercised
-    const hasActivity = morningCheck.exercised
+    let positiveNote = ""
+    if (highFocus) positiveNote = "Tvůj focus je dnes excelentní, to je tvá super-schopnost."
+    else if (lowStressMetric) positiveNote = "Jsi velmi klidný, což je perfektní pro disciplínu."
+    else if (highEnergy) positiveNote = "Máš skvělou energii, využij ji pro trpělivost."
+    else if (goodMood) positiveNote = "Tvá pozitivní nálada ti pomůže zvládat emoce."
+    else if (goodSleep) positiveNote = "Jsi kvalitně vyspaný, tvá mysl je ostrá."
 
-    // Analyze stress
-    const highStress = morningCheck.stressLevel > 7
-    const lowStress = morningCheck.stressLevel < 4
-
-    // Analyze focus
-    const lowFocus = morningCheck.focus < 6
-    const goodFocus = morningCheck.focus >= 8
-
-    // Analyze energy
-    const lowEnergy = morningCheck.energyLevel < 5
-    const goodEnergy = morningCheck.energyLevel >= 8
-
-    // Analyze emotional state
-    const badMood = morningCheck.emotionalState < 6
-    const goodMood = morningCheck.emotionalState >= 8
-
-    // Generate detailed personalized message
+    // Generate main message based on primary issue
     if (poorSleep) {
-      message = `Naspal jsi jen ${morningCheck.sleepHours}h (kvalita ${morningCheck.sleepQuality}/10), což je výrazně pod doporučenými 7-9 hodinami. Nedostatek spánku snižuje tvou schopnost rozhodování o 30-40% a zvyšuje riziko emočního tradingu. `
-      details.push(`Spánek: ${morningCheck.sleepHours}h, kvalita ${morningCheck.sleepQuality}/10 - Kriticky nízká`)
-      tips.push("Dej si 10-15min meditaci před tradingem pro zklidnění mysli")
-      tips.push("Zkus cold shower (2-3 minuty) pro boost energie a koncentrace")
-      tips.push("Dnes večer jdi spát o 1-2 hodiny dříve, ideálně před 22:00")
+      message = `Naspal jsi jen ${morningCheck.sleepHours}h (kvalita ${morningCheck.sleepQuality}/10). Nedostatek spánku snižuje rozhodování o 30-40%.`
+      if (positiveNote) message += ` ${positiveNote}`
+      details.push(`Spánek: ${morningCheck.sleepHours}h, kvalita ${morningCheck.sleepQuality}/10`)
+      tips.push("Dej si 10-15min meditaci před tradingem")
       tips.push("Zvaž vynechání tradingu nebo max 1-2 trades s polovičním riskem")
+      tips.push("Dnes večer jdi spát o 1-2 hodiny dříve")
     } else if (highStress) {
-      message = `Máš vysokou úroveň stresu (${morningCheck.stressLevel}/10), což je nad bezpečnou hranicí pro trading. Stres zvyšuje kortizol, který negativně ovlivňuje rozhodování a může vést k impulzivním vstupům. `
-      details.push(`Stres: ${morningCheck.stressLevel}/10 - Vysoké riziko`)
-      tips.push("Udělej 15-20min deep breathing (4-7-8 technika) před tradingem")
-      tips.push("Zvaž redukci velikosti pozic na 30-50% normálu")
-      tips.push("Dělej častější pauzy - každých 30 minut 5min break")
-      tips.push("Zapiš si co tě stresuje a udělej akční plán jak to řešit")
+      message = `Vysoká úroveň stresu (${morningCheck.stressLevel}/10) zvyšuje riziko impulzivních vstupů.`
+      if (positiveNote) message += ` ${positiveNote}`
+      details.push(`Stres: ${morningCheck.stressLevel}/10`)
+      tips.push("Udělej 15-20min deep breathing před tradingem")
+      tips.push("Zvaž redukci velikosti pozic na 30-50%")
+      tips.push("Dělej častější pauzy - každých 30 minut")
     } else if (lowFocus) {
-      message = `Tvůj focus je dnes nízký (${morningCheck.focus}/10), což znamená že můžeš přehlédnout důležité signály nebo udělat chyby v analýze. Nízký focus zvyšuje riziko špatných vstupů o 40%. `
-      details.push(`Focus: ${morningCheck.focus}/10 - Pod průměrem`)
-      tips.push("Běž se na 15-20min projít venku před tradingem (zvýší focus o 25%)")
-      tips.push("Zkus cold shower (2-3 minuty) pro zvýšení koncentrace")
-      tips.push("Omezte multitasking - zavři všechny nepotřebné aplikace")
-      tips.push("Dělej Pomodoro techniku - 25min focus, 5min pauza")
+      message = `Nízký focus (${morningCheck.focus}/10) zvyšuje riziko špatných vstupů o 40%.`
+      if (positiveNote) message += ` ${positiveNote}`
+      details.push(`Focus: ${morningCheck.focus}/10`)
+      tips.push("Běž se na 15-20min projít venku před tradingem")
+      tips.push("Zavři všechny nepotřebné aplikace")
+      tips.push("Dělej Pomodoro - 25min focus, 5min pauza")
     } else if (lowEnergy) {
-      message = `Máš nízkou energii (${morningCheck.energyLevel}/10), což může vést k únavě během tradingu a horším rozhodnutím. Nízká energie snižuje tvou schopnost držet se plánu. `
-      details.push(`Energie: ${morningCheck.energyLevel}/10 - Nízká`)
-      tips.push("Dej si zdravou snídani s proteiny (vejce, jogurt, ořechy)")
-      tips.push("Zkus 10-15min lehkého cvičení nebo jumping jacks")
-      tips.push("Pij dostatek vody - minimálně 2L během dne")
+      message = `Nízká energie (${morningCheck.energyLevel}/10) může vést k únavě a horším rozhodnutím.`
+      if (positiveNote) message += ` ${positiveNote}`
+      details.push(`Energie: ${morningCheck.energyLevel}/10`)
+      tips.push("Dej si zdravou snídani s proteiny")
+      tips.push("Zkus 10-15min lehkého cvičení")
       tips.push("Zvaž kratší trading session - max 2-3 hodiny")
     } else if (badMood) {
-      message = `Tvůj emoční stav není ideální (${morningCheck.emotionalState}/10). Negativní emoce jako frustrace nebo smutek mohou vést k revenge tradingu a impulzivním rozhodnutím. `
-      details.push(`Emoční stav: ${morningCheck.emotionalState}/10 - Pod průměrem`)
-      tips.push("Vezmi si pauzu, udělej něco co tě uklidní (hudba, procházka)")
-      tips.push("Zvaž vynechání tradingu dnes - tvé zdraví je priorita")
-      tips.push("Zapiš si své emoce do journalu - pomůže ti to zpracovat je")
-      tips.push("Pokud budeš tradovat, max 1 trade s minimálním riskem")
-    } else if (noActivity && readinessScore >= 70) {
-      message = `Dneska máš dobré podmínky na obchodování (readiness ${readinessScore}%), ale nemáš žádnou fyzickou aktivitu. Cvičení zvyšuje focus o 25% a energii o 30%. `
-      details.push(`Aktivita: Žádná - Doporučeno přidat`)
-      tips.push("Běž se na 10-15min projít před obchodováním")
-      tips.push("Lehké cvičení (jumping jacks, dřepy) zvýší tvůj focus a energii")
-      tips.push("I krátká procházka může výrazně zlepšit tvůj trading mindset")
-    } else if (goodSleep && goodEnergy && goodFocus && lowStress && goodMood) {
-      message = `Perfektní! Máš výborný spánek (${morningCheck.sleepHours}h, kvalita ${morningCheck.sleepQuality}/10), vysokou energii (${morningCheck.energyLevel}/10), skvělý focus (${morningCheck.focus}/10) a nízký stres (${morningCheck.stressLevel}/10). Jsi v optimálním stavu pro obchodování! `
+      message = `Emoční stav není ideální (${morningCheck.emotionalState}/10). Riziko revenge tradingu.`
+      if (positiveNote) message += ` ${positiveNote}`
+      details.push(`Emoční stav: ${morningCheck.emotionalState}/10`)
+      tips.push("Vezmi si pauzu, udělej něco co tě uklidní")
+      tips.push("Zvaž vynechání tradingu dnes")
+      tips.push("Zapiš si své emoce do journalu")
+    } else if (goodConditions) {
+      message = `Výborné podmínky! Readiness ${readinessScore}%, jsi připravený na obchodování.`
+      if (positiveNote) message += ` ${positiveNote}`
       details.push(`Všechny metriky v optimálním rozsahu`)
-      tips.push("Drž se svého trading plánu - máš ideální podmínky")
-      tips.push("Sleduj své emoce během tradingu - i v dobrém stavu můžeš udělat chyby")
-      tips.push("Dělaj pravidelné pauzy každou hodinu pro udržení koncentrace")
-    } else if (readinessScore >= 70) {
-      message = `Máš dobré podmínky na obchodování. Tvůj readiness score je ${readinessScore}%, což je nad průměrem. Většina metrik je v dobrém rozsahu. `
-      details.push(`Readiness: ${readinessScore}% - Dobré podmínky`)
-      tips.push("Drž se svého trading plánu a risk managementu")
-      tips.push("Buď opatrný a sleduj své emoce během tradingu")
-      tips.push("Dělej pauzy každou hodinu pro udržení koncentrace")
+      tips.push("Drž se svého trading plánu")
+      tips.push("Sleduj své emoce během tradingu")
+      tips.push("Dělej pravidelné pauzy každou hodinu")
     } else {
-      message = `Tvůj readiness score je ${readinessScore}%, což je pod doporučenou hranicí 70%. Několik metrik je mimo optimální rozsah. Zvaž vynechání tradingu nebo výrazné snížení risku na 30-50% normálu. `
-      details.push(`Readiness: ${readinessScore}% - Pod doporučenou hranicí`)
-      tips.push("Prioritou je tvé zdraví a dlouhodobý úspěch, ne dnešní profit")
-      tips.push("Zkus zlepšit své podmínky před tradingem (spánek, aktivita, stres)")
-      tips.push("Dnes je lepší den na odpočinek, analýzu nebo vzdělávání")
+      message = `Readiness ${readinessScore}% je pod hranicí 70%. Zvaž snížení risku.`
+      if (positiveNote) message += ` ${positiveNote}`
+      details.push(`Readiness: ${readinessScore}%`)
+      tips.push("Prioritou je tvé zdraví a dlouhodobý úspěch")
+      tips.push("Dnes je lepší den na odpočinek nebo vzdělávání")
     }
 
-    if (tradingStyle === "scalper") {
-      if (morningCheck.focus < 8) {
-        message = `Jako scalper potřebuješ extrémně vysoký focus (${morningCheck.focus}/10 je pod ideálem 8+). Nízký focus znamená zmeškané entry/exit signály a ztráty. `
-        tips.push("Zkus 5-10min Wim Hof breathing pro instant focus boost")
-        tips.push("Cold shower (2-3 min) zvýší koncentraci o 40%")
-        tips.push("Dnes raději max 2-3 sessions místo 5+")
-        tips.push("Zkrať session length na 30-45min místo 60min+")
-      } else if (morningCheck.energyLevel < 7) {
-        message = `Scalping vyžaduje vysokou energii po celý den (${morningCheck.energyLevel}/10 je pod ideálem 7+). Nízká energie = pomalé reakce = ztráty. `
-        tips.push("Dej si zdravou snídani s proteiny a komplexními sacharidy")
-        tips.push("Zkus 10-15min HIIT workout pro energy boost")
-        tips.push("Pij vodu každých 30min - dehydratace snižuje energii o 20%")
-        tips.push("Zvaž kratší sessions s častějšími pauzami")
-      } else {
-        message = `Perfektní podmínky pro scalping! Focus ${morningCheck.focus}/10 a energie ${morningCheck.energyLevel}/10 jsou v optimálním rozsahu. Jsi připravený na rychlé rozhodování. `
-        tips.push("Drž se svého session plánu - max 5 sessions dnes")
-        tips.push("Dělej 10min pauzy mezi sessions pro reset")
-        tips.push("Sleduj svou energii - když klesne pod 7, ukonči session")
-        tips.push("Quick journaling po každé session (2-3 minuty)")
-      }
-    } else if (tradingStyle === "daytrader") {
-      if (morningCheck.emotionalState < 7 || morningCheck.stressLevel > 6) {
-        message = `Jako day trader je emoční kontrola klíčová. Tvůj emoční stav (${morningCheck.emotionalState}/10) a stres (${morningCheck.stressLevel}/10) nejsou ideální. Riziko revenge tradingu je vysoké. `
-        tips.push("Udělej 15-20min meditaci před tradingem")
-        tips.push("Sniž position sizes na 50% normálu dnes")
-        tips.push("Nastav si max 3 trades dnes místo 5-10")
-        tips.push("Po každém tradu 5min pauza pro emoční reset")
-      } else if (morningCheck.sleepQuality < 7) {
-        message = `Day trading vyžaduje jasnou mysl. Tvůj spánek (${morningCheck.sleepHours}h, kvalita ${morningCheck.sleepQuality}/10) není optimální. Disciplína může být oslabená. `
-        tips.push("Drž se přísně svého trading plánu - žádné impulzivní vstupy")
-        tips.push("Nastav si max loss limit na 1% místo 2%")
-        tips.push("Dělej častější pauzy - každých 45min 10min break")
-        tips.push("Dnes večer jdi spát o 1-2 hodiny dříve")
-      } else {
-        message = `Výborné podmínky pro day trading! Emoční stav ${morningCheck.emotionalState}/10, disciplína připravená. Jsi v optimálním stavu pro dodržování plánu. `
-        tips.push("Drž se svého trading plánu a risk managementu")
-        tips.push("Sleduj své emoce po každém tradu - journaling je klíč")
-        tips.push("Max 5-10 trades dnes podle plánu")
-        tips.push("Dělej pauzy každou hodinu pro udržení disciplíny")
-      }
-    } else if (tradingStyle === "swingtrader") {
-      if (morningCheck.focus < 7 || morningCheck.emotionalState < 7) {
-        message = `Swing trading vyžaduje trpělivost a kvalitní analýzu. Tvůj focus (${morningCheck.focus}/10) a emoční stav (${morningCheck.emotionalState}/10) nejsou ideální pro důkladnou analýzu. `
-        tips.push("Dnes raději jen monitoring pozic, žádné nové vstupy")
-        tips.push("Zkus 20-30min meditaci pro zklidnění mysli")
-        tips.push("Zaměř se na long-term perspektivu, ne short-term noise")
-        tips.push("Přečti si své trading notes z minulého týdne")
-      } else if (!morningCheck.exercised) {
-        message = `Máš dobré podmínky (readiness ${readinessScore}%), ale chybí ti fyzická aktivita. Pro swing tradera je důležitý long-term mindset a zdraví. `
-        tips.push("Běž se na 30min projít - pomůže ti to s perspektivou")
-        tips.push("Fyzická aktivita zlepšuje long-term thinking o 30%")
-        tips.push("Dnes je dobrý den na detailní analýzu pozic")
-        tips.push("Zvaž přidání pravidelného cvičení do rutiny")
-      } else {
-        message = `Perfektní podmínky pro swing trading! Focus ${morningCheck.focus}/10, trpělivost připravená. Jsi v optimálním stavu pro kvalitní analýzu a long-term rozhodování. `
-        tips.push("Udělej důkladnou analýzu všech pozic - máš na to čas")
-        tips.push("Zaměř se na fundamentální faktory, ne jen techniku")
-        tips.push("Sleduj své emoce - i swing trader může být impulzivní")
-        tips.push("Journaling je klíč - zapiš si detailní analýzu každé pozice")
-      }
-    } else {
-      // Default day trader logic
-      if (poorSleep) {
-        message = `Naspal jsi jen ${morningCheck.sleepHours}h (kvalita ${morningCheck.sleepQuality}/10), což je výrazně pod doporučenými 7-9 hodinami. Nedostatek spánku snižuje tvou schopnost rozhodování o 30-40% a zvyšuje riziko emočního tradingu. `
-        details.push(`Spánek: ${morningCheck.sleepHours}h, kvalita ${morningCheck.sleepQuality}/10 - Kriticky nízká`)
-        tips.push("Dej si 10-15min meditaci před tradingem pro zklidnění mysli")
-        tips.push("Zkus cold shower (2-3 minuty) pro boost energie a koncentrace")
-        tips.push("Dnes večer jdi spát o 1-2 hodiny dříve, ideálně před 22:00")
-        tips.push("Zvaž vynechání tradingu nebo max 1-2 trades s polovičním riskem")
-      } else if (highStress) {
-        message = `Máš vysokou úroveň stresu (${morningCheck.stressLevel}/10), což je nad bezpečnou hranicí pro trading. Stres zvyšuje kortizol, který negativně ovlivňuje rozhodování a může vést k impulzivním vstupům. `
-        details.push(`Stres: ${morningCheck.stressLevel}/10 - Vysoké riziko`)
-        tips.push("Udělej 15-20min deep breathing (4-7-8 technika) před tradingem")
-        tips.push("Zvaž redukci velikosti pozic na 30-50% normálu")
-        tips.push("Dělej častější pauzy - každých 30 minut 5min break")
-        tips.push("Zapiš si co tě stresuje a udělej akční plán jak to řešit")
-      } else if (lowFocus) {
-        message = `Tvůj focus je dnes nízký (${morningCheck.focus}/10), což znamená že můžeš přehlédnout důležité signály nebo udělat chyby v analýze. Nízký focus zvyšuje riziko špatných vstupů o 40%. `
-        details.push(`Focus: ${morningCheck.focus}/10 - Pod průměrem`)
-        tips.push("Běž se na 15-20min projít venku před tradingem (zvýší focus o 25%)")
-        tips.push("Zkus cold shower (2-3 minuty) pro zvýšení koncentrace")
-        tips.push("Omezte multitasking - zavři všechny nepotřebné aplikace")
-        tips.push("Dělej Pomodoro techniku - 25min focus, 5min pauza")
-      } else if (lowEnergy) {
-        message = `Máš nízkou energii (${morningCheck.energyLevel}/10), což může vést k únavě během tradingu a horším rozhodnutím. Nízká energie snižuje tvou schopnost držet se plánu. `
-        details.push(`Energie: ${morningCheck.energyLevel}/10 - Nízká`)
-        tips.push("Dej si zdravou snídani s proteiny (vejce, jogurt, ořechy)")
-        tips.push("Zkus 10-15min lehkého cvičení nebo jumping jacks")
-        tips.push("Pij dostatek vody - minimálně 2L během dne")
-        tips.push("Zvaž kratší trading session - max 2-3 hodiny")
-      } else if (badMood) {
-        message = `Tvůj emoční stav není ideální (${morningCheck.emotionalState}/10). Negativní emoce jako frustrace nebo smutek mohou vést k revenge tradingu a impulzivním rozhodnutím. `
-        details.push(`Emoční stav: ${morningCheck.emotionalState}/10 - Pod průměrem`)
-        tips.push("Vezmi si pauzu, udělej něco co tě uklidní (hudba, procházka)")
-        tips.push("Zvaž vynechání tradingu dnes - tvé zdraví je priorita")
-        tips.push("Zapiš si své emoce do journalu - pomůže ti to zpracovat je")
-        tips.push("Pokud budeš tradovat, max 1 trade s minimálním riskem")
-      } else if (noActivity && readinessScore >= 70) {
-        message = `Dneska máš dobré podmínky na obchodování (readiness ${readinessScore}%), ale nemáš žádnou fyzickou aktivitu. Cvičení zvyšuje focus o 25% a energii o 30%. `
-        details.push(`Aktivita: Žádná - Doporučeno přidat`)
-        tips.push("Běž se na 10-15min projít před obchodováním")
-        tips.push("Lehké cvičení (jumping jacks, dřepy) zvýší tvůj focus a energii")
-        tips.push("I krátká procházka může výrazně zlepšit tvůj trading mindset")
-      } else if (goodSleep && goodEnergy && goodFocus && lowStress && goodMood) {
-        message = `Perfektní! Máš výborný spánek (${morningCheck.sleepHours}h, kvalita ${morningCheck.sleepQuality}/10), vysokou energii (${morningCheck.energyLevel}/10), skvělý focus (${morningCheck.focus}/10) a nízký stres (${morningCheck.stressLevel}/10). Jsi v optimálním stavu pro obchodování! `
-        details.push(`Všechny metriky v optimálním rozsahu`)
-        tips.push("Drž se svého trading plánu - máš ideální podmínky")
-        tips.push("Sleduj své emoce během tradingu - i v dobrém stavu můžeš udělat chyby")
-        tips.push("Dělaj pravidelné pauzy každou hodinu pro udržení koncentrace")
-      } else if (readinessScore >= 70) {
-        message = `Máš dobré podmínky na obchodování. Tvůj readiness score je ${readinessScore}%, což je nad průměrem. Většina metrik je v dobrém rozsahu. `
-        details.push(`Readiness: ${readinessScore}% - Dobré podmínky`)
-        tips.push("Drž se svého trading plánu a risk managementu")
-        tips.push("Buď opatrný a sleduj své emoce během tradingu")
-        tips.push("Dělej pauzy každou hodinu pro udržení koncentrace")
-      } else {
-        message = `Tvůj readiness score je ${readinessScore}%, což je pod doporučenou hranicí 70%. Několik metrik je mimo optimální rozsah. Zvaž vynechání tradingu nebo výrazné snížení risku na 30-50% normálu. `
-        details.push(`Readiness: ${readinessScore}% - Pod doporučenou hranicí`)
-        tips.push("Prioritou je tvé zdraví a dlouhodobý úspěch, ne dnešní profit")
-        tips.push("Zkus zlepšit své podmínky před tradingem (spánek, aktivita, stres)")
-        tips.push("Dnes je lepší den na odpočinek, analýzu nebo vzdělávání")
-      }
-    }
+    // Add positive detail if available and not already the main focus
+    if (highFocus && !lowFocus) details.push("Focus: Excelentní (Silná stránka)")
+    else if (lowStressMetric && !highStress) details.push("Stres: Minimální (Výhoda)")
+    else if (highEnergy && !lowEnergy) details.push("Energie: Vysoká (Palivo)")
 
-    return {
-      message,
-      tips,
-      details,
-      readinessScore,
-    }
+    return { message, tips, details }
   }
+
 
   const tradingDecision = generateTradingDecision(todayEntry?.morningCheck, readinessScore)
 
@@ -1211,83 +1076,220 @@ export default function DailyTrackerPage() {
 
                       {isExpanded && entry.morningCheck && (
                         <div className="border-t border-white/10 p-6 bg-white/5">
-                          <div className="space-y-6">
-                            {/* Morning Check Details */}
-                            <div>
-                              <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <Sun className="h-5 w-5 text-orange-400" />
-                                Morning Check Data
-                              </h4>
-                              <div className="grid md:grid-cols-5 gap-3">
-                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Moon className="h-4 w-4 text-indigo-400" />
-                                    <span className="text-xs text-muted-foreground">Spánek</span>
+                          
+                          {/* Stage 5 - Daily Summary (Highlighted) */}
+                          {entry.stagesCompleted >= 5 && (
+                            <div className="space-y-6 p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-rose-500/10 border-2 border-purple-500/30 mb-8">
+                              <div className="flex items-center gap-3 mb-6">
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500">
+                                  <Moon className="h-6 w-6 text-white" />
+                                </div>
+                                <div>
+                                  <h3 className="text-2xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                                    Shrnutí Dne
+                                  </h3>
+                                  <p className="text-sm text-muted-foreground">Stage 5 - Kompletní přehled dne</p>
+                                </div>
+                              </div>
+
+                              {/* Trading Performance */}
+                              {entry.trades && entry.trades.length > 0 && (
+                                <div>
+                                  <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    <DollarSign className="h-5 w-5 text-emerald-400" />
+                                    Obchodní Výsledky
+                                  </h4>
+                                  <div className="grid md:grid-cols-3 gap-4 mb-4">
+                                    <div className="p-4 rounded-xl bg-black/30 border border-white/10">
+                                      <div className="text-xs text-muted-foreground mb-1">Celkové P&L</div>
+                                      <div className={cn(
+                                        "text-2xl font-black",
+                                        entry.trades.reduce((sum, t) => sum + t.pnl, 0) > 0 ? "text-emerald-400" : "text-rose-400"
+                                      )}>
+                                        {entry.trades.reduce((sum, t) => sum + t.pnl, 0) > 0 ? "+" : ""}
+                                        {entry.trades.reduce((sum, t) => sum + t.pnl, 0).toFixed(2)} $
+                                      </div>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-black/30 border border-white/10">
+                                      <div className="text-xs text-muted-foreground mb-1">Win Rate</div>
+                                      <div className="text-2xl font-black text-blue-400">
+                                        {Math.round((entry.trades.filter(t => t.pnl > 0).length / entry.trades.length) * 100)}%
+                                      </div>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-black/30 border border-white/10">
+                                      <div className="text-xs text-muted-foreground mb-1">Počet Obchodů</div>
+                                      <div className="text-2xl font-black text-white">{entry.trades.length}</div>
+                                    </div>
                                   </div>
-                                  <div className="text-lg font-black text-white">{entry.morningCheck.sleepHours}h</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    kvalita {entry.morningCheck.sleepQuality}/10
+
+                                  {/* Trade List */}
+                                  <div className="space-y-2">
+                                    {entry.trades.map((trade, i) => (
+                                      <div
+                                        key={i}
+                                        className="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:bg-white/5 transition-colors"
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <div className={cn(
+                                            "w-2 h-2 rounded-full",
+                                            trade.pnl > 0 ? "bg-emerald-500" : "bg-rose-500"
+                                          )} />
+                                          <div>
+                                            <div className="flex items-center gap-2">
+                                              <span className="font-medium text-white text-sm">{trade.pair}</span>
+                                              <Badge variant="outline" className={cn(
+                                                "text-[10px] px-1.5 py-0 h-4 border-0",
+                                                trade.direction === "Long" ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                                              )}>
+                                                {trade.direction}
+                                              </Badge>
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                              {trade.entryPrice} → {trade.exitPrice}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className={cn(
+                                          "font-mono font-bold text-sm",
+                                          trade.pnl > 0 ? "text-emerald-400" : "text-rose-400"
+                                        )}>
+                                          {trade.pnl > 0 ? "+" : ""}{trade.pnl.toFixed(2)} $
+                                        </div>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
+                              )}
 
-                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Zap className="h-4 w-4 text-yellow-400" />
-                                    <span className="text-xs text-muted-foreground">Energie</span>
-                                  </div>
-                                  <div className="text-lg font-black text-white">
-                                    {entry.morningCheck.energyLevel}/10
-                                  </div>
-                                </div>
+                              {/* AI Insights from that day */}
+                              {(() => {
+                                const dayDecision = generateTradingDecision(entry.morningCheck, entryReadiness)
+                                return (
+                                  dayDecision && (
+                                    <div>
+                                      <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                        <Brain className="h-5 w-5 text-purple-400" />
+                                        AI Insights & Doporučení
+                                      </h4>
+                                      <div className="space-y-3">
+                                        <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+                                          <div className="text-sm text-white font-medium leading-relaxed">{dayDecision.message}</div>
+                                        </div>
+                                        {dayDecision.details.length > 0 && (
+                                          <div className="space-y-2">
+                                            <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Detailní Analýza</div>
+                                            {dayDecision.details.map((detail, i) => (
+                                              <div key={i} className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
+                                                <div className="text-xs text-white">{detail}</div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                        {dayDecision.tips.length > 0 && (
+                                          <div className="space-y-2">
+                                            <div className="text-xs font-semibold text-yellow-400 uppercase tracking-wider">Akční Kroky</div>
+                                            {dayDecision.tips.map((tip, i) => (
+                                              <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
+                                                <ArrowRight className="h-4 w-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+                                                <div className="text-xs text-white">{tip}</div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )
+                                )
+                              })()}
 
-                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Brain className="h-4 w-4 text-purple-400" />
-                                    <span className="text-xs text-muted-foreground">Focus</span>
+                              {/* Morning Readiness Summary */}
+                              <div>
+                                <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                  <Sun className="h-5 w-5 text-orange-400" />
+                                  Ranní Připravenost
+                                </h4>
+                                <div className="grid md:grid-cols-5 gap-3">
+                                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Moon className="h-4 w-4 text-indigo-400" />
+                                      <span className="text-xs text-muted-foreground">Spánek</span>
+                                    </div>
+                                    <div className="text-lg font-black text-white">{entry.morningCheck.sleepHours}h</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      kvalita {entry.morningCheck.sleepQuality}/10
+                                    </div>
                                   </div>
-                                  <div className="text-lg font-black text-white">{entry.morningCheck.focus}/10</div>
-                                </div>
 
-                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <AlertTriangle className="h-4 w-4 text-red-400" />
-                                    <span className="text-xs text-muted-foreground">Stres</span>
+                                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Zap className="h-4 w-4 text-yellow-400" />
+                                      <span className="text-xs text-muted-foreground">Energie</span>
+                                    </div>
+                                    <div className="text-lg font-black text-white">{entry.morningCheck.energyLevel}/10</div>
                                   </div>
-                                  <div className="text-lg font-black text-white">
-                                    {entry.morningCheck.stressLevel}/10
-                                  </div>
-                                </div>
 
-                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <Heart className="h-4 w-4 text-pink-400" />
-                                    <span className="text-xs text-muted-foreground">Nálada</span>
+                                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Brain className="h-4 w-4 text-purple-400" />
+                                      <span className="text-xs text-muted-foreground">Focus</span>
+                                    </div>
+                                    <div className="text-lg font-black text-white">{entry.morningCheck.focus}/10</div>
                                   </div>
-                                  <div className="text-lg font-black text-white">
-                                    {entry.morningCheck.emotionalState}/10
+
+                                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <AlertTriangle className="h-4 w-4 text-red-400" />
+                                      <span className="text-xs text-muted-foreground">Stres</span>
+                                    </div>
+                                    <div className="text-lg font-black text-white">{entry.morningCheck.stressLevel}/10</div>
+                                  </div>
+
+                                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Heart className="h-4 w-4 text-pink-400" />
+                                      <span className="text-xs text-muted-foreground">Nálada</span>
+                                    </div>
+                                    <div className="text-lg font-black text-white">{entry.morningCheck.emotionalState}/10</div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
 
-                            {/* AI Insights for this day */}
-                            {(() => {
-                              const dayDecision = generateTradingDecision(entry.morningCheck, entryReadiness)
-                              return (
-                                dayDecision && (
-                                  <div>
-                                    <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                      <Brain className="h-5 w-5 text-purple-400" />
-                                      AI Insights z tohoto dne
-                                    </h4>
-                                    <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
-                                      <div className="text-sm text-white leading-relaxed">{dayDecision.message}</div>
+                              {/* Goals & Plan Summary */}
+                              {entry.intention && (
+                                <div>
+                                  <h4 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                                    <Target className="h-5 w-5 text-blue-400" />
+                                    Cíle & Plán
+                                  </h4>
+                                  <div className="space-y-2">
+                                    <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
+                                      <div className="text-xs text-blue-400 mb-1 font-semibold">Cíle dne:</div>
+                                      <div className="text-sm text-white">{entry.intention.goals}</div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 flex-1">
+                                        <div className="text-xs text-blue-400 mb-1 font-semibold">Max Risk:</div>
+                                        <div className="text-sm text-white">{entry.intention.maxRiskPercent}%</div>
+                                      </div>
+                                      <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 flex-1">
+                                        <div className="text-xs text-blue-400 mb-1 font-semibold">Emoční Cíl:</div>
+                                        <div className="text-sm text-white">{entry.intention.emotionalGoal}</div>
+                                      </div>
                                     </div>
                                   </div>
-                                )
-                              )
-                            })()}
-                          </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Show simplified view if Stage 5 not completed */}
+                          {entry.stagesCompleted < 5 && (
+                            <div className="text-center py-8 text-muted-foreground">
+                              <Moon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                              <p className="text-lg font-medium">Stage 5 nebyla dokončena</p>
+                              <p className="text-sm mt-1">Zobrazují se pouze základní metriky z Morning Check</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </CardContent>

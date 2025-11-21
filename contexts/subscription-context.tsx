@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { toast } from "@/hooks/use-toast"
+import { useAuth } from "@/contexts/auth-context"
 
 interface SubscriptionContextType {
   plan: "free" | "premium"
@@ -34,11 +35,19 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null)
   const [customerId, setCustomerId] = useState<string | null>(null)
 
-  const isPremium = plan === "premium" && isActive
+  const { user } = useAuth()
+  const isOwnerAccount = user?.email === "honza.newage@gmail.com"
+
+  const isPremium = isOwnerAccount || (plan === "premium" && isActive)
 
   useEffect(() => {
-    checkSubscriptionStatus()
-  }, [])
+    if (isOwnerAccount) {
+      setPlan("premium")
+      setIsActive(true)
+    } else {
+      checkSubscriptionStatus()
+    }
+  }, [isOwnerAccount])
 
   const checkSubscriptionStatus = async () => {
     try {
