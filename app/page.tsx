@@ -1,14 +1,34 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { AdminPanel } from "@/components/admin-panel"
 import { TradingStyleBadge } from "@/components/trading-style-badge"
-import { Brain, TrendingUp, Target, DollarSign, Calendar, Crown, Shield, Sparkles, RefreshCw, TrendingDown, Users, ArrowRight, Check, Rocket, PlayCircle, PlusCircle, AlertTriangle, Zap, Activity } from 'lucide-react'
+import {
+  Brain,
+  TrendingUp,
+  Target,
+  DollarSign,
+  Calendar,
+  Crown,
+  Shield,
+  Sparkles,
+  RefreshCw,
+  TrendingDown,
+  Users,
+  ArrowRight,
+  Check,
+  Rocket,
+  PlayCircle,
+  PlusCircle,
+  AlertTriangle,
+  Zap,
+  Activity,
+} from "lucide-react"
 import Link from "next/link"
 import { getTimeOfDay } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
@@ -25,9 +45,9 @@ export default function DashboardPage() {
   const [aiAnalysisData, setAiAnalysisData] = useState({
     readiness: { text: "Připravenost: Neznámá", description: "Dokončete Morning Check pro analýzu připravenosti" },
     trend: { description: "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu." },
-    action: { description: "Začni Morning Check a uzamkni svůj readiness před tradingem." }
+    action: { description: "Začni Morning Check a uzamkni svůj readiness před tradingem." },
   })
-  
+
   const { isLiveMode, getTradingStats, portfolioValue } = useData()
   const { plan, isActive, daysRemaining } = useSubscription()
   const { startReset } = useLossReset()
@@ -44,11 +64,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!isMounted) return
-    
+
     const todayDate = new Date().toISOString().split("T")[0]
     const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
     const todayCheck = checks.find((c: any) => c.date === todayDate)
-    
+
     const entries = JSON.parse(localStorage.getItem("journal-entries") || "[]")
     const last7Days = entries.filter((e: any) => {
       const entryDate = new Date(e.date)
@@ -66,7 +86,7 @@ export default function DashboardPage() {
       else if (score >= 75) readinessText = "Připravenost: Dobrá ✅"
       else if (score >= 60) readinessText = "Připravenost: Střední ⚠️"
       else readinessText = "Připravenost: Nízká 🛑"
-      
+
       readinessDesc = `Spánek: ${todayCheck.sleepHours}h (${todayCheck.sleepQuality}/10), Stres: ${todayCheck.stressLevel}/10, Focus: ${todayCheck.focus}/10`
     }
 
@@ -87,7 +107,7 @@ export default function DashboardPage() {
     setAiAnalysisData({
       readiness: { text: readinessText, description: readinessDesc },
       trend: { description: trendDesc },
-      action: { description: actionDesc }
+      action: { description: actionDesc },
     })
   }, [isMounted])
 
@@ -188,7 +208,7 @@ export default function DashboardPage() {
         },
       ]
     }
-    
+
     const tradingStats = getTradingStats()
     const currentPortfolio = portfolioValue + tradingStats.totalPnL
 
@@ -524,7 +544,9 @@ export default function DashboardPage() {
                           {action.title}
                           {action.locked && <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 inline ml-1" />}
                         </h3>
-                        <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 hidden sm:block">{action.description}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 hidden sm:block">
+                          {action.description}
+                        </p>
                       </div>
                       {action.locked && (
                         <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 text-[10px] sm:text-xs">
@@ -607,9 +629,7 @@ export default function DashboardPage() {
                         50% OFF
                       </Badge>
                     </div>
-                    <p className="text-gray-300 text-sm sm:text-lg">
-                      Neomezené AI konzultace & pokročilá analytika
-                    </p>
+                    <p className="text-gray-300 text-sm sm:text-lg">Přepni do Live režimu a odemkni všechny funkce</p>
                     <div className="flex items-center justify-center sm:justify-start space-x-4 mt-2 sm:mt-3">
                       <div className="flex items-center space-x-2">
                         <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
@@ -653,9 +673,7 @@ export default function DashboardPage() {
               </div>
               <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Join our community</h3>
               <p className="text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto text-sm sm:text-lg">
-                {isLiveMode
-                  ? "Share experiences with other traders. 10,000+ members!"
-                  : "Try our demo community features"}
+                {isLiveMode ? "Sdílej zkušenosti s ostatními tradery" : "Vyzkoušej demo komunitu"}
               </p>
               <Button
                 asChild

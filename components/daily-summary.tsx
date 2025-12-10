@@ -1,14 +1,29 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { Moon, CheckCircle, TrendingUp, TrendingDown, Heart, Brain, Target, DollarSign, ArrowRight, Star, Sparkles, Calendar, Clock, AlertTriangle, BarChart2, Activity, Zap, Shield, ChevronRight, MoreHorizontal, Lightbulb, TrendingDown as TrendDown, Award, Eye } from 'lucide-react'
+import {
+  CheckCircle,
+  TrendingUp,
+  Brain,
+  Target,
+  DollarSign,
+  Sparkles,
+  Calendar,
+  Clock,
+  AlertTriangle,
+  BarChart2,
+  Activity,
+  Shield,
+  ChevronRight,
+  Eye,
+} from "lucide-react"
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
@@ -56,32 +71,32 @@ export function DailySummary() {
   const router = useRouter()
   const { completeStage, stages } = useDailyStage()
   const { getAllTrades, isLiveMode } = useData()
-  
+
   const [morningCheck, setMorningCheck] = useState<MorningCheckData | null>(null)
   const [intention, setIntention] = useState<DailyIntentionData | null>(null)
   const [plan, setTradingPlan] = useState<TradingPlanData | null>(null)
   const [todayTrades, setTodayTrades] = useState<Trade[]>([])
   const [aiInsights, setAiInsights] = useState<{
-    strengths: string[],
-    weaknesses: string[],
-    tomorrowPlan: string[],
-    psychologicalAnalysis: string,
-    patternRecognition: string[],
-    riskAssessment: string,
+    strengths: string[]
+    weaknesses: string[]
+    tomorrowPlan: string[]
+    psychologicalAnalysis: string
+    patternRecognition: string[]
+    riskAssessment: string
     performancePrediction: string
-  }>({ 
-    strengths: [], 
-    weaknesses: [], 
+  }>({
+    strengths: [],
+    weaknesses: [],
     tomorrowPlan: [],
     psychologicalAnalysis: "",
     patternRecognition: [],
     riskAssessment: "",
-    performancePrediction: ""
+    performancePrediction: "",
   })
 
   useEffect(() => {
     const today = format(new Date(), "yyyy-MM-dd")
-    
+
     // Load morning check
     const morningChecks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
     const todayMorningCheck = morningChecks.find((m: MorningCheckData) => m.date === today)
@@ -104,7 +119,11 @@ export function DailySummary() {
     generateAdvancedInsights(todayMorningCheck, trades, todayIntention)
   }, [getAllTrades])
 
-  const generateAdvancedInsights = (check: MorningCheckData | null, trades: Trade[], intention: DailyIntentionData | null) => {
+  const generateAdvancedInsights = (
+    check: MorningCheckData | null,
+    trades: Trade[],
+    intention: DailyIntentionData | null,
+  ) => {
     const strengths = []
     const weaknesses = []
     const tomorrowPlan = []
@@ -117,13 +136,16 @@ export function DailySummary() {
     if (check) {
       if (check.score >= 80) {
         strengths.push("🎯 Excelentní ranní příprava - tvá mysl je v optimálním stavu pro trading")
-        psychologicalAnalysis = "Tvůj mentální stav je výborný. Vysoký focus a nízký stres vytváří ideální podmínky pro disciplinované rozhodování. Pokračuj v této rutině."
+        psychologicalAnalysis =
+          "Tvůj mentální stav je výborný. Vysoký focus a nízký stres vytváří ideální podmínky pro disciplinované rozhodování. Pokračuj v této rutině."
       } else if (check.score >= 70) {
         strengths.push("✅ Solidní ranní příprava - dobrá základna pro obchodování")
-        psychologicalAnalysis = "Tvůj mentální stav je dobrý, ale existuje prostor pro zlepšení. Zaměř se na oblasti s nižším skóre pro optimalizaci výkonu."
+        psychologicalAnalysis =
+          "Tvůj mentální stav je dobrý, ale existuje prostor pro zlepšení. Zaměř se na oblasti s nižším skóre pro optimalizaci výkonu."
       } else {
         weaknesses.push("⚠️ Suboptimální ranní příprava ovlivnila tvé rozhodování")
-        psychologicalAnalysis = "Tvůj mentální stav vyžaduje pozornost. Nízké skóre v klíčových oblastech (spánek, focus, stres) může vést k impulzivním rozhodnutím. Prioritizuj odpočinek."
+        psychologicalAnalysis =
+          "Tvůj mentální stav vyžaduje pozornost. Nízké skóre v klíčových oblastech (spánek, focus, stres) může vést k impulzivním rozhodnutím. Prioritizuj odpočinek."
       }
 
       // Specific metric analysis
@@ -160,7 +182,7 @@ export function DailySummary() {
     }
 
     // Analyze Trading Performance
-    const winRate = trades.length > 0 ? (trades.filter(t => t.pnl > 0).length / trades.length) * 100 : 0
+    const winRate = trades.length > 0 ? (trades.filter((t) => t.pnl > 0).length / trades.length) * 100 : 0
     const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0)
     const avgMood = trades.length > 0 ? trades.reduce((sum, t) => sum + (t.mood || 0), 0) / trades.length : 0
 
@@ -173,9 +195,9 @@ export function DailySummary() {
       patternRecognition.push("Pattern: Ztráta → Frustrace → Revenge trading (POZOR!)")
     }
 
-    if (trades.length > 5) {
+    if (trades.length > 0) {
       weaknesses.push("⚡ Overtrading: Příliš vysoká aktivita snižuje kvalitu rozhodování")
-      tomorrowPlan.push("Limit: Maximum 3 trades denně, zaměřit se na A+ setupy")
+      tomorrowPlan.push("Limit: Zaměř se pouze na A+ setupy, kvalita > kvantita")
       patternRecognition.push("Pattern: Overtrading → Únava → Chyby v exekuci")
     } else if (trades.length === 0) {
       if (check && check.score < 70) {
@@ -187,8 +209,8 @@ export function DailySummary() {
 
     // Risk Assessment
     if (trades.length > 0) {
-      const maxLoss = Math.min(...trades.map(t => t.pnl || 0))
-      const maxWin = Math.max(...trades.map(t => t.pnl || 0))
+      const maxLoss = Math.min(...trades.map((t) => t.pnl || 0))
+      const maxWin = Math.max(...trades.map((t) => t.pnl || 0))
       const riskReward = maxLoss !== 0 ? Math.abs(maxWin / maxLoss) : 0
 
       if (riskReward >= 2) {
@@ -228,7 +250,8 @@ export function DailySummary() {
 
     // Default messages if no data
     if (!psychologicalAnalysis) {
-      psychologicalAnalysis = "Nedostatek dat pro psychologickou analýzu. Dokončete Morning Check pro detailní insights."
+      psychologicalAnalysis =
+        "Nedostatek dat pro psychologickou analýzu. Dokončete Morning Check pro detailní insights."
     }
     if (!performancePrediction) {
       performancePrediction = "Nedostatek dat pro predikci. Zaznamenejte trades pro AI predikce budoucího výkonu."
@@ -237,14 +260,14 @@ export function DailySummary() {
       riskAssessment = "Nedostatek dat pro risk assessment. Zaznamenejte trades pro analýzu risk managementu."
     }
 
-    setAiInsights({ 
-      strengths, 
-      weaknesses, 
+    setAiInsights({
+      strengths,
+      weaknesses,
       tomorrowPlan,
       psychologicalAnalysis,
       patternRecognition,
       riskAssessment,
-      performancePrediction
+      performancePrediction,
     })
   }
 
@@ -259,24 +282,33 @@ export function DailySummary() {
 
   // Calculate statistics
   const totalPnL = todayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
-  const winningTrades = todayTrades.filter(t => t.pnl > 0).length
-  const losingTrades = todayTrades.filter(t => t.pnl < 0).length
+  const winningTrades = todayTrades.filter((t) => t.pnl > 0).length
+  const losingTrades = todayTrades.filter((t) => t.pnl < 0).length
   const winRate = todayTrades.length > 0 ? Math.round((winningTrades / todayTrades.length) * 100) : 0
-  
+
   return (
     <div className="min-h-screen bg-black text-white p-6 space-y-8 font-sans">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-6">
         <div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {format(new Date(), "d. MMMM yyyy", { locale: cs })}</span>
+            <span className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" /> {format(new Date(), "d. MMMM yyyy", { locale: cs })}
+            </span>
             <span>•</span>
-            <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {format(new Date(), "HH:mm")}</span>
+            <span className="flex items-center gap-1">
+              <Clock className="w-4 h-4" /> {format(new Date(), "HH:mm")}
+            </span>
             <span>•</span>
-            <Badge variant="outline" className={cn(
-              "text-xs",
-              isLiveMode ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-blue-500/10 text-blue-400 border-blue-500/30"
-            )}>
+            <Badge
+              variant="outline"
+              className={cn(
+                "text-xs",
+                isLiveMode
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                  : "bg-blue-500/10 text-blue-400 border-blue-500/30",
+              )}
+            >
               {isLiveMode ? "🔴 Live" : "🎮 Virtual"}
             </Badge>
           </div>
@@ -287,10 +319,7 @@ export function DailySummary() {
             <Activity className="w-4 h-4 mr-2" />
             Exportovat Report
           </Button>
-          <Button 
-            onClick={handleComplete}
-            className="bg-white text-black hover:bg-gray-200 font-medium"
-          >
+          <Button onClick={handleComplete} className="bg-white text-black hover:bg-gray-200 font-medium">
             <CheckCircle className="w-4 h-4 mr-2" />
             Uzavřít Den
           </Button>
@@ -305,7 +334,8 @@ export function DailySummary() {
               <div>
                 <p className="text-sm text-muted-foreground">Celkové P&L</p>
                 <h3 className={cn("text-2xl font-bold mt-1", totalPnL >= 0 ? "text-emerald-400" : "text-rose-400")}>
-                  {totalPnL > 0 ? "+" : ""}{totalPnL.toFixed(2)} $
+                  {totalPnL > 0 ? "+" : ""}
+                  {totalPnL.toFixed(2)} $
                 </h3>
               </div>
               <div className={cn("p-2 rounded-lg", totalPnL >= 0 ? "bg-emerald-500/10" : "bg-rose-500/10")}>
@@ -313,9 +343,9 @@ export function DailySummary() {
               </div>
             </div>
             <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-              <div 
-                className={cn("h-full rounded-full", totalPnL >= 0 ? "bg-emerald-500" : "bg-rose-500")} 
-                style={{ width: '100%' }}
+              <div
+                className={cn("h-full rounded-full", totalPnL >= 0 ? "bg-emerald-500" : "bg-rose-500")}
+                style={{ width: "100%" }}
               />
             </div>
           </CardContent>
@@ -388,19 +418,24 @@ export function DailySummary() {
             {todayTrades.length > 0 ? (
               <div className="space-y-1">
                 {todayTrades.map((trade, i) => (
-                  <div key={i} className="group flex items-center justify-between p-3 hover:bg-white/5 rounded-lg transition-colors border border-transparent hover:border-white/5">
+                  <div
+                    key={i}
+                    className="group flex items-center justify-between p-3 hover:bg-white/5 rounded-lg transition-colors border border-transparent hover:border-white/5"
+                  >
                     <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "w-2 h-2 rounded-full",
-                        trade.pnl > 0 ? "bg-emerald-500" : "bg-rose-500"
-                      )} />
+                      <div className={cn("w-2 h-2 rounded-full", trade.pnl > 0 ? "bg-emerald-500" : "bg-rose-500")} />
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-white">{trade.pair}</span>
-                          <Badge variant="outline" className={cn(
-                            "text-[10px] px-1.5 py-0 h-5 border-0",
-                            trade.direction === "Long" ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
-                          )}>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px] px-1.5 py-0 h-5 border-0",
+                              trade.direction === "Long"
+                                ? "bg-emerald-500/10 text-emerald-400"
+                                : "bg-rose-500/10 text-rose-400",
+                            )}
+                          >
                             {trade.direction.toUpperCase()}
                           </Badge>
                         </div>
@@ -410,15 +445,16 @@ export function DailySummary() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={cn(
-                        "font-mono font-medium block",
-                        trade.pnl > 0 ? "text-emerald-400" : "text-rose-400"
-                      )}>
-                        {trade.pnl > 0 ? "+" : ""}{trade.pnl.toFixed(2)} $
+                      <span
+                        className={cn(
+                          "font-mono font-medium block",
+                          trade.pnl > 0 ? "text-emerald-400" : "text-rose-500",
+                        )}
+                      >
+                        {trade.pnl > 0 ? "+" : ""}
+                        {trade.pnl.toFixed(2)} $
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        Mood: {trade.mood}/10
-                      </span>
+                      <span className="text-xs text-muted-foreground">Mood: {trade.mood}/10</span>
                     </div>
                   </div>
                 ))}
@@ -550,7 +586,10 @@ export function DailySummary() {
             <CardContent>
               <div className="space-y-3">
                 {aiInsights.tomorrowPlan.map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10"
+                  >
                     <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <span className="text-xs font-bold text-blue-400">{i + 1}</span>
                     </div>

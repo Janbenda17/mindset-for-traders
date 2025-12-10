@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Textarea } from "@/components/ui/textarea"
 import { useLossReset } from "@/contexts/loss-reset-context"
 import {
   User,
@@ -17,6 +18,9 @@ import {
   History,
   ArrowLeft,
   X,
+  Brain,
+  Flame,
+  Sparkles,
 } from "lucide-react"
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
@@ -73,14 +77,33 @@ export default function LossResetPage() {
     selectActivity,
     completeActivity,
   } = useLossReset()
-  const [step, setStep] = useState<"overview" | "intro" | "mode-select" | "activity-select" | "activity" | "history">(
-    "overview",
-  )
+
+  const [step, setStep] = useState<
+    | "overview"
+    | "frustration-check"
+    | "mode-select"
+    | "activity-select"
+    | "activity"
+    | "write-inputs"
+    | "completion"
+    | "history"
+  >("overview")
   const [timeRemaining, setTimeRemaining] = useState(0)
   const [isTimerRunning, setIsTimerRunning] = useState(false)
 
+  const [frustrationBefore, setFrustrationBefore] = useState(5)
+  const [frustrationAfter, setFrustrationAfter] = useState(5)
+  const [frustrationNote, setFrustrationNote] = useState("")
+  const [completionNote, setCompletionNote] = useState("")
+
+  const [writeInputs, setWriteInputs] = useState({
+    whatHappened: "",
+    whatIFelt: "",
+    whatNextTime: "",
+    lesson: "",
+  })
+
   useEffect(() => {
-    // Auto-start reset when page loads
     if (!currentSession) {
       startReset("manual")
     }
@@ -119,9 +142,55 @@ export default function LossResetPage() {
   const completedSessions = recentSessions.filter((s) => s.completed)
   const completionRate = recentSessions.length > 0 ? (completedSessions.length / recentSessions.length) * 100 : 0
 
-  const handleComplete = () => {
+  const handleActivityComplete = () => {
     completeActivity()
-    router.push("/")
+    setStep("completion")
+  }
+
+  const handleFinalComplete = (goToAI: boolean) => {
+    // Save frustration data to localStorage
+    const lossResetData = {
+      frustrationBefore,
+      frustrationAfter,
+      frustrationNote,
+      completionNote,
+      writeInputs,
+      improvement: frustrationBefore - frustrationAfter,
+      timestamp: new Date().toISOString(),
+    }
+    localStorage.setItem("loss-reset-last-data", JSON.stringify(lossResetData))
+
+    if (goToAI) {
+      // Create prefill prompt for MindTrader AI
+      let prompt = `Právě jsem dokončil Loss Reset.\n\n`
+      prompt += `Frustrace PŘED: ${frustrationBefore}/10\n`
+      prompt += `Frustrace PO: ${frustrationAfter}/10\n`
+      prompt += `Zlepšení: ${frustrationBefore - frustrationAfter > 0 ? "+" : ""}${frustrationBefore - frustrationAfter} bodů\n\n`
+
+      if (frustrationNote) {
+        prompt += `Co se stalo: ${frustrationNote}\n\n`
+      }
+
+      if (writeInputs.whatHappened || writeInputs.whatIFelt) {
+        prompt += `Moje reflexe:\n`
+        if (writeInputs.whatHappened) prompt += `- Co se stalo: ${writeInputs.whatHappened}\n`
+        if (writeInputs.whatIFelt) prompt += `- Co jsem cítil: ${writeInputs.whatIFelt}\n`
+        if (writeInputs.whatNextTime) prompt += `- Příště udělám: ${writeInputs.whatNextTime}\n`
+        if (writeInputs.lesson) prompt += `- Ponaučení: ${writeInputs.lesson}\n`
+        prompt += "\n"
+      }
+
+      if (completionNote) {
+        prompt += `Poznámka po resetu: ${completionNote}\n\n`
+      }
+
+      prompt += `Pomoz mi zpracovat tuto situaci a připravit se na další trading.`
+
+      localStorage.setItem("mindtrader-ai-prefill", prompt)
+      router.push("/mindtrader?tab=ai")
+    } else {
+      router.push("/")
+    }
   }
 
   const handleCancel = () => {
@@ -133,6 +202,21 @@ export default function LossResetPage() {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, "0")}`
+  }
+
+  const getFrustrationColor = (level: number) => {
+    if (level <= 3) return "bg-green-500"
+    if (level <= 5) return "bg-yellow-500"
+    if (level <= 7) return "bg-orange-500"
+    return "bg-red-500"
+  }
+
+  const getFrustrationLabel = (level: number) => {
+    if (level <= 2) return "Klidný"
+    if (level <= 4) return "Mírně frustrovaný"
+    if (level <= 6) return "Frustrovaný"
+    if (level <= 8) return "Velmi frustrovaný"
+    return "Extrémně frustrovaný"
   }
 
   return (
@@ -147,6 +231,7 @@ export default function LossResetPage() {
           </Button>
         </div>
 
+        {/* OVERVIEW */}
         {step === "overview" && (
           <Card className="border-purple-500/30 bg-slate-900/50 backdrop-blur-sm">
             <CardHeader>
@@ -209,7 +294,7 @@ export default function LossResetPage() {
               </div>
 
               <div className="space-y-3">
-                <Button onClick={() => setStep("mode-select")} className="w-full" size="lg">
+                <Button onClick={() => setStep("frustration-check")} className="w-full" size="lg">
                   <Play className="mr-2 h-5 w-5" />
                   Spustit Loss Reset
                 </Button>
@@ -227,6 +312,71 @@ export default function LossResetPage() {
           </Card>
         )}
 
+        {step === "frustration-check" && (
+          <Card className="border-purple-500/30 bg-slate-900/50 backdrop-blur-sm">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4">
+                <Flame className="h-8 w-8 text-orange-400" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-white">Jak se teď cítíš?</CardTitle>
+              <p className="text-gray-400 mt-2">Ohodnoť svou frustraci na škále 1-10</p>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              {/* Frustration Scale */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Klidný</span>
+                  <span className="text-sm text-gray-400">Extrémně frustrovaný</span>
+                </div>
+                <div className="flex gap-2 justify-center">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setFrustrationBefore(level)}
+                      className={`w-10 h-10 rounded-lg font-bold transition-all ${
+                        frustrationBefore === level
+                          ? `${getFrustrationColor(level)} text-white scale-110 shadow-lg`
+                          : "bg-slate-700 text-gray-400 hover:bg-slate-600"
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-center">
+                  <Badge className={`${getFrustrationColor(frustrationBefore)} text-white px-4 py-1`}>
+                    {getFrustrationLabel(frustrationBefore)}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Optional Note */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Co se stalo? <span className="text-gray-500">(nepovinné)</span>
+                </label>
+                <Textarea
+                  placeholder="Napiš, co se stalo... (např. 'Dostal jsem 3 stoploss za sebou')"
+                  value={frustrationNote}
+                  onChange={(e) => setFrustrationNote(e.target.value)}
+                  className="bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 min-h-[100px]"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Button onClick={() => setStep("mode-select")} className="w-full" size="lg">
+                  Pokračovat k resetu
+                  <ChevronRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button onClick={() => setStep("overview")} variant="ghost" className="w-full">
+                  Zpět
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* HISTORY */}
         {step === "history" && (
           <Card className="border-purple-500/30 bg-slate-900/50 backdrop-blur-sm">
             <CardHeader>
@@ -281,6 +431,7 @@ export default function LossResetPage() {
           </Card>
         )}
 
+        {/* MODE SELECT */}
         {step === "mode-select" && (
           <Card className="border-purple-500/30 bg-slate-900/50 backdrop-blur-sm">
             <CardHeader>
@@ -310,7 +461,12 @@ export default function LossResetPage() {
                   selectMode("random")
                   const randomActivity = availableActivities[Math.floor(Math.random() * availableActivities.length)]
                   selectActivity(randomActivity.id)
-                  setStep("activity")
+                  // Check if it's write activity
+                  if (randomActivity.id === "write") {
+                    setStep("write-inputs")
+                  } else {
+                    setStep("activity")
+                  }
                 }}
               >
                 <div className="flex items-start gap-3">
@@ -323,13 +479,14 @@ export default function LossResetPage() {
                 </div>
               </Card>
 
-              <Button onClick={() => setStep("overview")} variant="ghost" className="w-full">
+              <Button onClick={() => setStep("frustration-check")} variant="ghost" className="w-full">
                 Zpět
               </Button>
             </CardContent>
           </Card>
         )}
 
+        {/* ACTIVITY SELECT */}
         {step === "activity-select" && (
           <Card className="border-purple-500/30 bg-slate-900/50 backdrop-blur-sm">
             <CardHeader>
@@ -342,7 +499,11 @@ export default function LossResetPage() {
                   className="p-4 cursor-pointer transition-all hover:border-purple-500 border-slate-700 bg-slate-800/50"
                   onClick={() => {
                     selectActivity(activity.id)
-                    setStep("activity")
+                    if (activity.id === "write") {
+                      setStep("write-inputs")
+                    } else {
+                      setStep("activity")
+                    }
                   }}
                 >
                   <div className="flex items-start gap-3">
@@ -365,6 +526,81 @@ export default function LossResetPage() {
           </Card>
         )}
 
+        {step === "write-inputs" && (
+          <Card className="border-purple-500/30 bg-slate-900/50 backdrop-blur-sm">
+            <CardHeader className="text-center">
+              <div className="text-4xl mb-2">✍️</div>
+              <CardTitle className="text-xl font-bold text-white">Write Reset</CardTitle>
+              <p className="text-gray-400 mt-2">Zapiš si své myšlenky a emoce</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Co se stalo? <span className="text-red-400">*</span>
+                </label>
+                <Textarea
+                  placeholder="Popiš situaci..."
+                  value={writeInputs.whatHappened}
+                  onChange={(e) => setWriteInputs({ ...writeInputs, whatHappened: e.target.value })}
+                  className="bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Co jsem cítil? <span className="text-red-400">*</span>
+                </label>
+                <Textarea
+                  placeholder="Jaké emoce jsi prožíval..."
+                  value={writeInputs.whatIFelt}
+                  onChange={(e) => setWriteInputs({ ...writeInputs, whatIFelt: e.target.value })}
+                  className="bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Co udělám příště jinak? <span className="text-gray-500">(nepovinné)</span>
+                </label>
+                <Textarea
+                  placeholder="Jaké změny provedu..."
+                  value={writeInputs.whatNextTime}
+                  onChange={(e) => setWriteInputs({ ...writeInputs, whatNextTime: e.target.value })}
+                  className="bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Jaké ponaučení si beru? <span className="text-gray-500">(nepovinné)</span>
+                </label>
+                <Textarea
+                  placeholder="Hlavní lekce..."
+                  value={writeInputs.lesson}
+                  onChange={(e) => setWriteInputs({ ...writeInputs, lesson: e.target.value })}
+                  className="bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <div className="space-y-3 pt-4">
+                <Button
+                  onClick={handleActivityComplete}
+                  className="w-full"
+                  size="lg"
+                  disabled={!writeInputs.whatHappened || !writeInputs.whatIFelt}
+                >
+                  <CheckCircle2 className="mr-2 h-5 w-5" />
+                  Dokončit Write Reset
+                </Button>
+                <Button onClick={() => setStep("activity-select")} variant="ghost" className="w-full">
+                  Zpět
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ACTIVITY (for non-write activities) */}
         {step === "activity" && currentSession?.activity && (
           <Card className="border-purple-500/30 bg-slate-900/50 backdrop-blur-sm">
             <CardHeader>
@@ -379,7 +615,10 @@ export default function LossResetPage() {
               {availableActivities.find((a) => a.id === currentSession.activity)?.completionType === "timer" && (
                 <div className="text-center space-y-4">
                   <div className="text-6xl font-bold text-purple-400">{formatTime(timeRemaining)}</div>
-                  <Progress value={(timeRemaining / (currentSession.duration || 1)) * 100} className="h-2" />
+                  <Progress
+                    value={(((currentSession.duration || 1) - timeRemaining) / (currentSession.duration || 1)) * 100}
+                    className="h-2"
+                  />
                 </div>
               )}
 
@@ -402,14 +641,127 @@ export default function LossResetPage() {
               </div>
 
               <div className="space-y-3">
-                <Button onClick={handleComplete} className="w-full" size="lg" disabled={timeRemaining > 0}>
+                <Button
+                  onClick={handleActivityComplete}
+                  className="w-full"
+                  size="lg"
+                  disabled={
+                    availableActivities.find((a) => a.id === currentSession.activity)?.completionType === "timer" &&
+                    timeRemaining > 0
+                  }
+                >
                   <CheckCircle2 className="mr-2 h-5 w-5" />
-                  {timeRemaining > 0 ? "Počkej na dokončení..." : "Dokončit reset"}
+                  {availableActivities.find((a) => a.id === currentSession.activity)?.completionType === "timer" &&
+                  timeRemaining > 0
+                    ? "Počkej na dokončení..."
+                    : "Dokončit reset"}
                 </Button>
 
                 <Button onClick={handleCancel} variant="outline" className="w-full bg-transparent">
                   <X className="mr-2 h-4 w-4" />
                   Zrušit
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === "completion" && (
+          <Card className="border-green-500/30 bg-slate-900/50 backdrop-blur-sm">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
+                <Sparkles className="h-10 w-10 text-green-400" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-white">Reset dokončen!</CardTitle>
+              <p className="text-gray-400 mt-2">Jak se teď cítíš?</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Frustration After Scale */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Klidný</span>
+                  <span className="text-sm text-gray-400">Stále frustrovaný</span>
+                </div>
+                <div className="flex gap-2 justify-center">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setFrustrationAfter(level)}
+                      className={`w-10 h-10 rounded-lg font-bold transition-all ${
+                        frustrationAfter === level
+                          ? `${getFrustrationColor(level)} text-white scale-110 shadow-lg`
+                          : "bg-slate-700 text-gray-400 hover:bg-slate-600"
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-center">
+                  <Badge className={`${getFrustrationColor(frustrationAfter)} text-white px-4 py-1`}>
+                    {getFrustrationLabel(frustrationAfter)}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Comparison */}
+              <Card className="border-slate-700 bg-slate-800/50 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400 mb-1">PŘED</p>
+                    <div
+                      className={`w-12 h-12 rounded-full ${getFrustrationColor(frustrationBefore)} flex items-center justify-center text-white font-bold text-xl`}
+                    >
+                      {frustrationBefore}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <ChevronRight className="h-6 w-6 text-gray-500" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400 mb-1">PO</p>
+                    <div
+                      className={`w-12 h-12 rounded-full ${getFrustrationColor(frustrationAfter)} flex items-center justify-center text-white font-bold text-xl`}
+                    >
+                      {frustrationAfter}
+                    </div>
+                  </div>
+                  <div className="text-center ml-4">
+                    <p className="text-xs text-gray-400 mb-1">ZLEPŠENÍ</p>
+                    <div
+                      className={`text-2xl font-bold ${frustrationBefore - frustrationAfter > 0 ? "text-green-400" : frustrationBefore - frustrationAfter < 0 ? "text-red-400" : "text-gray-400"}`}
+                    >
+                      {frustrationBefore - frustrationAfter > 0 ? "+" : ""}
+                      {frustrationBefore - frustrationAfter}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Optional Note */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Poznámka <span className="text-gray-500">(nepovinné)</span>
+                </label>
+                <Textarea
+                  placeholder="Jak ti reset pomohl? Co si odnášíš?"
+                  value={completionNote}
+                  onChange={(e) => setCompletionNote(e.target.value)}
+                  className="bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Button
+                  onClick={() => handleFinalComplete(true)}
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  size="lg"
+                >
+                  <Brain className="mr-2 h-5 w-5" />
+                  Zpracovat v MindTrader AI
+                </Button>
+                <Button onClick={() => handleFinalComplete(false)} variant="outline" className="w-full">
+                  Dokončit a vrátit se
                 </Button>
               </div>
             </CardContent>

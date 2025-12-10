@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { AlertCircle, Zap, Shield, TrendingUp, Clock, ArrowRight, CheckCircle, Sparkles, Activity } from "lucide-react"
+import { Zap, Shield, TrendingUp, Clock, ArrowRight, CheckCircle, Sparkles, Target, Brain, Heart } from "lucide-react"
 import { useData } from "@/contexts/data-context"
 import { useToast } from "@/hooks/use-toast"
 
@@ -34,9 +34,9 @@ const LiveModeToggle = () => {
   const { isLiveMode, switchToLive, switchToVirtual } = useData()
   const { toast } = useToast()
 
-  const [showWarningDialog, setShowWarningDialog] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [onboardingStep, setOnboardingStep] = useState(1)
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false)
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     tradingStyle: "",
     experience: "",
@@ -47,24 +47,60 @@ const LiveModeToggle = () => {
     averageTradesPerWeek: "",
   })
 
-  const handleModeSwitch = () => {
-    if (!isLiveMode) {
-      // Switching to Live Mode - show onboarding
-      setShowOnboarding(true)
-      setOnboardingStep(1)
-    } else {
-      // Switching to Virtual Mode - show warning
-      setShowWarningDialog(true)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedProfile = localStorage.getItem("trader-mindset-profile")
+      if (savedProfile) {
+        setHasCompletedOnboarding(true)
+      }
+    }
+  }, [])
+
+  const resetProfile = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("trader-mindset-profile")
+      setHasCompletedOnboarding(false)
+      setOnboardingData({
+        tradingStyle: "",
+        experience: "",
+        tradingYears: "",
+        mainMarkets: [],
+        riskLevel: "",
+        goals: "",
+        averageTradesPerWeek: "",
+      })
+      toast({
+        title: "Profil resetován",
+        description: "Můžeš znovu projít onboarding",
+      })
     }
   }
 
-  const confirmVirtualMode = () => {
-    switchToVirtual()
-    setShowWarningDialog(false)
+  const handleModeSwitch = () => {
+    if (!isLiveMode) {
+      // Přepínáme z Virtual do Live mode
+      if (hasCompletedOnboarding) {
+        switchToLive()
+        toast({
+          title: "Live Mode aktivován",
+          description: "Nyní pracuješ s reálnými daty",
+        })
+      } else {
+        setShowOnboarding(true)
+        setOnboardingStep(1)
+      }
+    } else {
+      // Přepínáme z Live do Virtual - bez otázek
+      switchToVirtual()
+      toast({
+        title: "Virtual Mode aktivován",
+        description: "Nyní pracuješ s demo daty pro trénink",
+      })
+    }
   }
 
   const handleOnboardingNext = () => {
-    if (onboardingStep < 4) {
+    if (onboardingStep < 5) {
       setOnboardingStep(onboardingStep + 1)
     } else {
       completeOnboarding()
@@ -78,7 +114,6 @@ const LiveModeToggle = () => {
   }
 
   const completeOnboarding = () => {
-    // Save onboarding data to localStorage
     const profileData = {
       tradingStyle: onboardingData.tradingStyle,
       experience: onboardingData.experience,
@@ -91,12 +126,16 @@ const LiveModeToggle = () => {
     }
 
     localStorage.setItem("trader-mindset-profile", JSON.stringify(profileData))
+    setHasCompletedOnboarding(true)
 
-    // Switch to Live Mode
     switchToLive()
     setShowOnboarding(false)
 
-    // Dispatch event for other components
+    toast({
+      title: "Profil uložen!",
+      description: "Live Mode aktivován - začni obchodovat",
+    })
+
     window.dispatchEvent(new Event("profile-updated"))
   }
 
@@ -109,35 +148,11 @@ const LiveModeToggle = () => {
       case 3:
         return onboardingData.riskLevel !== "" && onboardingData.averageTradesPerWeek !== ""
       case 4:
-        return true
+        return true // Trading cíle jsou dobrovolné
+      case 5:
+        return true // Motivační zpráva
       default:
         return false
-    }
-  }
-
-  const getTradingStyleIcon = (style: string) => {
-    switch (style) {
-      case "scalper":
-        return <Zap className="w-5 h-5" />
-      case "day-trader":
-        return <TrendingUp className="w-5 h-5" />
-      case "swing-trader":
-        return <Clock className="w-5 h-5" />
-      default:
-        return <Activity className="w-5 h-5" />
-    }
-  }
-
-  const getTradingStyleLabel = (style: string) => {
-    switch (style) {
-      case "scalper":
-        return "Scalper"
-      case "day-trader":
-        return "Day Trader"
-      case "swing-trader":
-        return "Swing Trader"
-      default:
-        return "Trading"
     }
   }
 
@@ -152,7 +167,6 @@ const LiveModeToggle = () => {
 
   return (
     <>
-      {/* Professional Mode Toggle Button */}
       <Button
         onClick={handleModeSwitch}
         variant="ghost"
@@ -166,7 +180,6 @@ const LiveModeToggle = () => {
           transition-all duration-300 px-4 py-2 rounded-lg
         `}
       >
-        {/* Glow effect */}
         <div
           className={`
           absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300
@@ -191,46 +204,17 @@ const LiveModeToggle = () => {
         </div>
       </Button>
 
-      {/* Warning Dialog for switching to Virtual */}
-      <Dialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-orange-400">
-              <AlertCircle className="w-5 h-5" />
-              Přepnout do Virtual Mode?
-            </DialogTitle>
-            <DialogDescription className="text-gray-300 space-y-3 pt-4">
-              <div>Přepnutím do Virtual Mode přejdeš zpět na demo data pro trénink.</div>
-              <div className="p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
-                <div className="text-sm text-orange-200">
-                  ⚠️ Tvá reálná data zůstanou uložena a můžeš se kdykoliv vrátit.
-                </div>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowWarningDialog(false)}>
-              Zrušit
-            </Button>
-            <Button onClick={confirmVirtualMode} className="bg-red-600 hover:bg-red-700">
-              Přepnout na Virtual
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Onboarding Dialog */}
-      <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={showOnboarding}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto [&>button]:hidden">
           <DialogHeader>
             <div className="flex items-center justify-between mb-4">
               <div>
                 <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                  <Sparkles className="w-6 h-6 text-purple-400" />
-                  Aktivuj Live Mode
+                  <Zap className="w-6 h-6 text-green-400" />
+                  Nastav svůj Trading Profil
                 </DialogTitle>
                 <DialogDescription className="text-gray-400 mt-1">
-                  Krok {onboardingStep} ze 4 - Nastav svůj trading profil
+                  Krok {onboardingStep} z 5 - Pomůže nám to personalizovat tvůj zážitek
                 </DialogDescription>
               </div>
               <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
@@ -238,7 +222,7 @@ const LiveModeToggle = () => {
                 Live Setup
               </Badge>
             </div>
-            <Progress value={(onboardingStep / 4) * 100} className="h-2" />
+            <Progress value={(onboardingStep / 5) * 100} className="h-2" />
           </DialogHeader>
 
           <div className="space-y-6 py-4">
@@ -368,11 +352,11 @@ const LiveModeToggle = () => {
               </div>
             )}
 
-            {/* Step 2: Markets & Experience Years */}
+            {/* Step 2: Trading Years & Markets */}
             {onboardingStep === 2 && (
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <Label className="text-lg font-semibold text-white">Jak dlouho obchoduješ?</Label>
+                  <Label className="text-lg font-semibold text-white">Jak dlouho aktivně obchoduješ?</Label>
                   <Select
                     value={onboardingData.tradingYears}
                     onValueChange={(value) => setOnboardingData((prev) => ({ ...prev, tradingYears: value }))}
@@ -418,18 +402,18 @@ const LiveModeToggle = () => {
                       <Button
                         key={market.id}
                         type="button"
-                        onClick={() => toggleMarket(market.id)}
                         variant="outline"
-                        className={`h-auto p-4 justify-start ${
+                        onClick={() => toggleMarket(market.id)}
+                        className={`h-auto py-3 justify-start gap-3 ${
                           onboardingData.mainMarkets.includes(market.id)
-                            ? "border-purple-500 bg-purple-500/10 text-white"
+                            ? "border-green-500 bg-green-500/10 text-white"
                             : "border-slate-700 text-gray-300 hover:border-slate-600"
                         }`}
                       >
-                        <span className="text-2xl mr-3">{market.icon}</span>
-                        <span className="font-medium">{market.label}</span>
+                        <span className="text-xl">{market.icon}</span>
+                        <span>{market.label}</span>
                         {onboardingData.mainMarkets.includes(market.id) && (
-                          <CheckCircle className="w-4 h-4 ml-auto text-purple-400" />
+                          <CheckCircle className="w-4 h-4 text-green-400 ml-auto" />
                         )}
                       </Button>
                     ))}
@@ -438,11 +422,11 @@ const LiveModeToggle = () => {
               </div>
             )}
 
-            {/* Step 3: Risk & Trading Frequency */}
+            {/* Step 3: Risk Level & Trades per Week */}
             {onboardingStep === 3 && (
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <Label className="text-lg font-semibold text-white">Jaká je tvá riziková tolerance?</Label>
+                  <Label className="text-lg font-semibold text-white">Jaký risk používáš na obchod?</Label>
                   <RadioGroup
                     value={onboardingData.riskLevel}
                     onValueChange={(value: any) => setOnboardingData((prev) => ({ ...prev, riskLevel: value }))}
@@ -462,8 +446,11 @@ const LiveModeToggle = () => {
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-white">Konzervativní</p>
-                        <p className="text-sm text-gray-400">0.25-1% risk na obchod, ochrana kapitálu</p>
+                        <p className="text-sm text-gray-400">0.25% - 1% na obchod</p>
                       </div>
+                      {onboardingData.riskLevel === "conservative" && (
+                        <CheckCircle className="w-5 h-5 text-green-400" />
+                      )}
                     </Label>
 
                     <Label
@@ -476,12 +463,13 @@ const LiveModeToggle = () => {
                     >
                       <RadioGroupItem value="moderate" id="moderate" className="sr-only" />
                       <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <Activity className="w-6 h-6 text-yellow-400" />
+                        <Target className="w-6 h-6 text-yellow-400" />
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-white">Střední</p>
-                        <p className="text-sm text-gray-400">1-5% risk na obchod, vyvážený přístup</p>
+                        <p className="text-sm text-gray-400">1% - 3% na obchod</p>
                       </div>
+                      {onboardingData.riskLevel === "moderate" && <CheckCircle className="w-5 h-5 text-yellow-400" />}
                     </Label>
 
                     <Label
@@ -494,18 +482,19 @@ const LiveModeToggle = () => {
                     >
                       <RadioGroupItem value="aggressive" id="aggressive" className="sr-only" />
                       <div className="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
-                        <AlertCircle className="w-6 h-6 text-red-400" />
+                        <Zap className="w-6 h-6 text-red-400" />
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-white">Agresivní</p>
-                        <p className="text-sm text-gray-400">15% a více risk na obchod, vysoký potenciál</p>
+                        <p className="text-sm text-gray-400">3% - 10% na obchod</p>
                       </div>
+                      {onboardingData.riskLevel === "aggressive" && <CheckCircle className="w-5 h-5 text-red-400" />}
                     </Label>
                   </RadioGroup>
                 </div>
 
                 <div className="space-y-3">
-                  <Label className="text-lg font-semibold text-white">Kolik obchodů průměrně děláš týdně?</Label>
+                  <Label className="text-lg font-semibold text-white">Kolik obchodů průměrně uděláš týdně?</Label>
                   <Select
                     value={onboardingData.averageTradesPerWeek}
                     onValueChange={(value) => setOnboardingData((prev) => ({ ...prev, averageTradesPerWeek: value }))}
@@ -517,16 +506,16 @@ const LiveModeToggle = () => {
                       <SelectItem value="1-5" className="text-white">
                         1-5 obchodů
                       </SelectItem>
-                      <SelectItem value="5-10" className="text-white">
-                        5-10 obchodů
+                      <SelectItem value="6-10" className="text-white">
+                        6-10 obchodů
                       </SelectItem>
-                      <SelectItem value="10-20" className="text-white">
-                        10-20 obchodů
+                      <SelectItem value="11-20" className="text-white">
+                        11-20 obchodů
                       </SelectItem>
-                      <SelectItem value="20-50" className="text-white">
-                        20-50 obchodů
+                      <SelectItem value="21-50" className="text-white">
+                        21-50 obchodů
                       </SelectItem>
-                      <SelectItem value="50-plus" className="text-white">
+                      <SelectItem value="50+" className="text-white">
                         50+ obchodů
                       </SelectItem>
                     </SelectContent>
@@ -535,77 +524,112 @@ const LiveModeToggle = () => {
               </div>
             )}
 
-            {/* Step 4: Goals */}
+            {/* Step 4: Trading Goals (Optional) */}
             {onboardingStep === 4 && (
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <Label className="text-lg font-semibold text-white">Jaké jsou tvé trading cíle?</Label>
-                  <p className="text-sm text-gray-400">Co chceš dosáhnout v následujících 6-12 měsících?</p>
+                  <Label className="text-lg font-semibold text-white">Jaké jsou tvé trading cíle na 6-12 měsíců?</Label>
+                  <p className="text-sm text-gray-400">
+                    Toto je nepovinné, ale pomůže nám lépe personalizovat tvůj zážitek
+                  </p>
                   <Textarea
                     value={onboardingData.goals}
                     onChange={(e) => setOnboardingData((prev) => ({ ...prev, goals: e.target.value }))}
-                    placeholder="Např: Zlepšit disciplínu, zvýšit win rate na 60%, konzistentní zisky..."
-                    className="bg-slate-800 border-slate-700 text-white min-h-32 resize-none"
+                    placeholder="Např: Chci dosáhnout konzistentní profitability, zlepšit risk management, naučit se lépe zvládat emoce při tradingu..."
+                    className="bg-slate-800 border-slate-700 text-white min-h-[120px]"
                   />
                 </div>
 
-                <div className="p-6 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-purple-400" />
+                <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                  <div className="flex items-start gap-3">
+                    <Target className="w-5 h-5 text-green-400 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-white">Proč je důležité mít cíle?</p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Jasně definované cíle ti pomůžou zůstat na správné cestě a měřit tvůj pokrok. MindTrader AI může
+                        tyto cíle využít k personalizovaným radám.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Motivational Message */}
+            {onboardingStep === 5 && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-6 rounded-xl border border-green-500/20">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+                      <Brain className="w-6 h-6 text-green-400" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-white">Tvůj profil je připravený!</h4>
-                      <p className="text-sm text-gray-300">AI kouč ti připraví personalizovaná doporučení</p>
+                      <h3 className="text-xl font-bold text-white">Trading je maraton, ne sprint</h3>
+                      <p className="text-sm text-green-300">Důležitá zpráva před startem</p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 pt-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-300">Trading styl:</span>
-                      <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
-                        {getTradingStyleIcon(onboardingData.tradingStyle)}
-                        <span className="ml-1">{getTradingStyleLabel(onboardingData.tradingStyle)}</span>
-                      </Badge>
+                  <div className="space-y-4 text-gray-300">
+                    <div className="flex items-start gap-3">
+                      <Heart className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                      <p>
+                        <strong className="text-white">Vysoký Readiness ≠ Zisk ten den.</strong> Můžeš mít skvělý
+                        mentální stav a přesto mít ztrátový den. A naopak - můžeš se cítit průměrně a přesto udělat
+                        ziskový obchod. To je normální!
+                      </p>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-300">Zkušenosti:</span>
-                      <span className="text-white font-medium">
-                        {onboardingData.experience === "beginner"
-                          ? "🌱 Začátečník"
-                          : onboardingData.experience === "intermediate"
-                            ? "📈 Pokročilý"
-                            : "🏆 Expert"}
-                      </span>
+
+                    <div className="flex items-start gap-3">
+                      <TrendingUp className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                      <p>
+                        <strong className="text-white">Dívej se na delší horizont.</strong> Statistiky a korelace mezi
+                        tvým mentálním stavem a výsledky se ukážou až po týdnech a měsících konzistentního používání.
+                      </p>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-300">Trhy:</span>
-                      <span className="text-white font-medium">{onboardingData.mainMarkets.length} vybrány</span>
+
+                    <div className="flex items-start gap-3">
+                      <Clock className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+                      <p>
+                        <strong className="text-white">Analytics potřebují data.</strong> Potřebuješ minimálně 10 dní
+                        aktivního používání, než ti analytics ukážou smysluplné vzorce. Buď trpělivý!
+                      </p>
                     </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-yellow-400" />
+                    <p className="text-white font-medium">Jsi připraven začít svou cestu k lepšímu tradingu?</p>
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="flex justify-between mt-4">
             {onboardingStep > 1 && (
-              <Button variant="outline" onClick={handleOnboardingBack} className="bg-transparent border-slate-700">
+              <Button
+                variant="outline"
+                onClick={handleOnboardingBack}
+                className="border-slate-700 text-white hover:bg-slate-800 bg-transparent"
+              >
                 Zpět
               </Button>
             )}
-            <Button onClick={() => setShowOnboarding(false)} variant="ghost" className="text-gray-400">
-              Zrušit
-            </Button>
             <Button
               onClick={handleOnboardingNext}
               disabled={!canProceed()}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50"
+              className={`ml-auto ${
+                onboardingStep === 5
+                  ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  : "bg-green-600 hover:bg-green-700"
+              } text-white`}
             >
-              {onboardingStep === 4 ? (
+              {onboardingStep === 5 ? (
                 <>
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Dokončit setup
+                  Aktivovat Live Mode
+                  <Zap className="w-4 h-4 ml-2" />
                 </>
               ) : (
                 <>
@@ -617,6 +641,8 @@ const LiveModeToggle = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Removed Warning Dialog as it's no longer needed */}
     </>
   )
 }

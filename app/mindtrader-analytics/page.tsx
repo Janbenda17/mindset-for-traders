@@ -339,11 +339,26 @@ function generateMindTraderAnalytics(timeframe: "week" | "month" | "quarter") {
   }
 }
 
+const getReadinessFromStorage = () => {
+  const entries = JSON.parse(localStorage.getItem("daily-tracker-entries") || "[]")
+  const today = new Date().toISOString().split("T")[0]
+  const todayEntry = entries.find((e: any) => e.date === today)
+  return todayEntry?.morningCheck?.score || 0
+}
+
 export default function MindTraderAnalyticsPage() {
   const [timeframe, setTimeframe] = useState<"week" | "month" | "quarter">("month")
   const [loading, setLoading] = useState(true)
+  const [readinessScore, setReadinessScore] = useState(0)
 
   useEffect(() => {
+    // Get readiness from daily tracker entries
+    const entries = JSON.parse(localStorage.getItem("daily-tracker-entries") || "[]")
+    const today = new Date().toISOString().split("T")[0]
+    const todayEntry = entries.find((e: any) => e.date === today)
+    if (todayEntry?.morningCheck?.score) {
+      setReadinessScore(todayEntry.morningCheck.score)
+    }
     setTimeout(() => setLoading(false), 500)
   }, [])
 

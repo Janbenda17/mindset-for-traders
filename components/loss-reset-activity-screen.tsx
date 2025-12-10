@@ -79,11 +79,17 @@ export function LossResetActivityScreen() {
   const { currentSession, coachTone, availableActivities, completeActivity, cancelReset } = useLossReset()
   const [timeLeft, setTimeLeft] = useState(0)
   const [isRunning, setIsRunning] = useState(false)
-  const [writeInput, setWriteInput] = useState({ feeling: "", nextTime: "" })
+  const [writeInput, setWriteInput] = useState({
+    feeling: "",
+    nextTime: "",
+    whatHappened: "",
+    lesson: "",
+  })
   const [currentTip, setCurrentTip] = useState(0)
 
   const activity = availableActivities.find((a) => a.id === currentSession?.activity)
-  const copy = ACTIVITY_COPY[coachTone][currentSession?.activity || "cold-shower"]
+  const activityId = currentSession?.activity || "cold-shower"
+  const copy = ACTIVITY_COPY[coachTone][activityId as keyof (typeof ACTIVITY_COPY)["calm-mentor"]]
 
   useEffect(() => {
     if (activity && activity.completionType === "timer") {
@@ -106,14 +112,14 @@ export function LossResetActivityScreen() {
 
     // Change tip every 30 seconds
     const tipInterval = setInterval(() => {
-      setCurrentTip((prev) => (prev + 1) % copy.during.length)
+      setCurrentTip((prev) => (prev + 1) % (copy?.during?.length || 1))
     }, 30000)
 
     return () => {
       clearInterval(interval)
       clearInterval(tipInterval)
     }
-  }, [isRunning, timeLeft, copy.during.length])
+  }, [isRunning, timeLeft, copy?.during?.length])
 
   if (!currentSession || !activity) return null
 
@@ -125,7 +131,6 @@ export function LossResetActivityScreen() {
 
   const handleComplete = () => {
     if (activity.completionType === "input") {
-      // Save write input
       localStorage.setItem("loss-reset-write", JSON.stringify(writeInput))
     }
     completeActivity()
@@ -175,7 +180,7 @@ export function LossResetActivityScreen() {
                 <div className="text-6xl font-bold tabular-nums">
                   {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">{copy.during[currentTip]}</p>
+                <p className="text-sm text-muted-foreground mt-2">{copy?.during?.[currentTip]}</p>
               </div>
 
               <Progress value={progress} className="h-2" />
@@ -191,7 +196,7 @@ export function LossResetActivityScreen() {
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20">
                     <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
                   </div>
-                  <p className="font-medium">{copy.completion}</p>
+                  <p className="font-medium">{copy?.completion}</p>
                 </div>
               )}
             </div>
@@ -201,32 +206,59 @@ export function LossResetActivityScreen() {
           {activity.completionType === "manual" && (
             <div className="space-y-4">
               <div className="text-center py-8">
-                <p className="text-lg font-medium mb-4">{copy.during[0]}</p>
+                <p className="text-lg font-medium mb-4">{copy?.during?.[0]}</p>
                 <p className="text-sm text-muted-foreground">Až dokončíš, klikni na tlačítko níže</p>
               </div>
             </div>
           )}
 
-          {/* Write input */}
           {activity.completionType === "input" && (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">1. Co jsem právě cítil?</label>
+                <label className="text-sm font-medium mb-2 block">1. Co se stalo? (nepovinné)</label>
                 <Textarea
-                  value={writeInput.feeling}
-                  onChange={(e) => setWriteInput({ ...writeInput, feeling: e.target.value })}
-                  placeholder="Piš rychle, bez editace..."
-                  rows={3}
+                  value={writeInput.whatHappened}
+                  onChange={(e) => setWriteInput({ ...writeInput, whatHappened: e.target.value })}
+                  placeholder="Popiš situaci - co vedlo k lossu..."
+                  rows={2}
+                  className="resize-none"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">2. Co udělám příště jinak?</label>
+                <label className="text-sm font-medium mb-2 block">
+                  2. Co jsem právě cítil? <span className="text-red-500">*</span>
+                </label>
+                <Textarea
+                  value={writeInput.feeling}
+                  onChange={(e) => setWriteInput({ ...writeInput, feeling: e.target.value })}
+                  placeholder="Piš rychle, bez editace... frustrace, vztek, zklamání?"
+                  rows={2}
+                  className="resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  3. Co udělám příště jinak? <span className="text-red-500">*</span>
+                </label>
                 <Textarea
                   value={writeInput.nextTime}
                   onChange={(e) => setWriteInput({ ...writeInput, nextTime: e.target.value })}
-                  placeholder="Konkrétní akce..."
-                  rows={3}
+                  placeholder="Konkrétní akce - např. počkám na potvrzení, zmenším pozici..."
+                  rows={2}
+                  className="resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">4. Jaké ponaučení si z toho beru? (nepovinné)</label>
+                <Textarea
+                  value={writeInput.lesson}
+                  onChange={(e) => setWriteInput({ ...writeInput, lesson: e.target.value })}
+                  placeholder="Co mě tato situace naučila..."
+                  rows={2}
+                  className="resize-none"
                 />
               </div>
             </div>
@@ -234,7 +266,7 @@ export function LossResetActivityScreen() {
 
           {/* Complete button */}
           <Button onClick={handleComplete} disabled={!canComplete} className="w-full" size="lg">
-            {canComplete ? "Dokončit reset" : "Dokonči aktivitu"}
+            {canComplete ? "Dokončit reset" : "Vyplň povinná pole"}
           </Button>
 
           <Button onClick={cancelReset} variant="ghost" className="w-full">

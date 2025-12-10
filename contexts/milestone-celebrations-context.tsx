@@ -123,6 +123,8 @@ export function MilestoneCelebrationsProvider({ children }: { children: React.Re
 
   // Load milestones from localStorage
   useEffect(() => {
+    if (typeof window === "undefined") return
+
     const stored = localStorage.getItem("milestones")
     if (stored) {
       setMilestones(JSON.parse(stored))
@@ -141,6 +143,8 @@ export function MilestoneCelebrationsProvider({ children }: { children: React.Re
   }, [level, xp])
 
   const checkMilestones = () => {
+    if (typeof window === "undefined") return
+
     const journalEntries = JSON.parse(localStorage.getItem("journal-entries") || "[]")
     const streakData = JSON.parse(localStorage.getItem("streak-data") || "{}")
 

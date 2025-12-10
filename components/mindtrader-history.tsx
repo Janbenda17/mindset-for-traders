@@ -4,8 +4,7 @@ import { useState } from "react"
 import { format, subDays } from "date-fns"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { TrendingUp, TrendingDown, Target, Zap, Rocket, Trophy, BarChart3 } from "lucide-react"
+import { TrendingUp, Target, Rocket, Trophy, BarChart3 } from "lucide-react"
 import {
   AreaChart,
   Area,
@@ -20,6 +19,9 @@ import {
   LineChart,
   Line,
   Cell,
+  ScatterChart,
+  Scatter,
+  ZAxis,
 } from "recharts"
 
 const generateTradingData = () => {
@@ -171,10 +173,10 @@ export function MindTraderHistory() {
   const tradingData = generateTradingData()
 
   const setupAnalysis = [
-    { setup: "Breakout", risk: 80, reward: 240, count: 24, winRate: 68 },
-    { setup: "Pullback", risk: 100, reward: 180, count: 18, winRate: 55 },
-    { setup: "Reversal", risk: 120, reward: 360, count: 12, winRate: 45 },
-    { setup: "Momentum", risk: 70, reward: 190, count: 31, winRate: 72 },
+    { setup: "Breakout", risk: 80, reward: 240, count: 24, winRate: 68, rr: 3.0 },
+    { setup: "Pullback", risk: 100, reward: 180, count: 18, winRate: 55, rr: 1.8 },
+    { setup: "Reversal", risk: 120, reward: 360, count: 12, winRate: 45, rr: 3.0 },
+    { setup: "Momentum", risk: 70, reward: 190, count: 31, winRate: 72, rr: 2.7 },
   ]
 
   const marketConditions = [
@@ -283,10 +285,10 @@ export function MindTraderHistory() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="col-span-full">
         <CardHeader>
           <CardTitle>Balance Progression & Daily Performance</CardTitle>
-          <CardDescription>Celková equity curve s denními P&L výsledky - žádná duplicita.</CardDescription>
+          <CardDescription>Celková equity curve s denními P&L výsledky.</CardDescription>
         </CardHeader>
         <CardContent className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -327,63 +329,56 @@ export function MindTraderHistory() {
               </Bar>
             </AreaChart>
           </ResponsiveContainer>
-
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-5 h-5 text-emerald-600" />
-                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">Longest Win Streak</p>
-              </div>
-              <p className="text-3xl font-black text-emerald-600">{longestWinStreak}</p>
-              <p className="text-xs text-muted-foreground mt-1">consecutive winning days</p>
-            </div>
-
-            <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingDown className="w-5 h-5 text-red-600" />
-                <p className="text-sm font-semibold text-red-900 dark:text-red-100">Longest Loss Streak</p>
-              </div>
-              <p className="text-3xl font-black text-red-600">{longestLossStreak}</p>
-              <p className="text-xs text-muted-foreground mt-1">consecutive losing days</p>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Setup Risk vs Reward</CardTitle>
-            <CardDescription>Jasné porovnání: Kolik riskujete vs co získáváte u každého setupu.</CardDescription>
+            <CardTitle>Risk/Reward Pattern Analysis</CardTitle>
+            <CardDescription>Přehledná vizualizace efektivity vašich setupů.</CardDescription>
           </CardHeader>
           <CardContent className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={setupAnalysis}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
-                <XAxis dataKey="setup" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(val) => `$${val}`} />
-                <Tooltip
-                  contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-                  formatter={(value: number, name: string) => {
-                    if (name === "Avg Risk") return [`$${value}`, "Průměrný Risk"]
-                    if (name === "Avg Reward") return [`$${value}`, "Průměrný Reward"]
-                    return [value, name]
-                  }}
+              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <XAxis
+                  type="number"
+                  dataKey="risk"
+                  name="Risk"
+                  unit="$"
+                  label={{ value: "Avg Risk ($)", position: "bottom", offset: 0 }}
                 />
+                <YAxis
+                  type="number"
+                  dataKey="reward"
+                  name="Reward"
+                  unit="$"
+                  label={{ value: "Avg Reward ($)", angle: -90, position: "left" }}
+                />
+                <ZAxis type="number" dataKey="winRate" range={[100, 500]} name="Win Rate" unit="%" />
+                <Tooltip cursor={{ strokeDasharray: "3 3" }} contentStyle={{ borderRadius: "8px" }} />
                 <Legend />
-                <Bar dataKey="risk" name="Avg Risk" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="reward" name="Avg Reward" fill="#10b981" radius={[4, 4, 0, 0]} />
-              </BarChart>
+                <Scatter name="Setups (Size = Win Rate)" data={setupAnalysis} fill="#8884d8">
+                  {setupAnalysis.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.rr > 2 ? "#10b981" : entry.rr > 1.5 ? "#f59e0b" : "#ef4444"}
+                    />
+                  ))}
+                </Scatter>
+              </ScatterChart>
             </ResponsiveContainer>
-
-            <div className="grid grid-cols-4 gap-2 mt-4">
-              {setupAnalysis.map((item, i) => (
-                <div key={i} className="text-center p-3 bg-muted/40 rounded-lg border">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">{item.setup}</p>
-                  <p className="text-lg font-black text-emerald-600">{(item.reward / item.risk).toFixed(1)}:1</p>
-                  <p className="text-xs text-muted-foreground mt-1">{item.winRate}% win</p>
-                </div>
-              ))}
+            <div className="flex justify-center gap-4 mt-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>R:R {">"} 2.0
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-amber-500"></div>R:R 1.5 - 2.0
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>R:R {"<"} 1.5
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -464,49 +459,6 @@ export function MindTraderHistory() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-5 h-5 text-emerald-600" />
-              <Badge className="bg-emerald-600">🎯 Peak Performance</Badge>
-            </div>
-            <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
-              Ranní trading 8-10h: 92% kvalita
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Vaše nejlepší výsledky. Plánujte hlavní obchody do tohoto času.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="w-5 h-5 text-purple-600" />
-              <Badge className="bg-purple-600">📈 Best Setup</Badge>
-            </div>
-            <p className="text-sm font-semibold text-purple-900 dark:text-purple-100">Momentum: 72% win rate</p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Nejlepší R:R a konzistence. Hledejte momentum setupy častěji.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingDown className="w-5 h-5 text-red-600" />
-              <Badge className="bg-red-600">⚠️ Avoid Zone</Badge>
-            </div>
-            <p className="text-sm font-semibold text-red-900 dark:text-red-100">12-14h: -$50 průměr</p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Nejhorší výsledky. Zvažte pauzu nebo paper trading v tuto dobu.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   )
 }

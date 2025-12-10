@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { AlertOctagon, Play, Pause, Brain, Wind, Eye, TrendingUp } from "lucide-react"
+import { AlertOctagon, Brain, Wind, Eye, TrendingUp } from "lucide-react"
 import {
   RadarChart,
   PolarGrid,
@@ -16,14 +16,14 @@ import {
   PolarRadiusAxis,
   Radar,
   ResponsiveContainer,
-  ComposedChart,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
-  Area,
-  Bar,
+  ScatterChart,
+  Scatter,
+  ZAxis,
+  Cell,
 } from "recharts"
 
 const radarData = [
@@ -36,16 +36,16 @@ const radarData = [
 ]
 
 const mentalPnlData = [
-  { day: "Po", mental: 85 || 0, pnl: 280 || 0, cumPnl: 280 || 0 },
-  { day: "Út", mental: 72 || 0, pnl: 150 || 0, cumPnl: 430 || 0 },
-  { day: "St", mental: 90 || 0, pnl: 420 || 0, cumPnl: 850 || 0 },
-  { day: "Čt", mental: 45 || 0, pnl: -200 || 0, cumPnl: 650 || 0 },
-  { day: "Pá", mental: 88 || 0, pnl: 320 || 0, cumPnl: 970 || 0 },
-  { day: "Po", mental: 65 || 0, pnl: 90 || 0, cumPnl: 1060 || 0 },
-  { day: "Út", mental: 95 || 0, pnl: 480 || 0, cumPnl: 1540 || 0 },
-  { day: "St", mental: 40 || 0, pnl: -180 || 0, cumPnl: 1360 || 0 },
-  { day: "Čt", mental: 80 || 0, pnl: 210 || 0, cumPnl: 1570 || 0 },
-  { day: "Pá", mental: 92 || 0, pnl: 390 || 0, cumPnl: 1960 || 0 },
+  { day: "Po", mental: 85 || 0, pnl: 280 || 0, cumPnl: 280 || 0, size: 100 },
+  { day: "Út", mental: 72 || 0, pnl: 150 || 0, cumPnl: 430 || 0, size: 100 },
+  { day: "St", mental: 90 || 0, pnl: 420 || 0, cumPnl: 850 || 0, size: 100 },
+  { day: "Čt", mental: 45 || 0, pnl: -200 || 0, cumPnl: 650 || 0, size: 100 },
+  { day: "Pá", mental: 88 || 0, pnl: 320 || 0, cumPnl: 970 || 0, size: 100 },
+  { day: "Po", mental: 65 || 0, pnl: 90 || 0, cumPnl: 1060 || 0, size: 100 },
+  { day: "Út", mental: 95 || 0, pnl: 480 || 0, cumPnl: 1540 || 0, size: 100 },
+  { day: "St", mental: 40 || 0, pnl: -180 || 0, cumPnl: 1360 || 0, size: 100 },
+  { day: "Čt", mental: 80 || 0, pnl: 210 || 0, cumPnl: 1570 || 0, size: 100 },
+  { day: "Pá", mental: 92 || 0, pnl: 390 || 0, cumPnl: 1960 || 0, size: 100 },
 ]
 
 export function MindTraderBehavior() {
@@ -84,92 +84,57 @@ export function MindTraderBehavior() {
 
   return (
     <div className="space-y-6">
-      <Card className={`${readinessBg} border-2`}>
-        <CardContent className="pt-6">
-          <div className="flex flex-col lg:flex-row justify-between gap-8">
-            {/* Left: Detailed breakdown */}
-            <div className="flex-1 space-y-6">
-              <div className="flex items-center gap-3">
-                <Brain className="w-8 h-8 text-primary" />
-                <div>
-                  <h2 className="text-2xl font-bold">Psychological Readiness</h2>
-                  <p className="text-sm text-muted-foreground">Professional pre-trade mental state assessment</p>
-                </div>
+      <Card className={`${readinessBg} border-2 overflow-hidden`}>
+        <div className="absolute top-0 right-0 p-4 opacity-10">
+          <Brain className="w-32 h-32" />
+        </div>
+        <CardContent className="pt-6 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex-1 space-y-4">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <Brain className="w-6 h-6" />
+                  Psychological Readiness
+                </h2>
+                <p className="text-muted-foreground">Profesionální analýza před-obchodního stavu</p>
               </div>
 
-              <div className="grid grid-cols-3 gap-6">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Eye className="w-4 h-4 text-purple-500" />
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Focus</p>
-                    </div>
-                    <span className="text-sm font-black text-purple-600">{focusScore}%</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-background/50 p-3 rounded-lg border">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-xs font-bold uppercase text-muted-foreground">Focus</span>
+                    <span className="text-xs font-bold">{focusScore}%</span>
                   </div>
-                  <Progress value={focusScore} className="h-3" />
-                  <p className="text-xs text-muted-foreground font-medium">
-                    {focusScore > 80 ? "🎯 Excellent" : focusScore > 50 ? "✓ Good" : "⚠ Poor"}
-                  </p>
+                  <Progress value={focusScore} className="h-2" />
                 </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Wind className="w-4 h-4 text-blue-500" />
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Calm</p>
-                    </div>
-                    <span className="text-sm font-black text-blue-600">{calmScore}%</span>
+                <div className="bg-background/50 p-3 rounded-lg border">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-xs font-bold uppercase text-muted-foreground">Calm</span>
+                    <span className="text-xs font-bold">{calmScore}%</span>
                   </div>
-                  <Progress value={calmScore} className="h-3" />
-                  <p className="text-xs text-muted-foreground font-medium">
-                    {calmScore > 80 ? "😌 Relaxed" : calmScore > 50 ? "😐 Moderate" : "😰 Stressed"}
-                  </p>
+                  <Progress value={calmScore} className="h-2" />
                 </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <AlertOctagon className="w-4 h-4 text-amber-500" />
-                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Bias Control</p>
-                    </div>
-                    <Badge
-                      variant={
-                        detectedBiasesCount > 2 ? "destructive" : detectedBiasesCount > 0 ? "secondary" : "default"
-                      }
-                      className="text-xs"
-                    >
-                      {detectedBiasesCount}
-                    </Badge>
+                <div className="bg-background/50 p-3 rounded-lg border">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-xs font-bold uppercase text-muted-foreground">Bias Free</span>
+                    <span className="text-xs font-bold">{biasScore}%</span>
                   </div>
-                  <Progress value={biasScore} className="h-3" />
-                  <p className="text-xs text-muted-foreground font-medium">Risk: {riskLevel}</p>
+                  <Progress value={biasScore} className="h-2" />
                 </div>
               </div>
             </div>
 
-            {/* Right: Overall score and CTA */}
-            <div className="flex flex-col lg:flex-row items-center gap-6 lg:border-l lg:pl-8">
-              <div className="text-center px-8 py-6 rounded-2xl border-2 border-primary/30 bg-background/60 shadow-lg">
-                <div className="text-xs text-muted-foreground uppercase tracking-widest mb-3 font-bold">
-                  Overall Readiness
-                </div>
-                <div className={`text-7xl font-black ${readinessColor} mb-3`}>{readinessScore}</div>
-                <Badge
-                  variant={readinessScore > 80 ? "default" : readinessScore > 50 ? "secondary" : "destructive"}
-                  className="text-sm px-4 py-1"
-                >
-                  {readinessScore > 80 ? "✓ OPTIMAL" : readinessScore > 50 ? "⚠ CAUTION" : "✕ HIGH RISK"}
-                </Badge>
+            <div className="flex items-center gap-6 border-l pl-6 border-border/50">
+              <div className="text-center">
+                <div className="text-5xl font-black tracking-tighter mb-1">{readinessScore}</div>
+                <Badge variant={readinessScore > 80 ? "default" : "secondary"}>READINESS SCORE</Badge>
               </div>
-
               <Button
                 size="lg"
-                variant={isTrading ? "destructive" : "default"}
-                className="gap-3 min-w-[200px] h-20 text-lg font-bold"
+                className={`h-16 px-8 text-lg font-bold shadow-xl transition-all hover:scale-105 ${isTrading ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"}`}
                 onClick={() => setIsTrading(!isTrading)}
               >
-                {isTrading ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-                {isTrading ? "End Session" : "Start Trading"}
+                {isTrading ? "STOP TRADING" : "START SESSION"}
               </Button>
             </div>
           </div>
@@ -179,79 +144,80 @@ export function MindTraderBehavior() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Mental State & Trading Performance</CardTitle>
+            <CardTitle>Mental Performance vs P&L Correlation</CardTitle>
             <CardDescription>
-              Jasná korelace: Vyšší mental score = Vyšší profit. Žádný zmatek, prostě vidět souvislost.
+              Jasná vizualizace: Každý bod představuje jeden obchodní den. Vidíte přímou souvislost mezi stavem mysli a
+              výsledkem.
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[480px]">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={mentalPnlData}>
-                <defs>
-                  <linearGradient id="mentalGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.6} />
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
-                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                <YAxis
-                  yAxisId="left"
-                  tick={{ fontSize: 11 }}
-                  domain={[0, 100]}
-                  label={{ value: "Mental Score (%)", angle: -90, position: "insideLeft", style: { fontSize: 11 } }}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tick={{ fontSize: 11 }}
-                  tickFormatter={(val) => `$${val}`}
-                  label={{ value: "Daily P&L ($)", angle: 90, position: "insideRight", style: { fontSize: 11 } }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "2px solid #8b5cf6",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
-                    padding: "16px",
-                  }}
-                  formatter={(value: number, name: string) => {
-                    if (name === "Mental Score") return [`${value || 0}%`, "🧠 Mental State"]
-                    if (name === "Daily P&L") return [`$${value || 0}`, "💰 Daily P&L"]
-                    return [value || 0, name]
-                  }}
-                />
-                <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                <Area
-                  yAxisId="left"
-                  type="monotone"
+              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis
+                  type="number"
                   dataKey="mental"
                   name="Mental Score"
-                  stroke="#8b5cf6"
-                  strokeWidth={3}
-                  fill="url(#mentalGrad)"
+                  unit="%"
+                  domain={[0, 100]}
+                  label={{ value: "Mental Score (%)", position: "bottom", offset: 0 }}
                 />
-                <Bar yAxisId="right" dataKey="pnl" name="Daily P&L" radius={[4, 4, 0, 0]}>
+                <YAxis
+                  type="number"
+                  dataKey="pnl"
+                  name="P&L"
+                  unit="$"
+                  label={{ value: "Daily P&L ($)", angle: -90, position: "left" }}
+                />
+                <ZAxis type="number" range={[100, 100]} />
+                <Tooltip
+                  cursor={{ strokeDasharray: "3 3" }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload
+                      return (
+                        <div className="bg-background border rounded-lg p-3 shadow-lg">
+                          <p className="font-bold mb-1">{data.day}</p>
+                          <p className="text-sm">
+                            Mental Score: <span className="font-bold">{data.mental}%</span>
+                          </p>
+                          <p className={`text-sm ${data.pnl > 0 ? "text-green-500" : "text-red-500"}`}>
+                            P&L:{" "}
+                            <span className="font-bold">
+                              {data.pnl > 0 ? "+" : ""}
+                              {data.pnl}$
+                            </span>
+                          </p>
+                        </div>
+                      )
+                    }
+                    return null
+                  }}
+                />
+                <Scatter name="Trading Days" data={mentalPnlData} fill="#8884d8">
                   {mentalPnlData.map((entry, index) => (
-                    <rect key={`bar-${index}`} fill={(entry.pnl || 0) > 0 ? "#10b981" : "#ef4444"} />
+                    <Cell key={`cell-${index}`} fill={entry.pnl > 0 ? "#10b981" : "#ef4444"} />
                   ))}
-                </Bar>
-              </ComposedChart>
+                </Scatter>
+              </ScatterChart>
             </ResponsiveContainer>
 
-            <div className="mt-6 p-5 bg-purple-50 dark:bg-purple-950/40 rounded-xl border-2 border-purple-300 dark:border-purple-700">
-              <div className="flex items-start gap-4">
-                <TrendingUp className="w-7 h-7 text-purple-600 mt-1" />
-                <div>
-                  <p className="text-base font-bold text-purple-900 dark:text-purple-100 mb-2">
-                    🔬 Correlation Coefficient: <span className="text-2xl">0.91</span>
-                  </p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    <strong>Velmi silná pozitivní korelace!</strong> Když je mental score nad 85, průměrný P&L je{" "}
-                    <span className="text-green-600 font-bold">+$380</span>. Pod 50 je průměr{" "}
-                    <span className="text-red-600 font-bold">-$190</span>. Závěr: Prioritizujte mentální přípravu před
-                    každou seancí.
-                  </p>
+            <div className="mt-6 p-5 bg-muted/30 rounded-xl border border-border/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-primary/10 rounded-full">
+                    <TrendingUp className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg">Silná Korelace</p>
+                    <p className="text-sm text-muted-foreground">
+                      Data ukazují, že při Mental Score nad 80% máte 3x vyšší šanci na ziskový den.
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right hidden md:block">
+                  <p className="text-xs text-muted-foreground uppercase font-bold">Průměrný P&L (High Focus)</p>
+                  <p className="text-2xl font-black text-green-500">+$380</p>
                 </div>
               </div>
             </div>
@@ -263,7 +229,7 @@ export function MindTraderBehavior() {
           <Card>
             <CardHeader>
               <CardTitle>Psychologický Profil</CardTitle>
-              <CardDescription>Vyplněný střed ukazuje vaše aktuální skóre v každé kategorii.</CardDescription>
+              <CardDescription>Vaše silné a slabé stránky v jedné grafice.</CardDescription>
             </CardHeader>
             <CardContent className="h-[320px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -277,7 +243,7 @@ export function MindTraderBehavior() {
                     stroke="#8b5cf6"
                     strokeWidth={3}
                     fill="#8b5cf6"
-                    fillOpacity={0.6}
+                    fillOpacity={0.5} // Ensure fill opacity is visible
                   />
                   <Tooltip
                     formatter={(value: number) => [`${value || 0}%`, "Current Score"]}

@@ -9,8 +9,50 @@ import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Users, TrendingUp, Brain, Target, AlertCircle, Activity, Smile, Trophy, Flame, Bell, Shield, Sparkles, VideoIcon, MessageSquare, UserPlus, Star, Telescope, Gauge, PieChart, ArrowUp, ArrowDown, Send, ThumbsUp, MessageCircle, Share2, TrendingDown, Lightbulb, Plus, XCircle, CheckCircle, Calendar, Clock, PlayCircle, Radio, Eye, Search } from 'lucide-react'
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  Users,
+  TrendingUp,
+  Brain,
+  Target,
+  AlertCircle,
+  Activity,
+  Smile,
+  Trophy,
+  Flame,
+  Bell,
+  Shield,
+  Sparkles,
+  MessageSquare,
+  UserPlus,
+  Star,
+  Telescope,
+  Gauge,
+  PieChart,
+  ArrowUp,
+  ArrowDown,
+  Send,
+  ThumbsUp,
+  MessageCircle,
+  Share2,
+  TrendingDown,
+  Lightbulb,
+  Plus,
+  XCircle,
+  CheckCircle,
+  Calendar,
+  Clock,
+  PlayCircle,
+  Radio,
+  Eye,
+  Search,
+  Flag,
+  Lock,
+  Trash2,
+  Edit,
+} from "lucide-react"
 import { useData } from "@/contexts/data-context"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Types
 interface CommunityPost {
@@ -631,15 +673,154 @@ function StudentTeamClubView() {
   const [searchQuery, setSearchQuery] = useState("")
   const [challengeFilter, setChallengeFilter] = useState<"all" | "beginner" | "intermediate" | "advanced">("all")
   const [postFilter, setPostFilter] = useState<"all" | "win" | "loss" | "insight" | "question">("all")
+  // Leaderboard state
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState<"weekly" | "monthly" | "alltime">("weekly")
 
+  const [dailyLimits, setDailyLimits] = useState<{
+    feed: { date: string; count: number }
+    qa: { date: string; count: number }
+    success: { date: string; count: number }
+  }>({
+    feed: { date: "", count: 0 },
+    qa: { date: "", count: 0 },
+    success: { date: "", count: 0 },
+  })
+  const [newQuestion, setNewQuestion] = useState("")
+  const [newStoryTitle, setNewStoryTitle] = useState("")
+  const [newStoryContent, setNewStoryContent] = useState("")
+  // ADD: Month selection state for success stories
+  const [selectedMonth1, setSelectedMonth1] = useState("")
+  const [selectedMonth2, setSelectedMonth2] = useState("")
+  const [postError, setPostError] = useState("")
+  const [reportedPosts, setReportedPosts] = useState<string[]>([])
+
+  // Add admin password dialog and new challenge form states
+  const [showAdminDialog, setShowAdminDialog] = useState(false)
+  const [adminPassword, setAdminPassword] = useState("")
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [showChallengeForm, setShowChallengeForm] = useState(false)
+  const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null)
+  const [newChallenge, setNewChallenge] = useState({
+    title: "",
+    description: "",
+    type: "behavioral" as "behavioral" | "routine" | "mental" | "skill",
+    category: "beginner" as "beginner" | "intermediate" | "advanced",
+    duration: 7,
+    difficulty: 5,
+    xpReward: 100,
+    reward: "",
+  })
+
+  // ADD: Function to get monthly stats from localStorage
+  const getMonthlyStats = (year: number, month: number) => {
+    try {
+      const journalData = localStorage.getItem("trader-mindset-journal")
+      const readinessData = localStorage.getItem("trader-mindset-readiness-history")
+
+      let winRate = 0
+      let pnl = 0
+      let avgReadiness = 0
+      let trades = 0
+      // Add revengeTrades counter
+      let revengeTrades = 0
+
+      if (journalData) {
+        const journal = JSON.parse(journalData)
+        const monthEntries = journal.filter((entry: any) => {
+          const entryDate = new Date(entry.date)
+          return entryDate.getFullYear() === year && entryDate.getMonth() === month
+        })
+
+        if (monthEntries.length > 0) {
+          const winningTrades = monthEntries.filter((e: any) => e.outcome === "win" || e.pnl > 0).length
+          trades = monthEntries.length
+          winRate = trades > 0 ? Math.round((winningTrades / trades) * 100) : 0
+          pnl = monthEntries.reduce((sum: number, e: any) => sum + (e.pnl || 0), 0)
+          revengeTrades = monthEntries.filter(
+            (e: any) =>
+              e.tags?.includes("revenge") ||
+              e.emotion === "frustrated" ||
+              e.emotion === "angry" ||
+              e.notes?.toLowerCase().includes("revenge"),
+          ).length
+        }
+      }
+
+      if (readinessData) {
+        const readiness = JSON.parse(readinessData)
+        const monthReadiness = readiness.filter((entry: any) => {
+          const entryDate = new Date(entry.date)
+          return entryDate.getFullYear() === year && entryDate.getMonth() === month
+        })
+
+        if (monthReadiness.length > 0) {
+          avgReadiness = Math.round(
+            monthReadiness.reduce((sum: number, e: any) => sum + (e.score || 0), 0) / monthReadiness.length,
+          )
+        }
+      }
+
+      // Return revengeTrades
+      return { winRate, pnl, readiness: avgReadiness, trades, revengeTrades }
+    } catch (e) {
+      console.error("Error getting monthly stats:", e)
+      // Return revengeTrades in error case
+      return { winRate: 0, pnl: 0, readiness: 0, trades: 0, revengeTrades: 0 }
+    }
+  }
+
+  // ADD: Month names for success story selector
+  const MONTH_NAMES = [
+    "Leden",
+    "Únor",
+    "Březen",
+    "Duben",
+    "Květen",
+    "Červen",
+    "Červenec",
+    "Srpen",
+    "Září",
+    "Říjen",
+    "Listopad",
+    "Prosinec",
+  ]
+
+  // ADD: Get available months (last 12 months)
+  const getAvailableMonths = () => {
+    const months = []
+    const now = new Date()
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      months.push({
+        value: `${date.getFullYear()}-${date.getMonth()}`,
+        label: `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`,
+        year: date.getFullYear(),
+        month: date.getMonth(),
+      })
+    }
+    return months
+  }
+
+  // ADD: Load data in live mode from localStorage
   useEffect(() => {
     if (isLiveMode) {
-      setPosts([])
-      setBuddies([])
-      setChallenges([])
-      setRooms([])
-      setMentorQA([])
-      setSuccessStories([])
+      // Load saved data from localStorage
+      const savedPosts = localStorage.getItem("team-club-posts")
+      const savedQA = localStorage.getItem("team-club-qa")
+      const savedStories = localStorage.getItem("team-club-stories")
+      const savedBuddies = localStorage.getItem("team-club-buddies")
+      const savedChallenges = localStorage.getItem("team-club-challenges")
+      if (savedChallenges) {
+        setChallenges(JSON.parse(savedChallenges))
+      } else {
+        setChallenges([]) // Start with empty challenges in live mode
+      }
+
+      setPosts(savedPosts ? JSON.parse(savedPosts) : [])
+      setMentorQA(savedQA ? JSON.parse(savedQA) : [])
+      setSuccessStories(savedStories ? JSON.parse(savedStories) : [])
+      setBuddies(savedBuddies ? JSON.parse(savedBuddies) : [])
+      setRooms([]) // Clear demo rooms in live mode
     } else {
       setPosts(DEMO_POSTS)
       setBuddies(DEMO_BUDDIES)
@@ -649,6 +830,29 @@ function StudentTeamClubView() {
       setSuccessStories(DEMO_SUCCESS_STORIES)
     }
   }, [isLiveMode])
+
+  // ADD: Save data to localStorage in live mode
+  useEffect(() => {
+    if (isLiveMode) {
+      if (posts.length > 0) localStorage.setItem("team-club-posts", JSON.stringify(posts))
+      if (mentorQA.length > 0) localStorage.setItem("team-club-qa", JSON.stringify(mentorQA))
+      if (successStories.length > 0) localStorage.setItem("team-club-stories", JSON.stringify(successStories))
+      if (buddies.length > 0) localStorage.setItem("team-club-buddies", JSON.stringify(buddies))
+      // Challenges are now saved in handleAddChallenge and handleDeleteChallenge
+      // localStorage.setItem("team-club-challenges", JSON.stringify(challenges))
+    }
+  }, [posts, mentorQA, successStories, buddies, isLiveMode])
+
+  useEffect(() => {
+    const savedLimits = localStorage.getItem("teamclub-daily-limits")
+    if (savedLimits) {
+      setDailyLimits(JSON.parse(savedLimits))
+    }
+    const savedReports = localStorage.getItem("teamclub-reported-posts")
+    if (savedReports) {
+      setReportedPosts(JSON.parse(savedReports))
+    }
+  }, [])
 
   const trades = getAllTrades()
   const journals = getAllJournalEntries()
@@ -670,6 +874,9 @@ function StudentTeamClubView() {
     totalXP: challenges
       .filter((c) => c.joined)
       .reduce((sum, c) => sum + Math.round((c.progress / 100) * c.xpReward), 0),
+    discipline: calculateDiscipline(trades, journals),
+    streak: calculateJournalStreak(journals), // Assuming streak here refers to journal streak
+    xp: challenges.filter((c) => c.joined).reduce((sum, c) => sum + Math.round((c.progress / 100) * c.xpReward), 0),
   }
 
   const communityStats = {
@@ -793,6 +1000,341 @@ function StudentTeamClubView() {
     }
   }
 
+  // Leaderboard helper functions
+  const getLeaderboardData = () => {
+    if (isLiveMode) {
+      // In live mode, load from localStorage or start empty
+      const savedLeaderboard = localStorage.getItem("team-club-leaderboard")
+      if (savedLeaderboard) {
+        return JSON.parse(savedLeaderboard)
+      }
+      // Start with empty leaderboard in live mode - users will populate it
+      return []
+    }
+
+    // Demo mode with bigger numbers (thousands $)
+    const demoData = [
+      {
+        rank: 1,
+        name: "Jana Svobodová",
+        discipline: 96,
+        streak: 45,
+        xp: 12850,
+        pnl: 8420,
+        avatar: "/trader-avatar.png",
+      },
+      { rank: 2, name: "Martin Novák", discipline: 94, streak: 38, xp: 11200, pnl: 6890, avatar: "/trader-avatar.png" },
+      { rank: 3, name: "Petra Nová", discipline: 91, streak: 32, xp: 9900, pnl: 5340, avatar: "/trader-avatar.png" },
+      { rank: 4, name: "Tomáš Dvořák", discipline: 89, streak: 28, xp: 8650, pnl: 4120, avatar: "/trader-avatar.png" },
+      { rank: 5, name: "Jan Novotný", discipline: 86, streak: 24, xp: 7400, pnl: 3560, avatar: "/trader-avatar.png" },
+      {
+        rank: 6,
+        name: "Lucie Martínková",
+        discipline: 84,
+        streak: 21,
+        xp: 6100,
+        pnl: 2890,
+        avatar: "/trader-avatar.png",
+      },
+      { rank: 7, name: "Petr Kovář", discipline: 82, streak: 19, xp: 5450, pnl: 2340, avatar: "/trader-avatar.png" },
+      { rank: 8, name: "Eva Dvořáková", discipline: 79, streak: 16, xp: 4800, pnl: 1780, avatar: "/trader-avatar.png" },
+      { rank: 9, name: "David Horváth", discipline: 77, streak: 14, xp: 4200, pnl: 1420, avatar: "/trader-avatar.png" },
+      {
+        rank: 10,
+        name: "Markéta Veselá",
+        discipline: 75,
+        streak: 12,
+        xp: 3600,
+        pnl: 980,
+        avatar: "/trader-avatar.png",
+      },
+    ]
+
+    // Filter based on period for demo variation
+    if (leaderboardPeriod === "weekly") {
+      return demoData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.15), pnl: Math.round(d.pnl * 0.25) }))
+    } else if (leaderboardPeriod === "monthly") {
+      return demoData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.4), pnl: Math.round(d.pnl * 0.5) }))
+    }
+    return demoData
+  }
+
+  const getUserStats = () => {
+    if (isLiveMode) {
+      const profile = JSON.parse(localStorage.getItem("trader-mindset-profile") || "{}")
+      const gamificationData = JSON.parse(localStorage.getItem("gamification-data") || "{}")
+      return {
+        rank: 0, // Will be calculated
+        name: profile.username || profile.displayName || "Ty",
+        discipline: gamificationData.discipline || 0,
+        streak: gamificationData.streak || 0,
+        xp: gamificationData.xp || 0,
+        pnl: profile.balance || 0,
+        avatar: "/trader-avatar.png",
+      }
+    }
+
+    return {
+      rank: 15,
+      name: "Ty",
+      discipline: userStats.discipline,
+      streak: userStats.streak,
+      xp: userStats.xp,
+      pnl: 2450, // Demo PNL
+      avatar: "/trader-avatar.png",
+    }
+  }
+
+  const getUserPosition = () => {
+    // Mock function to get user's position
+    const user = getUserStats()
+    const leaderboard = getLeaderboardData()
+    const found = leaderboard.find((trader) => trader.name === user.name)
+    if (found) {
+      return found.rank
+    }
+    // Fallback if user is not in the top 10 (or wherever we query)
+    return 15 // Example fallback
+  }
+
+  const canPostToday = (type: "feed" | "qa" | "success"): boolean => {
+    const today = getTodayString()
+    const limit = dailyLimits[type]
+    if (limit.date !== today) return true
+    return limit.count < 1
+  }
+
+  const updateDailyLimit = (type: "feed" | "qa" | "success") => {
+    const today = getTodayString()
+    const newLimits = {
+      ...dailyLimits,
+      [type]: {
+        date: today,
+        count: dailyLimits[type].date === today ? dailyLimits[type].count + 1 : 1,
+      },
+    }
+    setDailyLimits(newLimits)
+    localStorage.setItem("teamclub-daily-limits", JSON.stringify(newLimits))
+  }
+
+  const handleAddPost = (type: "win" | "loss" | "insight" | "question") => {
+    setPostError("")
+
+    if (!canPostToday("feed")) {
+      setPostError("Dosáhl jsi denního limitu. Můžeš přidat max 1 příspěvek denně.")
+      return
+    }
+
+    if (containsVulgarWords(newPost)) {
+      setPostError("Tvůj příspěvek obsahuje nevhodná slova. Uprav ho prosím.")
+      return
+    }
+
+    if (!newPost.trim()) return
+
+    const post: CommunityPost = {
+      id: Date.now().toString(),
+      author: "Já",
+      avatar: "/trader-avatar.png",
+      content: newPost,
+      type,
+      timestamp: "Právě teď",
+      likes: 0,
+      comments: 0,
+      isLiked: false,
+    }
+
+    setPosts([post, ...posts])
+    setNewPost("")
+    updateDailyLimit("feed")
+  }
+
+  const handleAddQuestion = () => {
+    setPostError("")
+
+    if (!canPostToday("qa")) {
+      setPostError("Dosáhl jsi denního limitu. Můžeš položit max 1 otázku denně.")
+      return
+    }
+
+    if (containsVulgarWords(newQuestion)) {
+      setPostError("Tvůj dotaz obsahuje nevhodná slova. Uprav ho prosím.")
+      return
+    }
+
+    if (!newQuestion.trim()) return
+
+    const qa: MentorQA = {
+      id: Date.now().toString(),
+      question: newQuestion,
+      askedBy: "Já",
+      likes: 0,
+      timestamp: "Právě teď",
+      status: "pending",
+    }
+
+    setMentorQA([qa, ...mentorQA])
+    setNewQuestion("")
+    updateDailyLimit("qa")
+  }
+
+  // ADD: Updated handleAddStory with month selection
+  const handleAddStory = () => {
+    setPostError("")
+
+    if (!canPostToday("success")) {
+      setPostError("Dosáhl jsi denního limitu. Můžeš sdílet max 1 příběh denně.")
+      return
+    }
+
+    if (containsVulgarWords(newStoryTitle) || containsVulgarWords(newStoryContent)) {
+      setPostError("Tvůj příběh obsahuje nevhodná slova. Uprav ho prosím.")
+      return
+    }
+
+    if (!newStoryTitle.trim() || !newStoryContent.trim()) return
+
+    if (!selectedMonth1 || !selectedMonth2) {
+      setPostError("Vyber prosím oba měsíce pro srovnání.")
+      return
+    }
+
+    // Get stats for both months
+    const [year1, month1] = selectedMonth1.split("-").map(Number)
+    const [year2, month2] = selectedMonth2.split("-").map(Number)
+    const stats1 = getMonthlyStats(year1, month1)
+    const stats2 = getMonthlyStats(year2, month2)
+
+    const availableMonths = getAvailableMonths()
+    const month1Label = availableMonths.find((m) => m.value === selectedMonth1)?.label || ""
+    const month2Label = availableMonths.find((m) => m.value === selectedMonth2)?.label || ""
+
+    // Update beforeAfter to include revenge trades
+    const story: SuccessStory = {
+      id: Date.now().toString(),
+      author: "Já",
+      avatar: "/trader-avatar.png",
+      title: newStoryTitle,
+      content: newStoryContent,
+      beforeAfter: {
+        before: [
+          { metric: `Win Rate (${month1Label})`, value: `${stats1.winRate}%` },
+          { metric: `P&L (${month1Label})`, value: `$${stats1.pnl}` },
+          { metric: `Readiness (${month1Label})`, value: `${stats1.readiness}%` },
+          { metric: `Trades (${month1Label})`, value: `${stats1.trades}` },
+          // Add revenge trades to beforeAfter
+          { metric: `Revenge Trades (${month1Label})`, value: `${stats1.revengeTrades}` },
+        ],
+        after: [
+          { metric: `Win Rate (${month2Label})`, value: `${stats2.winRate}%` },
+          { metric: `P&L (${month2Label})`, value: `$${stats2.pnl}` },
+          { metric: `Readiness (${month2Label})`, value: `${stats2.readiness}%` },
+          { metric: `Trades (${month2Label})`, value: `${stats2.trades}` },
+          // Add revenge trades to beforeAfter
+          { metric: `Revenge Trades (${month2Label})`, value: `${stats2.revengeTrades}` },
+        ],
+      },
+      timestamp: "Právě teď",
+      likes: 0,
+    }
+
+    setSuccessStories([story, ...successStories])
+    setNewStoryTitle("")
+    setNewStoryContent("")
+    setSelectedMonth1("")
+    setSelectedMonth2("")
+    updateDailyLimit("success")
+  }
+
+  const handleReport = (postId: string, type: string) => {
+    if (reportedPosts.includes(postId)) return
+
+    const newReported = [...reportedPosts, postId]
+    setReportedPosts(newReported)
+    localStorage.setItem("teamclub-reported-posts", JSON.stringify(newReported))
+
+    // Save report for admin
+    const reports = JSON.parse(localStorage.getItem("teamclub-reports") || "[]")
+    reports.push({
+      id: Date.now().toString(),
+      postId,
+      type,
+      reportedAt: new Date().toISOString(),
+      status: "pending",
+    })
+    localStorage.setItem("teamclub-reports", JSON.stringify(reports))
+  }
+
+  // Admin functions for managing challenges
+  const verifyAdminPassword = () => {
+    if (adminPassword === "trademind123") {
+      // Replace with a secure password mechanism
+      setIsAdmin(true)
+      setShowAdminDialog(false)
+      setAdminPassword("")
+    } else {
+      alert("Nesprávné heslo!")
+      setAdminPassword("")
+    }
+  }
+
+  const handleAddChallenge = () => {
+    if (!newChallenge.title || !newChallenge.description) {
+      alert("Prosím vyplňte název a popis výzvy.")
+      return
+    }
+    const challengeToAdd: Challenge = {
+      id: Date.now().toString(),
+      ...newChallenge,
+      participants: 0,
+      daysLeft: newChallenge.duration,
+      progress: 0,
+      joined: false,
+    }
+    setChallenges([challengeToAdd, ...challenges])
+    setNewChallenge({
+      title: "",
+      description: "",
+      type: "behavioral",
+      category: "beginner",
+      duration: 7,
+      difficulty: 5,
+      xpReward: 100,
+      reward: "",
+    })
+    setShowChallengeForm(false)
+    localStorage.setItem("team-club-challenges", JSON.stringify([...challenges, challengeToAdd]))
+  }
+
+  const handleUpdateChallenge = () => {
+    if (!editingChallenge) return
+    if (!editingChallenge.title || !editingChallenge.description) {
+      alert("Prosím vyplňte název a popis výzvy.")
+      return
+    }
+
+    setChallenges(
+      challenges.map((c) =>
+        c.id === editingChallenge.id ? { ...editingChallenge, daysLeft: editingChallenge.duration } : c,
+      ),
+    )
+    setEditingChallenge(null)
+    setShowChallengeForm(false)
+    localStorage.setItem("team-club-challenges", JSON.stringify(challenges))
+  }
+
+  const handleDeleteChallenge = (challengeId: string) => {
+    if (confirm("Opravdu chcete tuto výzvu smazat?")) {
+      setChallenges(challenges.filter((c) => c.id !== challengeId))
+      localStorage.setItem("team-club-challenges", JSON.stringify(challenges.filter((c) => c.id !== challengeId)))
+    }
+  }
+
+  const handleEditChallenge = (challenge: Challenge) => {
+    setEditingChallenge(challenge)
+    setShowChallengeForm(true)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="max-w-[1800px] mx-auto p-6 space-y-6 pt-20">
@@ -848,7 +1390,7 @@ function StudentTeamClubView() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-slate-800/80 backdrop-blur-xl border border-slate-600 p-1.5 flex lg:grid lg:grid-cols-8 overflow-x-auto scrollbar-hide">
+          <TabsList className="bg-slate-800/80 backdrop-blur-xl border border-slate-600 p-1.5 flex lg:grid lg:grid-cols-7 overflow-x-auto scrollbar-hide">
             <TabsTrigger
               value="overview"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
@@ -871,14 +1413,6 @@ function StudentTeamClubView() {
               <Target className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
               <span className="hidden sm:inline">Výzvy</span>
               <span className="sm:hidden">Výz</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="rooms"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
-            >
-              <VideoIcon className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
-              <span className="hidden sm:inline">Rooms</span>
-              <span className="sm:hidden">Live</span>
             </TabsTrigger>
             <TabsTrigger
               value="buddies"
@@ -1067,7 +1601,7 @@ function StudentTeamClubView() {
                       <span className="text-slate-400 text-sm">Journal Streak</span>
                       <span className="text-white font-bold flex items-center gap-1">
                         <Flame className="h-3 w-3 text-orange-400" />
-                        {userStats.journalStreak} dní
+                        {userStats.streak} dní
                       </span>
                     </div>
                     <Progress value={Math.min((userStats.journalStreak / 30) * 100, 100)} className="h-2 mb-1" />
@@ -1149,60 +1683,82 @@ function StudentTeamClubView() {
               {/* Main Feed */}
               <div className="lg:col-span-2 space-y-4">
                 {/* Create Post */}
-                {!isLiveMode && (
-                  <Card className="psyche-card">
-                    <CardContent className="p-5">
-                      <div className="flex items-start gap-3 mb-4">
-                        <Avatar className="w-10 h-10 ring-2 ring-purple-500/20">
-                          <AvatarImage src="/trader-avatar.png" />
-                          <AvatarFallback>U</AvatarFallback>
-                        </Avatar>
-                        <Textarea
-                          placeholder="Sdílej svůj win, loss lesson, insight nebo se zeptej komunity... 💬"
-                          value={newPost}
-                          onChange={(e) => setNewPost(e.target.value)}
-                          className="bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-500 rounded-xl min-h-[100px] resize-none"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-transparent border-slate-700 rounded-lg text-xs hover:bg-emerald-500/10 hover:border-emerald-500/30"
-                          >
-                            <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-emerald-400" />
-                            Win
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-transparent border-slate-700 rounded-lg text-xs hover:bg-red-500/10 hover:border-red-500/30"
-                          >
-                            <TrendingDown className="h-3.5 w-3.5 mr-1.5 text-red-400" />
-                            Loss
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-transparent border-slate-700 rounded-lg text-xs hover:bg-amber-500/10 hover:border-amber-500/30"
-                          >
-                            <Lightbulb className="h-3.5 w-3.5 mr-1.5 text-amber-400" />
-                            Insight
-                          </Button>
-                        </div>
+                <Card className="psyche-card">
+                  <CardContent className="p-5">
+                    {postError && (
+                      <Alert className="mb-4 bg-red-500/10 border-red-500/30">
+                        <AlertCircle className="h-4 w-4 text-red-400" />
+                        <AlertDescription className="text-red-400">{postError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    {!canPostToday("feed") && (
+                      <Alert className="mb-4 bg-amber-500/10 border-amber-500/30">
+                        <Clock className="h-4 w-4 text-amber-400" />
+                        <AlertDescription className="text-amber-400">
+                          Dnes jsi již přidal příspěvek. Další můžeš přidat zítra.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="flex items-start gap-3 mb-4">
+                      <Avatar className="w-10 h-10 ring-2 ring-purple-500/20">
+                        <AvatarImage src="/trader-avatar.png" />
+                        <AvatarFallback>U</AvatarFallback>
+                      </Avatar>
+                      <Textarea
+                        placeholder="Sdílej svůj win, loss lesson, insight nebo se zeptej komunity... 💬"
+                        value={newPost}
+                        onChange={(e) => setNewPost(e.target.value)}
+                        disabled={!canPostToday("feed")}
+                        className="bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-500 rounded-xl min-h-[100px] resize-none disabled:opacity-50"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-2">
                         <Button
                           size="sm"
-                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl"
-                          disabled={!newPost.trim()}
+                          variant="outline"
+                          onClick={() => handleAddPost("win")}
+                          disabled={!canPostToday("feed") || !newPost.trim()}
+                          className="bg-transparent border-slate-700 rounded-lg text-xs hover:bg-emerald-500/10 hover:border-emerald-500/30 disabled:opacity-50"
                         >
-                          <Send className="h-3.5 w-3.5 mr-1.5" />
-                          Sdílet
+                          <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-emerald-400" />
+                          Win
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleAddPost("loss")}
+                          disabled={!canPostToday("feed") || !newPost.trim()}
+                          className="bg-transparent border-slate-700 rounded-lg text-xs hover:bg-red-500/10 hover:border-red-500/30 disabled:opacity-50"
+                        >
+                          <TrendingDown className="h-3.5 w-3.5 mr-1.5 text-red-400" />
+                          Loss
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleAddPost("insight")}
+                          disabled={!canPostToday("feed") || !newPost.trim()}
+                          className="bg-transparent border-slate-700 rounded-lg text-xs hover:bg-amber-500/10 hover:border-amber-500/30 disabled:opacity-50"
+                        >
+                          <Lightbulb className="h-3.5 w-3.5 mr-1.5 text-amber-400" />
+                          Insight
                         </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                )}
+                      <Button
+                        size="sm"
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl disabled:opacity-50"
+                        disabled={!newPost.trim() || !canPostToday("feed")}
+                        onClick={() => handleAddPost("insight")} // Defaulting to insight type, could be made selectable
+                      >
+                        <Send className="h-3.5 w-3.5 mr-1.5" />
+                        Sdílet
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Filter */}
                 <div className="flex gap-2 flex-wrap">
@@ -1269,7 +1825,7 @@ function StudentTeamClubView() {
 
                 {/* Posts */}
                 {filteredPosts.map((post) => (
-                  <Card key={post.id} className="psyche-card">
+                  <Card key={post.id} className="psyche-card hover:border-slate-600/50 transition-colors">
                     <CardContent className="p-5">
                       <div className="flex items-start gap-3 mb-4">
                         <Avatar className="w-10 h-10 ring-2 ring-purple-500/20">
@@ -1297,14 +1853,14 @@ function StudentTeamClubView() {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-4 pt-3 border-t border-slate-700/50">
+                      <div className="flex items-center gap-3 pt-4 border-t border-slate-700/50">
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => handleLikePost(post.id)}
-                          className={`rounded-xl text-xs ${post.isLiked ? "text-pink-400" : "text-slate-400"} h-8`}
+                          className={`rounded-xl text-xs h-8 ${post.isLiked ? "text-pink-400" : "text-slate-400"}`}
                         >
-                          <ThumbsUp className={`h-3.5 w-3.5 mr-1.5 ${post.isLiked ? "fill-current" : ""}`} />
+                          <ThumbsUp className="h-3.5 w-3.5 mr-1.5" />
                           {post.likes}
                         </Button>
                         <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-8">
@@ -1314,6 +1870,18 @@ function StudentTeamClubView() {
                         <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-8">
                           <Share2 className="h-3.5 w-3.5 mr-1.5" />
                           Sdílet
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleReport(post.id, "feed")}
+                          disabled={reportedPosts.includes(post.id)}
+                          className={`ml-auto rounded-xl text-xs h-8 ${
+                            reportedPosts.includes(post.id) ? "text-amber-400" : "text-slate-500 hover:text-red-400"
+                          }`}
+                        >
+                          <Flag className="h-3.5 w-3.5 mr-1.5" />
+                          {reportedPosts.includes(post.id) ? "Nahlášeno" : "Nahlásit"}
                         </Button>
                       </div>
                     </CardContent>
@@ -1407,7 +1975,8 @@ function StudentTeamClubView() {
                   {userStats.activeChallenges} aktivních výzev · {userStats.totalXP} XP získáno
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                {/* Filter buttons */}
                 {(["all", "beginner", "intermediate", "advanced"] as const).map((filter) => (
                   <Button
                     key={filter}
@@ -1429,8 +1998,214 @@ function StudentTeamClubView() {
                           : "Expert"}
                   </Button>
                 ))}
+
+                {!isAdmin ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowAdminDialog(true)}
+                    className="text-slate-600 hover:text-slate-400 hover:bg-transparent"
+                  >
+                    <Lock className="h-3 w-3" />
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowChallengeForm(true)}
+                    className="text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Přidat
+                  </Button>
+                )}
               </div>
             </div>
+
+            {/* Admin Password Dialog */}
+            {showAdminDialog && (
+              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <Card className="bg-slate-900 border-slate-700 w-full max-w-sm">
+                  <CardContent className="p-6">
+                    <h3 className="text-white font-bold text-lg mb-4">Admin přístup</h3>
+                    <Input
+                      type="password"
+                      placeholder="Zadej heslo..."
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && verifyAdminPassword()}
+                      className="bg-slate-800 border-slate-700 text-white mb-4"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowAdminDialog(false)
+                          setAdminPassword("")
+                        }}
+                        className="flex-1 bg-transparent border-slate-700"
+                      >
+                        Zrušit
+                      </Button>
+                      <Button
+                        onClick={verifyAdminPassword}
+                        className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600"
+                      >
+                        Potvrdit
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Add/Edit Challenge Form */}
+            {(showChallengeForm || editingChallenge) && isAdmin && (
+              <Card className="bg-slate-800/50 border-slate-700 mb-6">
+                <CardContent className="p-6">
+                  <h3 className="text-white font-bold text-lg mb-4">
+                    {editingChallenge ? "Upravit výzvu" : "Přidat novou výzvu"}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="text-slate-400 text-sm mb-1 block">Název</label>
+                      <Input
+                        placeholder="Název výzvy..."
+                        value={editingChallenge?.title || newChallenge.title}
+                        onChange={(e) =>
+                          editingChallenge
+                            ? setEditingChallenge({ ...editingChallenge, title: e.target.value })
+                            : setNewChallenge({ ...newChallenge, title: e.target.value })
+                        }
+                        className="bg-slate-900 border-slate-700 text-white"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="text-slate-400 text-sm mb-1 block">Popis</label>
+                      <Textarea
+                        placeholder="Popis výzvy..."
+                        value={editingChallenge?.description || newChallenge.description}
+                        onChange={(e) =>
+                          editingChallenge
+                            ? setEditingChallenge({ ...editingChallenge, description: e.target.value })
+                            : setNewChallenge({ ...newChallenge, description: e.target.value })
+                        }
+                        className="bg-slate-900 border-slate-700 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 text-sm mb-1 block">Typ</label>
+                      <select
+                        value={editingChallenge?.type || newChallenge.type}
+                        onChange={(e) =>
+                          editingChallenge
+                            ? setEditingChallenge({ ...editingChallenge, type: e.target.value as any })
+                            : setNewChallenge({ ...newChallenge, type: e.target.value as any })
+                        }
+                        className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg p-2"
+                      >
+                        <option value="behavioral">Behavioral</option>
+                        <option value="routine">Routine</option>
+                        <option value="mental">Mental</option>
+                        <option value="skill">Skill</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-slate-400 text-sm mb-1 block">Kategorie</label>
+                      <select
+                        value={editingChallenge?.category || newChallenge.category}
+                        onChange={(e) =>
+                          editingChallenge
+                            ? setEditingChallenge({ ...editingChallenge, category: e.target.value as any })
+                            : setNewChallenge({ ...newChallenge, category: e.target.value as any })
+                        }
+                        className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg p-2"
+                      >
+                        <option value="beginner">Začátečník</option>
+                        <option value="intermediate">Pokročilý</option>
+                        <option value="advanced">Expert</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-slate-400 text-sm mb-1 block">Doba trvání (dny)</label>
+                      <Input
+                        type="number"
+                        value={editingChallenge?.duration || newChallenge.duration}
+                        onChange={(e) =>
+                          editingChallenge
+                            ? setEditingChallenge({
+                                ...editingChallenge,
+                                duration: Number.parseInt(e.target.value),
+                                daysLeft: Number.parseInt(e.target.value),
+                              })
+                            : setNewChallenge({ ...newChallenge, duration: Number.parseInt(e.target.value) })
+                        }
+                        className="bg-slate-900 border-slate-700 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 text-sm mb-1 block">Obtížnost (1-10)</label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={editingChallenge?.difficulty || newChallenge.difficulty}
+                        onChange={(e) =>
+                          editingChallenge
+                            ? setEditingChallenge({ ...editingChallenge, difficulty: Number.parseInt(e.target.value) })
+                            : setNewChallenge({ ...newChallenge, difficulty: Number.parseInt(e.target.value) })
+                        }
+                        className="bg-slate-900 border-slate-700 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 text-sm mb-1 block">XP odměna</label>
+                      <Input
+                        type="number"
+                        value={editingChallenge?.xpReward || newChallenge.xpReward}
+                        onChange={(e) =>
+                          editingChallenge
+                            ? setEditingChallenge({ ...editingChallenge, xpReward: Number.parseInt(e.target.value) })
+                            : setNewChallenge({ ...newChallenge, xpReward: Number.parseInt(e.target.value) })
+                        }
+                        className="bg-slate-900 border-slate-700 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 text-sm mb-1 block">Odměna (text)</label>
+                      <Input
+                        placeholder="🏆 Badge + bonus..."
+                        value={editingChallenge?.reward || newChallenge.reward}
+                        onChange={(e) =>
+                          editingChallenge
+                            ? setEditingChallenge({ ...editingChallenge, reward: e.target.value })
+                            : setNewChallenge({ ...newChallenge, reward: e.target.value })
+                        }
+                        className="bg-slate-900 border-slate-700 text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowChallengeForm(false)
+                        setEditingChallenge(null)
+                      }}
+                      className="bg-transparent border-slate-700"
+                    >
+                      Zrušit
+                    </Button>
+                    <Button
+                      onClick={editingChallenge ? handleUpdateChallenge : handleAddChallenge}
+                      className="bg-gradient-to-r from-purple-600 to-pink-600"
+                    >
+                      {editingChallenge ? "Uložit změny" : "Přidat výzvu"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Your Active Challenges */}
             {challenges.filter((c) => c.joined).length > 0 && (
@@ -1459,10 +2234,20 @@ function StudentTeamClubView() {
                                 </Badge>
                               </div>
                               <h3 className="text-white font-bold text-base mb-1">{challenge.title}</h3>
-                              <p className="text-slate-400 text-xs">
+                              <p className="text-slate-400 text-sm">
                                 {challenge.duration} dní · Zbývá {challenge.daysLeft} dní
                               </p>
                             </div>
+                            {isAdmin && (
+                              <div className="flex gap-1">
+                                <Button size="icon" variant="ghost" onClick={() => handleEditChallenge(challenge)}>
+                                  <Edit className="h-4 w-4 text-blue-400" />
+                                </Button>
+                                <Button size="icon" variant="ghost" onClick={() => handleDeleteChallenge(challenge.id)}>
+                                  <Trash2 className="h-4 w-4 text-red-400" />
+                                </Button>
+                              </div>
+                            )}
                           </div>
 
                           <Progress value={challenge.progress} className="h-3 rounded-full mb-3" />
@@ -1821,63 +2606,116 @@ function StudentTeamClubView() {
           <TabsContent value="leaderboard" className="space-y-6">
             <Card className="psyche-card">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-amber-400" />
-                  Disciplína Leaderboard
-                </CardTitle>
-                <CardDescription className="text-slate-400">
-                  Top tradeři podle disciplíny, streaks a dodržování rutiny
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-amber-400" />
+                      Disciplína Leaderboard
+                    </CardTitle>
+                    <CardDescription className="text-slate-400">
+                      Top tradeři podle disciplíny, streaks a dodržování rutiny
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                {/* Period Selector */}
+                <div className="flex gap-2 mb-6">
                   {[
-                    { rank: 1, name: "Jana Svobodová", discipline: 94, streak: 28, xp: 4850 },
-                    { rank: 2, name: "Martin Novák", discipline: 91, streak: 25, xp: 4200 },
-                    { rank: 3, name: "Petra Nová", discipline: 88, streak: 21, xp: 3900 },
-                    { rank: 4, name: "Tomáš Dvořák", discipline: 85, streak: 19, xp: 3650 },
-                    { rank: 5, name: "Jan Novotný", discipline: 82, streak: 17, xp: 3400 },
-                  ].map((trader) => (
-                    <div
-                      key={trader.rank}
-                      className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-xl hover:bg-slate-700/50 transition-all"
+                    { id: "weekly", label: "Týdenní" },
+                    { id: "monthly", label: "Měsíční" },
+                    { id: "alltime", label: "Celkový" },
+                  ].map((period) => (
+                    <Button
+                      key={period.id}
+                      variant="outline"
+                      size="sm"
+                      className={`rounded-xl ${
+                        leaderboardPeriod === period.id
+                          ? "bg-gradient-to-r from-purple-500 to-cyan-500 text-white border-transparent"
+                          : "bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700"
+                      }`}
+                      onClick={() => setLeaderboardPeriod(period.id as "weekly" | "monthly" | "alltime")}
                     >
+                      {period.label}
+                    </Button>
+                  ))}
+                </div>
+
+                {/* Top 5 Leaderboard */}
+                <div className="space-y-3">
+                  {getLeaderboardData()
+                    .slice(0, 5)
+                    .map((trader) => (
                       <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
-                          trader.rank === 1
-                            ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-white"
-                            : trader.rank === 2
-                              ? "bg-gradient-to-br from-slate-400 to-slate-500 text-white"
-                              : trader.rank === 3
-                                ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white"
-                                : "bg-slate-600 text-white"
-                        }`}
+                        key={trader.rank}
+                        className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-xl hover:bg-slate-700/50 transition-all"
                       >
-                        {trader.rank}
-                      </div>
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage src="/trader-avatar.png" />
-                        <AvatarFallback>{trader.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <h4 className="text-white font-bold">{trader.name}</h4>
-                        <div className="flex items-center gap-3 text-xs text-slate-400">
-                          <span className="flex items-center gap-1">
-                            <Target className="h-3 w-3" />
-                            {trader.discipline}% disciplína
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Flame className="h-3 w-3 text-orange-400" />
-                            {trader.streak} dní
-                          </span>
+                        <div
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
+                            trader.rank === 1
+                              ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-white"
+                              : trader.rank === 2
+                                ? "bg-gradient-to-br from-slate-400 to-slate-500 text-white"
+                                : trader.rank === 3
+                                  ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white"
+                                  : "bg-slate-600 text-white"
+                          }`}
+                        >
+                          {trader.rank}
+                        </div>
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={trader.avatar || "/placeholder.svg"} />
+                          <AvatarFallback>{trader.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <h4 className="text-white font-bold">{trader.name}</h4>
+                          <div className="flex items-center gap-3 text-xs text-slate-400">
+                            <span className="flex items-center gap-1">
+                              <Target className="h-3 w-3" />
+                              {trader.discipline}% disciplína
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Flame className="h-3 w-3 text-orange-400" />
+                              {trader.streak} dní
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-purple-400 font-bold">{trader.xp} XP</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-purple-400 font-bold">{trader.xp} XP</p>
-                        <p className="text-slate-500 text-xs">Total</p>
+                    ))}
+                </div>
+
+                {/* User Position - below Top 5 */}
+                <div className="mt-6 pt-4 border-t border-slate-700">
+                  <p className="text-slate-500 text-xs mb-3">Tvoje pozice</p>
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 rounded-xl">
+                    <div className="w-10 h-10 rounded-xl bg-slate-600 flex items-center justify-center font-bold text-lg text-white">
+                      {getUserPosition()}
+                    </div>
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={getUserStats().avatar || "/placeholder.svg"} />
+                      <AvatarFallback>TY</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <h4 className="text-white font-bold">{getUserStats().name}</h4>
+                      <div className="flex items-center gap-3 text-xs text-slate-400">
+                        <span className="flex items-center gap-1">
+                          <Target className="h-3 w-3" />
+                          {getUserStats().discipline}% disciplína
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Flame className="h-3 w-3 text-orange-400" />
+                          {getUserStats().streak} dní
+                        </span>
                       </div>
                     </div>
-                  ))}
+                    <div className="text-right">
+                      <p className="text-purple-400 font-bold">{getUserStats().xp} XP</p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1892,14 +2730,48 @@ function StudentTeamClubView() {
                   {mentorQA.filter((q) => q.status === "pending").length} čekajících otázek · Ptej se anything!
                 </p>
               </div>
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl">
-                <Plus className="h-4 w-4 mr-2" />
-                Položit otázku
-              </Button>
+              {/* Moved "Položit otázku" button to be part of the input section */}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-4">
+                <Card className="psyche-card">
+                  <CardContent className="p-5">
+                    {postError && (
+                      <Alert className="mb-4 bg-red-500/10 border-red-500/30">
+                        <AlertCircle className="h-4 w-4 text-red-400" />
+                        <AlertDescription className="text-red-400">{postError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    {!canPostToday("qa") && (
+                      <Alert className="mb-4 bg-amber-500/10 border-amber-500/30">
+                        <Clock className="h-4 w-4 text-amber-400" />
+                        <AlertDescription className="text-amber-400">
+                          Dnes jsi již položil otázku. Další můžeš položit zítra.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="flex gap-3">
+                      <Textarea
+                        placeholder="Polož otázku komunitě nebo mentorům..."
+                        value={newQuestion}
+                        onChange={(e) => setNewQuestion(e.target.value)}
+                        disabled={!canPostToday("qa")}
+                        className="bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-500 rounded-xl min-h-[80px] resize-none disabled:opacity-50 flex-1"
+                      />
+                      <Button
+                        onClick={handleAddQuestion}
+                        disabled={!newQuestion.trim() || !canPostToday("qa")}
+                        className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl disabled:opacity-50"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {mentorQA.map((qa) => (
                   <Card
                     key={qa.id}
@@ -1943,23 +2815,36 @@ function StudentTeamClubView() {
                             </div>
                           )}
 
-                          <div className="flex items-center gap-3 mt-4">
+                          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-700/50">
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleLikeQA(qa.id)}
-                              className="text-slate-400 rounded-xl text-xs h-7"
+                              className="text-slate-400 rounded-xl text-xs h-8"
                             >
-                              <ThumbsUp className="h-3 w-3 mr-1.5" />
+                              <ThumbsUp className="h-3.5 w-3.5 mr-1.5" />
                               {qa.likes}
                             </Button>
-                            <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-7">
-                              <MessageCircle className="h-3 w-3 mr-1.5" />
+                            <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-8">
+                              <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
                               Diskuze
                             </Button>
-                            <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-7">
-                              <Share2 className="h-3 w-3 mr-1.5" />
+                            <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-8">
+                              <Share2 className="h-3.5 w-3.5 mr-1.5" />
                               Sdílet
+                            </Button>
+                            {/* Report button for Q&A */}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleReport(qa.id, "qa")}
+                              disabled={reportedPosts.includes(qa.id)}
+                              className={`ml-auto rounded-xl text-xs h-8 ${
+                                reportedPosts.includes(qa.id) ? "text-amber-400" : "text-slate-500 hover:text-red-400"
+                              }`}
+                            >
+                              <Flag className="h-3.5 w-3.5 mr-1.5" />
+                              {reportedPosts.includes(qa.id) ? "Nahlášeno" : "Nahlásit"}
                             </Button>
                           </div>
                         </div>
@@ -2015,6 +2900,166 @@ function StudentTeamClubView() {
                 Inspirace od komunity · Reálné transformace · Dokázali to, dokážeš to taky
               </p>
             </div>
+
+            <Card className="psyche-card">
+              <CardContent className="p-5">
+                {postError && (
+                  <Alert className="mb-4 bg-red-500/10 border-red-500/30">
+                    <AlertCircle className="h-4 w-4 text-red-400" />
+                    <AlertDescription className="text-red-400">{postError}</AlertDescription>
+                  </Alert>
+                )}
+
+                {!canPostToday("success") && (
+                  <Alert className="mb-4 bg-amber-500/10 border-amber-500/30">
+                    <Clock className="h-4 w-4 text-amber-400" />
+                    <AlertDescription className="text-amber-400">
+                      Dnes jsi již sdílel příběh. Další můžeš sdílet zítra.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="space-y-3">
+                  <Input
+                    placeholder="Název tvého příběhu..."
+                    value={newStoryTitle}
+                    onChange={(e) => setNewStoryTitle(e.target.value)}
+                    disabled={!canPostToday("success")}
+                    className="bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-500 rounded-xl disabled:opacity-50"
+                  />
+                  <Textarea
+                    placeholder="Popiš svou cestu, co ti pomohlo, jaké překážky jsi překonal..."
+                    value={newStoryContent}
+                    onChange={(e) => setNewStoryContent(e.target.value)}
+                    disabled={!canPostToday("success")}
+                    className="bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-500 rounded-xl min-h-[100px] resize-none disabled:opacity-50"
+                  />
+
+                  {/* ADD: Month selection for before/after comparison */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-slate-400 mb-1 block">Měsíc "Před"</label>
+                      <Select
+                        value={selectedMonth1}
+                        onValueChange={setSelectedMonth1}
+                        disabled={!canPostToday("success")}
+                      >
+                        <SelectTrigger className="bg-slate-900/50 border-slate-700/50 text-white rounded-xl">
+                          <SelectValue placeholder="Vyber měsíc..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                          {getAvailableMonths().map((month) => (
+                            <SelectItem key={month.value} value={month.value} className="text-white hover:bg-slate-800">
+                              {month.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-400 mb-1 block">Měsíc "Po"</label>
+                      <Select
+                        value={selectedMonth2}
+                        onValueChange={setSelectedMonth2}
+                        disabled={!canPostToday("success")}
+                      >
+                        <SelectTrigger className="bg-slate-900/50 border-slate-700/50 text-white rounded-xl">
+                          <SelectValue placeholder="Vyber měsíc..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700">
+                          {getAvailableMonths().map((month) => (
+                            <SelectItem key={month.value} value={month.value} className="text-white hover:bg-slate-800">
+                              {month.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Preview selected months stats */}
+                  {selectedMonth1 && selectedMonth2 && (
+                    <div className="grid grid-cols-2 gap-3 p-3 bg-slate-800/50 rounded-xl">
+                      <div>
+                        <p className="text-xs text-slate-400 mb-2">Měsíc "Před"</p>
+                        {(() => {
+                          const [y, m] = selectedMonth1.split("-").map(Number)
+                          const stats = getMonthlyStats(y, m)
+                          return (
+                            <div className="space-y-1 text-sm">
+                              <p className="text-slate-300">
+                                Win Rate: <span className="text-white">{stats.winRate}%</span>
+                              </p>
+                              <p className="text-slate-300">
+                                P&L:{" "}
+                                <span className={stats.pnl >= 0 ? "text-emerald-400" : "text-red-400"}>
+                                  ${stats.pnl}
+                                </span>
+                              </p>
+                              <p className="text-slate-300">
+                                Readiness: <span className="text-white">{stats.readiness}%</span>
+                              </p>
+                              <p className="text-slate-300">
+                                Trades: <span className="text-white">{stats.trades}</span>
+                              </p>
+                              {/* Show revenge trades in preview */}
+                              <p className="text-slate-300">
+                                Revenge Trades: <span className="text-red-400">{stats.revengeTrades}</span>
+                              </p>
+                            </div>
+                          )
+                        })()}
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 mb-2">Měsíc "Po"</p>
+                        {(() => {
+                          const [y, m] = selectedMonth2.split("-").map(Number)
+                          const stats = getMonthlyStats(y, m)
+                          return (
+                            <div className="space-y-1 text-sm">
+                              <p className="text-slate-300">
+                                Win Rate: <span className="text-white">{stats.winRate}%</span>
+                              </p>
+                              <p className="text-slate-300">
+                                P&L:{" "}
+                                <span className={stats.pnl >= 0 ? "text-emerald-400" : "text-red-400"}>
+                                  ${stats.pnl}
+                                </span>
+                              </p>
+                              <p className="text-slate-300">
+                                Readiness: <span className="text-white">{stats.readiness}%</span>
+                              </p>
+                              <p className="text-slate-300">
+                                Trades: <span className="text-white">{stats.trades}</span>
+                              </p>
+                              {/* Show revenge trades in preview */}
+                              <p className="text-slate-300">
+                                Revenge Trades: <span className="text-red-400">{stats.revengeTrades}</span>
+                              </p>
+                            </div>
+                          )
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={handleAddStory}
+                    disabled={
+                      !newStoryTitle.trim() ||
+                      !newStoryContent.trim() ||
+                      !selectedMonth1 ||
+                      !selectedMonth2 ||
+                      !canPostToday("success")
+                    }
+                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl w-full disabled:opacity-50"
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    Sdílet můj příběh
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             <div className="space-y-6">
               {successStories.map((story) => (
@@ -2091,6 +3136,18 @@ function StudentTeamClubView() {
                         <Share2 className="h-3.5 w-3.5 mr-1.5" />
                         Sdílet
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleReport(story.id, "success")}
+                        disabled={reportedPosts.includes(story.id)}
+                        className={`ml-auto rounded-xl text-xs h-8 ${
+                          reportedPosts.includes(story.id) ? "text-amber-400" : "text-slate-500 hover:text-red-400"
+                        }`}
+                      >
+                        <Flag className="h-3.5 w-3.5 mr-1.5" />
+                        {reportedPosts.includes(story.id) ? "Nahlášeno" : "Nahlásit"}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -2123,6 +3180,79 @@ function StudentTeamClubView() {
       </div>
     </div>
   )
+}
+
+// Filter function
+const VULGAR_WORDS = [
+  // Czech vulgar words
+  "kurva",
+  "píča",
+  "čurák",
+  "kokot",
+  "debil",
+  "idiot",
+  "kretén",
+  "vole",
+  "hovno",
+  "sráč",
+  "zmrd",
+  "prdel",
+  "hajzl",
+  "šulin",
+  "mamrd",
+  "buzerant",
+  "buzna",
+  "coura",
+  "děvka",
+  "šlapka",
+  "chcát",
+  "srát",
+  "pičus",
+  "piča",
+  "curak",
+  "kozy",
+  "čůrák",
+  "chuj",
+  "mrdka",
+  "posrat",
+  // English vulgar words
+  "fuck",
+  "shit",
+  "ass",
+  "bitch",
+  "damn",
+  "crap",
+  "dick",
+  "cock",
+  "pussy",
+  "asshole",
+  "bastard",
+  "whore",
+  "slut",
+  "nigger",
+  "faggot",
+  "retard",
+  "cunt",
+  "twat",
+  "wanker",
+  // Variations
+  "f*ck",
+  "sh*t",
+  "a$$",
+  "b!tch",
+  "d!ck",
+  "fuk",
+  "fck",
+  "sht",
+]
+
+const containsVulgarWords = (text: string): boolean => {
+  const lowerText = text.toLowerCase()
+  return VULGAR_WORDS.some((word) => lowerText.includes(word))
+}
+
+const getTodayString = (): string => {
+  return new Date().toISOString().split("T")[0]
 }
 
 function isMentor(): boolean {

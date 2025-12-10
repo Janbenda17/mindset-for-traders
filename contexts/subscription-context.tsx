@@ -25,6 +25,7 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
 
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/bJe28sguAbri1noczO1B600"
+const STRIPE_BILLING_PORTAL = "https://billing.stripe.com/p/login/test_00g5kFbKe1Oy8qk000"
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [plan, setPlan] = useState<"free" | "premium">("free")
@@ -49,6 +50,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, [isOwnerAccount])
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedCustomerId = localStorage.getItem("stripe-customer-id")
+      if (storedCustomerId) {
+        setCustomerId(storedCustomerId)
+      }
+    }
+  }, [])
+
   const checkSubscriptionStatus = async () => {
     try {
       const storedCustomerId = localStorage.getItem("stripe-customer-id")
@@ -65,7 +75,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         setIsActive(data.isActive)
         setTrialEndsAt(data.trialEndsAt)
         setSubscriptionId(data.subscriptionId)
-        setCustomerId(data.customerId)
+
+        if (data.customerId) {
+          setCustomerId(data.customerId)
+          localStorage.setItem("stripe-customer-id", data.customerId)
+        }
 
         if (data.trialEndsAt) {
           const endDate = new Date(data.trialEndsAt)
@@ -82,14 +96,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const subscribe = async (planType: "free" | "premium"): Promise<boolean> => {
     if (planType === "free") return true
-
-    // Přesměrování na Stripe payment link
     window.location.href = STRIPE_PAYMENT_LINK
     return true
   }
 
   const startTrial = async (): Promise<boolean> => {
-    // Přesměrování na Stripe payment link (trial je součástí Stripe linku)
     window.location.href = STRIPE_PAYMENT_LINK
     return true
   }
@@ -100,7 +111,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }
 
   const cancelSubscription = async (): Promise<boolean> => {
-    if (!subscriptionId) return false
+    if (!subscriptionId) {
+      await openBillingPortal()
+      return true
+    }
 
     setIsLoading(true)
     try {
@@ -128,27 +142,31 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }
 
   const openBillingPortal = async () => {
-    if (!customerId) return
-
     setIsLoading(true)
     try {
-      const response = await fetch("/api/subscription/billing-portal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customerId }),
-      })
+      // If we have a customerId, try to create a portal session
+      if (customerId) {
+        const response = await fetch("/api/subscription/billing-portal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ customerId }),
+        })
 
-      const data = await response.json()
-      if (data.url) {
-        window.location.href = data.url
+        const data = await response.json()
+        if (data.url) {
+          window.location.href = data.url
+          return
+        }
       }
+
+      toast({
+        title: "Přesměrování",
+        description: "Budete přesměrováni na Stripe pro správu předplatného.",
+      })
+      window.location.href = STRIPE_PAYMENT_LINK
     } catch (error) {
       console.error("Billing portal error:", error)
-      toast({
-        title: "Chyba",
-        description: "Nepodařilo se otevřít správu plateb.",
-        variant: "destructive",
-      })
+      window.location.href = STRIPE_PAYMENT_LINK
     } finally {
       setIsLoading(false)
     }

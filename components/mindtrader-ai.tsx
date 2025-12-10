@@ -4,12 +4,24 @@ import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Brain, Send, Loader2, Heart, Target, Zap, AlertCircle, TrendingUp, Users, FileText, RefreshCw, Sparkles, BarChart2, Wind, Activity, Moon, Utensils, Lock } from 'lucide-react'
+import {
+  Brain,
+  Send,
+  Loader2,
+  Heart,
+  Target,
+  Zap,
+  AlertCircle,
+  BarChart2,
+  Wind,
+  Activity,
+  Moon,
+  Utensils,
+} from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
@@ -106,6 +118,24 @@ export function MindTraderAI() {
   const moodEntries = userData.moodEntries || []
   const journalEntries = getAllJournalEntries()
   const trades = getAllTrades()
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const prefillPrompt = localStorage.getItem("mindtrader-ai-prefill")
+      if (prefillPrompt) {
+        setInput(prefillPrompt)
+        localStorage.removeItem("mindtrader-ai-prefill")
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const prefill = localStorage.getItem("mindtrader-ai-prefill")
+    if (prefill) {
+      setInput(prefill)
+      localStorage.removeItem("mindtrader-ai-prefill")
+    }
+  }, [])
 
   // Load readiness data from Daily Tracker
   useEffect(() => {
@@ -218,13 +248,19 @@ export function MindTraderAI() {
   const modes = {
     mind: {
       name: language === "cs" ? "🧠 MIND AI" : "🧠 MIND AI",
-      description: language === "cs" ? "Tvůj psychologický parťák - okamžitá pomoc s emocemi" : "Your psychological partner - instant emotional help",
+      description:
+        language === "cs"
+          ? "Tvůj psychologický parťák - okamžitá pomoc s emocemi"
+          : "Your psychological partner - instant emotional help",
       icon: Brain,
       locked: false,
     },
     analytics: {
       name: language === "cs" ? "📊 ANALYTICS AI" : "📊 ANALYTICS AI",
-      description: language === "cs" ? "Chytrá výkonnostní analýza - rozbor podle dat" : "Smart performance analysis - data-driven insights",
+      description:
+        language === "cs"
+          ? "Chytrá výkonnostní analýza - rozbor podle dat"
+          : "Smart performance analysis - data-driven insights",
       icon: BarChart2,
       locked: false,
     },
@@ -593,9 +629,7 @@ export function MindTraderAI() {
             <Alert className="border-orange-500 bg-orange-50 dark:bg-orange-900/20 p-3 md:p-4">
               <AlertCircle className="h-3 w-3 md:h-4 md:w-4 text-orange-600" />
               <AlertDescription className="text-xs md:text-sm text-orange-800 dark:text-orange-200">
-                {language === "cs"
-                  ? "🚨 Recovery Mode aktivní"
-                  : "🚨 Recovery Mode active"}
+                {language === "cs" ? "🚨 Recovery Mode aktivní" : "🚨 Recovery Mode active"}
               </AlertDescription>
             </Alert>
           )}
@@ -634,9 +668,13 @@ export function MindTraderAI() {
                             }`}
                           >
                             <div className="flex items-start gap-2">
-                              <Icon className={`w-4 h-4 mt-0.5 ${aiMode === key ? "text-purple-600" : "text-gray-600"}`} />
+                              <Icon
+                                className={`w-4 h-4 mt-0.5 ${aiMode === key ? "text-purple-600" : "text-gray-600"}`}
+                              />
                               <div className="flex-1">
-                                <div className={`text-sm font-medium ${aiMode === key ? "text-purple-700 dark:text-purple-400" : "text-gray-900 dark:text-gray-100"}`}>
+                                <div
+                                  className={`text-sm font-medium ${aiMode === key ? "text-purple-700 dark:text-purple-400" : "text-gray-900 dark:text-gray-100"}`}
+                                >
                                   {mode.name}
                                 </div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -712,7 +750,10 @@ export function MindTraderAI() {
                   <ScrollArea className="flex-1 md:p-6 p-3">
                     <div className="space-y-3 md:space-y-4">
                       {messages.map((message, index) => (
-                        <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                        <div
+                          key={index}
+                          className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                        >
                           <div
                             className={`md:max-w-[80%] max-w-[90%] rounded-2xl md:p-4 p-3 ${
                               message.role === "user"
@@ -808,8 +849,16 @@ export function MindTraderAI() {
                           disabled={isLoading}
                         />
                       </div>
-                      <Button onClick={handleSend} disabled={!input.trim() || isLoading} className="md:h-[60px] h-[80px] md:px-6 px-4">
-                        {isLoading ? <Loader2 className="md:w-5 md:h-5 w-6 h-6 animate-spin" /> : <Send className="md:w-5 md:h-5 w-6 h-6" />}
+                      <Button
+                        onClick={handleSend}
+                        disabled={!input.trim() || isLoading}
+                        className="md:h-[60px] h-[80px] md:px-6 px-4"
+                      >
+                        {isLoading ? (
+                          <Loader2 className="md:w-5 md:h-5 w-6 h-6 animate-spin" />
+                        ) : (
+                          <Send className="md:w-5 md:h-5 w-6 h-6" />
+                        )}
                       </Button>
                     </div>
                     {!isLiveMode && (

@@ -5,13 +5,126 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { BookOpen, Calendar, TrendingUp, Plus, Sparkles, BarChart3, Brain, Target, Zap, Download, Eye, Flame, Award, TrendingDown, DollarSign } from 'lucide-react'
+import {
+  BookOpen,
+  Calendar,
+  TrendingUp,
+  Plus,
+  Sparkles,
+  BarChart3,
+  Brain,
+  Target,
+  Zap,
+  Download,
+  Eye,
+  Flame,
+  Award,
+  TrendingDown,
+  DollarSign,
+} from "lucide-react"
 import JournalCalendar from "@/components/journal-calendar"
 import JournalEntries from "@/components/journal-entries"
 import { RecordTrades } from "@/components/record-trades"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { getJournalEntries } from "@/utils/storage-utils"
 import { cn } from "@/lib/utils"
+
+const generateDemoEntries = () => {
+  const demoEntries = [
+    {
+      id: "demo-1",
+      type: "trade",
+      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      pair: "EUR/USD",
+      direction: "long",
+      entryPrice: 1.085,
+      exitPrice: 1.092,
+      profitLoss: 1450,
+      pnl: 1450,
+      mood: 75,
+      notes: "Perfektní setup na London Open, dodržel jsem plán",
+      emotion: "confident",
+      tags: ["A+ setup", "trend following"],
+    },
+    {
+      id: "demo-2",
+      type: "trade",
+      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      pair: "GBP/USD",
+      direction: "short",
+      entryPrice: 1.265,
+      exitPrice: 1.258,
+      profitLoss: 2100,
+      pnl: 2100,
+      mood: 80,
+      notes: "Breakout trade, vysoká conviction",
+      emotion: "focused",
+      tags: ["breakout", "high conviction"],
+    },
+    {
+      id: "demo-3",
+      type: "trade",
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      pair: "XAU/USD",
+      direction: "long",
+      entryPrice: 2340,
+      exitPrice: 2295,
+      profitLoss: -1350,
+      pnl: -1350,
+      mood: 45,
+      notes: "Revenge trade po předchozí ztrátě, měl jsem počkat",
+      emotion: "frustrated",
+      tags: ["revenge trade", "impulsive"],
+    },
+    {
+      id: "demo-4",
+      type: "trade",
+      date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      pair: "BTC/USD",
+      direction: "long",
+      entryPrice: 67500,
+      exitPrice: 69200,
+      profitLoss: 3400,
+      pnl: 3400,
+      mood: 85,
+      notes: "Swing trade podle plánu, držel jsem pozici přes noc",
+      emotion: "confident",
+      tags: ["swing", "planned"],
+    },
+    {
+      id: "demo-5",
+      type: "trade",
+      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      pair: "EUR/JPY",
+      direction: "short",
+      entryPrice: 162.5,
+      exitPrice: 163.1,
+      profitLoss: -980,
+      pnl: -980,
+      mood: 55,
+      notes: "Špatný timing, vstoupil jsem příliš brzy",
+      emotion: "anxious",
+      tags: ["bad timing"],
+    },
+    {
+      id: "demo-6",
+      type: "journal",
+      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      mood: 78,
+      notes: "Dnes se cítím dobře, vyspalý a připravený. Budu se soustředit pouze na A+ setupy.",
+      emotion: "focused",
+    },
+    {
+      id: "demo-7",
+      type: "journal",
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      mood: 50,
+      notes: "Špatný den, udělal jsem revenge trade. Musím pracovat na disciplíně.",
+      emotion: "frustrated",
+    },
+  ]
+  return demoEntries
+}
 
 export default function JournalPage() {
   const [selectedTab, setSelectedTab] = useState("calendar")
@@ -26,7 +139,7 @@ export default function JournalPage() {
 
   const loadEntries = () => {
     const journalEntries = getJournalEntries()
-    setEntries(journalEntries)
+    setEntries(journalEntries.length > 0 ? journalEntries : generateDemoEntries())
   }
 
   const handleEntryAdded = () => {
@@ -227,7 +340,9 @@ export default function JournalPage() {
                 PRO
               </Badge>
             </h1>
-            <p className="text-gray-300 text-sm md:text-lg hidden md:block">Sleduj své obchody, analyzuj výkon a rozvíjej se jako trader 🚀</p>
+            <p className="text-gray-300 text-sm md:text-lg hidden md:block">
+              Sleduj své obchody, analyzuj výkon a rozvíjej se jako trader 🚀
+            </p>
           </div>
 
           <div className="flex gap-2 md:gap-3 flex-wrap">
@@ -238,7 +353,9 @@ export default function JournalPage() {
               <Brain className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
               <span className="hidden md:inline">AI Insights</span>
               <span className="md:hidden">AI</span>
-              {insights.length > 0 && <Badge className="ml-1 md:ml-2 bg-white/20 text-white border-0 text-xs">{insights.length}</Badge>}
+              {insights.length > 0 && (
+                <Badge className="ml-1 md:ml-2 bg-white/20 text-white border-0 text-xs">{insights.length}</Badge>
+              )}
             </Button>
             <Button
               onClick={exportData}
@@ -325,7 +442,7 @@ export default function JournalPage() {
               <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-purple-500 to-pink-500"
-                  style={{ width: `${Math.min(parseFloat(stats.avgPerDay) * 20, 100)}%` }}
+                  style={{ width: `${Math.min(Number.parseFloat(stats.avgPerDay) * 20, 100)}%` }}
                 />
               </div>
             </CardContent>
@@ -383,7 +500,12 @@ export default function JournalPage() {
                       stats.totalPnL >= 0 ? "from-emerald-500/20 to-green-500/20" : "from-rose-500/20 to-red-500/20",
                     )}
                   >
-                    <DollarSign className={cn("w-4 h-4 md:w-6 md:h-6", stats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400")} />
+                    <DollarSign
+                      className={cn(
+                        "w-4 h-4 md:w-6 md:h-6",
+                        stats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400",
+                      )}
+                    />
                   </div>
                 </div>
               </div>
@@ -418,7 +540,11 @@ export default function JournalPage() {
                             : "text-rose-400",
                       )}
                     >
-                      {stats.winRate >= 60 ? <TrendingUp className="w-3 h-3 md:w-4 md:h-4" /> : <TrendingDown className="w-3 h-3 md:w-4 md:h-4" />}
+                      {stats.winRate >= 60 ? (
+                        <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
+                      ) : (
+                        <TrendingDown className="w-3 h-3 md:w-4 md:h-4" />
+                      )}
                       {stats.winRate >= 60 ? "Výborný" : stats.winRate >= 50 ? "Dobrý" : "Slabý"}
                     </p>
                   </div>

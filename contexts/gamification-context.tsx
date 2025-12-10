@@ -22,6 +22,7 @@ interface Challenge {
   target: number
   current: number
   xpReward: number
+  difficulty: "easy" | "medium" | "hard" | "elite"
   startDate: string
   endDate?: string
   active: boolean
@@ -29,10 +30,20 @@ interface Challenge {
 }
 
 interface PsychologicalMetrics {
-  calmScore: number // 0-100: AI měří stabilitu nálad
-  focusRating: number // 0-100: Podíl dní bez rozptylování
-  recoveryIndex: number // 0-100: Schopnost zvednout se po ztrátě
-  disciplineStreak: number // Počet dní po sobě s plněním všech kroků
+  calmScore: number
+  focusRating: number
+  recoveryIndex: number
+  disciplineStreak: number
+}
+
+interface DailyXPLog {
+  date: string
+  readinessCompleted: boolean
+  readinessAllStages: boolean
+  journalCompleted: boolean
+  lossResetCompleted: boolean
+  aiReflectionCompleted: boolean
+  xpEarned: number
 }
 
 interface GamificationData {
@@ -60,11 +71,17 @@ interface GamificationData {
   psychMetrics: PsychologicalMetrics
   aiPacingMultiplier: number
   lastActivityDate: string
+  dailyXPLog: DailyXPLog[]
 }
 
 interface GamificationContextType {
   data: GamificationData
   addXP: (amount: number, reason: string) => void
+  awardReadinessXP: (allStagesCompleted: boolean) => boolean
+  awardJournalXP: () => boolean
+  awardLossResetXP: () => boolean
+  awardAIReflectionXP: (messageLength: number) => boolean
+  getTodayXPLog: () => DailyXPLog | null
   calculateDailyXP: (factors: {
     readiness: number
     behavior: number
@@ -87,38 +104,50 @@ interface GamificationContextType {
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined)
 
 const LEVEL_XP_REQUIREMENTS = [
-  0, // Level 1: Observer
-  400, // Level 2: Planner
-  900, // Level 3: Executor
-  1500, // Level 4: Balancer
-  2200, // Level 5: Resilient Mind
-  3200, // Level 6: Consistent Performer
-  4700, // Level 7: Disciplined Warrior
-  6500, // Level 8: Zen Trader
-  9000, // Level 9: Mind Architect
-  12000, // Level 10: Mind Master
+  0, // Level 1: Beginner (0-399)
+  400, // Level 2: Initiate (400-799)
+  800, // Level 3: Consistent (800-1199)
+  1200, // Level 4: Disciplined (1200-1799)
+  1800, // Level 5: Focused (1800-2599)
+  2600, // Level 6: Self-aware (2600-3599)
+  3600, // Level 7: Growth Phase (3600-4799)
+  4800, // Level 8: High Performance (4800-6399)
+  6400, // Level 9: Elite Mindset (6400-8499)
+  8500, // Level 10: Mind Master (8500-15000+)
 ]
 
 const LEVEL_INFO = [
-  { name: "🧩 Observer", description: "Učíš se sledovat sebe", phase: "Uvědomění" },
-  { name: "🎯 Planner", description: "Vím, co chci dělat", phase: "Plánování" },
-  { name: "⚙️ Executor", description: "Začínám dělat správné kroky", phase: "Akce" },
-  { name: "🌿 Balancer", description: "Zvládám tlak", phase: "Rovnováha" },
-  { name: "🧘 Resilient Mind", description: "Nenechávám se rozhodit", phase: "Odolnost" },
-  { name: "🔥 Consistent Performer", description: "Mám svůj rytmus", phase: "Konzistence" },
-  { name: "🧱 Disciplined Warrior", description: "Disciplína je moje síla", phase: "Kontrola emocí" },
-  { name: "🪷 Zen Trader", description: "Klid je můj edge", phase: "Stabilita klidu" },
-  { name: "🧠 Mind Architect", description: "Rozumím své mysli i ostatním", phase: "Integrace" },
-  { name: "🕊️ Mind Master", description: "Mysl a trh jsou jedno", phase: "Mistrovství" },
+  { name: "Beginner", description: "Začínáš svou cestu", phase: "Uvědomění", icon: "🧩" },
+  { name: "Initiate", description: "Učíš se základy", phase: "Plánování", icon: "🎯" },
+  { name: "Consistent", description: "Budujíš konzistenci", phase: "Akce", icon: "⚙️" },
+  { name: "Disciplined", description: "Disciplína roste", phase: "Rovnováha", icon: "🌿" },
+  { name: "Focused", description: "Soustředěný na cíl", phase: "Odolnost", icon: "🧘" },
+  { name: "Self-aware", description: "Znáš sám sebe", phase: "Konzistence", icon: "🔥" },
+  { name: "Growth Phase", description: "Fáze růstu", phase: "Kontrola emocí", icon: "🧱" },
+  { name: "High Performance", description: "Vysoký výkon", phase: "Stabilita", icon: "🪷" },
+  { name: "Elite Mindset", description: "Elitní myšlení", phase: "Integrace", icon: "🧠" },
+  { name: "Mind Master", description: "Mistr mysli", phase: "Mistrovství", icon: "🕊️" },
 ]
+
+const XP_REWARDS = {
+  readinessCheck: 20, // +20 XP za dokončení Readiness Checku
+  readinessAllStages: 10, // +10 XP bonus za všech 5 stages
+  journalEntry: 15, // +15 XP za záznam v deníku
+  lossReset: 10, // +10 XP za kompletní Loss Reset
+  aiReflection: 5, // +5 XP za použití MindTrader AI
+  challengeEasy: 60, // +60 XP (bylo 30)
+  challengeMedium: 120, // +120 XP (bylo 60)
+  challengeHard: 240, // +240 XP (bylo 120)
+  challengeElite: 500, // +500 XP (bylo 250)
+}
 
 const INITIAL_ACHIEVEMENTS: Achievement[] = [
   {
     id: "first-steps",
     title: "První kroky",
-    description: "Dokončil jsi svůj první Morning Check",
+    description: "Dokončil jsi svůj první Readiness Check",
     icon: "🌅",
-    xpReward: 20, // Sníženo z 50 na 20 XP - základní achievement
+    xpReward: 20,
     unlocked: false,
     progress: 0,
     target: 1,
@@ -126,9 +155,9 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   {
     id: "early-bird",
     title: "Ranní ptáče",
-    description: "Dokončil jsi Morning Check 7 dní v řadě",
+    description: "Dokončil jsi Readiness Check 7 dní v řadě",
     icon: "🐦",
-    xpReward: 80, // Sníženo z 200 na 80 XP - 7denní streak
+    xpReward: 60,
     unlocked: false,
     progress: 0,
     target: 7,
@@ -138,7 +167,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
     title: "Mistr meditace",
     description: "Meditoval jsi 21 dní v řadě",
     icon: "🧘",
-    xpReward: 160, // Sníženo z 300 na 160 XP - 21denní streak
+    xpReward: 120,
     unlocked: false,
     progress: 0,
     target: 21,
@@ -148,7 +177,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
     title: "Perfektní týden",
     description: "Splnil jsi všechny stages 7 dní v řadě",
     icon: "⭐",
-    xpReward: 120, // Sníženo z 500 na 120 XP - náročnější 7denní achievement
+    xpReward: 80,
     unlocked: false,
     progress: 0,
     target: 7,
@@ -158,7 +187,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
     title: "Konzistentní trader",
     description: "Zaznamenal jsi trade 30 dní v řadě",
     icon: "📈",
-    xpReward: 200, // Sníženo z 400 na 200 XP - 30denní streak
+    xpReward: 150,
     unlocked: false,
     progress: 0,
     target: 30,
@@ -168,7 +197,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
     title: "Profesionální deník",
     description: "Napsal jsi 50 journal entries",
     icon: "📝",
-    xpReward: 150, // Sníženo z 300 na 150 XP - 50x aktivita
+    xpReward: 100,
     unlocked: false,
     progress: 0,
     target: 50,
@@ -176,9 +205,9 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   {
     id: "streak-master",
     title: "Mistr streaku",
-    description: "Udržel jsi 30denní streak v Morning Check",
+    description: "Udržel jsi 30denní streak v Readiness Check",
     icon: "🔥",
-    xpReward: 250, // Sníženo z 600 na 250 XP - prestižní 30denní streak
+    xpReward: 200,
     unlocked: false,
     progress: 0,
     target: 30,
@@ -188,7 +217,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
     title: "Fitness válečník",
     description: "Cvičil jsi 50krát",
     icon: "💪",
-    xpReward: 150, // Sníženo z 250 na 150 XP - 50x aktivita
+    xpReward: 100,
     unlocked: false,
     progress: 0,
     target: 50,
@@ -198,7 +227,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
     title: "Mindful trader",
     description: "Meditoval jsi 100krát",
     icon: "🌟",
-    xpReward: 250, // Sníženo z 400 na 250 XP - 100x aktivita
+    xpReward: 150,
     unlocked: false,
     progress: 0,
     target: 100,
@@ -208,7 +237,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
     title: "Šampion výzev",
     description: "Dokončil jsi 5 výzev",
     icon: "🏆",
-    xpReward: 300, // Sníženo z 800 na 300 XP - speciální achievement
+    xpReward: 200,
     unlocked: false,
     progress: 0,
     target: 5,
@@ -218,7 +247,7 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
     title: "Mistr klidu",
     description: "Dosáhl jsi Calm Score 80+ po dobu 7 dní",
     icon: "🧘",
-    xpReward: 180, // Sníženo z 400 na 180 XP - psychologický milestone
+    xpReward: 120,
     unlocked: false,
     progress: 0,
     target: 7,
@@ -228,49 +257,58 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
     title: "Reset Hero",
     description: "Dokončil jsi 10 Loss Resetů bez revenge tradingu",
     icon: "💪",
-    xpReward: 200, // Sníženo z 500 na 200 XP - důležitý skill
+    xpReward: 150,
     unlocked: false,
     progress: 0,
     target: 10,
   },
-  {
-    id: "zen-trader-achievement",
-    title: "Zen Trader",
-    description: "Dosáhl jsi Level 8 a udržel ho 30 dní",
-    icon: "🪷",
-    xpReward: 0, // Sníženo z 1000 na 0 XP - milník, ne zdroj XP
-    unlocked: false,
-    progress: 0,
-    target: 30,
-  },
-  {
-    id: "mind-master-achievement",
-    title: "Mind Master",
-    description: "Dosáhl jsi Level 10 - vrchol mentálního mistrovství",
-    icon: "🕊️",
-    xpReward: 0, // Sníženo z 2000 na 0 XP - milník, ne zdroj XP
-    unlocked: false,
-    progress: 0,
-    target: 1,
-  },
 ]
 
 const AVAILABLE_CHALLENGES: Omit<Challenge, "current" | "startDate" | "active" | "completed">[] = [
+  {
+    id: "2-days-no-fomo",
+    title: "2 dny bez FOMO",
+    description: "Obchoduj 2 dny bez FOMO vstupů",
+    type: "streak",
+    target: 2,
+    difficulty: "easy",
+    xpReward: XP_REWARDS.challengeEasy, // 60 XP
+  },
+  {
+    id: "week-no-revenge",
+    title: "Týden bez revenge trades",
+    description: "Týden s 0 revenge trades",
+    type: "streak",
+    target: 7,
+    difficulty: "medium",
+    xpReward: XP_REWARDS.challengeMedium, // 120 XP
+  },
+  {
+    id: "30-days-consistency",
+    title: "30 dní konzistence",
+    description: "30 dní konzistentního trackování",
+    type: "streak",
+    target: 30,
+    difficulty: "hard",
+    xpReward: XP_REWARDS.challengeHard, // 240 XP
+  },
+  {
+    id: "90-days-full-tracker",
+    title: "90 dní plného trackeru",
+    description: "90 dní s plně vyplněným trackerem",
+    type: "streak",
+    target: 90,
+    difficulty: "elite",
+    xpReward: XP_REWARDS.challengeElite, // 500 XP
+  },
   {
     id: "21-day-meditation",
     title: "21 dní meditace",
     description: "Medituj 21 dní v řadě",
     type: "streak",
     target: 21,
-    xpReward: 150, // Sníženo z 500 na 150 XP (21 dní = ~3 dny práce)
-  },
-  {
-    id: "30-day-morning-check",
-    title: "30 dní Morning Check",
-    description: "Dokončit Morning Check 30 dní v řadě",
-    type: "streak",
-    target: 30,
-    xpReward: 200, // Sníženo z 600 na 200 XP (30 dní = ~4 dny práce)
+    difficulty: "medium",
+    xpReward: XP_REWARDS.challengeMedium, // 120 XP
   },
   {
     id: "perfect-week-challenge",
@@ -278,7 +316,8 @@ const AVAILABLE_CHALLENGES: Omit<Challenge, "current" | "startDate" | "active" |
     description: "Splň všechny stages 7 dní v řadě",
     type: "streak",
     target: 7,
-    xpReward: 80, // Sníženo z 400 na 80 XP (7 dní = ~1.5 dne práce)
+    difficulty: "easy",
+    xpReward: XP_REWARDS.challengeEasy, // 60 XP
   },
   {
     id: "14-day-exercise",
@@ -286,7 +325,8 @@ const AVAILABLE_CHALLENGES: Omit<Challenge, "current" | "startDate" | "active" |
     description: "Cvič 14 dní v řadě",
     type: "streak",
     target: 14,
-    xpReward: 100, // Sníženo z 350 na 100 XP (14 dní = ~2 dny práce)
+    difficulty: "medium",
+    xpReward: XP_REWARDS.challengeMedium, // 120 XP
   },
   {
     id: "journal-master",
@@ -294,15 +334,8 @@ const AVAILABLE_CHALLENGES: Omit<Challenge, "current" | "startDate" | "active" |
     description: "Napiš 30 journal entries za 30 dní",
     type: "count",
     target: 30,
-    xpReward: 180, // Sníženo z 450 na 180 XP (30 dní = ~3.5 dne práce)
-  },
-  {
-    id: "profitable-week",
-    title: "Profitabilní týden",
-    description: "Zaznamenej 7 profitabilních tradů v řadě",
-    type: "streak",
-    target: 7,
-    xpReward: 80, // Sníženo z 500 na 80 XP (7 dní = ~1.5 dne práce)
+    difficulty: "hard",
+    xpReward: XP_REWARDS.challengeHard, // 240 XP
   },
 ]
 
@@ -337,12 +370,18 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     },
     aiPacingMultiplier: 1.0,
     lastActivityDate: new Date().toISOString(),
+    dailyXPLog: [],
   })
 
   useEffect(() => {
     const saved = localStorage.getItem("gamification-data")
     if (saved) {
-      setData(JSON.parse(saved))
+      const parsed = JSON.parse(saved)
+      // Ensure dailyXPLog exists for backwards compatibility
+      if (!parsed.dailyXPLog) {
+        parsed.dailyXPLog = []
+      }
+      setData(parsed)
     }
   }, [])
 
@@ -357,6 +396,224 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       }
     }
     return 1
+  }
+
+  const getTodayString = (): string => {
+    return new Date().toISOString().split("T")[0]
+  }
+
+  const getTodayXPLog = (): DailyXPLog | null => {
+    const today = getTodayString()
+    return data.dailyXPLog.find((log) => log.date === today) || null
+  }
+
+  const getOrCreateTodayLog = (): DailyXPLog => {
+    const today = getTodayString()
+    const existingLog = data.dailyXPLog.find((log) => log.date === today)
+    if (existingLog) return existingLog
+
+    return {
+      date: today,
+      readinessCompleted: false,
+      readinessAllStages: false,
+      journalCompleted: false,
+      lossResetCompleted: false,
+      aiReflectionCompleted: false,
+      xpEarned: 0,
+    }
+  }
+
+  const awardReadinessXP = (allStagesCompleted: boolean): boolean => {
+    const todayLog = getOrCreateTodayLog()
+
+    // Už bylo dnes uděleno
+    if (todayLog.readinessCompleted) {
+      return false
+    }
+
+    let xpToAdd = XP_REWARDS.readinessCheck // +20 XP
+    if (allStagesCompleted && !todayLog.readinessAllStages) {
+      xpToAdd += XP_REWARDS.readinessAllStages // +10 XP bonus
+    }
+
+    setData((prev) => {
+      const today = getTodayString()
+      const updatedLog = prev.dailyXPLog.filter((log) => log.date !== today)
+
+      const newLog: DailyXPLog = {
+        ...todayLog,
+        readinessCompleted: true,
+        readinessAllStages: allStagesCompleted,
+        xpEarned: todayLog.xpEarned + xpToAdd,
+      }
+
+      const newXP = prev.xp + xpToAdd
+      const newLevel = calculateLevel(newXP)
+
+      return {
+        ...prev,
+        xp: newXP,
+        level: newLevel,
+        dailyXPLog: [...updatedLog, newLog],
+        lastActivityDate: new Date().toISOString(),
+      }
+    })
+
+    // Emit XP event
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        const event = new CustomEvent("xp-gained", {
+          detail: {
+            amount: xpToAdd,
+            reason: allStagesCompleted ? "Readiness Check + všech 5 stages" : "Readiness Check dokončen",
+            leveledUp: false,
+            newLevel: data.level,
+          },
+        })
+        window.dispatchEvent(event)
+      }, 0)
+    }
+
+    return true
+  }
+
+  const awardJournalXP = (): boolean => {
+    const todayLog = getOrCreateTodayLog()
+
+    if (todayLog.journalCompleted) {
+      return false
+    }
+
+    const xpToAdd = XP_REWARDS.journalEntry // +15 XP
+
+    setData((prev) => {
+      const today = getTodayString()
+      const updatedLog = prev.dailyXPLog.filter((log) => log.date !== today)
+
+      const newLog: DailyXPLog = {
+        ...todayLog,
+        journalCompleted: true,
+        xpEarned: todayLog.xpEarned + xpToAdd,
+      }
+
+      const newXP = prev.xp + xpToAdd
+      const newLevel = calculateLevel(newXP)
+
+      return {
+        ...prev,
+        xp: newXP,
+        level: newLevel,
+        dailyXPLog: [...updatedLog, newLog],
+        lastActivityDate: new Date().toISOString(),
+      }
+    })
+
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        const event = new CustomEvent("xp-gained", {
+          detail: { amount: xpToAdd, reason: "Záznam v obchodním deníku" },
+        })
+        window.dispatchEvent(event)
+      }, 0)
+    }
+
+    return true
+  }
+
+  const awardLossResetXP = (): boolean => {
+    const todayLog = getOrCreateTodayLog()
+
+    if (todayLog.lossResetCompleted) {
+      return false
+    }
+
+    const xpToAdd = XP_REWARDS.lossReset // +10 XP
+
+    setData((prev) => {
+      const today = getTodayString()
+      const updatedLog = prev.dailyXPLog.filter((log) => log.date !== today)
+
+      const newLog: DailyXPLog = {
+        ...todayLog,
+        lossResetCompleted: true,
+        xpEarned: todayLog.xpEarned + xpToAdd,
+      }
+
+      const newXP = prev.xp + xpToAdd
+      const newLevel = calculateLevel(newXP)
+
+      return {
+        ...prev,
+        xp: newXP,
+        level: newLevel,
+        dailyXPLog: [...updatedLog, newLog],
+        lastActivityDate: new Date().toISOString(),
+        stats: {
+          ...prev.stats,
+          lossResetsCompleted: prev.stats.lossResetsCompleted + 1,
+        },
+      }
+    })
+
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        const event = new CustomEvent("xp-gained", {
+          detail: { amount: xpToAdd, reason: "Loss Reset dokončen" },
+        })
+        window.dispatchEvent(event)
+      }, 0)
+    }
+
+    return true
+  }
+
+  const awardAIReflectionXP = (messageLength: number): boolean => {
+    const todayLog = getOrCreateTodayLog()
+
+    // Už bylo dnes uděleno
+    if (todayLog.aiReflectionCompleted) {
+      return false
+    }
+
+    // Minimálně 3 věty (přibližně 50 znaků)
+    if (messageLength < 50) {
+      return false
+    }
+
+    const xpToAdd = XP_REWARDS.aiReflection // +5 XP
+
+    setData((prev) => {
+      const today = getTodayString()
+      const updatedLog = prev.dailyXPLog.filter((log) => log.date !== today)
+
+      const newLog: DailyXPLog = {
+        ...todayLog,
+        aiReflectionCompleted: true,
+        xpEarned: todayLog.xpEarned + xpToAdd,
+      }
+
+      const newXP = prev.xp + xpToAdd
+      const newLevel = calculateLevel(newXP)
+
+      return {
+        ...prev,
+        xp: newXP,
+        level: newLevel,
+        dailyXPLog: [...updatedLog, newLog],
+        lastActivityDate: new Date().toISOString(),
+      }
+    })
+
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        const event = new CustomEvent("xp-gained", {
+          detail: { amount: xpToAdd, reason: "MindTrader AI reflexe" },
+        })
+        window.dispatchEvent(event)
+      }, 0)
+    }
+
+    return true
   }
 
   const calculateDailyXP = (factors: {
@@ -595,6 +852,11 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       value={{
         data,
         addXP,
+        awardReadinessXP,
+        awardJournalXP,
+        awardLossResetXP,
+        awardAIReflectionXP,
+        getTodayXPLog,
         calculateDailyXP,
         unlockAchievement,
         updateChallenge,
@@ -621,4 +883,4 @@ export function useGamification() {
   return context
 }
 
-export { LEVEL_XP_REQUIREMENTS, LEVEL_INFO, AVAILABLE_CHALLENGES }
+export { LEVEL_XP_REQUIREMENTS, LEVEL_INFO, AVAILABLE_CHALLENGES, XP_REWARDS }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -28,8 +28,13 @@ import {
   Trophy,
   MoreHorizontal,
   Menu,
+  Calculator,
+  Sun,
+  Target,
+  AlertTriangle,
 } from "lucide-react"
 import LiveModeToggle from "@/components/live-mode-toggle"
+import { getUserData } from "@/utils/storage-utils"
 
 const mainNavigation = [
   { name: "Dashboard", href: "/", icon: Home },
@@ -41,6 +46,11 @@ const mainNavigation = [
 
 const moreNavigation = [
   { name: "Weekly Review", href: "/weekly-review", icon: Calendar },
+  { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NEW" },
+  { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NEW" },
+  { name: "Trading Cíle", href: "/trading-goals", icon: Target, badge: "NEW" },
+  { name: "Fail Log", href: "/fail-log", icon: AlertTriangle, badge: "NEW" },
+  { name: "Trading Identity", href: "/trading-identity", icon: User, badge: "NEW" },
   { name: "Odměny", href: "/rewards", icon: Trophy },
   { name: "Team Club", href: "/team-club", icon: Users, badge: "PRO" },
 ]
@@ -49,6 +59,68 @@ export function TopNavigation() {
   const pathname = usePathname()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const [profileData, setProfileData] = useState({
+    name: "Trader",
+    email: "",
+    nickname: "",
+    avatarUrl: "",
+    experienceLevel: "beginner",
+    isPremium: false,
+    level: 1,
+  })
+
+  useEffect(() => {
+    const loadProfileData = () => {
+      if (typeof window === "undefined") return
+
+      const userData = getUserData()
+
+      setProfileData({
+        name: userData.user?.name || userData.profile?.nickname || "Trader",
+        email: userData.user?.email || "",
+        nickname: userData.profile?.nickname || "",
+        avatarUrl: userData.profile?.avatarUrl || "",
+        experienceLevel: userData.profile?.experienceLevel || "beginner",
+        isPremium: userData.subscription?.plan === "premium" || userData.subscription?.plan === "pro",
+        level: userData.gamification?.level || 1,
+      })
+    }
+
+    loadProfileData()
+
+    window.addEventListener("settings-updated", loadProfileData)
+    window.addEventListener("storage", loadProfileData)
+
+    return () => {
+      window.removeEventListener("settings-updated", loadProfileData)
+      window.removeEventListener("storage", loadProfileData)
+    }
+  }, [])
+
+  const getInitials = (name: string) => {
+    if (!name) return "T"
+    const parts = name.trim().split(" ")
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+    }
+    return name.slice(0, 2).toUpperCase()
+  }
+
+  const getExperienceLabel = (level: string) => {
+    switch (level) {
+      case "beginner":
+        return "Začátečník"
+      case "intermediate":
+        return "Pokročilý"
+      case "advanced":
+        return "Expert"
+      case "expert":
+        return "Expert Trader"
+      default:
+        return "Trader"
+    }
+  }
 
   const handleLogout = () => {
     console.log("Logging out...")
@@ -60,20 +132,21 @@ export function TopNavigation() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
       <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-14 md:h-16 gap-2">
           {/* Logo */}
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-                <Brain className="w-6 h-6 text-white" />
+          <div className="flex items-center flex-shrink-0">
+            <Link href="/" className="flex items-center space-x-1.5 md:space-x-2">
+              <div className="p-1.5 md:p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                <Brain className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
-              <span className="hidden sm:block text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent whitespace-nowrap">
-                MindTrader AI
+              <span className="hidden md:block text-lg lg:text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent whitespace-nowrap">
+                MindTrader
               </span>
             </Link>
           </div>
 
-          <div className="hidden lg:flex items-center space-x-1">
+          {/* Main Navigation */}
+          <div className="hidden md:flex items-center space-x-0.5 lg:space-x-1">
             {mainNavigation.map((item) => {
               const isActive = pathname === item.href
               return (
@@ -81,17 +154,17 @@ export function TopNavigation() {
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     size="sm"
-                    className={`relative px-3 py-1 h-9 ${
+                    className={`relative px-2 lg:px-3 py-1 h-8 lg:h-9 ${
                       isActive
                         ? "bg-purple-600/20 text-purple-300 hover:bg-purple-600/30"
                         : "text-gray-300 hover:text-white hover:bg-slate-800/50"
                     }`}
                   >
-                    <item.icon className="w-4 h-4 mr-1.5" />
-                    <span className="text-sm">{item.name}</span>
+                    <item.icon className="w-4 h-4 mr-1 lg:mr-1.5" />
+                    <span className="hidden lg:inline text-sm">{item.name}</span>
                     {item.badge && (
                       <Badge
-                        className={`ml-1.5 text-xs px-1 py-0 h-4 ${
+                        className={`ml-1 lg:ml-1.5 text-[10px] lg:text-xs px-1 py-0 h-4 ${
                           item.badge === "AI"
                             ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
                             : item.badge === "PRO"
@@ -112,14 +185,14 @@ export function TopNavigation() {
                 <Button
                   variant={isMoreActive ? "secondary" : "ghost"}
                   size="sm"
-                  className={`relative px-3 py-1 h-9 ${
+                  className={`relative px-2 lg:px-3 py-1 h-8 lg:h-9 ${
                     isMoreActive
                       ? "bg-purple-600/20 text-purple-300 hover:bg-purple-600/30"
                       : "text-gray-300 hover:text-white hover:bg-slate-800/50"
                   }`}
                 >
-                  <MoreHorizontal className="w-4 h-4 mr-1.5" />
-                  <span className="text-sm">More</span>
+                  <MoreHorizontal className="w-4 h-4 lg:mr-1.5" />
+                  <span className="hidden lg:inline text-sm">More</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-slate-900/95 backdrop-blur-md border-slate-700" align="end">
@@ -140,7 +213,11 @@ export function TopNavigation() {
                         {item.badge && (
                           <Badge
                             className={`text-xs px-1.5 py-0 h-5 ${
-                              item.badge === "PRO" ? "bg-orange-500/20 text-orange-300 border-orange-500/30" : ""
+                              item.badge === "PRO"
+                                ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
+                                : item.badge === "NEW"
+                                  ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                  : ""
                             }`}
                           >
                             {item.badge}
@@ -154,10 +231,11 @@ export function TopNavigation() {
             </DropdownMenu>
           </div>
 
-          <div className="flex lg:hidden items-center space-x-2">
+          {/* Mobile Menu */}
+          <div className="flex md:hidden items-center">
             <DropdownMenu open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <Menu className="w-5 h-5 text-gray-300" />
                 </Button>
               </DropdownMenuTrigger>
@@ -194,7 +272,7 @@ export function TopNavigation() {
                 </div>
                 <DropdownMenuSeparator className="bg-slate-700" />
                 <div className="p-2">
-                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">DALŠÍ</p>
+                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">NÁSTROJE & DALŠÍ</p>
                   {moreNavigation.map((item) => {
                     const isActive = pathname === item.href
                     return (
@@ -212,7 +290,11 @@ export function TopNavigation() {
                           {item.badge && (
                             <Badge
                               className={`text-xs px-1.5 py-0 h-5 ${
-                                item.badge === "PRO" ? "bg-orange-500/20 text-orange-300 border-orange-500/30" : ""
+                                item.badge === "PRO"
+                                  ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
+                                  : item.badge === "NEW"
+                                    ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                    : ""
                               }`}
                             >
                               {item.badge}
@@ -228,46 +310,55 @@ export function TopNavigation() {
           </div>
 
           {/* Right Side */}
-          <div className="flex items-center space-x-2 flex-shrink-0">
+          <div className="flex items-center space-x-1.5 md:space-x-2 flex-shrink-0">
             <LiveModeToggle />
             {/* Profile Dropdown */}
             <DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen}>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-slate-800/50 flex-shrink-0">
-                  <Avatar className="h-10 w-10 border-2 border-purple-500/30">
-                    <AvatarImage src="/placeholder.svg?height=40&width=40" alt="Profile" />
-                    <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold">
-                      JD
+                <Button
+                  variant="ghost"
+                  className="relative h-8 w-8 md:h-10 md:w-10 rounded-full hover:bg-slate-800/50 flex-shrink-0 p-0"
+                >
+                  <Avatar className="h-8 w-8 md:h-10 md:w-10 border-2 border-purple-500/30">
+                    <AvatarImage src={profileData.avatarUrl || ""} alt={profileData.name} />
+                    <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-xs md:text-sm">
+                      {getInitials(profileData.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900"></div>
+                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-slate-900"></div>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-80 bg-slate-900/95 backdrop-blur-md border-slate-700" align="end">
                 <div className="p-4 border-b border-slate-700">
                   <div className="flex items-start space-x-3">
                     <Avatar className="h-14 w-14 border-2 border-purple-500/30">
-                      <AvatarImage src="/placeholder.svg?height=56&width=56" alt="Profile" />
+                      <AvatarImage src={profileData.avatarUrl || ""} alt={profileData.name} />
                       <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xl font-semibold">
-                        JD
+                        {getInitials(profileData.name)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
-                        <h3 className="text-white font-bold text-lg">John Doe</h3>
+                        <h3 className="text-white font-bold text-lg">{profileData.name}</h3>
                         <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs px-2 py-0.5">
                           Online
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-400 mt-0.5">john.doe@example.com</p>
+                      <p className="text-sm text-gray-400 mt-0.5">{profileData.email || "Nastavit email v profilu"}</p>
                       <div className="flex items-center gap-2 mt-2">
-                        <Badge className="bg-purple-600/20 text-purple-400 border-purple-500/30 text-xs">
-                          <Crown className="w-3 h-3 mr-1" />
-                          Premium
+                        {profileData.isPremium ? (
+                          <Badge className="bg-purple-600/20 text-purple-400 border-purple-500/30 text-xs">
+                            <Crown className="w-3 h-3 mr-1" />
+                            Premium
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">Free</Badge>
+                        )}
+                        <Badge className="bg-blue-600/20 text-blue-400 border-blue-500/30 text-xs">
+                          Level {profileData.level}
                         </Badge>
-                        <Badge className="bg-blue-600/20 text-blue-400 border-blue-500/30 text-xs">Level 5</Badge>
                         <Badge className="bg-orange-600/20 text-orange-400 border-orange-500/30 text-xs">
-                          Expert Trader
+                          {getExperienceLabel(profileData.experienceLevel)}
                         </Badge>
                       </div>
                     </div>
@@ -292,7 +383,7 @@ export function TopNavigation() {
 
                   <DropdownMenuItem asChild>
                     <Link
-                      href="/account?tab=preferences"
+                      href="/account?tab=notifications"
                       className="flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer"
                     >
                       <div className="p-2 bg-purple-500/10 rounded-lg">
@@ -300,7 +391,7 @@ export function TopNavigation() {
                       </div>
                       <div className="flex-1">
                         <p className="text-white font-medium text-sm">Nastavení</p>
-                        <p className="text-xs text-gray-400">Trading, notifikace, zabezpečení</p>
+                        <p className="text-xs text-gray-400">Notifikace, zabezpečení</p>
                       </div>
                     </Link>
                   </DropdownMenuItem>

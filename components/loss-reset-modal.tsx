@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
 import { useLossReset } from "@/contexts/loss-reset-context"
 import type { LossResetMode, LossResetActivity } from "@/types/loss-reset"
 import { User, Shuffle, ChevronRight, TrendingDown, Clock, CheckCircle2, Play, History } from "lucide-react"
@@ -51,10 +52,23 @@ const COPY = {
 }
 
 export function LossResetModal() {
-  const { isActive, currentSession, mode, coachTone, selectMode, cancelReset, recentSessions, availableActivities } =
-    useLossReset()
-  const [step, setStep] = useState<"overview" | "intro" | "mode-select" | "activity-select" | "history">("overview")
+  const {
+    isActive,
+    currentSession,
+    mode,
+    coachTone,
+    selectMode,
+    cancelReset,
+    recentSessions,
+    availableActivities,
+    startReset,
+  } = useLossReset()
+  const [step, setStep] = useState<
+    "overview" | "frustration-check" | "intro" | "mode-select" | "activity-select" | "history"
+  >("overview")
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [frustrationBefore, setFrustrationBefore] = useState<number>(5)
+  const [notesBefore, setNotesBefore] = useState("")
 
   useEffect(() => {
     if (isActive && !currentSession?.activity) {
@@ -72,6 +86,16 @@ export function LossResetModal() {
   )
   const completedSessions = recentSessions.filter((s) => s.completed)
   const completionRate = recentSessions.length > 0 ? (completedSessions.length / recentSessions.length) * 100 : 0
+
+  const handleStartWithFrustration = () => {
+    const frustrationData = {
+      frustrationBefore,
+      notesBefore,
+      timestamp: new Date().toISOString(),
+    }
+    localStorage.setItem("loss-reset-frustration-before", JSON.stringify(frustrationData))
+    setStep("mode-select")
+  }
 
   if (!isActive || !currentSession) return null
 
@@ -141,7 +165,7 @@ export function LossResetModal() {
               </div>
 
               <div className="space-y-3">
-                <Button onClick={() => setStep("mode-select")} className="w-full" size="lg">
+                <Button onClick={() => setStep("frustration-check")} className="w-full" size="lg">
                   <Play className="mr-2 h-5 w-5" />
                   Spustit Loss Reset
                 </Button>
@@ -153,6 +177,96 @@ export function LossResetModal() {
 
                 <Button onClick={cancelReset} variant="ghost" className="w-full">
                   Zavřít
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {step === "frustration-check" && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">Jak se teď cítíš?</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-6 py-4">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Ohodnoť svou aktuální úroveň frustrace (1 = klid, 10 = extrémní frustrace)
+                  </p>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Klid</span>
+                      <span>Extrémní frustrace</span>
+                    </div>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                        <button
+                          key={num}
+                          onClick={() => setFrustrationBefore(num)}
+                          className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all ${
+                            frustrationBefore === num
+                              ? num <= 3
+                                ? "bg-green-500 text-white scale-110"
+                                : num <= 6
+                                  ? "bg-yellow-500 text-white scale-110"
+                                  : "bg-red-500 text-white scale-110"
+                              : "bg-muted/50 hover:bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-center">
+                      <span
+                        className={`text-2xl font-bold ${
+                          frustrationBefore <= 3
+                            ? "text-green-500"
+                            : frustrationBefore <= 6
+                              ? "text-yellow-500"
+                              : "text-red-500"
+                        }`}
+                      >
+                        {frustrationBefore}/10
+                      </span>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {frustrationBefore <= 3 && "Jsi relativně v klidu"}
+                        {frustrationBefore > 3 && frustrationBefore <= 6 && "Střední úroveň frustrace"}
+                        {frustrationBefore > 6 && frustrationBefore <= 8 && "Vysoká frustrace - Loss Reset ti pomůže"}
+                        {frustrationBefore > 8 && "Kritická úroveň - rozhodně potřebuješ reset"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Co se stalo? <span className="text-muted-foreground font-normal">(nepovinné)</span>
+                  </label>
+                  <Textarea
+                    value={notesBefore}
+                    onChange={(e) => setNotesBefore(e.target.value)}
+                    placeholder="Např: Udělal jsem revenge trade, ztratil jsem X$, nebyl jsem disciplinovaný..."
+                    rows={3}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Toto se později použije pro AI analýzu v MindTrader AI
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Button onClick={handleStartWithFrustration} className="w-full" size="lg">
+                  Pokračovat k resetu
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+
+                <Button onClick={() => setStep("overview")} variant="ghost" className="w-full">
+                  Zpět
                 </Button>
               </div>
             </div>
@@ -277,7 +391,7 @@ export function LossResetModal() {
               />
             </div>
 
-            <Button onClick={() => setStep("overview")} variant="ghost" className="w-full">
+            <Button onClick={() => setStep("frustration-check")} variant="ghost" className="w-full">
               Zpět
             </Button>
           </>
@@ -328,7 +442,6 @@ function LossResetActivitySelect({ onBack }: { onBack: () => void }) {
 
   const handleActivitySelect = (activity: LossResetActivity) => {
     selectActivity(activity)
-    // Modal se automaticky zavře díky useEffect v parent komponentě
   }
 
   useEffect(() => {
