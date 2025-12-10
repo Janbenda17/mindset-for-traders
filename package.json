@@ -34,6 +34,7 @@
     "@stripe/stripe-js": "latest",
     "@supabase/ssr": "0.7.0",
     "@supabase/supabase-js": "latest",
+    "@vercel/analytics": "^1.6.1",
     "ai": "latest",
     "antd": "5.27.6",
     "canvas-confetti": "latest",

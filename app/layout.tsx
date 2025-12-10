@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
 import { DataProvider } from "@/contexts/data-context"
 import { AuthProvider } from "@/contexts/auth-context"
@@ -61,6 +62,7 @@ export default function RootLayout({
                                         <XPNotification />
                                         <LossResetModal />
                                         <NotificationPermissionBanner />
+                                        <Analytics />
                                       </LossResetProvider>
                                     </MilestoneCelebrationsProvider>
                                   </CommunityChallengesProvider>
