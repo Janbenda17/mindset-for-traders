@@ -11,6 +11,7 @@ import {
   setSimulatedDate as saveSimulatedDate,
 } from "@/utils/random-data-generator"
 import { useAuth } from "@/contexts/auth-context"
+import { saveJournalEntry } from "@/utils/storage-utils"
 
 interface DemoControlsProps {
   onDataGenerated?: () => void
@@ -36,28 +37,26 @@ export function DemoControls({ onDataGenerated }: DemoControlsProps) {
   if (user?.email !== "Demo") return null
 
   const handleGenerateRandomTrade = () => {
+    console.log("[v0] DemoControls: handleGenerateRandomTrade called")
     setIsGenerating(true)
     try {
-      console.log("[v0] DemoControls: Generating random trade...")
+      console.log("[v0] DemoControls: Generating random trade for date:", simulatedDate.toISOString())
       const trade = generateRandomTrade(simulatedDate)
       console.log("[v0] DemoControls: Trade generated:", trade)
 
-      const existingTrades = JSON.parse(localStorage.getItem("user-trades") || "[]")
-      existingTrades.push(trade)
-      localStorage.setItem("user-trades", JSON.stringify(existingTrades))
-      console.log("[v0] DemoControls: Trade saved to user-trades")
-
-      // Also save to journal-entries for compatibility
-      const existingJournal = JSON.parse(localStorage.getItem("journal-entries") || "[]")
-      existingJournal.push(trade)
-      localStorage.setItem("journal-entries", JSON.stringify(existingJournal))
+      // This ensures trade is saved to trader-mindset-data.journalEntries in live mode
+      saveJournalEntry(trade)
+      console.log("[v0] DemoControls: Trade saved via saveJournalEntry()")
 
       toast({
-        title: "Obchod vytvořen",
+        title: "✅ Obchod vytvořen",
         description: `${trade.pair} ${trade.tradeType} | P/L: $${trade.profitLoss.toFixed(2)} | ${trade.pips} pips`,
       })
 
-      setTimeout(() => window.location.reload(), 500)
+      setTimeout(() => {
+        console.log("[v0] DemoControls: Reloading page...")
+        window.location.reload()
+      }, 800)
       onDataGenerated?.()
     } catch (error) {
       console.error("[v0] DemoControls: Error generating trade:", error)
@@ -120,7 +119,7 @@ export function DemoControls({ onDataGenerated }: DemoControlsProps) {
     localStorage.setItem("daily-stages-date", today.toDateString())
     localStorage.removeItem("daily-stages")
     toast({ title: "Datum resetováno", description: "Nastaveno na dnešek" })
-    setTimeout(() => window.location.reload(), 500)
+    setTimeout(() => (window.location.href = "/"), 500)
   }
 
   const handleResetStatistics = () => {
@@ -179,7 +178,7 @@ export function DemoControls({ onDataGenerated }: DemoControlsProps) {
   }
 
   const handleGenerateRandom5Stages = () => {
-    console.log("[v0] DemoControls: handleGenerateRandom5Stages called")
+    console.log("[v0] DemoControls: handleGenerateRandom5Stages called - START")
     setIsGenerating(true)
     try {
       console.log("[v0] DemoControls: Generating random 5 stages for date:", simulatedDate.toISOString())
@@ -187,7 +186,16 @@ export function DemoControls({ onDataGenerated }: DemoControlsProps) {
       const dateStr = simulatedDate.toISOString().split("T")[0]
       const baseTime = simulatedDate.getTime()
 
-      // Complete all stages for the simulated date
+      const randomSleepQuality = Math.floor(Math.random() * 3) + 7 // 7-10
+      const randomSleepHours = Math.floor(Math.random() * 3) + 6 // 6-9
+      const randomHydration = Math.floor(Math.random() * 3) + 7
+      const randomStress = Math.floor(Math.random() * 4) + 3 // 3-7
+      const randomFocus = Math.floor(Math.random() * 3) + 7
+      const randomMood = ["Klidný", "Sebevědomý", "Pozitivní", "Energický", "Neutrální"][Math.floor(Math.random() * 5)]
+      const randomMeditationTime = Math.floor(Math.random() * 25) + 5 // 5-30 min
+      const randomScore = Math.floor(Math.random() * 25) + 65 // 65-90
+
+      // Complete all stages with unique random data
       const allStages = [
         {
           id: 1,
@@ -246,76 +254,91 @@ export function DemoControls({ onDataGenerated }: DemoControlsProps) {
         },
       ]
 
-      // Save stages
-      console.log("[v0] DemoControls: Saving stages:", allStages)
+      console.log("[v0] DemoControls: Saving stages to localStorage:", allStages)
       localStorage.setItem("daily-stages", JSON.stringify(allStages))
       localStorage.setItem("daily-stages-date", simulatedDate.toDateString())
 
-      // Generate and save morning check data
       const morningCheck = {
-        id: Date.now().toString(),
+        id: `morning-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         date: dateStr,
-        sleepQuality: Math.floor(Math.random() * 3) + 7,
-        sleepHours: Math.floor(Math.random() * 3) + 6,
-        exercised: Math.random() > 0.3,
-        exerciseType: "Běh",
-        exerciseDuration: Math.floor(Math.random() * 30) + 15,
-        hydration: Math.floor(Math.random() * 3) + 7,
-        stressLevel: Math.floor(Math.random() * 4) + 3,
-        focus: Math.floor(Math.random() * 3) + 7,
-        emotionalState: ["Klidný", "Sebevědomý", "Pozitivní"][Math.floor(Math.random() * 3)],
-        meditationTime: Math.floor(Math.random() * 20) + 5,
-        morningRoutine: true,
+        sleepQuality: randomSleepQuality,
+        sleepHours: randomSleepHours,
+        exercised: Math.random() > 0.4,
+        exerciseType: ["Běh", "Posilovna", "Jóga", "Procházka"][Math.floor(Math.random() * 4)],
+        exerciseDuration: Math.floor(Math.random() * 40) + 20,
+        hydration: randomHydration,
+        stressLevel: randomStress,
+        focus: randomFocus,
+        emotionalState: randomMood,
+        meditationTime: randomMeditationTime,
+        morningRoutine: Math.random() > 0.3,
         physicalHealth: Math.floor(Math.random() * 3) + 7,
-        score: Math.floor(Math.random() * 20) + 70,
+        score: randomScore,
       }
 
-      console.log("[v0] DemoControls: Saving morning check:", morningCheck)
+      console.log("[v0] DemoControls: Generated morning check:", morningCheck)
       const morningChecks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
       const filteredChecks = morningChecks.filter((c: any) => c.date !== dateStr)
       filteredChecks.push(morningCheck)
       localStorage.setItem("mindtrader-morning-checks", JSON.stringify(filteredChecks))
+      console.log("[v0] DemoControls: Saved morning checks, count:", filteredChecks.length)
 
-      // Generate and save daily intention
+      const dailyGoals = [
+        "Udržet disciplínu a dodržovat risk management",
+        "Čekat na A+ setupy, žádné FOMO",
+        "Maximálně 3 trades, kvalita nad kvantitou",
+        "Dodržet trading plán bez výjimek",
+        "Být trpělivý a nenutit trades",
+      ]
       const intention = {
-        id: Date.now().toString(),
+        id: `intention-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         date: dateStr,
-        dailyGoal: "Udržet disciplínu a dodržovat risk management",
-        emotionalTarget: "Zůstat klidný a trpělivý",
-        maxRisk: "2%",
-        profitTarget: "$500",
-        tradingHours: "2-3 hodiny",
+        dailyGoal: dailyGoals[Math.floor(Math.random() * dailyGoals.length)],
+        emotionalTarget: ["Zůstat klidný", "Být trpělivý", "Udržet disciplínu"][Math.floor(Math.random() * 3)],
+        maxRisk: ["1%", "1.5%", "2%"][Math.floor(Math.random() * 3)],
+        profitTarget: `$${Math.floor(Math.random() * 500) + 200}`,
+        tradingHours: ["1-2 hodiny", "2-3 hodiny", "3-4 hodiny"][Math.floor(Math.random() * 3)],
         timestamp: baseTime - 3 * 60 * 60 * 1000,
       }
 
-      console.log("[v0] DemoControls: Saving intention:", intention)
+      console.log("[v0] DemoControls: Generated intention:", intention)
       const intentions = JSON.parse(localStorage.getItem("daily-intentions") || "[]")
       const filteredIntentions = intentions.filter((i: any) => i.date !== dateStr)
       filteredIntentions.push(intention)
       localStorage.setItem("daily-intentions", JSON.stringify(filteredIntentions))
+      console.log("[v0] DemoControls: Saved intentions, count:", filteredIntentions.length)
 
-      // Generate and save trading plan
+      const strategies = [
+        "Breakout na EUR/USD a GBP/USD",
+        "Pullback trading na major pairs",
+        "Trend following na trending markets",
+        "Range trading na choppy days",
+        "Reversal setups na klíčových levelech",
+      ]
       const plan = {
-        id: Date.now().toString(),
+        id: `plan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         date: dateStr,
-        strategy: "Breakout na EUR/USD a GBP/USD",
-        keyLevels: "1.0850 support, 1.0920 resistance",
-        entryRules: "Breakout s retestem, volume confirmation",
-        exitRules: "Target 30-50 pips, stop 15 pips",
-        riskManagement: "Max 2% per trade, max 3 trades denně",
-        marketConditions: "Trending market, vysoká volatilita",
+        strategy: strategies[Math.floor(Math.random() * strategies.length)],
+        keyLevels: `${(1 + Math.random() * 0.1).toFixed(4)} support, ${(1.1 + Math.random() * 0.1).toFixed(4)} resistance`,
+        entryRules: "Breakout s retestem, volume confirmation, clean price action",
+        exitRules: `Target ${Math.floor(Math.random() * 40) + 20}-${Math.floor(Math.random() * 40) + 50} pips, stop ${Math.floor(Math.random() * 15) + 10} pips`,
+        riskManagement: `Max ${Math.floor(Math.random() * 2) + 1}% per trade, max ${Math.floor(Math.random() * 3) + 2} trades denně`,
+        marketConditions: ["Trending market", "Range-bound", "High volatility", "Low volatility"][
+          Math.floor(Math.random() * 4)
+        ],
         timestamp: baseTime - 2 * 60 * 60 * 1000,
       }
 
-      console.log("[v0] DemoControls: Saving trading plan:", plan)
+      console.log("[v0] DemoControls: Generated plan:", plan)
       const plans = JSON.parse(localStorage.getItem("trading-plans") || "[]")
       const filteredPlans = plans.filter((p: any) => p.date !== dateStr)
       filteredPlans.push(plan)
       localStorage.setItem("trading-plans", JSON.stringify(filteredPlans))
+      console.log("[v0] DemoControls: Saved plans, count:", filteredPlans.length)
 
       // Also save to daily-tracker-entries for analytics
       const trackerEntry = {
-        id: Date.now().toString(),
+        id: `tracker-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         date: dateStr,
         readinessScore: morningCheck.score,
         mood: morningCheck.emotionalState,
@@ -326,20 +349,24 @@ export function DemoControls({ onDataGenerated }: DemoControlsProps) {
         completedStages: 5,
       }
 
-      console.log("[v0] DemoControls: Saving tracker entry:", trackerEntry)
+      console.log("[v0] DemoControls: Generated tracker entry:", trackerEntry)
       const trackerEntries = JSON.parse(localStorage.getItem("daily-tracker-entries") || "[]")
       const filteredTracker = trackerEntries.filter((t: any) => t.date !== dateStr)
       filteredTracker.push(trackerEntry)
       localStorage.setItem("daily-tracker-entries", JSON.stringify(filteredTracker))
+      console.log("[v0] DemoControls: Saved tracker entries, count:", filteredTracker.length)
 
-      console.log("[v0] DemoControls: 5 stages generation complete")
+      console.log("[v0] DemoControls: 5 stages generation COMPLETE")
 
       toast({
-        title: "5 Stages vyplněny",
-        description: "Všechny stages byly náhodně vyplněny",
+        title: "✅ 5 Stages vyplněny",
+        description: `Všechny stages byly náhodně vyplněny pro ${simulatedDate.toLocaleDateString("cs-CZ")}`,
       })
 
-      setTimeout(() => window.location.reload(), 500)
+      setTimeout(() => {
+        console.log("[v0] DemoControls: Reloading page...")
+        window.location.reload()
+      }, 800)
     } catch (error) {
       console.error("[v0] DemoControls: Error generating 5 stages:", error)
       toast({ title: "Chyba", description: "Nepodařilo se vyplnit 5 stages", variant: "destructive" })

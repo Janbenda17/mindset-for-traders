@@ -148,12 +148,18 @@ function generatePsychologicalAnalysis(
   let dailyMoodData = []
   let weekdayChartData: any[] = []
 
-  if (!isLiveMode || (trades.length === 0 && moodEntries.length === 0)) {
+  const isDemoAccount =
+    typeof window !== "undefined" &&
+    JSON.parse(localStorage.getItem("mindtrader-auth-token") || '{"email":""}').email === "Demo"
+
+  // Only show demo data in virtual mode AND not Demo account
+  if (!isLiveMode && !isDemoAccount) {
     const demoData = generateDemoData(tradingStyle)
     weeklyPerformanceData = demoData.weeklyPerformanceData
     dailyMoodData = demoData.dailyMoodData
     weekdayChartData = demoData.weekdayChartData
   } else {
+    // Use real data (or empty data for Demo account in live mode)
     let filteredTrades = trades
     if (timeframe === "week") {
       filteredTrades = trades.filter((trade) => {
