@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
+import { resetDemoAccount } from "@/utils/demo-reset"
 
 interface User {
   id: string
@@ -23,6 +24,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const OWNER_EMAIL = "honza.newage@gmail.com"
+const DEMO_EMAIL = "Demo"
+const DEMO_PASSWORD = "Demo"
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -50,6 +53,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+        resetDemoAccount()
+
+        const userData = {
+          id: "demo",
+          email: DEMO_EMAIL,
+          name: "Demo User",
+          isOwner: false,
+        }
+
+        setUser(userData)
+        localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
+
+        // Set premium subscription for Demo account
+        const subscriptionData = {
+          plan: "premium",
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        }
+        localStorage.setItem("trader-mindset-subscription", JSON.stringify(subscriptionData))
+
+        localStorage.setItem("trading-mode", "live")
+
+        // Mark onboarding as completed
+        localStorage.setItem("trader-mindset-onboarding-completed", "true")
+
+        // Set flag to show ProductTour
+        localStorage.setItem("mindtrader-show-tour", "true")
+        localStorage.removeItem("mindtrader-product-tour-completed")
+
+        console.log("[v0] Demo login: Premium active, tour enabled, redirecting to dashboard")
+
+        toast({
+          title: "Demo režim aktivován",
+          description: "Premium přístup odemčen. Spustí se produktová prohlídka.",
+        })
+
+        router.push("/")
+        return true
+      }
+
       // Special handling for owner account
       if (email === OWNER_EMAIL) {
         const userData = {
@@ -179,9 +223,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData)
       localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
 
+      localStorage.setItem("mindtrader-show-tour", "true")
+
       toast({
         title: "Registrace úspěšná!",
-        description: "Vítejte v Trader Mindset!",
+        description: "Vítejte v MindTrader!",
       })
 
       // Redirect to onboarding

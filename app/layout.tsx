@@ -23,6 +23,7 @@ import { XPNotification } from "@/components/xp-notification"
 import { LossResetModal } from "@/components/loss-reset-modal"
 import { NotificationPermissionBanner } from "@/components/notification-permission-banner"
 import ClientLayout from "./ClientLayout"
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -77,6 +78,7 @@ export default function RootLayout({
             </SubscriptionProvider>
           </AuthProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )

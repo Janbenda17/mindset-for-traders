@@ -64,7 +64,7 @@ export function LoginForm() {
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                   <Input
                     id="email"
-                    type="email"
+                    type="text"
                     placeholder="váš@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}

@@ -246,13 +246,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   const { isPremium } = useSubscription()
 
-  // Check if current user is owner or can switch modes
   const isOwner = user?.email === "honza.newage@gmail.com"
-  const canSwitchModes = isPremium || isOwner
+  const isDemoAccount = user?.email === "Demo"
+  const canSwitchModes = isPremium || isOwner || isDemoAccount
 
   useEffect(() => {
-    // Check if we're in live mode on mount
-    const liveMode = localStorage.getItem("trader-mindset-live-mode") === "true"
+    const tradingMode = localStorage.getItem("trading-mode")
+    const oldLiveMode = localStorage.getItem("trader-mindset-live-mode")
+
+    // Use trading-mode as primary, fall back to old key
+    const liveMode = tradingMode === "live" || oldLiveMode === "true"
     const everSwitched = localStorage.getItem("trader-mindset-ever-switched-live") === "true"
 
     setIsLiveMode(liveMode)
@@ -449,7 +452,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }
 
   const switchToLive = () => {
-    if (!isPremium && !isOwner) {
+    if (!isPremium && !isOwner && !isDemoAccount) {
       toast({
         title: "Premium vyžadováno",
         description: "Live režim je dostupný pouze pro premium uživatele.",
@@ -469,6 +472,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
+    localStorage.setItem("trading-mode", "live")
     localStorage.setItem("trader-mindset-live-mode", "true")
     localStorage.setItem("trader-mindset-ever-switched-live", "true")
     setIsLiveMode(true)
@@ -501,6 +505,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
+    localStorage.setItem("trading-mode", "virtual")
     localStorage.setItem("trader-mindset-live-mode", "false")
     setIsLiveMode(false)
 
