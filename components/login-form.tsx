@@ -2,26 +2,46 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Brain, Mail, Lock, LogIn, Sparkles, Shield, Zap } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { login } = useAuth()
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("mindtrader-saved-email")
+    const savedPassword = localStorage.getItem("mindtrader-saved-password")
+    if (savedEmail && savedPassword) {
+      setEmail(savedEmail)
+      setPassword(savedPassword)
+      setRememberMe(true)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
+      if (rememberMe) {
+        localStorage.setItem("mindtrader-saved-email", email)
+        localStorage.setItem("mindtrader-saved-password", password)
+      } else {
+        localStorage.removeItem("mindtrader-saved-email")
+        localStorage.removeItem("mindtrader-saved-password")
+      }
+
       await login(email, password)
     } finally {
       setIsLoading(false)
@@ -90,6 +110,21 @@ export function LoginForm() {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  className="border-slate-600 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                />
+                <label
+                  htmlFor="remember"
+                  className="text-sm text-gray-400 cursor-pointer select-none hover:text-gray-300 transition-colors"
+                >
+                  Uložit přihlašovací údaje
+                </label>
               </div>
 
               <Button

@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
+import { getSimulatedDate } from "@/utils/random-data-generator"
 
 interface Stage {
   id: number
@@ -85,11 +86,16 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
   // Load stages from localStorage on mount
   useEffect(() => {
     const savedStages = localStorage.getItem("daily-stages")
-    const today = new Date().toDateString()
+
+    const simulatedDate = getSimulatedDate()
+    const today = simulatedDate.toDateString()
+
     const lastReset = localStorage.getItem("daily-stages-date")
 
     if (lastReset !== today) {
-      // Reset stages for new day
+      console.log("[v0] DailyStageContext: Resetting stages for new day:", today, "previous:", lastReset)
+
+      // Reset to initial stages - DO NOT touch previous data, just reset the stages state
       localStorage.setItem("daily-stages-date", today)
       localStorage.setItem("daily-stages", JSON.stringify(initialStages))
       setStages(initialStages)

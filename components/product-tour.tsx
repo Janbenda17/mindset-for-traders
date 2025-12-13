@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   Sparkles,
   X,
+  Eye,
 } from "lucide-react"
 
 const tourSteps = [
@@ -306,6 +307,19 @@ export function ProductTour() {
     <>
       {/* Semi-transparent overlay */}
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90]" onClick={() => setIsMinimized(true)} />
+
+      <div className="fixed inset-0 z-[95] pointer-events-none flex items-center justify-center">
+        <button
+          onClick={() => setIsMinimized(true)}
+          className="pointer-events-auto bg-cyan-500/20 hover:bg-cyan-500/30 backdrop-blur-md border-2 border-cyan-400/50 text-cyan-300 px-8 py-4 rounded-full flex items-center gap-3 transition-all hover:scale-105 shadow-lg shadow-cyan-500/20"
+        >
+          <Eye className="w-6 h-6" />
+          <div className="text-left">
+            <div className="font-semibold text-white">Náhled stránky</div>
+            <div className="text-xs text-cyan-400">Klikni zde pro přiblížení</div>
+          </div>
+        </button>
+      </div>
 
       {/* Bottom panel */}
       <div className="fixed bottom-0 left-0 right-0 z-[100] bg-gradient-to-t from-gray-900 via-gray-900 to-gray-900/95 border-t border-cyan-500/20 p-6 pb-8">

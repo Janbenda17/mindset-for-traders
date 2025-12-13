@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +11,19 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useDailyStage } from "@/contexts/daily-stage-context"
-import { Target, TrendingUp, ArrowRight, Check, Info, DollarSign, Clock, Activity, BookOpen, ArrowLeft } from 'lucide-react'
+import { getSimulatedDate } from "@/utils/random-data-generator"
+import {
+  Target,
+  TrendingUp,
+  ArrowRight,
+  Check,
+  Info,
+  DollarSign,
+  Clock,
+  Activity,
+  BookOpen,
+  ArrowLeft,
+} from "lucide-react"
 import { format } from "date-fns"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -37,7 +49,7 @@ export function TradingPlan() {
   const [isEditing, setIsEditing] = useState(false)
 
   const [formData, setFormData] = useState<TradingPlanData>({
-    date: format(new Date(), "yyyy-MM-dd"),
+    date: format(getSimulatedDate(), "yyyy-MM-dd"),
     setups: "",
     pairs: "",
     timeframes: "",
@@ -51,9 +63,15 @@ export function TradingPlan() {
   })
 
   useEffect(() => {
+    const simulatedDate = getSimulatedDate()
+    const todayDate = format(simulatedDate, "yyyy-MM-dd")
+
+    // Update formData date
+    setFormData((prev) => ({ ...prev, date: todayDate }))
+
     // Load existing plan for today
     const plans = JSON.parse(localStorage.getItem("trading-plans") || "[]")
-    const todayPlan = plans.find((p: TradingPlanData) => p.date === formData.date)
+    const todayPlan = plans.find((p: TradingPlanData) => p.date === todayDate)
 
     if (todayPlan) {
       setFormData(todayPlan)

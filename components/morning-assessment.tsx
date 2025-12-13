@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
 import { useGamification } from "@/contexts/gamification-context"
+import { getSimulatedDate } from "@/utils/random-data-generator"
 import {
   Moon,
   Coffee,
@@ -65,7 +66,7 @@ export function MorningAssessment() {
   const [isLocked, setIsLocked] = useState(false)
   const [assessment, setAssessment] = useState<MorningCheckData>({
     id: "",
-    date: new Date().toISOString().split("T")[0],
+    date: getSimulatedDate().toISOString().split("T")[0],
     sleepQuality: 7,
     sleepHours: 7.5,
     energyLevel: 7,
@@ -84,7 +85,8 @@ export function MorningAssessment() {
   })
 
   useEffect(() => {
-    const todayDate = new Date().toISOString().split("T")[0]
+    const simulatedDate = getSimulatedDate()
+    const todayDate = simulatedDate.toISOString().split("T")[0]
     const lockKey = `morning-check-locked-${todayDate}`
     const locked = localStorage.getItem(lockKey) === "true"
 
@@ -97,6 +99,12 @@ export function MorningAssessment() {
       if (todayCheck) {
         setAssessment(todayCheck)
       }
+    } else {
+      setIsLocked(false)
+      setAssessment((prev) => ({
+        ...prev,
+        date: todayDate,
+      }))
     }
   }, [])
 
@@ -213,7 +221,8 @@ export function MorningAssessment() {
       return
     }
 
-    const todayDate = new Date().toISOString().split("T")[0]
+    const simulatedDate = getSimulatedDate()
+    const todayDate = simulatedDate.toISOString().split("T")[0]
     const lockKey = `morning-check-locked-${todayDate}`
     const xpKey = `morning-check-xp-${todayDate}`
 
