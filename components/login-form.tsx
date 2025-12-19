@@ -21,8 +21,8 @@ export function LoginForm() {
 
   useEffect(() => {
     const teaserEarlyAccess = localStorage.getItem("teaser-early-access")
+    // User will be redirected by middleware if not authorized
     if (!teaserEarlyAccess) {
-      window.location.href = "/intro"
       return
     }
 

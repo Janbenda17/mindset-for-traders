@@ -17,7 +17,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       {!hideNavigation && <TopNavigation />}
       <div className={hideNavigation ? "flex-1" : "pt-16 flex-1"}>{children}</div>
       {!hideNavigation && <Footer />}
-      <ProductTour />
+      {!hideNavigation && <ProductTour />}
     </div>
   )
 }
