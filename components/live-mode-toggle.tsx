@@ -23,36 +23,9 @@ const LiveModeToggle = () => {
 
   useEffect(() => {
     const checkPremiumStatus = async () => {
-      if (!user?.id) {
-        setIsLoading(false)
-        return
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("subscription_status, subscription_tier, trial_ends_at")
-          .eq("user_id", user.id)
-          .maybeSingle()
-
-        if (error) {
-          console.error("[v0] Premium check error:", error.message)
-          setIsPremium(false)
-        } else if (!data) {
-          console.log("[v0] No profile data found for user:", user.id)
-          setIsPremium(false)
-        } else {
-          const hasActiveSub = data.subscription_status === "active"
-          const hasActiveTrial = data.trial_ends_at && new Date(data.trial_ends_at) > new Date()
-
-          setIsPremium(hasActiveSub || hasActiveTrial)
-        }
-      } catch (error) {
-        console.error("[v0] Exception checking premium:", error)
-        setIsPremium(false)
-      } finally {
-        setIsLoading(false)
-      }
+      setIsPremium(true)
+      setIsLoading(false)
+      return
     }
 
     checkPremiumStatus()

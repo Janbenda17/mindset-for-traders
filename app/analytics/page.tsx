@@ -810,61 +810,10 @@ export default function AnalyticsPage({ user }: any) {
   // CHANGE: Load demo data for virtual mode
   const demoData = !isLiveMode ? generateDemoData(tradingStyle || "daytrader") : null
 
-  if (!analysis && isLiveMode) {
-    // Only show loading state if in live mode and no analysis yet
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8">
-          {isLiveMode && analysis?.summary?.uniqueDays < 10 ? (
-            <div className="max-w-md w-full">
-              <div className="mb-6">
-                <Brain className="w-16 h-16 mx-auto text-purple-400 mb-4 opacity-60" />
-                <h2 className="text-2xl font-bold text-white mb-2">Building Your Profile</h2>
-                <p className="text-purple-300 text-sm mb-6">
-                  We're collecting data about your trading behavior to provide accurate psychological insights.
-                </p>
-              </div>
-
-              <div className="bg-slate-800/50 rounded-lg p-6 mb-6 border border-purple-500/30">
-                <div className="flex justify-between mb-2">
-                  <span className="text-white font-semibold">Trading Days Required</span>
-                  <span className="text-purple-400 font-bold">{analysis?.summary?.uniqueDays || 0}/10</span>
-                </div>
-                <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 h-full transition-all duration-500"
-                    style={{ width: `${Math.min(((analysis?.summary?.uniqueDays || 0) / 10) * 100, 100)}%` }}
-                  />
-                </div>
-                <p className="text-purple-300 text-xs mt-3">
-                  {10 - (analysis?.summary?.uniqueDays || 0)} more trading day
-                  {10 - (analysis?.summary?.uniqueDays || 0) !== 1 ? "s" : ""} needed
-                </p>
-              </div>
-
-              <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
-                <p className="text-slate-300 text-sm">
-                  Once you complete 10 trading days, your detailed psychological analysis will be available with
-                  insights into your trading patterns, emotional triggers, and performance metrics.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center">
-              <Brain className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-              <h2 className="text-xl font-semibold text-slate-400 mb-2">No Data Yet</h2>
-              <p className="text-slate-500">Start recording trades to see your analytics</p>
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  // CHANGE: Display demo data in virtual mode
+  // CHANGE: Add fallback for undefined displayData to prevent build error
   const displayData = !isLiveMode ? demoData : analysis
 
-  if (!displayData) {
+  if (!displayData || !displayData.summary) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">

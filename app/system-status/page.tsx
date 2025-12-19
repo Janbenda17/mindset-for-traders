@@ -28,10 +28,12 @@ export default function SystemStatusPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (typeof window === "undefined") return
     runSystemChecks()
   }, [isLiveMode])
 
   const runSystemChecks = () => {
+    if (typeof window === "undefined") return
     setLoading(true)
     const results: SystemCheck[] = []
 

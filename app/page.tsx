@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { AdminPanel } from "@/components/admin-panel"
 import { TradingStyleBadge } from "@/components/trading-style-badge"
-import { StageProgression } from "@/components/stage-progression"
 import {
   Brain,
   TrendingUp,
@@ -22,7 +21,6 @@ import {
   TrendingDown,
   Users,
   ArrowRight,
-  Check,
   Rocket,
   PlayCircle,
   PlusCircle,
@@ -466,8 +464,6 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {isLiveMode && <StageProgression />}
-
           <div className="space-y-3 sm:space-y-4 animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
             <h2 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
               <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
@@ -519,7 +515,7 @@ export default function DashboardPage() {
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5"></div>
             <CardContent className="p-4 sm:p-6 relative">
               <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="flex items-center space-x-3">
                   <div className="p-2 sm:p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-2xl shadow-lg shadow-purple-500/50">
                     <Zap className="w-5 h-5 text-green-400 mt-1 group-hover:scale-110 transition-transform" />
                   </div>
@@ -564,81 +560,34 @@ export default function DashboardPage() {
 
           {!isPremium && (
             <Card className="psyche-card border-yellow-500/50 bg-gradient-to-r from-yellow-900/30 via-orange-900/30 to-yellow-900/30 overflow-hidden relative backdrop-blur-sm shadow-xl">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-orange-500/5 to-yellow-500/5 animate-pulse"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 blur-xl"></div>
-              <CardContent className="p-4 sm:p-6 relative">
-                <div className="flex flex-col items-center gap-4 sm:gap-6 text-center sm:text-left sm:flex-row sm:justify-between">
-                  <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
-                    <div className="p-3 sm:p-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl sm:rounded-2xl shadow-2xl shadow-yellow-500/50 animate-pulse">
-                      <Crown className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-center sm:justify-start space-x-2 mb-2">
-                        <h3 className="text-xl sm:text-2xl font-bold text-white">Odemkni Premium</h3>
-                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 animate-bounce shadow-lg shadow-yellow-500/50 text-xs">
-                          <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
-                          50% OFF
-                        </Badge>
-                      </div>
-                      <p className="text-gray-300 text-sm sm:text-lg">Přepni do Live režimu a odemkni všechny funkce</p>
-                      <div className="flex items-center justify-center sm:justify-start space-x-4 mt-2 sm:mt-3">
-                        <div className="flex items-center space-x-2">
-                          <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
-                          <span className="text-xs sm:text-sm text-gray-300">Zruš kdykoliv</span>
-                        </div>
-                      </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-orange-500/10"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 blur-xl"></div>
+              <CardContent className="p-6 sm:p-8 relative">
+                <div className="text-center">
+                  <div className="flex justify-center mb-4 sm:mb-6">
+                    <div className="p-3 sm:p-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl sm:rounded-2xl border border-yellow-500/30 shadow-lg shadow-yellow-500/20">
+                      <Users className="w-8 h-8 sm:w-12 sm:h-12 text-blue-400" />
                     </div>
                   </div>
-                  <div className="flex flex-col items-center space-y-2 sm:space-y-3">
-                    <div className="text-center">
-                      <p className="text-gray-400 text-xs sm:text-sm line-through">2999 Kč/měsíc</p>
-                      <p className="text-3xl sm:text-4xl font-bold text-white">1499 Kč</p>
-                      <p className="text-yellow-400 text-xs sm:text-sm font-semibold">Ušetři 50%!</p>
-                    </div>
-                    <Button
-                      asChild
-                      size="lg"
-                      className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0 shadow-lg shadow-yellow-500/30 text-sm sm:text-base w-full sm:w-auto"
-                    >
-                      <Link href="/pricing">
-                        <Rocket className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                        Upgrade
-                        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
-                      </Link>
-                    </Button>
-                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Join our community</h3>
+                  <p className="text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto text-sm sm:text-lg">
+                    {isLiveMode ? "Sdílej zkušenosti s ostatními tradery" : "Vyzkoušej demo komunitu"}
+                  </p>
+                  <Button
+                    asChild
+                    size="lg"
+                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0 shadow-lg shadow-yellow-500/30 text-sm sm:text-base w-full sm:w-auto"
+                  >
+                    <Link href="/pricing">
+                      <Rocket className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                      Upgrade
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           )}
-
-          <Card className="psyche-card overflow-hidden border-slate-700/50 bg-slate-900/50 backdrop-blur-sm shadow-xl">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 blur-xl"></div>
-            <CardContent className="p-6 sm:p-8 relative">
-              <div className="text-center">
-                <div className="flex justify-center mb-4 sm:mb-6">
-                  <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl sm:rounded-2xl border border-blue-500/30 shadow-lg shadow-blue-500/20">
-                    <Users className="w-8 h-8 sm:w-12 sm:h-12 text-blue-400" />
-                  </div>
-                </div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Join our community</h3>
-                <p className="text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto text-sm sm:text-lg">
-                  {isLiveMode ? "Sdílej zkušenosti s ostatními tradery" : "Vyzkoušej demo komunitu"}
-                </p>
-                <Button
-                  asChild
-                  size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white border-0 shadow-lg shadow-blue-500/30 text-sm sm:text-base w-full sm:w-auto"
-                >
-                  <Link href="/team-club">
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    {isLiveMode ? "Join Community" : "Try Demo"}
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {showAdminPanel && <AdminPanel isVisible={showAdminPanel} onClose={() => setShowAdminPanel(false)} />}

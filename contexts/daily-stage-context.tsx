@@ -18,9 +18,10 @@ interface Stage {
 interface DailyStageContextType {
   stages: Stage[]
   currentStage: number
-  completeStage: (stageId: number) => void
+  completeStage: (stageId: number) => Promise<void>
   resetStages: () => void
   getProgress: () => number
+  isLoading: boolean
 }
 
 const DailyStageContext = createContext<DailyStageContextType | undefined>(undefined)
@@ -81,65 +82,134 @@ const initialStages: Stage[] = [
 export function DailyStageProvider({ children }: { children: React.ReactNode }) {
   const [stages, setStages] = useState<Stage[]>(initialStages)
   const [currentStage, setCurrentStage] = useState<number>(1)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Load stages from localStorage on mount
   useEffect(() => {
-    const savedStages = localStorage.getItem("daily-stages")
-    const today = new Date().toDateString()
-    const lastReset = localStorage.getItem("daily-stages-date")
-
-    if (lastReset !== today) {
-      // Reset stages for new day
-      localStorage.setItem("daily-stages-date", today)
-      localStorage.setItem("daily-stages", JSON.stringify(initialStages))
-      setStages(initialStages)
-      setCurrentStage(1)
-    } else if (savedStages) {
-      const parsedStages = JSON.parse(savedStages)
-      setStages(parsedStages)
-
-      // Find first incomplete stage
-      const firstIncomplete = parsedStages.findIndex((s: Stage) => !s.completed)
-      setCurrentStage(firstIncomplete !== -1 ? parsedStages[firstIncomplete].id : parsedStages.length)
-    }
+    loadStagesFromSupabase()
   }, [])
 
-  const completeStage = (stageId: number) => {
-    setStages((prev) => {
-      const newStages = prev.map((stage) => {
-        if (stage.id === stageId) {
-          return {
-            ...stage,
-            completed: true,
-            completedAt: new Date().toISOString(),
-          }
-        }
-        // Unlock next stage
-        if (stage.id === stageId + 1) {
-          return {
-            ...stage,
-            unlocked: true,
-          }
-        }
-        return stage
-      })
+  const loadStagesFromSupabase = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch("/api/daily-stages/get")
 
-      localStorage.setItem("daily-stages", JSON.stringify(newStages))
-
-      // Update current stage to next incomplete
-      const nextIncomplete = newStages.findIndex((s) => !s.completed)
-      if (nextIncomplete !== -1) {
-        setCurrentStage(newStages[nextIncomplete].id)
+      if (!response.ok) {
+        console.error(`[v0] Failed to load daily stages: ${response.status} ${response.statusText}`)
+        setStages(initialStages)
+        setIsLoading(false)
+        return
       }
 
-      return newStages
-    })
+      const data = await response.json()
+
+      // Map Supabase data to stages
+      let updatedStages = initialStages.map((stage) => {
+        let completed = false
+        let completedAt: string | undefined
+
+        switch (stage.id) {
+          case 1:
+            completed = data.morning_check_completed || false
+            completedAt = data.morning_check_completed_at
+            break
+          case 2:
+            completed = data.daily_intention_completed || false
+            completedAt = data.daily_intention_completed_at
+            break
+          case 3:
+            completed = data.trading_plan_completed || false
+            completedAt = data.trading_plan_completed_at
+            break
+          case 4:
+            completed = data.record_trades_completed || false
+            completedAt = data.record_trades_completed_at
+            break
+        }
+
+        return {
+          ...stage,
+          completed,
+          completedAt,
+          unlocked: true, // Will be set in second pass
+        }
+      })
+
+      updatedStages = updatedStages.map((stage) => ({
+        ...stage,
+        unlocked: stage.id === 1 || (stage.id > 1 && updatedStages[stage.id - 2]?.completed),
+      }))
+
+      setStages(updatedStages)
+
+      // Find current stage
+      const firstIncomplete = updatedStages.findIndex((s) => !s.completed)
+      setCurrentStage(firstIncomplete !== -1 ? updatedStages[firstIncomplete].id : updatedStages.length)
+
+      console.log(`[v0] Loaded daily stages - current stage: ${data.current_stage}`)
+    } catch (error) {
+      console.error("[v0] Error loading daily stages:", error)
+      setStages(initialStages)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const completeStage = async (stageId: number) => {
+    try {
+      console.log(`[v0] Completing stage ${stageId}...`)
+
+      const response = await fetch("/api/daily-stages/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stageId, completed: true }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("[v0] Failed to complete stage:", errorData)
+        return
+      }
+
+      const data = await response.json()
+      console.log(`[v0] Stage ${stageId} completed successfully:`, data)
+
+      setStages((prev) => {
+        const newStages = prev.map((stage) => {
+          if (stage.id === stageId) {
+            return {
+              ...stage,
+              completed: true,
+              completedAt: new Date().toISOString(),
+            }
+          }
+          // Unlock next stage
+          if (stage.id === stageId + 1) {
+            return {
+              ...stage,
+              unlocked: true,
+            }
+          }
+          return stage
+        })
+
+        // Update current stage to next incomplete
+        const nextIncomplete = newStages.findIndex((s) => !s.completed)
+        if (nextIncomplete !== -1) {
+          setCurrentStage(newStages[nextIncomplete].id)
+          console.log(`[v0] Current stage updated to: ${newStages[nextIncomplete].id}`)
+        }
+
+        return newStages
+      })
+    } catch (error) {
+      console.error("[v0] Error completing stage:", error)
+    }
   }
 
   const resetStages = () => {
     setStages(initialStages)
     setCurrentStage(1)
-    localStorage.setItem("daily-stages", JSON.stringify(initialStages))
+    loadStagesFromSupabase() // Reload from Supabase
   }
 
   const getProgress = () => {
@@ -155,6 +225,7 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
         completeStage,
         resetStages,
         getProgress,
+        isLoading,
       }}
     >
       {children}

@@ -60,13 +60,23 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && isProtectedPath) {
-    const { data: profile } = await supabase.from("profiles").select("user_id").eq("user_id", user.id).maybeSingle()
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_id, onboarding_completed")
+      .eq("user_id", user.id)
+      .maybeSingle()
 
     if (!profile) {
       console.log("[v0] User authenticated but no profile found - blocking access")
       const url = request.nextUrl.clone()
       url.pathname = "/auth/login"
       url.searchParams.set("error", "no_profile")
+      return NextResponse.redirect(url)
+    }
+
+    if (!profile.onboarding_completed && !request.nextUrl.pathname.startsWith("/onboarding")) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/onboarding"
       return NextResponse.redirect(url)
     }
   }
