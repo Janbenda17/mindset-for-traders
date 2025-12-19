@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useDailyStage } from "@/contexts/daily-stage-context"
-import { getSimulatedDate } from "@/utils/random-data-generator"
 import {
   Target,
   TrendingUp,
@@ -26,6 +25,7 @@ import {
 } from "lucide-react"
 import { format } from "date-fns"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { getUserStorageKey } from "@/utils/storage-namespace"
 
 interface TradingPlanData {
   date: string
@@ -49,7 +49,7 @@ export function TradingPlan() {
   const [isEditing, setIsEditing] = useState(false)
 
   const [formData, setFormData] = useState<TradingPlanData>({
-    date: format(getSimulatedDate(), "yyyy-MM-dd"),
+    date: format(new Date(), "yyyy-MM-dd"),
     setups: "",
     pairs: "",
     timeframes: "",
@@ -63,15 +63,9 @@ export function TradingPlan() {
   })
 
   useEffect(() => {
-    const simulatedDate = getSimulatedDate()
-    const todayDate = format(simulatedDate, "yyyy-MM-dd")
-
-    // Update formData date
-    setFormData((prev) => ({ ...prev, date: todayDate }))
-
-    // Load existing plan for today
-    const plans = JSON.parse(localStorage.getItem("trading-plans") || "[]")
-    const todayPlan = plans.find((p: TradingPlanData) => p.date === todayDate)
+    const plansKey = getUserStorageKey("trading-plans")
+    const plans = JSON.parse(localStorage.getItem(plansKey) || "[]")
+    const todayPlan = plans.find((p: TradingPlanData) => p.date === formData.date)
 
     if (todayPlan) {
       setFormData(todayPlan)
@@ -131,8 +125,8 @@ export function TradingPlan() {
     setIsLoading(true)
 
     try {
-      // Save to localStorage
-      const plans = JSON.parse(localStorage.getItem("trading-plans") || "[]")
+      const plansKey = getUserStorageKey("trading-plans")
+      const plans = JSON.parse(localStorage.getItem(plansKey) || "[]")
       const existingIndex = plans.findIndex((p: TradingPlanData) => p.date === formData.date)
 
       if (existingIndex >= 0) {
@@ -141,7 +135,7 @@ export function TradingPlan() {
         plans.push(formData)
       }
 
-      localStorage.setItem("trading-plans", JSON.stringify(plans))
+      localStorage.setItem(plansKey, JSON.stringify(plans))
 
       // Mark stage as completed
       completeStage(3)

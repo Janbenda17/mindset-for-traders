@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -10,8 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
-import { getSimulatedDate } from "@/utils/random-data-generator"
-import { Target, Shield, Brain, TrendingUp, CheckCircle } from "lucide-react"
+import { Target, Shield, Brain, TrendingUp, CheckCircle } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
 interface DailyIntentionData {
@@ -36,20 +35,12 @@ export function DailyIntention() {
   const { completeStage } = useDailyStage()
   const { isLiveMode, portfolioValue } = useData()
   const [intention, setIntention] = useState<DailyIntentionData>({
-    date: getSimulatedDate().toISOString().split("T")[0],
+    date: new Date().toISOString().split("T")[0],
     goals: "",
     maxRiskPercent: 2,
     emotionalGoal: "calm",
     strategy: "",
   })
-
-  useEffect(() => {
-    const simulatedDate = getSimulatedDate()
-    setIntention((prev) => ({
-      ...prev,
-      date: simulatedDate.toISOString().split("T")[0],
-    }))
-  }, [])
 
   const maxRiskDollars = (portfolioValue * intention.maxRiskPercent) / 100
 
@@ -74,8 +65,7 @@ export function DailyIntention() {
       return
     }
 
-    const simulatedDate = getSimulatedDate()
-    const todayDate = simulatedDate.toISOString().split("T")[0]
+    const todayDate = new Date().toISOString().split("T")[0]
 
     // Save intention history - POUZE DO SAMOSTATNÉHO STORAGE
     const saved = localStorage.getItem("daily-intentions") || "[]"

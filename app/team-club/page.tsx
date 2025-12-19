@@ -494,6 +494,76 @@ const DEMO_SUCCESS_STORIES: SuccessStory[] = [
   },
 ]
 
+// ADD: Demo students for virtual mode
+const DEMO_STUDENTS: Student[] = [
+  {
+    id: "demo-1",
+    name: "Alice Smith",
+    nickname: "ScalperPro",
+    avatar: "/trader-avatar.png",
+    traderType: "scalper",
+    readiness: 85,
+    readinessHistory: [80, 82, 85, 83, 88, 90, 85],
+    discipline: 92,
+    pnl: 1250,
+    pnlHistory: [1000, 1100, 1200, 1150, 1300, 1400, 1250],
+    journalStreak: 28,
+    status: "stable",
+    lastActive: "2h ago",
+    triggers: ["FOMO", "Overtrading"],
+    strengths: ["Risk Management", "Discipline"],
+    weaknesses: ["Patience", "Emotional Control"],
+    aiDiagnosis:
+      "Alice ukazuje vysokou úroveň disciplíny a silný systém řízení rizik. Její konzistentní journaling ji udržuje na správné cestě.",
+    mentorNotes: ["Continue focusing on setup quality."],
+    todos: ["Review past week's trades.", "Practice 10-minute meditation daily."],
+  },
+  {
+    id: "demo-2",
+    name: "Bob Johnson",
+    nickname: "SwingMaster",
+    avatar: "/trader-avatar.png",
+    traderType: "swing-trader",
+    readiness: 70,
+    readinessHistory: [65, 70, 72, 75, 73, 70, 70],
+    discipline: 78,
+    pnl: -300,
+    pnlHistory: [-500, -400, -350, -300, -250, -320, -300],
+    journalStreak: 10,
+    status: "warning",
+    lastActive: "1d ago",
+    triggers: ["Revenge Trading", "Impatience"],
+    strengths: ["Strategy Development", "Analysis"],
+    weaknesses: ["Emotional Control", "Trade Execution"],
+    aiDiagnosis:
+      "Bob má solidní strategie, ale bojuje s emoční kontrolou, což vede k revenge tradingu. Zlepšení journalingu a zavedení pauz po ztrátě pomůže.",
+    mentorNotes: ["Focus on sticking to the plan.", "Review the 'No FOMO' challenge."],
+    todos: ["Journal every trade for the next 7 days.", "Take a 30-minute break after any losing trade."],
+  },
+  {
+    id: "demo-3",
+    name: "Charlie Davis",
+    nickname: "DayTraderJoe",
+    avatar: "/trader-avatar.png",
+    traderType: "day-trader",
+    readiness: 55,
+    readinessHistory: [50, 52, 55, 58, 60, 57, 55],
+    discipline: 65,
+    pnl: 800,
+    pnlHistory: [600, 700, 750, 800, 850, 820, 800],
+    journalStreak: 5,
+    status: "critical",
+    lastActive: "3h ago",
+    triggers: ["Over-leveraging", "Lack of Sleep"],
+    strengths: ["Quick Decision Making"],
+    weaknesses: ["Risk Management", "Emotional Stability"],
+    aiDiagnosis:
+      "Charlieho nízká readiness a občasné vážné chyby naznačují problémy s emoční stabilitou a risk managementem. Doporučuje se zaměřit na wellness a trading plán.",
+    mentorNotes: ["Prioritize sleep and healthy habits.", "Strict adherence to risk per trade."],
+    todos: ["Track sleep schedule.", "Limit max risk to 1% per trade.", "Meditate 5 minutes before market open."],
+  },
+]
+
 // Helper functions
 function calculateJournalStreak(journals: any[]): number {
   if (journals.length === 0) return 0
@@ -521,7 +591,24 @@ function calculateDiscipline(trades: any[], journals: any[]): number {
 }
 
 function calculateReadiness(entries: any[]): number {
-  if (entries.length === 0) return 70
+  if (entries.length === 0) {
+    // Try to get from morning checks
+    try {
+      const morningChecks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
+      if (morningChecks.length > 0) {
+        const recent = morningChecks.slice(-7)
+        const avgReadiness =
+          recent.reduce((sum: number, check: any) => {
+            const readiness = check.readinessScore || check.readiness || 0
+            return sum + readiness
+          }, 0) / recent.length
+        return Math.round(avgReadiness)
+      }
+    } catch (e) {
+      console.error("Error reading morning checks", e)
+    }
+    return 0 // Return 0 if no data, not fake 70
+  }
   const recent = entries.slice(-7)
   const avg = recent.reduce((sum, m) => sum + (m.mood || 0), 0) / recent.length
   return Math.round(avg * 10)
@@ -576,9 +663,10 @@ function MentorTeamClubView() {
       const realStudents = generateStudentsFromRealData(trades, journals, moodEntries)
       setStudents(realStudents)
     } else {
-      setStudents([])
+      // In virtual mode, show demo students
+      setStudents(DEMO_STUDENTS)
     }
-  }, [isLiveMode, getAllTrades, getAllJournalEntries])
+  }, [isLiveMode]) // Removed functions from dependency array to prevent infinite loop
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -755,7 +843,7 @@ function StudentTeamClubView() {
 
         if (monthReadiness.length > 0) {
           avgReadiness = Math.round(
-            monthReadiness.reduce((sum: number, e: any) => sum + (e.score || 0), 0) / monthReadiness.length,
+            monthReadiness.reduce((sum: number, e: any) => sum + (e.mood || 0), 0) / monthReadiness.length,
           )
         }
       }
@@ -858,6 +946,9 @@ function StudentTeamClubView() {
   const journals = getAllJournalEntries()
   const moodEntries = JSON.parse(localStorage.getItem("user-mood-entries") || "[]")
 
+  const gamificationData =
+    typeof window !== "undefined" ? JSON.parse(localStorage.getItem("gamification-data") || "{}") : {}
+
   const userStats = {
     totalTrades: trades.length,
     winRate:
@@ -870,25 +961,33 @@ function StudentTeamClubView() {
     avgMood:
       moodEntries.length > 0
         ? Math.round(moodEntries.reduce((sum, m) => sum + (m.mood || 0), 0) / moodEntries.length)
-        : 70,
-    totalXP: challenges
-      .filter((c) => c.joined)
-      .reduce((sum, c) => sum + Math.round((c.progress / 100) * c.xpReward), 0),
-    discipline: calculateDiscipline(trades, journals),
-    streak: calculateJournalStreak(journals), // Assuming streak here refers to journal streak
-    xp: challenges.filter((c) => c.joined).reduce((sum, c) => sum + Math.round((c.progress / 100) * c.xpReward), 0),
+        : 0, // Return 0 instead of fake 70
+    totalXP: isLiveMode
+      ? gamificationData.xp || 0
+      : challenges.filter((c) => c.joined).reduce((sum, c) => sum + Math.round((c.progress / 100) * c.xpReward), 0),
+    discipline: isLiveMode
+      ? gamificationData.discipline || calculateDiscipline(trades, journals)
+      : calculateDiscipline(trades, journals),
+    streak: isLiveMode ? gamificationData.streak || calculateJournalStreak(journals) : calculateJournalStreak(journals),
+    xp: isLiveMode
+      ? gamificationData.xp || 0
+      : challenges.filter((c) => c.joined).reduce((sum, c) => sum + Math.round((c.progress / 100) * c.xpReward), 0),
   }
 
   const communityStats = {
     onlineMembers: isLiveMode ? 1 : 487,
     totalMembers: isLiveMode ? 1 : 1243,
-    activeChallenges: challenges.length,
-    liveRooms: rooms.filter((r) => r.status === "live").length,
-    todayPosts: posts.length,
-    avgCommunityMood: 68,
-    frustrationRate: 32,
-    improvementRate: 73,
-    avgWinRate: 64,
+    activeChallenges: isLiveMode ? challenges.filter((c) => c.joined).length : challenges.length,
+    liveRooms: isLiveMode ? 0 : rooms.filter((r) => r.status === "live").length,
+    todayPosts: isLiveMode ? posts.length : posts.length,
+    avgCommunityMood: isLiveMode ? userStats.avgMood : 68,
+    frustrationRate: isLiveMode ? 0 : 32,
+    improvementRate: isLiveMode
+      ? trades.length > 0
+        ? Math.round((trades.filter((t) => (t.pnl || t.profitLoss || 0) > 0).length / trades.length) * 100)
+        : 0
+      : 73,
+    avgWinRate: isLiveMode ? userStats.winRate : 64,
     activeStreaks: isLiveMode ? userStats.journalStreak : 892,
   }
 
@@ -1003,12 +1102,21 @@ function StudentTeamClubView() {
   // Leaderboard helper functions
   const getLeaderboardData = () => {
     if (isLiveMode) {
-      // In live mode, load from localStorage or start empty
-      const savedLeaderboard = localStorage.getItem("team-club-leaderboard")
-      if (savedLeaderboard) {
-        return JSON.parse(savedLeaderboard)
+      // In live mode, show only the user's own data
+      const user = getUserStats()
+      if (user.xp > 0 || user.pnl !== 0 || user.streak > 0) {
+        return [
+          {
+            rank: 1,
+            name: "Ty",
+            discipline: user.discipline,
+            streak: user.streak,
+            xp: user.xp,
+            pnl: user.pnl,
+            avatar: "/trader-avatar.png",
+          },
+        ]
       }
-      // Start with empty leaderboard in live mode - users will populate it
       return []
     }
 
@@ -1061,15 +1169,19 @@ function StudentTeamClubView() {
 
   const getUserStats = () => {
     if (isLiveMode) {
-      const profile = JSON.parse(localStorage.getItem("trader-mindset-profile") || "{}")
       const gamificationData = JSON.parse(localStorage.getItem("gamification-data") || "{}")
+      const allTrades = getAllTrades()
+      const totalPnL = allTrades.reduce((sum, t) => sum + (t.pnl || t.profitLoss || 0), 0)
+      const journalStreak = calculateJournalStreak(getAllJournalEntries())
+      const discipline = gamificationData.discipline || calculateDiscipline(allTrades, getAllJournalEntries())
+
       return {
-        rank: 0, // Will be calculated
-        name: profile.username || profile.displayName || "Ty",
-        discipline: gamificationData.discipline || 0,
-        streak: gamificationData.streak || 0,
+        rank: 0, // No rank in live mode (no community)
+        name: "Ty",
+        discipline: discipline,
+        streak: journalStreak,
         xp: gamificationData.xp || 0,
-        pnl: profile.balance || 0,
+        pnl: totalPnL,
         avatar: "/trader-avatar.png",
       }
     }
@@ -1100,17 +1212,18 @@ function StudentTeamClubView() {
   const canPostToday = (type: "feed" | "qa" | "success"): boolean => {
     const today = getTodayString()
     const limit = dailyLimits[type]
-    if (limit.date !== today) return true
+    if (!limit || limit.date !== today) return true
     return limit.count < 1
   }
 
   const updateDailyLimit = (type: "feed" | "qa" | "success") => {
     const today = getTodayString()
+    const currentLimit = dailyLimits[type]
     const newLimits = {
       ...dailyLimits,
       [type]: {
         date: today,
-        count: dailyLimits[type].date === today ? dailyLimits[type].count + 1 : 1,
+        count: currentLimit && currentLimit.date === today ? currentLimit.count + 1 : 1,
       },
     }
     setDailyLimits(newLimits)
@@ -1623,30 +1736,32 @@ function StudentTeamClubView() {
                 </CardContent>
               </Card>
 
-              <Card className="psyche-card">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Target className="h-5 w-5 text-blue-400" />
-                    Týdenní Cíle
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="p-4 rounded-xl border border-slate-600/30 bg-slate-700/30">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-white font-semibold text-sm">Splnit 5 trades podle plánu</h4>
-                      <span className="text-white font-bold text-sm">3/5</span>
+              {!isLiveMode && (
+                <Card className="psyche-card">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Target className="h-5 w-5 text-blue-400" />
+                      Týdenní Cíle
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="p-4 rounded-xl border border-slate-600/30 bg-slate-700/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-white font-semibold text-sm">Splnit 5 trades podle plánu</h4>
+                        <span className="text-white font-bold text-sm">3/5</span>
+                      </div>
+                      <Progress value={60} className="h-2" />
                     </div>
-                    <Progress value={60} className="h-2" />
-                  </div>
-                  <div className="p-4 rounded-xl border border-slate-600/30 bg-slate-700/30">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-white font-semibold text-sm">7 dní journalingu</h4>
-                      <span className="text-white font-bold text-sm">5/7</span>
+                    <div className="p-4 rounded-xl border border-slate-600/30 bg-slate-700/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-white font-semibold text-sm">7 dní journalingu</h4>
+                        <span className="text-white font-bold text-sm">5/7</span>
+                      </div>
+                      <Progress value={(5 / 7) * 100} className="h-2" />
                     </div>
-                    <Progress value={(5 / 7) * 100} className="h-2" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* AI Insights */}
@@ -1891,77 +2006,79 @@ function StudentTeamClubView() {
 
               {/* Sidebar */}
               <div className="space-y-4">
-                {/* Trending Topics */}
-                <Card className="psyche-card">
-                  <CardHeader>
-                    <CardTitle className="text-white text-sm flex items-center gap-2">
-                      <Flame className="h-4 w-4 text-orange-400" />
-                      Trending Topics
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {[
-                      { tag: "revenge-trading", posts: 23 },
-                      { tag: "patience", posts: 18 },
-                      { tag: "win-rate", posts: 15 },
-                      { tag: "discipline", posts: 12 },
-                      { tag: "FOMO", posts: 11 },
-                    ].map((topic, index) => (
-                      <div key={index} className="p-2 hover:bg-slate-700/30 rounded-lg cursor-pointer transition-all">
-                        <div className="flex items-center justify-between">
-                          <span className="text-purple-400 text-sm font-medium">#{topic.tag}</span>
-                          <span className="text-slate-500 text-xs">{topic.posts} postů</span>
+                {!isLiveMode && (
+                  <Card className="psyche-card">
+                    <CardHeader>
+                      <CardTitle className="text-white text-sm flex items-center gap-2">
+                        <Flame className="h-4 w-4 text-orange-400" />
+                        Trending Topics
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {[
+                        { tag: "revenge-trading", posts: 23 },
+                        { tag: "patience", posts: 18 },
+                        { tag: "win-rate", posts: 15 },
+                        { tag: "discipline", posts: 12 },
+                        { tag: "FOMO", posts: 11 },
+                      ].map((topic, index) => (
+                        <div key={index} className="p-2 hover:bg-slate-700/30 rounded-lg cursor-pointer transition-all">
+                          <div className="flex items-center justify-between">
+                            <span className="text-purple-400 text-sm font-medium">#{topic.tag}</span>
+                            <span className="text-slate-500 text-xs">{topic.posts} postů</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
 
-                {/* Top Contributors */}
-                <Card className="psyche-card">
-                  <CardHeader>
-                    <CardTitle className="text-white text-sm flex items-center gap-2">
-                      <Star className="h-4 w-4 text-amber-400" />
-                      Top Contributors
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {[
-                      { name: "Jana S.", helpful: 89, posts: 45 },
-                      { name: "Martin N.", helpful: 76, posts: 38 },
-                      { name: "Lukáš Č.", helpful: 71, posts: 32 },
-                    ].map((user, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-3 p-2 hover:bg-slate-700/30 rounded-lg transition-all cursor-pointer"
-                      >
+                {!isLiveMode && (
+                  <Card className="psyche-card">
+                    <CardHeader>
+                      <CardTitle className="text-white text-sm flex items-center gap-2">
+                        <Star className="h-4 w-4 text-amber-400" />
+                        Top Contributors
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {[
+                        { name: "Jana S.", helpful: 89, posts: 45 },
+                        { name: "Martin N.", helpful: 76, posts: 38 },
+                        { name: "Lukáš Č.", helpful: 71, posts: 32 },
+                      ].map((user, index) => (
                         <div
-                          className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs ${
-                            index === 0
-                              ? "bg-amber-500/20 text-amber-400"
-                              : index === 1
-                                ? "bg-slate-400/20 text-slate-300"
-                                : "bg-orange-500/20 text-orange-400"
-                          }`}
+                          key={index}
+                          className="flex items-center gap-3 p-2 hover:bg-slate-700/30 rounded-lg transition-all cursor-pointer"
                         >
-                          {index + 1}
+                          <div
+                            className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs ${
+                              index === 0
+                                ? "bg-amber-500/20 text-amber-400"
+                                : index === 1
+                                  ? "bg-slate-400/20 text-slate-300"
+                                  : "bg-orange-500/20 text-orange-400"
+                            }`}
+                          >
+                            {index + 1}
+                          </div>
+                          <Avatar className="w-7 h-7">
+                            <AvatarImage src="/trader-avatar.png" />
+                            <AvatarFallback>{user.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-xs font-medium truncate">{user.name}</p>
+                            <p className="text-slate-500 text-xs">{user.posts} příspěvků</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-emerald-400 text-xs font-bold">{user.helpful}%</p>
+                            <p className="text-slate-500 text-xs">helpful</p>
+                          </div>
                         </div>
-                        <Avatar className="w-7 h-7">
-                          <AvatarImage src="/trader-avatar.png" />
-                          <AvatarFallback>{user.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-xs font-medium truncate">{user.name}</p>
-                          <p className="text-slate-500 text-xs">{user.posts} příspěvků</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-emerald-400 text-xs font-bold">{user.helpful}%</p>
-                          <p className="text-slate-500 text-xs">helpful</p>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </TabsContent>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -21,13 +21,15 @@ import {
   Award,
   TrendingDown,
   DollarSign,
+  FileText,
 } from "lucide-react"
 import JournalCalendar from "@/components/journal-calendar"
 import JournalEntries from "@/components/journal-entries"
 import { RecordTrades } from "@/components/record-trades"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { getJournalEntries } from "@/utils/storage-utils"
 import { cn } from "@/lib/utils"
+import { useData } from "@/contexts/data-context" // Fixed import path from /context/ (singular) to /contexts/ (plural)
+import { useAuth } from "@/contexts/auth-context" // Import useAuth hook
 
 const generateDemoEntries = () => {
   const demoEntries = [
@@ -45,6 +47,11 @@ const generateDemoEntries = () => {
       notes: "Perfektní setup na London Open, dodržel jsem plán",
       emotion: "confident",
       tags: ["A+ setup", "trend following"],
+      emotionBefore: "neutral",
+      emotionDuring: "confident",
+      emotionAfter: "satisfied",
+      confidenceBefore: 6,
+      stressLevel: 3,
     },
     {
       id: "demo-2",
@@ -58,8 +65,12 @@ const generateDemoEntries = () => {
       pnl: 2100,
       mood: 80,
       notes: "Breakout trade, vysoká conviction",
-      emotion: "focused",
       tags: ["breakout", "high conviction"],
+      emotionBefore: "focused",
+      emotionDuring: "determined",
+      emotionAfter: "relieved",
+      confidenceBefore: 8,
+      stressLevel: 5,
     },
     {
       id: "demo-3",
@@ -73,8 +84,12 @@ const generateDemoEntries = () => {
       pnl: -1350,
       mood: 45,
       notes: "Revenge trade po předchozí ztrátě, měl jsem počkat",
-      emotion: "frustrated",
       tags: ["revenge trade", "impulsive"],
+      emotionBefore: "frustrated",
+      emotionDuring: "angry",
+      emotionAfter: "disappointed",
+      confidenceBefore: 4,
+      stressLevel: 8,
     },
     {
       id: "demo-4",
@@ -88,8 +103,12 @@ const generateDemoEntries = () => {
       pnl: 3400,
       mood: 85,
       notes: "Swing trade podle plánu, držel jsem pozici přes noc",
-      emotion: "confident",
       tags: ["swing", "planned"],
+      emotionBefore: "confident",
+      emotionDuring: "calm",
+      emotionAfter: "happy",
+      confidenceBefore: 7,
+      stressLevel: 2,
     },
     {
       id: "demo-5",
@@ -103,8 +122,12 @@ const generateDemoEntries = () => {
       pnl: -980,
       mood: 55,
       notes: "Špatný timing, vstoupil jsem příliš brzy",
-      emotion: "anxious",
       tags: ["bad timing"],
+      emotionBefore: "anxious",
+      emotionDuring: "nervous",
+      emotionAfter: "disappointed",
+      confidenceBefore: 5,
+      stressLevel: 9,
     },
     {
       id: "demo-6",
@@ -132,36 +155,69 @@ export default function JournalPage() {
   const [entries, setEntries] = useState<any[]>([])
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [showInsights, setShowInsights] = useState(false)
+  const [sortedJournalEntries, setSortedJournalEntries] = useState<any[]>([])
+  const { getAllJournalEntries, isLiveMode } = useData()
+  const { user } = useAuth()
 
   useEffect(() => {
     loadEntries()
-  }, [])
+  }, [user, isLiveMode])
 
   const loadEntries = () => {
-    const journalEntries = getJournalEntries()
-    setEntries(journalEntries.length > 0 ? journalEntries : generateDemoEntries())
+    if (user) {
+      const journalEntries = getAllJournalEntries() || []
+      const sortedEntries = [...journalEntries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      setEntries(journalEntries)
+      setSortedJournalEntries(sortedEntries)
+    } else {
+      // No user = empty state, no demo data
+      setEntries([])
+      setSortedJournalEntries([])
+    }
   }
 
+  // Function to handle new entries and refresh the list
   const handleEntryAdded = () => {
-    loadEntries()
-    setShowQuickAdd(false)
+    loadEntries() // Reload entries to reflect the new one
   }
 
-  // Calculate advanced stats
-  const calculateAdvancedStats = () => {
-    const trades = entries.filter((e) => e.type === "trade")
+  const stats = useMemo(() => {
+    const contextEntries = getAllJournalEntries() || []
+    const trades = contextEntries.filter((e) => e.type === "trade")
+
+    // Return zero stats if no entries from context
+    if (contextEntries.length === 0) {
+      return {
+        totalEntries: 0,
+        totalTrades: 0,
+        winningTrades: 0,
+        losingTrades: 0,
+        totalPnL: 0,
+        winRate: 0,
+        avgPerDay: "0",
+        streak: 0,
+        thisWeek: 0,
+        thisMonth: 0,
+        bestDay: 0,
+        worstDay: 0,
+        avgMood: 0,
+        avgWin: 0,
+        avgLoss: 0,
+      }
+    }
+
     const totalPnL = trades.reduce((sum, t) => sum + (t.profitLoss || t.pnl || 0), 0)
     const winningTrades = trades.filter((t) => (t.profitLoss || t.pnl || 0) > 0)
     const losingTrades = trades.filter((t) => (t.profitLoss || t.pnl || 0) < 0)
 
-    const thisWeek = entries.filter((entry) => {
+    const thisWeek = contextEntries.filter((entry) => {
       const entryDate = new Date(entry.date)
       const weekAgo = new Date()
       weekAgo.setDate(weekAgo.getDate() - 7)
       return entryDate >= weekAgo
     })
 
-    const thisMonth = entries.filter((entry) => {
+    const thisMonth = contextEntries.filter((entry) => {
       const entryDate = new Date(entry.date)
       const monthAgo = new Date()
       monthAgo.setDate(monthAgo.getDate() - 30)
@@ -169,12 +225,14 @@ export default function JournalPage() {
     })
 
     // Calculate streak
-    const sortedEntries = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    const sortedEntriesForStreak = [...contextEntries].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    )
     let streak = 0
     const currentDate = new Date()
     currentDate.setHours(0, 0, 0, 0)
 
-    for (const entry of sortedEntries) {
+    for (const entry of sortedEntriesForStreak) {
       const entryDate = new Date(entry.date)
       entryDate.setHours(0, 0, 0, 0)
       const diffDays = Math.floor((currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -197,17 +255,17 @@ export default function JournalPage() {
     const worstDay = Math.min(...Array.from(tradeDays.values()), 0)
 
     // Average mood
-    const moodEntries = entries.filter((e) => e.mood)
+    const moodEntries = contextEntries.filter((e) => e.mood !== undefined && e.mood !== null)
     const avgMood = moodEntries.length > 0 ? moodEntries.reduce((sum, e) => sum + e.mood, 0) / moodEntries.length : 0
 
     return {
-      totalEntries: entries.length,
+      totalEntries: contextEntries.length,
       totalTrades: trades.length,
       winningTrades: winningTrades.length,
       losingTrades: losingTrades.length,
       totalPnL: Math.round(totalPnL * 100) / 100,
       winRate: trades.length > 0 ? Math.round((winningTrades.length / trades.length) * 100) : 0,
-      avgPerDay: entries.length > 0 ? (entries.length / 30).toFixed(1) : "0",
+      avgPerDay: (contextEntries.length / 30).toFixed(1),
       streak,
       thisWeek: thisWeek.length,
       thisMonth: thisMonth.length,
@@ -227,9 +285,7 @@ export default function JournalPage() {
             ) / 100
           : 0,
     }
-  }
-
-  const stats = calculateAdvancedStats()
+  }, [getAllJournalEntries]) // Recalculate when entries from context change
 
   // AI Insights
   const generateInsights = () => {
@@ -242,7 +298,8 @@ export default function JournalPage() {
         title: "Skvělá konzistence!",
         message: `${stats.streak} dní v řadě jsi zapisoval do deníku. Udržuj to!`,
       })
-    } else if (stats.streak < 3) {
+    } else if (stats.streak < 3 && stats.totalEntries > 0) {
+      // Only show if there are entries
       insights.push({
         type: "warning",
         icon: "⚠️",
@@ -251,20 +308,23 @@ export default function JournalPage() {
       })
     }
 
-    if (stats.winRate >= 60) {
-      insights.push({
-        type: "success",
-        icon: "🎯",
-        title: "Výborný Win Rate!",
-        message: `${stats.winRate}% win rate je profesionální úroveň. Skvělá práce!`,
-      })
-    } else if (stats.winRate < 50) {
-      insights.push({
-        type: "critical",
-        icon: "🚨",
-        title: "Win Rate potřebuje zlepšení",
-        message: `${stats.winRate}% win rate je pod break-even. Zkontroluj svou strategii!`,
-      })
+    if (stats.totalTrades > 0) {
+      // Only show if there are trades
+      if (stats.winRate >= 60) {
+        insights.push({
+          type: "success",
+          icon: "🎯",
+          title: "Výborný Win Rate!",
+          message: `${stats.winRate}% win rate je profesionální úroveň. Skvělá práce!`,
+        })
+      } else if (stats.winRate < 50) {
+        insights.push({
+          type: "critical",
+          icon: "🚨",
+          title: "Win Rate potřebuje zlepšení",
+          message: `${stats.winRate}% win rate je pod break-even. Zkontroluj svou strategii!`,
+        })
+      }
     }
 
     if (stats.totalPnL > 1000) {
@@ -290,7 +350,8 @@ export default function JournalPage() {
         title: "Skvělá nálada!",
         message: `Průměrná nálada ${stats.avgMood}/10 je výborná. Pozitivní mindset = lepší výsledky!`,
       })
-    } else if (stats.avgMood < 5) {
+    } else if (stats.avgMood < 5 && stats.totalEntries > 0) {
+      // Only show if there are entries
       insights.push({
         type: "warning",
         icon: "😔",
@@ -315,7 +376,7 @@ export default function JournalPage() {
   const insights = generateInsights()
 
   const exportData = () => {
-    const dataStr = JSON.stringify(entries, null, 2)
+    const dataStr = JSON.stringify(getAllJournalEntries() || [], null, 2) // Use context for export
     const dataBlob = new Blob([dataStr], { type: "application/json" })
     const url = URL.createObjectURL(dataBlob)
     const link = document.createElement("a")
@@ -326,6 +387,10 @@ export default function JournalPage() {
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
   }
+
+  // const openEntryModal = (entry) => {
+  //   // Implement modal opening logic here
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -639,15 +704,15 @@ export default function JournalPage() {
 
         <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
           <CardContent className="p-3 md:p-6">
-            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-              <TabsList className="bg-slate-800/80 backdrop-blur-sm border border-slate-600 p-1 grid grid-cols-4 mb-4 md:mb-6 w-full">
+            <Tabs defaultValue="new" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 gap-2 md:gap-4 bg-slate-800 border border-slate-600 p-1">
                 <TabsTrigger
                   value="new"
                   className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
                 >
                   <Plus className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden md:inline">Nový záznam</span>
-                  <span className="md:hidden">Nový</span>
+                  <span className="md:hidden">+</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="calendar"
@@ -709,7 +774,7 @@ export default function JournalPage() {
                           <div className="h-2 bg-slate-600 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-emerald-500 to-green-500"
-                              style={{ width: `${(stats.winningTrades / stats.totalTrades) * 100}%` }}
+                              style={{ width: `${(stats.winningTrades / (stats.totalTrades || 1)) * 100}%` }}
                             />
                           </div>
                         </div>
@@ -735,7 +800,7 @@ export default function JournalPage() {
                           <div className="h-2 bg-slate-600 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-rose-500 to-red-500"
-                              style={{ width: `${(stats.losingTrades / stats.totalTrades) * 100}%` }}
+                              style={{ width: `${(stats.losingTrades / (stats.totalTrades || 1)) * 100}%` }}
                             />
                           </div>
                         </div>
@@ -831,6 +896,144 @@ export default function JournalPage() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="all" className="mt-0">
+                <div className="space-y-4">
+                  {sortedJournalEntries.length === 0 ? (
+                    <Card className="p-8 text-center">
+                      <div className="space-y-2">
+                        <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
+                        <h3 className="text-lg font-semibold">Zatím žádné záznamy</h3>
+                        <p className="text-sm text-muted-foreground">Začněte zaznamenávat své obchody a poznatky</p>
+                      </div>
+                    </Card>
+                  ) : (
+                    sortedJournalEntries.map((entry) => (
+                      <Card key={entry.id} className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            {entry.type === "trade" ? (
+                              <TrendingUp className="h-5 w-5 text-blue-500" />
+                            ) : (
+                              <FileText className="h-5 w-5 text-purple-500" />
+                            )}
+                            <div>
+                              <h3 className="font-semibold">
+                                {entry.type === "trade"
+                                  ? `${entry.direction?.toUpperCase() || ""} ${entry.pair || ""}`
+                                  : "Journal Entry"}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">{entry.date}</p>
+                            </div>
+                          </div>
+                          {entry.type === "trade" && (
+                            <div
+                              className={cn(
+                                "text-lg font-bold",
+                                (entry.profitLoss || entry.pnl || 0) >= 0 ? "text-green-500" : "text-red-500",
+                              )}
+                            >
+                              {(entry.profitLoss || entry.pnl || 0) >= 0 ? "+" : ""}$
+                              {entry.profitLoss || entry.pnl || 0}
+                            </div>
+                          )}
+                        </div>
+
+                        {entry.type === "trade" && (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 p-4 bg-muted/50 rounded-lg">
+                            {entry.emotionBefore && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Emoce před</p>
+                                <Badge variant="outline" className="text-xs">
+                                  {entry.emotionBefore}
+                                </Badge>
+                              </div>
+                            )}
+                            {entry.emotionDuring && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Emoce během</p>
+                                <Badge variant="outline" className="text-xs">
+                                  {entry.emotionDuring}
+                                </Badge>
+                              </div>
+                            )}
+                            {entry.emotionAfter && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Emoce po</p>
+                                <Badge variant="outline" className="text-xs">
+                                  {entry.emotionAfter}
+                                </Badge>
+                              </div>
+                            )}
+                            {entry.confidenceBefore !== undefined && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Důvěra v obchod</p>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-semibold">{entry.confidenceBefore}/10</div>
+                                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-blue-500 transition-all"
+                                      style={{ width: `${(entry.confidenceBefore / 10) * 100}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {entry.stressLevel !== undefined && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Úroveň stresu</p>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-semibold">{entry.stressLevel}/10</div>
+                                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                      className={cn(
+                                        "h-full transition-all",
+                                        entry.stressLevel > 7
+                                          ? "bg-red-500"
+                                          : entry.stressLevel > 4
+                                            ? "bg-yellow-500"
+                                            : "bg-green-500",
+                                      )}
+                                      style={{ width: `${(entry.stressLevel / 10) * 100}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {entry.mood !== undefined && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">Nálada</p>
+                                <div className="flex items-center gap-2">
+                                  <Brain className="h-4 w-4 text-purple-500" />
+                                  <div className="text-sm font-semibold">{entry.mood}/10</div>
+                                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-purple-500 transition-all"
+                                      style={{ width: `${(entry.mood / 10) * 100}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {entry.notes && <p className="text-sm text-muted-foreground mb-3">{entry.notes}</p>}
+
+                        {entry.tags && entry.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {entry.tags.map((tag: string, i: number) => (
+                              <Badge key={i} variant="secondary" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </Card>
+                    ))
+                  )}
                 </div>
               </TabsContent>
             </Tabs>

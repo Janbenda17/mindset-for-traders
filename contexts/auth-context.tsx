@@ -3,7 +3,9 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
-import { resetDemoAccount } from "@/utils/demo-reset"
+import { clearUserData } from "@/lib/user-storage"
+import { createBrowserClient } from "@supabase/ssr"
+import { v4 as generateUUID } from "uuid"
 
 interface User {
   id: string
@@ -19,147 +21,117 @@ interface AuthContextType {
   register: (data: { email: string; password: string; name: string }) => Promise<boolean>
   logout: () => void
   isLoading: boolean
+  clearAllAccounts: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const OWNER_EMAIL = "honza.newage@gmail.com"
-const DEMO_EMAIL = "Demo"
-const DEMO_PASSWORD = "Demo"
+
+function migrateUserID(user: User): User {
+  // If ID is a timestamp (numeric string like "1756675229779"), generate a valid UUID
+  if (/^\d+$/.test(user.id)) {
+    console.log("[v0] Migrating user ID from timestamp to UUID:", user.id)
+    // Create deterministic UUID from email + old ID to maintain consistency
+    return {
+      ...user,
+      id: generateUUID(),
+    }
+  }
+  return user
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
+  const [supabase] = useState(() =>
+    createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!),
+  )
+
+  const clearAllAccounts = () => {
+    localStorage.setItem("trader-mindset-registered-users", JSON.stringify([]))
+    localStorage.removeItem("trader-mindset-user")
+    localStorage.removeItem("trader-mindset-subscription")
+    console.log("[v0] All user accounts cleared from localStorage")
+  }
+
   useEffect(() => {
-    // Check if user is logged in on mount
-    const savedUser = localStorage.getItem("trader-mindset-user")
-    if (savedUser) {
-      try {
-        const parsedUser = JSON.parse(savedUser)
-        // Check if it's the owner
-        if (parsedUser.email === OWNER_EMAIL) {
-          parsedUser.isOwner = true
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session?.user) {
+        const userData = {
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata?.name || "Trader",
+          isOwner: session.user.email === OWNER_EMAIL,
         }
-        setUser(parsedUser)
-      } catch (error) {
-        console.error("Error parsing saved user:", error)
-        localStorage.removeItem("trader-mindset-user")
+        setUser(userData)
       }
+      setIsLoading(false)
     }
-    setIsLoading(false)
-  }, [])
+
+    checkAuth()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const userData = {
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata?.name || "Trader",
+          isOwner: session.user.email === OWNER_EMAIL,
+        }
+        setUser(userData)
+      } else {
+        setUser(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase])
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-        resetDemoAccount()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-        const userData = {
-          id: "demo",
-          email: DEMO_EMAIL,
-          name: "Demo User",
-          isOwner: false,
-        }
-
-        setUser(userData)
-        localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
-
-        // Set premium subscription for Demo account
-        const subscriptionData = {
-          plan: "premium",
-          startDate: new Date().toISOString(),
-          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        }
-        localStorage.setItem("trader-mindset-subscription", JSON.stringify(subscriptionData))
-
-        localStorage.setItem("trading-mode", "live")
-
-        // Mark onboarding as completed
-        localStorage.setItem("trader-mindset-onboarding-completed", "true")
-
-        // Set flag to show ProductTour
-        localStorage.setItem("mindtrader-show-tour", "true")
-        localStorage.removeItem("mindtrader-product-tour-completed")
-
-        console.log("[v0] Demo login: Premium active, tour enabled, redirecting to dashboard")
-
+      if (error) {
         toast({
-          title: "Demo režim aktivován",
-          description: "Premium přístup odemčen. Spustí se produktová prohlídka.",
+          title: "Chyba přihlášení",
+          description: error.message,
+          variant: "destructive",
         })
-
-        router.push("/")
-        return true
+        return false
       }
 
-      // Special handling for owner account
-      if (email === OWNER_EMAIL) {
+      if (data.user) {
         const userData = {
-          id: "owner",
-          email: OWNER_EMAIL,
-          name: "Honza (Owner)",
-          isOwner: true,
+          id: data.user.id,
+          email: data.user.email!,
+          name: data.user.user_metadata?.name || "Trader",
+          isOwner: data.user.email === OWNER_EMAIL,
         }
-
         setUser(userData)
-        localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
-
-        // Set premium subscription automatically for owner
-        const subscriptionData = {
-          plan: "premium",
-          startDate: new Date().toISOString(),
-          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
-        }
-        localStorage.setItem("trader-mindset-subscription", JSON.stringify(subscriptionData))
-
-        toast({
-          title: "Vítejte zpět, Honza!",
-          description: "Přihlášen jako Owner s plnými právy",
-        })
-
-        router.push("/")
-        return true
-      }
-
-      // Regular user login
-      const registeredUsers = JSON.parse(localStorage.getItem("trader-mindset-registered-users") || "[]")
-      const foundUser = registeredUsers.find((u: any) => u.email === email && u.password === password)
-
-      if (foundUser) {
-        const userData = {
-          id: foundUser.id,
-          email: foundUser.email,
-          name: foundUser.name,
-          isOwner: false,
-          stripeCustomerId: foundUser.stripeCustomerId,
-        }
-
-        setUser(userData)
-        localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
 
         toast({
           title: "Přihlášení úspěšné",
           description: "Vítejte zpět!",
         })
 
-        // Check if onboarding is completed
-        const onboardingCompleted = localStorage.getItem("trader-mindset-onboarding-completed")
-        if (onboardingCompleted === "true") {
-          router.push("/")
-        } else {
-          router.push("/onboarding")
-        }
+        router.push("/")
         return true
-      } else {
-        toast({
-          title: "Chyba přihlášení",
-          description: "Nesprávný email nebo heslo",
-          variant: "destructive",
-        })
-        return false
       }
+
+      return false
     } catch (error) {
       console.error("Login error:", error)
       toast({
@@ -175,64 +147,93 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { email, password, name } = data
 
-      // Prevent registration with owner email
-      if (email === OWNER_EMAIL) {
-        toast({
-          title: "Chyba registrace",
-          description: "Tento email je rezervován",
-          variant: "destructive",
-        })
-        return false
-      }
-
-      // Get existing users
-      const registeredUsers = JSON.parse(localStorage.getItem("trader-mindset-registered-users") || "[]")
-
-      // Check if user already exists
-      if (registeredUsers.some((u: any) => u.email === email)) {
-        toast({
-          title: "Chyba registrace",
-          description: "Uživatel s tímto emailem již existuje",
-          variant: "destructive",
-        })
-        return false
-      }
-
-      // Create new user
-      const newUser = {
-        id: Date.now().toString(),
+      const { data: authData, error } = await supabase.auth.signUp({
         email,
         password,
-        name,
-        stripeCustomerId: `cus_${Date.now()}`,
-      }
-
-      // Save to registered users
-      registeredUsers.push(newUser)
-      localStorage.setItem("trader-mindset-registered-users", JSON.stringify(registeredUsers))
-
-      // Auto login
-      const userData = {
-        id: newUser.id,
-        email: newUser.email,
-        name: newUser.name,
-        isOwner: false,
-        stripeCustomerId: newUser.stripeCustomerId,
-      }
-
-      setUser(userData)
-      localStorage.setItem("trader-mindset-user", JSON.stringify(userData))
-
-      localStorage.setItem("mindtrader-show-tour", "true")
-
-      toast({
-        title: "Registrace úspěšná!",
-        description: "Vítejte v MindTrader!",
+        options: {
+          data: {
+            name: name,
+          },
+          emailRedirectTo:
+            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
+        },
       })
 
-      // Redirect to onboarding
-      router.push("/onboarding")
-      return true
+      if (error) {
+        toast({
+          title: "Chyba registrace",
+          description: error.message,
+          variant: "destructive",
+        })
+        return false
+      }
+
+      if (authData.user) {
+        // Profile and XP progress are auto-created by database trigger
+        console.log("[v0] User registered, profile and XP auto-created by trigger:", authData.user.id)
+
+        const initialUserData = {
+          profile: {
+            nickname: name.split(" ")[0],
+            bio: "",
+            mentor: "",
+            experienceLevel: "beginner" as const,
+            updatedAt: new Date().toISOString(),
+          },
+          settings: {
+            trading: {
+              style: undefined,
+              riskLevel: "moderate",
+              timezone: "UTC",
+              tradingYears: "",
+              mainMarkets: [],
+              goals: "",
+              averageTradesPerWeek: "",
+              updatedAt: new Date().toISOString(),
+            },
+            notifications: {
+              email: true,
+              push: true,
+              weeklyReport: true,
+              tradingAlerts: true,
+              dailyReminder: true,
+              psychologyInsights: true,
+              updatedAt: new Date().toISOString(),
+            },
+          },
+          dailyTrackerItems: [],
+          tradingShopItems: [],
+          journalEntries: [],
+          moodEntries: [],
+          tradingData: [],
+          dashboardStats: {
+            totalTrades: 0,
+            totalPnL: 0,
+            winRate: 0,
+            consecutiveWins: 0,
+            consecutiveLosses: 0,
+          },
+          mindTraderNotifications: {
+            notifications: [],
+          },
+        }
+
+        // Save initial user data to user-scoped key
+        const userStorageKey = `user-${authData.user.id}-trader-mindset-data`
+        localStorage.setItem(userStorageKey, JSON.stringify(initialUserData))
+
+        localStorage.setItem("mindtrader-show-tour", "true")
+
+        toast({
+          title: "Registrace úspěšná!",
+          description: "Zkontrolujte svůj email pro potvrzení účtu",
+        })
+
+        router.push("/auth/sign-up-success")
+        return true
+      }
+
+      return false
     } catch (error) {
       console.error("Registration error:", error)
       toast({
@@ -245,11 +246,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
+    supabase.auth.signOut()
+
+    if (user?.id) {
+      clearUserData(user.id)
+    }
+
     setUser(null)
-    localStorage.removeItem("trader-mindset-user")
-    localStorage.removeItem("trader-mindset-subscription")
-    localStorage.removeItem("stripe-customer-id")
-    localStorage.removeItem("trader-mindset-onboarding-completed")
+
     toast({
       title: "Odhlášení úspěšné",
       description: "Nashledanou!",
@@ -257,7 +261,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/login")
   }
 
-  return <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading, clearAllAccounts }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

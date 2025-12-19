@@ -9,19 +9,26 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Brain, Mail, Lock, LogIn, Sparkles, Shield, Zap } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const { login } = useAuth()
 
   useEffect(() => {
+    const teaserEarlyAccess = localStorage.getItem("teaser-early-access")
+    if (!teaserEarlyAccess) {
+      window.location.href = "/intro"
+      return
+    }
+
     const savedEmail = localStorage.getItem("mindtrader-saved-email")
     const savedPassword = localStorage.getItem("mindtrader-saved-password")
+
     if (savedEmail && savedPassword) {
       setEmail(savedEmail)
       setPassword(savedPassword)
@@ -78,14 +85,14 @@ export function LoginForm() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-gray-300">
-                  Email
+                  Email / Uživatelské jméno
                 </Label>
                 <div className="relative group">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
                   <Input
                     id="email"
                     type="text"
-                    placeholder="váš@email.com"
+                    placeholder="váš@email.com nebo demo"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
@@ -116,15 +123,12 @@ export function LoginForm() {
                 <Checkbox
                   id="remember"
                   checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                  className="border-slate-600 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  className="border-slate-700 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                 />
-                <label
-                  htmlFor="remember"
-                  className="text-sm text-gray-400 cursor-pointer select-none hover:text-gray-300 transition-colors"
-                >
-                  Uložit přihlašovací údaje
-                </label>
+                <Label htmlFor="remember" className="text-sm text-gray-400 cursor-pointer select-none">
+                  Zapamatovat přihlašovací údaje
+                </Label>
               </div>
 
               <Button

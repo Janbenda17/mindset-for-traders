@@ -37,6 +37,12 @@ export default function TeaserPage() {
   }, [])
 
   useEffect(() => {
+    const introShown = localStorage.getItem("mindtrader-intro-shown")
+    if (!introShown) {
+      router.push("/intro")
+      return
+    }
+
     setIsLoaded(true)
 
     const launchDate = getLaunchDate()
@@ -62,7 +68,7 @@ export default function TeaserPage() {
     return () => {
       clearInterval(timer)
     }
-  }, [getLaunchDate])
+  }, [getLaunchDate, router])
 
   const handleWaitlistSubmit = (e: React.FormEvent) => {
     e.preventDefault()

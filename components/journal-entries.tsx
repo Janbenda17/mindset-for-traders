@@ -52,17 +52,19 @@ interface JournalEntry {
   whatDidntWork?: string
   lessonLearned?: string
   marketConditions?: string
-  preTradeEmotion?: string
-  duringTradeEmotion?: string
-  postTradeEmotion?: string
+  emotionBefore?: string
+  emotionDuring?: string
+  emotionAfter?: string
+  confidenceBefore?: number
   stressLevel?: number
-  moodBefore?: number
-  moodDuring?: number
-  moodAfter?: number
   discipline?: number
   stress?: number
   mistakes?: string
   improvements?: string
+  // Keeping these for backward compatibility or if they are still relevant separately
+  moodBefore?: number
+  moodDuring?: number
+  moodAfter?: number
 }
 
 interface JournalEntriesProps {
@@ -420,6 +422,91 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                           </p>
                         )}
 
+                        {(entry.emotionBefore ||
+                          entry.emotionDuring ||
+                          entry.emotionAfter ||
+                          entry.stressLevel !== undefined ||
+                          entry.mood !== undefined ||
+                          entry.confidenceBefore !== undefined) && (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 p-4 bg-black/30 rounded-lg border border-white/10">
+                            {entry.emotionBefore && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-300 font-medium">Emoce před</p>
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs bg-blue-500/20 text-blue-200 border-blue-400"
+                                >
+                                  {entry.emotionBefore}
+                                </Badge>
+                              </div>
+                            )}
+                            {entry.emotionDuring && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-300 font-medium">Emoce během</p>
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs bg-purple-500/20 text-purple-200 border-purple-400"
+                                >
+                                  {entry.emotionDuring}
+                                </Badge>
+                              </div>
+                            )}
+                            {entry.emotionAfter && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-300 font-medium">Emoce po</p>
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs bg-pink-500/20 text-pink-200 border-pink-400"
+                                >
+                                  {entry.emotionAfter}
+                                </Badge>
+                              </div>
+                            )}
+                            {entry.confidenceBefore !== undefined && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-300 font-medium">Důvěra v obchod</p>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-semibold text-white">{entry.confidenceBefore}/10</div>
+                                  <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-cyan-500 transition-all"
+                                      style={{ width: `${(entry.confidenceBefore / 10) * 100}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {entry.stressLevel !== undefined && (
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-300 font-medium">Úroveň stresu</p>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-semibold text-white">{entry.stressLevel}/10</div>
+                                  <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-orange-500 transition-all"
+                                      style={{ width: `${(entry.stressLevel / 10) * 100}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {entry.mood !== undefined && ( // This is for the overall mood in the entry, distinct from moodBefore/During/After
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-300 font-medium">Nálada</p>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-semibold text-white">{entry.mood}/10</div>
+                                  <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-emerald-500 transition-all"
+                                      style={{ width: `${(entry.mood / 10) * 100}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between pt-4 border-t border-white/10 gap-3">
                           <div className="flex items-center gap-2 flex-wrap">
                             {entry.pair && (
@@ -439,12 +526,12 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                                 {entry.tradeType === "long" ? "↗️ Long" : "↘️ Short"}
                               </Badge>
                             )}
-                            {entry.mood && (
+                            {entry.mood !== undefined && ( // This is for the overall mood in the entry, distinct from moodBefore/During/After
                               <Badge className="text-xs font-semibold bg-orange-500 text-white border-orange-400">
                                 😊 {entry.mood}/10
                               </Badge>
                             )}
-                            {entry.confidence && (
+                            {entry.confidence !== undefined && ( // This is for the overall confidence in the entry, distinct from confidenceBefore
                               <Badge className="text-xs font-semibold bg-cyan-500 text-white border-cyan-400">
                                 🎯 {entry.confidence}/10
                               </Badge>
@@ -646,7 +733,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                         <CardHeader>
                           <CardTitle className="text-sm text-emerald-300 flex items-center gap-2">
                             <Zap className="w-4 h-4" />
-                            Poučení
+                            Co fungovalo
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -688,7 +775,12 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                   detailEntry.moodDuring ||
                   detailEntry.moodAfter ||
                   detailEntry.stress ||
-                  detailEntry.discipline) && (
+                  detailEntry.discipline ||
+                  detailEntry.emotionBefore ||
+                  detailEntry.emotionDuring ||
+                  detailEntry.emotionAfter ||
+                  detailEntry.confidenceBefore !== undefined ||
+                  detailEntry.stressLevel !== undefined) && (
                   <Card className="bg-slate-700/50 border-slate-600">
                     <CardHeader>
                       <CardTitle className="text-lg text-white flex items-center gap-2">
@@ -805,6 +897,58 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                           </div>
                         )}
                       </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        {detailEntry.emotionBefore && (
+                          <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-600">
+                            <p className="text-xs text-gray-400 mb-1">Emoce před</p>
+                            <p className="text-base font-medium text-white">{detailEntry.emotionBefore}</p>
+                          </div>
+                        )}
+                        {detailEntry.emotionDuring && (
+                          <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-600">
+                            <p className="text-xs text-gray-400 mb-1">Emoce během</p>
+                            <p className="text-base font-medium text-white">{detailEntry.emotionDuring}</p>
+                          </div>
+                        )}
+                        {detailEntry.emotionAfter && (
+                          <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-600">
+                            <p className="text-xs text-gray-400 mb-1">Emoce po</p>
+                            <p className="text-base font-medium text-white">{detailEntry.emotionAfter}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        {detailEntry.confidenceBefore !== undefined && (
+                          <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-600">
+                            <p className="text-xs text-gray-400 mb-1">Důvěra v obchod</p>
+                            <div className="flex items-center gap-2">
+                              <div className="text-base font-medium text-white">{detailEntry.confidenceBefore}/10</div>
+                              <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-cyan-500 transition-all"
+                                  style={{ width: `${(detailEntry.confidenceBefore / 10) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {detailEntry.stressLevel !== undefined && (
+                          <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-600">
+                            <p className="text-xs text-gray-400 mb-1">Úroveň stresu</p>
+                            <div className="flex items-center gap-2">
+                              <div className="text-base font-medium text-white">{detailEntry.stressLevel}/10</div>
+                              <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-orange-500 transition-all"
+                                  style={{ width: `${(detailEntry.stressLevel / 10) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -850,7 +994,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {detailEntry.mood && (
+                  {detailEntry.mood !== undefined && ( // Overall mood
                     <Card className="bg-slate-700/50 border-slate-600">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-3">
@@ -869,7 +1013,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                       </CardContent>
                     </Card>
                   )}
-                  {detailEntry.confidence && (
+                  {detailEntry.confidence !== undefined && ( // Overall confidence
                     <Card className="bg-slate-700/50 border-slate-600">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-3">

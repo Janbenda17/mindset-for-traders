@@ -34,6 +34,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useData } from "@/contexts/data-context"
+import { getUserStorageKey } from "@/utils/storage-namespace"
 
 interface Goal {
   id: string
@@ -151,7 +152,8 @@ export default function TradingGoalsPage() {
 
   useEffect(() => {
     if (isLiveMode) {
-      const saved = localStorage.getItem("trading-goals")
+      const goalsKey = getUserStorageKey("trading-goals")
+      const saved = localStorage.getItem(goalsKey)
       if (saved) {
         setGoals(JSON.parse(saved))
       } else {
@@ -167,12 +169,14 @@ export default function TradingGoalsPage() {
   const saveGoals = (updatedGoals: Goal[]) => {
     setGoals(updatedGoals)
     if (isLiveMode) {
-      localStorage.setItem("trading-goals", JSON.stringify(updatedGoals))
+      const goalsKey = getUserStorageKey("trading-goals")
+      localStorage.setItem(goalsKey, JSON.stringify(updatedGoals))
     }
   }
 
   const checkAndSendReminders = () => {
-    const saved = localStorage.getItem("trading-goals")
+    const goalsKey = getUserStorageKey("trading-goals")
+    const saved = localStorage.getItem(goalsKey)
     if (!saved) return
 
     const goals: Goal[] = JSON.parse(saved)
@@ -196,7 +200,7 @@ export default function TradingGoalsPage() {
     })
 
     if (updated) {
-      localStorage.setItem("trading-goals", JSON.stringify(goals))
+      localStorage.setItem(goalsKey, JSON.stringify(goals))
       setGoals(goals)
     }
   }

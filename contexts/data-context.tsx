@@ -1,10 +1,11 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react"
 import { toast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { useSubscription } from "@/contexts/subscription-context"
+import { createClient } from "@/lib/supabase-client"
 
 // Demo trades data for virtual mode
 const DEMO_TRADES = [
@@ -176,369 +177,635 @@ const DEMO_JOURNAL_ENTRIES = [
   },
 ]
 
-// Demo stats for virtual mode
-const DEMO_STATS = {
-  totalPnL: 1630,
-  totalTrades: 7,
-  winningTrades: 5,
-  losingTrades: 2,
-  winRate: 71.4,
-  averageWin: 434,
-  averageLoss: -280,
-  profitFactor: 1.55,
-  maxDrawdown: -320,
-  averageMood: 7.4,
-  bestDay: 840,
-  worstDay: -320,
-  consecutiveWins: 3,
-  consecutiveLosses: 1,
-  riskRewardRatio: 1.8,
-  sharpeRatio: 1.2,
+// TypeScript interfaces for trades and data
+interface Trade {
+  id: string
+  date: string
+  pair: string
+  direction: string
+  entryPrice: number
+  exitPrice: number
+  quantity: number
+  pnl: number
+  mood?: number
+  confidence?: number
+  stress?: number
+  discipline?: number
+  emotionBefore?: string
+  emotionDuring?: string
+  emotionAfter?: string
+  notes?: string
+  lessons?: string[]
+  mistakes?: string[]
+  improvements?: string[]
+  whatWorked?: string
+  whatDidntWork?: string
+  entryReason?: string
+  exitReason?: string
+  marketConditions?: string
+  revengeTrade?: boolean
+  exitedEarly?: boolean
+  missedDueToHesitation?: boolean
+  matchedPlan?: boolean
+  tags?: string[]
+  followedPlan?: boolean
 }
 
-// Function to generate random trading stats for virtual mode
-const generateRandomTradingStats = () => {
-  return {
-    totalPnL: Math.floor(Math.random() * 20000) - 5000,
-    totalTrades: Math.floor(Math.random() * 200),
-    winningTrades: Math.floor(Math.random() * 150),
-    losingTrades: Math.floor(Math.random() * 50),
-    winRate: Math.floor(Math.random() * 100),
-    averageWin: Math.floor(Math.random() * 1000),
-    averageLoss: -Math.floor(Math.random() * 500),
-    profitFactor: Math.random() * 3,
-    maxDrawdown: -Math.floor(Math.random() * 1000),
-    averageMood: Math.floor(Math.random() * 10),
-    bestDay: Math.floor(Math.random() * 2000),
-    worstDay: -Math.floor(Math.random() * 1000),
-    consecutiveWins: Math.floor(Math.random() * 10),
-    consecutiveLosses: Math.floor(Math.random() * 5),
-    riskRewardRatio: Math.random() * 5,
-    sharpeRatio: Math.random() * 2,
+interface MorningCheck {
+  id: string
+  date: string
+  score: number
+  [key: string]: any
+}
+
+interface DataState {
+  trades: Trade[]
+  morningChecks: MorningCheck[]
+  journalEntries: any[]
+  isLiveMode: boolean
+  hasEverSwitchedToLive: boolean
+  showLiveWarning: boolean
+  portfolioValue: number
+  userId: string | null
+}
+
+// Action types for reducer
+type DataAction =
+  | { type: "ADD_TRADE"; payload: Trade }
+  | { type: "UPDATE_TRADE"; payload: Trade }
+  | { type: "DELETE_TRADE"; payload: string }
+  | { type: "SET_TRADES"; payload: Trade[] }
+  | { type: "ADD_MORNING_CHECK"; payload: MorningCheck }
+  | { type: "SET_MORNING_CHECKS"; payload: MorningCheck[] }
+  | { type: "ADD_JOURNAL_ENTRY"; payload: any }
+  | { type: "SET_JOURNAL_ENTRIES"; payload: any[] }
+  | { type: "SET_LIVE_MODE"; payload: boolean }
+  | { type: "SET_EVER_SWITCHED_LIVE"; payload: boolean }
+  | { type: "SET_SHOW_WARNING"; payload: boolean }
+  | { type: "SET_PORTFOLIO_VALUE"; payload: number }
+  | { type: "SET_USER_ID"; payload: string | null }
+  | { type: "CLEAR_ALL_DATA" }
+
+function dataReducer(state: DataState, action: DataAction): DataState {
+  switch (action.type) {
+    case "ADD_TRADE": {
+      const newTrades = [...state.trades, action.payload]
+      return { ...state, trades: newTrades }
+    }
+    case "UPDATE_TRADE": {
+      const updatedTrades = state.trades.map((t) => (t.id === action.payload.id ? action.payload : t))
+      return { ...state, trades: updatedTrades }
+    }
+    case "DELETE_TRADE": {
+      const filteredTrades = state.trades.filter((t) => t.id !== action.payload)
+      return { ...state, trades: filteredTrades }
+    }
+    case "SET_TRADES":
+      return { ...state, trades: action.payload }
+    case "ADD_MORNING_CHECK": {
+      const newChecks = [...state.morningChecks, action.payload]
+      return { ...state, morningChecks: newChecks }
+    }
+    case "SET_MORNING_CHECKS":
+      return { ...state, morningChecks: action.payload }
+    case "ADD_JOURNAL_ENTRY": {
+      const newEntries = [...state.journalEntries, action.payload]
+      return { ...state, journalEntries: newEntries }
+    }
+    case "SET_JOURNAL_ENTRIES":
+      return { ...state, journalEntries: action.payload }
+    case "SET_LIVE_MODE": {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("trader-mindset-live-mode", action.payload.toString())
+      }
+      return { ...state, isLiveMode: action.payload }
+    }
+    case "SET_EVER_SWITCHED_LIVE": {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("trader-mindset-ever-switched-live", action.payload.toString())
+      }
+      return { ...state, hasEverSwitchedToLive: action.payload }
+    }
+    case "SET_SHOW_WARNING":
+      return { ...state, showLiveWarning: action.payload }
+    case "SET_PORTFOLIO_VALUE": {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("trader-mindset-portfolio-value", action.payload.toString())
+      }
+      return { ...state, portfolioValue: action.payload }
+    }
+    case "SET_USER_ID":
+      return { ...state, userId: action.payload }
+    case "CLEAR_ALL_DATA": {
+      return { ...state, trades: [], morningChecks: [], journalEntries: [] }
+    }
+    default:
+      return state
   }
 }
 
 interface DataContextType {
+  // State
+  trades: Trade[]
+  morningChecks: MorningCheck[]
+  journalEntries: any[]
   isLiveMode: boolean
   hasEverSwitchedToLive: boolean
   showLiveWarning: boolean
+  portfolioValue: number
+  userId: string | null
+
+  // Actions
+  addTrade: (trade: Trade) => void
+  updateTrade: (trade: Trade) => void
+  deleteTrade: (id: string) => void
+  addMorningCheck: (check: MorningCheck) => void
+  addJournalEntry: (entry: any) => void
   setShowLiveWarning: (show: boolean) => void
+  setPortfolioValue: (value: number) => void
   switchToLive: () => void
   switchToVirtual: () => void
-  getAllTrades: () => any[]
+  clearAllData: () => void
+  setUserId: (userId: string | null) => void
+
+  // Computed values (kept for backwards compatibility)
+  getAllTrades: () => Trade[]
   getAllJournalEntries: () => any[]
   getTradingStats: () => any
-  clearAllData: () => void
   resetAllScores: () => void
   isOwner: boolean
   canSwitchModes: boolean
-  portfolioValue: number
-  setPortfolioValue: (value: number) => void
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
 
+const initialState: DataState = {
+  trades: [],
+  morningChecks: [],
+  journalEntries: [],
+  isLiveMode: false,
+  hasEverSwitchedToLive: false,
+  showLiveWarning: false,
+  portfolioValue: 10000,
+  userId: null,
+}
+
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [isLiveMode, setIsLiveMode] = useState(false)
-  const [hasEverSwitchedToLive, setHasEverSwitchedToLive] = useState(false)
-  const [showLiveWarning, setShowLiveWarning] = useState(false)
-  const [portfolioValue, setPortfolioValueState] = useState(10000)
   const { user } = useAuth()
   const { isPremium } = useSubscription()
 
+  const prevUserIdRef = useRef<string | null>(null)
+
+  const supabase = createClient()
+
+  const [state, dispatch] = useReducer(dataReducer, initialState)
+
   const isOwner = user?.email === "honza.newage@gmail.com"
-  const isDemoAccount = user?.email === "Demo"
-  const canSwitchModes = isPremium || isOwner || isDemoAccount
+  const canSwitchModes = isPremium || isOwner
+
+  const getUserKey = useCallback(
+    (baseKey: string): string => {
+      if (!state.userId) return baseKey
+      return `user-${state.userId}-${baseKey}`
+    },
+    [state.userId],
+  )
+
+  const saveTradesForUser = useCallback(
+    (trades: Trade[]) => {
+      if (typeof window === "undefined" || !state.userId) return
+      const key = getUserKey("mindtrader-trades")
+      localStorage.setItem(key, JSON.stringify(trades))
+      console.log(`[v0] Saved ${trades.length} trades to ${key}`)
+    },
+    [state.userId, getUserKey],
+  )
+
+  const saveMorningChecksForUser = useCallback(
+    (checks: MorningCheck[]) => {
+      if (typeof window === "undefined" || !state.userId) return
+      const key = getUserKey("mindtrader-morning-checks")
+      localStorage.setItem(key, JSON.stringify(checks))
+      console.log(`[v0] Saved ${checks.length} checks to ${key}`)
+    },
+    [state.userId, getUserKey],
+  )
+
+  const saveJournalEntriesForUser = useCallback(
+    (entries: any[]) => {
+      if (typeof window === "undefined" || !state.userId) return
+      const key = getUserKey("user-journal-entries")
+      localStorage.setItem(key, JSON.stringify(entries))
+      console.log(`[v0] Saved ${entries.length} journal entries to ${key}`)
+    },
+    [state.userId, getUserKey],
+  )
 
   useEffect(() => {
-    const tradingMode = localStorage.getItem("trading-mode")
-    const oldLiveMode = localStorage.getItem("trader-mindset-live-mode")
+    if (typeof window === "undefined") return
 
-    // Use trading-mode as primary, fall back to old key
-    const liveMode = tradingMode === "live" || oldLiveMode === "true"
+    const currentUserId = user?.id || null
+    const prevUserId = prevUserIdRef.current
+
+    if (prevUserId !== currentUserId) {
+      console.log(`[v0] User changed from ${prevUserId} to ${currentUserId} - clearing data`)
+      dispatch({ type: "CLEAR_ALL_DATA" })
+      prevUserIdRef.current = currentUserId
+    }
+
+    if (!currentUserId) {
+      console.log("[v0] No authenticated user - showing empty state")
+      return
+    }
+
+    dispatch({ type: "SET_USER_ID", payload: currentUserId })
+
+    const liveMode = localStorage.getItem("trader-mindset-live-mode") === "true"
     const everSwitched = localStorage.getItem("trader-mindset-ever-switched-live") === "true"
-
-    setIsLiveMode(liveMode)
-    setHasEverSwitchedToLive(everSwitched)
-
-    // Load portfolio value
     const savedPortfolio = localStorage.getItem("trader-mindset-portfolio-value")
+
+    dispatch({ type: "SET_LIVE_MODE", payload: liveMode })
+    dispatch({ type: "SET_EVER_SWITCHED_LIVE", payload: everSwitched })
     if (savedPortfolio) {
-      setPortfolioValueState(Number.parseFloat(savedPortfolio))
+      dispatch({ type: "SET_PORTFOLIO_VALUE", payload: Number.parseFloat(savedPortfolio) })
     }
 
-    // If in virtual mode, ensure demo data is available
-    if (!liveMode) {
-      loadDemoDataIfNeeded()
-    }
-  }, [])
-
-  const setPortfolioValue = (value: number) => {
-    setPortfolioValueState(value)
-    localStorage.setItem("trader-mindset-portfolio-value", value.toString())
-  }
-
-  const loadDemoDataIfNeeded = () => {
-    // Check if user has any real data
-    const userTrades = localStorage.getItem("user-trades")
-    const userJournals = localStorage.getItem("user-journal-entries")
-
-    // If no user data exists, we'll show demo data via getAllTrades/getAllJournalEntries
-    // No need to store demo data in localStorage
-  }
-
-  const getAllTrades = () => {
-    if (typeof window === "undefined") return []
-
-    if (isLiveMode) {
-      // Return only user's real trades in live mode
-      const userTrades = localStorage.getItem("user-trades")
-      return userTrades ? JSON.parse(userTrades) : []
+    if (liveMode) {
+      loadDataFromSupabase(currentUserId)
     } else {
-      // Return demo trades + user trades in virtual mode
-      const userTrades = localStorage.getItem("user-trades")
-      const parsedUserTrades = userTrades ? JSON.parse(userTrades) : []
-      return [...DEMO_TRADES, ...parsedUserTrades]
+      loadDataFromLocalStorage(currentUserId)
+    }
+  }, [user?.id, state.isLiveMode])
+
+  async function loadDataFromSupabase(userId: string) {
+    console.log(`[v0] Loading LIVE data for user: ${userId}`)
+
+    try {
+      const { data: trades, error: tradesError } = await supabase
+        .from("journal_entries")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+
+      if (tradesError) throw tradesError
+
+      console.log(`[v0] Loaded ${trades?.length || 0} trades from Supabase for user ${userId}`)
+      dispatch({ type: "SET_TRADES", payload: trades || [] })
+
+      const { data: checks, error: checksError } = await supabase
+        .from("morning_checks")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+
+      if (checksError) throw checksError
+
+      console.log(`[v0] Loaded ${checks?.length || 0} morning checks from Supabase for user ${userId}`)
+      dispatch({ type: "SET_MORNING_CHECKS", payload: checks || [] })
+    } catch (error) {
+      console.error("[v0] Error loading data from Supabase:", error)
+      dispatch({ type: "SET_TRADES", payload: [] })
+      dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
+      toast({
+        title: "Chyba načítání dat",
+        description: "Nepodařilo se načíst data ze serveru",
+        variant: "destructive",
+      })
     }
   }
 
-  const getAllJournalEntries = () => {
-    if (typeof window === "undefined") return []
+  function loadDataFromLocalStorage(userId: string) {
+    console.log(`[v0] Loading VIRTUAL data for user: ${userId}`)
 
-    if (isLiveMode) {
-      // Return only user's real journal entries in live mode
-      const userEntries = localStorage.getItem("user-journal-entries")
-      return userEntries ? JSON.parse(userEntries) : []
+    const tradesKey = `user-${userId}-mindtrader-trades`
+    const tradesData = localStorage.getItem(tradesKey)
+    if (tradesData) {
+      const parsedTrades = JSON.parse(tradesData)
+      console.log(`[v0] Loaded ${parsedTrades.length} trades from localStorage (${tradesKey})`)
+      dispatch({ type: "SET_TRADES", payload: parsedTrades })
     } else {
-      // Return demo entries + user entries in virtual mode
-      const userEntries = localStorage.getItem("user-journal-entries")
-      const parsedUserEntries = userEntries ? JSON.parse(userEntries) : []
-      return [...DEMO_JOURNAL_ENTRIES, ...parsedUserEntries]
+      console.log(`[v0] No trades found for user ${userId} - starting fresh`)
+      dispatch({ type: "SET_TRADES", payload: [] })
+    }
+
+    const checksKey = `user-${userId}-mindtrader-morning-checks`
+    const checksData = localStorage.getItem(checksKey)
+    if (checksData) {
+      const parsedChecks = JSON.parse(checksData)
+      console.log(`[v0] Loaded ${parsedChecks.length} checks from localStorage (${checksKey})`)
+      dispatch({ type: "SET_MORNING_CHECKS", payload: parsedChecks })
+    } else {
+      console.log(`[v0] No morning checks found for user ${userId} - starting fresh`)
+      dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
+    }
+
+    const journalKey = `user-${userId}-user-journal-entries`
+    const journalData = localStorage.getItem(journalKey)
+    if (journalData) {
+      const parsedJournal = JSON.parse(journalData)
+      console.log(`[v0] Loaded ${parsedJournal.length} journal entries from localStorage (${journalKey})`)
+      dispatch({ type: "SET_JOURNAL_ENTRIES", payload: parsedJournal })
+    } else {
+      console.log(`[v0] No journal entries found for user ${userId} - starting fresh`)
+      dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
     }
   }
 
-  const getTradingStats = () => {
-    if (typeof window === "undefined") {
-      return {
-        totalPnL: 0,
-        totalTrades: 0,
-        winningTrades: 0,
-        losingTrades: 0,
-        winRate: 0,
-        averageWin: 0,
-        averageLoss: 0,
-        profitFactor: 0,
-        maxDrawdown: 0,
-        averageMood: 0,
-        bestDay: 0,
-        worstDay: 0,
-        consecutiveWins: 0,
-        consecutiveLosses: 0,
-        riskRewardRatio: 0,
-        sharpeRatio: 0,
-      }
+  const addTrade = async (trade: Trade) => {
+    if (!state.userId) {
+      console.error("[v0] Cannot add trade: No authenticated user")
+      toast({
+        title: "Chyba autentizace",
+        description: "Musíte být přihlášeni",
+        variant: "destructive",
+      })
+      return
     }
 
-    if (isLiveMode) {
-      // Calculate stats from user's real data only
-      const userTrades = getAllTrades()
-      if (userTrades.length === 0) {
-        return {
-          totalPnL: 0,
-          totalTrades: 0,
-          winningTrades: 0,
-          losingTrades: 0,
-          winRate: 0,
-          averageWin: 0,
-          averageLoss: 0,
-          profitFactor: 0,
-          maxDrawdown: 0,
-          averageMood: 0,
-          bestDay: 0,
-          worstDay: 0,
-          consecutiveWins: 0,
-          consecutiveLosses: 0,
-          riskRewardRatio: 0,
-          sharpeRatio: 0,
+    if (state.isLiveMode) {
+      console.log(`[v0] Adding trade to Supabase for user: ${state.userId}`)
+
+      try {
+        const response = await fetch("/api/trades/add", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            trade,
+            userId: state.userId,
+          }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || "Failed to add trade")
         }
-      }
 
-      // Calculate real stats from user trades
-      const totalPnL = userTrades.reduce((sum: number, trade: any) => sum + (trade.pnl || 0), 0)
-      const totalTrades = userTrades.length
-      const winningTrades = userTrades.filter((trade: any) => (trade.pnl || 0) > 0).length
-      const losingTrades = userTrades.filter((trade: any) => (trade.pnl || 0) < 0).length
-      const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0
+        const { data } = await response.json()
 
-      const wins = userTrades.filter((trade: any) => (trade.pnl || 0) > 0).map((trade: any) => trade.pnl || 0)
-      const losses = userTrades.filter((trade: any) => (trade.pnl || 0) < 0).map((trade: any) => trade.pnl || 0)
-
-      const averageWin = wins.length > 0 ? wins.reduce((sum: number, win: number) => sum + win, 0) / wins.length : 0
-      const averageLoss =
-        losses.length > 0 ? losses.reduce((sum: number, loss: number) => sum + loss, 0) / losses.length : 0
-
-      const profitFactor = averageLoss !== 0 ? Math.abs(averageWin / averageLoss) : 0
-      const maxDrawdown = Math.min(...userTrades.map((trade: any) => trade.pnl || 0), 0)
-
-      const averageMood =
-        userTrades.length > 0
-          ? userTrades.reduce((sum: number, trade: any) => sum + (trade.mood || 0), 0) / userTrades.length
-          : 0
-
-      const bestDay = Math.max(...userTrades.map((trade: any) => trade.pnl || 0), 0)
-      const worstDay = Math.min(...userTrades.map((trade: any) => trade.pnl || 0), 0)
-
-      return {
-        totalPnL,
-        totalTrades,
-        winningTrades,
-        losingTrades,
-        winRate,
-        averageWin,
-        averageLoss,
-        profitFactor,
-        maxDrawdown,
-        averageMood,
-        bestDay,
-        worstDay,
-        consecutiveWins: 0,
-        consecutiveLosses: 0,
-        riskRewardRatio: profitFactor,
-        sharpeRatio: 0,
+        if (data) {
+          console.log(`[v0] Trade saved to Supabase: ${data.id}`)
+          dispatch({ type: "ADD_TRADE", payload: data })
+          toast({
+            title: "Obchod uložen",
+            description: "Data byla úspěšně uložena do cloudu",
+          })
+        }
+      } catch (error) {
+        console.error("[v0] Error adding trade to Supabase:", error)
+        toast({
+          title: "Chyba ukládání",
+          description: error instanceof Error ? error.message : "Nepodařilo se uložit obchod",
+          variant: "destructive",
+        })
       }
     } else {
-      // Return demo stats in virtual mode
-      return generateRandomTradingStats()
+      console.log(`[v0] Adding trade to localStorage for user: ${state.userId}`)
+      dispatch({ type: "ADD_TRADE", payload: trade })
+      const newTrades = [...state.trades, trade]
+      saveTradesForUser(newTrades)
+      toast({
+        title: "Obchod uložen",
+        description: "Data byla uložena lokálně",
+      })
+    }
+  }
+
+  const updateTrade = async (trade: Trade) => {
+    if (!state.userId) return
+
+    if (state.isLiveMode) {
+      try {
+        const { error } = await supabase
+          .from("journal_entries")
+          .update(trade)
+          .eq("id", trade.id)
+          .eq("user_id", state.userId)
+
+        if (error) throw error
+        dispatch({ type: "UPDATE_TRADE", payload: trade })
+      } catch (error) {
+        console.error("[v0] Error updating trade:", error)
+        toast({
+          title: "Chyba aktualizace",
+          description: "Nepodařilo se aktualizovat obchod",
+          variant: "destructive",
+        })
+      }
+    } else {
+      dispatch({ type: "UPDATE_TRADE", payload: trade })
+      const updatedTrades = state.trades.map((t) => (t.id === trade.id ? trade : t))
+      saveTradesForUser(updatedTrades)
+    }
+  }
+
+  const deleteTrade = async (id: string) => {
+    if (!state.userId) return
+
+    if (state.isLiveMode) {
+      try {
+        const { error } = await supabase.from("journal_entries").delete().eq("id", id).eq("user_id", state.userId)
+
+        if (error) throw error
+        dispatch({ type: "DELETE_TRADE", payload: id })
+      } catch (error) {
+        console.error("[v0] Error deleting trade:", error)
+        toast({
+          title: "Chyba mazání",
+          description: "Nepodařilo se smazat obchod",
+          variant: "destructive",
+        })
+      }
+    } else {
+      dispatch({ type: "DELETE_TRADE", payload: id })
+      const filteredTrades = state.trades.filter((t) => t.id !== id)
+      saveTradesForUser(filteredTrades)
+    }
+  }
+
+  const addMorningCheck = async (check: MorningCheck) => {
+    if (!state.userId) {
+      console.error("[v0] Cannot add morning check: No authenticated user")
+      return
+    }
+
+    if (state.isLiveMode) {
+      try {
+        const response = await fetch("/api/morning-checks/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            check,
+            userId: state.userId,
+          }),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || "Failed to add morning check")
+        }
+
+        const { data } = await response.json()
+        dispatch({ type: "ADD_MORNING_CHECK", payload: data })
+      } catch (error: any) {
+        console.error("[v0] Error adding morning check:", error.message)
+        toast({
+          title: "Chyba ukládání",
+          description: "Nepodařilo se uložit ranní check",
+          variant: "destructive",
+        })
+      }
+    } else {
+      dispatch({ type: "ADD_MORNING_CHECK", payload: check })
+      const newChecks = [...state.morningChecks, check]
+      saveMorningChecksForUser(newChecks)
+    }
+  }
+
+  const addJournalEntry = async (entry: any) => {
+    if (!state.userId) return
+
+    if (state.isLiveMode) {
+      try {
+        const { data, error } = await supabase
+          .from("journal_entries")
+          .insert({
+            ...entry,
+            user_id: state.userId,
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+        if (data) {
+          dispatch({ type: "ADD_JOURNAL_ENTRY", payload: data })
+        }
+      } catch (error) {
+        console.error("[v0] Error adding journal entry:", error)
+      }
+    } else {
+      dispatch({ type: "ADD_JOURNAL_ENTRY", payload: entry })
+      const newEntries = [...state.journalEntries, entry]
+      saveJournalEntriesForUser(newEntries)
+    }
+  }
+
+  const switchToLive = () => {
+    dispatch({ type: "SET_LIVE_MODE", payload: true })
+    dispatch({ type: "SET_EVER_SWITCHED_LIVE", payload: true })
+
+    if (state.userId) {
+      loadDataFromSupabase(state.userId)
+    }
+  }
+
+  const switchToVirtual = () => {
+    dispatch({ type: "SET_LIVE_MODE", payload: false })
+
+    if (state.userId) {
+      loadDataFromLocalStorage(state.userId)
     }
   }
 
   const clearAllData = () => {
-    // Clear all user data (trades, journal, mood)
-    localStorage.removeItem("user-trades")
-    localStorage.removeItem("user-journal-entries")
-    localStorage.removeItem("user-mood-entries")
-    localStorage.removeItem("user-behavioral-analysis")
-    localStorage.removeItem("user-trading-goals")
-    localStorage.removeItem("user-risk-settings")
+    if (!state.userId) return
 
-    // Clear MindTrader data
-    localStorage.removeItem("trader-mindset-mindtrader-history")
-    localStorage.removeItem("mindtrader-chat-history")
-    localStorage.removeItem("mindtrader-sessions")
+    const tradesKey = `user-${state.userId}-mindtrader-trades`
+    const checksKey = `user-${state.userId}-mindtrader-morning-checks`
+    const journalKey = `user-${state.userId}-user-journal-entries`
 
-    // Clear Team Club data
-    localStorage.removeItem("trader-mindset-team-club-data")
-    localStorage.removeItem("team-club-mentoring")
-    localStorage.removeItem("team-club-challenges")
+    localStorage.removeItem(tradesKey)
+    localStorage.removeItem(checksKey)
+    localStorage.removeItem(journalKey)
 
-    // Clear Daily Tracker data
-    localStorage.removeItem("daily-tracker-entries")
-    localStorage.removeItem("daily-assessments")
+    dispatch({ type: "CLEAR_ALL_DATA" })
 
-    // Clear Analytics data
-    localStorage.removeItem("trader-mindset-analytics-data")
-    localStorage.removeItem("trader-mindset-performance-data")
-    localStorage.removeItem("trader-mindset-emotional-data")
-    localStorage.removeItem("trader-mindset-trading-patterns")
-    localStorage.removeItem("trader-mindset-risk-data")
+    console.log(`[v0] Cleared all data for user ${state.userId}`)
+  }
 
-    // Clear other related data
-    localStorage.removeItem("trader-mindset-dashboard-stats")
-    localStorage.removeItem("trader-mindset-custom-affirmations")
+  const getAllTrades = () => state.trades
+  const getAllJournalEntries = () => state.journalEntries
+
+  const getTradingStats = () => {
+    const trades = state.trades
+    if (!trades.length) {
+      return {
+        totalTrades: 0,
+        winRate: 0,
+        totalPnL: 0,
+        avgWin: 0,
+        avgLoss: 0,
+        profitFactor: 0,
+      }
+    }
+
+    const wins = trades.filter((t) => t.pnl > 0)
+    const losses = trades.filter((t) => t.pnl < 0)
+    const totalPnL = trades.reduce((sum, t) => sum + t.pnl, 0)
+    const avgWin = wins.length ? wins.reduce((sum, t) => sum + t.pnl, 0) / wins.length : 0
+    const avgLoss = losses.length ? Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0) / losses.length) : 0
+    const profitFactor = avgLoss > 0 ? avgWin / avgLoss : 0
+
+    return {
+      totalTrades: trades.length,
+      winRate: (wins.length / trades.length) * 100,
+      totalPnL,
+      avgWin,
+      avgLoss,
+      profitFactor,
+    }
   }
 
   const resetAllScores = () => {
-    clearAllData()
+    if (!state.userId) return
+
+    const gamificationKey = `user-${state.userId}-gamification-state`
+    localStorage.removeItem(gamificationKey)
+
+    console.log(`[v0] Reset all scores for user ${state.userId}`)
   }
 
-  const switchToLive = () => {
-    if (!isPremium && !isOwner && !isDemoAccount) {
-      toast({
-        title: "Premium vyžadováno",
-        description: "Live režim je dostupný pouze pro premium uživatele.",
-        variant: "destructive",
-        duration: 5000,
-      })
-      return
-    }
-
-    if (!canSwitchModes) {
-      toast({
-        title: "Přístup odepřen",
-        description: "Nemáte oprávnění přepínat mezi režimy.",
-        variant: "destructive",
-        duration: 5000,
-      })
-      return
-    }
-
-    localStorage.setItem("trading-mode", "live")
-    localStorage.setItem("trader-mindset-live-mode", "true")
-    localStorage.setItem("trader-mindset-ever-switched-live", "true")
-    setIsLiveMode(true)
-    setHasEverSwitchedToLive(true)
-    setShowLiveWarning(false)
-
-    // Clear all demo and user data when switching to live
-    clearAllData()
-
-    toast({
-      title: "Přepnuto na Live režim",
-      description: "Nyní pracujete s reálnými daty. Všechna demo data byla vymazána.",
-      duration: 5000,
-    })
-
-    // Reload to ensure all components get fresh data
-    setTimeout(() => {
-      window.location.reload()
-    }, 1000)
+  const setShowLiveWarning = (show: boolean) => {
+    dispatch({ type: "SET_SHOW_WARNING", payload: show })
   }
 
-  const switchToVirtual = () => {
-    if (!canSwitchModes) {
-      toast({
-        title: "Přístup odepřen",
-        description: "Nemáte oprávnění přepínat mezi režimy.",
-        variant: "destructive",
-        duration: 5000,
-      })
-      return
-    }
+  const setPortfolioValue = (value: number) => {
+    dispatch({ type: "SET_PORTFOLIO_VALUE", payload: value })
+  }
 
-    localStorage.setItem("trading-mode", "virtual")
-    localStorage.setItem("trader-mindset-live-mode", "false")
-    setIsLiveMode(false)
-
-    toast({
-      title: "Přepnuto na Virtual režim",
-      description: "Nyní pracujete s demo daty pro testování funkcí. Vaše reálná data zůstávají zachována.",
-      duration: 5000,
-    })
-
-    // Reload to load demo data
-    setTimeout(() => {
-      window.location.reload()
-    }, 1000)
+  const setUserId = (userId: string | null) => {
+    dispatch({ type: "SET_USER_ID", payload: userId })
   }
 
   return (
     <DataContext.Provider
       value={{
-        isLiveMode,
-        hasEverSwitchedToLive,
-        showLiveWarning,
+        trades: state.trades,
+        morningChecks: state.morningChecks,
+        journalEntries: state.journalEntries,
+        isLiveMode: state.isLiveMode,
+        hasEverSwitchedToLive: state.hasEverSwitchedToLive,
+        showLiveWarning: state.showLiveWarning,
+        portfolioValue: state.portfolioValue,
+        userId: state.userId,
+        addTrade,
+        updateTrade,
+        deleteTrade,
+        addMorningCheck,
+        addJournalEntry,
         setShowLiveWarning,
+        setPortfolioValue,
         switchToLive,
         switchToVirtual,
+        clearAllData,
+        setUserId,
         getAllTrades,
         getAllJournalEntries,
         getTradingStats,
-        clearAllData,
         resetAllScores,
         isOwner,
         canSwitchModes,
-        portfolioValue,
-        setPortfolioValue,
       }}
     >
       {children}

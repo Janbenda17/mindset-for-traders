@@ -34,6 +34,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useData } from "@/contexts/data-context"
 import { cn } from "@/lib/utils"
+import { getUserStorageKey } from "@/utils/storage-namespace"
 
 interface FailEntry {
   id: string
@@ -154,7 +155,8 @@ export default function FailLogPage() {
       return
     }
 
-    const saved = localStorage.getItem("fail-log-entries")
+    const failLogKey = getUserStorageKey("fail-log-entries")
+    const saved = localStorage.getItem(failLogKey)
     if (saved) {
       try {
         setEntries(JSON.parse(saved))
@@ -167,7 +169,8 @@ export default function FailLogPage() {
 
   useEffect(() => {
     if (isLiveMode && entries.length > 0) {
-      localStorage.setItem("fail-log-entries", JSON.stringify(entries))
+      const failLogKey = getUserStorageKey("fail-log-entries")
+      localStorage.setItem(failLogKey, JSON.stringify(entries))
     }
   }, [entries, isLiveMode])
 
@@ -222,15 +225,15 @@ export default function FailLogPage() {
       ),
     )
 
-    // Save to localStorage in live mode
     if (isLiveMode) {
       setTimeout(() => {
+        const failLogKey = getUserStorageKey("fail-log-entries")
         const updated = entries.map((e) =>
           e.id === id
             ? { ...e, resolved: !e.resolved, resolvedDate: !e.resolved ? new Date().toISOString() : undefined }
             : e,
         )
-        localStorage.setItem("fail-log-entries", JSON.stringify(updated))
+        localStorage.setItem(failLogKey, JSON.stringify(updated))
       }, 0)
     }
   }

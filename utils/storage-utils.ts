@@ -226,7 +226,16 @@ export interface UserData {
   }
 }
 
-const STORAGE_KEY = "trader-mindset-data"
+function getStorageKey(): string {
+  // Get current user from auth
+  const currentUserStr = localStorage.getItem("trader-mindset-user")
+  if (!currentUserStr) {
+    return "trader-mindset-data" // Fallback for non-authenticated
+  }
+
+  const currentUser = JSON.parse(currentUserStr)
+  return `user-${currentUser.id}-trader-mindset-data`
+}
 
 // Sample data for demonstration (only for virtual mode)
 function getSampleJournalEntries(): JournalEntry[] {
@@ -632,6 +641,7 @@ export function getUserData(): UserData {
   }
 
   try {
+    const STORAGE_KEY = getStorageKey()
     const data = localStorage.getItem(STORAGE_KEY)
     const liveMode = isLiveMode()
 
@@ -673,7 +683,7 @@ export function getUserData(): UserData {
     return fullData
   } catch (error) {
     console.error("Error parsing user data from localStorage", error)
-    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem("trader-mindset-data")
     const defaultData = getDefaultUserData()
 
     if (!isLiveMode()) {
@@ -687,12 +697,15 @@ export function getUserData(): UserData {
   }
 }
 
-export function setUserData(data: UserData): void {
-  if (typeof window === "undefined") {
-    return
-  }
+export function setUserData(data: Partial<UserData>): void {
+  if (typeof window === "undefined") return
+
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    const STORAGE_KEY = getStorageKey()
+    const currentData = getUserData()
+    const updatedData = { ...currentData, ...data, lastUpdated: new Date().toISOString() }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData))
 
     window.dispatchEvent(
       new CustomEvent("storage-updated", {
@@ -704,24 +717,21 @@ export function setUserData(data: UserData): void {
   }
 }
 
-export function saveUserData(data: UserData): void {
+export function saveUserData(data: Partial<UserData>): void {
   setUserData(data)
 }
 
 export function clearUserData(): void {
-  if (typeof window === "undefined") {
-    return
-  }
+  if (typeof window === "undefined") return
+  const STORAGE_KEY = getStorageKey()
   localStorage.removeItem(STORAGE_KEY)
 }
 
 export function clearAllDemoData(): void {
-  if (typeof window === "undefined") {
-    return
-  }
+  if (typeof window === "undefined") return
 
   const keysToRemove = [
-    STORAGE_KEY,
+    getStorageKey(),
     "trader-mindset-dashboard-stats",
     "trader-mindset-performance-data",
     "trader-mindset-trading-data",

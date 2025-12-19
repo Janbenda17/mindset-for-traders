@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { AdminPanel } from "@/components/admin-panel"
 import { TradingStyleBadge } from "@/components/trading-style-badge"
+import { StageProgression } from "@/components/stage-progression"
 import {
   Brain,
   TrendingUp,
@@ -35,6 +36,8 @@ import { useData } from "@/contexts/data-context"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useLossReset } from "@/contexts/loss-reset-context"
 import { useTradingStyle } from "@/contexts/trading-style-context"
+import { useGamification, LEVEL_XP_REQUIREMENTS } from "@/contexts/gamification-context"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function DashboardPage() {
   const [timeOfDay, setTimeOfDay] = useState("")
@@ -42,16 +45,19 @@ export default function DashboardPage() {
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [cachedStats, setCachedStats] = useState(null)
   const [isMounted, setIsMounted] = useState(false)
+  const [mentalReadiness, setMentalReadiness] = useState<number | null>(null)
   const [aiAnalysisData, setAiAnalysisData] = useState({
     readiness: { text: "Připravenost: Neznámá", description: "Dokončete Morning Check pro analýzu připravenosti" },
     trend: { description: "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu." },
     action: { description: "Začni Morning Check a uzamkni svůj readiness před tradingem." },
   })
 
-  const { isLiveMode, getTradingStats, portfolioValue } = useData()
+  const { getTradingStats, trades, isLiveMode, portfolioValue } = useData()
   const { plan, isActive, daysRemaining } = useSubscription()
   const { startReset } = useLossReset()
   const { tradingStyle, config } = useTradingStyle()
+  const { data: gamificationData } = useGamification()
+  const { user } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -66,10 +72,18 @@ export default function DashboardPage() {
     if (!isMounted) return
 
     const todayDate = new Date().toISOString().split("T")[0]
-    const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
+    const checksKey = `user-${user?.id}-mindtrader-morning-checks`
+    const checks = JSON.parse(localStorage.getItem(checksKey) || "[]")
     const todayCheck = checks.find((c: any) => c.date === todayDate)
 
-    const entries = JSON.parse(localStorage.getItem("journal-entries") || "[]")
+    if (todayCheck && todayCheck.score !== undefined) {
+      setMentalReadiness(todayCheck.score)
+    } else {
+      setMentalReadiness(null)
+    }
+
+    const journalKey = `user-${user?.id}-journal-entries`
+    const entries = JSON.parse(localStorage.getItem(journalKey) || "[]")
     const last7Days = entries.filter((e: any) => {
       const entryDate = new Date(e.date)
       const today = new Date()
@@ -82,10 +96,9 @@ export default function DashboardPage() {
     let readinessDesc = "Dokončete Morning Check pro analýzu připravenosti"
     if (todayCheck) {
       const score = todayCheck.score
-      if (score >= 85) readinessText = "Připravenost: Výborná ✨"
-      else if (score >= 75) readinessText = "Připravenost: Dobrá ✅"
-      else if (score >= 60) readinessText = "Připravenost: Střední ⚠️"
-      else readinessText = "Připravenost: Nízká 🛑"
+      if (score >= 75) readinessText = "Připravenost: Výborná ✅"
+      else if (score >= 60) readinessText = "Připravenost: Buď opatrný ⚠️"
+      else readinessText = "Připravenost: Neobchoduj 🛑"
 
       readinessDesc = `Spánek: ${todayCheck.sleepHours}h (${todayCheck.sleepQuality}/10), Stres: ${todayCheck.stressLevel}/10, Focus: ${todayCheck.focus}/10`
     }
@@ -98,10 +111,11 @@ export default function DashboardPage() {
 
     let actionDesc = "Začni Morning Check a uzamkni svůj readiness před tradingem."
     if (todayCheck) {
-      if (todayCheck.score >= 85) actionDesc = "Jsi v top formě! Začni Daily Flow a obchoduj podle plánu."
-      else if (todayCheck.score >= 75) actionDesc = "Dobrá připravenost. Zvaž 10min meditaci před prvním obchodem."
-      else if (todayCheck.score >= 60) actionDesc = "Střední připravenost. Sniž position sizes a buď extra opatrný."
-      else actionDesc = "Nízká připravenost. Dnes raději studuj nebo paper trade."
+      if (todayCheck.score >= 75)
+        actionDesc = "✅ Jsi připraven! Dnes jsou dobré podmínky na obchodování podle tvého plánu."
+      else if (todayCheck.score >= 60)
+        actionDesc = "⚠️ Buď opatrný. Redukuj position sizes o 50% a zvyš disciplínu. Zvaž meditation před tradingem."
+      else actionDesc = "🛑 Dnes neobchoduj. Zaměř se na přípravu: paper trading, studium, nebo relaxaci."
     }
 
     setAiAnalysisData({
@@ -109,7 +123,7 @@ export default function DashboardPage() {
       trend: { description: trendDesc },
       action: { description: actionDesc },
     })
-  }, [isMounted])
+  }, [isMounted, user])
 
   useEffect(() => {
     if (!cachedStats && isMounted) {
@@ -164,118 +178,83 @@ export default function DashboardPage() {
   }, [portfolioValue, isMounted])
 
   const getStatsForStyle = () => {
-    if (!isMounted) {
-      return [
-        {
-          title: "Celkový kapitál",
-          value: "$0",
-          change: "+0%",
-          trend: "up" as const,
-          icon: DollarSign,
-          color: "from-emerald-500 to-teal-500",
-          description: "Celková hodnota účtu",
-          progress: 0,
-        },
-        {
-          title: "Měsíční P/L",
-          value: "$0",
-          change: "0 obchodů",
-          trend: "up" as const,
-          icon: TrendingUp,
-          color: "from-blue-500 to-cyan-500",
-          description: "Zisk/ztráta tento měsíc",
-          progress: 0,
-        },
-        {
-          title: "Mental Readiness",
-          value: "0%",
-          change: "Bez check",
-          trend: "neutral" as const,
-          icon: Brain,
-          color: "from-purple-500 to-pink-500",
-          description: "Psychická připravenost",
-          progress: 0,
-        },
-        {
-          title: "Discipline Score",
-          value: "0%",
-          change: "0 dní",
-          trend: "neutral" as const,
-          icon: Shield,
-          color: "from-orange-500 to-red-500",
-          description: "Dodržování plánu (7 dní)",
-          progress: 0,
-        },
-      ]
-    }
-
     const tradingStats = getTradingStats()
-    const currentPortfolio = portfolioValue + tradingStats.totalPnL
+
+    const allTrades = trades
 
     const now = new Date()
-    const currentMonth = now.getMonth()
-    const currentYear = now.getFullYear()
-    const entries = JSON.parse(localStorage.getItem("journal-entries") || "[]")
-    const monthlyTrades = entries.filter((e: any) => {
-      const entryDate = new Date(e.date)
-      return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const monthlyTrades = allTrades.filter((trade: any) => {
+      const tradeDate = new Date(trade.date)
+      return tradeDate >= monthStart
     })
-    const monthlyPnL = monthlyTrades.reduce((sum: number, e: any) => sum + (e.profitLoss || 0), 0)
+    const monthlyPnL = monthlyTrades.reduce((sum: number, trade: any) => sum + (trade.pnl || 0), 0)
 
-    const todayDate = new Date().toISOString().split("T")[0]
-    const checks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
-    const todayCheck = checks.find((c: any) => c.date === todayDate)
-    const mentalReadiness = todayCheck ? todayCheck.score : 0
-
-    const last7Days = entries.filter((e: any) => {
-      const entryDate = new Date(e.date)
-      const diffTime = Math.abs(now.getTime() - entryDate.getTime())
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      return diffDays <= 7
+    const last7Days = allTrades.filter((trade: any) => {
+      const tradeDate = new Date(trade.date)
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      return tradeDate >= sevenDaysAgo
     })
     const disciplineScore =
-      last7Days.length > 0 ? (last7Days.filter((e: any) => e.followedPlan).length / last7Days.length) * 100 : 0
+      last7Days.length > 0
+        ? (last7Days.filter((trade: any) => trade.followedPlan === true).length / last7Days.length) * 100
+        : 0
+
+    const currentLevel = gamificationData.level
+    const currentXP = gamificationData.xp
+    const currentLevelXP = LEVEL_XP_REQUIREMENTS[currentLevel - 1] || 0
+    const nextLevelXP = LEVEL_XP_REQUIREMENTS[currentLevel] || LEVEL_XP_REQUIREMENTS[LEVEL_XP_REQUIREMENTS.length - 1]
+    const xpToNextLevel = nextLevelXP - currentXP
+    const xpProgress = currentLevel >= 10 ? 100 : ((currentXP - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100
+
+    const totalPnL = allTrades.reduce((sum: number, trade: any) => sum + (trade.pnl || 0), 0)
+
+    const startingCapital = Number.parseFloat(localStorage.getItem("starting-capital") || "10000")
+    const totalCapital = startingCapital + totalPnL
 
     return [
       {
         title: "Celkový kapitál",
-        value: `$${currentPortfolio.toLocaleString()}`,
-        change: `${tradingStats.totalPnL >= 0 ? "+" : ""}${((tradingStats.totalPnL / portfolioValue) * 100).toFixed(1)}%`,
-        trend: (tradingStats.totalPnL >= 0 ? "up" : "down") as const,
+        value: `$${totalCapital.toLocaleString()}`,
+        change: `${totalPnL >= 0 ? "+" : ""}$${totalPnL.toFixed(2)}`,
+        trend: (totalPnL >= 0 ? "up" : "down") as const,
         icon: DollarSign,
         color: "from-emerald-500 to-teal-500",
-        description: "Celková hodnota účtu",
-        progress: Math.min((currentPortfolio / portfolioValue - 1) * 100 + 50, 100),
+        description: "Počáteční kapitál + P/L",
+        progress: Math.min(((totalCapital - startingCapital) / startingCapital) * 100 + 50, 100),
       },
       {
-        title: "Měsíční P/L",
-        value: `${monthlyPnL >= 0 ? "+" : ""}$${monthlyPnL.toLocaleString()}`,
-        change: `${monthlyTrades.length} obchodů`,
-        trend: (monthlyPnL >= 0 ? "up" : "down") as const,
+        title: "Total P/L",
+        value: `${totalPnL >= 0 ? "+" : ""}$${totalPnL.toLocaleString()}`,
+        change: `${allTrades.length} obchodů`,
+        trend: (totalPnL >= 0 ? "up" : "down") as const,
         icon: TrendingUp,
         color: "from-blue-500 to-cyan-500",
-        description: "Zisk/ztráta tento měsíc",
-        progress: Math.min(Math.abs((monthlyPnL / portfolioValue) * 100 * 10), 100),
+        description: "Celkový zisk/ztráta",
+        progress: Math.min(Math.abs((totalPnL / startingCapital) * 100 * 5), 100),
       },
       {
         title: "Mental Readiness",
-        value: `${mentalReadiness}%`,
-        change: todayCheck ? `${todayCheck.sleepHours}h spánek` : "Bez check",
-        trend: (mentalReadiness >= 75 ? "up" : mentalReadiness >= 60 ? "neutral" : "down") as const,
+        value: mentalReadiness !== null ? `${mentalReadiness}%` : "N/A",
+        trend:
+          mentalReadiness === null
+            ? ("neutral" as const)
+            : ((mentalReadiness >= 75 ? "up" : mentalReadiness >= 60 ? "neutral" : "down") as const),
         icon: Brain,
         color: "from-purple-500 to-pink-500",
-        description: "Psychická připravenost",
-        progress: mentalReadiness,
+        description: mentalReadiness !== null ? "Psychická připravenost" : "Vyplň Morning Check",
+        progress: mentalReadiness !== null ? mentalReadiness : 0,
       },
       {
-        title: "Discipline Score",
-        value: `${disciplineScore.toFixed(0)}%`,
-        change: `${last7Days.length} dní`,
-        trend: (disciplineScore >= 75 ? "up" : disciplineScore >= 50 ? "neutral" : "down") as const,
+        title: "Level & XP",
+        value: `Level ${currentLevel}`,
+        change: currentLevel >= 10 ? "Max Level!" : `${xpToNextLevel} XP do upgradu`,
+        trend: (xpProgress >= 75 ? "up" : xpProgress >= 50 ? "neutral" : "down") as const,
         icon: Shield,
         color: "from-orange-500 to-red-500",
-        description: "Dodržování plánu (7 dní)",
-        progress: disciplineScore,
+        description: currentLevel >= 10 ? "Mind Master" : "Získávej XP",
+        progress: xpProgress,
       },
     ]
   }
@@ -303,12 +282,10 @@ export default function DashboardPage() {
     },
     {
       title: "MindTrader AI",
-      description: "Získat AI analýzu",
+      description: "Tvůj AI trading mentor",
       icon: Brain,
-      href: isPremium ? "/mindtrader" : "/pricing",
-      color: "from-purple-500 to-pink-500",
-      gradient: "from-purple-500/20 to-pink-500/20",
-      locked: !isPremium,
+      href: "/mindtrader",
+      gradient: "from-purple-500 to-pink-500",
     },
     {
       title: "Loss Reset",
@@ -364,35 +341,6 @@ export default function DashboardPage() {
             animation: "twinkle 3s ease-in-out infinite",
           }}
         ></div>
-
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cGF0aCBkPSJNLS41IDM5LjVoNDEiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-20"></div>
-
-        <style jsx>{`
-          @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.8; }
-          }
-          @keyframes fadeInUp {
-            from {
-              opacity: 0;
-              transform: translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); }
-            50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.8); }
-          }
-          .animate-fade-in-up {
-            animation: fadeInUp 0.6s ease-out forwards;
-          }
-          .animate-glow {
-            animation: glow 2s ease-in-out infinite;
-          }
-        `}</style>
 
         <div className="max-w-[1800px] mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pt-4 sm:pt-6 relative z-10">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
@@ -518,6 +466,8 @@ export default function DashboardPage() {
             ))}
           </div>
 
+          {isLiveMode && <StageProgression />}
+
           <div className="space-y-3 sm:space-y-4 animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
             <h2 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
               <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
@@ -570,8 +520,8 @@ export default function DashboardPage() {
             <CardContent className="p-4 sm:p-6 relative">
               <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="flex items-center space-x-2 sm:space-x-3">
-                  <div className="p-2 sm:p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl shadow-lg shadow-purple-500/50">
-                    <Zap className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                  <div className="p-2 sm:p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-2xl shadow-lg shadow-purple-500/50">
+                    <Zap className="w-5 h-5 text-green-400 mt-1 group-hover:scale-110 transition-transform" />
                   </div>
                   <h3 className="text-lg sm:text-2xl font-bold text-white">AI Analýza</h3>
                 </div>

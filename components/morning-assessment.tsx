@@ -10,14 +10,13 @@ import { useToast } from "@/hooks/use-toast"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
 import { useGamification } from "@/contexts/gamification-context"
-import { getSimulatedDate } from "@/utils/random-data-generator"
+import { useAuth } from "@/contexts/auth-context"
 import {
   Moon,
   Coffee,
   Dumbbell,
   Brain,
   Target,
-  TrendingUp,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -57,16 +56,17 @@ const EXERCISE_TYPES = [
   { value: "other", label: "🎯 Other" },
 ]
 
-export function MorningAssessment() {
+export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
   const router = useRouter()
   const { toast } = useToast()
   const { completeStage } = useDailyStage()
-  const { isLiveMode } = useData()
+  const { isLiveMode, addMorningCheck } = useData()
   const { addXP, incrementStreak, incrementStat } = useGamification()
+  const { user } = useAuth()
   const [isLocked, setIsLocked] = useState(false)
   const [assessment, setAssessment] = useState<MorningCheckData>({
     id: "",
-    date: getSimulatedDate().toISOString().split("T")[0],
+    date: new Date().toISOString().split("T")[0],
     sleepQuality: 7,
     sleepHours: 7.5,
     energyLevel: 7,
@@ -85,45 +85,41 @@ export function MorningAssessment() {
   })
 
   useEffect(() => {
-    const simulatedDate = getSimulatedDate()
-    const todayDate = simulatedDate.toISOString().split("T")[0]
-    const lockKey = `morning-check-locked-${todayDate}`
+    const todayDate = new Date().toISOString().split("T")[0]
+    const lockKey = `user-${user?.id}-morning-check-locked-${todayDate}`
     const locked = localStorage.getItem(lockKey) === "true"
 
     if (locked) {
       setIsLocked(true)
-      // Load locked data
-      const saved = localStorage.getItem("mindtrader-morning-checks") || "[]"
+      const storageKey = `user-${user?.id}-mindtrader-morning-checks`
+      const saved = localStorage.getItem(storageKey) || "[]"
       const checks = JSON.parse(saved)
       const todayCheck = checks.find((c: MorningCheckData) => c.date === todayDate)
       if (todayCheck) {
         setAssessment(todayCheck)
       }
-    } else {
-      setIsLocked(false)
-      setAssessment((prev) => ({
-        ...prev,
-        date: todayDate,
-      }))
     }
-  }, [])
+  }, [user?.id])
 
   const calculateScore = () => {
     const weights = {
-      sleepQuality: 0.2,
-      sleepHours: 0.15,
-      energyLevel: 0.15,
-      stressLevel: 0.15,
-      focus: 0.15,
-      physicalHealth: 0.1,
-      emotionalState: 0.1,
+      sleepQuality: 0.18, // Sleep je základ - špatný spánek = špatné rozhodování
+      sleepHours: 0.12, // Délka spánku je důležitá ale méně než kvalita
+      energyLevel: 0.18, // Energie ovlivňuje disciplínu a trpělivost
+      stressLevel: 0.15, // Stres vede k impulsivním rozhodnutím
+      focus: 0.2, // Focus je klíčový - bez koncentrace = chyby
+      emotionalState: 0.12, // Emoce ovlivňují risk management
+      physicalHealth: 0.05, // Fyzické zdraví má menší přímý vliv
     }
 
     const sleepScore = (assessment.sleepQuality / 10) * 100
     const sleepHoursScore =
       assessment.sleepHours >= 7 && assessment.sleepHours <= 9
         ? 100
-        : Math.max(0, 100 - Math.abs(assessment.sleepHours - 8) * 15)
+        : assessment.sleepHours < 6
+          ? Math.max(0, (assessment.sleepHours / 6) * 100) // Těžká penalizace pod 6h
+          : Math.max(0, 100 - (assessment.sleepHours - 9) * 10) // Mírná penalizace nad 9h
+
     const energyScore = (assessment.energyLevel / 10) * 100
     const stressScore = ((10 - assessment.stressLevel) / 10) * 100
     const focusScore = (assessment.focus / 10) * 100
@@ -140,37 +136,32 @@ export function MorningAssessment() {
       emotionalScore * weights.emotionalState
 
     let bonus = 0
-    if (assessment.exercised) bonus += 5
-    if (assessment.meditationTime > 0) bonus += 3
-    if (assessment.morningRoutine) bonus += 2
-    if (assessment.hydration >= 6) bonus += 2
+    if (assessment.exercised) bonus += 5 // Cvičení zlepšuje fokus a disciplínu
+    if (assessment.meditationTime >= 10)
+      bonus += 5 // Meditace 10+ min = lepší emoční kontrola
+    else if (assessment.meditationTime > 0) bonus += 2 // Krátká meditace = malý bonus
+    if (assessment.morningRoutine) bonus += 3 // Konzistentní rutina = mentální připravenost
+    if (assessment.hydration >= 8)
+      bonus += 3 // Dobrá hydratace = lepší kognitní funkce
+    else if (assessment.hydration >= 6) bonus += 1
 
     return Math.min(100, Math.round(baseScore + bonus))
   }
 
   const getRecommendation = (score: number) => {
-    if (score >= 85) {
+    if (score >= 75) {
       return {
-        text: "🔥 Perfect Trading Day!",
-        subtext: "You're in peak condition. Trade with full confidence!",
+        text: "✅ Dobré podmínky na obchodování",
+        subtext: "Jsi v optimálním stavu. Obchoduj podle svého plánu!",
         color: "text-green-500",
         bgColor: "bg-green-500/10",
         borderColor: "border-green-500/30",
         icon: CheckCircle,
       }
-    } else if (score >= 75) {
-      return {
-        text: "✅ Good to Trade",
-        subtext: "You're well prepared. Follow your plan!",
-        color: "text-teal-500",
-        bgColor: "bg-teal-500/10",
-        borderColor: "border-teal-500/30",
-        icon: TrendingUp,
-      }
     } else if (score >= 60) {
       return {
-        text: "⚠️ Trade with Caution",
-        subtext: "Reduce position sizes and be extra careful.",
+        text: "⚠️ Buď opatrný",
+        subtext: "Redukuj position sizes o 50% a zvyš disciplínu.",
         color: "text-yellow-500",
         bgColor: "bg-yellow-500/10",
         borderColor: "border-yellow-500/30",
@@ -178,8 +169,8 @@ export function MorningAssessment() {
       }
     } else {
       return {
-        text: "🛑 Don't Trade Today",
-        subtext: "Focus on rest and recovery. Study or paper trade instead.",
+        text: "🛑 Neobchoduj dnes",
+        subtext: "Zaměř se na odpočinek a přípravu. Paper trading nebo studium.",
         color: "text-red-500",
         bgColor: "bg-red-500/10",
         borderColor: "border-red-500/30",
@@ -221,16 +212,12 @@ export function MorningAssessment() {
       return
     }
 
-    const simulatedDate = getSimulatedDate()
-    const todayDate = simulatedDate.toISOString().split("T")[0]
-    const lockKey = `morning-check-locked-${todayDate}`
-    const xpKey = `morning-check-xp-${todayDate}`
+    const todayDate = new Date().toISOString().split("T")[0]
+    const lockKey = `user-${user?.id}-morning-check-locked-${todayDate}`
+    const xpKey = `user-${user?.id}-morning-check-xp-${todayDate}`
 
     localStorage.setItem(lockKey, "true")
     setIsLocked(true)
-
-    const saved = localStorage.getItem("mindtrader-morning-checks") || "[]"
-    const checks = JSON.parse(saved)
 
     const newCheck = {
       ...assessment,
@@ -238,11 +225,9 @@ export function MorningAssessment() {
       date: todayDate,
     }
 
-    const filtered = checks.filter((c: MorningCheckData) => c.date !== todayDate)
-    filtered.push(newCheck)
-    localStorage.setItem("mindtrader-morning-checks", JSON.stringify(filtered))
+    addMorningCheck(newCheck)
 
-    const storageKey = "daily-tracker-entries-live"
+    const storageKey = `user-${user?.id}-daily-tracker-entries-live`
     const entries = JSON.parse(localStorage.getItem(storageKey) || "[]")
 
     let todayEntry = entries.find((e: any) => e.date === todayDate)
@@ -379,6 +364,9 @@ export function MorningAssessment() {
 
     setTimeout(() => {
       router.push("/daily-tracker")
+      if (onComplete) {
+        onComplete()
+      }
     }, 1000)
   }
 

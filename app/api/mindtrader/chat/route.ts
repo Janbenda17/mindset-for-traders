@@ -72,6 +72,8 @@ interface ChatRequest {
     stress: number
     confidence: number
     readiness: number
+    sleep?: number
+    energy?: number
   }
   userData: {
     trades: Array<{
@@ -84,6 +86,11 @@ interface ChatRequest {
       mood?: number
       confidence?: number
       stress?: number
+      emotionBefore?: string
+      emotionDuring?: string
+      emotionAfter?: string
+      isRevengeTrade?: boolean
+      tags?: string[]
     }>
     journals: Array<{
       id: string
@@ -103,6 +110,23 @@ interface ChatRequest {
       confidence: number
       notes?: string
     }>
+    patterns?: {
+      fomoRate: string
+      revengeRate: string
+      overconfidenceRate: string
+      fearRate: string
+    }
+    morningCheck?: {
+      sleepQuality: number
+      sleepHours: number
+      energyLevel: number
+      stressLevel: number
+      focus: number
+      physicalHealth: number
+      emotionalState: number
+      exercised: boolean
+      meditationTime: number
+    } | null
     stats: {
       totalPnL: number
       winRate: number
@@ -116,26 +140,36 @@ interface ChatRequest {
 
 function generateEnhancedMockResponse(request: ChatRequest): string {
   const { message, personality, mode, context, userData } = request
-  const { mood, stress, readiness } = context
-  const { stats } = userData
+  const { mood, stress, readiness, sleep, energy } = context
+  const { stats, patterns, morningCheck } = userData
 
   let response = ""
 
   if (mode === "mind") {
-    // MIND AI - pure emotions, NO numbers
-    if (message.toLowerCase().includes("strach") || message.toLowerCase().includes("fear")) {
-      response = `Strach je normální. Zkus TEĎKA: Zavři oči, dýchej 4s in-7s hold-8s out, 3x opakuj. Tvůj stres ${stress}/10 říká že potřebuješ reset. Pauza 30 min, pak zpět s čistou hlavou.`
+    if (morningCheck && morningCheck.sleepHours < 6) {
+      response = `Spánek ${morningCheck.sleepHours}h je pod 6h = vyšší riziko špatných rozhodnutí. ${morningCheck.energyLevel < 5 ? "Nízká energie navíc." : ""} Doporuč: zkrať session nebo menší pozice. Mental clarity first.`
+    } else if (message.toLowerCase().includes("strach") || message.toLowerCase().includes("fear")) {
+      response = `Strach je normální. ${patterns && Number.parseFloat(patterns.fearRate) > 20 ? `Vidím ${patterns.fearRate}% obchodů má nízkou důvěru.` : ""} Zkus TEĎKA: 4-7-8 dýchání 3x. ${stress > 7 ? "Stres " + stress + "/10 blokuje rozhodování." : ""} Reset, pak zpět.`
     } else if (message.toLowerCase().includes("ztráta") || message.toLowerCase().includes("loss")) {
-      response = `Po ztrátě STOP min 2h. Zapiš do journalu: Co jsem cítil před tradedem? Emoce nejsou nepřítel, ignorování je. Návrat s poloviční pozicí. One loss ≠ bad trader.`
+      response = `Po ztrátě STOP min 2h. ${patterns && Number.parseFloat(patterns.revengeRate) > 15 ? `Máš ${patterns.revengeRate}% revenge trades - nebezpečný pattern.` : ""} Journal: Co jsem cítil PŘED? Emoce ignorovat = chyba. Návrat poloviční pozicí.`
     } else {
-      response = `Vidím mood ${mood}/10, stress ${stress}/10. ${stress > 7 ? "Vysoký stres blokuje jasné myšlení. 5 min deep breathing." : "Mentál je OK."} ${readiness < 60 ? "Readiness <60% = nebezpečí zone. Rest first." : "Můžeš pokračovat, ale opatrně."}`
+      response = `Mood ${mood}/10, stress ${stress}/10${energy ? `, energie ${energy}/10` : ""}. ${stress > 7 ? "Vysoký stres = riziko impulz. 5 min reset." : "Mentál OK."} ${readiness < 60 ? "Readiness <60% = red zone." : "Můžeš pokračovat opatrně."}`
     }
   } else if (mode === "analytics") {
-    // ANALYTICS AI - pure data, NO emotions
-    response = `Win rate: ${stats.winRate.toFixed(1)}%, P&L: $${stats.totalPnL.toFixed(0)}, Trades: ${stats.totalTrades}. ${stats.consecutiveLosses > 0 ? `Consecutive losses: ${stats.consecutiveLosses} = vysoké riziko revenge trading.` : "Data ukazují stabilitu."} ${stats.winRate < 50 ? "Win rate <50% = přehodnoť strategy." : "Čísla jsou solid."}`
+    const sleepNote =
+      morningCheck && morningCheck.sleepHours < 6
+        ? ` Spánek ${morningCheck.sleepHours}h koreluje s nižším výkonem.`
+        : ""
+    const patternNote = patterns ? ` FOMO ${patterns.fomoRate}%, Revenge ${patterns.revengeRate}%.` : ""
+
+    response = `Win rate: ${stats.winRate.toFixed(1)}%, P&L: $${stats.totalPnL.toFixed(0)}, Trades: ${stats.totalTrades}.${patternNote}${sleepNote} ${stats.consecutiveLosses > 2 ? `Consecutive losses: ${stats.consecutiveLosses} = high risk zone.` : "Data ukazují stabilitu."}`
   } else {
-    // COACH AI - long-term development
-    response = `${stats.totalTrades < 100 ? "Fáze: Learning. Sbírej data 100+ tradů před optimalizací." : "Máš dostatek dat - čas na scale."} ${stats.winRate > 55 ? "Win rate >55% je profesionální úroveň." : "Zlepši edge před zvětšováním pozic."} Každý top trader byl tam kde jsi teď. Focus na proces 12 měsíců = transformation.`
+    const exerciseNote =
+      morningCheck && morningCheck.exercised
+        ? " Cvičení je pozitivní návyk - keep it."
+        : " Zvažte přidat ranní cvičení pro focus."
+
+    response = `${stats.totalTrades < 100 ? "Fáze: Learning. Sbírej data 100+ tradů." : "Máš data - scale now."} ${stats.winRate > 55 ? "Win rate >55% je pro." : "Zlepši edge před scale."} ${patterns && Number.parseFloat(patterns.fomoRate) > 20 ? `FOMO ${patterns.fomoRate}% = pracuj na disciplíně.` : ""}${exerciseNote}`
   }
 
   return response
@@ -191,15 +225,17 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const { trades, journals, moodHistory, stats } = userData
+    const { trades, journals, moodHistory, stats, patterns, morningCheck } = userData
 
-    const dataSummary = `USER QUESTION: ${message}
+    const isAnalyticsMode = mode === "analytics"
+
+    let dataSummary = `USER QUESTION: ${message}
 
 REAL DATA FROM DAILY TRACKER:
-- Mood: ${context.mood}/10 (from today's tracker)
-- Stress: ${context.stress}/10 (from today's tracker)
-- Confidence: ${context.confidence}/10 (from today's tracker)
-- Readiness: ${context.readiness}% (calculated from tracker)
+- Mood: ${context.mood}/10
+- Stress: ${context.stress}/10
+- Confidence: ${context.confidence}/10
+- Readiness: ${context.readiness}%
 
 TRADING STATS:
 - Total Trades: ${stats.totalTrades}
@@ -210,19 +246,66 @@ TRADING STATS:
 RECENT TRADES:
 ${trades
   .slice(0, 5)
-  .map((t, i) => `${i + 1}. ${t.pair || "N/A"} ${t.type || ""}: $${t.pnl?.toFixed(0) || "0"}`)
-  .join("\n")}
+  .map((t, i) => {
+    return `${i + 1}. ${t.pair || "N/A"} ${t.type || ""}: $${t.pnl?.toFixed(0) || "0"}`
+  })
+  .join("\n")}`
+
+    if (isAnalyticsMode) {
+      dataSummary += `
+
+REAL DATA FROM MORNING CHECK:
+${
+  morningCheck
+    ? `- Sleep: ${morningCheck.sleepHours}h (quality ${morningCheck.sleepQuality}/10)
+- Energy: ${morningCheck.energyLevel}/10
+- Stress: ${morningCheck.stressLevel}/10
+- Focus: ${morningCheck.focus}/10
+- Physical Health: ${morningCheck.physicalHealth}/10
+- Emotional State: ${morningCheck.emotionalState}/10
+- Exercised: ${morningCheck.exercised ? "Yes" : "No"}
+- Meditation: ${morningCheck.meditationTime} min`
+    : "- No morning check today"
+}
+
+EMOTIONAL PATTERNS FROM ANALYTICS:
+${
+  patterns
+    ? `- FOMO Trades: ${patterns.fomoRate}%
+- Revenge Trades: ${patterns.revengeRate}%
+- Overconfident Trades: ${patterns.overconfidenceRate}%
+- Fear-based Trades: ${patterns.fearRate}%`
+    : "- No pattern data available"
+}
+
+RECENT TRADES WITH EMOTIONS:
+${trades
+  .slice(0, 10)
+  .map((t, i) => {
+    let emotionInfo = ""
+    if (t.emotionBefore) emotionInfo += ` (před: ${t.emotionBefore})`
+    if (t.emotionDuring) emotionInfo += ` (během: ${t.emotionDuring})`
+    if (t.emotionAfter) emotionInfo += ` (po: ${t.emotionAfter})`
+    if (t.isRevengeTrade) emotionInfo += " [REVENGE]"
+    if (t.tags?.includes("FOMO")) emotionInfo += " [FOMO]"
+    return `${i + 1}. ${t.pair || "N/A"} ${t.type || ""}: $${t.pnl?.toFixed(0) || "0"}${emotionInfo}`
+  })
+  .join("\n")}`
+    }
+
+    dataSummary += `
 
 ODPOVĚZ PODLE SVÉHO REŽIMU (${mode.toUpperCase()}):
-${mode === "mind" ? "- Zaměř se na emoce a psychologii" : ""}
-${mode === "analytics" ? "- Zaměř se na čísla a data" : ""}
-${mode === "coach" ? "- Zaměř se na dlouhodobý rozvoj" : ""}
+${mode === "mind" ? "- Zaměř se na emoce, psychologii a mentální stav. Pomoz s aktuálními pocity." : ""}
+${mode === "analytics" ? "- Zaměř se na čísla, trendy a korelace. Ukážej souvislosti mezi spánkem, náladou a výkonem." : ""}
+${mode === "coach" ? "- Zaměř se na dlouhodobý rozvoj a návyky. Navrhuj změny pro zlepšení disciplíny." : ""}
 
 PRAVIDLA:
 - MAX 3-4 věty
 - BEZ markdown znaků
 - BEZ prefixu "Přímá odpověď:"
-- Přímo k věci`
+- Přímo k věci
+- Použij data z výše uvedených metrik`
 
     try {
       const result = await generateText({

@@ -59,6 +59,7 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "utf-8-validate": "latest",
+    "uuid": "13.0.0",
     "ws": "^8.18.3",
     "zod": "^4.1.12"
   },

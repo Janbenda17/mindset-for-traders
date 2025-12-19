@@ -112,7 +112,7 @@ interface WeeklyReview {
 export default function WeeklyReviewPage() {
   const { isLiveMode } = useData()
   const [currentWeekData, setCurrentWeekData] = useState<any>(null)
-  const [reviewVariant, setReviewVariant] = useState<"manual" | "ai">("ai") // Default to AI
+  const [reviewVariant, setReviewVariant] = useState<"manual" | "ai">("manual") // Changed default from "ai" to "manual"
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [review, setReview] = useState<Partial<WeeklyReview>>({
     whatWorked: "",
@@ -148,9 +148,9 @@ export default function WeeklyReviewPage() {
   }, [isLiveMode])
 
   useEffect(() => {
-    if (reviewVariant === "ai" && currentWeekData) {
-      generateAIContent()
-    }
+    // if (reviewVariant === "ai" && currentWeekData) {
+    //   generateAIContent()
+    // }
   }, [reviewVariant, currentWeekData])
 
   const generateAIContent = async () => {
@@ -896,15 +896,15 @@ Vygenerováno aplikací Trader Mindset
               onClick={() => {
                 setReviewVariant("ai")
               }}
+              disabled={true} // Disabled AI button
               className={cn(
                 "px-6 py-3 rounded-xl transition-all",
-                reviewVariant === "ai"
-                  ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                  : "bg-slate-800 text-gray-400 hover:bg-slate-700",
+                "bg-slate-700 text-gray-500 cursor-not-allowed opacity-50", // Grayed out styling for disabled state
               )}
+              title="AI varianta je brzy dostupná"
             >
               <Wand2 className="w-5 h-5 mr-2" />
-              AI Varianta
+              AI Varianta - Brzy
             </Button>
             <Button
               onClick={() => {
@@ -1954,7 +1954,7 @@ Vygenerováno aplikací Trader Mindset
                         <Target className="w-5 h-5" />
                         Cíle na příští týden
                       </h3>
-                      <p className="text-white">{viewingReview.weeklyGoals}</p>
+                      <p className="text-white">{viewingReview.weeklyGoals.join(", ")}</p>
                     </div>
                   )}
                   {viewingReview.focusAreas && (
@@ -1963,7 +1963,7 @@ Vygenerováno aplikací Trader Mindset
                         <Target className="w-5 h-5" />
                         Oblasti zaměření
                       </h3>
-                      <p className="text-white">{viewingReview.focusAreas}</p>
+                      <p className="text-white">{viewingReview.focusAreas.join(", ")}</p>
                     </div>
                   )}
                 </div>

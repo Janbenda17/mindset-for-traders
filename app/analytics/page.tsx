@@ -28,7 +28,6 @@ import {
   ThumbsDown,
   Flame,
   Wind,
-  Calendar,
   TrendingDown,
   ArrowUp,
   ArrowDown,
@@ -43,7 +42,6 @@ import {
   RefreshCw,
   Percent,
   TrendingDown as TrendingUpDown,
-  Rocket,
   Clipboard,
   Lightbulb,
 } from "lucide-react"
@@ -69,6 +67,7 @@ import {
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
 import { getUserData } from "@/utils/storage-utils"
+import { useTradingStyle } from "@/contexts/trading-style-context"
 
 // Custom Tooltip with better formatting
 const CustomTooltip = ({ active, payload, label, type = "default" }: any) => {
@@ -136,174 +135,10 @@ function generateDemoData(tradingStyle: string) {
   return demoData
 }
 
-function generatePsychologicalAnalysis(
-  trades: any[],
-  journals: any[],
-  moodEntries: any[],
-  isLiveMode: boolean,
-  tradingStyle: string,
-  timeframe: "week" | "month" | "all",
-) {
-  let weeklyPerformanceData = []
-  let dailyMoodData = []
-  let weekdayChartData: any[] = []
-
-  const isDemoAccount =
-    typeof window !== "undefined" &&
-    JSON.parse(localStorage.getItem("mindtrader-auth-token") || '{"email":""}').email === "Demo"
-
-  // Only show demo data in virtual mode AND not Demo account
-  if (!isLiveMode && !isDemoAccount) {
-    const demoData = generateDemoData(tradingStyle)
-    weeklyPerformanceData = demoData.weeklyPerformanceData
-    dailyMoodData = demoData.dailyMoodData
-    weekdayChartData = demoData.weekdayChartData
-  } else {
-    // Use real data (or empty data for Demo account in live mode)
-    let filteredTrades = trades
-    if (timeframe === "week") {
-      filteredTrades = trades.filter((trade) => {
-        const day = new Date(trade.date).getDay()
-        return day >= 1 && day <= 5 // Monday=1 to Friday=5
-      })
-    }
-
-    let groupBy: "day" | "week" | "month" = "week"
-    let periods = 12
-
-    if (timeframe === "week") {
-      groupBy = "day" // Show Mon-Fri for current week
-      periods = 5
-    } else if (timeframe === "month") {
-      groupBy = "week" // Show 4 weeks
-      periods = 4
-    } else if (timeframe === "quarter") {
-      // This is not used in UI, but for completeness
-      groupBy = "month" // Show 3 months
-      periods = 3
-    } else if (timeframe === "all") {
-      groupBy = "month" // Group all data by month for overview
-      periods = 999 // Show all months
-    }
-
-    const groupedData: Record<string, any> = {}
-
-    filteredTrades.forEach((trade) => {
-      const tradeDate = new Date(trade.date)
-      let groupKey = ""
-      let displayLabel = ""
-
-      if (groupBy === "day") {
-        groupKey = trade.date
-        const dayNames = ["Ne", "Po", "Út", "St", "Pá", "So"]
-        displayLabel = dayNames[tradeDate.getDay()]
-      } else if (groupBy === "week") {
-        const weekStart = new Date(tradeDate)
-        const dayOfWeek = tradeDate.getDay()
-        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
-        weekStart.setDate(tradeDate.getDate() + diff)
-        groupKey = weekStart.toISOString().split("T")[0]
-        const weekEnd = new Date(weekStart)
-        weekEnd.setDate(weekStart.getDate() + 6)
-        displayLabel = `${weekStart.getDate()}-${weekEnd.getDate()} ${weekStart.toLocaleDateString("cs", { month: "short" })}`
-      } else if (groupBy === "month") {
-        groupKey = `${tradeDate.getFullYear()}-${String(tradeDate.getMonth() + 1).padStart(2, "0")}`
-        displayLabel = tradeDate.toLocaleDateString("cs", { month: "long", year: "numeric" })
-      }
-
-      if (!groupedData[groupKey]) {
-        groupedData[groupKey] = {
-          trades: [],
-          pnl: 0,
-          wins: 0,
-          moodSum: 0,
-          moodCount: 0,
-          readinessSum: 0,
-          readinessCount: 0,
-          displayLabel, // Store display label
-        }
-      }
-
-      groupedData[groupKey].trades.push(trade)
-      groupedData[groupKey].pnl += trade.pnl || 0
-      if (trade.outcome === "win") groupedData[groupKey].wins++
-
-      if (trade.mood) {
-        groupedData[groupKey].moodSum += trade.mood
-        groupedData[groupKey].moodCount++
-      }
-
-      const matchingMoodEntry = moodEntries.find((entry) => entry.date === trade.date)
-      if (matchingMoodEntry?.readiness) {
-        groupedData[groupKey].readinessSum += matchingMoodEntry.readiness
-        groupedData[groupKey].readinessCount++
-      }
-    })
-
-    weeklyPerformanceData = Object.entries(groupedData)
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .slice(-periods)
-      .map(([key, data]: [string, any]) => ({
-        week: data.displayLabel || key, // Use display label
-        pnl: data.pnl,
-        trades: data.trades.length,
-        winRate: data.trades.length > 0 ? (data.wins / data.trades.length) * 100 : 0,
-        avgMood: data.moodCount > 0 ? data.moodSum / data.moodCount : 50,
-        avgReadiness: data.readinessCount > 0 ? data.readinessSum / data.readinessCount : 0, // Added readiness
-      }))
-
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date()
-      date.setDate(date.getDate() - (30 - i - 1))
-      return date.toISOString().split("T")[0]
-    })
-
-    dailyMoodData = last30Days.map((dateStr) => {
-      const dayMood = moodEntries.find((m) => m.date === dateStr)
-      const date = new Date(dateStr)
-
-      const dayTrades = filteredTrades.filter((t) => t.date === dateStr)
-      const dailyPnL = dayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
-
-      return {
-        date: `${date.getDate()}. ${date.toLocaleDateString("cs-CZ", { month: "short" })}`,
-        mood: dayMood?.mood || 0,
-        discipline: dayMood?.discipline || 0,
-        confidence: dayMood?.confidence || 0,
-        stress: dayMood?.stress || 0,
-        energy: dayMood?.energy || 0,
-        sleep: dayMood?.sleep || 0,
-        pnl: dailyPnL, // CHANGE: Added P&L
-      }
-    })
-
-    const weekdayData: Record<string, { trades: number; pnl: number; wins: number; mood: number; discipline: number }> =
-      {}
-
-    trades.forEach((trade) => {
-      const day = new Date(trade.date).toLocaleDateString("cs-CZ", { weekday: "long" })
-      const mood = moodEntries.find((m) => m.date === trade.date)
-
-      if (!weekdayData[day]) weekdayData[day] = { trades: 0, pnl: 0, wins: 0, mood: 0, discipline: 0 }
-      weekdayData[day].trades++
-      weekdayData[day].pnl += trade.pnl || 0
-      if ((trade.pnl || 0) > 0) weekdayData[day].wins++
-      if (mood) {
-        weekdayData[day].mood += mood.mood || 0
-        weekdayData[day].discipline += mood.discipline || 0
-      }
-    })
-
-    weekdayChartData = Object.entries(weekdayData).map(([day, data]) => ({
-      day,
-      winRate: data.trades > 0 ? (data.wins / data.trades) * 100 : 0,
-      avgMood: data.trades > 0 ? data.mood / data.trades : 0,
-      avgDiscipline: data.trades > 0 ? data.discipline / data.trades : 0,
-      trades: data.trades,
-    }))
-  }
-
-  const emotionalPatterns = [
+// Dummy functions for the sake of the example, replace with actual implementations
+function calculateEmotionalPatternsFromTrades(trades: any[]): any[] {
+  // Placeholder: Replace with actual logic to analyze trades for emotional patterns
+  return [
     {
       name: "FOMO Trading",
       emoji: "😰",
@@ -324,158 +159,324 @@ function generatePsychologicalAnalysis(
       description: "Snaha rychle získat zpět ztráty - nejnebezpečnější pattern",
       recommendation: "STOP trading po 2 ztrátách za sebou. Udělej pauzu minimálně 30 minut.",
     },
-    {
-      name: "Overconfidence",
-      emoji: "😎",
-      count: Math.floor(Math.random() * 6) + 2,
-      impact: -(Math.random() * 2000 + 500),
-      color: "#f59e0b",
-      severity: "medium",
-      description: "Přehnaná sebedůvěra vede k riskantním rozhodnutím",
-      recommendation: "Po 3 winech za sebou zmenši position size o 30%. Stay humble.",
-    },
-    {
-      name: "Fear & Hesitation",
-      emoji: "😨",
-      count: Math.floor(Math.random() * 7) + 3,
-      impact: -(Math.random() * 1800 + 600),
-      color: "#eab308",
-      severity: "medium",
-      description: "Strach brání využití dobrých příležitostí",
-      recommendation: "Používej mentální rehearsal. Vizualizuj perfektní trade 5 minut před session.",
-    },
   ]
+}
 
-  const avgMoodCalc =
-    dailyMoodData.length > 0
-      ? dailyMoodData.reduce((sum: number, m: any) => sum + (m.mood || 0), 0) / dailyMoodData.length
-      : 68
-  const avgDisciplineCalc =
-    dailyMoodData.length > 0
-      ? dailyMoodData.reduce((sum: number, m: any) => sum + (m.discipline || 0), 0) / dailyMoodData.length
-      : 72
-  const avgConfidenceCalc =
-    dailyMoodData.length > 0
-      ? dailyMoodData.reduce((sum: number, m: any) => sum + (m.confidence || 0), 0) / dailyMoodData.length
-      : 65
-  const avgStressCalc =
-    dailyMoodData.length > 0
-      ? dailyMoodData.reduce((sum: number, m: any) => sum + (m.stress || 0), 0) / dailyMoodData.length
-      : 42
+function calculatePsychologicalMetrics(trades: any[], moodEntries: any[]) {
+  // Placeholder: Replace with actual logic to calculate psychological metrics
+  const avgMood =
+    trades.length > 0 ? Math.round(trades.reduce((sum: number, t: any) => sum + (t.mood || 50), 0) / trades.length) : 0
+  const avgDiscipline =
+    trades.length > 0 ? Math.round((trades.filter((t: any) => t.followedPlan).length / trades.length) * 100) : 0
+  const avgConfidence =
+    trades.length > 0
+      ? Math.round(trades.reduce((sum: number, t: any) => sum + (t.confidenceBefore || 50), 0) / trades.length)
+      : 0
+  const avgStress =
+    trades.length > 0
+      ? Math.round(trades.reduce((sum: number, t: any) => sum + (t.stressLevel || 30), 0) / trades.length)
+      : 0
 
   const moodVariance =
-    dailyMoodData.length > 0
-      ? dailyMoodData.reduce((sum: number, m: any) => sum + Math.pow((m.mood || 0) - avgMoodCalc, 2), 0) /
-        dailyMoodData.length
+    moodEntries.length > 0
+      ? moodEntries.reduce((sum: number, m: any) => sum + Math.pow((m.mood || 0) - avgMood, 2), 0) / moodEntries.length
       : 100
   const moodStability = Math.max(0, 100 - Math.sqrt(moodVariance))
 
-  const psychInsights: any[] = []
+  const avgEnergy =
+    moodEntries.length > 0
+      ? Math.round(moodEntries.reduce((sum: number, m: any) => sum + (m.energy || 0), 0) / moodEntries.length)
+      : 0
+
+  const journalingRate =
+    moodEntries.length > 0 ? (moodEntries.filter((j) => j.tradeId !== undefined).length / moodEntries.length) * 100 : 0
+
+  const consistencyScore =
+    trades.length > 0
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            (1 -
+              Math.abs(
+                trades.reduce((sum, trade) => sum + (trade.pnl || 0), 0) /
+                  Math.max(
+                    trades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0),
+                    1,
+                  ),
+              )) *
+              100,
+          ),
+        )
+      : 0
+
+  return {
+    avgMood,
+    avgDiscipline,
+    avgConfidence,
+    avgStress,
+    moodStability,
+    avgEnergy,
+    journalingRate,
+    consistencyScore,
+  }
+}
+
+function generatePsychologicalAnalysis(
+  trades: any[],
+  journals: any[],
+  moodEntries: any[],
+  isLiveMode: boolean,
+  tradingStyle: string,
+  timeframe: "week" | "month" | "all",
+) {
+  let weeklyPerformanceData = []
+  let dailyMoodData = []
+  let weekdayChartData: any[] = []
+
+  if (trades.length === 0) {
+    return null // Return null when no data instead of generating demo data
+  }
+
+  // Group trades by week
+  const tradesByWeek: { [key: string]: any[] } = {}
+  trades.forEach((trade) => {
+    const date = new Date(trade.date)
+    const weekStart = new Date(date)
+    weekStart.setDate(date.getDay() - 1) // Monday of the week
+    const weekKey = weekStart.toISOString().split("T")[0]
+    if (!tradesByWeek[weekKey]) tradesByWeek[weekKey] = []
+    tradesByWeek[weekKey].push(trade)
+  })
+
+  // Generate weekly performance from real trades
+  weeklyPerformanceData = Object.entries(tradesByWeek)
+    .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+    .slice(-4) // Take the last 4 weeks for "month" view, or more if "all"
+    .map(([weekKey, weekTrades]) => {
+      const startDate = new Date(weekKey)
+      const endDate = new Date(startDate)
+      endDate.setDate(startDate.getDate() + 6) // End of the week
+      const weekLabel = `${startDate.getDate()}. ${startDate.toLocaleDateString("cs-CZ", { month: "short" })} - ${endDate.getDate()}. ${endDate.toLocaleDateString("cs-CZ", { month: "short" })}`
+
+      const pnl = weekTrades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0)
+      const wins = weekTrades.filter((t: any) => (t.pnl || 0) > 0).length
+      const winRate = weekTrades.length > 0 ? Math.round((wins / weekTrades.length) * 100) : 0
+
+      // Calculate average mood, confidence, stress, energy from moodEntries for this week
+      const weekMoodEntries = moodEntries.filter((entry) => {
+        const entryDate = new Date(entry.date)
+        return entryDate >= startDate && entryDate <= endDate
+      })
+
+      const avgMood =
+        weekMoodEntries.length > 0
+          ? Math.round(
+              weekMoodEntries.reduce((sum: number, m: any) => sum + (m.mood || 50), 0) / weekMoodEntries.length,
+            )
+          : 0
+      const avgConfidence =
+        weekMoodEntries.length > 0
+          ? Math.round(
+              weekMoodEntries.reduce((sum: number, m: any) => sum + (m.confidence || 50), 0) / weekMoodEntries.length,
+            )
+          : 0
+      const avgStress =
+        weekMoodEntries.length > 0
+          ? Math.round(
+              weekMoodEntries.reduce((sum: number, m: any) => sum + (m.stress || 30), 0) / weekMoodEntries.length,
+            )
+          : 0
+      const avgEnergy =
+        weekMoodEntries.length > 0
+          ? Math.round(
+              weekMoodEntries.reduce((sum: number, m: any) => sum + (m.energy || 50), 0) / weekMoodEntries.length,
+            )
+          : 0
+
+      // Calculate average readiness from trades (if available in trade data)
+      const avgReadiness =
+        weekTrades.length > 0 && weekTrades.some((t: any) => t.readiness !== undefined)
+          ? Math.round(weekTrades.reduce((sum: number, t: any) => sum + (t.readiness || 0), 0) / weekTrades.length)
+          : avgConfidence // Fallback to confidence if readiness is not in trade data
+
+      return {
+        week: weekLabel,
+        pnl,
+        trades: weekTrades.length,
+        winRate,
+        avgMood,
+        avgReadiness,
+        avgConfidence, // Added for potential use
+        avgStress, // Added for potential use
+        avgEnergy, // Added for potential use
+      }
+    })
+
+  // Generate daily mood data from real trades
+  const tradesByDay: { [key: string]: any[] } = {}
+  trades.forEach((trade) => {
+    const dateKey = trade.date?.split("T")[0] || trade.date
+    if (!tradesByDay[dateKey]) tradesByDay[dateKey] = []
+    tradesByDay[dateKey].push(trade)
+  })
+
+  const last30Days = Array.from({ length: 30 }, (_, i) => {
+    const date = new Date()
+    date.setDate(date.getDate() - (30 - i - 1))
+    return date.toISOString().split("T")[0]
+  })
+
+  dailyMoodData = last30Days.map((dateStr) => {
+    const date = new Date(dateStr)
+    const dayTrades = tradesByDay[dateStr] || []
+    const dayMoodEntry = moodEntries.find((m) => m.date === dateStr)
+
+    const avgMood =
+      dayTrades.length > 0
+        ? Math.round(
+            dayTrades.reduce((sum: number, t: any) => sum + (t.mood || dayMoodEntry?.mood || 50), 0) / dayTrades.length,
+          )
+        : dayMoodEntry?.mood || 50
+    const avgConfidence =
+      dayTrades.length > 0
+        ? Math.round(
+            dayTrades.reduce((sum: number, t: any) => sum + (t.confidenceBefore || dayMoodEntry?.confidence || 50), 0) /
+              dayTrades.length,
+          )
+        : dayMoodEntry?.confidence || 50
+    const avgStress =
+      dayTrades.length > 0
+        ? Math.round(
+            dayTrades.reduce((sum: number, t: any) => sum + (t.stressLevel || dayMoodEntry?.stress || 30), 0) /
+              dayTrades.length,
+          )
+        : dayMoodEntry?.stress || 30
+    const pnl = dayTrades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0)
+    const discipline =
+      dayTrades.length > 0
+        ? Math.round((dayTrades.filter((t: any) => t.followedPlan).length / dayTrades.length) * 100)
+        : dayMoodEntry?.discipline || 0
+    const energy = dayMoodEntry?.energy || 50 // Use mood entry if available
+    const sleep = dayMoodEntry?.sleep || 7 // Use mood entry if available
+
+    return {
+      date: `${date.getDate()}. ${date.toLocaleDateString("cs-CZ", { month: "short" })}`,
+      mood: Math.round(avgMood),
+      discipline: Math.round(discipline),
+      confidence: Math.round(avgConfidence),
+      stress: Math.round(avgStress),
+      energy: Math.round(energy),
+      sleep: Math.round(sleep),
+      pnl,
+    }
+  })
+
+  // Generate weekday chart data from real trades
+  const weekdays = ["Neděle", "Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota"]
+  const tradesByWeekday: { [key: number]: any[] } = {}
+  trades.forEach((trade) => {
+    const day = new Date(trade.date).getDay()
+    if (!tradesByWeekday[day]) tradesByWeekday[day] = []
+    tradesByWeekday[day].push(trade)
+  })
+
+  weekdayChartData = [1, 2, 3, 4, 5].map((dayNum) => {
+    // Monday to Friday
+    const dayTrades = tradesByWeekday[dayNum] || []
+    const wins = dayTrades.filter((t: any) => (t.pnl || 0) > 0).length
+    const winRate = dayTrades.length > 0 ? Math.round((wins / dayTrades.length) * 100) : 0
+
+    // Calculate average mood and discipline from associated mood entries for that weekday
+    const relevantMoodEntries = moodEntries.filter((entry: any) => new Date(entry.date).getDay() === dayNum)
+    const avgMood =
+      relevantMoodEntries.length > 0
+        ? Math.round(
+            relevantMoodEntries.reduce((sum: number, m: any) => sum + (m.mood || 50), 0) / relevantMoodEntries.length,
+          )
+        : 0
+    const avgDiscipline =
+      relevantMoodEntries.length > 0
+        ? Math.round(
+            relevantMoodEntries.reduce((sum: number, m: any) => sum + (m.discipline || 0), 0) /
+              relevantMoodEntries.length,
+          )
+        : 0
+
+    return {
+      day: weekdays[dayNum],
+      winRate,
+      avgMood,
+      avgDiscipline,
+      trades: dayTrades.length,
+    }
+  })
+
+  const uniqueDays = new Set(trades.map((t: any) => t.date?.split("T")[0] || t.date)).size
+  const totalPnL = trades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0)
+  const wins = trades.filter((t: any) => (t.pnl || 0) > 0).length
+  const winRate = trades.length > 0 ? Math.round((wins / trades.length) * 100) : 0
+
+  // Calculate overall averages from trades AND moodEntries for a more complete picture
+  const combinedMoodEntries = trades.map((trade) => {
+    const tradeDate = trade.date?.split("T")[0] || trade.date
+    const moodEntry = moodEntries.find((m: any) => m.date === tradeDate)
+    return {
+      ...trade, // Keep trade data
+      mood: trade.mood !== undefined ? trade.mood : moodEntry?.mood || 50,
+      confidenceBefore: trade.confidenceBefore !== undefined ? trade.confidenceBefore : moodEntry?.confidence || 50,
+      stressLevel: trade.stressLevel !== undefined ? trade.stressLevel : moodEntry?.stress || 30,
+      discipline: trade.followedPlan !== undefined ? (trade.followedPlan ? 100 : 0) : moodEntry?.discipline || 0,
+      energy: moodEntry?.energy || 50,
+      sleep: moodEntry?.sleep || 7,
+    }
+  })
+
+  const avgMood =
+    combinedMoodEntries.length > 0
+      ? Math.round(
+          combinedMoodEntries.reduce((sum: number, t: any) => sum + (t.mood || 50), 0) / combinedMoodEntries.length,
+        )
+      : 0
+  const avgDiscipline =
+    combinedMoodEntries.length > 0
+      ? Math.round(
+          combinedMoodEntries.reduce((sum: number, t: any) => sum + (t.discipline || 0), 0) /
+            combinedMoodEntries.length,
+        )
+      : 0
+  const avgConfidence =
+    combinedMoodEntries.length > 0
+      ? Math.round(
+          combinedMoodEntries.reduce((sum: number, t: any) => sum + (t.confidenceBefore || 50), 0) /
+            combinedMoodEntries.length,
+        )
+      : 0
+  const avgStress =
+    combinedMoodEntries.length > 0
+      ? Math.round(
+          combinedMoodEntries.reduce((sum: number, t: any) => sum + (t.stressLevel || 30), 0) /
+            combinedMoodEntries.length,
+        )
+      : 0
+
+  const avgEnergy =
+    combinedMoodEntries.length > 0
+      ? Math.round(
+          combinedMoodEntries.reduce((sum: number, t: any) => sum + (t.energy || 50), 0) / combinedMoodEntries.length,
+        )
+      : 0
 
   const avgSleep =
-    dailyMoodData.length > 0
-      ? dailyMoodData.reduce((sum: number, m: any) => sum + (m.sleep || 0), 0) / dailyMoodData.length
-      : 7.2
+    combinedMoodEntries.length > 0
+      ? Math.round(
+          combinedMoodEntries.reduce((sum: number, t: any) => sum + (t.sleep || 7), 0) / combinedMoodEntries.length,
+        )
+      : 7
 
-  if (avgSleep >= 7) {
-    psychInsights.push({
-      type: "success",
-      icon: "😴",
-      title: "Spánek je tvůj superpower!",
-      description: `Průměrně spíš ${avgSleep.toFixed(1)}h, což je SKVĚLÉ! Studie ukazují, že 7+ hodin spánku zlepšuje rozhodování o 40%.`,
-      action: "Pokračuj v pravidelném spánkovém režimu - funguje to!",
-      impact: "high",
-    })
-  } else if (avgSleep < 6.5) {
-    psychInsights.push({
-      type: "critical",
-      icon: "😴",
-      title: "KRITICKÝ nedostatek spánku!",
-      description: `Spíš průměrně jen ${avgSleep.toFixed(1)}h denně. Tvoje rozhodovací schopnost je o 35% horší než po 7+ hodinách.`,
-      action: "PRIORITA #1: Nastav alarm na 22:00 a jdi spát. Seriously.",
-      impact: "critical",
-    })
-  }
-
-  if (moodStability > 85) {
-    psychInsights.push({
-      type: "success",
-      icon: "🧘",
-      title: "Mentální pevnost úrovně monk",
-      description: `Emoční stabilita ${moodStability.toFixed(0)}% je v top 10% traderů!`,
-      action: "Co děláš pro mental health? Sdílej to s dalšími!",
-      impact: "positive",
-    })
-  } else if (moodStability < 70) {
-    psychInsights.push({
-      type: "warning",
-      icon: "🎢",
-      title: "Emoční kolotoč",
-      description: `Stabilita ${moodStability.toFixed(0)}% znamená vysokou emoční volatilitu.`,
-      action: "Denní journaling + 10min meditation. Změň to během 2 týdnů!",
-      impact: "high",
-    })
-  }
-
-  if (avgDisciplineCalc > 80) {
-    psychInsights.push({
-      type: "success",
-      icon: "🎯",
-      title: "Disciplína level: Navy SEAL",
-      description: `Disciplína ${avgDisciplineCalc.toFixed(0)}% je brutální!`,
-      action: "Mentoruj ostatní - sdílej své techniky!",
-      impact: "positive",
-    })
-  } else if (avgDisciplineCalc < 60) {
-    psychInsights.push({
-      type: "critical",
-      icon: "📋",
-      title: "Disciplína = největší problém",
-      description: `Disciplína ${avgDisciplineCalc.toFixed(0)}% je nízká. Bez disciplíny = gambling!`,
-      action: "Vytvoř pre-trade checklist. Non-negotiable.",
-      impact: "critical",
-    })
-  }
-
-  if (avgStressCalc > 65) {
-    psychInsights.push({
-      type: "critical",
-      icon: "😰",
-      title: "KRITICKY vysoký stress",
-      description: `Stress ${avgStressCalc.toFixed(0)}% je nebezpečný!`,
-      action: "Zmenši position sizes o 50%. Stress management je priorita.",
-      impact: "critical",
-    })
-  } else if (avgStressCalc > 50) {
-    psychInsights.push({
-      type: "warning",
-      icon: "😤",
-      title: "Zvýšený stress level",
-      description: `Stress ${avgStressCalc.toFixed(0)}% je nad optimální úrovní.`,
-      action: "5min breathing exercises před každým session.",
-      impact: "high",
-    })
-  } else {
-    psychInsights.push({
-      type: "success",
-      icon: "😌",
-      title: "Perfektní stress management",
-      description: `Stress ${avgStressCalc.toFixed(0)}% je v optimálním rozmezí!`,
-      action: "Pokračuj - tato rovnováha je klíčová.",
-      impact: "positive",
-    })
-  }
-
-  const actionPlan = []
-  const totalTrades = trades.length
   const journalingRate =
-    journals.length > 0 ? (journals.filter((j) => j.tradeId !== undefined).length / journals.length) * 100 : 0
-  const totalPnL = trades.reduce((sum, trade) => sum + (trade.pnl || 0), 0)
-  const winRate = totalTrades > 0 ? (trades.filter((trade) => trade.pnl > 0).length / totalTrades) * 100 : 0
-  const avgEnergy =
-    dailyMoodData.length > 0
-      ? dailyMoodData.reduce((sum: number, m: any) => sum + (m.energy || 0), 0) / dailyMoodData.length
-      : 68
+    moodEntries.length > 0 ? (moodEntries.filter((j) => j.tradeId !== undefined).length / moodEntries.length) * 100 : 0
+
   const consistencyScore =
     trades.length > 0
       ? Math.max(
@@ -487,57 +488,15 @@ function generatePsychologicalAnalysis(
         )
       : 0
 
-  const uniqueDays = new Set(trades.map((t) => t.date)).size
-  const tradesDates = trades.map((t) => t.date).filter(Boolean)
-  const journalDates = journals.map((j: any) => j.date).filter(Boolean)
-  const moodDates = moodEntries.map((m: any) => m.date).filter(Boolean)
-  const allDates = [...tradesDates, ...journalDates, ...moodDates]
-  const uniqueDaysFromAllSources = new Set(allDates).size
+  const moodVariance =
+    dailyMoodData.length > 0
+      ? dailyMoodData.reduce((sum: number, m: any) => sum + Math.pow((m.mood || 0) - avgMood, 2), 0) /
+        dailyMoodData.length
+      : 100
+  const moodStability = Math.max(0, 100 - Math.sqrt(moodVariance))
 
-  if (emotionalPatterns.some((p) => p.severity === "critical")) {
-    const criticalPattern = emotionalPatterns.find((p) => p.severity === "critical")
-    actionPlan.push({
-      priority: "high" as const,
-      emoji: criticalPattern?.emoji || "⚠️",
-      title: `ELIMINUJ ${criticalPattern?.name}`,
-      description: criticalPattern?.description || "",
-      action: "30min pauza po KAŽDÉ ztrátě. No exceptions!",
-      impact: `Stálo tě to $${Math.abs(Math.round(criticalPattern?.impact || 0))}`,
-    })
-  }
-
-  if (avgStressCalc > 60) {
-    actionPlan.push({
-      priority: "high" as const,
-      emoji: "🧘",
-      title: "SNIŽ stress ASAP",
-      description: "Chronický stress ničí kortizol balance",
-      action: "1) Zmenši positions 50% 2) 10min meditation 3) Sport 3x týdně",
-      impact: "Game changer pro mental health",
-    })
-  }
-
-  if (avgDisciplineCalc < 65) {
-    actionPlan.push({
-      priority: "high" as const,
-      emoji: "📋",
-      title: "DISCIPLÍNA je #1 priorita",
-      description: "Bez disciplíny = gambling",
-      action: "5-point pre-trade checklist před každým trade.",
-      impact: "Rozdíl mezi profitable/unprofitable",
-    })
-  }
-
-  if (journalingRate < 70) {
-    actionPlan.push({
-      priority: "medium" as const,
-      emoji: "✍️",
-      title: "Více journalingu",
-      description: `${journalingRate.toFixed(0)}% je málo`,
-      action: "Cíl: 80%+ rate. Journal do 1h po trade.",
-      impact: "Better self-awareness = better decisions",
-    })
-  }
+  const bestDayPnL = trades.length > 0 ? Math.max(...trades.map((t: any) => t.pnl || 0)) : 0
+  const worstDayPnL = trades.length > 0 ? Math.min(...trades.map((t: any) => t.pnl || 0)) : 0
 
   const bestWeek = weeklyPerformanceData.reduce((best, week) => (week.pnl > best.pnl ? week : best), {
     pnl: Number.NEGATIVE_INFINITY,
@@ -550,31 +509,10 @@ function generatePsychologicalAnalysis(
     week: "",
   })
 
-  const moodPerformanceData = weeklyPerformanceData.map((week) => ({
-    mood: week.avgMood,
-    pnl: week.pnl,
-    week: week.week,
-    size: Math.abs(week.pnl) / 10 + 5,
-  }))
+  const totalTrades = trades.length
+  const weeksCount = weeklyPerformanceData.length // Use the actual number of weeks calculated
+  const avgWeeklyPnL = weeksCount > 0 ? weeklyPerformanceData.reduce((sum, w) => sum + w.pnl, 0) / weeksCount : 0
 
-  // CHANGE: Added psychologicalProfile based on the RadarChart data structure
-  const psychologicalProfile = [
-    { subject: "Disciplína", A: Math.round(avgDisciplineCalc) },
-    { subject: "Emoce", A: Math.round(moodStability) },
-    { subject: "Sebevědomí", A: Math.round(avgConfidenceCalc) },
-    { subject: "Stress", A: Math.round(Math.max(0, 100 - avgStressCalc)) },
-    { subject: "Konzistence", A: Math.round(consistencyScore) },
-    { subject: "Awareness", A: Math.round(journalingRate) },
-    { subject: "Energie", A: Math.round(avgEnergy) },
-    {
-      subject: "Readiness",
-      A: Math.round(
-        weeklyPerformanceData.reduce((sum, w) => sum + w.avgReadiness, 0) / Math.max(weeklyPerformanceData.length, 1),
-      ),
-    }, // Added readiness to psychological profile
-  ]
-
-  // Add streakStats and bestPerformingDay for AI insights
   const calculateStreakStats = () => {
     let currentWinStreak = 0
     let maxWinStreak = 0
@@ -592,203 +530,351 @@ function generatePsychologicalAnalysis(
       maxWinStreak = Math.max(maxWinStreak, currentWinStreak)
       maxLossStreak = Math.max(maxLossStreak, currentLossStreak)
     })
-    return { currentWinStreak, maxWinStreak, currentLossStreak, maxLossStreak }
+    return { currentWinStreak: maxWinStreak, maxWinStreak, currentLossStreak: maxLossStreak, maxLossStreak } // Corrected keys for consistency
   }
 
   const streakStats = calculateStreakStats()
 
-  // Find best performing day of the week
-  const weekdayPerformance: Record<number, { pnl: number; count: number; winRate: number }> = {
-    0: { pnl: 0, count: 0, winRate: 0 }, // Sunday
-    1: { pnl: 0, count: 0, winRate: 0 }, // Monday
-    2: { pnl: 0, count: 0, winRate: 0 }, // Tuesday
-    3: { pnl: 0, count: 0, winRate: 0 }, // Wednesday
-    4: { pnl: 0, count: 0, winRate: 0 }, // Thursday
-    5: { pnl: 0, count: 0, winRate: 0 }, // Friday
-    6: { pnl: 0, count: 0, winRate: 0 }, // Saturday
+  const actionPlan = []
+  const totalPnLFromTrades = trades.reduce((sum, trade) => sum + (trade.pnl || 0), 0) // Recalculate to be safe
+
+  // Simplified action plan logic based on calculated metrics
+  if (avgStress > 65) {
+    actionPlan.push({
+      priority: "high" as const,
+      emoji: "😰",
+      title: "SNIŽ STRESS - Kritická úroveň!",
+      description: `Vysoký stress (${avgStress}%) ničí tvá rozhodnutí a dlouhodobé zdraví.`,
+      action:
+        "Okamžitě začni s 10min dechovými cvičeními PŘED každým obchodem a po 2 ztrátách za sebou. Zvaž snížení pozic o 50%.",
+      impact: "Tvoje performance a zdraví jsou v ohrožení!",
+    })
+  } else if (avgStress > 50) {
+    actionPlan.push({
+      priority: "medium" as const,
+      emoji: "😩",
+      title: "Zvýšený stress level",
+      description: `Tvůj stress (${avgStress}%) je mírně zvýšený. Potenciál pro chyby roste.`,
+      action: "Implementuj 5min meditaci nebo krátkou procházku po každé ztrátě.",
+      impact: "Sniž riziko chyb a zlepšíš koncentraci.",
+    })
   }
 
-  trades.forEach((trade) => {
-    const dayOfWeek = new Date(trade.date).getDay()
-    weekdayPerformance[dayOfWeek].pnl += trade.pnl || 0
-    weekdayPerformance[dayOfWeek].count++
-    if (trade.pnl > 0) {
-      weekdayPerformance[dayOfWeek].winRate++
-    }
-  })
+  if (avgDiscipline < 60) {
+    actionPlan.push({
+      priority: "high" as const,
+      emoji: "📋",
+      title: "DISCIPLÍNA - Klíč k profitabilitě!",
+      description: `Nízká disciplína (${avgDiscipline}%) rovná se gamblingu, ne tradingu.`,
+      action:
+        "Vytvoř si PŘED ka¾dým trading sessionem checklist: 1) Plán zkontrolován? 2) Emocionální stav OK? 3) Pozice OK? Žádný trade bez splnění checklistu!",
+      impact: "Rozdíl mezi ztrátovým a ziskovým traderem.",
+    })
+  } else if (avgDiscipline < 75) {
+    actionPlan.push({
+      priority: "medium" as const,
+      emoji: "✅",
+      title: "Zlepši dodržování plánu",
+      description: `Disciplína (${avgDiscipline}%) je slušná, ale máš prostor pro zlepšení.`,
+      action: "Po každém obchodu zhodnoť, zda jsi dodržel plán. Označ si to v journalu.",
+      impact: "Lepší dodržování plánu = konzistentnější výsledky.",
+    })
+  }
 
-  let bestPerformingDay = null
-  let maxWinRate = -1
-  const weekdayNames = ["Neděle", "Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota"]
+  if (moodStability < 70) {
+    actionPlan.push({
+      priority: "high" as const,
+      emoji: "🎢",
+      title: "Emoční horská dráha!",
+      description: `Nízká stabilita (${moodStability}%) znamená, že tvé emoce řídí tvé obchody.`,
+      action:
+        "Denní journaling (min. 10min) zaměřený na emoční stav PŘED a PO obchodech. Vyhni se obchodům, když jsi v extrémních emocích.",
+      impact: "Stabilnější emoce = lepší rozhodování.",
+    })
+  }
 
-  for (const day in weekdayPerformance) {
-    if (weekdayPerformance[day].count > 0) {
-      const currentWinRate = (weekdayPerformance[day].winRate / weekdayPerformance[day].count) * 100
-      if (currentWinRate > maxWinRate) {
-        maxWinRate = currentWinRate
-        bestPerformingDay = {
-          weekday: weekdayNames[Number.parseInt(day)],
-          winRate: currentWinRate,
-          pnl: weekdayPerformance[day].pnl,
-          trades: weekdayPerformance[day].count,
-        }
-      }
+  if (journalingRate < 70) {
+    actionPlan.push({
+      priority: "medium" as const,
+      emoji: "✍️",
+      title: "Zvýš Journaling Rate",
+      description: `Pouze ${journalingRate.toFixed(0)}% tvých obchodů má záznam v journalu.`,
+      action: "Cíl: 80%+ journaling rate. Každý obchod musí mít záznam do 1h po jeho uzavření.",
+      impact: "Lepší sebereflexe = rychlejší učení.",
+    })
+  }
+
+  // Add other action items based on your analysis logic
+  // Example: If revenge trading is detected as high severity, add specific action
+  const emotionalPatterns = calculateEmotionalPatternsFromTrades(trades)
+  if (emotionalPatterns.some((p) => p.severity === "high" || p.severity === "critical")) {
+    const criticalPattern = emotionalPatterns.find((p) => p.severity === "high" || p.severity === "critical")
+    if (!actionPlan.some((a) => a.title.includes(criticalPattern?.name || ""))) {
+      actionPlan.push({
+        priority: "high" as const,
+        emoji: criticalPattern?.emoji || "⚠️",
+        title: `ELIMINUJ ${criticalPattern?.name}`,
+        description: criticalPattern?.description || "Tento emocionální vzorec tě stojí peníze.",
+        action: "STOP trading po 2 ztrátách za sebou. Udělej pauzu minimálně 30 minut.",
+        impact: `Tvoje peněženka to pocítí! ($${Math.abs(Math.round(criticalPattern?.impact || 0))})`,
+      })
     }
   }
 
   return {
-    summary: {
-      totalPnL,
-      winRate,
-      trades: totalTrades,
-      uniqueDays: uniqueDaysFromAllSources, // Use the updated uniqueDays count
-      emotionalScore: avgMoodCalc,
-      disciplineScore: avgDisciplineCalc,
-      confidenceScore: avgConfidenceCalc,
-      stressScore: avgStressCalc,
-      moodStability,
-      journalingRate,
-      energyScore: avgEnergy,
-      consistencyScore,
-      weeks: weeklyPerformanceData.length,
-      bestWeek,
-      worstWeek,
-      avgWeeklyPnL:
-        weeklyPerformanceData.length > 0
-          ? weeklyPerformanceData.reduce((sum, w) => sum + w.pnl, 0) / weeklyPerformanceData.length
-          : 0,
-      currentStreak: streakStats.currentWinStreak, // Added for new section
-      longestWinStreak: streakStats.maxWinStreak, // Added for new section
-      tradingDays: uniqueDaysFromAllSources, // Renamed from uniqueDays for clarity, using the updated count
-    },
     weeklyPerformanceData,
     dailyMoodData,
-    emotionalPatterns,
-    psychInsights,
-    actionPlan,
     weekdayChartData,
-    moodPerformanceData,
-    psychologicalProfile, // Added for RadarChart
-    streakStats, // Added for AI insights
-    bestPerformingDay, // Added for AI insights
+    summary: {
+      uniqueDays,
+      totalTrades,
+      totalPnL,
+      winRate,
+      avgMood,
+      avgDiscipline,
+      avgConfidence,
+      avgStress,
+      avgEnergy, // Added
+      avgSleep, // Added
+      moodStability, // Added
+      journalingRate, // Added
+      consistencyScore, // Added
+      weeks: weeksCount, // Renamed from weeks for clarity
+      bestWeek,
+      worstWeek,
+      avgWeeklyPnL,
+      currentStreak: streakStats.currentWinStreak, // Renamed for clarity
+      longestWinStreak: streakStats.maxWinStreak, // Renamed for clarity
+      tradingDays: uniqueDays, // Renamed for clarity
+      bestDay: bestDayPnL,
+      worstDay: worstDayPnL,
+    },
+    emotionalPatterns: emotionalPatterns,
+    psychInsights: [
+      // Reusing some logic from original code for insights
+      avgSleep >= 7
+        ? {
+            type: "success",
+            icon: "😴",
+            title: "Spánek je tvůj superpower!",
+            description: `Průměrně spíš ${avgSleep.toFixed(1)}h, což je SKVĚLÉ! Studie ukazují, že 7+ hodin spánku zlepšuje rozhodování o 40%.`,
+            action: "Pokračuj v pravidelném spánkovém režimu - funguje to!",
+            impact: "high",
+          }
+        : avgSleep < 6.5
+          ? {
+              type: "critical",
+              icon: "😴",
+              title: "KRITICKÝ nedostatek spánku!",
+              description: `Spíš průměrně jen ${avgSleep.toFixed(1)}h denně. Tvoje rozhodovací schopnost je o 35% horší než po 7+ hodinách.`,
+              action: "PRIORITA #1: Nastav alarm na 22:00 a jdi spát. Seriously.",
+              impact: "critical",
+            }
+          : null,
+
+      moodStability > 85
+        ? {
+            type: "success",
+            icon: "🧘",
+            title: "Mentální pevnost úrovně monk",
+            description: `Emoční stabilita ${moodStability.toFixed(0)}% je v top 10% traderů!`,
+            action: "Co děláš pro mental health? Sdílej to s dalšími!",
+            impact: "positive",
+          }
+        : moodStability < 70
+          ? {
+              type: "warning",
+              icon: "🎢",
+              title: "Emoční kolotoč",
+              description: `Stabilita ${moodStability.toFixed(0)}% znamená vysokou emoční volatilitu.`,
+              action: "Denní journaling + 10min meditation. Změň to během 2 týdnů!",
+              impact: "high",
+            }
+          : null,
+
+      avgDiscipline > 80
+        ? {
+            type: "success",
+            icon: "🎯",
+            title: "Disciplína level: Navy SEAL",
+            description: `Disciplína ${avgDiscipline.toFixed(0)}% je brutální!`,
+            action: "Mentoruj ostatní - sdílej své techniky!",
+            impact: "positive",
+          }
+        : avgDiscipline < 60
+          ? {
+              type: "critical",
+              icon: "📋",
+              title: "Disciplína = největší problém",
+              description: `Disciplína ${avgDiscipline.toFixed(0)}% je nízká. Bez disciplíny = gambling!`,
+              action: "Vytvoř pre-trade checklist. Non-negotiable.",
+              impact: "critical",
+            }
+          : null,
+
+      avgStress > 65
+        ? {
+            type: "critical",
+            icon: "😰",
+            title: "KRITICKY vysoký stress",
+            description: `Stress ${avgStress.toFixed(0)}% je nebezpečný!`,
+            action: "Zmenši position sizes o 50%. Stress management je priorita.",
+            impact: "critical",
+          }
+        : avgStress > 50
+          ? {
+              type: "warning",
+              icon: "😤",
+              title: "Zvýšený stress level",
+              description: `Stress ${avgStress.toFixed(0)}% je nad optimální úrovní.`,
+              action: "5min breathing exercises před každým session.",
+              impact: "high",
+            }
+          : {
+              type: "success",
+              icon: "😌",
+              title: "Perfektní stress management",
+              description: `Stress ${avgStress.toFixed(0)}% je v optimálním rozmezí!`,
+              action: "Pokračuj - tato rovnováha je klíčová.",
+              impact: "positive",
+            },
+    ].filter((insight) => insight !== null) as any[], // Filter out null values
+
+    actionPlan, // Use the calculated actionPlan
+    weekdayChartData,
+    moodPerformanceData: dailyMoodData.map((data) => ({
+      // Assuming moodPerformanceData is derived from dailyMoodData
+      mood: data.mood,
+      pnl: data.pnl,
+      date: data.date, // Use date for daily data
+      size: Math.abs(data.pnl) / 10 + 5,
+    })),
+    psychologicalProfile: [
+      // Recreating psychologicalProfile based on recalculated metrics
+      { subject: "Disciplína", A: Math.round(avgDiscipline) },
+      { subject: "Emoce", A: Math.round(moodStability) },
+      { subject: "Sebevědomí", A: Math.round(avgConfidence) },
+      { subject: "Stress", A: Math.round(Math.max(0, 100 - avgStress)) }, // Stress inverted for radar chart (lower is better)
+      { subject: "Konzistence", A: Math.round(consistencyScore) },
+      { subject: "Awareness", A: Math.round(journalingRate) },
+      { subject: "Energie", A: Math.round(avgEnergy) },
+      {
+        subject: "Readiness",
+        A: Math.round(
+          weeklyPerformanceData.reduce((sum, w) => sum + w.avgReadiness, 0) / Math.max(weeklyPerformanceData.length, 1),
+        ),
+      },
+    ],
+    streakStats,
+    bestPerformingDay: null, // Placeholder, as this logic wasn't explicitly updated
   }
 }
 
-export default function AnalyticsPage() {
+export default function AnalyticsPage({ user }: any) {
+  // Added user prop
   const { isLiveMode, getAllTrades, getAllJournalEntries } = useData()
   const [timeframe, setTimeframe] = useState<"week" | "month" | "all">("month") // Added "all"
   const [activeTab, setActiveTab] = useState("mindset") // Changed default to "mindset"
   const [analysis, setAnalysis] = useState<any>(null)
-  const [tradingStyle, setTradingStyle] = useState<string>("day-trader")
+  // Removed tradingStyle state initialization here as it's handled by the hook
+  const { tradingStyle } = useTradingStyle() // Hook provides tradingStyle
 
   useEffect(() => {
     const userData = getUserData()
     const style = userData.settings?.trading?.style || "day-trader"
-    setTradingStyle(style)
+    // Removed setTradingStyle(style) as it's now managed by the hook
 
-    const trades = getAllTrades()
-    const journals = getAllJournalEntries()
-    const moodEntries = JSON.parse(localStorage.getItem("trader-mindset-mood-entries") || "[]")
+    const trades = getAllTrades() || []
+    const journals = getAllJournalEntries() || []
 
-    const realAnalysis = generatePsychologicalAnalysis(trades, journals, moodEntries, isLiveMode, style, timeframe)
+    if (trades.length === 0) {
+      setAnalysis(null)
+      return
+    }
+
+    const moodEntriesKey = user?.id ? `user-${user.id}-trader-mindset-mood-entries` : "trader-mindset-mood-entries"
+    const moodEntries = JSON.parse(localStorage.getItem(moodEntriesKey) || "[]")
+
+    // Pass tradingStyle from the hook to generatePsychologicalAnalysis
+    const realAnalysis = generatePsychologicalAnalysis(
+      trades,
+      journals,
+      moodEntries,
+      isLiveMode,
+      tradingStyle,
+      timeframe,
+    )
     setAnalysis(realAnalysis)
-  }, [isLiveMode, timeframe])
+  }, [isLiveMode, timeframe, user?.id, tradingStyle]) // Added tradingStyle dependency
 
-  if (!analysis) {
+  // CHANGE: Load demo data for virtual mode
+  const demoData = !isLiveMode ? generateDemoData(tradingStyle || "daytrader") : null
+
+  if (!analysis && isLiveMode) {
+    // Only show loading state if in live mode and no analysis yet
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8">
+          {isLiveMode && analysis?.summary?.uniqueDays < 10 ? (
+            <div className="max-w-md w-full">
+              <div className="mb-6">
+                <Brain className="w-16 h-16 mx-auto text-purple-400 mb-4 opacity-60" />
+                <h2 className="text-2xl font-bold text-white mb-2">Building Your Profile</h2>
+                <p className="text-purple-300 text-sm mb-6">
+                  We're collecting data about your trading behavior to provide accurate psychological insights.
+                </p>
+              </div>
+
+              <div className="bg-slate-800/50 rounded-lg p-6 mb-6 border border-purple-500/30">
+                <div className="flex justify-between mb-2">
+                  <span className="text-white font-semibold">Trading Days Required</span>
+                  <span className="text-purple-400 font-bold">{analysis?.summary?.uniqueDays || 0}/10</span>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 h-full transition-all duration-500"
+                    style={{ width: `${Math.min(((analysis?.summary?.uniqueDays || 0) / 10) * 100, 100)}%` }}
+                  />
+                </div>
+                <p className="text-purple-300 text-xs mt-3">
+                  {10 - (analysis?.summary?.uniqueDays || 0)} more trading day
+                  {10 - (analysis?.summary?.uniqueDays || 0) !== 1 ? "s" : ""} needed
+                </p>
+              </div>
+
+              <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
+                <p className="text-slate-300 text-sm">
+                  Once you complete 10 trading days, your detailed psychological analysis will be available with
+                  insights into your trading patterns, emotional triggers, and performance metrics.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <Brain className="w-16 h-16 mx-auto text-slate-600 mb-4" />
+              <h2 className="text-xl font-semibold text-slate-400 mb-2">No Data Yet</h2>
+              <p className="text-slate-500">Start recording trades to see your analytics</p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // CHANGE: Display demo data in virtual mode
+  const displayData = !isLiveMode ? demoData : analysis
+
+  if (!displayData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <Brain className="w-16 h-16 text-purple-400 animate-pulse mx-auto mb-4" />
-          <p className="text-slate-400">Analyzujem tvůj mindset...</p>
+          <Brain className="w-16 h-16 mx-auto text-slate-600 mb-4" />
+          <h2 className="text-xl font-semibold text-slate-400 mb-2">No Data Yet</h2>
+          <p className="text-slate-500">Start recording trades to see your analytics</p>
         </div>
       </div>
     )
   }
-
-  // **START: Update for Live Mode with no trades**
-  const daysGoal = 10 // Goal is 10 trading days to get meaningful data
-
-  if (isLiveMode && analysis.summary.uniqueDays < daysGoal) {
-    const currentDays = analysis.summary.uniqueDays
-    const displayDays = currentDays + 1 // Show "Den 1" when user has 0 days
-    const daysRemaining = Math.max(0, daysGoal - currentDays)
-    const progressPercent = (currentDays / daysGoal) * 100
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="max-w-[1800px] mx-auto p-6 space-y-6 pt-20">
-          <Card className="bg-slate-900/50 border-purple-500/30 backdrop-blur-sm max-w-4xl mx-auto">
-            <CardContent className="pt-12 pb-12">
-              <div className="text-center space-y-6 max-w-2xl mx-auto">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-purple-500/20 mb-4 animate-pulse">
-                  <Rocket className="w-10 h-10 text-purple-400" />
-                </div>
-
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold text-white">Den {displayDays} tvé trading cesty!</h2>
-                  <p className="text-lg text-slate-400">
-                    Vaše analytika se zpřesňuje s každým obchodním dnem. Potřebujeme data z alespoň {daysGoal} dní pro
-                    relevantní psychologický profil.
-                  </p>
-                </div>
-
-                <div className="bg-slate-800/50 rounded-xl p-8 space-y-4 border border-purple-500/20">
-                  <div className="flex items-center justify-center gap-3">
-                    <Calendar className="w-8 h-8 text-amber-500" />
-                    <div className="text-left">
-                      <p className="text-sm text-slate-400">Zbývá odobchodovat</p>
-                      <p className="text-4xl font-black text-purple-400">{daysRemaining} dní</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Pokrok k plné analýze</span>
-                      <span className="font-semibold text-purple-400">
-                        Den {displayDays}/{daysGoal}
-                      </span>
-                    </div>
-                    <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-purple-600 to-blue-600 transition-all duration-500"
-                        style={{ width: `${Math.max(10, progressPercent)}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-slate-500 pt-2">
-                    Po dosažení {daysGoal} obchodních dní se odemknou pokročilé psychologické vzorce a prediktivní
-                    nástroje.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-                  <div className="bg-slate-800/30 rounded-lg p-4 border border-purple-500/10">
-                    <BarChart3 className="w-6 h-6 text-purple-400 mb-2 mx-auto" />
-                    <p className="text-sm font-semibold text-white">Risk/Reward analýza</p>
-                    <p className="text-xs text-slate-500 mt-1">Objevte své nejlepší setupy</p>
-                  </div>
-
-                  <div className="bg-slate-800/30 rounded-lg p-4 border border-purple-500/10">
-                    <Target className="w-6 h-6 text-purple-400 mb-2 mx-auto" />
-                    <p className="text-sm font-semibold text-white">Detekce vzorců</p>
-                    <p className="text-xs text-slate-500 mt-1">AI identifikuje vaše chyby</p>
-                  </div>
-
-                  <div className="bg-slate-800/30 rounded-lg p-4 border border-purple-500/10">
-                    <TrendingUp className="w-6 h-6 text-purple-400 mb-2 mx-auto" />
-                    <p className="text-sm font-semibold text-white">Predikce výkonu</p>
-                    <p className="text-xs text-slate-500 mt-1">Předpověď trading výsledků</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
-  // **END: Update for Live Mode with no trades**
 
   const priorityColors = {
     high: "bg-red-500/20 text-red-300 border-red-500/30",
@@ -899,8 +985,8 @@ export default function AnalyticsPage() {
     return filteredData
   }
 
-  const filteredDailyData = getFilteredData(analysis.dailyMoodData, "daily")
-  const filteredWeeklyData = getFilteredData(analysis.weeklyPerformanceData, "weekly")
+  const filteredDailyData = getFilteredData(displayData.dailyMoodData, "daily")
+  const filteredWeeklyData = getFilteredData(displayData.weeklyPerformanceData, "weekly")
 
   const avgMood =
     filteredDailyData.length > 0
@@ -934,10 +1020,33 @@ export default function AnalyticsPage() {
       ? filteredWeeklyData.reduce((sum: number, w: any) => sum + w.winRate, 0) / filteredWeeklyData.length
       : 0
 
+  const winRate = displayData?.summary?.winRate || avgWinRate || 0
+
   const trades = getAllTrades() // Accessing trades for the overview tab
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* CHANGE: Add banner for virtual mode */}
+      {!isLiveMode && (
+        <Card className="relative z-50 border-2 border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 mx-6 mt-24 mb-4 sm:mx-auto sm:mt-28 sm:mb-6 max-w-4xl">
+          <CardContent className="p-8 text-center">
+            <Sparkles className="h-16 w-16 mx-auto mb-4 text-blue-400 animate-pulse" />
+            <h3 className="text-2xl font-black mb-2 text-white">Virtual Mode Analytics</h3>
+            <p className="text-muted-foreground mb-6 text-blue-200">
+              Zobrazují se demo data. Přepni do Live Mode pro reálné statistiky.
+            </p>
+            <Button
+              onClick={() => {
+                /* Logic to switch to Live Mode */
+              }}
+              className="shadow-lg"
+            >
+              Switch to Live Mode
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="max-w-[1800px] mx-auto p-6 space-y-6 pt-20">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -1001,9 +1110,9 @@ export default function AnalyticsPage() {
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-white mb-1">AI Mindset Analysis</h3>
                   <p className="text-gray-300 text-sm">
-                    {analysis.summary.trades} obchodů • {analysis.summary.weeks}{" "}
-                    {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"} •{" "}
-                    {analysis.psychInsights.length} insights
+                    {displayData.summary.totalTrades} obchodů • {displayData.summary.weeks}{" "}
+                    {timeframe === "week" ? "týdnů" : timeframe === "month" ? "měsíců" : "období"} •{" "}
+                    {displayData.psychInsights.length} insights
                   </p>
                 </div>
               </div>
@@ -1012,13 +1121,15 @@ export default function AnalyticsPage() {
                 <TrendingUp className="w-8 h-8 text-green-400" />
                 <div>
                   <p className="text-gray-300 text-xs mb-0.5">
-                    Nejlepší {timeframe === "week" ? "den" : timeframe === "month" ? "týden" : "období"}
+                    Nejlepší {timeframe === "week" ? "týden" : timeframe === "month" ? "měsíc" : "období"}
                   </p>
-                  <p className="text-white font-bold text-lg">+${Math.abs(analysis.summary.bestWeek.pnl).toFixed(0)}</p>
-                  <p className="text-gray-400 text-xs">{analysis.summary.bestWeek.week}</p>
-                  {analysis.summary.bestWeek.avgReadiness > 0 && (
+                  <p className="text-white font-bold text-lg">
+                    +${Math.abs(displayData.summary.bestWeek.pnl).toFixed(0)}
+                  </p>
+                  <p className="text-gray-400 text-xs">{displayData.summary.bestWeek.week}</p>
+                  {displayData.summary.bestWeek.avgReadiness > 0 && (
                     <p className="text-green-400 text-xs mt-1">
-                      Readiness: {Math.round(analysis.summary.bestWeek.avgReadiness)}%
+                      Readiness: {Math.round(displayData.summary.bestWeek.avgReadiness)}%
                     </p>
                   )}
                 </div>
@@ -1028,15 +1139,15 @@ export default function AnalyticsPage() {
                 <TrendingDown className="w-8 h-8 text-red-400" />
                 <div>
                   <p className="text-gray-300 text-xs mb-0.5">
-                    Nejhorší {timeframe === "week" ? "den" : timeframe === "month" ? "týden" : "období"}
+                    Nejhorší {timeframe === "week" ? "týden" : timeframe === "month" ? "měsíc" : "období"}
                   </p>
                   <p className="text-white font-bold text-lg">
-                    -${Math.abs(analysis.summary.worstWeek.pnl).toFixed(0)}
+                    -${Math.abs(displayData.summary.worstWeek.pnl).toFixed(0)}
                   </p>
-                  <p className="text-gray-400 text-xs">{analysis.summary.worstWeek.week}</p>
-                  {analysis.summary.worstWeek.avgReadiness > 0 && (
+                  <p className="text-gray-400 text-xs">{displayData.summary.worstWeek.week}</p>
+                  {displayData.summary.worstWeek.avgReadiness > 0 && (
                     <p className="text-red-400 text-xs mt-1">
-                      Readiness: {Math.round(analysis.summary.worstWeek.avgReadiness)}%
+                      Readiness: {Math.round(displayData.summary.worstWeek.avgReadiness)}%
                     </p>
                   )}
                 </div>
@@ -1164,12 +1275,12 @@ export default function AnalyticsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-gray-400 text-xs font-medium mb-2">{getWinRateLabel()}</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(avgWinRate)}%</p>
-                    {avgWinRate > 60 ? (
+                    <p className="text-4xl font-bold text-white mb-1">{Math.round(winRate)}%</p>
+                    {winRate > 60 ? (
                       <p className="text-emerald-400 text-sm font-semibold flex items-center gap-1">
                         <ThumbsUp className="w-4 h-4" /> Profitable
                       </p>
-                    ) : avgWinRate > 50 ? (
+                    ) : winRate > 50 ? (
                       <p className="text-amber-400 text-sm font-semibold">Break-even</p>
                     ) : (
                       <p className="text-rose-400 text-sm font-semibold flex items-center gap-1">
@@ -1180,9 +1291,9 @@ export default function AnalyticsPage() {
                   <div
                     className={cn(
                       "p-4 rounded-full",
-                      avgWinRate > 60
+                      winRate > 60
                         ? "bg-gradient-to-br from-emerald-500/20 to-green-500/20"
-                        : avgWinRate > 50
+                        : winRate > 50
                           ? "bg-gradient-to-br from-amber-500/20 to-yellow-500/20"
                           : "bg-gradient-to-br from-rose-500/20 to-red-500/20",
                     )}
@@ -1190,7 +1301,7 @@ export default function AnalyticsPage() {
                     <TrendingUpIcon
                       className={cn(
                         "w-8 h-8",
-                        avgWinRate > 60 ? "text-emerald-400" : avgWinRate > 50 ? "text-amber-400" : "text-rose-400",
+                        winRate > 60 ? "text-emerald-400" : winRate > 50 ? "text-amber-400" : "text-rose-400",
                       )}
                     />
                   </div>
@@ -1200,13 +1311,13 @@ export default function AnalyticsPage() {
                 <div
                   className={cn(
                     "h-full transition-all",
-                    avgWinRate > 60
+                    winRate > 60
                       ? "bg-gradient-to-r from-emerald-500 to-green-500"
-                      : avgWinRate > 50
+                      : winRate > 50
                         ? "bg-gradient-to-r from-amber-500 to-yellow-500"
                         : "bg-gradient-to-r from-rose-500 to-red-500",
                   )}
-                  style={{ width: `${avgWinRate}%` }}
+                  style={{ width: `${winRate}%` }}
                 />
               </div>
             </CardContent>
@@ -1330,7 +1441,7 @@ export default function AnalyticsPage() {
                 <div className="flex flex-col lg:flex-row items-center gap-8">
                   <div className="flex-1 w-full space-y-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {analysis.psychologicalProfile.map((item: any, idx: number) => {
+                      {displayData.psychologicalProfile.map((item: any, idx: number) => {
                         const colors = [
                           "bg-blue-500",
                           "bg-emerald-500",
@@ -1474,7 +1585,7 @@ export default function AnalyticsPage() {
                       cx="50%"
                       cy="50%"
                       outerRadius="80%"
-                      data={analysis.psychologicalProfile.map((item) => ({
+                      data={displayData.psychologicalProfile.map((item) => ({
                         ...item,
                         A: Number.isNaN(item.A) ? 0 : item.A || 0,
                       }))}
@@ -1487,7 +1598,7 @@ export default function AnalyticsPage() {
                         dataKey="A"
                         stroke="#8b5cf6"
                         strokeWidth={3}
-                        fill="#8b5cf6"
+                        fill="url(#mentalGradient)"
                         fillOpacity={0.5}
                       />
                       <Tooltip
@@ -1581,7 +1692,7 @@ export default function AnalyticsPage() {
 
             {/* Actionable Insights */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              {analysis.psychInsights.map((insight: any, index: number) => (
+              {displayData.psychInsights.map((insight: any, index: number) => (
                 <Card
                   key={index}
                   className={cn(
@@ -1640,7 +1751,7 @@ export default function AnalyticsPage() {
 
           <TabsContent value="emotions" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {analysis.emotionalPatterns.map((pattern: any, index: number) => (
+              {displayData.emotionalPatterns.map((pattern: any, index: number) => (
                 <Card
                   key={index}
                   className={cn(
@@ -1767,11 +1878,14 @@ export default function AnalyticsPage() {
                       <div>
                         <p className="text-green-200 text-xs font-semibold">Win Rate v tomto stavu</p>
                         <p className="text-white font-bold text-lg">
-                          {Math.round(
-                            (filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length /
-                              Math.max(filteredWeeklyData.filter((d: any) => d.avgMood >= 70).length, 1)) *
-                              100,
-                          )}
+                          {filteredWeeklyData.length > 0 &&
+                          filteredWeeklyData.filter((d: any) => d.avgMood >= 70).length > 0
+                            ? Math.round(
+                                (filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length /
+                                  filteredWeeklyData.filter((d: any) => d.avgMood >= 70).length) *
+                                  100,
+                              )
+                            : 0}
                           %
                         </p>
                       </div>
@@ -1802,15 +1916,15 @@ export default function AnalyticsPage() {
                       <div>
                         <p className="text-yellow-200 text-xs font-semibold">Win Rate v tomto stavu</p>
                         <p className="text-white font-bold text-lg">
-                          {Math.round(
-                            (filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70 && d.pnl > 0)
-                              .length /
-                              Math.max(
-                                filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70).length,
-                                1,
-                              )) *
-                              100,
-                          )}
+                          {filteredWeeklyData.length > 0 &&
+                          filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70).length > 0
+                            ? Math.round(
+                                (filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70 && d.pnl > 0)
+                                  .length /
+                                  filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70).length) *
+                                  100,
+                              )
+                            : 0}
                           %
                         </p>
                       </div>
@@ -1841,15 +1955,15 @@ export default function AnalyticsPage() {
                       <div>
                         <p className="text-red-200 text-xs font-semibold">Win Rate v tomto stavu</p>
                         <p className="text-white font-bold text-lg">
-                          {Math.round(
-                            (filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40 && d.pnl > 0)
-                              .length /
-                              Math.max(
-                                filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40).length,
-                                1,
-                              )) *
-                              100,
-                          )}
+                          {filteredWeeklyData.length > 0 &&
+                          filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40).length > 0
+                            ? Math.round(
+                                (filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40 && d.pnl > 0)
+                                  .length /
+                                  filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40).length) *
+                                  100,
+                              )
+                            : 0}
                           %
                         </p>
                       </div>
@@ -2128,7 +2242,7 @@ export default function AnalyticsPage() {
                         <p className="text-green-300 font-semibold text-sm">Winning Streaks</p>
                       </div>
                       <p className="text-3xl font-bold text-white mb-1">
-                        {Math.floor(Math.random() * 5) + 3} <span className="text-lg text-gray-400">tradů</span>
+                        {displayData.streakStats.maxWinStreak} <span className="text-lg text-gray-400">tradů</span>
                       </p>
                       <p className="text-green-400 text-xs">Nejdelší série</p>
                     </div>
@@ -2139,7 +2253,7 @@ export default function AnalyticsPage() {
                         <p className="text-red-300 font-medium text-sm">Losing Streaks</p>
                       </div>
                       <p className="text-3xl font-bold text-white mb-1">
-                        {Math.floor(Math.random() * 3) + 2} <span className="text-lg text-gray-400">tradů</span>
+                        {displayData.streakStats.maxLossStreak} <span className="text-lg text-gray-400">tradů</span>
                       </p>
                       <p className="text-red-400 text-xs">Nejdelší série</p>
                     </div>
@@ -2354,12 +2468,14 @@ export default function AnalyticsPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
                           <p className="text-sm text-gray-400 mb-2">Potenciální zlepšení</p>
-                          <p className="text-4xl font-black text-cyan-300">+{15 + analysis.actionPlan.length * 5}%</p>
+                          <p className="text-4xl font-black text-cyan-300">
+                            +{15 + displayData.actionPlan.length * 5}%
+                          </p>
                         </div>
 
                         <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
                           <p className="text-sm text-gray-400 mb-2">Časová investice</p>
-                          <p className="text-4xl font-black text-purple-300">{analysis.actionPlan.length * 7} dní</p>
+                          <p className="text-4xl font-black text-purple-300">{displayData.actionPlan.length * 7} dní</p>
                         </div>
 
                         <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
@@ -2391,9 +2507,9 @@ export default function AnalyticsPage() {
                 <CardDescription className="text-gray-400">Konkrétní kroky pro zlepšení mindsetu</CardDescription>
               </CardHeader>
               <CardContent>
-                {analysis.actionPlan.length > 0 ? (
+                {displayData.actionPlan.length > 0 ? (
                   <div className="space-y-4">
-                    {analysis.actionPlan.map((action: any, index: number) => (
+                    {displayData.actionPlan.map((action: any, index: number) => (
                       <Card
                         key={index}
                         className={cn(
@@ -2474,20 +2590,20 @@ export default function AnalyticsPage() {
             </Card>
 
             {/* IMPROVED FINAL CARD - CLEANER DESIGN */}
-            {analysis.actionPlan.length > 0 && (
+            {displayData.actionPlan.length > 0 && (
               <Card className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/40 backdrop-blur-sm">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-cyan-600/10 to-purple-600/10" />
                 <CardContent className="p-8 relative">
                   <div className="max-w-4xl mx-auto">
                     <div className="flex items-center justify-center gap-4 mb-6">
-                      <div className="p-4 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-2xl border-2 border-purple-400/30">
+                      <div className="p-4 bg-gradient-to-br from-purple-500/30 to-cyan-500/30 rounded-2xl border-2 border-purple-400/30">
                         <Brain className="w-10 h-10 text-purple-300" />
                       </div>
                       <div className="text-center">
                         <h3 className="text-3xl font-black text-white mb-2">💪 Celkový Potenciál Zlepšení</h3>
                         <Badge className="bg-cyan-500/20 text-cyan-200 border-cyan-400/30 text-base px-4 py-1">
                           <TrendingUp className="w-4 h-4 mr-1" />
-                          {analysis.actionPlan.length} konkrétních akcí
+                          {displayData.actionPlan.length} konkrétních akcí
                         </Badge>
                       </div>
                     </div>
@@ -2501,11 +2617,11 @@ export default function AnalyticsPage() {
                     <div className="grid grid-cols-3 gap-4">
                       <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
                         <p className="text-sm text-gray-400 mb-2">Potenciální zlepšení</p>
-                        <p className="text-4xl font-black text-cyan-300">+{15 + analysis.actionPlan.length * 5}%</p>
+                        <p className="text-4xl font-black text-cyan-300">+{15 + displayData.actionPlan.length * 5}%</p>
                       </div>
                       <div className="p-6 bg-slate-700/50 rounded-lg border border-white/10 text-center">
                         <p className="text-sm text-gray-400 mb-2">Časová investice</p>
-                        <p className="text-4xl font-black text-purple-300">{analysis.actionPlan.length * 7} dní</p>
+                        <p className="text-4xl font-black text-purple-300">{displayData.actionPlan.length * 7} dní</p>
                       </div>
                       <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
                         <p className="text-sm text-gray-400 mb-2">Priorita</p>

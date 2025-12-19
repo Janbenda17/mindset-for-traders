@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation"
 import { TopNavigation } from "@/components/top-navigation"
 import { Footer } from "@/components/footer"
 import { ProductTour } from "@/components/product-tour"
-import { DemoControls } from "@/components/demo-controls"
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -20,7 +19,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <div className={hideNavigation ? "flex-1" : "pt-16 flex-1"}>{children}</div>
       {!hideNavigation && <Footer />}
       <ProductTour />
-      {!hideNavigation && <DemoControls />}
     </div>
   )
 }

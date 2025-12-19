@@ -6,15 +6,36 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Sun, CheckCircle, BookOpen, Moon, Target, DollarSign, CalendarIcon, Lock, Unlock, TrendingUp, AlertTriangle, Lightbulb, Activity, Brain, Heart, Zap, ArrowRight, Clock, Shield } from 'lucide-react'
+import {
+  Sun,
+  CheckCircle,
+  BookOpen,
+  Moon,
+  Target,
+  DollarSign,
+  CalendarIcon,
+  Lock,
+  Unlock,
+  TrendingUp,
+  AlertTriangle,
+  Lightbulb,
+  Activity,
+  Brain,
+  Heart,
+  Zap,
+  ArrowRight,
+  Clock,
+  Shield,
+} from "lucide-react"
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useTradingStyle } from "@/contexts/trading-style-context"
 import { generateDemoDailyTrackerData } from "@/data/demo-daily-tracker"
+import { useAuth } from "@/contexts/auth-context" // Import useAuth
 
 interface MorningCheckData {
   id: string
@@ -79,24 +100,97 @@ interface DailySummary {
   stagesCompleted: number
 }
 
+// Define stageData here
+const stageData = [
+  {
+    id: 1,
+    name: "Morning Check",
+    icon: Sun,
+    href: "/morning-check",
+    color: "from-orange-500 to-rose-500",
+    bgColor: "bg-gradient-to-br from-orange-500/20 to-rose-500/20",
+    borderColor: "border-orange-500/30",
+  },
+  {
+    id: 2,
+    name: "Daily Intention",
+    icon: Target,
+    href: "/daily-intention",
+    color: "from-yellow-500 to-amber-500",
+    bgColor: "bg-gradient-to-br from-yellow-500/20 to-amber-500/20",
+    borderColor: "border-yellow-500/30",
+  },
+  {
+    id: 3,
+    name: "Trading Plan",
+    icon: BookOpen,
+    href: "/trading-plan",
+    color: "from-cyan-500 to-teal-500",
+    bgColor: "bg-gradient-to-br from-cyan-500/20 to-teal-500/20",
+    borderColor: "border-cyan-500/30",
+  },
+  {
+    id: 4,
+    name: "Execution",
+    icon: Clock,
+    href: "/execution",
+    color: "from-blue-500 to-indigo-500",
+    bgColor: "bg-gradient-to-br from-blue-500/20 to-indigo-500/20",
+    borderColor: "border-blue-500/30",
+  },
+  {
+    id: 5,
+    name: "Daily Summary",
+    icon: Shield,
+    href: "/daily-summary",
+    color: "from-green-500 to-emerald-500",
+    bgColor: "bg-gradient-to-br from-green-500/20 to-emerald-500/20",
+    borderColor: "border-green-500/30",
+  },
+]
+
 export default function DailyTrackerPage() {
-  const router = useRouter()
   const { isLiveMode } = useData()
   const { stages } = useDailyStage()
   const { tradingStyle, config } = useTradingStyle()
+  const { user } = useAuth()
+  const router = useRouter()
+
   const [entries, setEntries] = useState<DailySummary[]>([])
   const [activeTab, setActiveTab] = useState("today")
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!isLiveMode) {
+      router.push("/analytics")
+    }
+  }, [isLiveMode, router])
+
+  if (!isLiveMode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Přesměrování na Analytics...</h2>
+          <p className="text-muted-foreground">Ve virtual módu se zobrazují analytics místo daily trackeru.</p>
+        </div>
+      </div>
+    )
+  }
 
   const loadEntries = () => {
     if (!isLiveMode) {
       const demoData = generateDemoDailyTrackerData()
       setEntries(demoData)
     } else {
-      const morningChecks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
-      const intentions = JSON.parse(localStorage.getItem("daily-intentions") || "[]")
-      const plans = JSON.parse(localStorage.getItem("trading-plans") || "[]")
-      const allTrades = JSON.parse(localStorage.getItem("trade-records") || "[]")
+      const morningChecksKey = user?.id ? `user-${user.id}-mindtrader-morning-checks` : "mindtrader-morning-checks"
+      const intentionsKey = user?.id ? `user-${user.id}-daily-intentions` : "daily-intentions"
+      const plansKey = user?.id ? `user-${user.id}-trading-plans` : "trading-plans"
+      const tradesKey = user?.id ? `user-${user.id}-trade-records` : "trade-records"
+
+      const morningChecks = JSON.parse(localStorage.getItem(morningChecksKey) || "[]")
+      const intentions = JSON.parse(localStorage.getItem(intentionsKey) || "[]")
+      const plans = JSON.parse(localStorage.getItem(plansKey) || "[]")
+      const allTrades = JSON.parse(localStorage.getItem(tradesKey) || "[]")
 
       const combinedData: DailySummary[] = []
       const dates = new Set([
@@ -111,23 +205,26 @@ export default function DailyTrackerPage() {
         const plan = plans.find((p: any) => p.date === date)
         const trades = allTrades.filter((t: Trade) => t.date === date)
 
-        let stagesCompleted = 0
-        if (morningCheck) stagesCompleted++
-        if (intention) stagesCompleted++
-        if (plan) stagesCompleted++
-        if (trades.length > 0) stagesCompleted++
+        // Only push if at least one stage is present for the date
+        if (morningCheck || intention || plan || trades.length > 0) {
+          let stagesCompleted = 0
+          if (morningCheck) stagesCompleted++
+          if (intention) stagesCompleted++
+          if (plan) stagesCompleted++
+          if (trades.length > 0) stagesCompleted++
 
-        const overallScore = morningCheck?.score || 0
+          const overallScore = morningCheck?.score || 0
 
-        combinedData.push({
-          date: date as string,
-          morningCheck,
-          intention,
-          plan,
-          trades,
-          overallScore,
-          stagesCompleted,
-        })
+          combinedData.push({
+            date: date as string,
+            morningCheck,
+            intention,
+            plan,
+            trades,
+            overallScore,
+            stagesCompleted,
+          })
+        }
       })
 
       combinedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -137,228 +234,38 @@ export default function DailyTrackerPage() {
 
   useEffect(() => {
     loadEntries()
-  }, [isLiveMode])
+  }, [isLiveMode, user?.id]) // Re-fetch entries when user changes
 
   const todayEntry = entries.find((e) => e.date === format(new Date(), "yyyy-MM-dd"))
   const todayStages = stages
 
-  const getStageDataForStyle = () => {
-    if (tradingStyle === "scalper") {
-      return [
-        {
-          id: 1,
-          name: "Energy Check",
-          icon: Zap,
-          color: "from-yellow-500 to-orange-500",
-          borderColor: "border-yellow-500/30",
-          bgColor: "bg-yellow-500/10",
-          href: "/morning-check",
-        },
-        {
-          id: 2,
-          name: "Session Plan",
-          icon: Target,
-          color: "from-red-500 to-orange-500",
-          borderColor: "border-red-500/30",
-          bgColor: "bg-red-500/10",
-          href: "/daily-intention",
-        },
-        {
-          id: 3,
-          name: "Session Track",
-          icon: Activity,
-          color: "from-orange-500 to-amber-500",
-          borderColor: "border-orange-500/30",
-          bgColor: "bg-orange-500/10",
-          href: "/trading-plan",
-        },
-        {
-          id: 4,
-          name: "Quick Trades",
-          icon: DollarSign,
-          color: "from-emerald-500 to-green-500",
-          borderColor: "border-emerald-500/30",
-          bgColor: "bg-emerald-500/10",
-          href: "/record-trades",
-        },
-        {
-          id: 5,
-          name: "Session Review",
-          icon: Moon,
-          color: "from-violet-500 to-purple-500",
-          borderColor: "border-violet-500/30",
-          bgColor: "bg-violet-500/10",
-          href: "/daily-summary",
-        },
-      ]
-    } else if (tradingStyle === "daytrader") {
-      return [
-        {
-          id: 1,
-          name: "Morning Check",
-          icon: Sun,
-          color: "from-indigo-500 to-purple-500",
-          borderColor: "border-indigo-500/30",
-          bgColor: "bg-indigo-500/10",
-          href: "/morning-check",
-        },
-        {
-          id: 2,
-          name: "Daily Intention",
-          icon: Target,
-          color: "from-blue-500 to-cyan-500",
-          borderColor: "border-blue-500/30",
-          bgColor: "bg-blue-500/10",
-          href: "/daily-intention",
-        },
-        {
-          id: 3,
-          name: "Trading Plan",
-          icon: BookOpen,
-          color: "from-cyan-500 to-teal-500",
-          borderColor: "border-cyan-500/30",
-          bgColor: "bg-cyan-500/10",
-          href: "/trading-plan",
-        },
-        {
-          id: 4,
-          name: "Record Trades",
-          icon: DollarSign,
-          color: "from-emerald-500 to-green-500",
-          borderColor: "border-emerald-500/30",
-          bgColor: "bg-emerald-500/10",
-          href: "/record-trades",
-        },
-        {
-          id: 5,
-          name: "Evening Review",
-          icon: Moon,
-          color: "from-violet-500 to-purple-500",
-          borderColor: "border-violet-500/30",
-          bgColor: "bg-violet-500/10",
-          href: "/daily-summary",
-        },
-      ]
-    } else if (tradingStyle === "swingtrader") {
-      return [
-        {
-          id: 1,
-          name: "Weekly Planning",
-          icon: CalendarIcon,
-          color: "from-purple-500 to-pink-500",
-          borderColor: "border-purple-500/30",
-          bgColor: "bg-purple-500/10",
-          href: "/morning-check",
-        },
-        {
-          id: 2,
-          name: "Position Review",
-          icon: Target,
-          color: "from-blue-500 to-cyan-500",
-          borderColor: "border-blue-500/30",
-          bgColor: "bg-blue-500/10",
-          href: "/daily-intention",
-        },
-        {
-          id: 3,
-          name: "Analysis Update",
-          icon: Brain,
-          color: "from-cyan-500 to-teal-500",
-          borderColor: "border-cyan-500/30",
-          bgColor: "bg-cyan-500/10",
-          href: "/trading-plan",
-        },
-        {
-          id: 4,
-          name: "Position Mgmt",
-          icon: Shield,
-          color: "from-emerald-500 to-green-500",
-          borderColor: "border-emerald-500/30",
-          bgColor: "bg-emerald-500/10",
-          href: "/record-trades",
-        },
-        {
-          id: 5,
-          name: "Weekly Summary",
-          icon: Clock,
-          color: "from-violet-500 to-purple-500",
-          borderColor: "border-violet-500/30",
-          bgColor: "bg-violet-500/10",
-          href: "/daily-summary",
-        },
-      ]
-    }
-
-    // Default to day trader stages
-    return [
-      {
-        id: 1,
-        name: "Morning Check",
-        icon: Sun,
-        color: "from-indigo-500 to-purple-500",
-        borderColor: "border-indigo-500/30",
-        bgColor: "bg-indigo-500/10",
-        href: "/morning-check",
-      },
-      {
-        id: 2,
-        name: "Daily Intention",
-        icon: Target,
-        color: "from-blue-500 to-cyan-500",
-        borderColor: "border-blue-500/30",
-        bgColor: "bg-blue-500/10",
-        href: "/daily-intention",
-      },
-      {
-        id: 3,
-        name: "Trading Plan",
-        icon: BookOpen,
-        color: "from-cyan-500 to-teal-500",
-        borderColor: "border-cyan-500/30",
-        bgColor: "bg-cyan-500/10",
-        href: "/trading-plan",
-      },
-      {
-        id: 4,
-        name: "Record Trades",
-        icon: DollarSign,
-        color: "from-emerald-500 to-green-500",
-        borderColor: "border-emerald-500/30",
-        bgColor: "bg-emerald-500/10",
-        href: "/record-trades",
-      },
-      {
-        id: 5,
-        name: "Evening Review",
-        icon: Moon,
-        color: "from-violet-500 to-purple-500",
-        borderColor: "border-violet-500/30",
-        bgColor: "bg-violet-500/10",
-        href: "/daily-summary",
-      },
-    ]
-  }
-
-  const stageData = getStageDataForStyle()
-
-  const readinessScore = todayEntry?.morningCheck?.score || 0
-
-  const getReadinessColor = (score: number) => {
-    if (score >= 80) return "text-green-400"
+  const getReadinessColor = (score: number | null) => {
+    if (score === null) return "text-gray-400"
+    if (score >= 75) return "text-green-400"
     if (score >= 60) return "text-yellow-400"
     return "text-red-400"
   }
 
-  const getReadinessStatus = (score: number) => {
-    if (score >= 80) return { text: "Výborný stav", color: "from-green-500 to-emerald-500" }
-    if (score >= 60) return { text: "Dobrý stav", color: "from-yellow-500 to-orange-500" }
-    return { text: "Zvýšená opatrnost", color: "from-red-500 to-rose-500" }
+  const getReadinessStatus = (score: number | null) => {
+    if (score === null) return { text: "Nevyplněno", color: "from-gray-500 to-slate-500" }
+    if (score >= 75) return { text: "Dobré podmínky ✅", color: "from-green-500 to-emerald-500" }
+    if (score >= 60) return { text: "Buď opatrný ⚠️", color: "from-yellow-500 to-orange-500" }
+    return { text: "Neobchoduj 🛑", color: "from-red-500 to-rose-500" }
   }
 
-  // CHANGE: Simplified generateTradingDecision to avoid duplicate tips and added positive reinforcement
-  const generateTradingDecision = (morningCheck?: MorningCheckData, readinessScore?: number) => {
-    if (!morningCheck || readinessScore === undefined) return null
+  // Calculate readinessScore here
+  const readinessScore = todayEntry?.morningCheck?.score ?? null
 
+  const generateTradingDecision = (morningCheck?: MorningCheckData, readinessScore?: number | null) => {
+    if (!morningCheck || readinessScore === undefined || readinessScore === null) {
+      return {
+        message: "Vyplň Morning Check pro získání doporučení.",
+        tips: ["Dokončete ranní vyhodnocení pro personalizované tipy"],
+        details: ["Morning Check nevyplněn"],
+      }
+    }
+
+    // CHANGE: Simplified generateTradingDecision to avoid duplicate tips and added positive reinforcement
     let message = ""
     const tips: string[] = []
     const details: string[] = []
@@ -412,7 +319,7 @@ export default function DailyTrackerPage() {
       if (positiveNote) message += ` ${positiveNote}`
       details.push(`Energie: ${morningCheck.energyLevel}/10`)
       tips.push("Dej si zdravou snídani s proteiny")
-      tips.push("Zkus 10-15min lehkého cvičení")
+      tips.push("Tkus 10-15min lehkého cvičení")
       tips.push("Zvaž kratší trading session - max 2-3 hodiny")
     } else if (badMood) {
       message = `Emoční stav není ideální (${morningCheck.emotionalState}/10). Riziko revenge tradingu.`
@@ -443,7 +350,6 @@ export default function DailyTrackerPage() {
 
     return { message, tips, details }
   }
-
 
   const tradingDecision = generateTradingDecision(todayEntry?.morningCheck, readinessScore)
 
@@ -489,7 +395,7 @@ export default function DailyTrackerPage() {
         category: "Energie",
         severity: "medium",
         message: "Nízká energie snižuje tvou schopnost držet se plánu",
-        action: "Zkus lehké cvičení nebo zdravou snídani pro boost energie.",
+        action: "Tkus lehké cvičení nebo zdravou snídani pro boost energie.",
       })
     }
 
@@ -533,14 +439,10 @@ export default function DailyTrackerPage() {
                   Daily Tracker
                 </h1>
                 <p className="md:text-lg text-sm text-muted-foreground mt-1 md:block hidden">
-                  {tradingStyle === "scalper" &&
-                    (isLiveMode ? "Track your sessions 🚀" : "Demo režim 🎮")}
-                  {tradingStyle === "daytrader" &&
-                    (isLiveMode ? "Tvé shrnutí 📊" : "Demo režim 🎮")}
-                  {tradingStyle === "swingtrader" &&
-                    (isLiveMode ? "Monitor positions 📈" : "Demo režim 🎮")}
-                  {!tradingStyle &&
-                    (isLiveMode ? "Tvé shrnutí 📊" : "Demo režim 🎮")}
+                  {tradingStyle === "scalper" && (isLiveMode ? "Track your sessions 🚀" : "Demo režim 🎮")}
+                  {tradingStyle === "daytrader" && (isLiveMode ? "Tvé shrnutí 📊" : "Demo režim 🎮")}
+                  {tradingStyle === "swingtrader" && (isLiveMode ? "Monitor positions 📈" : "Demo režim 🎮")}
+                  {!tradingStyle && (isLiveMode ? "Tvé shrnutí 📊" : "Demo režim 🎮")}
                 </p>
               </div>
             </div>
@@ -602,7 +504,7 @@ export default function DailyTrackerPage() {
                       </div>
                       <div className="text-center">
                         <div className={cn("md:text-8xl text-6xl font-black", getReadinessColor(readinessScore))}>
-                          {readinessScore}%
+                          {readinessScore !== null ? `${readinessScore}%` : "Nevyplněno"}
                         </div>
                         <Badge
                           className={cn(
@@ -620,9 +522,12 @@ export default function DailyTrackerPage() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">Celková připravenost</span>
-                          <span className="text-white font-bold">{readinessScore}/100</span>
+                          {/* Display "Nevyplněno" instead of 0% in UI */}
+                          <span className="text-white font-bold">
+                            {readinessScore !== null ? `${readinessScore}/100` : "Nevyplněno"}
+                          </span>
                         </div>
-                        <Progress value={readinessScore} className="h-3" />
+                        <Progress value={readinessScore ?? 0} className="h-3" />
                       </div>
 
                       <div className="grid md:grid-cols-5 gap-4">
@@ -679,7 +584,7 @@ export default function DailyTrackerPage() {
                   <Card
                     className={cn(
                       "relative border-2 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl",
-                      readinessScore >= 70 ? "border-green-500/30" : "border-amber-500/30",
+                      readinessScore !== null && readinessScore >= 75 ? "border-green-500/30" : "border-amber-500/30",
                     )}
                   >
                     <CardHeader>
@@ -700,24 +605,25 @@ export default function DailyTrackerPage() {
                           <div className="text-xl font-bold text-white leading-relaxed">{tradingDecision.message}</div>
                         </div>
 
-                        {tradingDecision.details.length > 0 && (
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 mb-3">
-                              <Activity className="h-5 w-5 text-cyan-400" />
-                              <h3 className="text-lg font-bold text-white">Detailní Analýza:</h3>
-                            </div>
+                        {tradingDecision.details.length > 0 &&
+                          tradingDecision.details[0] !== "Morning Check nevyplněn" && (
                             <div className="space-y-2">
-                              {tradingDecision.details.map((detail, i) => (
-                                <div
-                                  key={i}
-                                  className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20"
-                                >
-                                  <div className="text-sm text-white font-medium">{detail}</div>
-                                </div>
-                              ))}
+                              <div className="flex items-center gap-2 mb-3">
+                                <Activity className="h-5 w-5 text-cyan-400" />
+                                <h3 className="text-lg font-bold text-white">Detailní Analýza:</h3>
+                              </div>
+                              <div className="space-y-2">
+                                {tradingDecision.details.map((detail, i) => (
+                                  <div
+                                    key={i}
+                                    className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20"
+                                  >
+                                    <div className="text-sm text-white font-medium">{detail}</div>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
 
                         {/* Tips */}
                         <div className="space-y-3">
@@ -1021,7 +927,7 @@ export default function DailyTrackerPage() {
           {entries.length > 0 ? (
             <div className="space-y-4">
               {entries.map((entry) => {
-                const entryReadiness = entry.morningCheck?.score || 0
+                const entryReadiness = entry.morningCheck?.score ?? null
                 const isExpanded = expandedEntry === entry.date
 
                 return (
@@ -1058,7 +964,7 @@ export default function DailyTrackerPage() {
                             {entry.morningCheck && (
                               <div className="text-center">
                                 <div className={cn("text-4xl font-black", getReadinessColor(entryReadiness))}>
-                                  {entryReadiness}%
+                                  {entryReadiness !== null ? `${entryReadiness}%` : "---"}
                                 </div>
                                 <div className="text-xs text-muted-foreground">readiness</div>
                               </div>
@@ -1076,7 +982,6 @@ export default function DailyTrackerPage() {
 
                       {isExpanded && entry.morningCheck && (
                         <div className="border-t border-white/10 p-6 bg-white/5">
-                          
                           {/* Stage 5 - Daily Summary (Highlighted) */}
                           {entry.stagesCompleted >= 5 && (
                             <div className="space-y-6 p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-rose-500/10 border-2 border-purple-500/30 mb-8">
@@ -1102,10 +1007,14 @@ export default function DailyTrackerPage() {
                                   <div className="grid md:grid-cols-3 gap-4 mb-4">
                                     <div className="p-4 rounded-xl bg-black/30 border border-white/10">
                                       <div className="text-xs text-muted-foreground mb-1">Celkové P&L</div>
-                                      <div className={cn(
-                                        "text-2xl font-black",
-                                        entry.trades.reduce((sum, t) => sum + t.pnl, 0) > 0 ? "text-emerald-400" : "text-rose-400"
-                                      )}>
+                                      <div
+                                        className={cn(
+                                          "text-2xl font-black",
+                                          entry.trades.reduce((sum, t) => sum + t.pnl, 0) > 0
+                                            ? "text-emerald-400"
+                                            : "text-rose-400",
+                                        )}
+                                      >
                                         {entry.trades.reduce((sum, t) => sum + t.pnl, 0) > 0 ? "+" : ""}
                                         {entry.trades.reduce((sum, t) => sum + t.pnl, 0).toFixed(2)} $
                                       </div>
@@ -1113,7 +1022,10 @@ export default function DailyTrackerPage() {
                                     <div className="p-4 rounded-xl bg-black/30 border border-white/10">
                                       <div className="text-xs text-muted-foreground mb-1">Win Rate</div>
                                       <div className="text-2xl font-black text-blue-400">
-                                        {Math.round((entry.trades.filter(t => t.pnl > 0).length / entry.trades.length) * 100)}%
+                                        {Math.round(
+                                          (entry.trades.filter((t) => t.pnl > 0).length / entry.trades.length) * 100,
+                                        )}
+                                        %
                                       </div>
                                     </div>
                                     <div className="p-4 rounded-xl bg-black/30 border border-white/10">
@@ -1130,17 +1042,24 @@ export default function DailyTrackerPage() {
                                         className="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 hover:bg-white/5 transition-colors"
                                       >
                                         <div className="flex items-center gap-3">
-                                          <div className={cn(
-                                            "w-2 h-2 rounded-full",
-                                            trade.pnl > 0 ? "bg-emerald-500" : "bg-rose-500"
-                                          )} />
+                                          <div
+                                            className={cn(
+                                              "w-2 h-2 rounded-full",
+                                              trade.pnl > 0 ? "bg-emerald-500" : "bg-rose-500",
+                                            )}
+                                          />
                                           <div>
                                             <div className="flex items-center gap-2">
                                               <span className="font-medium text-white text-sm">{trade.pair}</span>
-                                              <Badge variant="outline" className={cn(
-                                                "text-[10px] px-1.5 py-0 h-4 border-0",
-                                                trade.direction === "Long" ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
-                                              )}>
+                                              <Badge
+                                                variant="outline"
+                                                className={cn(
+                                                  "text-[10px] px-1.5 py-0 h-4 border-0",
+                                                  trade.direction === "Long"
+                                                    ? "bg-emerald-500/10 text-emerald-400"
+                                                    : "bg-rose-500/10 text-rose-400",
+                                                )}
+                                              >
                                                 {trade.direction}
                                               </Badge>
                                             </div>
@@ -1149,11 +1068,14 @@ export default function DailyTrackerPage() {
                                             </div>
                                           </div>
                                         </div>
-                                        <div className={cn(
-                                          "font-mono font-bold text-sm",
-                                          trade.pnl > 0 ? "text-emerald-400" : "text-rose-400"
-                                        )}>
-                                          {trade.pnl > 0 ? "+" : ""}{trade.pnl.toFixed(2)} $
+                                        <div
+                                          className={cn(
+                                            "font-mono font-bold text-sm",
+                                            trade.pnl > 0 ? "text-emerald-400" : "text-rose-400",
+                                          )}
+                                        >
+                                          {trade.pnl > 0 ? "+" : ""}
+                                          {trade.pnl.toFixed(2)} $
                                         </div>
                                       </div>
                                     ))}
@@ -1173,23 +1095,36 @@ export default function DailyTrackerPage() {
                                       </h4>
                                       <div className="space-y-3">
                                         <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
-                                          <div className="text-sm text-white font-medium leading-relaxed">{dayDecision.message}</div>
-                                        </div>
-                                        {dayDecision.details.length > 0 && (
-                                          <div className="space-y-2">
-                                            <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Detailní Analýza</div>
-                                            {dayDecision.details.map((detail, i) => (
-                                              <div key={i} className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
-                                                <div className="text-xs text-white">{detail}</div>
-                                              </div>
-                                            ))}
+                                          <div className="text-sm text-white font-medium leading-relaxed">
+                                            {dayDecision.message}
                                           </div>
-                                        )}
+                                        </div>
+                                        {dayDecision.details.length > 0 &&
+                                          dayDecision.details[0] !== "Morning Check nevyplněn" && (
+                                            <div className="space-y-2">
+                                              <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+                                                Detailní Analýza
+                                              </div>
+                                              {dayDecision.details.map((detail, i) => (
+                                                <div
+                                                  key={i}
+                                                  className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10"
+                                                >
+                                                  <div className="text-xs text-white">{detail}</div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
                                         {dayDecision.tips.length > 0 && (
                                           <div className="space-y-2">
-                                            <div className="text-xs font-semibold text-yellow-400 uppercase tracking-wider">Akční Kroky</div>
+                                            <div className="text-xs font-semibold text-yellow-400 uppercase tracking-wider">
+                                              Akční Kroky
+                                            </div>
                                             {dayDecision.tips.map((tip, i) => (
-                                              <div key={i} className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
+                                              <div
+                                                key={i}
+                                                className="flex items-start gap-2 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/10"
+                                              >
                                                 <ArrowRight className="h-4 w-4 text-yellow-400 mt-0.5 flex-shrink-0" />
                                                 <div className="text-xs text-white">{tip}</div>
                                               </div>
@@ -1214,7 +1149,9 @@ export default function DailyTrackerPage() {
                                       <Moon className="h-4 w-4 text-indigo-400" />
                                       <span className="text-xs text-muted-foreground">Spánek</span>
                                     </div>
-                                    <div className="text-lg font-black text-white">{entry.morningCheck.sleepHours}h</div>
+                                    <div className="text-lg font-black text-white">
+                                      {entry.morningCheck.sleepHours}h
+                                    </div>
                                     <div className="text-xs text-muted-foreground">
                                       kvalita {entry.morningCheck.sleepQuality}/10
                                     </div>
@@ -1225,7 +1162,9 @@ export default function DailyTrackerPage() {
                                       <Zap className="h-4 w-4 text-yellow-400" />
                                       <span className="text-xs text-muted-foreground">Energie</span>
                                     </div>
-                                    <div className="text-lg font-black text-white">{entry.morningCheck.energyLevel}/10</div>
+                                    <div className="text-lg font-black text-white">
+                                      {entry.morningCheck.energyLevel}/10
+                                    </div>
                                   </div>
 
                                   <div className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -1241,7 +1180,9 @@ export default function DailyTrackerPage() {
                                       <AlertTriangle className="h-4 w-4 text-red-400" />
                                       <span className="text-xs text-muted-foreground">Stres</span>
                                     </div>
-                                    <div className="text-lg font-black text-white">{entry.morningCheck.stressLevel}/10</div>
+                                    <div className="text-lg font-black text-white">
+                                      {entry.morningCheck.stressLevel}/10
+                                    </div>
                                   </div>
 
                                   <div className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -1249,7 +1190,9 @@ export default function DailyTrackerPage() {
                                       <Heart className="h-4 w-4 text-pink-400" />
                                       <span className="text-xs text-muted-foreground">Nálada</span>
                                     </div>
-                                    <div className="text-lg font-black text-white">{entry.morningCheck.emotionalState}/10</div>
+                                    <div className="text-lg font-black text-white">
+                                      {entry.morningCheck.emotionalState}/10
+                                    </div>
                                   </div>
                                 </div>
                               </div>

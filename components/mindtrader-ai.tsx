@@ -27,6 +27,7 @@ import { getUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useLanguage } from "@/contexts/language-context"
+import { getUserStorageKey } from "@/utils/storage-namespace"
 
 interface Message {
   role: "user" | "assistant"
@@ -89,7 +90,7 @@ export function MindTraderAI() {
   const [aiPersonality, setAiPersonality] = useState<"calm" | "strict" | "analytical" | "balanced">("calm")
 
   // Readiness Data (loaded from Daily Tracker)
-  const [readinessScore, setReadinessScore] = useState(0)
+  const [readinessScore, setReadinessScore] = useState<number | null>(null)
   const [readinessFactors, setReadinessFactors] = useState<ReadinessFactors>({
     sleep: 7,
     stress: 5,
@@ -140,7 +141,27 @@ export function MindTraderAI() {
   // Load readiness data from Daily Tracker
   useEffect(() => {
     loadReadinessFromTracker()
-  }, [isLiveMode])
+
+    // Check for losses in recent trades to trigger recovery mode
+    const trades = getAllTrades()
+    const today = new Date().toISOString().split("T")[0]
+    const todayTrades = trades.filter((t: any) => t.date === today || t.closeDate === today)
+
+    const totalLoss = todayTrades.reduce((sum: number, trade: any) => {
+      const pnl = trade.pnl || trade.profitLoss || 0
+      return sum + (pnl < 0 ? pnl : 0)
+    }, 0)
+
+    console.log("[v0] MindTrader: Today's total loss:", totalLoss)
+
+    if (totalLoss < -500 && !isRecoveryMode) {
+      console.log("[v0] MindTrader: Activating recovery mode due to loss")
+      setIsRecoveryMode(true)
+      setTimeout(() => {
+        triggerRecoveryMode()
+      }, 500)
+    }
+  }, [isLiveMode, getAllTrades, isRecoveryMode])
 
   const loadReadinessFromTracker = () => {
     try {
@@ -164,27 +185,15 @@ export function MindTraderAI() {
             mood: todayEntry.mental_state.mood,
             previousResults: Math.min(10, Math.max(1, (todayEntry.trading_session.profit_loss / 100) * 10 + 5)),
           })
-
-          // Check if should activate recovery mode
-          const shouldActivateRecovery =
-            todayEntry.ai_score < 50 ||
-            todayEntry.mental_state.stress_level > 7 ||
-            todayEntry.mental_state.mood < 4 ||
-            todayEntry.trading_session.profit_loss < -500
-
-          if (shouldActivateRecovery && !isRecoveryMode) {
-            setIsRecoveryMode(true)
-            setTimeout(() => {
-              triggerRecoveryMode()
-            }, 500)
-          }
         } else {
-          // Use defaults if no entry for today
-          setReadinessScore(70)
+          setReadinessScore(null)
         }
+      } else {
+        setReadinessScore(null)
       }
     } catch (error) {
       console.error("Error loading readiness from tracker:", error)
+      setReadinessScore(null)
     }
   }
 
@@ -211,6 +220,63 @@ export function MindTraderAI() {
       }
     }
   }, [isLiveMode])
+
+  useEffect(() => {
+    loadReadinessFromTracker()
+
+    const messagesKey = getUserStorageKey("mindtrader-messages")
+    const messagesDateKey = getUserStorageKey("mindtrader-messages-date")
+    const recoveryKey = getUserStorageKey("mindtrader-recovery-mode")
+
+    const storedMessages = localStorage.getItem(messagesKey)
+    const storedDate = localStorage.getItem(messagesDateKey)
+    const today = new Date().toDateString()
+
+    if (storedDate !== today) {
+      setMessages([])
+      localStorage.removeItem(messagesKey)
+      localStorage.setItem(messagesDateKey, today)
+    } else if (storedMessages) {
+      try {
+        const parsed = JSON.parse(storedMessages)
+        setMessages(
+          parsed.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp),
+          })),
+        )
+      } catch (error) {
+        console.error("[v0] Failed to load messages:", error)
+      }
+    }
+
+    const recoveryData = localStorage.getItem(recoveryKey)
+    if (recoveryData) {
+      try {
+        const parsed = JSON.parse(recoveryData)
+        if (parsed.isActive) {
+          console.log("[v0] Recovery mode is active", parsed)
+          setIsRecoveryMode(true)
+        }
+      } catch (error) {
+        console.error("[v0] Failed to load recovery mode:", error)
+      }
+    }
+  }, [isLiveMode, getAllTrades, isRecoveryMode])
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const messagesKey = getUserStorageKey("mindtrader-messages")
+      const messagesDateKey = getUserStorageKey("mindtrader-messages-date")
+
+      const messagesToStore = messages.map((msg) => ({
+        ...msg,
+        timestamp: msg.timestamp.toISOString(),
+      }))
+      localStorage.setItem(messagesKey, JSON.stringify(messagesToStore))
+      localStorage.setItem(messagesDateKey, new Date().toDateString())
+    }
+  }, [messages])
 
   // AI Personalities
   const personalities = {
@@ -301,8 +367,8 @@ export function MindTraderAI() {
     if (messages.length === 0) {
       const welcomeMessage =
         language === "cs"
-          ? `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nViděl jsem tvoje data a jsem tady, abych ti pomohl s psychologií tradování.\n\nTvoje aktuální readiness skóre: ${readinessScore}%\n\nCo tě trápí? Jak ti můžu pomoct?`
-          : `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${readinessScore}%\n\nWhat's troubling you? How can I help?`
+          ? `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nViděl jsem tvoje data a jsem tady, abych ti pomohl s psychologií tradování.\n\nTvoje aktuální readiness skóre: ${readinessScore !== null ? readinessScore + "%" : "Není dostupné"}\n\nCo tě trápí? Jak ti můžu pomoct?`
+          : `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${readinessScore !== null ? readinessScore + "%" : "Not available"}\n\nWhat's troubling you? How can I help?`
 
       setMessages([
         {
@@ -353,86 +419,21 @@ export function MindTraderAI() {
     localStorage.setItem("mindtrader-live-message-date", today)
   }
 
-  const handleSend = async () => {
+  const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return
-
-    if (!isLiveMode && virtualMessageCount >= 3) {
-      toast({
-        title: language === "cs" ? "Limit dosažen" : "Limit reached",
-        description:
-          language === "cs"
-            ? "Virtual Mode má limit 3 zpráv celkově. Přepni na Live Mode pro neomezené zprávy."
-            : "Virtual Mode has a 3 message limit total. Switch to Live Mode for unlimited messages.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (isLiveMode && liveMessageCount >= 50) {
-      toast({
-        title: language === "cs" ? "Dočasně nedostupné" : "Temporarily unavailable",
-        description:
-          language === "cs"
-            ? "MindTrader AI je momentálně nedostupný. Zkuste to prosím později."
-            : "MindTrader AI is temporarily unavailable. Please try again later.",
-        variant: "destructive",
-      })
-      return
-    }
 
     const userMessage: Message = {
       role: "user",
-      content: input.trim(),
+      content: input,
       timestamp: new Date(),
-      mode: aiMode,
-      personality: aiPersonality,
     }
 
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
 
-    if (!isLiveMode) {
-      incrementVirtualMessageCount()
-    } else {
-      incrementLiveMessageCount()
-    }
-
     try {
-      const dailyTrackerKey = isLiveMode ? "daily-tracker-entries-live" : "daily-tracker-entries-virtual"
-      const storedTracker = localStorage.getItem(dailyTrackerKey)
-      let realMood = 5
-      let realStress = 5
-      let realConfidence = 5
-      let realReadiness = 50
-
-      if (storedTracker) {
-        const trackerEntries = JSON.parse(storedTracker)
-        const today = new Date().toISOString().split("T")[0]
-        const todayEntry = trackerEntries.find((e: any) => e.date === today)
-
-        if (todayEntry) {
-          realMood = todayEntry.mental_state?.mood || 5
-          realStress = todayEntry.mental_state?.stress_level || 5
-          realConfidence = todayEntry.mental_state?.confidence || 5
-          realReadiness = todayEntry.ai_score || 50
-        }
-      }
-
-      // Calculate stats from trades
-      const recentTrades = trades.slice(0, 20)
-      const totalPnL = recentTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
-      const winningTrades = recentTrades.filter((t) => (t.pnl || 0) > 0).length
-      const winRate = recentTrades.length > 0 ? (winningTrades / recentTrades.length) * 100 : 0
-
-      const consecutiveLosses = (() => {
-        let losses = 0
-        for (const trade of recentTrades) {
-          if ((trade.pnl || 0) < 0) losses++
-          else break
-        }
-        return losses
-      })()
+      const isAnalyticsMode = aiMode === "analytics"
 
       const response = await fetch("/api/mindtrader/chat", {
         method: "POST",
@@ -444,48 +445,70 @@ export function MindTraderAI() {
           personality: aiPersonality,
           mode: aiMode,
           context: {
-            mood: realMood,
-            stress: realStress,
-            confidence: realConfidence,
-            readiness: realReadiness,
+            mood: 5,
+            stress: 5,
+            confidence: 5,
+            readiness: 50,
+            sleep: 7,
+            energy: 5,
           },
           userData: {
-            trades: recentTrades.map((t) => ({
+            trades: trades.slice(0, isAnalyticsMode ? 20 : 5).map((t) => ({
               id: t.id,
               date: t.date,
               pair: t.pair,
               type: t.type,
               pnl: t.pnl,
               notes: t.notes,
-              mood: t.mood,
-              confidence: t.confidence,
-              stress: t.stress,
+              ...(isAnalyticsMode && {
+                mood: t.mood,
+                confidence: t.confidenceBefore,
+                stress: t.stressLevel,
+                emotionBefore: t.emotionBefore,
+                emotionDuring: t.emotionDuring,
+                emotionAfter: t.emotionAfter,
+                isRevengeTrade: t.isRevengeTrade,
+                tags: t.tags,
+              }),
             })),
-            journals: journalEntries.slice(0, 10).map((j) => ({
+            journals: journalEntries.slice(0, 5).map((j) => ({
               id: j.id,
               date: j.date,
               title: j.title,
-              content: j.content || "",
               type: j.type,
-              mood: j.mood,
-              confidence: j.confidence,
-              stress: j.stress,
-              tags: j.tags,
+              ...(isAnalyticsMode && {
+                content: j.content || "",
+                mood: j.mood,
+                confidence: j.confidence,
+                stress: j.stress,
+                tags: j.tags,
+              }),
             })),
-            moodHistory: moodEntries.slice(0, 7).map((m) => ({
-              date: m.date,
-              mood: m.mood,
-              stress: m.stress,
-              confidence: m.confidence,
-              notes: m.notes,
-            })),
+            moodHistory: isAnalyticsMode
+              ? moodEntries.slice(0, 7).map((m) => ({
+                  date: m.date,
+                  mood: m.mood,
+                  stress: m.stress,
+                  confidence: m.confidence,
+                  notes: m.notes,
+                }))
+              : [],
+            patterns: isAnalyticsMode
+              ? {
+                  fomoRate: "0",
+                  revengeRate: "0",
+                  overconfidenceRate: "0",
+                  fearRate: "0",
+                }
+              : null,
+            morningCheck: null,
             stats: {
-              totalPnL,
-              winRate,
-              totalTrades: recentTrades.length,
-              averageMood: realMood,
+              totalPnL: 0,
+              winRate: 0,
+              totalTrades: trades.length,
+              averageMood: 5,
               consecutiveWins: 0,
-              consecutiveLosses,
+              consecutiveLosses: 0,
             },
           },
         }),
@@ -517,8 +540,8 @@ export function MindTraderAI() {
       // Fallback mock response if API fails
       const mockResponse =
         language === "cs"
-          ? `Rozumím tvou situaci. Podle tvých dat vidím, že máš readiness ${readinessScore}%.\n\nTvoje nálada je ${readinessFactors.mood}/10, stres ${readinessFactors.stress}/10.\n\n${readinessFactors.stress > 6 ? "Vysoký stres ovlivňuje tvoje rozhodování." : "Tvůj mentální stav je v pořádku."}\n\n${readinessScore < 60 ? "Dej si pauzu, readiness je pod 60%." : "Můžeš obchodovat, ale buď opatrný."}\n\nPamatuj: každý den je nový start.`
-          : `I understand your situation. Based on your data, I see your readiness is ${readinessScore}%.\n\nYour mood is ${readinessFactors.mood}/10, stress ${readinessFactors.stress}/10.\n\n${readinessFactors.stress > 6 ? "High stress is affecting your decision-making." : "Your mental state is okay."}\n\n${readinessScore < 60 ? "Take a break, readiness is below 60%." : "You can trade, but be careful."}\n\nRemember: every day is a fresh start.`
+          ? `Rozumím tvou situaci. Podle tvých dat vidím, že máš readiness ${readinessScore !== null ? readinessScore + "%" : "Není dostupné"}.\n\nTvoje nálada je ${readinessFactors.mood}/10, stres ${readinessFactors.stress}/10.\n\n${readinessFactors.stress > 6 ? "Vysoký stres ovlivňuje tvoje rozhodování." : "Tvůj mentální stav je v pořádku."}\n\n${readinessScore !== null && readinessScore < 60 ? "🛑 Dej si pauzu, readiness je pod 60%. Dnes neobchoduj." : readinessScore !== null && readinessScore < 75 ? "⚠️ Readiness 60-74%. Buď opatrný a redukuj risk o 50%." : "✅ Readiness 75%+. Můžeš obchodovat podle plánu."}\n\nPamatuj: každý den je nový start.`
+          : `I understand your situation. Based on your data, I see your readiness is ${readinessScore !== null ? readinessScore + "%" : "Not available"}.\n\nYour mood is ${readinessFactors.mood}/10, stress ${readinessFactors.stress}/10.\n\n${readinessFactors.stress > 6 ? "High stress is affecting your decision-making." : "Your mental state is okay."}\n\n${readinessScore !== null && readinessScore < 60 ? "🛑 Take a break, readiness is below 60%. Don't trade today." : readinessScore !== null && readinessScore < 75 ? "⚠️ Readiness 60-74%. Be cautious and reduce risk by 50%." : "✅ Readiness 75%+. You can trade according to your plan."}\n\nRemember: every day is a fresh start.`
 
       const fallbackMessage: Message = {
         role: "assistant",
@@ -545,8 +568,8 @@ export function MindTraderAI() {
     try {
       const insightMessage =
         language === "cs"
-          ? `📊 AI INSIGHTS - POSLEDNÍ TÝDEN\n\n🧠 Co se děje:\n- Tvůj průměrný readiness score: ${readinessScore}%\n- Spánek: ${readinessFactors.sleep}/10\n- Stres: ${readinessFactors.stress}/10\n- Nálada: ${readinessFactors.mood}/10\n\n💡 Proč se to děje:\n${readinessFactors.sleep < 7 ? "- Nedostatečný spánek ovlivňuje výkon\n" : ""}${readinessFactors.stress > 6 ? "- Vysoký stres snižuje koncentraci\n" : ""}${trades.length === 0 ? "- Zatím nemám dostatek dat z obchodů\n" : ""}\n\n🎯 Co udělat dál:\n1. ${readinessFactors.sleep < 7 ? "Zlepši kvalitu spánku (cíl 7-9h)" : "Udržuj dobré spánkové návyky"}\n2. ${readinessFactors.stress > 6 ? "Sniž stres (meditace, procházky)" : "Pokračuj v dobrém managementu stresu"}\n3. Pravidelně zapisuj do journalu\n\nDisciplína = dlouhodobý úspěch! 💪`
-          : `📊 AI INSIGHTS - LAST WEEK\n\n🧠 What's happening:\n- Your average readiness score: ${readinessScore}%\n- Sleep: ${readinessFactors.sleep}/10\n- Stress: ${readinessFactors.stress}/10\n- Mood: ${readinessFactors.mood}/10\n\n💡 Why it's happening:\n${readinessFactors.sleep < 7 ? "- Insufficient sleep affects performance\n" : ""}${readinessFactors.stress > 6 ? "- High stress reduces concentration\n" : ""}${trades.length === 0 ? "- Not enough trading data yet\n" : ""}\n\n🎯 What to do next:\n1. ${readinessFactors.sleep < 7 ? "Improve sleep quality (target 7-9h)" : "Maintain good sleep habits"}\n2. ${readinessFactors.stress > 6 ? "Reduce stress (meditation, walks)" : "Continue good stress management"}\n3. Journal regularly\n\nDisciplína = long-term success! 💪`
+          ? `📊 AI INSIGHTS - POSLEDNÍ TÝDEN\n\n🧠 Co se děje:\n- Tvůj průměrný readiness score: ${readinessScore !== null ? readinessScore + "%" : "Není dostupné"}\n- Spánek: ${readinessFactors.sleep}/10\n- Stres: ${readinessFactors.stress}/10\n- Nálada: ${readinessFactors.mood}/10\n\n💡 Proč se to děje:\n${readinessFactors.sleep < 7 ? "- Nedostatečný spánek ovlivňuje výkon\n" : ""}${readinessFactors.stress > 6 ? "- Vysoký stres snižuje koncentraci\n" : ""}${trades.length === 0 ? "- Zatím nemám dostatek dat z obchodů\n" : ""}\n\n🎯 Co udělat dál:\n1. ${readinessFactors.sleep < 7 ? "Zlepši kvalitu spánku (cíl 7-9h)" : "Udržuj dobré spánkové návyky"}\n2. ${readinessFactors.stress > 6 ? "Sniž stres (meditace, procházky)" : "Pokračuj v dobrém managementu stresu"}\n3. Pravidelně zapisuj do journalu\n\nDisciplína = dlouhodobý úspěch! 💪`
+          : `📊 AI INSIGHTS - LAST WEEK\n\n🧠 What's happening:\n- Your average readiness score: ${readinessScore !== null ? readinessScore + "%" : "Not available"}\n- Sleep: ${readinessFactors.sleep}/10\n- Stress: ${readinessFactors.stress}/10\n- Mood: ${readinessFactors.mood}/10\n\n💡 Why it's happening:\n${readinessFactors.sleep < 7 ? "- Insufficient sleep affects performance\n" : ""}${readinessFactors.stress > 6 ? "- High stress reduces concentration\n" : ""}${trades.length === 0 ? "- Not enough trading data yet\n" : ""}\n\n🎯 What to do next:\n1. ${readinessFactors.sleep < 7 ? "Improve sleep quality (target 7-9h)" : "Maintain good sleep habits"}\n2. ${readinessFactors.stress > 6 ? "Reduce stress (meditation, walks)" : "Continue good stress management"}\n3. Journal regularly\n\nDisciplína = long-term success! 💪`
 
       const insightMsg: Message = {
         role: "assistant",
@@ -578,8 +601,8 @@ export function MindTraderAI() {
 
     const reportContent =
       language === "cs"
-        ? `# MindTrader AI Report\n\n**Datum:** ${new Date().toLocaleDateString("cs-CZ")}\n**Readiness Score:** ${readinessScore}%\n\n## 📊 Přehled výkonu\n\n- Celkový počet obchodů: ${trades.length}\n- Průměrná nálada: ${readinessFactors.mood}/10\n- Úroveň stresu: ${readinessFactors.stress}/10\n\n## 🧠 Psychologické poznatky\n\n${readinessFactors.stress > 6 ? "⚠️ Vysoký stres může ovlivňovat rozhodování\n" : "✅ Stres je pod kontrolou\n"}${readinessFactors.sleep < 7 ? "⚠️ Nedostatečný spánek snižuje výkon\n" : "✅ Kvalita spánku je dobrá\n"}\n## 🎯 Doporučení\n\n1. Pokračuj v pravidelném journalingu\n2. Sleduj své readiness score před obchodováním\n3. Respektuj své mentální limity\n\n---\n\n*Vygenerováno MindTrader AI*`
-        : `# MindTrader AI Report\n\n**Date:** ${new Date().toLocaleDateString("en-US")}\n**Readiness Score:** ${readinessScore}%\n\n## 📊 Performance Overview\n\n- Total trades: ${trades.length}\n- Average mood: ${readinessFactors.mood}/10\n- Stress level: ${readinessFactors.stress}/10\n\n## 🧠 Psychological Insights\n\n${readinessFactors.stress > 6 ? "⚠️ High stress may affect decision-making\n" : "✅ Stress is under control\n"}${readinessFactors.sleep < 7 ? "⚠️ Insufficient sleep reduces performance\n" : "✅ Sleep quality is good\n"}\n## 🎯 Recommendations\n\n1. Continue regular journaling\n2. Monitor readiness score before trading\n3. Respect your mental limits\n\n---\n\n*Generated by MindTrader AI*`
+        ? `# MindTrader AI Report\n\n**Datum:** ${new Date().toLocaleDateString("cs-CZ")}\n**Readiness Score:** ${readinessScore !== null ? readinessScore + "%" : "Není dostupné"}\n\n## 📊 Přehled výkonu\n\n- Celkový počet obchodů: ${trades.length}\n- Průměrná nálada: ${readinessFactors.mood}/10\n- Úroveň stresu: ${readinessFactors.stress}/10\n\n## 🧠 Psychologické poznatky\n\n${readinessFactors.stress > 6 ? "⚠️ Vysoký stres může ovlivňovat rozhodování\n" : "✅ Stres je pod kontrolou\n"}${readinessFactors.sleep < 7 ? "⚠️ Nedostatečný spánek snižuje výkon\n" : "✅ Kvalita spánku je dobrá\n"}\n## 🎯 Doporučení\n\n1. Pokračuj v pravidelném journalingu\n2. Sleduj své readiness score před obchodováním\n3. Respektuj své mentální limity\n\n---\n\n*Vygenerováno MindTrader AI*`
+        : `# MindTrader AI Report\n\n**Date:** ${new Date().toLocaleDateString("en-US")}\n**Readiness Score:** ${readinessScore !== null ? readinessScore + "%" : "Not available"}\n\n## 📊 Performance Overview\n\n- Total trades: ${trades.length}\n- Average mood: ${readinessFactors.mood}/10\n- Stress level: ${readinessFactors.stress}/10\n\n## 🧠 Psychological Insights\n\n${readinessFactors.stress > 6 ? "⚠️ High stress may affect decision-making\n" : "✅ Stress is under control\n"}${readinessFactors.sleep < 7 ? "⚠️ Insufficient sleep reduces performance\n" : "✅ Sleep quality is good\n"}\n## 🎯 Recommendations\n\n1. Continue regular journaling\n2. Monitor readiness score before trading\n3. Respect your mental limits\n\n---\n\n*Generated by MindTrader AI*`
 
     const blob = new Blob([reportContent], { type: "text/markdown" })
     const url = URL.createObjectURL(blob)
@@ -595,21 +618,23 @@ export function MindTraderAI() {
     })
   }
 
-  const getReadinessColor = (score: number) => {
+  const getReadinessColor = (score: number | null) => {
+    if (score === null) return "text-gray-500"
     if (score >= 75) return "text-green-500"
-    if (score >= 50) return "text-yellow-500"
+    if (score >= 60) return "text-yellow-500"
     return "text-red-500"
   }
 
-  const getReadinessStatus = (score: number) => {
-    if (score >= 75) return language === "cs" ? "Výborné" : "Excellent"
-    if (score >= 50) return language === "cs" ? "Dobré" : "Good"
-    return language === "cs" ? "Slabé" : "Poor"
+  const getReadinessStatus = (score: number | null) => {
+    if (score === null) return language === "cs" ? "Není dostupné" : "Not available"
+    if (score >= 75) return language === "cs" ? "Dobré podmínky ✅" : "Good conditions ✅"
+    if (score >= 60) return language === "cs" ? "Buď opatrný ⚠️" : "Be cautious ⚠️"
+    return language === "cs" ? "Neobchoduj 🛑" : "Don't trade 🛑"
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
-      <div className="max-w-7xl mx-auto md:py-6 py-3 md:px-4 px-3">
+      <div className="max-w-full mx-auto md:py-6 py-3 md:px-4 px-3">
         <div className="space-y-4 md:space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -634,8 +659,8 @@ export function MindTraderAI() {
             </Alert>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
-            <div className="lg:col-span-1 space-y-4 lg:block hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 h-[calc(100vh-180px)]">
+            <div className="lg:col-span-1 space-y-4 lg:block hidden overflow-y-auto">
               {/* Readiness Score */}
               <Card>
                 <CardHeader>
@@ -643,12 +668,14 @@ export function MindTraderAI() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="text-center">
-                    <div className={`text-5xl font-bold ${getReadinessColor(readinessScore)}`}>{readinessScore}%</div>
+                    <div className={`text-5xl font-bold ${getReadinessColor(readinessScore)}`}>
+                      {readinessScore !== null ? readinessScore + "%" : "Není dostupné"}
+                    </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {getReadinessStatus(readinessScore)}
                     </p>
                   </div>
-                  <Progress value={readinessScore} className="h-2" />
+                  {readinessScore !== null && <Progress value={readinessScore} className="h-2" />}
 
                   <div className="space-y-3 pt-4 border-t">
                     <Label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
@@ -742,9 +769,9 @@ export function MindTraderAI() {
               </Card>
             </div>
 
-            {/* Main Chat Area */}
-            <div className="lg:col-span-3 col-span-1">
-              <Card className="md:h-[calc(100vh-200px)] h-[calc(100vh-150px)]">
+            {/* Main Chat Area - Now spans full height with lg:col-span-4 */}
+            <div className="lg:col-span-4 col-span-1 h-full flex flex-col">
+              <Card className="h-full flex flex-col">
                 <CardContent className="p-0 h-full flex flex-col">
                   {/* Messages */}
                   <ScrollArea className="flex-1 md:p-6 p-3">
@@ -841,7 +868,7 @@ export function MindTraderAI() {
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
                               e.preventDefault()
-                              handleSend()
+                              handleSendMessage()
                             }
                           }}
                           placeholder={language === "cs" ? "Napiš zprávu..." : "Type a message..."}
@@ -850,7 +877,7 @@ export function MindTraderAI() {
                         />
                       </div>
                       <Button
-                        onClick={handleSend}
+                        onClick={handleSendMessage}
                         disabled={!input.trim() || isLoading}
                         className="md:h-[60px] h-[80px] md:px-6 px-4"
                       >
