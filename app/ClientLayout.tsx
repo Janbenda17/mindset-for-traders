@@ -10,8 +10,7 @@ import { ProductTour } from "@/components/product-tour"
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
-  const hideNavigation =
-    pathname === "/login" || pathname === "/signup" || pathname === "/onboarding" || pathname === "/teaser"
+  const hideNavigation = pathname?.startsWith("/auth/") || pathname === "/onboarding" || pathname === "/teaser"
 
   return (
     <div className="flex flex-col min-h-screen">

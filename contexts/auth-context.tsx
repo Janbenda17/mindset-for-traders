@@ -154,8 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             name: name,
           },
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
+          emailRedirectTo: undefined,
         },
       })
 
@@ -169,8 +168,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (authData.user) {
-        // Profile and XP progress are auto-created by database trigger
-        console.log("[v0] User registered, profile and XP auto-created by trigger:", authData.user.id)
+        console.log("[v0] User registered, waiting for profile creation by trigger:", authData.user.id)
+
+        let profile = null
+        let attempts = 0
+        const maxAttempts = 10
+
+        while (!profile && attempts < maxAttempts) {
+          attempts++
+          const waitTime = Math.min(500 * attempts, 3000) // 500ms, 1s, 1.5s, 2s, 2.5s, 3s, 3s...
+
+          console.log(`[v0] Checking profile existence (attempt ${attempts}/${maxAttempts})...`)
+
+          await new Promise((resolve) => setTimeout(resolve, waitTime))
+
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("user_id", authData.user.id)
+            .maybeSingle()
+
+          profile = profileData
+
+          if (profile) {
+            console.log("[v0] Profile successfully created by trigger!")
+            break
+          }
+        }
+
+        if (!profile) {
+          console.error("[v0] Profile creation failed - trigger did not execute after", maxAttempts, "attempts")
+          toast({
+            title: "Chyba registrace",
+            description: "Nepodařilo se vytvořit profil. Zkuste to znovu.",
+            variant: "destructive",
+          })
+          await supabase.auth.signOut()
+          return false
+        }
 
         const initialUserData = {
           profile: {
@@ -218,7 +253,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         }
 
-        // Save initial user data to user-scoped key
         const userStorageKey = `user-${authData.user.id}-trader-mindset-data`
         localStorage.setItem(userStorageKey, JSON.stringify(initialUserData))
 
@@ -226,10 +260,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         toast({
           title: "Registrace úspěšná!",
-          description: "Zkontrolujte svůj email pro potvrzení účtu",
+          description: "Tvůj účet byl vytvořen",
         })
 
-        router.push("/auth/sign-up-success")
+        router.push("/onboarding")
         return true
       }
 

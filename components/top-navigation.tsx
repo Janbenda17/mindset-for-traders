@@ -59,6 +59,7 @@ export function TopNavigation() {
   const pathname = usePathname()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -87,8 +88,11 @@ export function TopNavigation() {
 
     if (!user) {
       setIsLoading(false)
+      setIsAuthenticated(false)
       return
     }
+
+    setIsAuthenticated(true)
 
     const { data: profile } = await supabase.from("profiles").select("*").eq("user_id", user.id).single()
 
@@ -356,7 +360,7 @@ export function TopNavigation() {
             <LiveModeToggle />
 
             {/* Profile Dropdown - only show if authenticated */}
-            {profileData.email ? (
+            {isAuthenticated ? (
               <DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -473,11 +477,7 @@ export function TopNavigation() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
-              <Link href="/auth/login">
-                <Button className="bg-purple-600 hover:bg-purple-700 text-white px-4 h-8 md:h-10">Login</Button>
-              </Link>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

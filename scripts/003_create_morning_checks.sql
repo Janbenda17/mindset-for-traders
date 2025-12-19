@@ -13,7 +13,7 @@ create table if not exists public.morning_checks (
   exercised boolean default false,
   meditation integer default 0,
   morning_routine boolean default false,
-  hydration boolean default false,
+  hydration integer default 0,
   score integer not null,
   locked boolean default false,
   created_at timestamp with time zone default now(),
