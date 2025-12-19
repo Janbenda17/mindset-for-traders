@@ -32,14 +32,13 @@ export async function POST(request: Request) {
         tags: entry.tags || [],
       })
       .select()
-      .single()
 
     if (error) {
       console.error("[v0] Error inserting fail log entry:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, data: data?.[0] })
   } catch (error: any) {
     console.error("[v0] Error in fail log API:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

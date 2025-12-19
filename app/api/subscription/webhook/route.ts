@@ -6,10 +6,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-06-20",
 })
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
@@ -71,16 +68,11 @@ export async function POST(request: NextRequest) {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log("✅ Checkout completed:", session.id)
-  
+
   const customerEmail = session.customer_details?.email
   if (!customerEmail) return
 
-  // Find user by email and update subscription info
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("email", customerEmail)
-    .single()
+  const { data: profile, error } = await supabase.from("profiles").select("id").eq("email", customerEmail).maybeSingle()
 
   if (error || !profile) {
     console.error("Profile not found for email:", customerEmail)
@@ -101,10 +93,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   console.log("✅ Subscription created:", subscription.id)
-  
+
   const customerId = subscription.customer as string
   const status = subscription.status === "trialing" ? "trial" : "premium"
-  
+
   // Update user subscription in database
   const { error } = await supabase
     .from("profiles")
@@ -125,15 +117,15 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   console.log("🔄 Subscription updated:", subscription.id)
-  
+
   const customerId = subscription.customer as string
   let status = "premium"
-  
+
   // Map Stripe status to our status
   if (subscription.status === "trialing") status = "trial"
   else if (subscription.status === "canceled" || subscription.cancel_at_period_end) status = "canceled"
   else if (subscription.status === "active") status = "premium"
-  
+
   const { error } = await supabase
     .from("profiles")
     .update({
@@ -149,9 +141,9 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   console.log("❌ Subscription deleted:", subscription.id)
-  
+
   const customerId = subscription.customer as string
-  
+
   // Downgrade user to free
   const { error } = await supabase
     .from("profiles")
@@ -171,7 +163,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   console.log("💰 Payment succeeded:", invoice.id)
-  
+
   // Ensure subscription is active
   if (invoice.subscription) {
     const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
@@ -181,9 +173,9 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   console.log("❌ Payment failed:", invoice.id)
-  
+
   const customerId = invoice.customer as string
-  
+
   // Mark subscription as having payment issues
   // Don't immediately downgrade - Stripe will retry
   console.warn("Payment failed for customer:", customerId)

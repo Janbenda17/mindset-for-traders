@@ -49,7 +49,7 @@ export async function POST(request: Request) {
         },
       )
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error("[v0] Error updating daily stage:", error)

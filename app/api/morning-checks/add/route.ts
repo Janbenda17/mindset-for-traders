@@ -26,17 +26,17 @@ export async function POST(request: Request) {
         focus: Number(check.focus) || 0,
         physical_health: Number(check.physicalHealth) || 0,
         emotional_state: Number(check.emotionalState) || 0,
-        exercised: Boolean(check.exercised),
+        exercised: check.exercised === true || check.exercised === "true",
         meditation: Number(check.meditationTime) || 0,
-        morning_routine: Boolean(check.morningRoutine),
+        morning_routine: check.morningRoutine === true || check.morningRoutine === "true",
         hydration: Number(check.hydration) || 0,
-        locked: Boolean(check.locked) || false,
+        locked: check.locked === true || check.locked === "true",
         score: Number(check.score) || 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error("[v0] Error inserting morning check:", error.message)

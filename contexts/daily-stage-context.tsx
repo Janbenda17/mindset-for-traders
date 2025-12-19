@@ -102,8 +102,7 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
 
       const data = await response.json()
 
-      // Map Supabase data to stages
-      let updatedStages = initialStages.map((stage) => {
+      const stagesWithCompletion = initialStages.map((stage) => {
         let completed = false
         let completedAt: string | undefined
 
@@ -124,28 +123,38 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
             completed = data.record_trades_completed || false
             completedAt = data.record_trades_completed_at
             break
+          case 5:
+            completed = data.daily_summary_completed || false
+            completedAt = data.daily_summary_completed_at
+            break
         }
 
         return {
           ...stage,
           completed,
           completedAt,
-          unlocked: true, // Will be set in second pass
+          unlocked: false, // Will be set in second pass
         }
       })
 
-      updatedStages = updatedStages.map((stage) => ({
+      const updatedStages = stagesWithCompletion.map((stage, index) => ({
         ...stage,
-        unlocked: stage.id === 1 || (stage.id > 1 && updatedStages[stage.id - 2]?.completed),
+        unlocked: stage.id === 1 || (index > 0 && stagesWithCompletion[index - 1].completed),
       }))
 
       setStages(updatedStages)
 
-      // Find current stage
-      const firstIncomplete = updatedStages.findIndex((s) => !s.completed)
+      // Find current stage (first incomplete, unlocked stage)
+      const firstIncomplete = updatedStages.findIndex((s) => !s.completed && s.unlocked)
       setCurrentStage(firstIncomplete !== -1 ? updatedStages[firstIncomplete].id : updatedStages.length)
 
-      console.log(`[v0] Loaded daily stages - current stage: ${data.current_stage}`)
+      console.log(
+        `[v0] Loaded daily stages - current stage: ${firstIncomplete !== -1 ? updatedStages[firstIncomplete].id : "all completed"}`,
+      )
+      console.log(
+        `[v0] Stage completion status:`,
+        updatedStages.map((s) => `${s.id}: ${s.completed ? "completed" : s.unlocked ? "unlocked" : "locked"}`),
+      )
     } catch (error) {
       console.error("[v0] Error loading daily stages:", error)
       setStages(initialStages)
@@ -173,34 +182,7 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
       const data = await response.json()
       console.log(`[v0] Stage ${stageId} completed successfully:`, data)
 
-      setStages((prev) => {
-        const newStages = prev.map((stage) => {
-          if (stage.id === stageId) {
-            return {
-              ...stage,
-              completed: true,
-              completedAt: new Date().toISOString(),
-            }
-          }
-          // Unlock next stage
-          if (stage.id === stageId + 1) {
-            return {
-              ...stage,
-              unlocked: true,
-            }
-          }
-          return stage
-        })
-
-        // Update current stage to next incomplete
-        const nextIncomplete = newStages.findIndex((s) => !s.completed)
-        if (nextIncomplete !== -1) {
-          setCurrentStage(newStages[nextIncomplete].id)
-          console.log(`[v0] Current stage updated to: ${newStages[nextIncomplete].id}`)
-        }
-
-        return newStages
-      })
+      await loadStagesFromSupabase()
     } catch (error) {
       console.error("[v0] Error completing stage:", error)
     }
@@ -209,7 +191,7 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
   const resetStages = () => {
     setStages(initialStages)
     setCurrentStage(1)
-    loadStagesFromSupabase() // Reload from Supabase
+    loadStagesFromSupabase()
   }
 
   const getProgress = () => {

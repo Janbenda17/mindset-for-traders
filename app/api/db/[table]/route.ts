@@ -18,9 +18,9 @@ const ALLOWED_TABLES = [
   "mindtrader_sessions",
 ]
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ table: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: { table: string } }) {
   try {
-    const { table } = await params
+    const { table } = params
 
     if (!ALLOWED_TABLES.includes(table)) {
       return NextResponse.json({ error: "Invalid table" }, { status: 400 })
@@ -62,9 +62,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ table: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: { table: string } }) {
   try {
-    const { table } = await params
+    const { table } = params
 
     if (!ALLOWED_TABLES.includes(table)) {
       return NextResponse.json({ error: "Invalid table" }, { status: 400 })
@@ -89,21 +89,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         user_id: user.id,
       })
       .select()
-      .single()
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ data })
+    return NextResponse.json({ data: data?.[0] })
   } catch (error) {
     return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ table: string }> }) {
+export async function PUT(request: NextRequest, { params }: { params: { table: string } }) {
   try {
-    const { table } = await params
+    const { table } = params
 
     if (!ALLOWED_TABLES.includes(table)) {
       return NextResponse.json({ error: "Invalid table" }, { status: 400 })
@@ -135,7 +134,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       .eq("id", id)
       .eq("user_id", user.id)
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
@@ -147,9 +146,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ table: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: { table: string } }) {
   try {
-    const { table } = await params
+    const { table } = params
 
     if (!ALLOWED_TABLES.includes(table)) {
       return NextResponse.json({ error: "Invalid table" }, { status: 400 })

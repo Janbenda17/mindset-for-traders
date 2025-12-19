@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = "force-dynamic"
+
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
@@ -187,6 +189,10 @@ export default function DashboardPage() {
   }, [portfolioValue, isMounted])
 
   const getStatsForStyle = () => {
+    if (typeof window === "undefined") {
+      return []
+    }
+
     const tradingStats = getTradingStats()
 
     const allTrades = trades
@@ -219,7 +225,8 @@ export default function DashboardPage() {
 
     const totalPnL = allTrades.reduce((sum: number, trade: any) => sum + (trade.pnl || 0), 0)
 
-    const startingCapital = Number.parseFloat(localStorage.getItem("starting-capital") || "10000")
+    const startingCapital =
+      typeof window !== "undefined" ? Number.parseFloat(localStorage.getItem("starting-capital") || "10000") : 10000
     const totalCapital = startingCapital + totalPnL
 
     return [
