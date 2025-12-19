@@ -26,29 +26,38 @@ export default function SystemStatusPage() {
 
   const [checks, setChecks] = useState<SystemCheck[]>([])
   const [loading, setLoading] = useState(true)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    if (typeof window === "undefined") return
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isMounted) return
     runSystemChecks()
-  }, [isLiveMode])
+  }, [isLiveMode, isMounted])
 
   const runSystemChecks = () => {
-    if (typeof window === "undefined") return
+    if (typeof window === "undefined" || !isMounted) return
     setLoading(true)
     const results: SystemCheck[] = []
 
     // Check 1: Trades data
-    const tradesData = localStorage.getItem("mindtrader-trades")
-    const trades = tradesData ? JSON.parse(tradesData) : null
-    results.push({
-      name: "Trading Data (Obchody)",
-      status: trades && Array.isArray(trades) && trades.length > 0 ? "working" : "warning",
-      message:
-        trades && Array.isArray(trades)
-          ? `${trades.length} obchodů uloženo v localStorage`
-          : "Žádné obchody nenalezeny - zkus přidat obchod v sekci Obchod",
-      dataCount: trades?.length || 0,
-    })
+    try {
+      const tradesData = localStorage.getItem("mindtrader-trades")
+      const trades = tradesData ? JSON.parse(tradesData) : null
+      results.push({
+        name: "Trading Data (Obchody)",
+        status: trades && Array.isArray(trades) && trades.length > 0 ? "working" : "warning",
+        message:
+          trades && Array.isArray(trades)
+            ? `${trades.length} obchodů uloženo v localStorage`
+            : "Žádné obchody nenalezeny - zkus přidat obchod v sekci Obchod",
+        dataCount: trades?.length || 0,
+      })
+    } catch (error) {
+      console.error("Error in runSystemChecks:", error)
+    }
 
     // Check 2: Morning Checks
     const morningChecks = localStorage.getItem("mindtrader-morning-checks")
@@ -135,7 +144,6 @@ export default function SystemStatusPage() {
   }
 
   const generateDemoData = () => {
-    // Generate 5 demo trades
     const demoTrades = [
       {
         id: `trade-${Date.now()}-1`,
@@ -241,7 +249,6 @@ export default function SystemStatusPage() {
 
     localStorage.setItem("mindtrader-trades", JSON.stringify(demoTrades))
 
-    // Generate morning check
     const morningCheck = {
       id: `check-${Date.now()}`,
       date: new Date().toISOString().split("T")[0],
@@ -265,7 +272,6 @@ export default function SystemStatusPage() {
     existingChecks.push(morningCheck)
     localStorage.setItem("mindtrader-morning-checks", JSON.stringify(existingChecks))
 
-    // Set initial capital
     localStorage.setItem("initial-capital", "10000")
 
     runSystemChecks()
@@ -339,12 +345,11 @@ export default function SystemStatusPage() {
     }
 
     try {
-      // Delete from Supabase (all users)
       const supabase = createClient()
       const { error } = await supabase
         .from("journal_entries")
         .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000") // Delete all entries (neq with impossible ID)
+        .neq("id", "00000000-0000-0000-0000-000000000000")
 
       if (error) {
         console.error("Error deleting from Supabase:", error)
@@ -352,7 +357,6 @@ export default function SystemStatusPage() {
         return
       }
 
-      // Delete from localStorage (all user-scoped keys)
       const allKeys = Object.keys(localStorage)
       const tradeKeys = allKeys.filter((key) => key.includes("mindtrader-trades"))
       tradeKeys.forEach((key) => localStorage.removeItem(key))
@@ -396,9 +400,18 @@ export default function SystemStatusPage() {
   const errorCount = checks.filter((c) => c.status === "error").length
   const healthPercentage = checks.length > 0 ? (workingCount / checks.length) * 100 : 0
 
+  if (!isMounted || loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <p className="text-muted-foreground">Načítání system status...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">System Status Dashboard</h1>
@@ -417,7 +430,6 @@ export default function SystemStatusPage() {
         </Badge>
       </div>
 
-      {/* Overall Health */}
       <Card>
         <CardHeader>
           <CardTitle>Celkový stav systému</CardTitle>
@@ -442,7 +454,6 @@ export default function SystemStatusPage() {
         </CardContent>
       </Card>
 
-      {/* Action Buttons */}
       <div className="flex gap-3 flex-wrap">
         <Button onClick={runSystemChecks} variant="outline" className="gap-2 bg-transparent">
           <RefreshCw className="w-4 h-4" />
@@ -470,7 +481,6 @@ export default function SystemStatusPage() {
         </Button>
       </div>
 
-      {/* System Checks */}
       <Card>
         <CardHeader>
           <CardTitle>Detailní přehled systémů</CardTitle>
@@ -504,7 +514,6 @@ export default function SystemStatusPage() {
         </CardContent>
       </Card>
 
-      {/* LocalStorage Inspector */}
       <Card>
         <CardHeader>
           <CardTitle>localStorage Inspector</CardTitle>
@@ -523,7 +532,7 @@ export default function SystemStatusPage() {
               "mindtrader-show-tour",
               "trader-mindset-onboarding-completed",
             ].map((key) => {
-              const data = localStorage.getItem(key)
+              const data = typeof window !== "undefined" ? localStorage.getItem(key) : null
               return (
                 <div key={key} className="p-3 bg-slate-900 rounded border border-slate-700">
                   <div className="text-blue-400 mb-1">{key}:</div>

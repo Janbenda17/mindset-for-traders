@@ -59,11 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const checkAuth = async () => {
+      console.log("[v0] Checking authentication state...")
+
       const {
         data: { session },
       } = await supabase.auth.getSession()
 
       if (session?.user) {
+        console.log("[v0] User authenticated:", session.user.email)
         const userData = {
           id: session.user.id,
           email: session.user.email!,
@@ -71,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isOwner: session.user.email === OWNER_EMAIL,
         }
         setUser(userData)
+      } else {
+        console.log("[v0] No authenticated user found")
       }
       setIsLoading(false)
     }

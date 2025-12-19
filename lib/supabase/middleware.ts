@@ -32,6 +32,7 @@ export async function updateSession(request: NextRequest) {
 
   // Protected routes - redirect to login if not authenticated
   const protectedPaths = [
+    "/", // Dashboard is the root path
     "/dashboard",
     "/journal",
     "/analytics",

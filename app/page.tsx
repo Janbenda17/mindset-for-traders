@@ -55,7 +55,7 @@ export default function DashboardPage() {
   const { startReset } = useLossReset()
   const { tradingStyle, config } = useTradingStyle()
   const { data: gamificationData } = useGamification()
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -63,65 +63,76 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    setTimeOfDay(getTimeOfDay())
-  }, [])
+    if (!isMounted || typeof window === "undefined") return
+
+    if (!user?.id) {
+      console.log("[v0] No authenticated user - showing empty state")
+      return
+    }
+
+    try {
+      const checksKey = `user-${user.id}-mindtrader-morning-checks`
+      const checks = JSON.parse(localStorage.getItem(checksKey) || "[]")
+      const todayDate = new Date().toISOString().split("T")[0]
+      const todayCheck = checks.find((c: any) => c.date === todayDate)
+
+      if (todayCheck && todayCheck.score !== undefined) {
+        setMentalReadiness(todayCheck.score)
+      } else {
+        setMentalReadiness(null)
+      }
+
+      const journalKey = `user-${user.id}-journal-entries`
+      const entries = JSON.parse(localStorage.getItem(journalKey) || "[]")
+      const last7Days = entries.filter((e: any) => {
+        const entryDate = new Date(e.date)
+        const today = new Date()
+        const diffTime = Math.abs(today.getTime() - entryDate.getTime())
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        return diffDays <= 7
+      })
+
+      let readinessText = "Připravenost: Neznámá"
+      let readinessDesc = "Dokončete Morning Check pro analýzu připravenosti"
+      if (todayCheck) {
+        const score = todayCheck.score
+        if (score >= 75) readinessText = "Připravenost: Výborná ✅"
+        else if (score >= 60) readinessText = "Připravenost: Buď opatrný ⚠️"
+        else readinessText = "Připravenost: Neobchoduj 🛑"
+
+        readinessDesc = `Spánek: ${todayCheck.sleepHours}h (${todayCheck.sleepQuality}/10), Stres: ${todayCheck.stressLevel}/10, Focus: ${todayCheck.focus}/10`
+      }
+
+      let trendDesc = "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu."
+      if (last7Days.length > 0) {
+        const avgMood = (last7Days.reduce((sum: number, e: any) => sum + (e.mood || 5), 0) / last7Days.length).toFixed(
+          1,
+        )
+        trendDesc = `${last7Days.length} záznamů za 7 dní. Průměrná nálada: ${avgMood}/10. Pokračuj v pravidelném journalingu!`
+      }
+
+      let actionDesc = "Začni Morning Check a uzamkni svůj readiness před tradingem."
+      if (todayCheck) {
+        if (todayCheck.score >= 75)
+          actionDesc = "✅ Jsi připraven! Dnes jsou dobré podmínky na obchodování podle tvého plánu."
+        else if (todayCheck.score >= 60)
+          actionDesc = "⚠️ Buď opatrný. Redukuj position sizes o 50% a zvyš disciplínu. Zvaž meditation před tradingem."
+        else actionDesc = "🛑 Dnes neobchoduj. Zaměř se na přípravu: paper trading, studium, nebo relaxaci."
+      }
+
+      setAiAnalysisData({
+        readiness: { text: readinessText, description: readinessDesc },
+        trend: { description: trendDesc },
+        action: { description: actionDesc },
+      })
+    } catch (error) {
+      console.error("[v0] Error loading mental readiness:", error)
+    }
+  }, [isMounted, user])
 
   useEffect(() => {
-    if (!isMounted) return
-
-    const todayDate = new Date().toISOString().split("T")[0]
-    const checksKey = `user-${user?.id}-mindtrader-morning-checks`
-    const checks = JSON.parse(localStorage.getItem(checksKey) || "[]")
-    const todayCheck = checks.find((c: any) => c.date === todayDate)
-
-    if (todayCheck && todayCheck.score !== undefined) {
-      setMentalReadiness(todayCheck.score)
-    } else {
-      setMentalReadiness(null)
-    }
-
-    const journalKey = `user-${user?.id}-journal-entries`
-    const entries = JSON.parse(localStorage.getItem(journalKey) || "[]")
-    const last7Days = entries.filter((e: any) => {
-      const entryDate = new Date(e.date)
-      const today = new Date()
-      const diffTime = Math.abs(today.getTime() - entryDate.getTime())
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      return diffDays <= 7
-    })
-
-    let readinessText = "Připravenost: Neznámá"
-    let readinessDesc = "Dokončete Morning Check pro analýzu připravenosti"
-    if (todayCheck) {
-      const score = todayCheck.score
-      if (score >= 75) readinessText = "Připravenost: Výborná ✅"
-      else if (score >= 60) readinessText = "Připravenost: Buď opatrný ⚠️"
-      else readinessText = "Připravenost: Neobchoduj 🛑"
-
-      readinessDesc = `Spánek: ${todayCheck.sleepHours}h (${todayCheck.sleepQuality}/10), Stres: ${todayCheck.stressLevel}/10, Focus: ${todayCheck.focus}/10`
-    }
-
-    let trendDesc = "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu."
-    if (last7Days.length > 0) {
-      const avgMood = (last7Days.reduce((sum: number, e: any) => sum + (e.mood || 5), 0) / last7Days.length).toFixed(1)
-      trendDesc = `${last7Days.length} záznamů za 7 dní. Průměrná nálada: ${avgMood}/10. Pokračuj v pravidelném journalingu!`
-    }
-
-    let actionDesc = "Začni Morning Check a uzamkni svůj readiness před tradingem."
-    if (todayCheck) {
-      if (todayCheck.score >= 75)
-        actionDesc = "✅ Jsi připraven! Dnes jsou dobré podmínky na obchodování podle tvého plánu."
-      else if (todayCheck.score >= 60)
-        actionDesc = "⚠️ Buď opatrný. Redukuj position sizes o 50% a zvyš disciplínu. Zvaž meditation před tradingem."
-      else actionDesc = "🛑 Dnes neobchoduj. Zaměř se na přípravu: paper trading, studium, nebo relaxaci."
-    }
-
-    setAiAnalysisData({
-      readiness: { text: readinessText, description: readinessDesc },
-      trend: { description: trendDesc },
-      action: { description: actionDesc },
-    })
-  }, [isMounted, user])
+    setTimeOfDay(getTimeOfDay())
+  }, [])
 
   useEffect(() => {
     if (!cachedStats && isMounted) {
@@ -295,11 +306,22 @@ export default function DashboardPage() {
     },
   ]
 
-  if (!isMounted) {
+  if (isLoading || !isMounted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
-        <div className="max-w-[1800px] mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pt-4 sm:pt-6 relative z-10">
-          <div className="text-center text-white">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="mt-4 text-muted-foreground">Načítání...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Pro přístup k dashboardu se prosím přihlašte.</p>
         </div>
       </div>
     )
@@ -482,7 +504,7 @@ export default function DashboardPage() {
                       ></div>
                       <CardContent className="p-3 sm:p-4 relative flex flex-col items-center text-center space-y-1.5 sm:space-y-2">
                         <div
-                          className={`p-2 sm:p-3 bg-gradient-to-br ${action.color} rounded-xl sm:rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}
+                          className={`p-2 sm:p-3 bg-gradient-to-r ${action.color} rounded-xl sm:rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}
                         >
                           <action.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                         </div>
