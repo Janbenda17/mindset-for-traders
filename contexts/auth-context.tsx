@@ -29,10 +29,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const OWNER_EMAIL = "honza.newage@gmail.com"
 
 function migrateUserID(user: User): User {
-  // If ID is a timestamp (numeric string like "1756675229779"), generate a valid UUID
   if (/^\d+$/.test(user.id)) {
     console.log("[v0] Migrating user ID from timestamp to UUID:", user.id)
-    // Create deterministic UUID from email + old ID to maintain consistency
     return {
       ...user,
       id: generateUUID(),
@@ -82,7 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     checkAuth()
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -110,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (error) {
+        console.error("[v0] Login error:", error.message)
         toast({
           title: "Chyba přihlášení",
           description: error.message,
@@ -138,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return false
     } catch (error) {
-      console.error("Login error:", error)
+      console.error("[v0] Login error:", error)
       toast({
         title: "Chyba přihlášení",
         description: "Došlo k neočekávané chybě",
@@ -161,15 +159,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             name: name,
           },
-          emailRedirectTo: undefined,
+          // emailRedirectTo is intentionally undefined to avoid email confirmation requirement
         },
       })
 
       if (error) {
-        console.error("[v0] Registration error:", error)
+        console.error("[v0] Registration error - Code:", error.code)
+        console.error("[v0] Registration error - Message:", error.message)
+        console.error("[v0] Registration error - Status:", error.status)
+        console.error("[v0] Full error object:", JSON.stringify(error, null, 2))
+
         toast({
           title: "Chyba registrace",
-          description: error.message,
+          description: error.message || "Nepodařilo se vytvořit účet",
           variant: "destructive",
         })
         return false
@@ -198,7 +200,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return true
       }
 
-      // Wait for profile creation
       let profile = null
       let attempts = 0
       const maxAttempts = 10
@@ -295,11 +296,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[v0] Registration complete, redirecting to onboarding")
       router.push("/onboarding")
       return true
-    } catch (error) {
-      console.error("[v0] Registration error:", error)
+    } catch (error: any) {
+      console.error("[v0] Registration try-catch error:", {
+        message: error?.message || "Unknown error",
+        stack: error?.stack,
+        toString: error?.toString(),
+        type: typeof error,
+      })
+
       toast({
         title: "Chyba registrace",
-        description: "Došlo k neočekávané chybě",
+        description: error?.message || "Došlo k neočekávané chybě",
         variant: "destructive",
       })
       return false

@@ -80,8 +80,10 @@ export function SignupForm() {
     }
 
     setIsLoading(true)
+    setErrors({})
 
     try {
+      console.log("[v0] Attempting registration...")
       const success = await register({
         name: formData.name,
         email: formData.email,
@@ -89,13 +91,15 @@ export function SignupForm() {
       })
 
       if (!success) {
+        console.log("[v0] Registration returned false")
         setIsLoading(false)
         setErrors({ general: "Registrace se nezdařila. Zkuste to prosím znovu." })
       }
       // Success - context redirects to /onboarding
-    } catch (error) {
+    } catch (error: any) {
+      console.error("[v0] Signup form error:", error)
       setIsLoading(false)
-      setErrors({ general: "Došlo k chybě. Zkuste to prosím znovu." })
+      setErrors({ general: error?.message || "Došlo k chybě. Zkuste to prosím znovu." })
     }
   }
 
