@@ -72,8 +72,9 @@ export function OnboardingComplete() {
         return
       }
 
+      localStorage.setItem("trading-mode", "virtual")
       localStorage.setItem("mindtrader-show-tour", "true")
-      console.log("[v0] Onboarding complete - ProductTour flag set")
+      console.log("[v0] Onboarding complete - Virtual mode and ProductTour flag set")
 
       confetti({
         particleCount: 100,
@@ -82,7 +83,6 @@ export function OnboardingComplete() {
         colors: ["#8B5CF6", "#EC4899", "#10B981"],
       })
 
-      // The session is already authenticated, no need to wait
       router.push("/")
     } catch (err) {
       setError("An error occurred")

@@ -1,25 +1,33 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/server"
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { trade, userId } = body
+    const supabase = await createClient()
 
-    if (!userId) {
-      return NextResponse.json({ error: "User ID required" }, { status: 400 })
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      console.error("[v0] Unauthorized trade submission attempt")
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    console.log("[v0] Adding trade for user:", userId)
+    const body = await request.json()
+    const { trade } = body
+
+    console.log("[v0] Adding trade for user:", user.id)
 
     const supabaseFields = {
-      user_id: userId,
-      type: "trade", // Required field
+      user_id: user.id,
+      type: "trade",
       date: trade.date || new Date().toISOString().split("T")[0],
       pair: trade.pair,
-      symbol: trade.pair, // Also set symbol for compatibility
+      symbol: trade.pair,
       direction: trade.direction,
       entry_price: trade.entryPrice || null,
       exit_price: trade.exitPrice || null,
@@ -64,7 +72,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log("[v0] Trade inserted successfully")
+    console.log("[v0] Trade inserted successfully for user:", user.id)
     return NextResponse.json({ data })
   } catch (error: any) {
     console.error("[v0] API error:", error)

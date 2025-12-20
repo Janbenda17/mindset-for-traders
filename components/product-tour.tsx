@@ -184,6 +184,12 @@ export function ProductTour() {
   }
 
   const completeTour = () => {
+    const currentMode = localStorage.getItem("trading-mode")
+    if (!currentMode) {
+      localStorage.setItem("trading-mode", "virtual")
+      console.log("[v0] ProductTour complete - Virtual mode set")
+    }
+
     localStorage.setItem("mindtrader-product-tour-completed", "true")
     setIsVisible(false)
     router.push("/")

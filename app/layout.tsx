@@ -6,6 +6,8 @@ import ClientLayout from "./ClientLayout"
 import { AuthProvider } from "@/contexts/auth-context"
 import { DataProvider } from "@/contexts/data-context"
 import { SubscriptionProvider } from "@/contexts/subscription-context"
+import { GamificationProvider } from "@/contexts/gamification-context"
+import { LossResetProvider } from "@/contexts/loss-reset-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,9 +27,13 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <SubscriptionProvider>
-            <DataProvider>
-              <ClientLayout>{children}</ClientLayout>
-            </DataProvider>
+            <GamificationProvider>
+              <DataProvider>
+                <LossResetProvider>
+                  <ClientLayout>{children}</ClientLayout>
+                </LossResetProvider>
+              </DataProvider>
+            </GamificationProvider>
           </SubscriptionProvider>
         </AuthProvider>
       </body>
