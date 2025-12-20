@@ -14,6 +14,7 @@ import { LanguageProvider } from "@/contexts/language-context"
 import { AIInsightsProvider } from "@/contexts/ai-insights-context"
 import { CommunityChallengesProvider } from "@/contexts/community-challenges-context"
 import { StreakProvider } from "@/contexts/streak-context"
+import { MilestoneCelebrationsProvider } from "@/contexts/milestone-celebrations-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -34,23 +35,25 @@ export default function RootLayout({
         <AuthProvider>
           <SubscriptionProvider>
             <GamificationProvider>
-              <TradingStyleProvider>
-                <DataProvider>
-                  <LossResetProvider>
-                    <DailyStageProvider>
-                      <LanguageProvider>
-                        <AIInsightsProvider>
-                          <CommunityChallengesProvider>
-                            <StreakProvider>
-                              <ClientLayout>{children}</ClientLayout>
-                            </StreakProvider>
-                          </CommunityChallengesProvider>
-                        </AIInsightsProvider>
-                      </LanguageProvider>
-                    </DailyStageProvider>
-                  </LossResetProvider>
-                </DataProvider>
-              </TradingStyleProvider>
+              <MilestoneCelebrationsProvider>
+                <TradingStyleProvider>
+                  <DataProvider>
+                    <LossResetProvider>
+                      <DailyStageProvider>
+                        <LanguageProvider>
+                          <AIInsightsProvider>
+                            <CommunityChallengesProvider>
+                              <StreakProvider>
+                                <ClientLayout>{children}</ClientLayout>
+                              </StreakProvider>
+                            </CommunityChallengesProvider>
+                          </AIInsightsProvider>
+                        </LanguageProvider>
+                      </DailyStageProvider>
+                    </LossResetProvider>
+                  </DataProvider>
+                </TradingStyleProvider>
+              </MilestoneCelebrationsProvider>
             </GamificationProvider>
           </SubscriptionProvider>
         </AuthProvider>
