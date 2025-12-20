@@ -107,10 +107,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (error) {
+        let userFriendlyMessage = error.message
+
+        if (error.message.includes("Invalid login credentials")) {
+          userFriendlyMessage = "Email nebo heslo je nesprávné. Ověřte prosím své údaje nebo se zaregistrujte."
+        } else if (error.message.includes("Email not confirmed")) {
+          userFriendlyMessage = "Prosím potvrďte svůj email před přihlášením."
+        } else if (error.status === 429) {
+          userFriendlyMessage = "Příliš mnoho pokusů o přihlášení. Zkuste to za chvíli znovu."
+        }
+
         console.error("[v0] Login error:", error.message)
         toast({
           title: "Chyba přihlášení",
-          description: error.message,
+          description: userFriendlyMessage,
           variant: "destructive",
         })
         return false

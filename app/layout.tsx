@@ -11,6 +11,9 @@ import { LossResetProvider } from "@/contexts/loss-reset-context"
 import { TradingStyleProvider } from "@/contexts/trading-style-context"
 import { DailyStageProvider } from "@/contexts/daily-stage-context"
 import { LanguageProvider } from "@/contexts/language-context"
+import { AIInsightsProvider } from "@/contexts/ai-insights-context"
+import { CommunityChallengesProvider } from "@/contexts/community-challenges-context"
+import { StreakProvider } from "@/contexts/streak-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -36,7 +39,13 @@ export default function RootLayout({
                   <LossResetProvider>
                     <DailyStageProvider>
                       <LanguageProvider>
-                        <ClientLayout>{children}</ClientLayout>
+                        <AIInsightsProvider>
+                          <CommunityChallengesProvider>
+                            <StreakProvider>
+                              <ClientLayout>{children}</ClientLayout>
+                            </StreakProvider>
+                          </CommunityChallengesProvider>
+                        </AIInsightsProvider>
                       </LanguageProvider>
                     </DailyStageProvider>
                   </LossResetProvider>
