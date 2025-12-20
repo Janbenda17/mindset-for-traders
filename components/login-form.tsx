@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Brain, Mail, Lock, LogIn, Sparkles, Shield, Zap } from "lucide-react"
 import Link from "next/link"
 import { Checkbox } from "@/components/ui/checkbox"
-import { toast } from "@/hooks/use-toast"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -39,25 +38,6 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!email || !password) {
-      toast({
-        title: "Chyba",
-        description: "Prosím vyplňte email a heslo",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!email.includes("@")) {
-      toast({
-        title: "Chyba",
-        description: "Prosím zadejte platný email",
-        variant: "destructive",
-      })
-      return
-    }
-
     setIsLoading(true)
 
     try {

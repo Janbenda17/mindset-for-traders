@@ -94,14 +94,7 @@ export function TopNavigation() {
 
     setIsAuthenticated(true)
 
-    let { data: profile, error } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle()
-
-    if (!profile) {
-      console.log("[v0] Waiting for profile creation trigger...")
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      const { data: retryProfile } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle()
-      profile = retryProfile
-    }
+    const { data: profile } = await supabase.from("profiles").select("*").eq("user_id", user.id).single()
 
     setProfileData({
       name: profile?.nickname || user.email?.split("@")[0] || "User",

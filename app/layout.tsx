@@ -6,15 +6,6 @@ import ClientLayout from "./ClientLayout"
 import { AuthProvider } from "@/contexts/auth-context"
 import { DataProvider } from "@/contexts/data-context"
 import { SubscriptionProvider } from "@/contexts/subscription-context"
-import { GamificationProvider } from "@/contexts/gamification-context"
-import { LossResetProvider } from "@/contexts/loss-reset-context"
-import { TradingStyleProvider } from "@/contexts/trading-style-context"
-import { DailyStageProvider } from "@/contexts/daily-stage-context"
-import { LanguageProvider } from "@/contexts/language-context"
-import { AIInsightsProvider } from "@/contexts/ai-insights-context"
-import { CommunityChallengesProvider } from "@/contexts/community-challenges-context"
-import { StreakProvider } from "@/contexts/streak-context"
-import { MilestoneCelebrationsProvider } from "@/contexts/milestone-celebrations-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -34,27 +25,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <SubscriptionProvider>
-            <GamificationProvider>
-              <MilestoneCelebrationsProvider>
-                <TradingStyleProvider>
-                  <DataProvider>
-                    <LossResetProvider>
-                      <DailyStageProvider>
-                        <LanguageProvider>
-                          <AIInsightsProvider>
-                            <CommunityChallengesProvider>
-                              <StreakProvider>
-                                <ClientLayout>{children}</ClientLayout>
-                              </StreakProvider>
-                            </CommunityChallengesProvider>
-                          </AIInsightsProvider>
-                        </LanguageProvider>
-                      </DailyStageProvider>
-                    </LossResetProvider>
-                  </DataProvider>
-                </TradingStyleProvider>
-              </MilestoneCelebrationsProvider>
-            </GamificationProvider>
+            <DataProvider>
+              <ClientLayout>{children}</ClientLayout>
+            </DataProvider>
           </SubscriptionProvider>
         </AuthProvider>
       </body>

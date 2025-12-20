@@ -32,7 +32,9 @@ export async function updateSession(request: NextRequest) {
 
   console.log("[v0] Middleware - path:", request.nextUrl.pathname, "user:", user ? user.email : "none")
 
+  // Protected routes - redirect to login if not authenticated
   const protectedPaths = [
+    "/", // Dashboard is the root path
     "/dashboard",
     "/journal",
     "/analytics",
@@ -47,7 +49,7 @@ export async function updateSession(request: NextRequest) {
     "/team-club",
     "/account",
     "/admin",
-    "/pricing", // Add pricing as protected route so only authenticated users can access
+    "/pricing", // Added pricing to protected paths - users must login to see pricing
   ]
 
   const isProtectedPath = protectedPaths.some(
@@ -69,7 +71,17 @@ export async function updateSession(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle()
 
-    if (profile && !profile.onboarding_completed && !request.nextUrl.pathname.startsWith("/onboarding")) {
+    if (!profile) {
+      console.log("[v0] User authenticated but no profile found - blocking access")
+      const url = request.nextUrl.clone()
+      url.pathname = "/auth/login"
+      url.searchParams.set("error", "no_profile")
+      return NextResponse.redirect(url)
+    }
+
+    console.log("[v0] Profile found - onboarding_completed:", profile.onboarding_completed)
+
+    if (!profile.onboarding_completed && !request.nextUrl.pathname.startsWith("/onboarding")) {
       console.log("[v0] Redirecting to onboarding - not completed")
       const url = request.nextUrl.clone()
       url.pathname = "/onboarding"
@@ -77,7 +89,7 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // Redirect authenticated users away from auth pages (unless they need onboarding)
+  // Redirect authenticated users away from auth pages
   const authPaths = ["/auth/login", "/auth/sign-up", "/login", "/signup"]
   const isAuthPath = authPaths.some((path) => request.nextUrl.pathname === path)
 
@@ -86,27 +98,6 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = "/"
     return NextResponse.redirect(url)
-  }
-
-  if (request.nextUrl.pathname === "/") {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = "/auth/login"
-      return NextResponse.redirect(url)
-    }
-
-    // Check if user has completed onboarding
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("user_id", user.id)
-      .maybeSingle()
-
-    if (profile && !profile.onboarding_completed) {
-      const url = request.nextUrl.clone()
-      url.pathname = "/onboarding"
-      return NextResponse.redirect(url)
-    }
   }
 
   return supabaseResponse
