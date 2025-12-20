@@ -159,19 +159,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             name: name,
           },
-          // emailRedirectTo is intentionally undefined to avoid email confirmation requirement
+          emailRedirectTo: undefined, // Disable email confirmation
         },
       })
 
       if (error) {
-        console.error("[v0] Registration error - Code:", error.code)
-        console.error("[v0] Registration error - Message:", error.message)
-        console.error("[v0] Registration error - Status:", error.status)
-        console.error("[v0] Full error object:", JSON.stringify(error, null, 2))
+        console.error("[v0] Supabase registration error:", {
+          code: error.code,
+          message: error.message,
+          status: error.status,
+          name: error.name,
+        })
+
+        let errorMessage = error.message
+        if (error.status === 504) {
+          errorMessage = "Server timeout - zkuste to prosím znovu za chvíli"
+        } else if (error.message.includes("already registered")) {
+          errorMessage = "Tento email je již registrován. Zkuste se přihlásit."
+        }
 
         toast({
           title: "Chyba registrace",
-          description: error.message || "Nepodařilo se vytvořit účet",
+          description: errorMessage,
           variant: "destructive",
         })
         return false
@@ -187,56 +196,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      console.log("[v0] User created:", authData.user.id)
-      console.log("[v0] Session:", authData.session ? "Active" : "Waiting for email confirmation")
+      console.log("[v0] User created successfully:", authData.user.id)
+      console.log("[v0] Session status:", authData.session ? "Active" : "No session (email confirmation required)")
 
       if (!authData.session) {
-        console.warn("[v0] No session created - email confirmation may be required")
+        console.log("[v0] No session - email confirmation required")
         toast({
-          title: "Ověřte email",
-          description: "Na váš email byl odeslán odkaz k potvrzení účtu",
+          title: "Potvrďte email",
+          description: "Na váš email byl odeslán odkaz k potvrzení účtu. Po kliknutí na odkaz budete moci pokračovat.",
         })
         router.push("/auth/sign-up-success")
         return true
       }
 
+      console.log("[v0] Waiting for profile creation...")
       let profile = null
       let attempts = 0
       const maxAttempts = 10
 
       while (!profile && attempts < maxAttempts) {
         attempts++
-        const waitTime = Math.min(500 * attempts, 3000)
-
-        console.log(`[v0] Checking profile existence (attempt ${attempts}/${maxAttempts})...`)
+        const waitTime = Math.min(300 * attempts, 2000)
 
         await new Promise((resolve) => setTimeout(resolve, waitTime))
 
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("user_id")
+          .select("user_id, onboarding_completed")
           .eq("user_id", authData.user.id)
           .maybeSingle()
+
+        if (profileError) {
+          console.error(`[v0] Profile check error (attempt ${attempts}):`, profileError)
+        }
 
         profile = profileData
 
         if (profile) {
-          console.log("[v0] Profile successfully created by trigger!")
+          console.log("[v0] Profile found after", attempts, "attempts:", profile)
           break
         }
+
+        console.log(`[v0] Profile not found yet (attempt ${attempts}/${maxAttempts})`)
       }
 
       if (!profile) {
-        console.error("[v0] Profile creation failed - trigger did not execute after", maxAttempts, "attempts")
+        console.error("[v0] Profile was not created by database trigger after", maxAttempts, "attempts")
         toast({
           title: "Chyba registrace",
-          description: "Nepodařilo se vytvořit profil. Zkuste to znovu.",
+          description: "Profil se nepodařilo vytvořit. Kontaktujte podporu.",
           variant: "destructive",
         })
         await supabase.auth.signOut()
         return false
       }
 
+      const userData = {
+        id: authData.user.id,
+        email: authData.user.email!,
+        name: name,
+        isOwner: authData.user.email === OWNER_EMAIL,
+      }
+      setUser(userData)
+
+      const userStorageKey = `user-${authData.user.id}-trader-mindset-data`
       const initialUserData = {
         profile: {
           nickname: name.split(" ")[0],
@@ -282,31 +305,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           notifications: [],
         },
       }
-
-      const userStorageKey = `user-${authData.user.id}-trader-mindset-data`
       localStorage.setItem(userStorageKey, JSON.stringify(initialUserData))
-
       localStorage.setItem("mindtrader-show-tour", "true")
 
+      console.log("[v0] Registration complete - redirecting to onboarding")
       toast({
         title: "Registrace úspěšná!",
-        description: "Tvůj účet byl vytvořen",
+        description: "Vítejte v MindTrader!",
       })
 
-      console.log("[v0] Registration complete, redirecting to onboarding")
       router.push("/onboarding")
       return true
     } catch (error: any) {
-      console.error("[v0] Registration try-catch error:", {
-        message: error?.message || "Unknown error",
+      console.error("[v0] Registration unexpected error:", {
+        message: error?.message,
+        name: error?.name,
         stack: error?.stack,
-        toString: error?.toString(),
-        type: typeof error,
       })
 
       toast({
         title: "Chyba registrace",
-        description: error?.message || "Došlo k neočekávané chybě",
+        description: "Došlo k neočekávané chybě. Zkuste to prosím znovu.",
         variant: "destructive",
       })
       return false
