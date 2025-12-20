@@ -21,7 +21,6 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
@@ -32,16 +31,60 @@ export default function SignUpPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const supabase = createClient()
+
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/`,
+          emailRedirectTo: undefined, // No email confirmation
         },
       })
-      if (error) throw error
-      router.push("/auth/sign-up-success")
+
+      if (signUpError) {
+        throw new Error(signUpError.message)
+      }
+
+      if (!data.user) {
+        throw new Error("User creation failed")
+      }
+
+      console.log("[v0] User registered and session created:", data.user.id)
+      console.log("[v0] Session:", data.session ? "Active" : "None")
+
+      let profile = null
+      let attempts = 0
+      const maxAttempts = 10
+
+      while (!profile && attempts < maxAttempts) {
+        attempts++
+        await new Promise((resolve) => setTimeout(resolve, 500))
+
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", data.user.id)
+          .maybeSingle()
+
+        if (profileData) {
+          profile = profileData
+          console.log("[v0] Profile found:", profile)
+          break
+        }
+      }
+
+      if (!profile) {
+        console.error("[v0] Profile not created - trigger may have failed")
+        setError("Account created but profile setup failed. Please contact support.")
+        setIsLoading(false)
+        return
+      }
+
+      localStorage.setItem("mindtrader-show-tour", "true")
+
+      router.push("/onboarding")
     } catch (error: unknown) {
+      console.error("[v0] Signup error:", error)
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsLoading(false)

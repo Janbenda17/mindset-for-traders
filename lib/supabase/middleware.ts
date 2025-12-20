@@ -30,6 +30,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  console.log("[v0] Middleware - path:", request.nextUrl.pathname, "user:", user ? user.email : "none")
+
   // Protected routes - redirect to login if not authenticated
   const protectedPaths = [
     "/", // Dashboard is the root path
@@ -55,6 +57,7 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect unauthenticated users to login
   if (isProtectedPath && !user) {
+    console.log("[v0] Redirecting to login - protected path without auth")
     const url = request.nextUrl.clone()
     url.pathname = "/auth/login"
     return NextResponse.redirect(url)
@@ -75,7 +78,10 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
+    console.log("[v0] Profile found - onboarding_completed:", profile.onboarding_completed)
+
     if (!profile.onboarding_completed && !request.nextUrl.pathname.startsWith("/onboarding")) {
+      console.log("[v0] Redirecting to onboarding - not completed")
       const url = request.nextUrl.clone()
       url.pathname = "/onboarding"
       return NextResponse.redirect(url)
@@ -83,10 +89,11 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Redirect authenticated users away from auth pages
-  const authPaths = ["/auth/login", "/auth/sign-up"]
+  const authPaths = ["/auth/login", "/auth/sign-up", "/login", "/signup"]
   const isAuthPath = authPaths.some((path) => request.nextUrl.pathname === path)
 
   if (isAuthPath && user) {
+    console.log("[v0] Redirecting authenticated user away from auth pages")
     const url = request.nextUrl.clone()
     url.pathname = "/"
     return NextResponse.redirect(url)

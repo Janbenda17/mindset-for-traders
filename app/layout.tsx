@@ -2,28 +2,10 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { DataProvider } from "@/contexts/data-context"
-import { AuthProvider } from "@/contexts/auth-context"
-import { SubscriptionProvider } from "@/contexts/subscription-context"
-import { LanguageProvider } from "@/contexts/language-context"
-import { DailyStageProvider } from "@/contexts/daily-stage-context"
-import { GamificationProvider } from "@/contexts/gamification-context"
-import { LossResetProvider } from "@/contexts/loss-reset-context"
-import { CloudSyncProvider } from "@/contexts/cloud-sync-context"
-import { NotificationsProvider } from "@/contexts/notifications-context"
-import { TradingStyleProvider } from "@/contexts/trading-style-context"
-import { TradingIntegrationProvider } from "@/contexts/trading-integration-context"
-import { AIInsightsProvider } from "@/contexts/ai-insights-context"
-import { StreakProvider } from "@/contexts/streak-context"
-import { CommunityChallengesProvider } from "@/contexts/community-challenges-context"
-import { MilestoneCelebrationsProvider } from "@/contexts/milestone-celebrations-context"
-import { Toaster } from "@/components/ui/toaster"
-import { XPNotification } from "@/components/xp-notification"
-import { LossResetModal } from "@/components/loss-reset-modal"
-import { NotificationPermissionBanner } from "@/components/notification-permission-banner"
 import ClientLayout from "./ClientLayout"
-import { Analytics } from "@vercel/analytics/next"
+import { AuthProvider } from "@/contexts/auth-context"
+import { DataProvider } from "@/contexts/data-context"
+import { SubscriptionProvider } from "@/contexts/subscription-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -41,44 +23,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            <SubscriptionProvider>
-              <LanguageProvider>
-                <CloudSyncProvider>
-                  <NotificationsProvider>
-                    <TradingStyleProvider>
-                      <TradingIntegrationProvider>
-                        <DataProvider>
-                          <DailyStageProvider>
-                            <GamificationProvider>
-                              <StreakProvider>
-                                <AIInsightsProvider>
-                                  <CommunityChallengesProvider>
-                                    <MilestoneCelebrationsProvider>
-                                      <LossResetProvider>
-                                        <ClientLayout>{children}</ClientLayout>
-                                        <Toaster />
-                                        <XPNotification />
-                                        <LossResetModal />
-                                        <NotificationPermissionBanner />
-                                      </LossResetProvider>
-                                    </MilestoneCelebrationsProvider>
-                                  </CommunityChallengesProvider>
-                                </AIInsightsProvider>
-                              </StreakProvider>
-                            </GamificationProvider>
-                          </DailyStageProvider>
-                        </DataProvider>
-                      </TradingIntegrationProvider>
-                    </TradingStyleProvider>
-                  </NotificationsProvider>
-                </CloudSyncProvider>
-              </LanguageProvider>
-            </SubscriptionProvider>
-          </AuthProvider>
-        </ThemeProvider>
-        <Analytics />
+        <AuthProvider>
+          <SubscriptionProvider>
+            <DataProvider>
+              <ClientLayout>{children}</ClientLayout>
+            </DataProvider>
+          </SubscriptionProvider>
+        </AuthProvider>
       </body>
     </html>
   )

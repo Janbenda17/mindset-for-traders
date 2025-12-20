@@ -72,6 +72,9 @@ export function OnboardingComplete() {
         return
       }
 
+      localStorage.setItem("mindtrader-show-tour", "true")
+      console.log("[v0] Onboarding complete - ProductTour flag set")
+
       confetti({
         particleCount: 100,
         spread: 70,
