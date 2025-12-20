@@ -41,6 +41,8 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
+      console.log("[v0] Attempting login for:", email)
+
       if (rememberMe) {
         localStorage.setItem("mindtrader-saved-email", email)
         localStorage.setItem("mindtrader-saved-password", password)
@@ -49,7 +51,15 @@ export function LoginForm() {
         localStorage.removeItem("mindtrader-saved-password")
       }
 
-      await login(email, password)
+      const success = await login(email, password)
+
+      if (!success) {
+        console.error("[v0] Login failed")
+      } else {
+        console.log("[v0] Login successful")
+      }
+    } catch (error) {
+      console.error("[v0] Login error:", error)
     } finally {
       setIsLoading(false)
     }

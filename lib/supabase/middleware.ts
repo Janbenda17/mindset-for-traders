@@ -49,6 +49,7 @@ export async function updateSession(request: NextRequest) {
     "/team-club",
     "/account",
     "/admin",
+    "/pricing", // Added pricing to protected paths - users must login to see pricing
   ]
 
   const isProtectedPath = protectedPaths.some(

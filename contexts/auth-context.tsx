@@ -152,6 +152,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { email, password, name } = data
 
+      console.log("[v0] Starting registration process for:", email)
+
       const { data: authData, error } = await supabase.auth.signUp({
         email,
         password,
@@ -164,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (error) {
+        console.error("[v0] Registration error:", error)
         toast({
           title: "Chyba registrace",
           description: error.message,
@@ -172,109 +175,128 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      if (authData.user) {
-        console.log("[v0] User registered, waiting for profile creation by trigger:", authData.user.id)
-
-        let profile = null
-        let attempts = 0
-        const maxAttempts = 10
-
-        while (!profile && attempts < maxAttempts) {
-          attempts++
-          const waitTime = Math.min(500 * attempts, 3000) // 500ms, 1s, 1.5s, 2s, 2.5s, 3s, 3s...
-
-          console.log(`[v0] Checking profile existence (attempt ${attempts}/${maxAttempts})...`)
-
-          await new Promise((resolve) => setTimeout(resolve, waitTime))
-
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("user_id")
-            .eq("user_id", authData.user.id)
-            .maybeSingle()
-
-          profile = profileData
-
-          if (profile) {
-            console.log("[v0] Profile successfully created by trigger!")
-            break
-          }
-        }
-
-        if (!profile) {
-          console.error("[v0] Profile creation failed - trigger did not execute after", maxAttempts, "attempts")
-          toast({
-            title: "Chyba registrace",
-            description: "Nepodařilo se vytvořit profil. Zkuste to znovu.",
-            variant: "destructive",
-          })
-          await supabase.auth.signOut()
-          return false
-        }
-
-        const initialUserData = {
-          profile: {
-            nickname: name.split(" ")[0],
-            bio: "",
-            mentor: "",
-            experienceLevel: "beginner" as const,
-            updatedAt: new Date().toISOString(),
-          },
-          settings: {
-            trading: {
-              style: undefined,
-              riskLevel: "moderate",
-              timezone: "UTC",
-              tradingYears: "",
-              mainMarkets: [],
-              goals: "",
-              averageTradesPerWeek: "",
-              updatedAt: new Date().toISOString(),
-            },
-            notifications: {
-              email: true,
-              push: true,
-              weeklyReport: true,
-              tradingAlerts: true,
-              dailyReminder: true,
-              psychologyInsights: true,
-              updatedAt: new Date().toISOString(),
-            },
-          },
-          dailyTrackerItems: [],
-          tradingShopItems: [],
-          journalEntries: [],
-          moodEntries: [],
-          tradingData: [],
-          dashboardStats: {
-            totalTrades: 0,
-            totalPnL: 0,
-            winRate: 0,
-            consecutiveWins: 0,
-            consecutiveLosses: 0,
-          },
-          mindTraderNotifications: {
-            notifications: [],
-          },
-        }
-
-        const userStorageKey = `user-${authData.user.id}-trader-mindset-data`
-        localStorage.setItem(userStorageKey, JSON.stringify(initialUserData))
-
-        localStorage.setItem("mindtrader-show-tour", "true")
-
+      if (!authData.user) {
+        console.error("[v0] No user returned from signUp")
         toast({
-          title: "Registrace úspěšná!",
-          description: "Tvůj účet byl vytvořen",
+          title: "Chyba registrace",
+          description: "Nepodařilo se vytvořit uživatele",
+          variant: "destructive",
         })
+        return false
+      }
 
-        router.push("/onboarding")
+      console.log("[v0] User created:", authData.user.id)
+      console.log("[v0] Session:", authData.session ? "Active" : "Waiting for email confirmation")
+
+      if (!authData.session) {
+        console.warn("[v0] No session created - email confirmation may be required")
+        toast({
+          title: "Ověřte email",
+          description: "Na váš email byl odeslán odkaz k potvrzení účtu",
+        })
+        router.push("/auth/sign-up-success")
         return true
       }
 
-      return false
+      // Wait for profile creation
+      let profile = null
+      let attempts = 0
+      const maxAttempts = 10
+
+      while (!profile && attempts < maxAttempts) {
+        attempts++
+        const waitTime = Math.min(500 * attempts, 3000)
+
+        console.log(`[v0] Checking profile existence (attempt ${attempts}/${maxAttempts})...`)
+
+        await new Promise((resolve) => setTimeout(resolve, waitTime))
+
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("user_id", authData.user.id)
+          .maybeSingle()
+
+        profile = profileData
+
+        if (profile) {
+          console.log("[v0] Profile successfully created by trigger!")
+          break
+        }
+      }
+
+      if (!profile) {
+        console.error("[v0] Profile creation failed - trigger did not execute after", maxAttempts, "attempts")
+        toast({
+          title: "Chyba registrace",
+          description: "Nepodařilo se vytvořit profil. Zkuste to znovu.",
+          variant: "destructive",
+        })
+        await supabase.auth.signOut()
+        return false
+      }
+
+      const initialUserData = {
+        profile: {
+          nickname: name.split(" ")[0],
+          bio: "",
+          mentor: "",
+          experienceLevel: "beginner" as const,
+          updatedAt: new Date().toISOString(),
+        },
+        settings: {
+          trading: {
+            style: undefined,
+            riskLevel: "moderate",
+            timezone: "UTC",
+            tradingYears: "",
+            mainMarkets: [],
+            goals: "",
+            averageTradesPerWeek: "",
+            updatedAt: new Date().toISOString(),
+          },
+          notifications: {
+            email: true,
+            push: true,
+            weeklyReport: true,
+            tradingAlerts: true,
+            dailyReminder: true,
+            psychologyInsights: true,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+        dailyTrackerItems: [],
+        tradingShopItems: [],
+        journalEntries: [],
+        moodEntries: [],
+        tradingData: [],
+        dashboardStats: {
+          totalTrades: 0,
+          totalPnL: 0,
+          winRate: 0,
+          consecutiveWins: 0,
+          consecutiveLosses: 0,
+        },
+        mindTraderNotifications: {
+          notifications: [],
+        },
+      }
+
+      const userStorageKey = `user-${authData.user.id}-trader-mindset-data`
+      localStorage.setItem(userStorageKey, JSON.stringify(initialUserData))
+
+      localStorage.setItem("mindtrader-show-tour", "true")
+
+      toast({
+        title: "Registrace úspěšná!",
+        description: "Tvůj účet byl vytvořen",
+      })
+
+      console.log("[v0] Registration complete, redirecting to onboarding")
+      router.push("/onboarding")
+      return true
     } catch (error) {
-      console.error("Registration error:", error)
+      console.error("[v0] Registration error:", error)
       toast({
         title: "Chyba registrace",
         description: "Došlo k neočekávané chybě",
