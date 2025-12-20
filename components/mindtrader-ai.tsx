@@ -4,24 +4,10 @@ import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Progress } from "@/components/ui/progress"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import {
-  Brain,
-  Send,
-  Loader2,
-  Heart,
-  Target,
-  Zap,
-  AlertCircle,
-  BarChart2,
-  Wind,
-  Activity,
-  Moon,
-  Utensils,
-} from "lucide-react"
+import { Brain, Send, Loader2, Heart, Target, Zap, AlertCircle, BarChart2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
@@ -530,6 +516,12 @@ export function MindTraderAI() {
 
       setMessages((prev) => [...prev, aiMessage])
 
+      if (!isLiveMode) {
+        incrementVirtualMessageCount()
+      } else {
+        incrementLiveMessageCount()
+      }
+
       toast({
         title: language === "cs" ? "Odpověď přijata" : "Response received",
         description: language === "cs" ? "AI ti odpověděl" : "AI has responded",
@@ -633,290 +625,209 @@ export function MindTraderAI() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
-      <div className="max-w-full mx-auto md:py-6 py-3 md:px-4 px-3">
-        <div className="space-y-4 md:space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="md:p-3 p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl">
-                <Brain className="md:w-8 md:h-8 w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="md:text-4xl text-2xl font-bold text-gray-900 dark:text-white">MindTrader AI</h1>
-                <p className="text-gray-600 dark:text-gray-400 md:text-base text-xs md:block hidden">
-                  Tvůj osobní psychologický kouč 24/7
-                </p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="md:p-6 p-4 border-b bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg">
+              <Brain className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="md:text-3xl text-2xl font-bold text-slate-900 dark:text-white">MindTrader AI</h1>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {language === "cs" ? "Tvůj osobní psychologický kouč" : "Your personal psychological coach"}
+              </p>
             </div>
           </div>
+        </div>
 
-          {isRecoveryMode && (
-            <Alert className="border-orange-500 bg-orange-50 dark:bg-orange-900/20 p-3 md:p-4">
-              <AlertCircle className="h-3 w-3 md:h-4 md:w-4 text-orange-600" />
-              <AlertDescription className="text-xs md:text-sm text-orange-800 dark:text-orange-200">
-                {language === "cs" ? "🚨 Recovery Mode aktivní" : "🚨 Recovery Mode active"}
-              </AlertDescription>
-            </Alert>
-          )}
+        {isRecoveryMode && (
+          <Alert className="mx-4 mt-4 border-orange-400 bg-orange-50 dark:bg-orange-950 border-2">
+            <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            <AlertDescription className="text-orange-900 dark:text-orange-200 font-medium">
+              {language === "cs" ? "🚨 Recovery Mode aktivní - Dej si pauzu" : "🚨 Recovery Mode active - Take a break"}
+            </AlertDescription>
+          </Alert>
+        )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 h-[calc(100vh-180px)]">
-            <div className="lg:col-span-1 space-y-4 lg:block hidden overflow-y-auto">
-              {/* Readiness Score */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">{language === "cs" ? "Readiness Score" : "Readiness Score"}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center">
-                    <div className={`text-5xl font-bold ${getReadinessColor(readinessScore)}`}>
-                      {readinessScore !== null ? readinessScore + "%" : "Není dostupné"}
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      {getReadinessStatus(readinessScore)}
-                    </p>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 md:p-6 p-4 h-[calc(100vh-160px)]">
+          {/* Sidebar - Desktop Only */}
+          <div className="lg:col-span-1 space-y-4 lg:block hidden overflow-y-auto">
+            <Card className="bg-white dark:bg-slate-800 border-2 border-amber-200 dark:border-amber-900">
+              <CardHeader>
+                <CardTitle className="text-base font-bold text-slate-900 dark:text-white">
+                  {language === "cs" ? "Readiness" : "Readiness"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center">
+                  <div className={`text-4xl font-bold ${getReadinessColor(readinessScore)}`}>
+                    {readinessScore !== null ? readinessScore + "%" : "—"}
                   </div>
-                  {readinessScore !== null && <Progress value={readinessScore} className="h-2" />}
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
+                    {getReadinessStatus(readinessScore)}
+                  </p>
+                </div>
 
-                  <div className="space-y-3 pt-4 border-t">
-                    <Label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                      {language === "cs" ? "Režim AI" : "AI Mode"}
-                    </Label>
-                    <div className="space-y-2">
-                      {Object.entries(modes).map(([key, mode]) => {
-                        const Icon = mode.icon
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => setAiMode(key as any)}
-                            className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
-                              aiMode === key
-                                ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
-                                : "border-gray-200 dark:border-gray-700 hover:border-purple-300"
-                            }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <Icon
-                                className={`w-4 h-4 mt-0.5 ${aiMode === key ? "text-purple-600" : "text-gray-600"}`}
-                              />
-                              <div className="flex-1">
-                                <div
-                                  className={`text-sm font-medium ${aiMode === key ? "text-purple-700 dark:text-purple-400" : "text-gray-900 dark:text-gray-100"}`}
-                                >
-                                  {mode.name}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                  {mode.description}
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Readiness Factors Display */}
-                  <div className="space-y-3 pt-4 border-t">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {language === "cs" ? "Načteno z Daily Trackeru:" : "Loaded from Daily Tracker:"}
-                    </p>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Moon className="w-4 h-4 text-blue-500" />
-                          <Label className="text-xs">{language === "cs" ? "Spánek" : "Sleep"}</Label>
-                        </div>
-                        <span className="text-xs font-medium">{readinessFactors.sleep}/10</span>
-                      </div>
-                      <Progress value={readinessFactors.sleep * 10} className="h-1" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Activity className="w-4 h-4 text-red-500" />
-                          <Label className="text-xs">{language === "cs" ? "Stres" : "Stress"}</Label>
-                        </div>
-                        <span className="text-xs font-medium">{readinessFactors.stress}/10</span>
-                      </div>
-                      <Progress value={readinessFactors.stress * 10} className="h-1" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Wind className="w-4 h-4 text-green-500" />
-                          <Label className="text-xs">{language === "cs" ? "Rutina" : "Routine"}</Label>
-                        </div>
-                        <span className="text-xs font-medium">{readinessFactors.routine}/10</span>
-                      </div>
-                      <Progress value={readinessFactors.routine * 10} className="h-1" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Utensils className="w-4 h-4 text-orange-500" />
-                          <Label className="text-xs">{language === "cs" ? "Výživa" : "Nutrition"}</Label>
-                        </div>
-                        <span className="text-xs font-medium">{readinessFactors.nutrition}/10</span>
-                      </div>
-                      <Progress value={readinessFactors.nutrition * 10} className="h-1" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Main Chat Area - Now spans full height with lg:col-span-4 */}
-            <div className="lg:col-span-4 col-span-1 h-full flex flex-col">
-              <Card className="h-full flex flex-col">
-                <CardContent className="p-0 h-full flex flex-col">
-                  {/* Messages */}
-                  <ScrollArea className="flex-1 md:p-6 p-3">
-                    <div className="space-y-3 md:space-y-4">
-                      {messages.map((message, index) => (
-                        <div
-                          key={index}
-                          className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                        >
-                          <div
-                            className={`md:max-w-[80%] max-w-[90%] rounded-2xl md:p-4 p-3 ${
-                              message.role === "user"
-                                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                                : message.type === "recovery"
-                                  ? "bg-gradient-to-r from-orange-500 to-red-500 text-white"
-                                  : message.type === "insight"
-                                    ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
-                                    : "bg-slate-100 dark:bg-slate-800 text-gray-900 dark:text-gray-100"
-                            }`}
-                          >
-                            <div className="flex items-start gap-2 md:gap-3">
-                              {message.role === "assistant" && (
-                                <div className="p-2 bg-white/20 rounded-lg mt-1 md:block hidden">
-                                  <Brain className="w-4 h-4" />
-                                </div>
-                              )}
-                              <div className="flex-1">
-                                <p className="md:text-sm text-xs leading-relaxed whitespace-pre-wrap">
-                                  {message.content}
-                                </p>
-                                <span className="text-xs opacity-60 mt-2 block">
-                                  {message.timestamp.toLocaleTimeString(language === "cs" ? "cs-CZ" : "en-US", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-
-                      {/* Loading state */}
-                      {isLoading && (
-                        <div className="flex justify-start">
-                          <div className="max-w-[80%] rounded-2xl p-4 bg-slate-100 dark:bg-slate-800">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-purple-500/20 rounded-lg">
-                                <Brain className="w-4 h-4 text-purple-600" />
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  {language === "cs" ? "Analyzuji..." : "Analyzing..."}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div ref={messagesEndRef} />
-                    </div>
-                  </ScrollArea>
-
-                  {messages.length <= 1 && (
-                    <div className="md:px-6 px-3 py-3 border-t">
-                      <Label className="text-xs text-gray-600 dark:text-gray-400 mb-2 block md:block hidden">
-                        Rychlé dotazy:
-                      </Label>
-                      <div className="grid md:grid-cols-2 grid-cols-1 gap-2">
-                        {quickPrompts.slice(0, 4).map((prompt, index) => (
-                          <Button
-                            key={index}
-                            variant="outline"
-                            size="sm"
-                            className="text-left justify-start h-auto py-2 md:text-xs text-xs bg-transparent"
-                            onClick={() => setInput(prompt)}
-                          >
-                            <Zap className="w-3 h-3 mr-2 flex-shrink-0" />
-                            <span className="truncate">{prompt}</span>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="border-t md:p-4 p-3 bg-slate-50 dark:bg-slate-900">
-                    <div className="flex gap-2 md:gap-3">
-                      <div className="flex-1 relative">
-                        <Textarea
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault()
-                              handleSendMessage()
-                            }
-                          }}
-                          placeholder={language === "cs" ? "Napiš zprávu..." : "Type a message..."}
-                          className="md:min-h-[60px] min-h-[80px] md:max-h-[120px] max-h-[150px] resize-none md:text-sm text-base"
-                          disabled={isLoading}
-                        />
-                      </div>
-                      <Button
-                        onClick={handleSendMessage}
-                        disabled={!input.trim() || isLoading}
-                        className="md:h-[60px] h-[80px] md:px-6 px-4"
-                      >
-                        {isLoading ? (
-                          <Loader2 className="md:w-5 md:h-5 w-6 h-6 animate-spin" />
-                        ) : (
-                          <Send className="md:w-5 md:h-5 w-6 h-6" />
-                        )}
-                      </Button>
-                    </div>
-                    {!isLiveMode && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        {language === "cs"
-                          ? `Virtual: ${virtualMessageCount}/3 zpráv`
-                          : `Virtual: ${virtualMessageCount}/3 messages`}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="lg:hidden border-t md:p-4 p-3 bg-slate-100 dark:bg-slate-900">
-                    <div className="flex items-center gap-2 overflow-x-auto">
-                      <Label className="text-xs whitespace-nowrap">Režim:</Label>
-                      {Object.entries(modes).map(([key, mode]) => (
-                        <Button
+                <div className="space-y-3 pt-4 border-t">
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {language === "cs" ? "Režim AI" : "AI Mode"}
+                  </p>
+                  <div className="space-y-2">
+                    {Object.entries(modes).map(([key, mode]) => {
+                      const Icon = mode.icon
+                      return (
+                        <button
                           key={key}
-                          variant={aiMode === key ? "default" : "outline"}
-                          size="sm"
-                          className="whitespace-nowrap text-xs h-8"
-                          onClick={() => !mode.locked && setAiMode(key as any)}
-                          disabled={mode.locked}
+                          onClick={() => setAiMode(key as any)}
+                          className={`w-full text-left p-3 rounded-lg border-2 transition-all font-medium text-sm ${
+                            aiMode === key
+                              ? "border-amber-500 bg-amber-50 dark:bg-amber-950 text-slate-900 dark:text-amber-200"
+                              : "border-slate-200 dark:border-slate-700 hover:border-amber-300 text-slate-700 dark:text-slate-300"
+                          }`}
                         >
-                          {mode.name.split(" ")[1] || mode.name}
+                          <div className="flex items-center gap-2">
+                            <Icon className="w-4 h-4" />
+                            <span>{mode.name}</span>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Chat Area */}
+          <div className="lg:col-span-4 col-span-1 h-full flex flex-col">
+            <Card className="h-full flex flex-col bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-lg">
+              <CardContent className="p-0 h-full flex flex-col">
+                {/* Messages Area */}
+                <ScrollArea className="flex-1 md:p-6 p-4">
+                  <div className="space-y-4">
+                    {messages.map((message, index) => (
+                      <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                        <div
+                          className={`md:max-w-[75%] max-w-[85%] rounded-lg md:p-4 p-3 ${
+                            message.role === "user"
+                              ? "bg-blue-600 text-white shadow-md"
+                              : message.type === "recovery"
+                                ? "bg-orange-100 dark:bg-orange-950 text-orange-900 dark:text-orange-100 border-2 border-orange-300 dark:border-orange-700"
+                                : message.type === "insight"
+                                  ? "bg-indigo-100 dark:bg-indigo-950 text-indigo-900 dark:text-indigo-100"
+                                  : "bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100"
+                          }`}
+                        >
+                          <p className="md:text-base text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                            {message.content}
+                          </p>
+                          <span className="text-xs opacity-70 mt-2 block">
+                            {message.timestamp.toLocaleTimeString(language === "cs" ? "cs-CZ" : "en-US", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Loading State */}
+                    {isLoading && (
+                      <div className="flex justify-start">
+                        <div className="max-w-[75%] rounded-lg p-4 bg-slate-100 dark:bg-slate-700">
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                            <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">
+                              {language === "cs" ? "Analyzuji tvá data..." : "Analyzing your data..."}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
+
+                {/* Quick Prompts */}
+                {messages.length <= 1 && (
+                  <div className="md:px-6 px-4 py-3 border-t">
+                    <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-3 block">
+                      {language === "cs" ? "Rychlé dotazy:" : "Quick prompts:"}
+                    </Label>
+                    <div className="grid md:grid-cols-2 grid-cols-1 gap-2">
+                      {quickPrompts.slice(0, 4).map((prompt, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          className="text-left justify-start h-auto py-2 text-xs font-medium border-slate-300 dark:border-slate-600 hover:bg-amber-50 dark:hover:bg-slate-700 bg-transparent"
+                          onClick={() => setInput(prompt)}
+                        >
+                          <Zap className="w-4 h-4 mr-2 flex-shrink-0 text-amber-600" />
+                          <span className="truncate">{prompt}</span>
                         </Button>
                       ))}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                )}
+
+                {/* Input Area */}
+                <div className="border-t md:p-4 p-3 bg-slate-50 dark:bg-slate-900">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Textarea
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault()
+                            handleSendMessage()
+                          }
+                        }}
+                        placeholder={language === "cs" ? "Napiš zprávu..." : "Type your message..."}
+                        className="md:min-h-[60px] min-h-[70px] md:max-h-[100px] max-h-[120px] resize-none text-sm"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <Button
+                      onClick={handleSendMessage}
+                      disabled={!input.trim() || isLoading}
+                      className="md:h-[60px] h-[70px] px-4 bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                    </Button>
+                  </div>
+                  {!isLiveMode && (
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 font-medium">
+                      {language === "cs" ? `Virtual: ${virtualMessageCount}/3` : `Virtual: ${virtualMessageCount}/3`}
+                    </p>
+                  )}
+                </div>
+
+                {/* Mobile Mode Selector */}
+                <div className="lg:hidden border-t md:p-4 p-3 bg-slate-100 dark:bg-slate-900">
+                  <div className="flex items-center gap-2 overflow-x-auto">
+                    <Label className="text-xs font-semibold whitespace-nowrap">
+                      {language === "cs" ? "Režim:" : "Mode:"}
+                    </Label>
+                    {Object.entries(modes).map(([key, mode]) => (
+                      <Button
+                        key={key}
+                        variant={aiMode === key ? "default" : "outline"}
+                        size="sm"
+                        className="whitespace-nowrap text-xs font-medium"
+                        onClick={() => setAiMode(key as any)}
+                      >
+                        {mode.name.split(" ")[1]}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

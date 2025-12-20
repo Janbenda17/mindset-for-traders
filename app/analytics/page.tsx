@@ -68,6 +68,7 @@ import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
 import { getUserData } from "@/utils/storage-utils"
 import { useTradingStyle } from "@/contexts/trading-style-context"
+import { useAuth } from "@/contexts/auth-context" // Added
 
 // Custom Tooltip with better formatting
 const CustomTooltip = ({ active, payload, label, type = "default" }: any) => {
@@ -503,7 +504,7 @@ function generatePsychologicalAnalysis(
     avgReadiness: 0,
     week: "",
   })
-  const worstWeek = weeklyPerformanceData.reduce((worst, week) => (week.pnl < worst.pnl ? worst : worst), {
+  const worstWeek = weeklyPerformanceData.reduce((worst, week) => (worst.pnl < worst.pnl ? worst : worst), {
     pnl: Number.POSITIVE_INFINITY,
     avgReadiness: 0,
     week: "",
@@ -770,7 +771,8 @@ function generatePsychologicalAnalysis(
   }
 }
 
-export default function AnalyticsPage({ user }: any) {
+export default function AnalyticsPage({ user: authUser }: any) {
+  // Renamed user to authUser to avoid redeclaration
   // Added user prop
   const { isLiveMode, getAllTrades, getAllJournalEntries } = useData()
   const [timeframe, setTimeframe] = useState<"week" | "month" | "all">("month") // Added "all"
@@ -778,20 +780,19 @@ export default function AnalyticsPage({ user }: any) {
   const [analysis, setAnalysis] = useState<any>(null)
   // Removed tradingStyle state initialization here as it's handled by the hook
   const { tradingStyle } = useTradingStyle() // Hook provides tradingStyle
+  const { user } = useAuth() // Added user from auth context
+
+  // CHANGE: Load demo data for virtual mode and set state
+  const demoData = !isLiveMode ? generateDemoData(tradingStyle || "daytrader") : null
 
   useEffect(() => {
     const userData = getUserData()
-    const style = userData.settings?.trading?.style || "day-trader"
-    // Removed setTradingStyle(style) as it's now managed by the hook
+    // const style = userData.settings?.trading?.style || "day-trader" // This logic is likely moved or handled by useTradingStyle hook now
 
     const trades = getAllTrades() || []
     const journals = getAllJournalEntries() || []
 
-    if (trades.length === 0) {
-      setAnalysis(null)
-      return
-    }
-
+    // CHANGE: Don't return null when no trades - generate analysis from virtual data
     const moodEntriesKey = user?.id ? `user-${user.id}-trader-mindset-mood-entries` : "trader-mindset-mood-entries"
     const moodEntries = JSON.parse(localStorage.getItem(moodEntriesKey) || "[]")
 
@@ -807,13 +808,11 @@ export default function AnalyticsPage({ user }: any) {
     setAnalysis(realAnalysis)
   }, [isLiveMode, timeframe, user?.id, tradingStyle]) // Added tradingStyle dependency
 
-  // CHANGE: Load demo data for virtual mode
-  const demoData = !isLiveMode ? generateDemoData(tradingStyle || "daytrader") : null
-
   // CHANGE: Add fallback for undefined displayData to prevent build error
   const displayData = !isLiveMode ? demoData : analysis
 
-  if (!displayData || !displayData.summary) {
+  // CHANGE: Only show "no data" if in live mode with no data
+  if (!displayData && isLiveMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">

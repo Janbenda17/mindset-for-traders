@@ -50,6 +50,12 @@ export interface VirtualJournalEntry {
   type: string
 }
 
+export interface VirtualDailyTrackerData {
+  morningCheck: VirtualMorningCheck
+  todayScore: number
+  insight: string
+}
+
 const CURRENCY_PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "GBP/JPY", "AUD/USD", "USD/CAD", "EUR/GBP", "NZD/USD"]
 
 const EMOTIONS = ["Confident", "Calm", "Focused", "Anxious", "Excited", "Nervous", "Relaxed", "Stressed", "Disciplined"]
@@ -258,5 +264,61 @@ export function generateVirtualAnalytics() {
     largestLoss: Math.min(...trades.map((t) => t.pnl)),
     profitFactor,
     uniqueTradingDays: new Set(trades.map((t) => t.date)).size,
+  }
+}
+
+export function generateVirtualDailyTrackerData() {
+  // Generate realistic daily tracker data with filled stages
+  const today = new Date().toISOString().split("T")[0]
+
+  const morningCheck: VirtualMorningCheck = {
+    id: `virtual-morning-${today}`,
+    date: today,
+    sleepQuality: 8,
+    sleepHours: 7.5,
+    energyLevel: 8,
+    stressLevel: 3,
+    focus: 9,
+    physicalHealth: 8,
+    emotionalState: 8,
+    exercised: true,
+    meditationTime: 15,
+    morningRoutine: true,
+    hydration: 8,
+    score: 82,
+  }
+
+  return {
+    morningCheck,
+    todayScore: 82,
+    insight:
+      "Vynikající readiness! Jsi plně připravený na obchodování. Tvá vysoká úroveň focusu (9/10) a nízký stres (3/10) vytváří optimální podmínky pro disciplinované rozhodování.",
+  }
+}
+
+export function generateVirtualJournalStats() {
+  const trades = generateVirtualTrades(30)
+
+  const winningTrades = trades.filter((t) => t.pnl > 0)
+  const losingTrades = trades.filter((t) => t.pnl < 0)
+
+  const totalPnL = trades.reduce((sum, t) => sum + t.pnl, 0)
+
+  // This week stats (last 7 days)
+  const weekTrades = trades.filter((t) => {
+    const tradeDate = new Date(t.date)
+    const today = new Date()
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+    return tradeDate >= weekAgo
+  })
+
+  const weekPnL = weekTrades.reduce((sum, t) => sum + t.pnl, 0)
+
+  return {
+    celkem: trades.length,
+    thisWeek: weekTrades.length,
+    avgPerTrade: trades.length > 0 ? Math.round(totalPnL / trades.length) : 0,
+    weekPnL: Math.round(weekPnL),
+    winRate: trades.length > 0 ? Math.round((winningTrades.length / trades.length) * 100) : 0,
   }
 }

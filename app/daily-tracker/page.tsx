@@ -34,7 +34,7 @@ import { useData } from "@/contexts/data-context"
 import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useTradingStyle } from "@/contexts/trading-style-context"
-import { generateDemoDailyTrackerData } from "@/data/demo-daily-tracker"
+import { generateVirtualDailyTrackerData } from "@/data/demo-daily-tracker"
 import { useAuth } from "@/contexts/auth-context" // Import useAuth
 
 interface MorningCheckData {
@@ -159,29 +159,21 @@ export default function DailyTrackerPage() {
   const [entries, setEntries] = useState<DailySummary[]>([])
   const [activeTab, setActiveTab] = useState("today")
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
+  const [virtualData, setVirtualData] = useState<any>(null)
 
   useEffect(() => {
     if (!isLiveMode) {
-      router.push("/analytics")
+      const data = generateVirtualDailyTrackerData()
+      setVirtualData(data)
     }
-  }, [isLiveMode, router])
-
-  if (!isLiveMode) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Přesměrování na Analytics...</h2>
-          <p className="text-muted-foreground">Ve virtual módu se zobrazují analytics místo daily trackeru.</p>
-        </div>
-      </div>
-    )
-  }
+  }, [isLiveMode])
 
   const loadEntries = () => {
     if (!isLiveMode) {
-      const demoData = generateDemoDailyTrackerData()
-      setEntries(demoData)
+      // Virtual mode uses virtualData set in useEffect
+      return
     } else {
+      // Live mode logic
       const morningChecksKey = user?.id ? `user-${user.id}-mindtrader-morning-checks` : "mindtrader-morning-checks"
       const intentionsKey = user?.id ? `user-${user.id}-daily-intentions` : "daily-intentions"
       const plansKey = user?.id ? `user-${user.id}-trading-plans` : "trading-plans"
@@ -236,8 +228,11 @@ export default function DailyTrackerPage() {
     loadEntries()
   }, [isLiveMode, user?.id]) // Re-fetch entries when user changes
 
-  const todayEntry = entries.find((e) => e.date === format(new Date(), "yyyy-MM-dd"))
-  const todayStages = stages
+  const todayEntry = isLiveMode
+    ? entries.find((e) => e.date === format(new Date(), "yyyy-MM-dd"))
+    : { morningCheck: virtualData?.morningCheck }
+
+  const readinessScore = isLiveMode ? (todayEntry?.morningCheck?.score ?? null) : (virtualData?.todayScore ?? null)
 
   const getReadinessColor = (score: number | null) => {
     if (score === null) return "text-gray-400"
@@ -254,10 +249,21 @@ export default function DailyTrackerPage() {
   }
 
   // Calculate readinessScore here
-  const readinessScore = todayEntry?.morningCheck?.score ?? null
+  // const readinessScore = todayEntry?.morningCheck?.score ?? null; // Moved up
 
   const generateTradingDecision = (morningCheck?: MorningCheckData, readinessScore?: number | null) => {
-    if (!morningCheck || readinessScore === undefined || readinessScore === null) {
+    if (!morningCheck && !virtualData) {
+      return {
+        message: "Vyplň Morning Check pro získání doporučení.",
+        tips: ["Dokončete ranní vyhodnocení pro personalizované tipy"],
+        details: ["Morning Check nevyplněn"],
+      }
+    }
+
+    const currentMorningCheck = morningCheck || virtualData?.morningCheck
+    const currentReadinessScore = readinessScore ?? virtualData?.todayScore ?? null
+
+    if (!currentMorningCheck || currentReadinessScore === undefined || currentReadinessScore === null) {
       return {
         message: "Vyplň Morning Check pro získání doporučení.",
         tips: ["Dokončete ranní vyhodnocení pro personalizované tipy"],
@@ -271,19 +277,19 @@ export default function DailyTrackerPage() {
     const details: string[] = []
 
     // Analyze metrics
-    const poorSleep = morningCheck.sleepQuality < 6 || morningCheck.sleepHours < 6
-    const highStress = morningCheck.stressLevel > 7
-    const lowFocus = morningCheck.focus < 6
-    const lowEnergy = morningCheck.energyLevel < 5
-    const badMood = morningCheck.emotionalState < 6
-    const goodConditions = readinessScore >= 70
+    const poorSleep = currentMorningCheck.sleepQuality < 6 || currentMorningCheck.sleepHours < 6
+    const highStress = currentMorningCheck.stressLevel > 7
+    const lowFocus = currentMorningCheck.focus < 6
+    const lowEnergy = currentMorningCheck.energyLevel < 5
+    const badMood = currentMorningCheck.emotionalState < 6
+    const goodConditions = currentReadinessScore >= 70
 
     // Analyze positives for confidence boost
-    const highFocus = morningCheck.focus >= 8
-    const lowStressMetric = morningCheck.stressLevel <= 3
-    const highEnergy = morningCheck.energyLevel >= 8
-    const goodMood = morningCheck.emotionalState >= 8
-    const goodSleep = morningCheck.sleepQuality >= 8 && morningCheck.sleepHours >= 7
+    const highFocus = currentMorningCheck.focus >= 8
+    const lowStressMetric = currentMorningCheck.stressLevel <= 3
+    const highEnergy = currentMorningCheck.energyLevel >= 8
+    const goodMood = currentMorningCheck.emotionalState >= 8
+    const goodSleep = currentMorningCheck.sleepQuality >= 8 && currentMorningCheck.sleepHours >= 7
 
     let positiveNote = ""
     if (highFocus) positiveNote = "Tvůj focus je dnes excelentní, to je tvá super-schopnost."
@@ -294,51 +300,51 @@ export default function DailyTrackerPage() {
 
     // Generate main message based on primary issue
     if (poorSleep) {
-      message = `Naspal jsi jen ${morningCheck.sleepHours}h (kvalita ${morningCheck.sleepQuality}/10). Nedostatek spánku snižuje rozhodování o 30-40%.`
+      message = `Naspal jsi jen ${currentMorningCheck.sleepHours}h (kvalita ${currentMorningCheck.sleepQuality}/10). Nedostatek spánku snižuje rozhodování o 30-40%.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Spánek: ${morningCheck.sleepHours}h, kvalita ${morningCheck.sleepQuality}/10`)
+      details.push(`Spánek: ${currentMorningCheck.sleepHours}h, kvalita ${currentMorningCheck.sleepQuality}/10`)
       tips.push("Dej si 10-15min meditaci před tradingem")
       tips.push("Zvaž vynechání tradingu nebo max 1-2 trades s polovičním riskem")
       tips.push("Dnes večer jdi spát o 1-2 hodiny dříve")
     } else if (highStress) {
-      message = `Vysoká úroveň stresu (${morningCheck.stressLevel}/10) zvyšuje riziko impulzivních vstupů.`
+      message = `Vysoká úroveň stresu (${currentMorningCheck.stressLevel}/10) zvyšuje riziko impulzivních vstupů.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Stres: ${morningCheck.stressLevel}/10`)
+      details.push(`Stres: ${currentMorningCheck.stressLevel}/10`)
       tips.push("Udělej 15-20min deep breathing před tradingem")
       tips.push("Zvaž redukci velikosti pozic na 30-50%")
       tips.push("Dělej častější pauzy - každých 30 minut")
     } else if (lowFocus) {
-      message = `Nízký focus (${morningCheck.focus}/10) zvyšuje riziko špatných vstupů o 40%.`
+      message = `Nízký focus (${currentMorningCheck.focus}/10) zvyšuje riziko špatných vstupů o 40%.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Focus: ${morningCheck.focus}/10`)
+      details.push(`Focus: ${currentMorningCheck.focus}/10`)
       tips.push("Běž se na 15-20min projít venku před tradingem")
       tips.push("Zavři všechny nepotřebné aplikace")
       tips.push("Dělej Pomodoro - 25min focus, 5min pauza")
     } else if (lowEnergy) {
-      message = `Nízká energie (${morningCheck.energyLevel}/10) může vést k únavě a horším rozhodnutím.`
+      message = `Nízká energie (${currentMorningCheck.energyLevel}/10) může vést k únavě a horším rozhodnutím.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Energie: ${morningCheck.energyLevel}/10`)
+      details.push(`Energie: ${currentMorningCheck.energyLevel}/10`)
       tips.push("Dej si zdravou snídani s proteiny")
       tips.push("Tkus 10-15min lehkého cvičení")
       tips.push("Zvaž kratší trading session - max 2-3 hodiny")
     } else if (badMood) {
-      message = `Emoční stav není ideální (${morningCheck.emotionalState}/10). Riziko revenge tradingu.`
+      message = `Emoční stav není ideální (${currentMorningCheck.emotionalState}/10). Riziko revenge tradingu.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Emoční stav: ${morningCheck.emotionalState}/10`)
+      details.push(`Emoční stav: ${currentMorningCheck.emotionalState}/10`)
       tips.push("Vezmi si pauzu, udělej něco co tě uklidní")
       tips.push("Zvaž vynechání tradingu dnes")
       tips.push("Zapiš si své emoce do journalu")
     } else if (goodConditions) {
-      message = `Výborné podmínky! Readiness ${readinessScore}%, jsi připravený na obchodování.`
+      message = `Výborné podmínky! Readiness ${currentReadinessScore}%, jsi připravený na obchodování.`
       if (positiveNote) message += ` ${positiveNote}`
       details.push(`Všechny metriky v optimálním rozsahu`)
       tips.push("Drž se svého trading plánu")
       tips.push("Sleduj své emoce během tradingu")
       tips.push("Dělej pravidelné pauzy každou hodinu")
     } else {
-      message = `Readiness ${readinessScore}% je pod hranicí 70%. Zvaž snížení risku.`
+      message = `Readiness ${currentReadinessScore}% je pod hranicí 70%. Zvaž snížení risku.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Readiness: ${readinessScore}%`)
+      details.push(`Readiness: ${currentReadinessScore}%`)
       tips.push("Prioritou je tvé zdraví a dlouhodobý úspěch")
       tips.push("Dnes je lepší den na odpočinek nebo vzdělávání")
     }
@@ -351,7 +357,10 @@ export default function DailyTrackerPage() {
     return { message, tips, details }
   }
 
-  const tradingDecision = generateTradingDecision(todayEntry?.morningCheck, readinessScore)
+  const tradingDecision = generateTradingDecision(
+    isLiveMode ? todayEntry?.morningCheck : virtualData?.morningCheck,
+    readinessScore,
+  )
 
   // Generate insights
   const generateInsights = (morningCheck?: MorningCheckData) => {
@@ -424,6 +433,14 @@ export default function DailyTrackerPage() {
 
   const insights = generateInsights(todayEntry?.morningCheck)
 
+  // Define todayStages here, based on the 'stages' from useDailyStage hook
+  const todayStages = stages.map((stage) => ({
+    ...stage,
+    // In virtual mode, all stages are considered completed and unlocked for display purposes
+    completed: !isLiveMode ? true : stage.completed,
+    unlocked: !isLiveMode ? true : stage.unlocked,
+  }))
+
   return (
     <div className="min-h-screen p-3 sm:p-6 space-y-4 sm:space-y-6 pt-4 sm:pt-6">
       <div className="md:mb-12 mb-6 relative">
@@ -480,7 +497,7 @@ export default function DailyTrackerPage() {
         </TabsList>
 
         <TabsContent value="today" className="space-y-6 md:space-y-8">
-          {todayEntry?.morningCheck && (
+          {(todayEntry?.morningCheck || virtualData) && (
             <>
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-cyan-500/10 to-teal-500/10 rounded-3xl blur-2xl" />
@@ -536,7 +553,9 @@ export default function DailyTrackerPage() {
                             <Moon className="h-4 w-4 text-indigo-400" />
                             <span className="text-xs text-muted-foreground">Spánek</span>
                           </div>
-                          <div className="text-xl font-black text-white">{todayEntry.morningCheck.sleepQuality}/10</div>
+                          <div className="text-xl font-black text-white">
+                            {todayEntry.morningCheck?.sleepQuality}/10
+                          </div>
                         </div>
 
                         <div className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -544,7 +563,7 @@ export default function DailyTrackerPage() {
                             <Zap className="h-4 w-4 text-yellow-400" />
                             <span className="text-xs text-muted-foreground">Energie</span>
                           </div>
-                          <div className="text-xl font-black text-white">{todayEntry.morningCheck.energyLevel}/10</div>
+                          <div className="text-xl font-black text-white">{todayEntry.morningCheck?.energyLevel}/10</div>
                         </div>
 
                         <div className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -552,7 +571,7 @@ export default function DailyTrackerPage() {
                             <Brain className="h-4 w-4 text-purple-400" />
                             <span className="text-xs text-muted-foreground">Focus</span>
                           </div>
-                          <div className="text-xl font-black text-white">{todayEntry.morningCheck.focus}/10</div>
+                          <div className="text-xl font-black text-white">{todayEntry.morningCheck?.focus}/10</div>
                         </div>
 
                         <div className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -560,7 +579,7 @@ export default function DailyTrackerPage() {
                             <AlertTriangle className="h-4 w-4 text-red-400" />
                             <span className="text-xs text-muted-foreground">Stres</span>
                           </div>
-                          <div className="text-xl font-black text-white">{todayEntry.morningCheck.stressLevel}/10</div>
+                          <div className="text-xl font-black text-white">{todayEntry.morningCheck?.stressLevel}/10</div>
                         </div>
 
                         <div className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -569,13 +588,25 @@ export default function DailyTrackerPage() {
                             <span className="text-xs text-muted-foreground">Nálada</span>
                           </div>
                           <div className="text-xl font-black text-white">
-                            {todayEntry.morningCheck.emotionalState}/10
+                            {todayEntry.morningCheck?.emotionalState}/10
                           </div>
                         </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+              </div>
+
+              <div className="mt-6 p-6 bg-slate-800/50 rounded-2xl border border-cyan-500/20">
+                <div className="flex items-start gap-4">
+                  <Lightbulb className="h-6 w-6 text-cyan-400 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-2">AI Insight</h3>
+                    <p className="text-gray-300 leading-relaxed">
+                      {!isLiveMode ? virtualData?.insight : tradingDecision.message}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {tradingDecision && (
@@ -731,161 +762,132 @@ export default function DailyTrackerPage() {
             </>
           )}
 
-          {/* Stage Progress - Progressive Unlock */}
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl blur-2xl" />
-            <Card className="relative border-2 border-violet-500/30 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl overflow-hidden">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-3xl">
-                      <CheckCircle className="h-8 w-8 text-violet-400" />
-                      <span className="bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
-                        {tradingStyle === "scalper" && "Session Flow"}
-                        {tradingStyle === "daytrader" && "Daily Trading Flow"}
-                        {tradingStyle === "swingtrader" && "Position Management Flow"}
-                        {!tradingStyle && "Daily Trading Flow"}
-                      </span>
-                    </CardTitle>
-                    <CardDescription className="text-lg mt-2">
-                      {tradingStyle === "scalper" && "Postupné odemykání session stages"}
-                      {tradingStyle === "daytrader" && "Postupné odemykání stages během dne"}
-                      {tradingStyle === "swingtrader" && "Postupné odemykání management stages"}
-                      {!tradingStyle && "Postupné odemykání stages během dne"}
-                    </CardDescription>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-5xl font-black bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
-                      {todayStages.filter((s) => s.completed).length}/5
-                    </div>
-                    <div className="text-sm text-muted-foreground">dokončeno</div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-5 gap-4">
-                  {stageData.map((stage, index) => {
-                    const stageStatus = todayStages.find((s) => s.id === stage.id)
-                    const isCompleted = stageStatus?.completed || false
-                    const isUnlocked = stageStatus?.unlocked || false
-                    const isActive = !isCompleted && isUnlocked
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {stageData.map((stage, index) => {
+              // Use virtualData for stage status in virtual mode
+              const isCompleted =
+                !isLiveMode || (todayEntry?.morningCheck && stages.find((s) => s.id === stage.id)?.completed)
+              const isUnlocked =
+                !isLiveMode || (todayEntry?.morningCheck && stages.find((s) => s.id === stage.id)?.unlocked)
+              const isActive = !isCompleted && isUnlocked
 
-                    return (
+              return (
+                <Card
+                  key={stage.id}
+                  className={cn(
+                    "relative overflow-hidden border-2 transition-all duration-300",
+                    isCompleted && `${stage.borderColor} ${stage.bgColor}`,
+                    isActive && "border-yellow-500/50 bg-yellow-500/10 animate-pulse cursor-pointer",
+                    !isUnlocked && "border-slate-700/50 bg-slate-800/30 opacity-40 cursor-not-allowed",
+                    isUnlocked && !isCompleted && "hover:scale-105 cursor-pointer",
+                  )}
+                  onClick={() => {
+                    if (isUnlocked && stage.href) {
+                      router.push(stage.href)
+                    }
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity from-white/5 to-transparent" />
+                  <div className="relative p-6">
+                    <div className="flex flex-col items-center text-center space-y-3">
                       <div
-                        key={stage.id}
                         className={cn(
-                          "group relative overflow-hidden rounded-2xl border-2 transition-all duration-300",
-                          isCompleted && `${stage.borderColor} ${stage.bgColor}`,
-                          isActive && "border-yellow-500/50 bg-yellow-500/10 animate-pulse",
-                          !isUnlocked && "border-slate-700/50 bg-slate-800/30 opacity-40 cursor-not-allowed",
-                          isUnlocked && !isCompleted && "hover:scale-105 cursor-pointer",
+                          "relative p-4 rounded-2xl",
+                          isCompleted && `bg-gradient-to-br ${stage.color}`,
+                          isActive && "bg-gradient-to-br from-yellow-500 to-orange-500",
+                          !isUnlocked && "bg-slate-700/50",
                         )}
-                        onClick={() => {
-                          if (isUnlocked) {
-                            router.push(stage.href)
-                          }
-                        }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity from-white/5 to-transparent" />
-                        <div className="relative p-6">
-                          <div className="flex flex-col items-center text-center space-y-3">
-                            <div
-                              className={cn(
-                                "relative p-4 rounded-2xl",
-                                isCompleted && `bg-gradient-to-br ${stage.color}`,
-                                isActive && "bg-gradient-to-br from-yellow-500 to-orange-500",
-                                !isUnlocked && "bg-slate-700/50",
-                              )}
-                            >
-                              <stage.icon
-                                className={cn(
-                                  "h-8 w-8",
-                                  (isCompleted || isActive) && "text-white",
-                                  !isUnlocked && "text-slate-500",
-                                )}
-                              />
-                              {!isUnlocked && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 rounded-2xl">
-                                  <Lock className="h-6 w-6 text-slate-400" />
-                                </div>
-                              )}
-                            </div>
-
-                            <div>
-                              <div
-                                className={cn(
-                                  "text-sm font-bold mb-1",
-                                  isCompleted && "text-white",
-                                  isActive && "text-yellow-400",
-                                  !isUnlocked && "text-slate-500",
-                                )}
-                              >
-                                Stage {stage.id}
-                              </div>
-                              <div
-                                className={cn(
-                                  "text-xs font-medium",
-                                  (isCompleted || isActive) && "text-white",
-                                  !isUnlocked && "text-slate-600",
-                                )}
-                              >
-                                {stage.name}
-                              </div>
-                            </div>
-
-                            <div>
-                              {isCompleted && (
-                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Dokončeno
-                                </Badge>
-                              )}
-                              {isActive && (
-                                <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
-                                  <Unlock className="h-3 w-3 mr-1" />
-                                  Aktivní
-                                </Badge>
-                              )}
-                              {!isUnlocked && (
-                                <Badge className="bg-slate-700/20 text-slate-500 border-slate-700/30 text-xs">
-                                  <Lock className="h-3 w-3 mr-1" />
-                                  Zamčeno
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-
-                          {index < 4 && (
-                            <div
-                              className={cn(
-                                "absolute top-1/2 -right-2 w-4 h-0.5 transform -translate-y-1/2 z-10",
-                                isCompleted ? "bg-gradient-to-r " + stage.color : "bg-slate-700/50",
-                              )}
-                            />
+                        <stage.icon
+                          className={cn(
+                            "h-8 w-8",
+                            (isCompleted || isActive) && "text-white",
+                            !isUnlocked && "text-slate-500",
                           )}
+                        />
+                        {!isUnlocked && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 rounded-2xl">
+                            <Lock className="h-6 w-6 text-slate-400" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <div
+                          className={cn(
+                            "text-sm font-bold mb-1",
+                            isCompleted && "text-white",
+                            isActive && "text-yellow-400",
+                            !isUnlocked && "text-slate-500",
+                          )}
+                        >
+                          Stage {stage.id}
+                        </div>
+                        <div
+                          className={cn(
+                            "text-xs font-medium",
+                            (isCompleted || isActive) && "text-white",
+                            !isUnlocked && "text-slate-600",
+                          )}
+                        >
+                          {stage.name}
                         </div>
                       </div>
-                    )
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+
+                      <div>
+                        {isCompleted && (
+                          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Dokončeno
+                          </Badge>
+                        )}
+                        {isActive && (
+                          <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+                            <Unlock className="h-3 w-3 mr-1" />
+                            Aktivní
+                          </Badge>
+                        )}
+                        {!isUnlocked && (
+                          <Badge className="bg-slate-700/20 text-slate-500 border-slate-700/30 text-xs">
+                            <Lock className="h-3 w-3 mr-1" />
+                            Zamčeno
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {index < 4 && (
+                      <div
+                        className={cn(
+                          "absolute top-1/2 -right-2 w-4 h-0.5 transform -translate-y-1/2 z-10",
+                          isCompleted ? "bg-gradient-to-r " + stage.color : "bg-slate-700/50",
+                        )}
+                      />
+                    )}
+                  </div>
+                </Card>
+              )
+            })}
           </div>
 
           {/* Continue Button */}
-          {todayEntry && todayStages.filter((s) => s.completed).length < 5 && (
+          {(!isLiveMode || (todayEntry && todayStages.filter((s) => s.completed).length < 5)) && (
             <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10">
               <CardContent className="p-8 text-center">
                 <Target className="h-16 w-16 mx-auto mb-4 text-orange-400" />
                 <h3 className="text-2xl font-black mb-2">Pokračuj v Daily Flow!</h3>
                 <p className="text-muted-foreground mb-6">
-                  Dokončil jsi {todayStages.filter((s) => s.completed).length} z 5 stages. Pokračuj dál!
+                  Dokončil jsi{" "}
+                  {!isLiveMode ? virtualData?.stagesCompleted : todayStages.filter((s) => s.completed).length} z 5
+                  stages. Pokračuj dál!
                 </p>
                 <Button
                   onClick={() => {
-                    const nextIncomplete = todayStages.find((s) => !s.completed && s.unlocked)
-                    if (nextIncomplete) {
-                      const nextStage = stageData.find((sd) => sd.id === nextIncomplete.id)
+                    const nextStageId = !isLiveMode
+                      ? virtualData?.nextStageId
+                      : todayStages.find((s) => !s.completed && s.unlocked)?.id
+                    if (nextStageId) {
+                      const nextStage = stageData.find((sd) => sd.id === nextStageId)
                       if (nextStage) {
                         router.push(nextStage.href)
                       }
@@ -901,7 +903,7 @@ export default function DailyTrackerPage() {
             </Card>
           )}
 
-          {!todayEntry && (
+          {!todayEntry && !virtualData && (
             <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10">
               <CardContent className="p-16 text-center">
                 <Sun className="h-24 w-24 mx-auto mb-6 text-orange-400" />

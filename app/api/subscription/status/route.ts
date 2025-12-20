@@ -1,33 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { createServerClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization")
+    const supabase = await createServerClient()
 
-    if (!authHeader) {
-      return NextResponse.json({
-        plan: "free",
-        isActive: false,
-        trialEndsAt: null,
-        subscriptionId: null,
-        customerId: null,
-      })
-    }
-
-    // Extract token and get user
-    const token = authHeader.replace("Bearer ", "")
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser(token)
+    } = await supabase.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json({
+        isPremium: false,
+        tier: "free",
         plan: "free",
         isActive: false,
         trialEndsAt: null,
@@ -38,14 +26,14 @@ export async function GET(request: NextRequest) {
 
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select(
-        "subscription_status, stripe_customer_id, stripe_subscription_id, subscription_current_period_end, trial_ends_at",
-      )
-      .eq("id", user.id)
+      .select("subscription_status, subscription_tier, stripe_customer_id")
+      .eq("user_id", user.id)
       .maybeSingle()
 
-    if (error) {
+    if (error || !profile) {
       return NextResponse.json({
+        isPremium: false,
+        tier: "free",
         plan: "free",
         isActive: false,
         trialEndsAt: null,
@@ -54,27 +42,27 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const periodEnd = profile?.subscription_current_period_end
-      ? new Date(profile.subscription_current_period_end)
-      : null
-    const isActive =
-      (profile?.subscription_status === "premium" || profile?.subscription_status === "trial") &&
-      (!periodEnd || periodEnd > new Date())
+    const isActive = profile?.subscription_status === "premium" || profile?.subscription_status === "pro"
 
-    const plan = isActive ? "premium" : "free"
+    const tier = profile?.subscription_tier || "free"
+    const isPremium = isActive && tier !== "free"
 
     return NextResponse.json({
-      plan,
+      isPremium,
+      tier,
+      plan: isPremium ? "premium" : "free",
       isActive,
-      trialEndsAt: profile?.trial_ends_at,
-      subscriptionId: profile?.stripe_subscription_id,
+      trialEndsAt: null,
+      subscriptionId: null,
       customerId: profile?.stripe_customer_id,
       status: profile?.subscription_status,
       cancelAtPeriodEnd: false,
     })
   } catch (error) {
-    console.error("Error checking subscription status:", error)
+    console.error("[v0] Error checking subscription status:", error)
     return NextResponse.json({
+      isPremium: false,
+      tier: "free",
       plan: "free",
       isActive: false,
       trialEndsAt: null,

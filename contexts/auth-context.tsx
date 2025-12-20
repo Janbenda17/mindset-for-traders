@@ -80,23 +80,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     checkAuth()
 
+    let debounceTimer: NodeJS.Timeout | null = null
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        const userData = {
-          id: session.user.id,
-          email: session.user.email!,
-          name: session.user.user_metadata?.name || "Trader",
-          isOwner: session.user.email === OWNER_EMAIL,
-        }
-        setUser(userData)
-      } else {
-        setUser(null)
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("[v0] Auth state changed:", event)
+
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
       }
+
+      debounceTimer = setTimeout(() => {
+        if (session?.user) {
+          const userData = {
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.name || "Trader",
+            isOwner: session.user.email === OWNER_EMAIL,
+          }
+          setUser(userData)
+        } else {
+          setUser(null)
+        }
+      }, 300) // 300ms debounce to prevent rapid flapping
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer)
+      subscription.unsubscribe()
+    }
   }, [supabase])
 
   const login = async (email: string, password: string): Promise<boolean> => {

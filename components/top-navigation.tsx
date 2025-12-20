@@ -36,6 +36,10 @@ import {
 import LiveModeToggle from "@/components/live-mode-toggle"
 import { createBrowserClient } from "@supabase/ssr"
 
+interface TopNavigationProps {
+  initialTheme?: string
+}
+
 const mainNavigation = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
@@ -55,7 +59,7 @@ const moreNavigation = [
   { name: "Team Club", href: "/team-club", icon: Users, badge: "PRO" },
 ]
 
-export function TopNavigation() {
+export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
   const pathname = usePathname()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -71,9 +75,12 @@ export function TopNavigation() {
     level: 1,
   })
   const [isLoading, setIsLoading] = useState(true)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false) // Track if we loaded profile once
 
   const loadProfileData = async () => {
     if (typeof window === "undefined") return
+
+    if (hasLoadedOnce && !isLoading) return
 
     setIsLoading(true)
 
@@ -87,14 +94,23 @@ export function TopNavigation() {
     } = await supabase.auth.getUser()
 
     if (!user) {
+      console.log("[v0] No authenticated user")
       setIsLoading(false)
       setIsAuthenticated(false)
+      setHasLoadedOnce(true)
       return
     }
 
+    console.log("[v0] User authenticated:", user.email)
     setIsAuthenticated(true)
 
-    const { data: profile } = await supabase.from("profiles").select("*").eq("user_id", user.id).single()
+    const { data, error } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle()
+
+    if (error) {
+      console.error("[v0] Profile load error:", error)
+    }
+
+    const profile = data
 
     setProfileData({
       name: profile?.nickname || user.email?.split("@")[0] || "User",
@@ -107,26 +123,14 @@ export function TopNavigation() {
     })
 
     setIsLoading(false)
+    setHasLoadedOnce(true)
   }
 
   useEffect(() => {
     loadProfileData()
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      loadProfileData()
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
+    // Auth state is already managed by AuthProvider
+  }, []) // Only load once on mount
 
   const getInitials = (name: string) => {
     if (!name) return "T"

@@ -30,6 +30,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context" // Fixed import path from /context/ (singular) to /contexts/ (plural)
 import { useAuth } from "@/contexts/auth-context" // Import useAuth hook
+import { generateVirtualJournalStats } from "@/lib/virtual-data-generator" // Import for virtual stats
 
 const generateDemoEntries = () => {
   const demoEntries = [
@@ -158,19 +159,30 @@ export default function JournalPage() {
   const [sortedJournalEntries, setSortedJournalEntries] = useState<any[]>([])
   const { getAllJournalEntries, isLiveMode } = useData()
   const { user } = useAuth()
+  const [virtualStats, setVirtualStats] = useState<any>(null) // State for virtual stats
 
   useEffect(() => {
     loadEntries()
   }, [user, isLiveMode])
 
+  useEffect(() => {
+    if (!isLiveMode) {
+      const stats = generateVirtualJournalStats()
+      setVirtualStats(stats)
+    }
+  }, [isLiveMode]) // Recalculate when isLiveMode changes
+
   const loadEntries = () => {
-    if (user) {
+    if (!isLiveMode) {
+      const virtualEntries = generateDemoEntries()
+      setEntries(virtualEntries)
+      setSortedJournalEntries(virtualEntries)
+    } else if (user) {
       const journalEntries = getAllJournalEntries() || []
       const sortedEntries = [...journalEntries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       setEntries(journalEntries)
       setSortedJournalEntries(sortedEntries)
     } else {
-      // No user = empty state, no demo data
       setEntries([])
       setSortedJournalEntries([])
     }
@@ -182,7 +194,7 @@ export default function JournalPage() {
   }
 
   const stats = useMemo(() => {
-    const contextEntries = getAllJournalEntries() || []
+    const contextEntries = isLiveMode ? getAllJournalEntries() || [] : entries
     const trades = contextEntries.filter((e) => e.type === "trade")
 
     // Return zero stats if no entries from context
@@ -285,7 +297,7 @@ export default function JournalPage() {
             ) / 100
           : 0,
     }
-  }, [getAllJournalEntries]) // Recalculate when entries from context change
+  }, [getAllJournalEntries, entries, isLiveMode]) // Recalculate when entries from context change
 
   // AI Insights
   const generateInsights = () => {
@@ -392,9 +404,12 @@ export default function JournalPage() {
   //   // Implement modal opening logic here
   // }
 
+  // Determine which stats to display
+  const displayStats = !isLiveMode && virtualStats ? virtualStats : stats
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <div className="max-w-[1800px] mx-auto p-3 md:p-6 space-y-4 md:space-y-6 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-16">
+      <div className="max-w-[1800px] mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3 md:gap-4">
           <div>
             <h1 className="text-2xl md:text-4xl font-bold text-white mb-1 md:mb-2 flex items-center gap-2 md:gap-3">
@@ -448,7 +463,9 @@ export default function JournalPage() {
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
                     <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Celkem</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.totalEntries}</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">
+                      {displayStats.totalEntries || displayStats.celkem}
+                    </p>
                     <p className="text-blue-400 text-[10px] md:text-xs font-semibold">Záznamů</p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20">
@@ -471,7 +488,7 @@ export default function JournalPage() {
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
                     <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Tento týden</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.thisWeek}</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.thisWeek}</p>
                     <p className="text-green-400 text-[10px] md:text-xs font-semibold flex items-center gap-1">
                       <TrendingUp className="w-3 h-3 md:w-4 md:h-4" /> Nových
                     </p>
@@ -484,7 +501,7 @@ export default function JournalPage() {
               <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-green-500 to-emerald-500"
-                  style={{ width: `${Math.min((stats.thisWeek / 10) * 100, 100)}%` }}
+                  style={{ width: `${Math.min((displayStats.thisWeek / 10) * 100, 100)}%` }}
                 />
               </div>
             </CardContent>
@@ -496,7 +513,9 @@ export default function JournalPage() {
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
                     <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Průměr/den</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.avgPerDay}</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">
+                      {displayStats.avgPerDay || displayStats.avgPerTrade}
+                    </p>
                     <p className="text-purple-400 text-[10px] md:text-xs font-semibold">Záznamů</p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20">
@@ -507,7 +526,9 @@ export default function JournalPage() {
               <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-purple-500 to-pink-500"
-                  style={{ width: `${Math.min(Number.parseFloat(stats.avgPerDay) * 20, 100)}%` }}
+                  style={{
+                    width: `${Math.min(Number.parseFloat(displayStats.avgPerDay || displayStats.avgPerTrade) * 20, 100)}%`,
+                  }}
                 />
               </div>
             </CardContent>
@@ -519,7 +540,7 @@ export default function JournalPage() {
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
                     <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Série</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.streak}</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.streak}</p>
                     <p className="text-orange-400 text-[10px] md:text-xs font-semibold flex items-center gap-1">
                       <Flame className="w-3 h-3 md:w-4 md:h-4" /> Dní
                     </p>
@@ -532,7 +553,7 @@ export default function JournalPage() {
               <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-orange-500 to-amber-500"
-                  style={{ width: `${Math.min((stats.streak / 30) * 100, 100)}%` }}
+                  style={{ width: `${Math.min((displayStats.streak / 30) * 100, 100)}%` }}
                 />
               </div>
             </CardContent>
@@ -541,7 +562,7 @@ export default function JournalPage() {
           <Card
             className={cn(
               "bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all",
-              stats.totalPnL >= 0 ? "ring-2 ring-emerald-500/50" : "ring-2 ring-rose-500/50",
+              displayStats.totalPnL >= 0 ? "ring-2 ring-emerald-500/50" : "ring-2 ring-rose-500/50",
             )}
           >
             <CardContent className="p-0">
@@ -552,23 +573,25 @@ export default function JournalPage() {
                     <p
                       className={cn(
                         "text-xl md:text-3xl font-bold mb-0.5 md:mb-1",
-                        stats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400",
+                        displayStats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400",
                       )}
                     >
-                      {stats.totalPnL >= 0 ? "+" : ""}${stats.totalPnL}
+                      {displayStats.totalPnL >= 0 ? "+" : ""}${displayStats.totalPnL}
                     </p>
                     <p className="text-gray-400 text-[10px] md:text-xs font-semibold">Celkem</p>
                   </div>
                   <div
                     className={cn(
                       "p-2 md:p-3 rounded-full bg-gradient-to-br",
-                      stats.totalPnL >= 0 ? "from-emerald-500/20 to-green-500/20" : "from-rose-500/20 to-red-500/20",
+                      displayStats.totalPnL >= 0
+                        ? "from-emerald-500/20 to-green-500/20"
+                        : "from-rose-500/20 to-red-500/20",
                     )}
                   >
                     <DollarSign
                       className={cn(
                         "w-4 h-4 md:w-6 md:h-6",
-                        stats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400",
+                        displayStats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400",
                       )}
                     />
                   </div>
@@ -578,7 +601,7 @@ export default function JournalPage() {
                 <div
                   className={cn(
                     "h-full transition-all",
-                    stats.totalPnL >= 0
+                    displayStats.totalPnL >= 0
                       ? "bg-gradient-to-r from-emerald-500 to-green-500"
                       : "bg-gradient-to-r from-rose-500 to-red-500",
                   )}
@@ -594,23 +617,23 @@ export default function JournalPage() {
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
                     <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Win Rate</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.winRate}%</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.winRate}%</p>
                     <p
                       className={cn(
                         "text-[10px] md:text-xs font-semibold flex items-center gap-1",
-                        stats.winRate >= 60
+                        displayStats.winRate >= 60
                           ? "text-emerald-400"
-                          : stats.winRate >= 50
+                          : displayStats.winRate >= 50
                             ? "text-yellow-400"
                             : "text-rose-400",
                       )}
                     >
-                      {stats.winRate >= 60 ? (
+                      {displayStats.winRate >= 60 ? (
                         <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
                       ) : (
                         <TrendingDown className="w-3 h-3 md:w-4 md:h-4" />
                       )}
-                      {stats.winRate >= 60 ? "Výborný" : stats.winRate >= 50 ? "Dobrý" : "Slabý"}
+                      {displayStats.winRate >= 60 ? "Výborný" : displayStats.winRate >= 50 ? "Dobrý" : "Slabý"}
                     </p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
@@ -621,7 +644,7 @@ export default function JournalPage() {
               <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-cyan-500 to-blue-500"
-                  style={{ width: `${stats.winRate}%` }}
+                  style={{ width: `${displayStats.winRate}%` }}
                 />
               </div>
             </CardContent>
@@ -633,7 +656,9 @@ export default function JournalPage() {
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
                     <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Nejlepší</p>
-                    <p className="text-xl md:text-3xl font-bold text-emerald-400 mb-0.5 md:mb-1">+${stats.bestDay}</p>
+                    <p className="text-xl md:text-3xl font-bold text-emerald-400 mb-0.5 md:mb-1">
+                      +${displayStats.bestDay}
+                    </p>
                     <p className="text-gray-400 text-[10px] md:text-xs font-semibold">Den</p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20">
@@ -656,7 +681,7 @@ export default function JournalPage() {
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
                     <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Nálada</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{stats.avgMood}</p>
+                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.avgMood}</p>
                     <p className="text-pink-400 text-[10px] md:text-xs font-semibold">/10 avg</p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-pink-500/20 to-rose-500/20">
@@ -667,7 +692,7 @@ export default function JournalPage() {
               <div className="h-1 md:h-1.5 bg-slate-700">
                 <div
                   className="h-full transition-all bg-gradient-to-r from-pink-500 to-rose-500"
-                  style={{ width: `${stats.avgMood * 10}%` }}
+                  style={{ width: `${displayStats.avgMood * 10}%` }}
                 />
               </div>
             </CardContent>
@@ -763,18 +788,20 @@ export default function JournalPage() {
                           </div>
                           <div>
                             <p className="text-xs text-gray-400">Ziskové obchody</p>
-                            <p className="text-2xl font-bold text-white">{stats.winningTrades}</p>
+                            <p className="text-2xl font-bold text-white">{displayStats.winningTrades}</p>
                           </div>
                         </div>
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-400">Průměrný zisk</span>
-                            <span className="text-emerald-400 font-bold">+${stats.avgWin}</span>
+                            <span className="text-emerald-400 font-bold">+${displayStats.avgWin}</span>
                           </div>
                           <div className="h-2 bg-slate-600 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-emerald-500 to-green-500"
-                              style={{ width: `${(stats.winningTrades / (stats.totalTrades || 1)) * 100}%` }}
+                              style={{
+                                width: `${(displayStats.winningTrades / (displayStats.totalTrades || 1)) * 100}%`,
+                              }}
                             />
                           </div>
                         </div>
@@ -789,18 +816,20 @@ export default function JournalPage() {
                           </div>
                           <div>
                             <p className="text-xs text-gray-400">Ztrátové obchody</p>
-                            <p className="text-2xl font-bold text-white">{stats.losingTrades}</p>
+                            <p className="text-2xl font-bold text-white">{displayStats.losingTrades}</p>
                           </div>
                         </div>
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-400">Průměrná ztráta</span>
-                            <span className="text-rose-400 font-bold">${stats.avgLoss}</span>
+                            <span className="text-rose-400 font-bold">${displayStats.avgLoss}</span>
                           </div>
                           <div className="h-2 bg-slate-600 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-rose-500 to-red-500"
-                              style={{ width: `${(stats.losingTrades / (stats.totalTrades || 1)) * 100}%` }}
+                              style={{
+                                width: `${(displayStats.losingTrades / (displayStats.totalTrades || 1)) * 100}%`,
+                              }}
                             />
                           </div>
                         </div>
@@ -816,7 +845,9 @@ export default function JournalPage() {
                           <div>
                             <p className="text-xs text-gray-400">Profit Factor</p>
                             <p className="text-2xl font-bold text-white">
-                              {stats.avgLoss !== 0 ? Math.abs(stats.avgWin / stats.avgLoss).toFixed(2) : "0"}
+                              {displayStats.avgLoss !== 0
+                                ? Math.abs(displayStats.avgWin / displayStats.avgLoss).toFixed(2)
+                                : "0"}
                             </p>
                           </div>
                         </div>
@@ -824,14 +855,16 @@ export default function JournalPage() {
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-400">Hodnocení</span>
                             <span className="text-purple-400 font-bold">
-                              {stats.avgLoss !== 0 && Math.abs(stats.avgWin / stats.avgLoss) > 2 ? "Výborný" : "Dobrý"}
+                              {displayStats.avgLoss !== 0 && Math.abs(displayStats.avgWin / displayStats.avgLoss) > 2
+                                ? "Výborný"
+                                : "Dobrý"}
                             </span>
                           </div>
                           <div className="h-2 bg-slate-600 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
                               style={{
-                                width: `${Math.min((stats.avgLoss !== 0 ? Math.abs(stats.avgWin / stats.avgLoss) : 0) * 33, 100)}%`,
+                                width: `${Math.min((displayStats.avgLoss !== 0 ? Math.abs(displayStats.avgWin / displayStats.avgLoss) : 0) * 33, 100)}%`,
                               }}
                             />
                           </div>
@@ -853,21 +886,21 @@ export default function JournalPage() {
                               <Award className="w-5 h-5 text-emerald-400" />
                               <span className="text-gray-300">Nejlepší den</span>
                             </div>
-                            <span className="text-emerald-400 font-bold text-lg">+${stats.bestDay}</span>
+                            <span className="text-emerald-400 font-bold text-lg">+${displayStats.bestDay}</span>
                           </div>
                           <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
                             <div className="flex items-center gap-3">
                               <TrendingDown className="w-5 h-5 text-rose-400" />
                               <span className="text-gray-300">Nejhorší den</span>
                             </div>
-                            <span className="text-rose-400 font-bold text-lg">${stats.worstDay}</span>
+                            <span className="text-rose-400 font-bold text-lg">${displayStats.worstDay}</span>
                           </div>
                           <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
                             <div className="flex items-center gap-3">
                               <Target className="w-5 h-5 text-cyan-400" />
                               <span className="text-gray-300">Win Rate</span>
                             </div>
-                            <span className="text-cyan-400 font-bold text-lg">{stats.winRate}%</span>
+                            <span className="text-cyan-400 font-bold text-lg">{displayStats.winRate}%</span>
                           </div>
                         </div>
                         <div className="space-y-4">
@@ -876,21 +909,21 @@ export default function JournalPage() {
                               <Flame className="w-5 h-5 text-orange-400" />
                               <span className="text-gray-300">Série dní</span>
                             </div>
-                            <span className="text-orange-400 font-bold text-lg">{stats.streak} dní</span>
+                            <span className="text-orange-400 font-bold text-lg">{displayStats.streak} dní</span>
                           </div>
                           <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
                             <div className="flex items-center gap-3">
                               <Brain className="w-5 h-5 text-pink-400" />
                               <span className="text-gray-300">Průměrná nálada</span>
                             </div>
-                            <span className="text-pink-400 font-bold text-lg">{stats.avgMood}/10</span>
+                            <span className="text-pink-400 font-bold text-lg">{displayStats.avgMood}/10</span>
                           </div>
                           <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
                             <div className="flex items-center gap-3">
                               <BookOpen className="w-5 h-5 text-blue-400" />
                               <span className="text-gray-300">Tento měsíc</span>
                             </div>
-                            <span className="text-blue-400 font-bold text-lg">{stats.thisMonth} záznamů</span>
+                            <span className="text-blue-400 font-bold text-lg">{displayStats.thisMonth} záznamů</span>
                           </div>
                         </div>
                       </div>
