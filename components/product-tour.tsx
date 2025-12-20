@@ -125,6 +125,7 @@ export function ProductTour() {
   const [isNavigating, setIsNavigating] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+  const showTour = localStorage.getItem("mindtrader-show-tour") // Declare showTour variable
 
   useEffect(() => {
     console.log("[v0] ProductTour: pathname =", pathname)
@@ -136,22 +137,23 @@ export function ProductTour() {
     }
 
     const tourCompleted = localStorage.getItem("mindtrader-product-tour-completed")
-    const showTour = localStorage.getItem("mindtrader-show-tour")
     const isVirtualMode = localStorage.getItem("trading-mode") === "virtual"
 
     console.log("[v0] ProductTour: tourCompleted =", tourCompleted)
     console.log("[v0] ProductTour: showTour =", showTour)
     console.log("[v0] ProductTour: isVirtualMode =", isVirtualMode)
 
-    // Show tour if flag is set OR if it's a new virtual mode user who hasn't seen the tour
-    if (!tourCompleted && (showTour === "true" || (isVirtualMode && !tourCompleted))) {
-      console.log("[v0] ProductTour: Starting tour!")
-      setIsVisible(true)
-      localStorage.removeItem("mindtrader-show-tour")
-    } else {
-      console.log("[v0] ProductTour: Not starting tour")
+    if (!tourCompleted) {
+      if (showTour === "true" && !isVisible) {
+        console.log("[v0] ProductTour: Starting tour!")
+        setIsVisible(true)
+        localStorage.removeItem("mindtrader-show-tour")
+      } else if (isVisible) {
+        console.log("[v0] ProductTour: Tour already running, keeping visible")
+        // Tour is already running, don't hide it
+      }
     }
-  }, [pathname])
+  }, [showTour, localStorage.getItem("mindtrader-product-tour-completed")]) // Use showTour directly
 
   // Navigate to step route when step changes
   useEffect(() => {
@@ -185,6 +187,10 @@ export function ProductTour() {
 
   const completeTour = () => {
     localStorage.setItem("mindtrader-product-tour-completed", "true")
+    if (!localStorage.getItem("trading-mode")) {
+      localStorage.setItem("trading-mode", "virtual")
+      console.log("[v0] Virtual mode ensured after tour completion")
+    }
     setIsVisible(false)
     router.push("/")
   }

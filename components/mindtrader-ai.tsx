@@ -117,8 +117,9 @@ export function MindTraderAI() {
 
   const userData = getUserData()
   const moodEntries = userData.moodEntries || []
-  const journalEntries = getAllJournalEntries()
-  const trades = getAllTrades()
+
+  const trades = getAllTrades() || []
+  const journalEntries = getAllJournalEntries() || []
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -143,7 +144,6 @@ export function MindTraderAI() {
     loadReadinessFromTracker()
 
     // Check for losses in recent trades to trigger recovery mode
-    const trades = getAllTrades()
     const today = new Date().toISOString().split("T")[0]
     const todayTrades = trades.filter((t: any) => t.date === today || t.closeDate === today)
 

@@ -1,11 +1,15 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useReducer, useEffect, useCallback, useRef } from "react"
-import { toast } from "@/hooks/use-toast"
-import { useAuth } from "@/contexts/auth-context"
-import { useSubscription } from "@/contexts/subscription-context"
+import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "./auth-context"
 import { createClient } from "@/lib/supabase-client"
+import {
+  generateVirtualTrades,
+  generateVirtualMorningChecks,
+  generateVirtualJournalEntries,
+} from "@/lib/virtual-data-generator"
+import { useSubscription } from "@/hooks/use-subscription" // Import useSubscription hook
 
 // Demo trades data for virtual mode
 const DEMO_TRADES = [
@@ -346,15 +350,16 @@ const initialState: DataState = {
   isLiveMode: false,
   hasEverSwitchedToLive: false,
   showLiveWarning: false,
-  portfolioValue: 10000,
+  portfolioValue: 0,
   userId: null,
 }
 
-export function DataProvider({ children }: { children: React.ReactNode }) {
+export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const { isPremium } = useSubscription()
+  const toast = useToast()
 
-  const prevUserIdRef = useRef<string | null>(null)
+  const prevUserIdRef = React.useRef<string | null>(null)
 
   const supabase = createClient()
 
@@ -363,7 +368,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const isOwner = user?.email === "honza.newage@gmail.com"
   const canSwitchModes = isPremium || isOwner
 
-  const getUserKey = useCallback(
+  const getUserKey = React.useCallback(
     (baseKey: string): string => {
       if (!state.userId) return baseKey
       return `user-${state.userId}-${baseKey}`
@@ -371,7 +376,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [state.userId],
   )
 
-  const saveTradesForUser = useCallback(
+  const saveTradesForUser = React.useCallback(
     (trades: Trade[]) => {
       if (typeof window === "undefined" || !state.userId) return
       const key = getUserKey("mindtrader-trades")
@@ -381,7 +386,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [state.userId, getUserKey],
   )
 
-  const saveMorningChecksForUser = useCallback(
+  const saveMorningChecksForUser = React.useCallback(
     (checks: MorningCheck[]) => {
       if (typeof window === "undefined" || !state.userId) return
       const key = getUserKey("mindtrader-morning-checks")
@@ -391,7 +396,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [state.userId, getUserKey],
   )
 
-  const saveJournalEntriesForUser = useCallback(
+  const saveJournalEntriesForUser = React.useCallback(
     (entries: any[]) => {
       if (typeof window === "undefined" || !state.userId) return
       const key = getUserKey("user-journal-entries")
@@ -402,40 +407,42 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   )
 
   useEffect(() => {
-    if (typeof window === "undefined") return
-
-    const currentUserId = user?.id || null
-    const prevUserId = prevUserIdRef.current
-
-    if (prevUserId !== currentUserId) {
-      console.log(`[v0] User changed from ${prevUserId} to ${currentUserId} - clearing data`)
-      dispatch({ type: "CLEAR_ALL_DATA" })
-      prevUserIdRef.current = currentUserId
-    }
-
-    if (!currentUserId) {
-      console.log("[v0] No authenticated user - showing empty state")
+    if (!state.userId) {
+      console.log("[v0] No authenticated user")
       return
     }
 
-    dispatch({ type: "SET_USER_ID", payload: currentUserId })
+    console.log(`[v0] User ID changed to: ${state.userId}, Live mode: ${state.isLiveMode}`)
 
-    const liveMode = localStorage.getItem("trader-mindset-live-mode") === "true"
-    const everSwitched = localStorage.getItem("trader-mindset-ever-switched-live") === "true"
-    const savedPortfolio = localStorage.getItem("trader-mindset-portfolio-value")
-
-    dispatch({ type: "SET_LIVE_MODE", payload: liveMode })
-    dispatch({ type: "SET_EVER_SWITCHED_LIVE", payload: everSwitched })
-    if (savedPortfolio) {
-      dispatch({ type: "SET_PORTFOLIO_VALUE", payload: Number.parseFloat(savedPortfolio) })
-    }
-
-    if (liveMode) {
-      loadDataFromSupabase(currentUserId)
+    if (state.isLiveMode) {
+      console.log("[v0] Loading LIVE data from Supabase")
+      loadDataFromSupabase(state.userId)
     } else {
-      loadDataFromLocalStorage(currentUserId)
+      console.log("[v0] Loading VIRTUAL data")
+      loadVirtualData(state.userId)
     }
-  }, [user?.id, state.isLiveMode])
+  }, [state.userId, state.isLiveMode])
+
+  function loadVirtualData(userId: string) {
+    console.log(`[v0] Generating virtual demo data for user: ${userId}`)
+
+    const virtualTrades = generateVirtualTrades(30)
+    const virtualChecks = generateVirtualMorningChecks(30)
+    const virtualJournal = generateVirtualJournalEntries(15)
+
+    console.log(`[v0] Generated ${virtualTrades.length} virtual trades`)
+    console.log(`[v0] Generated ${virtualChecks.length} virtual morning checks`)
+    console.log(`[v0] Generated ${virtualJournal.length} virtual journal entries`)
+
+    dispatch({ type: "SET_TRADES", payload: virtualTrades as any })
+    dispatch({ type: "SET_MORNING_CHECKS", payload: virtualChecks as any })
+    dispatch({ type: "SET_JOURNAL_ENTRIES", payload: virtualJournal })
+
+    toast({
+      title: "Virtual Mode",
+      description: "Zobrazují se demo data. Můžete přepnout na Live Mode pro reálná data.",
+    })
+  }
 
   async function loadDataFromSupabase(userId: string) {
     console.log(`[v0] Loading LIVE data for user: ${userId}`)
@@ -471,43 +478,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         description: "Nepodařilo se načíst data ze serveru",
         variant: "destructive",
       })
-    }
-  }
-
-  function loadDataFromLocalStorage(userId: string) {
-    console.log(`[v0] Loading VIRTUAL data for user: ${userId}`)
-
-    const tradesKey = `user-${userId}-mindtrader-trades`
-    const tradesData = localStorage.getItem(tradesKey)
-    if (tradesData) {
-      const parsedTrades = JSON.parse(tradesData)
-      console.log(`[v0] Loaded ${parsedTrades.length} trades from localStorage (${tradesKey})`)
-      dispatch({ type: "SET_TRADES", payload: parsedTrades })
-    } else {
-      console.log(`[v0] No trades found for user ${userId} - starting fresh`)
-      dispatch({ type: "SET_TRADES", payload: [] })
-    }
-
-    const checksKey = `user-${userId}-mindtrader-morning-checks`
-    const checksData = localStorage.getItem(checksKey)
-    if (checksData) {
-      const parsedChecks = JSON.parse(checksData)
-      console.log(`[v0] Loaded ${parsedChecks.length} checks from localStorage (${checksKey})`)
-      dispatch({ type: "SET_MORNING_CHECKS", payload: parsedChecks })
-    } else {
-      console.log(`[v0] No morning checks found for user ${userId} - starting fresh`)
-      dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
-    }
-
-    const journalKey = `user-${userId}-user-journal-entries`
-    const journalData = localStorage.getItem(journalKey)
-    if (journalData) {
-      const parsedJournal = JSON.parse(journalData)
-      console.log(`[v0] Loaded ${parsedJournal.length} journal entries from localStorage (${journalKey})`)
-      dispatch({ type: "SET_JOURNAL_ENTRIES", payload: parsedJournal })
-    } else {
-      console.log(`[v0] No journal entries found for user ${userId} - starting fresh`)
-      dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
     }
   }
 
@@ -691,12 +661,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const switchToLive = () => {
-    dispatch({ type: "SET_LIVE_MODE", payload: true })
-    dispatch({ type: "SET_EVER_SWITCHED_LIVE", payload: true })
-
-    if (state.userId) {
-      loadDataFromSupabase(state.userId)
+  const switchToLive = async () => {
+    if (!state.hasEverSwitchedToLive) {
+      dispatch({ type: "SET_SHOW_WARNING", payload: true })
+    } else {
+      dispatch({ type: "SET_LIVE_MODE", payload: true })
+      if (state.userId) {
+        await loadDataFromSupabase(state.userId)
+      }
     }
   }
 
@@ -704,7 +676,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_LIVE_MODE", payload: false })
 
     if (state.userId) {
-      loadDataFromLocalStorage(state.userId)
+      loadVirtualData(state.userId)
     }
   }
 

@@ -6,6 +6,11 @@ import ClientLayout from "./ClientLayout"
 import { AuthProvider } from "@/contexts/auth-context"
 import { DataProvider } from "@/contexts/data-context"
 import { SubscriptionProvider } from "@/contexts/subscription-context"
+import { GamificationProvider } from "@/contexts/gamification-context"
+import { TradingStyleProvider } from "@/contexts/trading-style-context"
+import { LossResetProvider } from "@/contexts/loss-reset-context"
+import { DailyStageProvider } from "@/contexts/daily-stage-context"
+import { LanguageProvider } from "@/contexts/language-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,9 +30,19 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <SubscriptionProvider>
-            <DataProvider>
-              <ClientLayout>{children}</ClientLayout>
-            </DataProvider>
+            <GamificationProvider>
+              <TradingStyleProvider>
+                <DataProvider>
+                  <DailyStageProvider>
+                    <LossResetProvider>
+                      <LanguageProvider>
+                        <ClientLayout>{children}</ClientLayout>
+                      </LanguageProvider>
+                    </LossResetProvider>
+                  </DailyStageProvider>
+                </DataProvider>
+              </TradingStyleProvider>
+            </GamificationProvider>
           </SubscriptionProvider>
         </AuthProvider>
       </body>
