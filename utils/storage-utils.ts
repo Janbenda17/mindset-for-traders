@@ -628,12 +628,6 @@ function getDefaultUserData(): UserData {
   }
 }
 
-// Check if we're in live mode
-function isLiveMode(): boolean {
-  if (typeof window === "undefined") return false
-  return localStorage.getItem("trader-mindset-live-mode") === "true"
-}
-
 // Main storage functions
 export function getUserData(): UserData {
   if (typeof window === "undefined") {
@@ -643,54 +637,14 @@ export function getUserData(): UserData {
   try {
     const STORAGE_KEY = getStorageKey()
     const data = localStorage.getItem(STORAGE_KEY)
-    const liveMode = isLiveMode()
-
-    if (!data) {
-      const defaultData = getDefaultUserData()
-
-      if (!liveMode) {
-        defaultData.journalEntries = getSampleJournalEntries()
-        defaultData.moodEntries = getSampleMoodEntries()
-        defaultData.tradingData = getSampleTradingData()
-      }
-
-      setUserData(defaultData)
-      return defaultData
-    }
-
     const parsedData: Partial<UserData> = JSON.parse(data)
     const fullData = { ...getDefaultUserData(), ...parsedData }
-
-    if (!liveMode) {
-      if (!fullData.journalEntries || fullData.journalEntries.length === 0) {
-        fullData.journalEntries = getSampleJournalEntries()
-      }
-      if (!fullData.moodEntries || fullData.moodEntries.length === 0) {
-        fullData.moodEntries = getSampleMoodEntries()
-      }
-      if (!fullData.tradingData || fullData.tradingData.length === 0) {
-        fullData.tradingData = getSampleTradingData()
-      }
-    } else {
-      if (fullData.journalEntries && fullData.journalEntries.some((entry) => entry.id.startsWith("sample-"))) {
-        fullData.journalEntries = fullData.journalEntries.filter((entry) => !entry.id.startsWith("sample-"))
-      }
-      if (fullData.moodEntries && fullData.moodEntries.some((entry) => entry.id.startsWith("mood-sample-"))) {
-        fullData.moodEntries = fullData.moodEntries.filter((entry) => !entry.id.startsWith("mood-sample-"))
-      }
-    }
 
     return fullData
   } catch (error) {
     console.error("Error parsing user data from localStorage", error)
     localStorage.removeItem("trader-mindset-data")
     const defaultData = getDefaultUserData()
-
-    if (!isLiveMode()) {
-      defaultData.journalEntries = getSampleJournalEntries()
-      defaultData.moodEntries = getSampleMoodEntries()
-      defaultData.tradingData = getSampleTradingData()
-    }
 
     setUserData(defaultData)
     return defaultData
@@ -759,14 +713,8 @@ export function clearAllDemoData(): void {
 export const getJournalEntries = (): JournalEntry[] => {
   if (typeof window === "undefined") return []
 
-  const liveMode = isLiveMode()
-
-  if (liveMode) {
-    const userData = getUserData()
-    return userData.journalEntries || []
-  } else {
-    return getSampleJournalEntries()
-  }
+  const userData = getUserData()
+  return userData.journalEntries || []
 }
 
 export const saveJournalEntry = (entry: any): void => {
@@ -776,104 +724,76 @@ export const saveJournalEntry = (entry: any): void => {
     entry.id = Date.now().toString() + Math.random().toString(36).substr(2, 9)
   }
 
-  const liveMode = isLiveMode()
+  const userData = getUserData()
+  const entries = userData.journalEntries || []
+  const existingIndex = entries.findIndex((e) => e.id === entry.id)
 
-  if (liveMode) {
-    const userData = getUserData()
-    const entries = userData.journalEntries || []
-    const existingIndex = entries.findIndex((e) => e.id === entry.id)
+  if (existingIndex >= 0) {
+    entries[existingIndex] = entry
+  } else {
+    entries.push(entry)
+  }
 
-    if (existingIndex >= 0) {
-      entries[existingIndex] = entry
-    } else {
-      entries.push(entry)
-    }
+  userData.journalEntries = entries
+  setUserData(userData)
 
-    userData.journalEntries = entries
-    setUserData(userData)
-
-    // Update challenge stats if this is a trade entry
-    if (entry.type === "trade" && entry.challengeId && entry.pnl !== undefined) {
-      updateChallengeStats(entry.challengeId)
-    }
+  // Update challenge stats if this is a trade entry
+  if (entry.type === "trade" && entry.challengeId && entry.pnl !== undefined) {
+    updateChallengeStats(entry.challengeId)
   }
 }
 
 export const deleteJournalEntry = (id: string): void => {
   if (typeof window === "undefined") return
 
-  const liveMode = isLiveMode()
+  const userData = getUserData()
+  const deletedEntry = userData.journalEntries?.find((e) => e.id === id)
+  userData.journalEntries = (userData.journalEntries || []).filter((entry) => entry.id !== id)
+  setUserData(userData)
 
-  if (liveMode) {
-    const userData = getUserData()
-    const deletedEntry = userData.journalEntries?.find((e) => e.id === id)
-    userData.journalEntries = (userData.journalEntries || []).filter((entry) => entry.id !== id)
-    setUserData(userData)
-
-    // Update challenge stats if this was a trade entry
-    if (deletedEntry?.type === "trade" && deletedEntry.challengeId) {
-      updateChallengeStats(deletedEntry.challengeId)
-    }
+  // Update challenge stats if this was a trade entry
+  if (deletedEntry?.type === "trade" && deletedEntry.challengeId) {
+    updateChallengeStats(deletedEntry.challengeId)
   }
 }
 
 export const getMoodEntries = (): MoodEntry[] => {
   if (typeof window === "undefined") return []
 
-  const liveMode = isLiveMode()
-
-  if (liveMode) {
-    const userData = getUserData()
-    return userData.moodEntries || []
-  } else {
-    return getSampleMoodEntries()
-  }
+  const userData = getUserData()
+  return userData.moodEntries || []
 }
 
 export const saveMoodEntry = (entry: MoodEntry): void => {
   if (typeof window === "undefined") return
 
-  const liveMode = isLiveMode()
+  const userData = getUserData()
+  const entries = userData.moodEntries || []
+  const existingIndex = entries.findIndex((e) => e.date === entry.date)
 
-  if (liveMode) {
-    const userData = getUserData()
-    const entries = userData.moodEntries || []
-    const existingIndex = entries.findIndex((e) => e.date === entry.date)
-
-    if (existingIndex >= 0) {
-      entries[existingIndex] = entry
-    } else {
-      entries.push(entry)
-    }
-
-    userData.moodEntries = entries
-    setUserData(userData)
+  if (existingIndex >= 0) {
+    entries[existingIndex] = entry
+  } else {
+    entries.push(entry)
   }
+
+  userData.moodEntries = entries
+  setUserData(userData)
 }
 
 export const getTradingData = (): TradingEntry[] => {
   if (typeof window === "undefined") return []
 
-  const liveMode = isLiveMode()
-
-  if (liveMode) {
-    const userData = getUserData()
-    return userData.tradingData || []
-  } else {
-    return getSampleTradingData()
-  }
+  const userData = getUserData()
+  return userData.tradingData || []
 }
 
 export const saveTradingData = (data: TradingEntry[]): void => {
   if (typeof window === "undefined") return
 
-  const liveMode = isLiveMode()
-
-  if (liveMode) {
-    const userData = getUserData()
-    userData.tradingData = data
-    setUserData(userData)
-  }
+  const userData = getUserData()
+  userData.tradingData = data
+  setUserData(userData)
 }
 
 export const calculateTradingStats = (challengeId?: string): TradingData => {
@@ -1156,4 +1076,81 @@ export function restoreBackup(file: File): Promise<boolean> {
 
 export function getTodayDateString(): string {
   return new Date().toISOString().split("T")[0]
+}
+
+// New functions for managing trades
+export function saveTrade(trade: any): void {
+  if (typeof window === "undefined") return
+
+  const userData = getUserData()
+  const trades = userData.tradingData || []
+  const existingIndex = trades.findIndex((t) => t.id === trade.id)
+
+  if (existingIndex >= 0) {
+    trades[existingIndex] = trade
+  } else {
+    trades.push(trade)
+  }
+
+  userData.tradingData = trades
+  setUserData(userData)
+}
+
+export function deleteTrade(id: string): void {
+  if (typeof window === "undefined") return
+
+  const userData = getUserData()
+  userData.tradingData = (userData.tradingData || []).filter((trade) => trade.id !== id)
+  setUserData(userData)
+}
+
+export function addJournalEntry(entry: JournalEntry): void {
+  if (typeof window === "undefined") return
+
+  const userData = getUserData()
+  const entries = userData.journalEntries || []
+  entries.push(entry)
+  userData.journalEntries = entries
+  setUserData(userData)
+}
+
+export function updateJournalEntry(id: string, updates: Partial<JournalEntry>): void {
+  if (typeof window === "undefined") return
+
+  const userData = getUserData()
+  const entries = userData.journalEntries || []
+  const entryIndex = entries.findIndex((e) => e.id === id)
+
+  if (entryIndex >= 0) {
+    entries[entryIndex] = { ...entries[entryIndex], ...updates }
+    userData.journalEntries = entries
+    setUserData(userData)
+  }
+}
+
+export function addWeeklyReview(review: any): void {
+  if (typeof window === "undefined") return
+
+  const userData = getUserData()
+  const reviews = userData.journalEntries || []
+  reviews.push(review)
+  userData.journalEntries = reviews
+  setUserData(userData)
+}
+
+export function addMoodEntry(entry: MoodEntry): void {
+  if (typeof window === "undefined") return
+
+  const userData = getUserData()
+  const entries = userData.moodEntries || []
+  entries.push(entry)
+  userData.moodEntries = entries
+  setUserData(userData)
+}
+
+export function getAllTrades(): any[] {
+  if (typeof window === "undefined") return []
+
+  const userData = getUserData()
+  return userData.tradingData || []
 }

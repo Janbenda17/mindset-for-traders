@@ -237,6 +237,14 @@ export function TradingStyleProvider({ children }: { children: React.ReactNode }
 export function useTradingStyle() {
   const context = useContext(TradingStyleContext)
   if (context === undefined) {
+    if (typeof window === "undefined") {
+      return {
+        tradingStyle: null,
+        setTradingStyle: () => {},
+        config: null,
+        isConfigured: false,
+      }
+    }
     throw new Error("useTradingStyle must be used within a TradingStyleProvider")
   }
   return context

@@ -42,6 +42,7 @@ import {
 } from "lucide-react"
 import { getJournalEntries, getMoodEntries, getUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
+import { useAnalytics } from "@/contexts/analytics-context"
 import {
   Line,
   XAxis,
@@ -111,6 +112,7 @@ interface WeeklyReview {
 
 export default function WeeklyReviewPage() {
   const { isLiveMode } = useData()
+  const { analytics } = useAnalytics()
   const [currentWeekData, setCurrentWeekData] = useState<any>(null)
   const [reviewVariant, setReviewVariant] = useState<"manual" | "ai">("manual") // Changed default from "ai" to "manual"
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
@@ -146,6 +148,37 @@ export default function WeeklyReviewPage() {
     }
     loadSavedReviews()
   }, [isLiveMode])
+
+  // /** START: CHANGE */
+  // // Auto-generate weekly review from computed analytics
+  useEffect(() => {
+    if (!analytics) return
+
+    const { weeklyInsights } = analytics
+
+    setReview({
+      whatWorked: `Best performing day: ${weeklyInsights.bestPerformingDay}`,
+      whatDidntWork: `Worst performing day: ${weeklyInsights.worstPerformingDay}`,
+      biggestWin: `Best day: ${analytics.summary.bestDay.date} (+$${analytics.summary.bestDay.pnl.toFixed(2)})`,
+      biggestLoss: `Worst day: ${analytics.summary.worstDay.date} (-$${Math.abs(analytics.summary.worstDay.pnl).toFixed(2)})`,
+      emotionalPatterns: weeklyInsights.readinessVsResults,
+      mistakesMade: weeklyInsights.commonMistake,
+      lessonsLearned: `${analytics.psychology.revengeIncidents === 0 ? "Good emotional control" : `${analytics.psychology.revengeIncidents} revenge trading incidents - implement pause after losses`}`,
+      weeklyGoals: weeklyInsights.nextWeekFocus.slice(0, 3),
+      focusAreas: ["Maintain high readiness", "Follow trading plan", "Track emotions"],
+      tradingPlanAdjustments: `Current discipline: ${analytics.psychology.disciplineScore.toFixed(0)}%`,
+      riskManagementNotes: `Win rate: ${analytics.summary.winRate.toFixed(1)}%`,
+      mindsetPreparation: `Average readiness: ${analytics.summary.avgReadiness.toFixed(0)}%`,
+    })
+
+    setActionPlan(
+      weeklyInsights.nextWeekFocus.map((focus) => ({
+        text: focus,
+        completed: false,
+      })),
+    )
+  }, [analytics])
+  // /** END: CHANGE */
 
   useEffect(() => {
     // if (reviewVariant === "ai" && currentWeekData) {

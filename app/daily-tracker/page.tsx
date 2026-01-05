@@ -151,10 +151,12 @@ const stageData = [
 
 export default function DailyTrackerPage() {
   const { isLiveMode } = useData()
+  const router = useRouter()
+
   const { stages } = useDailyStage()
+
   const { tradingStyle, config } = useTradingStyle()
   const { user } = useAuth()
-  const router = useRouter()
 
   const [entries, setEntries] = useState<DailySummary[]>([])
   const [activeTab, setActiveTab] = useState("today")
@@ -164,6 +166,7 @@ export default function DailyTrackerPage() {
   useEffect(() => {
     if (!isLiveMode) {
       const data = generateVirtualDailyTrackerData()
+      console.log("[v0] Virtual data generated:", data)
       setVirtualData(data)
     }
   }, [isLiveMode])
@@ -335,7 +338,7 @@ export default function DailyTrackerPage() {
       tips.push("Zvaž vynechání tradingu dnes")
       tips.push("Zapiš si své emoce do journalu")
     } else if (goodConditions) {
-      message = `Výborné podmínky! Readiness ${currentReadinessScore}%, jsi připravený na obchodování.`
+      message = `Výborné podmínky! Readiness ${currentReadinessScore}%! Jsi připravený na obchodování.`
       if (positiveNote) message += ` ${positiveNote}`
       details.push(`Všechny metriky v optimálním rozsahu`)
       tips.push("Drž se svého trading plánu")
@@ -441,6 +444,8 @@ export default function DailyTrackerPage() {
     unlocked: !isLiveMode ? true : stage.unlocked,
   }))
 
+  const isMorningCheckCompleted = todayStages.find((s) => s.id === 1)?.completed || false
+
   return (
     <div className="min-h-screen p-3 sm:p-6 space-y-4 sm:space-y-6 pt-4 sm:pt-6">
       <div className="md:mb-12 mb-6 relative">
@@ -499,103 +504,109 @@ export default function DailyTrackerPage() {
         <TabsContent value="today" className="space-y-6 md:space-y-8">
           {(todayEntry?.morningCheck || virtualData) && (
             <>
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-cyan-500/10 to-teal-500/10 rounded-3xl blur-2xl" />
-                <Card className="relative border-2 border-cyan-500/30 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl">
-                  <CardHeader className="md:p-6 p-4">
-                    <div className="flex items-center justify-between flex-wrap gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
-                          <div className="md:h-20 md:w-20 h-14 w-14 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/50">
-                            <TrendingUp className="md:h-12 md:w-12 h-8 w-8 text-white" />
+              {isMorningCheckCompleted && readinessScore !== null && (
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-cyan-500/10 to-teal-500/10 rounded-3xl blur-2xl" />
+                  <Card className="relative border-2 border-cyan-500/30 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl">
+                    <CardHeader className="md:p-6 p-4">
+                      <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6">
+                            <div className="md:h-20 md:w-20 h-14 w-14 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/50">
+                              <TrendingUp className="md:h-12 md:w-12 h-8 w-8 text-white" />
+                            </div>
+                            <div>
+                              <CardTitle className="md:text-6xl text-3xl font-black bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
+                                Readiness
+                              </CardTitle>
+                              <CardDescription className="md:text-xl text-sm mt-1 md:block hidden">
+                                Tvá připravenost na dnešní den
+                              </CardDescription>
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="md:text-6xl text-3xl font-black bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
-                              Readiness
-                            </CardTitle>
-                            <CardDescription className="md:text-xl text-sm mt-1 md:block hidden">
-                              Tvá připravenost na dnešní den
-                            </CardDescription>
+                        </div>
+                        <div className="text-center">
+                          <div className={cn("md:text-8xl text-6xl font-black", getReadinessColor(readinessScore))}>
+                            {readinessScore !== null ? `${readinessScore}%` : "Nevyplněno"}
+                          </div>
+                          <Badge
+                            className={cn(
+                              "mt-3 md:text-base text-sm md:px-6 px-4 md:py-2 py-1",
+                              `bg-gradient-to-r ${getReadinessStatus(readinessScore).color} text-white border-0`,
+                            )}
+                          >
+                            {getReadinessStatus(readinessScore).text}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="md:p-6 p-4">
+                      <div className="space-y-6">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Celková připravenost</span>
+                            {/* Display "Nevyplněno" instead of 0% in UI */}
+                            <span className="text-white font-bold">
+                              {readinessScore !== null ? `${readinessScore}/100` : "Nevyplněno"}
+                            </span>
+                          </div>
+                          <Progress value={readinessScore ?? 0} className="h-3" />
+                        </div>
+
+                        <div className="grid md:grid-cols-5 gap-4">
+                          <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Moon className="h-4 w-4 text-indigo-400" />
+                              <span className="text-xs text-muted-foreground">Spánek</span>
+                            </div>
+                            <div className="text-xl font-black text-white">
+                              {todayEntry.morningCheck?.sleepQuality}/10
+                            </div>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Zap className="h-4 w-4 text-yellow-400" />
+                              <span className="text-xs text-muted-foreground">Energie</span>
+                            </div>
+                            <div className="text-xl font-black text-white">
+                              {todayEntry.morningCheck?.energyLevel}/10
+                            </div>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Brain className="h-4 w-4 text-purple-400" />
+                              <span className="text-xs text-muted-foreground">Focus</span>
+                            </div>
+                            <div className="text-xl font-black text-white">{todayEntry.morningCheck?.focus}/10</div>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                            <div className="flex items-center gap-2 mb-2">
+                              <AlertTriangle className="h-4 w-4 text-red-400" />
+                              <span className="text-xs text-muted-foreground">Stres</span>
+                            </div>
+                            <div className="text-xl font-black text-white">
+                              {todayEntry.morningCheck?.stressLevel}/10
+                            </div>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Heart className="h-4 w-4 text-pink-400" />
+                              <span className="text-xs text-muted-foreground">Nálada</span>
+                            </div>
+                            <div className="text-xl font-black text-white">
+                              {todayEntry.morningCheck?.emotionalState}/10
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <div className="text-center">
-                        <div className={cn("md:text-8xl text-6xl font-black", getReadinessColor(readinessScore))}>
-                          {readinessScore !== null ? `${readinessScore}%` : "Nevyplněno"}
-                        </div>
-                        <Badge
-                          className={cn(
-                            "mt-3 md:text-base text-sm md:px-6 px-4 md:py-2 py-1",
-                            `bg-gradient-to-r ${getReadinessStatus(readinessScore).color} text-white border-0`,
-                          )}
-                        >
-                          {getReadinessStatus(readinessScore).text}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="md:p-6 p-4">
-                    <div className="space-y-6">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Celková připravenost</span>
-                          {/* Display "Nevyplněno" instead of 0% in UI */}
-                          <span className="text-white font-bold">
-                            {readinessScore !== null ? `${readinessScore}/100` : "Nevyplněno"}
-                          </span>
-                        </div>
-                        <Progress value={readinessScore ?? 0} className="h-3" />
-                      </div>
-
-                      <div className="grid md:grid-cols-5 gap-4">
-                        <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Moon className="h-4 w-4 text-indigo-400" />
-                            <span className="text-xs text-muted-foreground">Spánek</span>
-                          </div>
-                          <div className="text-xl font-black text-white">
-                            {todayEntry.morningCheck?.sleepQuality}/10
-                          </div>
-                        </div>
-
-                        <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Zap className="h-4 w-4 text-yellow-400" />
-                            <span className="text-xs text-muted-foreground">Energie</span>
-                          </div>
-                          <div className="text-xl font-black text-white">{todayEntry.morningCheck?.energyLevel}/10</div>
-                        </div>
-
-                        <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Brain className="h-4 w-4 text-purple-400" />
-                            <span className="text-xs text-muted-foreground">Focus</span>
-                          </div>
-                          <div className="text-xl font-black text-white">{todayEntry.morningCheck?.focus}/10</div>
-                        </div>
-
-                        <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                          <div className="flex items-center gap-2 mb-2">
-                            <AlertTriangle className="h-4 w-4 text-red-400" />
-                            <span className="text-xs text-muted-foreground">Stres</span>
-                          </div>
-                          <div className="text-xl font-black text-white">{todayEntry.morningCheck?.stressLevel}/10</div>
-                        </div>
-
-                        <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Heart className="h-4 w-4 text-pink-400" />
-                            <span className="text-xs text-muted-foreground">Nálada</span>
-                          </div>
-                          <div className="text-xl font-black text-white">
-                            {todayEntry.morningCheck?.emotionalState}/10
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               <div className="mt-6 p-6 bg-slate-800/50 rounded-2xl border border-cyan-500/20">
                 <div className="flex items-start gap-4">
@@ -681,7 +692,7 @@ export default function DailyTrackerPage() {
               )}
 
               {/* Insights & Recommendations */}
-              {insights.length > 0 && (
+              {isMorningCheckCompleted && insights.length > 0 && (
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-red-500/10 rounded-3xl blur-2xl" />
                   <Card className="relative border-2 border-amber-500/30 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl">

@@ -17,13 +17,13 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error("[v0] Error fetching team club posts:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: false, error: { code: error.code, message: error.message } }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, data: data || [] })
+    return NextResponse.json({ ok: true, data: data || [] })
   } catch (error: any) {
     console.error("[v0] Error in team club API:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: false, error: { code: "INTERNAL_ERROR", message: error.message } }, { status: 500 })
   }
 }
 
@@ -33,7 +33,10 @@ export async function POST(request: Request) {
     const { userId, post } = body
 
     if (!userId || !post) {
-      return NextResponse.json({ error: "Missing userId or post data" }, { status: 400 })
+      return NextResponse.json(
+        { ok: false, error: { code: "MISSING_FIELDS", message: "Missing userId or post data" } },
+        { status: 400 },
+      )
     }
 
     const { data, error } = await supabase
@@ -49,16 +52,16 @@ export async function POST(request: Request) {
         visibility: post.visibility || "public",
       })
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error("[v0] Error inserting team club post:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: false, error: { code: error.code, message: error.message } }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ ok: true, data })
   } catch (error: any) {
     console.error("[v0] Error in team club API:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: false, error: { code: "INTERNAL_ERROR", message: error.message } }, { status: 500 })
   }
 }

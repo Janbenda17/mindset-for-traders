@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import { useData } from "@/contexts/data-context"
 import {
   Brain,
   LayoutDashboard,
@@ -59,7 +60,7 @@ const tourSteps = [
     description:
       "Zde můžeš mluvit s AI koučem. Pomůže ti při frustraci, FOMO, euforii nebo pochybnostech. Je to tvůj mentální navigátor.",
     highlight: "24/7 podpora • Personalizované rady • Emoční analýza",
-    route: "/mindtrader-ai",
+    route: "/mindtrader?tab=ai", // Changed from /mindtrader-ai (non-existent) to /mindtrader?tab=ai
   },
   {
     id: "trading-diary",
@@ -122,10 +123,9 @@ export function ProductTour() {
   const [currentStep, setCurrentStep] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
-  const [isNavigating, setIsNavigating] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  const showTour = localStorage.getItem("mindtrader-show-tour") // Declare showTour variable
+  const { isLiveMode } = useData()
 
   useEffect(() => {
     console.log("[v0] ProductTour: pathname =", pathname)
@@ -137,11 +137,11 @@ export function ProductTour() {
     }
 
     const tourCompleted = localStorage.getItem("mindtrader-product-tour-completed")
-    const isVirtualMode = localStorage.getItem("trading-mode") === "virtual"
+    const showTour = localStorage.getItem("mindtrader-show-tour")
 
     console.log("[v0] ProductTour: tourCompleted =", tourCompleted)
     console.log("[v0] ProductTour: showTour =", showTour)
-    console.log("[v0] ProductTour: isVirtualMode =", isVirtualMode)
+    console.log("[v0] ProductTour: isLiveMode =", isLiveMode)
 
     if (!tourCompleted) {
       if (showTour === "true" && !isVisible) {
@@ -150,22 +150,20 @@ export function ProductTour() {
         localStorage.removeItem("mindtrader-show-tour")
       } else if (isVisible) {
         console.log("[v0] ProductTour: Tour already running, keeping visible")
-        // Tour is already running, don't hide it
       }
     }
-  }, [showTour, localStorage.getItem("mindtrader-product-tour-completed")]) // Use showTour directly
+  }, [pathname, isVisible, isLiveMode])
 
-  // Navigate to step route when step changes
   useEffect(() => {
-    if (isVisible && !isMinimized && !isNavigating) {
+    if (isVisible && !isMinimized) {
       const step = tourSteps[currentStep]
+      // Only navigate if step has a route AND we're not already on that route
       if (step.route && pathname !== step.route) {
-        setIsNavigating(true)
+        console.log("[v0] Tour: Navigating to", step.route)
         router.push(step.route)
-        setTimeout(() => setIsNavigating(false), 500)
       }
     }
-  }, [currentStep, isVisible, isMinimized, router, pathname, isNavigating])
+  }, [currentStep, isVisible, isMinimized, router, pathname])
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
@@ -187,10 +185,7 @@ export function ProductTour() {
 
   const completeTour = () => {
     localStorage.setItem("mindtrader-product-tour-completed", "true")
-    if (!localStorage.getItem("trading-mode")) {
-      localStorage.setItem("trading-mode", "virtual")
-      console.log("[v0] Virtual mode ensured after tour completion")
-    }
+    console.log("[v0] Tour completed - mode controlled by database (trading_mode column)")
     setIsVisible(false)
     router.push("/")
   }

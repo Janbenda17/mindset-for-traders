@@ -26,12 +26,15 @@ export async function POST(request: Request) {
       2: { completed: "daily_intention_completed", completedAt: "daily_intention_completed_at" },
       3: { completed: "trading_plan_completed", completedAt: "trading_plan_completed_at" },
       4: { completed: "record_trades_completed", completedAt: "record_trades_completed_at" },
+      5: { completed: "daily_summary_completed", completedAt: "daily_summary_completed_at" },
     }
 
     const stageColumn = stageColumns[stageId]
     if (!stageColumn) {
       return NextResponse.json({ error: "Invalid stage ID" }, { status: 400 })
     }
+
+    const nextStage = completed ? Math.min(stageId + 1, 5) : stageId
 
     const { data, error } = await supabase
       .from("daily_stages")
@@ -41,7 +44,7 @@ export async function POST(request: Request) {
           date: today,
           [stageColumn.completed]: completed,
           [stageColumn.completedAt]: completedAt,
-          current_stage: completed ? stageId + 1 : stageId,
+          current_stage: nextStage,
           updated_at: new Date().toISOString(),
         },
         {
@@ -56,7 +59,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log(`[v0] Stage ${stageId} completed and saved to Supabase for user ${user.id}`)
+    console.log(`[v0] Stage ${stageId} ${completed ? "completed" : "uncompleted"} - next stage: ${nextStage}`)
     return NextResponse.json(data)
   } catch (error: any) {
     console.error("[v0] Error in daily-stages UPDATE:", error)

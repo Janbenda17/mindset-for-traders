@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
+import { useAnalytics } from "./analytics-context"
 
 interface Stage {
   id: number
@@ -18,7 +19,7 @@ interface Stage {
 interface DailyStageContextType {
   stages: Stage[]
   currentStage: number
-  completeStage: (stageId: number) => Promise<void>
+  completeStage: (stageId: number | string) => Promise<void>
   resetStages: () => void
   getProgress: () => number
   isLoading: boolean
@@ -83,6 +84,7 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
   const [stages, setStages] = useState<Stage[]>(initialStages)
   const [currentStage, setCurrentStage] = useState<number>(1)
   const [isLoading, setIsLoading] = useState(true)
+  const { analytics } = useAnalytics()
 
   useEffect(() => {
     loadStagesFromSupabase()
@@ -163,9 +165,27 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
-  const completeStage = async (stageId: number) => {
+  const stageNameToId: { [key: string]: number } = {
+    "morning-assessment": 1,
+    "daily-intention": 2,
+    "trading-plan": 3,
+    "record-trades": 4,
+    "daily-summary": 5,
+  }
+
+  const completeStage = async (stageIdOrName: number | string) => {
     try {
-      console.log(`[v0] Completing stage ${stageId}...`)
+      const stageId =
+        typeof stageIdOrName === "string"
+          ? stageNameToId[stageIdOrName] || Number.parseInt(stageIdOrName)
+          : stageIdOrName
+
+      if (!stageId || stageId < 1 || stageId > 5) {
+        console.error(`[v0] Invalid stage ID: ${stageIdOrName} (resolved to: ${stageId})`)
+        return
+      }
+
+      console.log(`[v0] Completing stage ${stageId} (from: ${stageIdOrName})...`)
 
       const response = await fetch("/api/daily-stages/update", {
         method: "POST",
@@ -180,7 +200,7 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
       }
 
       const data = await response.json()
-      console.log(`[v0] Stage ${stageId} completed successfully:`, data)
+      console.log(`[v0] ✓ Stage ${stageId} completed successfully`)
 
       await loadStagesFromSupabase()
     } catch (error) {
@@ -198,6 +218,34 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
     const completed = stages.filter((s) => s.completed).length
     return Math.round((completed / stages.length) * 100)
   }
+
+  useEffect(() => {
+    if (!analytics || isLoading) return
+
+    const autoProgressStages = async () => {
+      const { stages: stageConditions } = analytics
+
+      // Auto-unlock stages based on data conditions
+      if (stageConditions.shouldUnlockStage2 && !stages[1].unlocked && !stages[1].completed) {
+        console.log("[v0] [Stages] Auto-unlocking Stage 2: Daily Intention (morning check completed)")
+        await completeStage(1)
+      }
+      if (stageConditions.shouldUnlockStage3 && !stages[2].unlocked && !stages[2].completed) {
+        console.log("[v0] [Stages] Auto-unlocking Stage 3: Trading Plan (daily intention set)")
+        await completeStage(2)
+      }
+      if (stageConditions.shouldUnlockStage4 && !stages[3].unlocked && !stages[3].completed) {
+        console.log("[v0] [Stages] Auto-unlocking Stage 4: Record Trades (trading plan created)")
+        await completeStage(3)
+      }
+      if (stageConditions.shouldUnlockStage5 && !stages[4].unlocked && !stages[4].completed) {
+        console.log("[v0] [Stages] Auto-unlocking Stage 5: Daily Summary (trades recorded)")
+        await completeStage(4)
+      }
+    }
+
+    autoProgressStages()
+  }, [analytics]) // Updated to use the entire analytics object
 
   return (
     <DailyStageContext.Provider
@@ -218,6 +266,16 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
 export function useDailyStage() {
   const context = useContext(DailyStageContext)
   if (context === undefined) {
+    if (typeof window === "undefined") {
+      return {
+        stages: [],
+        currentStage: 1,
+        completeStage: async () => {},
+        resetStages: () => {},
+        getProgress: () => 0,
+        isLoading: true,
+      }
+    }
     throw new Error("useDailyStage must be used within a DailyStageProvider")
   }
   return context

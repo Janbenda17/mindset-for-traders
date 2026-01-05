@@ -9,20 +9,21 @@ export async function POST(request: Request) {
     const { userId, email, name } = body
 
     if (!userId) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
+      return NextResponse.json(
+        { ok: false, error: { code: "MISSING_USER_ID", message: "User ID is required" } },
+        { status: 400 },
+      )
     }
 
     console.log("[v0] Creating Supabase profile for user:", userId)
 
-    // Check if profile already exists
-    const { data: existingProfile } = await supabase.from("profiles").select("id").eq("id", userId).single()
+    const { data: existingProfile } = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle()
 
     if (existingProfile) {
       console.log("[v0] Profile already exists for user:", userId)
-      return NextResponse.json({ data: existingProfile }, { status: 200 })
+      return NextResponse.json({ ok: true, data: existingProfile }, { status: 200 })
     }
 
-    // Create new profile
     const { data, error } = await supabase
       .from("profiles")
       .insert({
@@ -33,19 +34,17 @@ export async function POST(request: Request) {
         updated_at: new Date().toISOString(),
       })
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error("[v0] Error creating profile:", error.message)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: false, error: { code: error.code, message: error.message } }, { status: 500 })
     }
 
     console.log("[v0] Profile created successfully for user:", userId)
-    return NextResponse.json({ data }, { status: 200 })
+    return NextResponse.json({ ok: true, data }, { status: 200 })
   } catch (error: any) {
     console.error("[v0] API error:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: false, error: { code: "INTERNAL_ERROR", message: error.message } }, { status: 500 })
   }
 }
-
-// This API route is no longer needed as Supabase Auth triggers handle profile creation

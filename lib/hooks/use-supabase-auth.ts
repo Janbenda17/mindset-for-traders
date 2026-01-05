@@ -1,17 +1,22 @@
 "use client"
 
+// Use useAuth() from @/contexts/auth-context instead
+// Kept for backwards compatibility only
+
 import { useEffect, useState, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { User, Session } from "@supabase/supabase-js"
 
 export function useSupabaseAuth() {
+  console.warn("[v0] DEPRECATED: useSupabaseAuth hook - Use useAuth() from @/contexts/auth-context instead")
+
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session without setting up duplicate listener
     const getSession = async () => {
       const {
         data: { session },
@@ -23,16 +28,7 @@ export function useSupabaseAuth() {
 
     getSession()
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
+    // NO onAuthStateChange listener - that's handled by AuthProvider
   }, [supabase.auth])
 
   const signIn = useCallback(

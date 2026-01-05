@@ -309,6 +309,24 @@ export function LossResetProvider({ children }: { children: React.ReactNode }) {
 export function useLossReset() {
   const context = useContext(LossResetContext)
   if (!context) {
+    if (typeof window === "undefined") {
+      return {
+        isActive: false,
+        currentSession: null,
+        mode: "ai-recommended" as const,
+        coachTone: "calm-mentor" as const,
+        availableActivities: [],
+        recentSessions: [],
+        startReset: () => {},
+        selectMode: () => {},
+        selectActivity: () => {},
+        completeActivity: () => {},
+        cancelReset: () => {},
+        setCoachTone: () => {},
+        getRecommendedActivity: () => "meditation" as const,
+        logEvent: () => {},
+      }
+    }
     throw new Error("useLossReset must be used within LossResetProvider")
   }
   return context

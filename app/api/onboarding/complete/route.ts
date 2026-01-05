@@ -25,19 +25,17 @@ export async function POST(req: Request) {
 
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
 
-  // Validate nickname
   if (!nickname || nickname.length < 3 || nickname.length > 20) {
-    return NextResponse.json({ error: "Invalid nickname" }, { status: 400 })
+    return NextResponse.json({ error: "Nickname must be 3-20 characters" }, { status: 400 })
   }
 
-  if (["jan", "user", "demo"].includes(nickname.toLowerCase())) {
-    return NextResponse.json({ error: "Default username not allowed" }, { status: 400 })
+  if (["jan", "user", "demo", "admin", "test"].includes(nickname.toLowerCase())) {
+    return NextResponse.json({ error: "This nickname is reserved" }, { status: 400 })
   }
 
-  // Update profile with onboarding data
-  const { error } = await supabase
-    .from("profiles")
-    .update({
+  const { error } = await supabase.from("profiles").upsert(
+    {
+      user_id: user.id,
       username: nickname.toLowerCase(),
       display_name: nickname,
       onboarding_completed: true,
@@ -45,10 +43,20 @@ export async function POST(req: Request) {
       experience_level,
       main_problems,
       main_goal,
-    })
-    .eq("user_id", user.id)
+      email: user.email,
+      updated_at: new Date().toISOString(),
+    },
+    {
+      onConflict: "user_id",
+    },
+  )
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error("[v0] Onboarding completion error:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  console.log("[v0] Onboarding completed successfully for user:", user.id)
 
   return NextResponse.json({ success: true })
 }

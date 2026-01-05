@@ -10,7 +10,7 @@ import { CheckCircle2, XCircle, AlertCircle, Database, RefreshCw, Trash2, Downlo
 import { useData } from "@/contexts/data-context"
 import { useGamification } from "@/contexts/gamification-context"
 import { useAuth } from "@/contexts/auth-context"
-import { createClient } from "@/lib/supabase-client"
+import { createClient } from "@/lib/supabase/client"
 
 interface SystemCheck {
   name: string

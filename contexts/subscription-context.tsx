@@ -37,7 +37,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [customerId, setCustomerId] = useState<string | null>(null)
 
   const { user } = useAuth()
-  const isOwnerAccount = user?.email === "honza.newage@gmail.com"
+  const isOwnerAccount = user?.email === "jankrupicka.jan@gmail.com"
 
   const isPremium = isOwnerAccount || (plan === "premium" && isActive)
 
@@ -199,6 +199,24 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 export function useSubscription() {
   const context = useContext(SubscriptionContext)
   if (context === undefined) {
+    if (typeof window === "undefined") {
+      return {
+        plan: "free" as const,
+        daysRemaining: 0,
+        isActive: false,
+        isPremium: false,
+        isLoading: true,
+        trialEndsAt: null,
+        subscriptionId: null,
+        customerId: null,
+        subscribe: async () => false,
+        startTrial: async () => false,
+        upgradeToPremium: async () => false,
+        cancelSubscription: async () => false,
+        openBillingPortal: async () => {},
+        checkSubscriptionStatus: async () => {},
+      }
+    }
     throw new Error("useSubscription must be used within a SubscriptionProvider")
   }
   return context

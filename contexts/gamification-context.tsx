@@ -878,6 +878,60 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
 export function useGamification() {
   const context = useContext(GamificationContext)
   if (!context) {
+    // During SSR or build, return safe defaults instead of throwing
+    if (typeof window === "undefined") {
+      return {
+        data: {
+          xp: 0,
+          level: 1,
+          achievements: [],
+          challenges: [],
+          streaks: {
+            morningCheck: 0,
+            trading: 0,
+            meditation: 0,
+            exercise: 0,
+            journal: 0,
+          },
+          stats: {
+            totalMorningChecks: 0,
+            totalTrades: 0,
+            totalJournalEntries: 0,
+            totalMeditations: 0,
+            totalExercises: 0,
+            challengesCompleted: 0,
+            lossResetsCompleted: 0,
+            revengeTradesAvoided: 0,
+          },
+          psychMetrics: {
+            calmScore: 50,
+            focusRating: 50,
+            recoveryIndex: 50,
+            disciplineStreak: 0,
+          },
+          aiPacingMultiplier: 1.0,
+          lastActivityDate: "",
+          dailyXPLog: [],
+        },
+        addXP: () => {},
+        awardReadinessXP: () => false,
+        awardJournalXP: () => false,
+        awardLossResetXP: () => false,
+        awardAIReflectionXP: () => false,
+        getTodayXPLog: () => null,
+        calculateDailyXP: () => 0,
+        unlockAchievement: () => {},
+        updateChallenge: () => {},
+        startChallenge: () => {},
+        completeChallenge: () => {},
+        incrementStreak: () => {},
+        incrementStat: () => {},
+        updatePsychMetrics: () => {},
+        checkXPDecay: () => {},
+        updateAIPacing: () => {},
+        getLevelInfo: () => LEVEL_INFO[0],
+      } as GamificationContextType
+    }
     throw new Error("useGamification must be used within GamificationProvider")
   }
   return context

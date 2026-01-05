@@ -52,7 +52,7 @@ export default function DashboardPage() {
     action: { description: "Začni Morning Check a uzamkni svůj readiness před tradingem." },
   })
 
-  const { getTradingStats, trades, isLiveMode, portfolioValue } = useData()
+  const { getTradingStats, trades, morningChecks, journalEntries, isLiveMode, portfolioValue } = useData()
   const { plan, isActive, daysRemaining } = useSubscription()
   const { startReset } = useLossReset()
   const { tradingStyle, config } = useTradingStyle()
@@ -65,18 +65,14 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    if (!isMounted || typeof window === "undefined") return
-
-    if (!user?.id) {
+    if (!isMounted || !user?.id) {
       console.log("[v0] No authenticated user - showing empty state")
       return
     }
 
     try {
-      const checksKey = `user-${user.id}-mindtrader-morning-checks`
-      const checks = JSON.parse(localStorage.getItem(checksKey) || "[]")
       const todayDate = new Date().toISOString().split("T")[0]
-      const todayCheck = checks.find((c: any) => c.date === todayDate)
+      const todayCheck = morningChecks.find((c: any) => c.date === todayDate)
 
       if (todayCheck && todayCheck.score !== undefined) {
         setMentalReadiness(todayCheck.score)
@@ -84,9 +80,7 @@ export default function DashboardPage() {
         setMentalReadiness(null)
       }
 
-      const journalKey = `user-${user.id}-journal-entries`
-      const entries = JSON.parse(localStorage.getItem(journalKey) || "[]")
-      const last7Days = entries.filter((e: any) => {
+      const last7Days = journalEntries.filter((e: any) => {
         const entryDate = new Date(e.date)
         const today = new Date()
         const diffTime = Math.abs(today.getTime() - entryDate.getTime())
@@ -130,7 +124,7 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("[v0] Error loading mental readiness:", error)
     }
-  }, [isMounted, user])
+  }, [isMounted, user, morningChecks, journalEntries])
 
   useEffect(() => {
     setTimeOfDay(getTimeOfDay())
@@ -313,12 +307,12 @@ export default function DashboardPage() {
     },
   ]
 
-  if (isLoading || !isMounted) {
+  if (!isMounted || isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="mt-4 text-muted-foreground">Načítání...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Načítání...</p>
         </div>
       </div>
     )
@@ -516,19 +510,11 @@ export default function DashboardPage() {
                           <action.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                         </div>
                         <div>
-                          <h3 className="text-white font-semibold mb-0.5 sm:mb-1 text-xs sm:text-sm">
-                            {action.title}
-                            {action.locked && <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 inline ml-1" />}
-                          </h3>
+                          <h3 className="text-white font-semibold mb-0.5 sm:mb-1 text-xs sm:text-sm">{action.title}</h3>
                           <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 hidden sm:block">
                             {action.description}
                           </p>
                         </div>
-                        {action.locked && (
-                          <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 text-[10px] sm:text-xs">
-                            Premium
-                          </Badge>
-                        )}
                       </CardContent>
                     </Card>
                   </Link>

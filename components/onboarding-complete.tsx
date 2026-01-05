@@ -72,8 +72,8 @@ export function OnboardingComplete() {
         return
       }
 
-      localStorage.setItem("trading-mode", "virtual")
-      console.log("[v0] Virtual mode set for new user")
+      // New users default to 'virtual' mode in database via SQL default value
+      console.log("[v0] New user defaults to virtual mode (set in database)")
 
       localStorage.removeItem("mindtrader-product-tour-completed")
       localStorage.setItem("mindtrader-show-tour", "true")
@@ -168,7 +168,7 @@ export function OnboardingComplete() {
         {step === 3 && (
           <Card className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50">
             <CardContent className="pt-8 pb-8">
-              <h2 className="text-2xl font-bold text-white mb-2">Jaký typ tradera jsi?</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">Jaký typ tradera jsi?</h2>
               <p className="text-gray-400 mb-6">Pomáhá nám přizpůsobit analytics a rutiny tvému stylu.</p>
 
               <RadioGroup value={traderType} onValueChange={setTraderType} className="space-y-3">

@@ -4,10 +4,8 @@ import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Brain, Send, Loader2, Heart, Target, Zap, AlertCircle, BarChart2 } from "lucide-react"
+import { Brain, Send, Loader2, Heart, Target, Zap, BarChart2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
@@ -57,6 +55,40 @@ interface DailyEntry {
   ai_score: number
   sleep_hours: number
 }
+
+const GalaxyBackground = () => (
+  <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-purple-900 to-slate-950 overflow-hidden pointer-events-none z-0">
+    <div className="absolute inset-0">
+      {Array.from({ length: 80 }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-0.5 h-0.5 bg-white rounded-full"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            opacity: Math.random() * 0.7 + 0.3,
+            animation: `twinkle ${2 + Math.random() * 4}s ease-in-out infinite`,
+            animationDelay: `${Math.random() * 2}s`,
+          }}
+        />
+      ))}
+    </div>
+
+    <div className="absolute top-20 -left-32 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen opacity-30 blur-3xl animate-pulse" />
+    <div
+      className="absolute bottom-20 -right-32 w-96 h-96 bg-blue-600 rounded-full mix-blend-screen opacity-25 blur-3xl animate-pulse"
+      style={{ animationDelay: "0.7s" }}
+    />
+    <div
+      className="absolute top-1/3 right-1/4 w-80 h-80 bg-indigo-600 rounded-full mix-blend-screen opacity-20 blur-3xl animate-pulse"
+      style={{ animationDelay: "1.4s" }}
+    />
+    <div
+      className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-fuchsia-600 rounded-full mix-blend-screen opacity-15 blur-3xl animate-pulse"
+      style={{ animationDelay: "2.1s" }}
+    />
+  </div>
+)
 
 export function MindTraderAI() {
   const { t, language } = useLanguage()
@@ -263,6 +295,14 @@ export function MindTraderAI() {
       localStorage.setItem(messagesDateKey, new Date().toDateString())
     }
   }, [messages])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadReadinessFromTracker()
+    }, 5000) // Check every 5 seconds
+
+    return () => clearInterval(interval)
+  }, [isLiveMode])
 
   // AI Personalities
   const personalities = {
@@ -625,105 +665,129 @@ export function MindTraderAI() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="md:p-6 p-4 border-b bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg">
-              <Brain className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="md:text-3xl text-2xl font-bold text-slate-900 dark:text-white">MindTrader AI</h1>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {language === "cs" ? "Tvůj osobní psychologický kouč" : "Your personal psychological coach"}
-              </p>
-            </div>
-          </div>
+    <div className="relative w-full min-h-screen bg-gradient-to-br from-slate-950 via-purple-900 to-slate-950 overflow-hidden">
+      <GalaxyBackground />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-950/40 pointer-events-none" />
+
+      <div className="relative z-10 w-full h-screen flex flex-col lg:flex-row gap-6 p-4 lg:p-6">
+        {/* Left Sidebar - Readiness & AI Modes */}
+        <div className="lg:w-96 w-full lg:h-screen order-1 lg:order-1 flex-shrink-0">
+          <Card className="bg-gradient-to-b from-slate-900/90 to-slate-950/80 border-2 border-purple-500/30 backdrop-blur-xl h-full shadow-2xl">
+            <CardHeader className="pb-4 border-b border-purple-500/20 bg-gradient-to-r from-purple-900/40 to-transparent">
+              <div className="flex items-center gap-2 mb-2">
+                <Brain className="w-5 h-5 text-purple-400" />
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-200 to-cyan-200 bg-clip-text text-transparent">
+                  {language === "cs" ? "Tvoje Připravenost" : "Your Readiness"}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 h-[calc(100%-100px)] flex flex-col overflow-y-auto p-6">
+              {/* Readiness Score - Enhanced */}
+              <div className="space-y-3 pb-6 border-b border-purple-500/20">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-cyan-600 rounded-2xl blur-xl opacity-30" />
+                  <div className="relative bg-slate-900/80 border border-purple-400/30 rounded-2xl p-6 text-center">
+                    <div className={`text-6xl font-black ${getReadinessColor(readinessScore)} drop-shadow-lg`}>
+                      {readinessScore !== null ? readinessScore + "%" : "—"}
+                    </div>
+                    <p className="text-sm text-slate-300 mt-3 font-semibold">{getReadinessStatus(readinessScore)}</p>
+                    <div className="w-full h-1 bg-slate-700 rounded-full mt-3 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${getReadinessColor(readinessScore)}`}
+                        style={{ width: `${readinessScore}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Modes - Enhanced with better spacing */}
+              <div className="flex-1 space-y-4">
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-purple-300 uppercase tracking-widest">
+                    🤖 {language === "cs" ? "Režimy AI" : "AI Modes"}
+                  </p>
+                  <div className="h-0.5 w-8 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full" />
+                </div>
+                <div className="space-y-3">
+                  {Object.entries(modes).map(([key, mode]) => {
+                    const Icon = mode.icon
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setAiMode(key as any)}
+                        className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-300 font-semibold text-sm group ${
+                          aiMode === key
+                            ? "border-amber-400 bg-gradient-to-r from-amber-950/80 to-amber-900/60 text-amber-100 shadow-lg shadow-amber-500/20"
+                            : "border-purple-500/30 bg-slate-800/40 hover:bg-slate-700/60 text-slate-300 hover:text-purple-200 hover:border-purple-400/60"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`p-2 rounded-lg ${
+                              aiMode === key ? "bg-amber-400/20" : "bg-purple-500/20 group-hover:bg-purple-400/30"
+                            }`}
+                          >
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <span>{mode.name}</span>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {isRecoveryMode && (
-          <Alert className="mx-4 mt-4 border-orange-400 bg-orange-50 dark:bg-orange-950 border-2">
-            <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-            <AlertDescription className="text-orange-900 dark:text-orange-200 font-medium">
-              {language === "cs" ? "🚨 Recovery Mode aktivní - Dej si pauzu" : "🚨 Recovery Mode active - Take a break"}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 md:p-6 p-4 h-[calc(100vh-160px)]">
-          {/* Sidebar - Desktop Only */}
-          <div className="lg:col-span-1 space-y-4 lg:block hidden overflow-y-auto">
-            <Card className="bg-white dark:bg-slate-800 border-2 border-amber-200 dark:border-amber-900">
-              <CardHeader>
-                <CardTitle className="text-base font-bold text-slate-900 dark:text-white">
-                  {language === "cs" ? "Readiness" : "Readiness"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center">
-                  <div className={`text-4xl font-bold ${getReadinessColor(readinessScore)}`}>
-                    {readinessScore !== null ? readinessScore + "%" : "—"}
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-                    {getReadinessStatus(readinessScore)}
-                  </p>
-                </div>
-
-                <div className="space-y-3 pt-4 border-t">
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === "cs" ? "Režim AI" : "AI Mode"}
-                  </p>
-                  <div className="space-y-2">
-                    {Object.entries(modes).map(([key, mode]) => {
-                      const Icon = mode.icon
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => setAiMode(key as any)}
-                          className={`w-full text-left p-3 rounded-lg border-2 transition-all font-medium text-sm ${
-                            aiMode === key
-                              ? "border-amber-500 bg-amber-50 dark:bg-amber-950 text-slate-900 dark:text-amber-200"
-                              : "border-slate-200 dark:border-slate-700 hover:border-amber-300 text-slate-700 dark:text-slate-300"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Icon className="w-4 h-4" />
-                            <span>{mode.name}</span>
+        {/* Right Chat Area - Enhanced */}
+        <div className="flex-1 order-2 lg:order-2 flex flex-col">
+          <Card className="bg-gradient-to-br from-slate-900/80 to-slate-950/80 border-2 border-purple-500/30 backdrop-blur-xl flex-1 flex flex-col shadow-2xl">
+            <CardContent className="p-0 h-full flex flex-col">
+              {/* Messages Area - Enhanced with better spacing */}
+              <ScrollArea className="flex-1 p-6 space-y-4">
+                <div className="space-y-5">
+                  {messages.length === 0 ? (
+                    <div className="h-full flex items-center justify-center">
+                      <div className="text-center space-y-4">
+                        <div className="relative mx-auto w-16 h-16">
+                          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-full blur-lg opacity-30 animate-pulse" />
+                          <div className="relative bg-slate-800 rounded-full flex items-center justify-center border border-purple-400/30">
+                            <Brain className="w-8 h-8 text-purple-400" />
                           </div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Chat Area */}
-          <div className="lg:col-span-4 col-span-1 h-full flex flex-col">
-            <Card className="h-full flex flex-col bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-lg">
-              <CardContent className="p-0 h-full flex flex-col">
-                {/* Messages Area */}
-                <ScrollArea className="flex-1 md:p-6 p-4">
-                  <div className="space-y-4">
-                    {messages.map((message, index) => (
-                      <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                        </div>
+                        <div>
+                          <p className="text-base font-bold text-purple-200">
+                            {language === "cs" ? "Pojďme začít!" : "Let's Get Started!"}
+                          </p>
+                          <p className="text-sm text-slate-400 mt-2 max-w-xs mx-auto">
+                            {language === "cs"
+                              ? "Vyber režim a ptej se mě na cokoli"
+                              : "Choose a mode and ask me anything"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    messages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
+                      >
                         <div
-                          className={`md:max-w-[75%] max-w-[85%] rounded-lg md:p-4 p-3 ${
+                          className={`max-w-[70%] rounded-xl p-4 ${
                             message.role === "user"
-                              ? "bg-blue-600 text-white shadow-md"
+                              ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20 font-medium"
                               : message.type === "recovery"
-                                ? "bg-orange-100 dark:bg-orange-950 text-orange-900 dark:text-orange-100 border-2 border-orange-300 dark:border-orange-700"
+                                ? "bg-gradient-to-r from-orange-900 to-orange-950 text-orange-100 border border-orange-400/30 shadow-lg shadow-orange-500/10"
                                 : message.type === "insight"
-                                  ? "bg-indigo-100 dark:bg-indigo-950 text-indigo-900 dark:text-indigo-100"
-                                  : "bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100"
+                                  ? "bg-gradient-to-r from-indigo-900 to-indigo-950 text-indigo-100 border border-indigo-400/30 shadow-lg shadow-indigo-500/10"
+                                  : "bg-gradient-to-r from-slate-700 to-slate-800 text-slate-100 border border-purple-400/20 shadow-lg shadow-purple-500/10"
                           }`}
                         >
-                          <p className="md:text-base text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                            {message.content}
-                          </p>
-                          <span className="text-xs opacity-70 mt-2 block">
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                          <span className="text-xs opacity-60 mt-2 block font-normal">
                             {message.timestamp.toLocaleTimeString(language === "cs" ? "cs-CZ" : "en-US", {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -731,106 +795,80 @@ export function MindTraderAI() {
                           </span>
                         </div>
                       </div>
-                    ))}
+                    ))
+                  )}
 
-                    {/* Loading State */}
-                    {isLoading && (
-                      <div className="flex justify-start">
-                        <div className="max-w-[75%] rounded-lg p-4 bg-slate-100 dark:bg-slate-700">
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                            <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">
-                              {language === "cs" ? "Analyzuji tvá data..." : "Analyzing your data..."}
-                            </span>
-                          </div>
+                  {isLoading && (
+                    <div className="flex justify-start animate-fadeIn">
+                      <div className="max-w-[70%] rounded-xl p-4 bg-gradient-to-r from-slate-700 to-slate-800 border border-purple-400/20 shadow-lg shadow-purple-500/10">
+                        <div className="flex items-center gap-3">
+                          <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                          <span className="text-sm text-slate-200 font-medium">
+                            {language === "cs" ? "Myslím..." : "Thinking..."}
+                          </span>
                         </div>
                       </div>
-                    )}
-
-                    <div ref={messagesEndRef} />
-                  </div>
-                </ScrollArea>
-
-                {/* Quick Prompts */}
-                {messages.length <= 1 && (
-                  <div className="md:px-6 px-4 py-3 border-t">
-                    <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-3 block">
-                      {language === "cs" ? "Rychlé dotazy:" : "Quick prompts:"}
-                    </Label>
-                    <div className="grid md:grid-cols-2 grid-cols-1 gap-2">
-                      {quickPrompts.slice(0, 4).map((prompt, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          className="text-left justify-start h-auto py-2 text-xs font-medium border-slate-300 dark:border-slate-600 hover:bg-amber-50 dark:hover:bg-slate-700 bg-transparent"
-                          onClick={() => setInput(prompt)}
-                        >
-                          <Zap className="w-4 h-4 mr-2 flex-shrink-0 text-amber-600" />
-                          <span className="truncate">{prompt}</span>
-                        </Button>
-                      ))}
                     </div>
+                  )}
+
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
+
+              {/* Quick Prompts and Input - Enhanced */}
+              <div className="border-t border-purple-500/20 bg-gradient-to-t from-slate-950/80 to-slate-950/40 p-6 space-y-4">
+                {messages.length < 3 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {quickPrompts.slice(0, 4).map((prompt, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setInput(prompt)}
+                        className="text-xs p-3 rounded-lg bg-slate-700/60 hover:bg-slate-600/80 text-slate-200 border border-purple-400/30 hover:border-purple-400/60 transition-all duration-200 hover:shadow-md hover:shadow-purple-500/10 font-medium truncate"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
                   </div>
                 )}
 
-                {/* Input Area */}
-                <div className="border-t md:p-4 p-3 bg-slate-50 dark:bg-slate-900">
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault()
-                            handleSendMessage()
-                          }
-                        }}
-                        placeholder={language === "cs" ? "Napiš zprávu..." : "Type your message..."}
-                        className="md:min-h-[60px] min-h-[70px] md:max-h-[100px] max-h-[120px] resize-none text-sm"
-                        disabled={isLoading}
-                      />
-                    </div>
-                    <Button
-                      onClick={handleSendMessage}
-                      disabled={!input.trim() || isLoading}
-                      className="md:h-[60px] h-[70px] px-4 bg-blue-600 hover:bg-blue-700"
-                    >
-                      {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                    </Button>
-                  </div>
-                  {!isLiveMode && (
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 font-medium">
-                      {language === "cs" ? `Virtual: ${virtualMessageCount}/3` : `Virtual: ${virtualMessageCount}/3`}
-                    </p>
-                  )}
+                {/* Message Input - Enhanced */}
+                <div className="flex gap-3">
+                  <Textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder={language === "cs" ? "Piš svou zprávu..." : "Type your message..."}
+                    className="bg-slate-800 border-2 border-purple-400/30 focus:border-purple-400/60 text-white placeholder-slate-500 resize-none h-12 rounded-lg"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault()
+                        handleSendMessage()
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={isLoading || !input.trim()}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-200"
+                    size="lg"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
                 </div>
-
-                {/* Mobile Mode Selector */}
-                <div className="lg:hidden border-t md:p-4 p-3 bg-slate-100 dark:bg-slate-900">
-                  <div className="flex items-center gap-2 overflow-x-auto">
-                    <Label className="text-xs font-semibold whitespace-nowrap">
-                      {language === "cs" ? "Režim:" : "Mode:"}
-                    </Label>
-                    {Object.entries(modes).map(([key, mode]) => (
-                      <Button
-                        key={key}
-                        variant={aiMode === key ? "default" : "outline"}
-                        size="sm"
-                        className="whitespace-nowrap text-xs font-medium"
-                        onClick={() => setAiMode(key as any)}
-                      >
-                        {mode.name.split(" ")[1]}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Twinkle animation CSS */}
+      <style>{`
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 1; }
+        }
+      `}</style>
     </div>
   )
 }
+
+export default MindTraderAI

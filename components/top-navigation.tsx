@@ -34,7 +34,8 @@ import {
   AlertTriangle,
 } from "lucide-react"
 import LiveModeToggle from "@/components/live-mode-toggle"
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient } from "@/lib/supabase/client"
+import { useAuth } from "@/contexts/auth-context"
 
 interface TopNavigationProps {
   initialTheme?: string
@@ -77,6 +78,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false) // Track if we loaded profile once
 
+  const { logout } = useAuth()
+
   const loadProfileData = async () => {
     if (typeof window === "undefined") return
 
@@ -84,10 +87,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
     setIsLoading(true)
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
+    const supabase = createClient()
 
     const {
       data: { user },
@@ -112,14 +112,30 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
     const profile = data
 
+    if (!profile) {
+      console.log("[v0] No profile found - user needs onboarding")
+      setProfileData({
+        name: "Loading...",
+        email: user.email || "",
+        nickname: "",
+        avatarUrl: "",
+        experienceLevel: "beginner",
+        isPremium: false,
+        level: 1,
+      })
+      setIsLoading(false)
+      setHasLoadedOnce(true)
+      return
+    }
+
     setProfileData({
-      name: profile?.nickname || user.email?.split("@")[0] || "User",
+      name: profile.display_name || profile.username || user.email?.split("@")[0] || "Trader",
       email: user.email || "",
-      nickname: profile?.nickname || "",
-      avatarUrl: profile?.avatar_url || "",
-      experienceLevel: profile?.experience_level || "beginner",
-      isPremium: profile?.subscription_plan === "premium" || profile?.subscription_plan === "pro",
-      level: profile?.level || 1,
+      nickname: profile.username || "",
+      avatarUrl: profile.avatar_url || "",
+      experienceLevel: profile.experience_level || "beginner",
+      isPremium: profile.subscription_tier === "premium" || profile.subscription_tier === "pro",
+      level: 1,
     })
 
     setIsLoading(false)
@@ -157,8 +173,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   }
 
   const handleLogout = () => {
-    console.log("Logging out...")
-    window.location.href = "/login"
+    logout()
   }
 
   const isMoreActive = moreNavigation.some((item) => pathname === item.href)

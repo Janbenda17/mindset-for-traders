@@ -174,7 +174,7 @@ export function generateVirtualMorningChecks(count = 30): VirtualMorningCheck[] 
     const sleepHours = randomBetween(6, 9)
     const energyLevel = sleepQuality >= 7 ? randomInt(7, 10) : randomInt(4, 7)
     const stressLevel = randomInt(2, 8)
-    const focus = energyLevel >= 7 ? randomInt(7, 10) : randomInt(5, 8)
+    const focus = energyLevel >= 7 ? randomInt(7, 10) : randomInt(5, 9)
     const physicalHealth = randomInt(6, 10)
     const emotionalState = randomInt(5, 10)
     const exercised = Math.random() > 0.4
@@ -271,28 +271,76 @@ export function generateVirtualDailyTrackerData() {
   // Generate realistic daily tracker data with filled stages
   const today = new Date().toISOString().split("T")[0]
 
+  // Generate random but realistic metrics
+  const sleepQuality = randomInt(6, 10)
+  const sleepHours = randomBetween(6.5, 8.5)
+  const energyLevel = sleepQuality >= 8 ? randomInt(7, 10) : randomInt(5, 8)
+  const stressLevel = randomInt(2, 7)
+  const focus = energyLevel >= 7 ? randomInt(7, 10) : randomInt(5, 9)
+  const physicalHealth = randomInt(7, 10)
+  const emotionalState = randomInt(6, 10)
+  const exercised = Math.random() > 0.3
+  const meditationTime = Math.random() > 0.4 ? randomInt(10, 30) : 0
+  const morningRoutine = Math.random() > 0.2
+  const hydration = randomInt(6, 10)
+
+  // Calculate readiness score based on all metrics (0-100)
+  const sleepScore = (sleepQuality * 10 + sleepHours * 8) / 2
+  const energyScore = energyLevel * 10
+  const stressScore = (10 - stressLevel) * 8
+  const focusScore = focus * 10
+  const healthScore = physicalHealth * 10
+  const emotionalScore = emotionalState * 10
+  const exerciseBonus = exercised ? 50 : 20
+  const routineBonus = morningRoutine ? 40 : 10
+  const hydrationScore = hydration * 8
+
+  const totalScore =
+    (sleepScore +
+      energyScore +
+      stressScore +
+      focusScore +
+      healthScore +
+      emotionalScore +
+      exerciseBonus +
+      routineBonus +
+      hydrationScore) /
+    9
+  const score = Math.max(0, Math.min(100, Math.round(totalScore / 10)))
+
   const morningCheck: VirtualMorningCheck = {
     id: `virtual-morning-${today}`,
     date: today,
-    sleepQuality: 8,
-    sleepHours: 7.5,
-    energyLevel: 8,
-    stressLevel: 3,
-    focus: 9,
-    physicalHealth: 8,
-    emotionalState: 8,
-    exercised: true,
-    meditationTime: 15,
-    morningRoutine: true,
-    hydration: 8,
-    score: 82,
+    sleepQuality,
+    sleepHours: Number(sleepHours.toFixed(1)),
+    energyLevel,
+    stressLevel,
+    focus,
+    physicalHealth,
+    emotionalState,
+    exercised,
+    meditationTime,
+    morningRoutine,
+    hydration,
+    score,
+  }
+
+  // Generate dynamic insight based on the metrics
+  let insight = ""
+  if (score >= 80) {
+    insight = `Vynikající readiness (${score}%)! Jsi plně připravený na obchodování. Tvá vysoká úroveň focusu (${focus}/10) a ${stressLevel <= 4 ? "nízký stres" : "zvládnutelný stres"} (${stressLevel}/10) vytváří optimální podmínky pro disciplinované rozhodování.`
+  } else if (score >= 70) {
+    insight = `Dobrá readiness (${score}%). Jsi připravený obchodovat, ale sleduj své ${stressLevel > 5 ? "úrovně stresu" : energyLevel < 7 ? "energii" : "focus"}. ${exercised ? "Cvičení ti pomohlo!" : "Zkus krátké cvičení před tradingem."}`
+  } else if (score >= 60) {
+    insight = `Přijatelná readiness (${score}%). Zvaž redukci risku a počtu tradů. ${sleepQuality < 7 ? `Spánek (${sleepQuality}/10) není ideální.` : ""} ${stressLevel > 6 ? `Vysoký stres (${stressLevel}/10) může ovlivnit rozhodování.` : ""}`
+  } else {
+    insight = `Nízká readiness (${score}%). Dnes je lepší den na odpočinek nebo vzdělávání místo tradingu. ${sleepQuality < 6 ? `Nedostatečný spánek (${sleepQuality}/10).` : ""} ${stressLevel > 7 ? `Vysoký stres (${stressLevel}/10).` : ""} ${focus < 6 ? `Nízký focus (${focus}/10).` : ""}`
   }
 
   return {
     morningCheck,
-    todayScore: 82,
-    insight:
-      "Vynikající readiness! Jsi plně připravený na obchodování. Tvá vysoká úroveň focusu (9/10) a nízký stres (3/10) vytváří optimální podmínky pro disciplinované rozhodování.",
+    todayScore: score,
+    insight,
   }
 }
 
@@ -320,5 +368,80 @@ export function generateVirtualJournalStats() {
     avgPerTrade: trades.length > 0 ? Math.round(totalPnL / trades.length) : 0,
     weekPnL: Math.round(weekPnL),
     winRate: trades.length > 0 ? Math.round((winningTrades.length / trades.length) * 100) : 0,
+  }
+}
+
+export function generateDemoData(tradingStyle: string) {
+  const trades = generateVirtualTrades(30)
+  const journalEntries = generateVirtualJournalEntries(15)
+  const morningChecks = generateVirtualMorningChecks(30)
+
+  // Calculate psychological analysis metrics
+  const avgMood = trades.length > 0 ? Math.round(trades.reduce((sum, t) => sum + t.mood, 0) / trades.length) : 0
+  const avgStress =
+    trades.length > 0 ? Math.round(trades.reduce((sum, t) => sum + t.stressLevel, 0) / trades.length) : 0
+  const avgDiscipline =
+    trades.length > 0 ? Math.round(trades.reduce((sum, t) => sum + t.discipline, 0) / trades.length) : 0
+  const avgConfidence =
+    trades.length > 0 ? Math.round(trades.reduce((sum, t) => sum + t.confidence, 0) / trades.length) : 0
+
+  const winRate = trades.length > 0 ? Math.round((trades.filter((t) => t.pnl > 0).length / trades.length) * 100) : 0
+  const totalPnL = trades.reduce((sum, t) => sum + t.pnl, 0)
+
+  return {
+    summary: {
+      totalTrades: trades.length,
+      weeks: 4,
+      uniqueDays: new Set(trades.map((t) => t.date)).size,
+      totalPnL,
+      winRate,
+      avgMood,
+      avgStress,
+      avgDiscipline,
+      avgConfidence,
+    },
+    weeklyPerformanceData: [],
+    dailyMoodData: [],
+    weekdayChartData: [],
+    psychInsights: [
+      {
+        category: "Discipline",
+        score: avgDiscipline,
+        message: `Tvá disciplína je na úrovni ${avgDiscipline}%. ${avgDiscipline > 75 ? "Excelentní!" : avgDiscipline > 60 ? "Dobré, ale máš prostor pro zlepšení." : "Potřebuješ se zaměřit na dodržování plánu."}`,
+      },
+      {
+        category: "Stress Management",
+        score: 100 - avgStress,
+        message: `Stres na úrovni ${avgStress}%. ${avgStress < 50 ? "Velmi dobré zvládání stresu!" : avgStress < 70 ? "Moderovaný stres, pracuj na técích relaxace." : "Vysoký stres, zvaž užívání krizovych technik."}`,
+      },
+      {
+        category: "Emotional Control",
+        score: avgMood,
+        message: `Emoční stabilita: ${avgMood}/10. ${avgMood > 7 ? "Velmi stabilní!" : avgMood > 5 ? "Dobrá, ale nepředvídatelná." : "Potřebuješ delší práci na emočním řízení."}`,
+      },
+      {
+        category: "Trading Consistency",
+        score: winRate,
+        message: `Win rate: ${winRate}%. ${winRate > 60 ? "Skvělá konzistentnost!" : winRate > 50 ? "Slušné, ale máš prostor." : "Pracuj na kvalitě setupů."}`,
+      },
+    ],
+    actionPlan: [
+      {
+        priority: "high" as const,
+        emoji: "📊",
+        title: "Analyze Your Patterns",
+        description: "Review your virtual trades to understand your trading patterns.",
+        action: "Look at the trades above and identify what worked best.",
+        impact: "Better understanding of your strengths and weaknesses.",
+      },
+      {
+        priority: "medium" as const,
+        emoji: "✍️",
+        title: "Journal Your Insights",
+        description: "Document what you've learned from this virtual trading session.",
+        action: "Write down 3 key learnings and your action items.",
+        impact: "Faster improvement and better decision-making.",
+      },
+    ],
   }
 }

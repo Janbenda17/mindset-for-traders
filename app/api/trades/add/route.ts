@@ -19,9 +19,14 @@ export async function POST(request: NextRequest) {
 
     console.log("[v0] Adding trade for authenticated user:", user.id)
 
+    const tradeTitle =
+      trade.title ||
+      `${trade.pair || trade.symbol || "Trade"} ${trade.direction || ""} - ${trade.date || new Date().toISOString().split("T")[0]}`
+
     const supabaseFields = {
       user_id: user.id,
       type: "trade",
+      title: tradeTitle,
       date: trade.date || new Date().toISOString().split("T")[0],
       pair: trade.pair,
       symbol: trade.pair,
@@ -62,7 +67,7 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     }
 
-    const { data, error } = await supabase.from("journal_entries").insert(supabaseFields).select().single()
+    const { data, error } = await supabase.from("journal_entries").insert(supabaseFields).select().maybeSingle()
 
     if (error) {
       console.error("[v0] Error inserting trade:", error.message)
@@ -70,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("[v0] Trade inserted successfully with RLS protection")
-    return NextResponse.json({ data })
+    return NextResponse.json({ data: data || supabaseFields })
   } catch (error: any) {
     console.error("[v0] API error:", error)
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 })

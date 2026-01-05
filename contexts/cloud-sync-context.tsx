@@ -2,10 +2,11 @@
 
 import type React from "react"
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 import { getUserData, setUserData } from "@/utils/storage-utils"
+import { useAuth } from "@/contexts/auth-context"
 
 interface CloudSyncContextType {
   user: User | null
@@ -19,11 +20,26 @@ interface CloudSyncContextType {
 const CloudSyncContext = createContext<CloudSyncContextType | undefined>(undefined)
 
 export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
+  const { user: authUser } = useAuth()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
-  const supabase = createClient()
+
+  const supabase = useMemo(() => createClient(), [])
+
+  useEffect(() => {
+    if (authUser?.id) {
+      // Get Supabase user object if we only have the auth user
+      supabase.auth.getUser().then(({ data }) => {
+        setUser(data.user)
+        setIsLoading(false)
+      })
+    } else {
+      setUser(null)
+      setIsLoading(false)
+    }
+  }, [authUser, supabase])
 
   // Sync localStorage data to Supabase
   const syncToCloud = useCallback(async () => {
@@ -158,22 +174,6 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
       syncFromCloud()
     }
   }, [user, syncFromCloud])
-
-  // Check auth state
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setIsLoading(false)
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase])
 
   const signOut = async () => {
     await supabase.auth.signOut()

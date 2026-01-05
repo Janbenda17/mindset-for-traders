@@ -2,11 +2,13 @@
 
 // import { Label } from "@/components/ui/label" // Removed
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react" // Added useMemo
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton" // Added
+import { AlertTriangle } from "lucide-react"
 import {
   Brain,
   Target,
@@ -23,7 +25,6 @@ import {
   TrendingUpIcon,
   TrendingUp,
   DollarSign,
-  AlertTriangle,
   ThumbsUp,
   ThumbsDown,
   Flame,
@@ -43,7 +44,6 @@ import {
   Percent,
   TrendingDown as TrendingUpDown,
   Clipboard,
-  Lightbulb,
 } from "lucide-react"
 import {
   XAxis,
@@ -66,9 +66,12 @@ import {
 } from "recharts"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
-import { getUserData } from "@/utils/storage-utils"
 import { useTradingStyle } from "@/contexts/trading-style-context"
 import { useAuth } from "@/contexts/auth-context" // Added
+import { useRouter } from "next/navigation" // Added for navigation
+import { useAdmin } from "@/contexts/admin-context"
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
+import { useAnalytics } from "@/contexts/analytics-context"
 
 // Custom Tooltip with better formatting
 const CustomTooltip = ({ active, payload, label, type = "default" }: any) => {
@@ -131,6 +134,136 @@ function generateDemoData(tradingStyle: string) {
       { day: "Čtvrtek", winRate: 55, avgMood: 65, avgDiscipline: 68, trades: 40 },
       { day: "Pátek", winRate: 62, avgMood: 70, avgDiscipline: 72, trades: 38 },
     ],
+    summary: {
+      totalTrades: 150,
+      winRate: 58,
+      totalPnL: 25000,
+      averageWin: 300,
+      averageLoss: -150,
+      avgReadiness: 75,
+      avgMood: 68,
+      bestDay: { date: "15. Led", pnl: 2500, readiness: 85 },
+      worstDay: { date: "10. Led", pnl: -1200, readiness: 50 },
+      bestWeek: { week: "15-21 Led", pnl: 3780, avgReadiness: 80 }, // Added for demo
+      worstWeek: { week: "8-14 Led", pnl: -890, avgReadiness: 58 }, // Added for demo
+    },
+    psychology: {
+      readinessCorrelation: 0.6,
+      moodCorrelation: 0.7,
+      disciplineScore: 78,
+      consistencyScore: 70,
+      revengeIncidents: 5,
+    },
+    stages: {
+      shouldUnlockStage2: true,
+      shouldUnlockStage3: true,
+      shouldUnlockStage4: true,
+      shouldUnlockStage5: true,
+    },
+    weeklyInsights: {
+      bestPerformingDay: "Středa",
+      worstPerformingDay: "Úterý",
+      commonMistake: "Revenge trading",
+      readinessVsResults: "High readiness correlates with higher P&L",
+      nextWeekFocus: ["Discipline", "Stress Management"],
+    },
+    psychologicalProfile: [
+      { subject: "Disciplína", A: 78 },
+      { subject: "Emoce", A: 75 },
+      { subject: "Sebevědomí", A: 72 },
+      { subject: "Stress", A: 35 }, // Stress inverted for radar chart (lower is better)
+      { subject: "Konzistence", A: 70 },
+      { subject: "Awareness", A: 80 },
+      { subject: "Energie", A: 70 },
+      { subject: "Readiness", A: 75 },
+    ],
+    psychInsights: [
+      {
+        type: "success",
+        icon: "😴",
+        title: "Spánek je tvůj superpower!",
+        description: `Průměrně spíš ${7.5}h, což je SKVĚLÉ! Studie ukazují, že 7+ hodin spánku zlepšuje rozhodování o 40%.`,
+        action: "Pokračuj v pravidelném spánkovém režimu - funguje to!",
+        impact: "high",
+      },
+      {
+        type: "success",
+        icon: "🎯",
+        title: "Disciplína level: Navy SEAL",
+        description: `Disciplína ${78}% je brutální!`,
+        action: "Mentoruj ostatní - sdílej své techniky!",
+        impact: "positive",
+      },
+      {
+        type: "warning",
+        icon: "😩",
+        title: "Zvýšený stress level",
+        description: `Tvůj stress (${35}%) je mírně zvýšený. Potenciál pro chyby roste.`,
+        action: "Implementuj 5min meditaci nebo krátkou procházku po každé ztrátě.",
+        impact: "high",
+      },
+    ],
+    emotionalPatterns: [
+      {
+        name: "FOMO Trading",
+        emoji: "😰",
+        count: 5,
+        impact: -1500,
+        color: "#ef4444",
+        severity: "medium",
+        description: "Impulzivní obchody z obavy, že promeškáš příležitost",
+        recommendation: "Vyčkej 10 minut před vstupem. FOMO většinou znamená, že jsi pozdě.",
+      },
+      {
+        name: "Revenge Trading",
+        emoji: "😤",
+        count: 3,
+        impact: -2800,
+        color: "#dc2626",
+        severity: "high",
+        description: "Snaha rychle získat zpět ztráty - nejnebezpečnější pattern",
+        recommendation: "STOP trading po 2 ztrátách za sebou. Udělej pauzu minimálně 30 minut.",
+      },
+    ],
+    streakStats: {
+      currentWinStreak: 4,
+      maxWinStreak: 6,
+      currentLossStreak: 1,
+      maxLossStreak: 3,
+    },
+    actionPlan: [
+      {
+        priority: "high" as const,
+        emoji: "📋",
+        title: "DISCIPLÍNA - Klíč k profitabilitě!",
+        description: `Nízká disciplína (${78}%) rovná se gamblingu, ne tradingu.`,
+        action:
+          "Vytvoř si PŘED ka¾dým trading sessionem checklist: 1) Plán zkontrolován? 2) Emocionální stav OK? 3) Pozice OK? Žádný trade bez splnění checklistu!",
+        impact: "Rozdíl mezi ztrátovým a ziskovým traderem.",
+      },
+      {
+        priority: "medium" as const,
+        emoji: "😰",
+        title: "SNIŽ STRESS - Kritická úroveň!",
+        description: `Vysoký stress (${35}%) ničí tvá rozhodnutí a dlouhodobé zdraví.`,
+        action:
+          "Okamžitě začni s 10min dechovými cvičeními PŘED každým obchodem a po 2 ztrátách za sebou. Zvaž snížení pozic o 50%.",
+        impact: "Tvoje performance a zdraví jsou v ohrožení!",
+      },
+    ],
+    weekdayChartData: [
+      { day: "Pondělí", winRate: 65, avgMood: 72, avgDiscipline: 75, trades: 45 },
+      { day: "Úterý", winRate: 58, avgMood: 68, avgDiscipline: 70, trades: 42 },
+      { day: "Středa", winRate: 72, avgMood: 78, avgDiscipline: 82, trades: 48 },
+      { day: "Čtvrtek", winRate: 55, avgMood: 65, avgDiscipline: 68, trades: 40 },
+      { day: "Pátek", winRate: 62, avgMood: 70, avgDiscipline: 72, trades: 38 },
+    ],
+    moodPerformanceData: Array.from({ length: 30 }, (_, i) => ({
+      mood: Math.floor(Math.random() * 40) + 50,
+      pnl: Math.floor(Math.random() * 2500) - 500,
+      date: `${i + 1}. Led`,
+      size: Math.abs(Math.floor(Math.random() * 2500) - 500) / 10 + 5,
+    })),
   }
 
   return demoData
@@ -649,6 +782,12 @@ function generatePsychologicalAnalysis(
       tradingDays: uniqueDays, // Renamed for clarity
       bestDay: bestDayPnL,
       worstDay: worstDayPnL,
+      averageWin:
+        trades.filter((t) => t.pnl > 0).reduce((sum, t) => sum + t.pnl, 0) /
+        Math.max(trades.filter((t) => t.pnl > 0).length, 1),
+      averageLoss:
+        trades.filter((t) => t.pnl < 0).reduce((sum, t) => sum + t.pnl, 0) /
+        Math.max(trades.filter((t) => t.pnl < 0).length, 1),
     },
     emotionalPatterns: emotionalPatterns,
     psychInsights: [
@@ -658,7 +797,7 @@ function generatePsychologicalAnalysis(
             type: "success",
             icon: "😴",
             title: "Spánek je tvůj superpower!",
-            description: `Průměrně spíš ${avgSleep.toFixed(1)}h, což je SKVĚLÉ! Studie ukazují, že 7+ hodin spánku zlepšuje rozhodování o 40%.`,
+            description: `Průměrně spíš ${avgSleep.toFixed(1)}h, což je SKVÉLÉ! Studie ukazují, že 7+ hodin spánku zlepšuje rozhodování o 40%.`,
             action: "Pokračuj v pravidelném spánkovém režimu - funguje to!",
             impact: "high",
           }
@@ -771,58 +910,115 @@ function generatePsychologicalAnalysis(
   }
 }
 
-export default function AnalyticsPage({ user: authUser }: any) {
-  // Renamed user to authUser to avoid redeclaration
-  // Added user prop
+export default function AnalyticsPage() {
+  const router = useRouter()
+  const [timeframe, setTimeframe] = useState<"week" | "month" | "all">("month")
+  const [activeTab, setActiveTab] = useState("mindset")
+  const { tradingStyle } = useTradingStyle()
+  const { user } = useAuth()
+  const { isAdmin, isTestModeEnabled, simulatedDaysOffset, getSimulatedDate } = useAdmin()
   const { isLiveMode, getAllTrades, getAllJournalEntries } = useData()
-  const [timeframe, setTimeframe] = useState<"week" | "month" | "all">("month") // Added "all"
-  const [activeTab, setActiveTab] = useState("mindset") // Changed default to "mindset"
-  const [analysis, setAnalysis] = useState<any>(null)
-  // Removed tradingStyle state initialization here as it's handled by the hook
-  const { tradingStyle } = useTradingStyle() // Hook provides tradingStyle
-  const { user } = useAuth() // Added user from auth context
 
-  // CHANGE: Load demo data for virtual mode and set state
-  const demoData = !isLiveMode ? generateDemoData(tradingStyle || "daytrader") : null
+  const { analytics, isLoading: analyticsLoading } = useAnalytics()
 
-  useEffect(() => {
-    const userData = getUserData()
-    // const style = userData.settings?.trading?.style || "day-trader" // This logic is likely moved or handled by useTradingStyle hook now
+  const trades = getAllTrades() || []
 
-    const trades = getAllTrades() || []
-    const journals = getAllJournalEntries() || []
+  const isUnlocked = useMemo(() => {
+    if (isAdmin && isTestModeEnabled) {
+      return true
+    }
 
-    // CHANGE: Don't return null when no trades - generate analysis from virtual data
-    const moodEntriesKey = user?.id ? `user-${user.id}-trader-mindset-mood-entries` : "trader-mindset-mood-entries"
-    const moodEntries = JSON.parse(localStorage.getItem(moodEntriesKey) || "[]")
+    if (!isLiveMode) return true
 
-    // Pass tradingStyle from the hook to generatePsychologicalAnalysis
-    const realAnalysis = generatePsychologicalAnalysis(
-      trades,
-      journals,
-      moodEntries,
-      isLiveMode,
-      tradingStyle,
-      timeframe,
-    )
-    setAnalysis(realAnalysis)
-  }, [isLiveMode, timeframe, user?.id, tradingStyle]) // Added tradingStyle dependency
+    const today = new Date()
+    const currentDate = isTestModeEnabled ? getSimulatedDate() : today
 
-  // CHANGE: Add fallback for undefined displayData to prevent build error
-  const displayData = !isLiveMode ? demoData : analysis
+    const daysSinceFirstTrade =
+      trades.length > 0
+        ? Math.floor(
+            (currentDate.getTime() - new Date(trades[0].date || trades[0].created_at).getTime()) /
+              (1000 * 60 * 60 * 24),
+          )
+        : 0
 
-  // CHANGE: Only show "no data" if in live mode with no data
-  if (!displayData && isLiveMode) {
+    return daysSinceFirstTrade >= 7 || trades.length >= 10
+  }, [isLiveMode, trades, isAdmin, isTestModeEnabled, getSimulatedDate])
+
+  const safeData = useMemo(() => {
+    if (!isLiveMode && (!analytics || analytics.summary.totalTrades === 0)) {
+      return generateDemoData(tradingStyle || "daytrader")
+    }
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <Brain className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-          <h2 className="text-xl font-semibold text-slate-400 mb-2">No Data Yet</h2>
-          <p className="text-slate-500">Start recording trades to see your analytics</p>
-        </div>
+      analytics || {
+        summary: {
+          totalTrades: 0,
+          winRate: 0,
+          totalPnL: 0,
+          averageWin: 0,
+          averageLoss: 0,
+          avgReadiness: 0,
+          avgMood: 0,
+          bestDay: { date: "", pnl: 0, readiness: 0 },
+          worstDay: { date: "", pnl: 0, readiness: 0 },
+          bestWeek: { week: "N/A", pnl: 0, avgReadiness: 0 },
+          worstWeek: { week: "N/A", pnl: 0, avgReadiness: 0 },
+        },
+        psychology: {
+          readinessCorrelation: 0,
+          moodCorrelation: 0,
+          disciplineScore: 0,
+          consistencyScore: 0,
+          revengeIncidents: 0,
+        },
+        stages: {
+          shouldUnlockStage2: false,
+          shouldUnlockStage3: false,
+          shouldUnlockStage4: false,
+          shouldUnlockStage5: false,
+        },
+        weeklyInsights: {
+          bestPerformingDay: "N/A",
+          worstPerformingDay: "N/A",
+          commonMistake: "No data yet",
+          readinessVsResults: "No data yet",
+          nextWeekFocus: [],
+        },
+        dailyMoodData: [],
+        weeklyPerformanceData: [],
+        psychologicalProfile: [],
+        psychInsights: [],
+        emotionalPatterns: [],
+        streakStats: {},
+        actionPlan: [],
+      }
+    )
+  }, [isLiveMode, analytics, tradingStyle])
+
+  const showEmptyState = false // Always false now based on the change above
+
+  if (analyticsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border-slate-700/50 backdrop-blur-sm">
+          <CardContent className="p-8">
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-48 mx-auto" />
+              <Skeleton className="h-12 w-full max-w-lg mx-auto" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-48 w-full" />
+              </div>
+              <Skeleton className="h-96 w-full mt-8" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
+
+  // Removed the showEmptyState check here, as it's always false
 
   const priorityColors = {
     high: "bg-red-500/20 text-red-300 border-red-500/30",
@@ -853,30 +1049,30 @@ export default function AnalyticsPage({ user: authUser }: any) {
   }
 
   const getFilteredData = (data: any[], type: "daily" | "weekly") => {
+    if (!Array.isArray(data) || !data) {
+      return []
+    }
+
     const now = new Date()
     let filteredData = [...data]
 
     if (timeframe === "week") {
-      // Week = Monday to Friday only (last 5 trading days)
       const startDate = new Date(now)
-      startDate.setDate(now.getDate() - 7) // Look back 7 days to ensure we get 5 weekdays
+      startDate.setDate(now.getDate() - 7)
 
       filteredData = data
         .filter((item) => {
-          // Ensure item.date or item.week exists and is a valid date
           if (!item.date && !item.week) return false
           const itemDate = new Date(item.date || item.week)
-          if (isNaN(itemDate.getTime())) return false // Skip invalid dates
+          if (isNaN(itemDate.getTime())) return false
 
           const dayOfWeek = itemDate.getDay()
-          // Only Monday (1) to Friday (5)
           return itemDate >= startDate && dayOfWeek >= 1 && dayOfWeek <= 5
         })
-        .slice(-5) // Take last 5 weekdays
+        .slice(-5)
     } else if (timeframe === "month") {
-      // Month = 4 weeks of data grouped by weeks
       const startDate = new Date(now)
-      startDate.setDate(now.getDate() - 28) // 4 weeks
+      startDate.setDate(now.getDate() - 28)
 
       filteredData = data.filter((item) => {
         if (!item.date && !item.week) return false
@@ -884,23 +1080,22 @@ export default function AnalyticsPage({ user: authUser }: any) {
         return itemDate >= startDate
       })
 
-      // Group by weeks
       if (type === "daily") {
         const weeklyGrouped: Record<string, any> = {}
         filteredData.forEach((item) => {
           const itemDate = new Date(item.date)
-          if (isNaN(itemDate.getTime())) return // Skip invalid dates
+          if (isNaN(itemDate.getTime())) return
 
           const weekStart = new Date(itemDate)
           const day = weekStart.getDay()
-          const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1) // Fixed: use getDate() not getDay()
+          const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1)
           weekStart.setDate(diff)
 
-          const weekKey = `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}` // Use full date for unique key
+          const weekKey = `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}`
 
           if (!weeklyGrouped[weekKey]) {
             weeklyGrouped[weekKey] = {
-              week: `${weekStart.getDate()}. ${weekStart.toLocaleDateString("cs-CZ", { month: "short" })} - ${new Date(weekStart.setDate(weekStart.getDate() + 6)).getDate()}. ${new Date(weekStart.setDate(weekStart.getDate() - 6)).toLocaleDateString("cs-CZ", { month: "short" })}`, // Dynamic week label
+              week: `${weekStart.getDate()}. ${weekStart.toLocaleDateString("cs-CZ", { month: "short" })} - ${new Date(weekStart.setDate(weekStart.getDate() + 6)).getDate()}. ${new Date(weekStart.setDate(weekStart.getDate() - 6)).toLocaleDateString("cs-CZ", { month: "short" })}`,
               mood: 0,
               discipline: 0,
               confidence: 0,
@@ -919,7 +1114,7 @@ export default function AnalyticsPage({ user: authUser }: any) {
         })
 
         filteredData = Object.values(weeklyGrouped).map((week: any) => ({
-          date: week.week, // Use the formatted week label
+          date: week.week,
           mood: Math.round(week.mood / week.count),
           discipline: Math.round(week.discipline / week.count),
           confidence: Math.round(week.confidence / week.count),
@@ -928,13 +1123,12 @@ export default function AnalyticsPage({ user: authUser }: any) {
         }))
       }
     }
-    // timeframe === "all" returns all data unfiltered
 
-    return filteredData
+    return Array.isArray(filteredData) ? filteredData : []
   }
 
-  const filteredDailyData = getFilteredData(displayData.dailyMoodData, "daily")
-  const filteredWeeklyData = getFilteredData(displayData.weeklyPerformanceData, "weekly")
+  const filteredDailyData = getFilteredData(safeData.dailyMoodData, "daily")
+  const filteredWeeklyData = getFilteredData(safeData.weeklyPerformanceData, "weekly")
 
   const avgMood =
     filteredDailyData.length > 0
@@ -968,367 +1162,352 @@ export default function AnalyticsPage({ user: authUser }: any) {
       ? filteredWeeklyData.reduce((sum: number, w: any) => sum + w.winRate, 0) / filteredWeeklyData.length
       : 0
 
-  const winRate = displayData?.summary?.winRate || avgWinRate || 0
-
-  const trades = getAllTrades() // Accessing trades for the overview tab
+  const winRate = safeData?.summary?.winRate || avgWinRate || 0
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* CHANGE: Add banner for virtual mode */}
-      {!isLiveMode && (
-        <Card className="relative z-50 border-2 border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 mx-6 mt-24 mb-4 sm:mx-auto sm:mt-28 sm:mb-6 max-w-4xl">
-          <CardContent className="p-8 text-center">
-            <Sparkles className="h-16 w-16 mx-auto mb-4 text-blue-400 animate-pulse" />
-            <h3 className="text-2xl font-black mb-2 text-white">Virtual Mode Analytics</h3>
-            <p className="text-muted-foreground mb-6 text-blue-200">
-              Zobrazují se demo data. Přepni do Live Mode pro reálné statistiky.
-            </p>
-            <Button
-              onClick={() => {
-                /* Logic to switch to Live Mode */
-              }}
-              className="shadow-lg"
-            >
-              Switch to Live Mode
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="max-w-[1800px] mx-auto p-6 space-y-6 pt-20">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-              <Brain className="w-10 h-10 text-purple-400" />
-              Psychologická Analytics
-              <Badge
-                className={
-                  isLiveMode
-                    ? "bg-green-500/20 text-green-300 border-green-500/30"
-                    : "bg-red-500/20 text-red-300 border-red-500/30"
-                }
-              >
-                <Sparkles className="w-3 h-3 mr-1" />
-                {isLiveMode ? "Live Mode" : "Virtual Mode"}
-              </Badge>
-            </h1>
-            <p className="text-gray-300 text-lg">
-              {isLiveMode ? "Live Mode - Tvůj mentální profil" : "Virtual Mode - Demo data"}
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm rounded-lg p-1 border border-slate-600">
-              {(["week", "month", "all"] as const).map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setTimeframe(period)}
-                  className={cn(
-                    "px-4 py-2 rounded-md text-sm font-medium transition-all",
-                    timeframe === period
-                      ? "bg-purple-600 text-white shadow-lg"
-                      : "text-gray-300 hover:text-white hover:bg-slate-700",
-                  )}
+      <div className="space-y-6">
+        <Tabs defaultValue="mindset" className="w-full">
+          {/* Header */}
+          <div className="flex items-center justify-between flex-wrap gap-4 p-6 pt-20">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
+                <Brain className="w-10 h-10 text-purple-400" />
+                Psychologická Analytics
+                <Badge
+                  className={
+                    isLiveMode
+                      ? "bg-green-500/20 text-green-300 border-green-500/30"
+                      : "bg-red-500/20 text-red-300 border-red-500/30"
+                  }
                 >
-                  {period === "week" ? "Týden" : period === "month" ? "Měsíc" : "Celkový"}
-                </button>
-              ))}
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  {isLiveMode ? "Live Mode" : "Virtual Mode"}
+                </Badge>
+              </h1>
+              <p className="text-gray-300 text-lg">
+                {isLiveMode ? "Live Mode - Tvůj mentální profil" : "Virtual Mode - Demo data"}
+              </p>
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 bg-slate-800/80 backdrop-blur-sm border-slate-600 text-white hover:bg-slate-700"
-            >
-              <Download className="w-4 h-4" />
-              Export
-            </Button>
+            <div className="flex gap-3">
+              <div className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm rounded-lg p-1 border border-slate-600">
+                {(["week", "month", "all"] as const).map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => setTimeframe(period)}
+                    className={cn(
+                      "px-4 py-2 rounded-md text-sm font-medium transition-all",
+                      timeframe === period
+                        ? "bg-purple-600 text-white shadow-lg"
+                        : "text-gray-300 hover:text-white hover:bg-slate-700",
+                    )}
+                  >
+                    {period === "week" ? "Týden" : period === "month" ? "Měsíc" : "Celkový"}
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 bg-slate-800/80 backdrop-blur-sm border-slate-600 text-white hover:bg-slate-700"
+              >
+                <Download className="w-4 h-4" />
+                Export
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {/* AI Banner with Stats */}
-        <Card className="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-slate-600 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="flex items-center justify-between mb-4 md:col-span-2">
-                <div className="flex items-center gap-3">
-                  <Brain className="w-8 h-8 text-purple-300" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white mb-1">AI Mindset Analysis</h3>
-                  <p className="text-gray-300 text-sm">
-                    {displayData.summary.totalTrades} obchodů • {displayData.summary.weeks}{" "}
-                    {timeframe === "week" ? "týdnů" : timeframe === "month" ? "měsíců" : "období"} •{" "}
-                    {displayData.psychInsights.length} insights
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-4 bg-green-500/10 rounded-lg border border-green-500/30">
-                <TrendingUp className="w-8 h-8 text-green-400" />
-                <div>
-                  <p className="text-gray-300 text-xs mb-0.5">
-                    Nejlepší {timeframe === "week" ? "týden" : timeframe === "month" ? "měsíc" : "období"}
-                  </p>
-                  <p className="text-white font-bold text-lg">
-                    +${Math.abs(displayData.summary.bestWeek.pnl).toFixed(0)}
-                  </p>
-                  <p className="text-gray-400 text-xs">{displayData.summary.bestWeek.week}</p>
-                  {displayData.summary.bestWeek.avgReadiness > 0 && (
-                    <p className="text-green-400 text-xs mt-1">
-                      Readiness: {Math.round(displayData.summary.bestWeek.avgReadiness)}%
+          {/* AI Banner with Stats */}
+          <Card className="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-slate-600 backdrop-blur-sm mx-6 max-w-[1800px]">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="flex items-center justify-between mb-4 md:col-span-2">
+                  <div className="flex items-center gap-3">
+                    <Brain className="w-8 h-8 text-purple-300" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-white mb-1">AI Mindset Analysis</h3>
+                    <p className="text-gray-300 text-sm">
+                      {safeData.summary.totalTrades} obchodů • {safeData.summary.weeks}{" "}
+                      {timeframe === "week" ? "týdnů" : timeframe === "month" ? "měsíců" : "období"} •{" "}
+                      {safeData.psychInsights.length} insights
                     </p>
-                  )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-3 p-4 bg-red-500/10 rounded-lg border border-red-500/30">
-                <TrendingDown className="w-8 h-8 text-red-400" />
-                <div>
-                  <p className="text-gray-300 text-xs mb-0.5">
-                    Nejhorší {timeframe === "week" ? "týden" : timeframe === "month" ? "měsíc" : "období"}
-                  </p>
-                  <p className="text-white font-bold text-lg">
-                    -${Math.abs(displayData.summary.worstWeek.pnl).toFixed(0)}
-                  </p>
-                  <p className="text-gray-400 text-xs">{displayData.summary.worstWeek.week}</p>
-                  {displayData.summary.worstWeek.avgReadiness > 0 && (
-                    <p className="text-red-400 text-xs mt-1">
-                      Readiness: {Math.round(displayData.summary.worstWeek.avgReadiness)}%
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Key Metrics - COMPLETELY REDESIGNED */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Emoční Stabilita */}
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
-            <CardContent className="p-0">
-              <div className="p-6 pb-4">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3 p-4 bg-green-500/10 rounded-lg border border-green-500/30">
+                  <TrendingUp className="w-8 h-8 text-green-400" />
                   <div>
-                    <p className="text-gray-400 text-xs font-medium mb-2">Emoční Stabilita</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(moodStability)}%</p>
-                    {moodStability > 85 ? (
-                      <p className="text-green-400 text-sm font-semibold flex items-center gap-1">
-                        <ArrowUp className="w-4 h-4" /> Výborná
-                      </p>
-                    ) : moodStability > 70 ? (
-                      <p className="text-yellow-400 text-sm font-semibold">Dobrá</p>
-                    ) : (
-                      <p className="text-red-400 text-sm font-semibold flex items-center gap-1">
-                        <ArrowDown className="w-4 h-4" /> Nestabilní
+                    <p className="text-gray-300 text-xs mb-0.5">
+                      Nejlepší {timeframe === "week" ? "týden" : timeframe === "month" ? "měsíc" : "období"}
+                    </p>
+                    <p className="text-white font-bold text-lg">
+                      +${Math.abs(safeData?.summary?.bestWeek?.pnl ?? 0).toFixed(0)}
+                    </p>
+                    <p className="text-gray-400 text-xs">{safeData?.summary?.bestWeek?.week ?? "N/A"}</p>
+                    {(safeData?.summary?.bestWeek?.avgReadiness ?? 0) > 0 && (
+                      <p className="text-green-400 text-xs mt-1">
+                        Readiness: {Math.round(safeData.summary.bestWeek.avgReadiness)}%
                       </p>
                     )}
                   </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-red-500/10 rounded-lg border border-red-500/30">
+                  <TrendingDown className="w-8 h-8 text-red-400" />
+                  <div>
+                    <p className="text-gray-300 text-xs mb-0.5">
+                      Nejhorší {timeframe === "week" ? "týden" : timeframe === "month" ? "měsíc" : "období"}
+                    </p>
+                    <p className="text-white font-bold text-lg">
+                      -${Math.abs(safeData?.summary?.worstWeek?.pnl ?? 0).toFixed(0)}
+                    </p>
+                    <p className="text-gray-400 text-xs">{safeData?.summary?.worstWeek?.week ?? "N/A"}</p>
+                    {(safeData?.summary?.worstWeek?.avgReadiness ?? 0) > 0 && (
+                      <p className="text-red-400 text-xs mt-1">
+                        Readiness: {Math.round(safeData?.summary?.worstWeek?.avgReadiness ?? 0)}%
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Key Metrics - COMPLETELY REDESIGNED */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mx-6 max-w-[1800px]">
+            {/* Emoční Stabilita */}
+            <Card className="bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border-slate-700/50 backdrop-blur-sm overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-6 pb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-gray-400 text-xs font-medium mb-2">Emoční Stabilita</p>
+                      <p className="text-4xl font-bold text-white mb-1">{Math.round(moodStability)}%</p>
+                      {moodStability > 85 ? (
+                        <p className="text-green-400 text-sm font-semibold flex items-center gap-1">
+                          <ArrowUp className="w-4 h-4" /> Výborná
+                        </p>
+                      ) : moodStability > 70 ? (
+                        <p className="text-yellow-400 text-sm font-semibold">Dobrá</p>
+                      ) : (
+                        <p className="text-red-400 text-sm font-semibold flex items-center gap-1">
+                          <ArrowDown className="w-4 h-4" /> Nestabilní
+                        </p>
+                      )}
+                    </div>
+                    <div
+                      className={cn(
+                        "p-4 rounded-full",
+                        moodStability > 85
+                          ? "bg-gradient-to-br from-green-500/20 to-emerald-500/20"
+                          : moodStability > 70
+                            ? "bg-gradient-to-br from-yellow-500/20 to-amber-500/20"
+                            : "bg-gradient-to-br from-red-500/20 to-rose-500/20",
+                      )}
+                    >
+                      <Heart
+                        className={cn(
+                          "w-8 h-8",
+                          moodStability > 85
+                            ? "text-green-400"
+                            : moodStability > 70
+                              ? "text-yellow-400"
+                              : "text-red-400",
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="h-2 bg-slate-700">
                   <div
                     className={cn(
-                      "p-4 rounded-full",
+                      "h-full transition-all",
                       moodStability > 85
-                        ? "bg-gradient-to-br from-green-500/20 to-emerald-500/20"
+                        ? "bg-gradient-to-r from-green-500 to-emerald-500"
                         : moodStability > 70
-                          ? "bg-gradient-to-br from-yellow-500/20 to-amber-500/20"
-                          : "bg-gradient-to-br from-red-500/20 to-rose-500/20",
+                          ? "bg-gradient-to-r from-yellow-500 to-amber-500"
+                          : "bg-gradient-to-r from-red-500 to-rose-500",
                     )}
-                  >
-                    <Heart
-                      className={cn(
-                        "w-8 h-8",
-                        moodStability > 85 ? "text-green-400" : moodStability > 70 ? "text-yellow-400" : "text-red-400",
+                    style={{ width: `${moodStability}%` }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Disciplína */}
+            <Card className="bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border-slate-700/50 backdrop-blur-sm overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-6 pb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-gray-400 text-xs font-medium mb-2">Disciplína</p>
+                      <p className="text-4xl font-bold text-white mb-1">{Math.round(avgDiscipline)}%</p>
+                      {avgDiscipline > 80 ? (
+                        <p className="text-cyan-400 text-sm font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-4 h-4" /> Professional
+                        </p>
+                      ) : avgDiscipline > 60 ? (
+                        <p className="text-blue-400 text-sm font-semibold">Slušná</p>
+                      ) : (
+                        <p className="text-orange-400 text-sm font-semibold flex items-center gap-1">
+                          <AlertTriangle className="w-4 h-4" /> Problém
+                        </p>
                       )}
-                    />
+                    </div>
+                    <div
+                      className={cn(
+                        "p-4 rounded-full",
+                        avgDiscipline > 80
+                          ? "bg-gradient-to-br from-cyan-500/20 to-blue-500/20"
+                          : avgDiscipline > 60
+                            ? "bg-gradient-to-br from-blue-500/20 to-indigo-500/20"
+                            : "bg-gradient-to-br from-orange-500/20 to-red-500/20",
+                      )}
+                    >
+                      <Target
+                        className={cn(
+                          "w-8 h-8",
+                          avgDiscipline > 80
+                            ? "text-cyan-400"
+                            : avgDiscipline > 60
+                              ? "text-blue-400"
+                              : "text-orange-400",
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="h-2 bg-slate-700">
-                <div
-                  className={cn(
-                    "h-full transition-all",
-                    moodStability > 85
-                      ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                      : moodStability > 70
-                        ? "bg-gradient-to-r from-yellow-500 to-amber-500"
-                        : "bg-gradient-to-r from-red-500 to-rose-500",
-                  )}
-                  style={{ width: `${moodStability}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Disciplína */}
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
-            <CardContent className="p-0">
-              <div className="p-6 pb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-gray-400 text-xs font-medium mb-2">Disciplína</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(avgDiscipline)}%</p>
-                    {avgDiscipline > 80 ? (
-                      <p className="text-cyan-400 text-sm font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-4 h-4" /> Professional
-                      </p>
-                    ) : avgDiscipline > 60 ? (
-                      <p className="text-blue-400 text-sm font-semibold">Slušná</p>
-                    ) : (
-                      <p className="text-orange-400 text-sm font-semibold flex items-center gap-1">
-                        <AlertTriangle className="w-4 h-4" /> Problém
-                      </p>
-                    )}
-                  </div>
+                <div className="h-2 bg-slate-700">
                   <div
                     className={cn(
-                      "p-4 rounded-full",
+                      "h-full transition-all",
                       avgDiscipline > 80
-                        ? "bg-gradient-to-br from-cyan-500/20 to-blue-500/20"
+                        ? "bg-gradient-to-r from-cyan-500 to-blue-500"
                         : avgDiscipline > 60
-                          ? "bg-gradient-to-br from-blue-500/20 to-indigo-500/20"
-                          : "bg-gradient-to-br from-orange-500/20 to-red-500/20",
+                          ? "bg-gradient-to-r from-blue-500 to-indigo-500"
+                          : "bg-gradient-to-r from-orange-500 to-red-500",
                     )}
-                  >
-                    <Target
-                      className={cn(
-                        "w-8 h-8",
-                        avgDiscipline > 80 ? "text-cyan-400" : avgDiscipline > 60 ? "text-blue-400" : "text-orange-400",
+                    style={{ width: `${avgDiscipline}%` }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Win Rate */}
+            <Card className="bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border-slate-700/50 backdrop-blur-sm overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-6 pb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-gray-400 text-xs font-medium mb-2">{getWinRateLabel()}</p>
+                      <p className="text-4xl font-bold text-white mb-1">{Math.round(winRate)}%</p>
+                      {winRate > 60 ? (
+                        <p className="text-emerald-400 text-sm font-semibold flex items-center gap-1">
+                          <ThumbsUp className="w-4 h-4" /> Profitable
+                        </p>
+                      ) : winRate > 50 ? (
+                        <p className="text-amber-400 text-sm font-semibold">Break-even</p>
+                      ) : (
+                        <p className="text-rose-400 text-sm font-semibold flex items-center gap-1">
+                          <ThumbsDown className="w-4 h-4" /> Unprofitable
+                        </p>
                       )}
-                    />
+                    </div>
+                    <div
+                      className={cn(
+                        "p-4 rounded-full",
+                        winRate > 60
+                          ? "bg-gradient-to-br from-emerald-500/20 to-green-500/20"
+                          : winRate > 50
+                            ? "bg-gradient-to-br from-amber-500/20 to-yellow-500/20"
+                            : "bg-gradient-to-br from-rose-500/20 to-red-500/20",
+                      )}
+                    >
+                      <TrendingUpIcon
+                        className={cn(
+                          "w-8 h-8",
+                          winRate > 60 ? "text-emerald-400" : winRate > 50 ? "text-amber-400" : "text-rose-400",
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="h-2 bg-slate-700">
-                <div
-                  className={cn(
-                    "h-full transition-all",
-                    avgDiscipline > 80
-                      ? "bg-gradient-to-r from-cyan-500 to-blue-500"
-                      : avgDiscipline > 60
-                        ? "bg-gradient-to-r from-blue-500 to-indigo-500"
-                        : "bg-gradient-to-r from-orange-500 to-red-500",
-                  )}
-                  style={{ width: `${avgDiscipline}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Win Rate */}
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
-            <CardContent className="p-0">
-              <div className="p-6 pb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-gray-400 text-xs font-medium mb-2">{getWinRateLabel()}</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(winRate)}%</p>
-                    {winRate > 60 ? (
-                      <p className="text-emerald-400 text-sm font-semibold flex items-center gap-1">
-                        <ThumbsUp className="w-4 h-4" /> Profitable
-                      </p>
-                    ) : winRate > 50 ? (
-                      <p className="text-amber-400 text-sm font-semibold">Break-even</p>
-                    ) : (
-                      <p className="text-rose-400 text-sm font-semibold flex items-center gap-1">
-                        <ThumbsDown className="w-4 h-4" /> Unprofitable
-                      </p>
-                    )}
-                  </div>
+                <div className="h-2 bg-slate-700">
                   <div
                     className={cn(
-                      "p-4 rounded-full",
+                      "h-full transition-all",
                       winRate > 60
-                        ? "bg-gradient-to-br from-emerald-500/20 to-green-500/20"
+                        ? "bg-gradient-to-r from-emerald-500 to-green-500"
                         : winRate > 50
-                          ? "bg-gradient-to-br from-amber-500/20 to-yellow-500/20"
-                          : "bg-gradient-to-br from-rose-500/20 to-red-500/20",
+                          ? "bg-gradient-to-r from-amber-500 to-yellow-500"
+                          : "bg-gradient-to-r from-rose-500 to-red-500",
                     )}
-                  >
-                    <TrendingUpIcon
-                      className={cn(
-                        "w-8 h-8",
-                        winRate > 60 ? "text-emerald-400" : winRate > 50 ? "text-amber-400" : "text-rose-400",
+                    style={{ width: `${winRate}%` }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Stress Level */}
+            <Card className="bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border-slate-700/50 backdrop-blur-sm overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-6 pb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-gray-400 text-xs font-medium mb-2">Stress Level</p>
+                      <p className="text-4xl font-bold text-white mb-1">{Math.round(avgStress)}%</p>
+                      {avgStress < 40 ? (
+                        <p className="text-teal-400 text-sm font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-4 h-4" /> Zdravý
+                        </p>
+                      ) : avgStress < 60 ? (
+                        <p className="text-orange-400 text-sm font-semibold">Zvýšený</p>
+                      ) : (
+                        <p className="text-red-400 text-sm font-semibold flex items-center gap-1">
+                          <AlertTriangle className="w-4 h-4" /> Kritický
+                        </p>
                       )}
-                    />
+                    </div>
+                    <div
+                      className={cn(
+                        "p-4 rounded-full",
+                        avgStress < 40
+                          ? "bg-gradient-to-br from-teal-500/20 to-cyan-500/20"
+                          : avgStress < 60
+                            ? "bg-gradient-to-br from-orange-500/20 to-amber-500/20"
+                            : "bg-gradient-to-br from-red-500/20 to-rose-500/20",
+                      )}
+                    >
+                      <Activity
+                        className={cn(
+                          "w-8 h-8",
+                          avgStress < 40 ? "text-teal-400" : avgStress < 60 ? "text-orange-400" : "text-red-400",
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="h-2 bg-slate-700">
-                <div
-                  className={cn(
-                    "h-full transition-all",
-                    winRate > 60
-                      ? "bg-gradient-to-r from-emerald-500 to-green-500"
-                      : winRate > 50
-                        ? "bg-gradient-to-r from-amber-500 to-yellow-500"
-                        : "bg-gradient-to-r from-rose-500 to-red-500",
-                  )}
-                  style={{ width: `${winRate}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Stress Level */}
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
-            <CardContent className="p-0">
-              <div className="p-6 pb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-gray-400 text-xs font-medium mb-2">Stress Level</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(avgStress)}%</p>
-                    {avgStress < 40 ? (
-                      <p className="text-teal-400 text-sm font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-4 h-4" /> Zdravý
-                      </p>
-                    ) : avgStress < 60 ? (
-                      <p className="text-orange-400 text-sm font-semibold">Zvýšený</p>
-                    ) : (
-                      <p className="text-red-400 text-sm font-semibold flex items-center gap-1">
-                        <AlertTriangle className="w-4 h-4" /> Kritický
-                      </p>
-                    )}
-                  </div>
+                <div className="h-2 bg-slate-700">
                   <div
                     className={cn(
-                      "p-4 rounded-full",
+                      "h-full transition-all",
                       avgStress < 40
-                        ? "bg-gradient-to-br from-teal-500/20 to-cyan-500/20"
+                        ? "bg-gradient-to-r from-teal-500 to-cyan-500"
                         : avgStress < 60
-                          ? "bg-gradient-to-br from-orange-500/20 to-amber-500/20"
-                          : "bg-gradient-to-br from-red-500/20 to-rose-500/20",
+                          ? "bg-gradient-to-r from-orange-500 to-amber-500"
+                          : "bg-gradient-to-r from-red-500 to-rose-500",
                     )}
-                  >
-                    <Activity
-                      className={cn(
-                        "w-8 h-8",
-                        avgStress < 40 ? "text-teal-400" : avgStress < 60 ? "text-orange-400" : "text-red-400",
-                      )}
-                    />
-                  </div>
+                    style={{ width: `${avgStress}%` }}
+                  />
                 </div>
-              </div>
-              <div className="h-2 bg-slate-700">
-                <div
-                  className={cn(
-                    "h-full transition-all",
-                    avgStress < 40
-                      ? "bg-gradient-to-r from-teal-500 to-cyan-500"
-                      : avgStress < 60
-                        ? "bg-gradient-to-r from-orange-500 to-amber-500"
-                        : "bg-gradient-to-r from-red-500 to-rose-500",
-                  )}
-                  style={{ width: `${avgStress}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-slate-800/80 backdrop-blur-sm border border-slate-600 p-1 grid grid-cols-4">
+          <TabsList className="bg-slate-800/80 backdrop-blur-sm border border-slate-600 p-1 grid grid-cols-4 mx-6 max-w-[1800px]">
             <TabsTrigger
               value="mindset"
               className="gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300"
@@ -1359,669 +1538,688 @@ export default function AnalyticsPage({ user: authUser }: any) {
             </TabsTrigger>
           </TabsList>
 
+          {/* MINDSET TAB - Now with collapsible sections */}
           <TabsContent value="mindset" className="space-y-6">
-            {/* Psychological Readiness Score - UPDATED */}
-            <Card className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 shadow-2xl overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                <Brain className="w-64 h-64 text-purple-500" />
-              </div>
-              <CardHeader className="relative z-10 border-b border-slate-700/50 pb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-white flex items-center gap-3 text-2xl">
-                      <div className="p-2 bg-purple-500/10 rounded-lg">
-                        <Brain className="w-6 h-6 text-purple-400" />
-                      </div>
-                      Psychological Readiness
-                    </CardTitle>
-                    <CardDescription className="text-gray-400 mt-1">
-                      Komplexní analýza vaší připravenosti k obchodování
-                    </CardDescription>
-                  </div>
-                  <Badge variant="outline" className="border-purple-500/50 text-purple-300 px-3 py-1 bg-purple-500/10">
-                    {Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) >= 70
-                      ? "READY"
-                      : "PREPARE"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="relative z-10 pt-6">
-                <div className="flex flex-col lg:flex-row items-center gap-8">
-                  <div className="flex-1 w-full space-y-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {displayData.psychologicalProfile.map((item: any, idx: number) => {
-                        const colors = [
-                          "bg-blue-500",
-                          "bg-emerald-500",
-                          "bg-purple-500",
-                          "bg-amber-500",
-                          "bg-cyan-500",
-                          "bg-pink-500",
-                          "bg-indigo-500",
-                          "bg-rose-500",
-                        ]
-                        const value = Number.isNaN(item.A) ? 0 : item.A || 0
-                        return (
-                          <div key={idx} className="bg-slate-800/50 p-3 rounded-xl border border-slate-700">
-                            <div className="flex justify-between items-end mb-2">
-                              <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider truncate">
-                                {item.subject}
-                              </span>
-                              <span className="text-lg font-bold text-white">{Math.round(value)}%</span>
-                            </div>
-                            <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full ${colors[idx % colors.length]} shadow-lg`}
-                                style={{ width: `${value}%` }}
-                              />
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Right Side: Big Score */}
-                  <div className="flex flex-col items-center justify-center min-w-[180px] border-l border-slate-700/50 pl-8">
-                    <div className="relative">
-                      <svg className="w-28 h-28 transform -rotate-90">
-                        <circle
-                          cx="56"
-                          cy="56"
-                          r="52"
-                          stroke="currentColor"
-                          strokeWidth="8"
-                          fill="transparent"
-                          className="text-slate-800"
-                        />
-                        <circle
-                          cx="56"
-                          cy="56"
-                          r="52"
-                          stroke="currentColor"
-                          strokeWidth="8"
-                          fill="transparent"
-                          strokeDasharray={327}
-                          strokeDashoffset={
-                            327 -
-                            (327 * Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4)) / 100
-                          }
-                          className="text-purple-500 transition-all duration-1000 ease-out"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-3xl font-black text-white">
-                          {Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4)}
-                        </span>
-                        <span className="text-[9px] uppercase tracking-widest text-gray-400 mt-1">Score</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-gradient-to-br from-blue-900/30 to-slate-900 border-blue-500/30">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                      <Lightbulb className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-white mb-1">Pattern Detection</h4>
-                      <p className="text-xs text-gray-400">
-                        {avgMood >= 70
-                          ? "Vaše nálada je konzistentně vysoká. Držte tento trend."
-                          : "Identifikovali jsme kolísání nálady. Zkuste ranní rutinu."}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-emerald-900/30 to-slate-900 border-emerald-500/30">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-emerald-500/20 rounded-lg">
-                      <Target className="w-5 h-5 text-emerald-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-white mb-1">Performance Tip</h4>
-                      <p className="text-xs text-gray-400">
-                        {avgDiscipline >= 75
-                          ? "Disciplína je vaše silná stránka. Využijte ji na vyšší timeframy."
-                          : "Zaměřte se na dodržování trading plánu před každým obchodem."}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-purple-900/30 to-slate-900 border-purple-500/30">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-purple-500/20 rounded-lg">
-                      <TrendingUp className="w-5 h-5 text-purple-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-white mb-1">Stress Management</h4>
-                      <p className="text-xs text-gray-400">
-                        {avgStress <= 40
-                          ? "Skvělá kontrola stresu! Udržujte současné techniky."
-                          : "Vysoký stres snižuje výkon o 23%. Zkuste dechová cvičení."}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Psychological Profile (Radar) - FIXED NaN & FILL */}
-              <Card className="bg-slate-800/50 backdrop-blur border-slate-700 flex flex-col">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
+            <Accordion type="multiple" defaultValue={["readiness", "radar", "insights"]} className="space-y-4">
+              {/* Psychological Readiness Section */}
+              <AccordionItem
+                value="readiness"
+                className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 shadow-2xl overflow-hidden rounded-lg border mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
                     <Brain className="w-5 h-5 text-purple-400" />
-                    Psychologický Profil
-                  </CardTitle>
-                  <CardDescription>Vizualizace vašich silných a slabých stránek</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 min-h-[350px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart
-                      cx="50%"
-                      cy="50%"
-                      outerRadius="80%"
-                      data={displayData.psychologicalProfile.map((item) => ({
-                        ...item,
-                        A: Number.isNaN(item.A) ? 0 : item.A || 0,
-                      }))}
-                    >
-                      <PolarGrid stroke="#334155" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fill: "#94a3b8", fontSize: 12, fontWeight: 500 }} />
-                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                      <Radar
-                        name="Můj Profil"
-                        dataKey="A"
-                        stroke="#8b5cf6"
-                        strokeWidth={3}
-                        fill="url(#mentalGradient)"
-                        fillOpacity={0.5}
-                      />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", color: "#f8fafc" }}
-                        itemStyle={{ color: "#8b5cf6" }}
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <div className="flex flex-col gap-4">
-                {/* Mental Score Graph */}
-                <Card className="bg-slate-800/50 backdrop-blur border-slate-700 flex-1">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-white flex items-center gap-2 text-base">
-                      <Brain className="w-4 h-4 text-purple-400" />
-                      Mental Readiness Score
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="h-[150px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={filteredDailyData}>
-                        <defs>
-                          <linearGradient id="mentalGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
-                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                        <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
-                        <YAxis
-                          domain={[0, 100]}
-                          stroke="#64748b"
-                          fontSize={10}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(v) => `${v}%`}
-                        />
-                        <Tooltip
-                          contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155" }}
-                          formatter={(value: any) => [`${Math.round(value)}%`, "Mental Score"]}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="mood"
-                          stroke="#8b5cf6"
-                          strokeWidth={2}
-                          fill="url(#mentalGradient)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-
-                {/* P&L Graph */}
-                <Card className="bg-slate-800/50 backdrop-blur border-slate-700 flex-1">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-white flex items-center gap-2 text-base">
-                      <DollarSign className="w-4 h-4 text-emerald-400" />
-                      Financial Performance (P&L)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="h-[150px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={filteredDailyData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                        <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
-                        <YAxis
-                          stroke="#64748b"
-                          fontSize={10}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(v) => `$${v}`}
-                        />
-                        <Tooltip
-                          contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155" }}
-                          formatter={(value: any) => [`$${value}`, "P&L"]}
-                        />
-                        <Bar dataKey="pnl" radius={[4, 4, 0, 0]} barSize={16}>
-                          {filteredDailyData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? "#10b981" : "#ef4444"} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Actionable Insights */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              {displayData.psychInsights.map((insight: any, index: number) => (
-                <Card
-                  key={index}
-                  className={cn(
-                    "border-2 backdrop-blur-sm relative overflow-hidden p-5",
-                    insight.type === "success" && "border-green-500/40 bg-green-500/5",
-                    insight.type === "warning" && "border-yellow-500/40 bg-yellow-500/5",
-                    insight.type === "critical" && "border-red-500/40 bg-red-500/5",
-                  )}
-                >
-                  <div className="absolute top-0 right-0 p-3 opacity-20">
-                    {insight.icon === "😴" && <Moon className="w-20 h-20 text-blue-500" />}
-                    {insight.icon === "🧘" && <Activity className="w-20 h-20 text-purple-500" />}
-                    {insight.icon === "🎯" && <Target className="w-20 h-20 text-cyan-500" />}
-                    {insight.icon === "📋" && <Clipboard className="w-20 h-20 text-orange-500" />}
-                    {insight.icon === "😰" && <Flame className="w-20 h-20 text-red-500" />}
-                    {insight.icon === "😌" && <Smile className="w-20 h-20 text-green-500" />}
-                    {insight.icon === "🎢" && <Activity className="w-20 h-20 text-yellow-500" />}
+                    Psychological Readiness Score
                   </div>
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="text-3xl">{insight.icon}</div>
-                      <div>
-                        <h4 className="text-white font-bold text-lg">{insight.title}</h4>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4">
+                  {/* Psychological Readiness content - existing code */}
+                  <Card className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 shadow-2xl overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                      <Brain className="w-64 h-64 text-purple-500" />
+                    </div>
+                    <CardHeader className="relative z-10 border-b border-slate-700/50 pb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-white flex items-center gap-3 text-2xl">
+                            <div className="p-2 bg-purple-500/10 rounded-lg">
+                              <Brain className="w-6 h-6 text-purple-400" />
+                            </div>
+                            Psychological Readiness
+                          </CardTitle>
+                          <CardDescription className="text-gray-400 mt-1">
+                            Komplexní analýza vaší připravenosti k obchodování
+                          </CardDescription>
+                        </div>
                         <Badge
-                          className={cn(
-                            "text-xs font-semibold",
-                            insight.type === "success" && "bg-green-500/30 text-green-200 border-green-400",
-                            insight.type === "warning" && "bg-yellow-500/30 text-yellow-200 border-yellow-400",
-                            insight.type === "critical" && "bg-red-500/30 text-red-200 border-red-400",
-                          )}
+                          variant="outline"
+                          className="border-purple-500/50 text-purple-300 px-3 py-1 bg-purple-500/10"
                         >
-                          {insight.type === "success" && "POZITIVNÍ"}
-                          {insight.type === "warning" && "VAROVÁNÍ"}
-                          {insight.type === "critical" && "KRITICKÉ"}
+                          {Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) >= 70
+                            ? "READY"
+                            : "PREPARE"}
                         </Badge>
                       </div>
-                    </div>
-                    <p className="text-gray-200 text-sm mb-4">{insight.description}</p>
-                    <div
-                      className={cn(
-                        "p-3 rounded-lg border text-sm flex items-center gap-2",
-                        insight.type === "success" && "bg-green-500/10 border-green-500/30",
-                        insight.type === "warning" && "bg-yellow-500/10 border-yellow-500/30",
-                        insight.type === "critical" && "bg-red-500/10 border-red-500/30",
-                      )}
-                    >
-                      <Sparkles className="w-4 h-4 flex-shrink-0" />
-                      <p className="text-white font-medium">{insight.action}</p>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-2 text-right">{insight.impact}</p>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+                    </CardHeader>
+                    <CardContent className="relative z-10 pt-6">
+                      <div className="flex flex-col lg:flex-row items-center gap-8">
+                        <div className="flex-1 w-full space-y-6">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {safeData.psychologicalProfile.map((item: any, idx: number) => {
+                              const colors = [
+                                "bg-blue-500",
+                                "bg-emerald-500",
+                                "bg-purple-500",
+                                "bg-amber-500",
+                                "bg-cyan-500",
+                                "bg-pink-500",
+                                "bg-indigo-500",
+                                "bg-rose-500",
+                              ]
+                              const value = Number.isNaN(item.A) ? 0 : item.A || 0
+                              return (
+                                <div key={idx} className="bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+                                  <div className="flex justify-between items-end mb-2">
+                                    <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider truncate">
+                                      {item.subject}
+                                    </span>
+                                    <span className="text-lg font-bold text-white">{Math.round(value)}%</span>
+                                  </div>
+                                  <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full ${colors[idx % colors.length]} shadow-lg`}
+                                      style={{ width: `${value}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
 
-          <TabsContent value="emotions" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {displayData.emotionalPatterns.map((pattern: any, index: number) => (
-                <Card
-                  key={index}
-                  className={cn(
-                    "bg-slate-800/80 backdrop-blur-sm border-2",
-                    pattern.severity === "critical" && "border-red-500/50 bg-red-500/5",
-                    pattern.severity === "high" && "border-orange-500/50 bg-orange-500/5",
-                    pattern.severity === "medium" && "border-yellow-500/50 bg-yellow-500/5",
-                  )}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="text-5xl">{pattern.emoji}</div>
-                        <div>
-                          <h3 className="text-2xl font-bold text-white mb-1">{pattern.name}</h3>
-                          <Badge
+                        {/* Right Side: Big Score */}
+                        <div className="flex flex-col items-center justify-center min-w-[180px] border-l border-slate-700/50 pl-8">
+                          <div className="relative">
+                            <svg className="w-28 h-28 transform -rotate-90">
+                              <circle
+                                cx="56"
+                                cy="56"
+                                r="52"
+                                stroke="currentColor"
+                                strokeWidth="8"
+                                fill="transparent"
+                                className="text-slate-800"
+                              />
+                              <circle
+                                cx="56"
+                                cy="56"
+                                r="52"
+                                stroke="currentColor"
+                                strokeWidth="8"
+                                fill="transparent"
+                                strokeDasharray={327}
+                                strokeDashoffset={
+                                  327 -
+                                  (327 *
+                                    Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4)) /
+                                    100
+                                }
+                                className="text-purple-500 transition-all duration-1000 ease-out"
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                              <span className="text-3xl font-black text-white">
+                                {Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4)}
+                              </span>
+                              <span className="text-[9px] uppercase tracking-widest text-gray-400 mt-1">Score</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Mental Profile Radar Section */}
+              <AccordionItem
+                value="radar"
+                className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 shadow-2xl overflow-hidden rounded-lg border mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
+                    <BarChart3 className="w-5 h-5 text-cyan-400" />
+                    Psychologický Profil & Mental Score
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4 space-y-4">
+                  {/* Radar chart and graphs - existing code */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card className="bg-slate-800/50 backdrop-blur border-slate-700 flex flex-col">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center gap-2">
+                          <Brain className="w-5 h-5 text-purple-400" />
+                          Psychologický Profil
+                        </CardTitle>
+                        <CardDescription>Vizualizace vašich silných a slabých stránek</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex-1 min-h-[350px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RadarChart
+                            cx="50%"
+                            cy="50%"
+                            outerRadius="80%"
+                            data={safeData.psychologicalProfile.map((item) => ({
+                              ...item,
+                              A: Number.isNaN(item.A) ? 0 : item.A || 0,
+                            }))}
+                          >
+                            <PolarGrid stroke="#334155" />
+                            <PolarAngleAxis
+                              dataKey="subject"
+                              tick={{ fill: "#94a3b8", fontSize: 12, fontWeight: 500 }}
+                            />
+                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                            <Radar
+                              name="Můj Profil"
+                              dataKey="A"
+                              stroke="#8b5cf6"
+                              strokeWidth={3}
+                              fill="url(#mentalGradient)"
+                              fillOpacity={0.5}
+                            />
+                            <Tooltip
+                              contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", color: "#f8fafc" }}
+                              itemStyle={{ color: "#8b5cf6" }}
+                            />
+                          </RadarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    <div className="flex flex-col gap-4">
+                      {/* Mental Score Graph */}
+                      <Card className="bg-slate-800/50 backdrop-blur border-slate-700 flex-1">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-white flex items-center gap-2 text-base">
+                            <Brain className="w-4 h-4 text-purple-400" />
+                            Mental Readiness Score
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-[150px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={filteredDailyData}>
+                              <defs>
+                                <linearGradient id="mentalGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
+                              <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                              <YAxis
+                                domain={[0, 100]}
+                                stroke="#64748b"
+                                fontSize={10}
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(v) => `${v}%`}
+                              />
+                              <Tooltip
+                                contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155" }}
+                                formatter={(value: any) => [`${Math.round(value)}%`, "Mental Score"]}
+                              />
+                              <Area
+                                type="monotone"
+                                dataKey="mood"
+                                stroke="#8b5cf6"
+                                strokeWidth={2}
+                                fill="url(#mentalGradient)"
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* P&L Graph */}
+                      <Card className="bg-slate-800/50 backdrop-blur border-slate-700 flex-1">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-white flex items-center gap-2 text-base">
+                            <DollarSign className="w-4 h-4 text-emerald-400" />
+                            Financial Performance (P&L)
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-[150px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={filteredDailyData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
+                              <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                              <YAxis
+                                stroke="#64748b"
+                                fontSize={10}
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(v) => `$${v}`}
+                              />
+                              <Tooltip
+                                contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155" }}
+                                formatter={(value: any) => [`$${value}`, "P&L"]}
+                              />
+                              <Bar dataKey="pnl" radius={[4, 4, 0, 0]} barSize={16}>
+                                {filteredDailyData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.pnl >= 0 ? "#10b981" : "#ef4444"} />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Insights Section */}
+              <AccordionItem
+                value="insights"
+                className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 shadow-2xl overflow-hidden rounded-lg border mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-yellow-400" />
+                    Actionable Insights ({safeData.psychInsights.length})
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4">
+                  {/* Actionable Insights - existing code */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                    {safeData.psychInsights.map((insight: any, index: number) => (
+                      <Card
+                        key={index}
+                        className={cn(
+                          "border-2 backdrop-blur-sm relative overflow-hidden p-5",
+                          insight.type === "success" && "border-green-500/40 bg-green-500/5",
+                          insight.type === "warning" && "border-yellow-500/40 bg-yellow-500/5",
+                          insight.type === "critical" && "border-red-500/40 bg-red-500/5",
+                        )}
+                      >
+                        <div className="absolute top-0 right-0 p-3 opacity-20">
+                          {insight.icon === "😴" && <Moon className="w-20 h-20 text-blue-500" />}
+                          {insight.icon === "🧘" && <Activity className="w-20 h-20 text-purple-500" />}
+                          {insight.icon === "🎯" && <Target className="w-20 h-20 text-cyan-500" />}
+                          {insight.icon === "📋" && <Clipboard className="w-20 h-20 text-orange-500" />}
+                          {insight.icon === "😰" && <Flame className="w-20 h-20 text-red-500" />}
+                          {insight.icon === "😌" && <Smile className="w-20 h-20 text-green-500" />}
+                          {insight.icon === "🎢" && <Activity className="w-20 h-20 text-yellow-500" />}
+                        </div>
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="text-3xl">{insight.icon}</div>
+                            <div>
+                              <h4 className="text-white font-bold text-lg">{insight.title}</h4>
+                              <Badge
+                                className={cn(
+                                  "text-xs font-semibold",
+                                  insight.type === "success" && "bg-green-500/30 text-green-200 border-green-400",
+                                  insight.type === "warning" && "bg-yellow-500/30 text-yellow-200 border-yellow-400",
+                                  insight.type === "critical" && "bg-red-500/30 text-red-200 border-red-400",
+                                )}
+                              >
+                                {insight.type === "success" && "POZITIVNÍ"}
+                                {insight.type === "warning" && "VAROVÁNÍ"}
+                                {insight.type === "critical" && "KRITICKÉ"}
+                              </Badge>
+                            </div>
+                          </div>
+                          <p className="text-gray-200 text-sm mb-4">{insight.description}</p>
+                          <div
                             className={cn(
-                              "text-xs font-semibold",
-                              pattern.severity === "critical" && "bg-red-500/30 text-red-200 border-red-400",
-                              pattern.severity === "high" && "bg-orange-500/30 text-orange-200 border-orange-400",
-                              pattern.severity === "medium" && "bg-yellow-500/30 text-yellow-200 border-yellow-400",
+                              "p-3 rounded-lg border text-sm flex items-center gap-2",
+                              insight.type === "success" && "bg-green-500/10 border-green-500/30",
+                              insight.type === "warning" && "bg-yellow-500/10 border-yellow-500/30",
+                              insight.type === "critical" && "bg-red-500/10 border-red-500/30",
                             )}
                           >
-                            {pattern.severity === "critical" && "🚨 KRITICKÝ"}
-                            {pattern.severity === "high" && "⚠️ VYSOKÁ ZÁVAŽNOST"}
-                            {pattern.severity === "medium" && "⚡ STŘEDNÍ"}
-                          </Badge>
+                            <Sparkles className="w-4 h-4 flex-shrink-0" />
+                            <p className="text-white font-medium">{insight.action}</p>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-2 text-right">{insight.impact}</p>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </TabsContent>
+
+          {/* EMOTIONS TAB - Now with collapsible sections */}
+          <TabsContent value="emotions" className="space-y-6">
+            <Accordion type="multiple" defaultValue={["patterns", "distribution", "impact"]} className="space-y-4">
+              {/* Emotional Patterns Section */}
+              <AccordionItem
+                value="patterns"
+                className="border-slate-600 rounded-lg border overflow-hidden mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
+                    <Heart className="w-5 h-5 text-pink-400" />
+                    Emoční Patterny ({safeData.emotionalPatterns.length})
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {safeData.emotionalPatterns.map((pattern: any, index: number) => (
+                      <Card
+                        key={index}
+                        className={cn(
+                          "bg-slate-800/80 backdrop-blur-sm border-2",
+                          pattern.severity === "critical" && "border-red-500/50 bg-red-500/5",
+                          pattern.severity === "high" && "border-orange-500/50 bg-orange-500/5",
+                          pattern.severity === "medium" && "border-yellow-500/50 bg-yellow-500/5",
+                        )}
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="text-5xl">{pattern.emoji}</div>
+                              <div>
+                                <h3 className="text-2xl font-bold text-white mb-1">{pattern.name}</h3>
+                                <Badge
+                                  className={cn(
+                                    "text-xs font-semibold",
+                                    pattern.severity === "critical" && "bg-red-500/30 text-red-200 border-red-400",
+                                    pattern.severity === "high" && "bg-orange-500/30 text-orange-200 border-orange-400",
+                                    pattern.severity === "medium" &&
+                                      "bg-yellow-500/30 text-yellow-200 border-yellow-400",
+                                  )}
+                                >
+                                  {pattern.severity === "critical" && "🚨 KRITICKÝ"}
+                                  {pattern.severity === "high" && "⚠️ VYSOKÁ ZÁVAŽNOST"}
+                                  {pattern.severity === "medium" && "⚡ STŘEDNÍ"}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+
+                          <p className="text-gray-200 mb-4 text-base leading-relaxed">{pattern.description}</p>
+
+                          <div className="grid grid-cols-2 gap-3 mb-4">
+                            <div
+                              className={cn(
+                                "p-4 rounded-lg border-2",
+                                pattern.severity === "critical" && "bg-red-500/10 border-red-500/30",
+                                pattern.severity === "high" && "bg-orange-500/10 border-orange-500/30",
+                                pattern.severity === "medium" && "bg-yellow-500/10 border-yellow-500/30",
+                              )}
+                            >
+                              <div className="flex items-center gap-2 mb-1">
+                                <Flame className="w-4 h-4 text-orange-400" />
+                                <p className="text-gray-400 text-xs font-medium">Výskyt</p>
+                              </div>
+                              <p className="text-white text-2xl font-bold">{pattern.count}x</p>
+                              <p className="text-gray-500 text-xs mt-1">za období</p>
+                            </div>
+
+                            <div
+                              className={cn(
+                                "p-4 rounded-lg border-2",
+                                pattern.severity === "critical" && "bg-red-500/10 border-red-500/30",
+                                pattern.severity === "high" && "bg-orange-500/10 border-orange-500/30",
+                                pattern.severity === "medium" && "bg-yellow-500/10 border-yellow-500/30",
+                              )}
+                            >
+                              <div className="flex items-center gap-2 mb-1">
+                                <AlertTriangle className="w-4 h-4 text-red-400" />
+                                <p className="text-gray-400 text-xs font-medium">Ztráta</p>
+                              </div>
+                              <p className="text-red-400 text-2xl font-bold">${Math.abs(Math.round(pattern.impact))}</p>
+                              <p className="text-gray-500 text-xs mt-1">celkem</p>
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700 mb-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-400 text-sm">Průměrná ztráta/incident</span>
+                              <span className="text-red-400 font-bold">
+                                -${Math.abs(Math.round(pattern.impact / pattern.count))}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/30">
+                            <div className="flex items-start gap-2">
+                              <Target className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-purple-300 font-semibold text-sm mb-1">🎯 Doporučení:</p>
+                                <p className="text-gray-200 text-sm">{pattern.recommendation}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Emotional Distribution Section */}
+              <AccordionItem
+                value="distribution"
+                className="border-slate-600 rounded-lg border overflow-hidden mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
+                    <PieChart className="w-5 h-5 text-purple-400" />
+                    Distribuce Emočních Stavů
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4">
+                  {/* Distribution cards - existing code */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-6 bg-green-500/10 border-2 border-green-500/30 rounded-xl">
+                      <div className="flex items-center justify-between mb-4">
+                        <Smile className="w-12 h-12 text-green-400" />
+                        <div className="text-right">
+                          <p className="text-4xl font-bold text-green-400">
+                            {Math.round(
+                              (filteredDailyData.filter((m: any) => m.mood >= 70).length / filteredDailyData.length) *
+                                100,
+                            )}
+                            %
+                          </p>
+                          <p className="text-gray-400 text-sm">
+                            {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
+                          </p>
+                        </div>
+                      </div>
+                      <h3 className="text-white font-bold text-xl mb-2">Dobrá nálada</h3>
+                      <p className="text-gray-300 text-sm mb-3">Nálada 70+</p>
+                      <div className="flex items-center gap-2 p-3 bg-green-500/20 rounded-lg border border-green-500/30">
+                        <ThumbsUp className="w-5 h-5 text-green-300" />
+                        <div>
+                          <p className="text-green-200 text-xs font-semibold">Win Rate v tomto stavu</p>
+                          <p className="text-white font-bold text-lg">
+                            {filteredWeeklyData.length > 0 &&
+                            filteredWeeklyData.filter((d: any) => d.avgMood >= 70).length > 0
+                              ? Math.round(
+                                  (filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length /
+                                    filteredWeeklyData.filter((d: any) => d.avgMood >= 70).length) *
+                                    100,
+                                )
+                              : 0}
+                            %
+                          </p>
                         </div>
                       </div>
                     </div>
 
-                    <p className="text-gray-200 mb-4 text-base leading-relaxed">{pattern.description}</p>
-
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div
-                        className={cn(
-                          "p-4 rounded-lg border-2",
-                          pattern.severity === "critical" && "bg-red-500/10 border-red-500/30",
-                          pattern.severity === "high" && "bg-orange-500/10 border-orange-500/30",
-                          pattern.severity === "medium" && "bg-yellow-500/10 border-yellow-500/30",
-                        )}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <Flame className="w-4 h-4 text-orange-400" />
-                          <p className="text-gray-400 text-xs font-medium">Výskyt</p>
+                    <div className="p-6 bg-yellow-500/10 border-2 border-yellow-500/30 rounded-xl">
+                      <div className="flex items-center justify-between mb-4">
+                        <Meh className="w-12 h-12 text-yellow-400" />
+                        <div className="text-right">
+                          <p className="text-4xl font-bold text-yellow-400">
+                            {Math.round(
+                              (filteredDailyData.filter((m: any) => m.mood >= 40 && m.mood < 70).length /
+                                filteredDailyData.length) *
+                                100,
+                            )}
+                            %
+                          </p>
+                          <p className="text-gray-400 text-sm">
+                            {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
+                          </p>
                         </div>
-                        <p className="text-white text-2xl font-bold">{pattern.count}x</p>
-                        <p className="text-gray-500 text-xs mt-1">za období</p>
                       </div>
-
-                      <div
-                        className={cn(
-                          "p-4 rounded-lg border-2",
-                          pattern.severity === "critical" && "bg-red-500/10 border-red-500/30",
-                          pattern.severity === "high" && "bg-orange-500/10 border-orange-500/30",
-                          pattern.severity === "medium" && "bg-yellow-500/10 border-yellow-500/30",
-                        )}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <AlertTriangle className="w-4 h-4 text-red-400" />
-                          <p className="text-gray-400 text-xs font-medium">Ztráta</p>
+                      <h3 className="text-white font-bold text-xl mb-2">Neutrální</h3>
+                      <p className="text-gray-300 text-sm mb-3">Nálada 40-70%</p>
+                      <div className="flex items-center gap-2 p-3 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+                        <Wind className="w-5 h-5 text-yellow-300" />
+                        <div>
+                          <p className="text-yellow-200 text-xs font-semibold">Win Rate v tomto stavu</p>
+                          <p className="text-white font-bold text-lg">
+                            {filteredWeeklyData.length > 0 &&
+                            filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70).length > 0
+                              ? Math.round(
+                                  (filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70 && d.pnl > 0)
+                                    .length /
+                                    filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70).length) *
+                                    100,
+                                )
+                              : 0}
+                            %
+                          </p>
                         </div>
-                        <p className="text-red-400 text-2xl font-bold">${Math.abs(Math.round(pattern.impact))}</p>
-                        <p className="text-gray-500 text-xs mt-1">celkem</p>
                       </div>
                     </div>
 
-                    <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700 mb-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-400 text-sm">Průměrná ztráta/incident</span>
-                        <span className="text-red-400 font-bold">
-                          -${Math.abs(Math.round(pattern.impact / pattern.count))}
+                    <div className="p-6 bg-red-500/10 border-2 border-red-500/30 rounded-xl">
+                      <div className="flex items-center justify-between mb-4">
+                        <Frown className="w-12 h-12 text-red-400" />
+                        <div className="text-right">
+                          <p className="text-4xl font-bold text-red-400">
+                            {Math.round(
+                              (filteredDailyData.filter((m: any) => m.mood > 0 && m.mood < 40).length /
+                                filteredDailyData.length) *
+                                100,
+                            )}
+                            %
+                          </p>
+                          <p className="text-gray-400 text-sm">
+                            {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
+                          </p>
+                        </div>
+                      </div>
+                      <h3 className="text-white font-bold text-xl mb-2">Špatná nálada</h3>
+                      <p className="text-gray-300 text-sm mb-3">Nálada &lt;40%</p>
+                      <div className="flex items-center gap-2 p-3 bg-red-500/20 rounded-lg border border-red-500/30">
+                        <ThumbsDown className="w-5 h-5 text-red-300" />
+                        <div>
+                          <p className="text-red-200 text-xs font-semibold">Win Rate v tomto stavu</p>
+                          <p className="text-white font-bold text-lg">
+                            {filteredWeeklyData.length > 0 &&
+                            filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40).length > 0
+                              ? Math.round(
+                                  (filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40 && d.pnl > 0)
+                                    .length /
+                                    filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40).length) *
+                                    100,
+                                )
+                              : 0}
+                            %
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Emotional Impact Section */}
+              <AccordionItem
+                value="impact"
+                className="border-slate-600 rounded-lg border overflow-hidden mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
+                    <TrendingUpDown className="w-5 h-5 text-orange-400" />
+                    Emoční Dopad na Performance
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4">
+                  {/* Pie chart impact - existing code */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={[
+                              {
+                                name: "Dobrá nálada + Profit",
+                                value: filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length,
+                                fill: "#10b981",
+                              },
+                              {
+                                name: "Dobrá nálada + Ztráta",
+                                value: filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl < 0).length,
+                                fill: "#eab308",
+                              },
+                              {
+                                name: "Špatná nálada + Profit",
+                                value: filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl > 0).length,
+                                fill: "#3b82f6",
+                              },
+                              {
+                                name: "Špatná nálada + Ztráta",
+                                value: filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl < 0).length,
+                                fill: "#ef4444",
+                              },
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={100}
+                            paddingAngle={2}
+                            dataKey="value"
+                          >
+                            <Tooltip />
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex flex-col justify-center space-y-3">
+                      <div className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/30">
+                        <div className="w-4 h-4 rounded-full bg-green-500" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white">Dobrá nálada + Profit</p>
+                          <p className="text-xs text-gray-400">Ideální kombinace pro success</p>
+                        </div>
+                        <span className="text-lg font-bold text-green-400">
+                          {filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+                        <div className="w-4 h-4 rounded-full bg-yellow-500" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white">Dobrá nálada + Ztráta</p>
+                          <p className="text-xs text-gray-400">Setup nebo timing problém</p>
+                        </div>
+                        <span className="text-lg font-bold text-yellow-400">
+                          {filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl < 0).length}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
+                        <div className="w-4 h-4 rounded-full bg-blue-500" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white">Špatná nálada + Profit</p>
+                          <p className="text-xs text-gray-400">Štěstí nebo skill?</p>
+                        </div>
+                        <span className="text-lg font-bold text-blue-400">
+                          {filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl > 0).length}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-red-500/10 rounded-lg border border-red-500/30">
+                        <div className="w-4 h-4 rounded-full bg-red-500" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white">Špatná nálada + Ztráta</p>
+                          <p className="text-xs text-gray-400">Nebezpečná kombinace</p>
+                        </div>
+                        <span className="text-lg font-bold text-red-400">
+                          {filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl < 0).length}
                         </span>
                       </div>
                     </div>
-
-                    <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/30">
-                      <div className="flex items-start gap-2">
-                        <Target className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-purple-300 font-semibold text-sm mb-1">🎯 Doporučení:</p>
-                          <p className="text-gray-200 text-sm">{pattern.recommendation}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Heart className="w-6 h-6 text-pink-400" />
-                  Distribuce Emočních Stavů
-                </CardTitle>
-                <CardDescription>
-                  {timeframe === "week" ? "Tento týden" : timeframe === "month" ? "Tento měsíc" : "Celkově"} - jak často
-                  jsi v jakém emočním stavu
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-6 bg-green-500/10 border-2 border-green-500/30 rounded-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <Smile className="w-12 h-12 text-green-400" />
-                      <div className="text-right">
-                        <p className="text-4xl font-bold text-green-400">
-                          {Math.round(
-                            (filteredDailyData.filter((m: any) => m.mood >= 70).length / filteredDailyData.length) *
-                              100,
-                          )}
-                          %
-                        </p>
-                        <p className="text-gray-400 text-sm">
-                          {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
-                        </p>
-                      </div>
-                    </div>
-                    <h3 className="text-white font-bold text-xl mb-2">Dobrá nálada</h3>
-                    <p className="text-gray-300 text-sm mb-3">Nálada 70+</p>
-                    <div className="flex items-center gap-2 p-3 bg-green-500/20 rounded-lg border border-green-500/30">
-                      <ThumbsUp className="w-5 h-5 text-green-300" />
-                      <div>
-                        <p className="text-green-200 text-xs font-semibold">Win Rate v tomto stavu</p>
-                        <p className="text-white font-bold text-lg">
-                          {filteredWeeklyData.length > 0 &&
-                          filteredWeeklyData.filter((d: any) => d.avgMood >= 70).length > 0
-                            ? Math.round(
-                                (filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length /
-                                  filteredWeeklyData.filter((d: any) => d.avgMood >= 70).length) *
-                                  100,
-                              )
-                            : 0}
-                          %
-                        </p>
-                      </div>
-                    </div>
                   </div>
-
-                  <div className="p-6 bg-yellow-500/10 border-2 border-yellow-500/30 rounded-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <Meh className="w-12 h-12 text-yellow-400" />
-                      <div className="text-right">
-                        <p className="text-4xl font-bold text-yellow-400">
-                          {Math.round(
-                            (filteredDailyData.filter((m: any) => m.mood >= 40 && m.mood < 70).length /
-                              filteredDailyData.length) *
-                              100,
-                          )}
-                          %
-                        </p>
-                        <p className="text-gray-400 text-sm">
-                          {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
-                        </p>
-                      </div>
-                    </div>
-                    <h3 className="text-white font-bold text-xl mb-2">Neutrální</h3>
-                    <p className="text-gray-300 text-sm mb-3">Nálada 40-70%</p>
-                    <div className="flex items-center gap-2 p-3 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
-                      <Wind className="w-5 h-5 text-yellow-300" />
-                      <div>
-                        <p className="text-yellow-200 text-xs font-semibold">Win Rate v tomto stavu</p>
-                        <p className="text-white font-bold text-lg">
-                          {filteredWeeklyData.length > 0 &&
-                          filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70).length > 0
-                            ? Math.round(
-                                (filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70 && d.pnl > 0)
-                                  .length /
-                                  filteredWeeklyData.filter((d: any) => d.avgMood >= 40 && d.avgMood < 70).length) *
-                                  100,
-                              )
-                            : 0}
-                          %
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6 bg-red-500/10 border-2 border-red-500/30 rounded-xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <Frown className="w-12 h-12 text-red-400" />
-                      <div className="text-right">
-                        <p className="text-4xl font-bold text-red-400">
-                          {Math.round(
-                            (filteredDailyData.filter((m: any) => m.mood > 0 && m.mood < 40).length /
-                              filteredDailyData.length) *
-                              100,
-                          )}
-                          %
-                        </p>
-                        <p className="text-gray-400 text-sm">
-                          {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
-                        </p>
-                      </div>
-                    </div>
-                    <h3 className="text-white font-bold text-xl mb-2">Špatná nálada</h3>
-                    <p className="text-gray-300 text-sm mb-3">Nálada &lt;40%</p>
-                    <div className="flex items-center gap-2 p-3 bg-red-500/20 rounded-lg border border-red-500/30">
-                      <ThumbsDown className="w-5 h-5 text-red-300" />
-                      <div>
-                        <p className="text-red-200 text-xs font-semibold">Win Rate v tomto stavu</p>
-                        <p className="text-white font-bold text-lg">
-                          {filteredWeeklyData.length > 0 &&
-                          filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40).length > 0
-                            ? Math.round(
-                                (filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40 && d.pnl > 0)
-                                  .length /
-                                  filteredWeeklyData.filter((d: any) => d.avgMood > 0 && d.avgMood < 40).length) *
-                                  100,
-                              )
-                            : 0}
-                          %
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* NEW ADDITION - Donut Chart */}
-            <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-purple-400" />
-                  Emoční Dopad na Performance
-                </CardTitle>
-                <CardDescription>Vztah mezi náladou a trading výsledky</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={[
-                            {
-                              name: "Dobrá nálada + Profit",
-                              value: filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length,
-                              fill: "#10b981",
-                            },
-                            {
-                              name: "Dobrá nálada + Ztráta",
-                              value: filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl < 0).length,
-                              fill: "#eab308",
-                            },
-                            {
-                              name: "Špatná nálada + Profit",
-                              value: filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl > 0).length,
-                              fill: "#3b82f6",
-                            },
-                            {
-                              name: "Špatná nálada + Ztráta",
-                              value: filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl < 0).length,
-                              fill: "#ef4444",
-                            },
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
-                          paddingAngle={2}
-                          dataKey="value"
-                        >
-                          <Tooltip />
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="flex flex-col justify-center space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/30">
-                      <div className="w-4 h-4 rounded-full bg-green-500" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-white">Dobrá nálada + Profit</p>
-                        <p className="text-xs text-gray-400">Ideální kombinace pro success</p>
-                      </div>
-                      <span className="text-lg font-bold text-green-400">
-                        {filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl > 0).length}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
-                      <div className="w-4 h-4 rounded-full bg-yellow-500" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-white">Dobrá nálada + Ztráta</p>
-                        <p className="text-xs text-gray-400">Setup nebo timing problém</p>
-                      </div>
-                      <span className="text-lg font-bold text-yellow-400">
-                        {filteredWeeklyData.filter((d: any) => d.avgMood >= 70 && d.pnl < 0).length}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
-                      <div className="w-4 h-4 rounded-full bg-blue-500" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-white">Špatná nálada + Profit</p>
-                        <p className="text-xs text-gray-400">Štěstí nebo skill?</p>
-                      </div>
-                      <span className="text-lg font-bold text-blue-400">
-                        {filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl > 0).length}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-red-500/10 rounded-lg border border-red-500/30">
-                      <div className="w-4 h-4 rounded-full bg-red-500" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-white">Špatná nálada + Ztráta</p>
-                        <p className="text-xs text-gray-400">Nebezpečná kombinace</p>
-                      </div>
-                      <span className="text-lg font-bold text-red-400">
-                        {filteredWeeklyData.filter((d: any) => d.avgMood < 50 && d.pnl < 0).length}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
             {/* IMPROVED INSIGHT CARD */}
-            <Card className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/40 backdrop-blur-sm">
+            <Card className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/40 backdrop-blur-sm mx-6 max-w-[1800px]">
               <div className="absolute top-0 right-0 p-4 opacity-10">
                 <Heart className="w-32 h-32 text-pink-500" />
               </div>
-              <CardContent className="p-6 relative">
+              <CardContent className="p-8 relative">
                 <div className="flex items-start gap-4">
                   <div className="p-4 bg-gradient-to-br from-pink-500/30 to-purple-500/30 rounded-2xl border-2 border-pink-400/30">
                     <Heart className="w-10 h-10 text-pink-300" />
@@ -2053,493 +2251,581 @@ export default function AnalyticsPage({ user: authUser }: any) {
             </Card>
           </TabsContent>
 
+          {/* PATTERNS TAB - Now with collapsible sections */}
           <TabsContent value="patterns" className="space-y-6">
-            {/* Time-Based Performance Patterns */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Trading Sessions Performance */}
-              <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
+            <Accordion
+              type="multiple"
+              defaultValue={["sessions", "streaks", "conditions", "summary"]}
+              className="space-y-4"
+            >
+              {/* Trading Sessions Section */}
+              <AccordionItem
+                value="sessions"
+                className="border-slate-600 rounded-lg border overflow-hidden mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
                     <Clock className="w-5 h-5 text-cyan-400" />
                     Výkon podle Trading Session
-                  </CardTitle>
-                  <CardDescription className="text-gray-400">Kdy obchoduješ nejlépe během dne?</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {[
-                      {
-                        name: "Asian Session",
-                        icon: <Moon className="w-6 h-6 text-indigo-400" />,
-                        time: "00:00 - 08:00",
-                        winRate: 45 + Math.random() * 20,
-                        trades: Math.floor(Math.random() * 15) + 5,
-                        avgPnL: Math.floor((Math.random() - 0.3) * 1500), // CHANGE: Increased avgPnL to thousands
-                        color: "indigo",
-                      },
-                      {
-                        name: "London Open",
-                        icon: <Sunrise className="w-6 h-6 text-amber-400" />,
-                        time: "08:00 - 12:00",
-                        winRate: 55 + Math.random() * 25,
-                        trades: Math.floor(Math.random() * 25) + 10,
-                        avgPnL: Math.floor((Math.random() - 0.2) * 2200), // CHANGE: Increased avgPnL to thousands
-                        color: "amber",
-                      },
-                      {
-                        name: "NY Session",
-                        icon: <Sun className="w-6 h-6 text-orange-400" />,
-                        time: "13:00 - 18:00",
-                        winRate: 50 + Math.random() * 30,
-                        trades: Math.floor(Math.random() * 30) + 15,
-                        avgPnL: Math.floor((Math.random() - 0.25) * 2800), // CHANGE: Increased avgPnL to thousands
-                        color: "orange",
-                      },
-                      {
-                        name: "Evening",
-                        icon: <Sunset className="w-6 h-6 text-rose-400" />,
-                        time: "18:00 - 24:00",
-                        winRate: 40 + Math.random() * 20,
-                        trades: Math.floor(Math.random() * 10) + 3,
-                        avgPnL: Math.floor((Math.random() - 0.4) * 1200), // CHANGE: Increased avgPnL to thousands
-                        color: "rose",
-                      },
-                    ].map((session, idx) => (
-                      <div
-                        key={idx}
-                        className="p-4 bg-slate-700/30 rounded-lg border border-slate-600 hover:border-slate-500 transition-colors"
-                      >
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            {session.icon}
-                            <div>
-                              <h4 className="text-white font-bold">{session.name}</h4>
-                              <p className="text-gray-400 text-xs">{session.time}</p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4">
+                  {/* Trading sessions content - existing code */}
+                  <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-cyan-400" />
+                        Výkon podle Trading Session
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">Kdy obchoduješ nejlépe během dne?</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {[
+                          {
+                            name: "Asian Session",
+                            icon: <Moon className="w-6 h-6 text-indigo-400" />,
+                            time: "00:00 - 08:00",
+                            winRate: 45 + Math.random() * 20,
+                            trades: Math.floor(Math.random() * 15) + 5,
+                            avgPnL: Math.floor((Math.random() - 0.3) * 1500), // CHANGE: Increased avgPnL to thousands
+                            color: "indigo",
+                          },
+                          {
+                            name: "London Open",
+                            icon: <Sunrise className="w-6 h-6 text-amber-400" />,
+                            time: "08:00 - 12:00",
+                            winRate: 55 + Math.random() * 25,
+                            trades: Math.floor(Math.random() * 25) + 10,
+                            avgPnL: Math.floor((Math.random() - 0.2) * 2200), // CHANGE: Increased avgPnL to thousands
+                            color: "amber",
+                          },
+                          {
+                            name: "NY Session",
+                            icon: <Sun className="w-6 h-6 text-orange-400" />,
+                            time: "13:00 - 18:00",
+                            winRate: 50 + Math.random() * 30,
+                            trades: Math.floor(Math.random() * 30) + 15,
+                            avgPnL: Math.floor((Math.random() - 0.25) * 2800), // CHANGE: Increased avgPnL to thousands
+                            color: "orange",
+                          },
+                          {
+                            name: "Evening",
+                            icon: <Sunset className="w-6 h-6 text-rose-400" />,
+                            time: "18:00 - 24:00",
+                            winRate: 40 + Math.random() * 20,
+                            trades: Math.floor(Math.random() * 10) + 3,
+                            avgPnL: Math.floor((Math.random() - 0.4) * 1200), // CHANGE: Increased avgPnL to thousands
+                            color: "rose",
+                          },
+                        ].map((session, idx) => (
+                          <div
+                            key={idx}
+                            className="p-4 bg-slate-700/30 rounded-lg border border-slate-600 hover:border-slate-500 transition-colors"
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                {session.icon}
+                                <div>
+                                  <h4 className="text-white font-bold">{session.name}</h4>
+                                  <p className="text-gray-400 text-xs">{session.time}</p>
+                                </div>
+                              </div>
+                              <Badge
+                                className={cn(
+                                  "text-sm font-bold",
+                                  session.winRate >= 60
+                                    ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                    : session.winRate >= 50
+                                      ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+                                      : "bg-red-500/20 text-red-300 border-red-500/30",
+                                )}
+                              >
+                                {Math.round(session.winRate)}% WR
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3 text-sm">
+                              <div>
+                                <p className="text-gray-400 text-xs">Trades</p>
+                                <p className="text-white font-bold">{session.trades}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400 text-xs">Avg P&L</p>
+                                <p className={cn("font-bold", session.avgPnL >= 0 ? "text-green-400" : "text-red-400")}>
+                                  {session.avgPnL >= 0 ? "+" : ""}${session.avgPnL}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400 text-xs">Rating</p>
+                                <div className="flex gap-0.5">
+                                  {Array.from({ length: 5 }).map((_, i) => (
+                                    <div
+                                      key={i}
+                                      className={cn(
+                                        "w-2 h-2 rounded-full",
+                                        i < Math.floor(session.winRate / 20)
+                                          ? `bg-${session.color}-400`
+                                          : "bg-slate-600",
+                                      )}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
                             </div>
                           </div>
-                          <Badge
-                            className={cn(
-                              "text-sm font-bold",
-                              session.winRate >= 60
-                                ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                : session.winRate >= 50
-                                  ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-                                  : "bg-red-500/20 text-red-300 border-red-500/30",
-                            )}
-                          >
-                            {Math.round(session.winRate)}% WR
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3 text-sm">
+                        ))}
+                      </div>
+                      <div className="mt-4 p-4 bg-cyan-500/10 rounded-lg border border-cyan-500/30">
+                        <div className="flex items-start gap-2">
+                          <Zap className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-gray-400 text-xs">Trades</p>
-                            <p className="text-white font-bold">{session.trades}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-xs">Avg P&L</p>
-                            <p className={cn("font-bold", session.avgPnL >= 0 ? "text-green-400" : "text-red-400")}>
-                              {session.avgPnL >= 0 ? "+" : ""}${session.avgPnL}
+                            <p className="text-cyan-300 font-semibold text-sm mb-1">💡 Pattern Insight:</p>
+                            <p className="text-white text-sm">
+                              Tvůj best trading window je London Open (08:00-12:00). Soustřeď 70% tradů do tohoto času!
                             </p>
                           </div>
-                          <div>
-                            <p className="text-gray-400 text-xs">Rating</p>
-                            <div className="flex gap-0.5">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <div
-                                  key={i}
-                                  className={cn(
-                                    "w-2 h-2 rounded-full",
-                                    i < Math.floor(session.winRate / 20) ? `bg-${session.color}-400` : "bg-slate-600",
-                                  )}
-                                />
-                              ))}
-                            </div>
-                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 p-4 bg-cyan-500/10 rounded-lg border border-cyan-500/30">
-                    <div className="flex items-start gap-2">
-                      <Zap className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-cyan-300 font-semibold text-sm mb-1">💡 Pattern Insight:</p>
-                        <p className="text-white text-sm">
-                          Tvůj best trading window je London Open (08:00-12:00). Soustřeď 70% tradů do tohoto času!
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
 
-              {/* Win/Loss Streaks Analysis */}
-              <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
+              {/* Win/Loss Streaks Section */}
+              <AccordionItem
+                value="streaks"
+                className="border-slate-600 rounded-lg border overflow-hidden mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
                     <TrendingUpDown className="w-5 h-5 text-purple-400" />
                     Winning vs Losing Streaks
-                  </CardTitle>
-                  <CardDescription className="text-gray-400">Jak zvládáš série výher a proher?</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Award className="w-5 h-5 text-green-400" />
-                        <p className="text-green-300 font-semibold text-sm">Winning Streaks</p>
-                      </div>
-                      <p className="text-3xl font-bold text-white mb-1">
-                        {displayData.streakStats.maxWinStreak} <span className="text-lg text-gray-400">tradů</span>
-                      </p>
-                      <p className="text-green-400 text-xs">Nejdelší série</p>
-                    </div>
-
-                    <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <XCircle className="w-5 h-5 text-red-400" />
-                        <p className="text-red-300 font-medium text-sm">Losing Streaks</p>
-                      </div>
-                      <p className="text-3xl font-bold text-white mb-1">
-                        {displayData.streakStats.maxLossStreak} <span className="text-lg text-gray-400">tradů</span>
-                      </p>
-                      <p className="text-red-400 text-xs">Nejdelší série</p>
-                    </div>
                   </div>
-
-                  <div className="space-y-3">
-                    <div className="p-4 bg-slate-700/30 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <RefreshCw className="w-4 h-4 text-blue-400" />
-                          <p className="text-white font-medium text-sm">Recovery Rate po ztrátě</p>
-                        </div>
-                        <span className="text-blue-400 font-bold">{Math.floor(Math.random() * 20) + 65}%</span>
-                      </div>
-                      <p className="text-gray-400 text-xs">Pravděpodobnost, že další trade po ztrátě bude ziskový</p>
-                    </div>
-
-                    <div className="p-4 bg-slate-700/30 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Percent className="w-4 h-4 text-purple-400" />
-                          <p className="text-white font-medium text-sm">Streak Consistency</p>
-                        </div>
-                        <span className="text-purple-400 font-bold">{Math.floor(Math.random() * 15) + 70}%</span>
-                      </div>
-                      <p className="text-gray-400 text-xs">Jak dobře udržuješ momentum při winning streaku</p>
-                    </div>
-
-                    <div className="p-4 bg-slate-700/30 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 text-orange-400" />
-                          <p className="text-white font-medium text-sm">Revenge Trading Risk</p>
-                        </div>
-                        <span className="text-orange-400 font-bold">{Math.floor(Math.random() * 15) + 15}%</span>
-                      </div>
-                      <p className="text-gray-400 text-xs">Tendence k impulzivním obchodům po ztrátě</p>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-slate-700/30 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-orange-400" />
-                        <p className="text-white font-medium text-sm">Revenge Trading Risk</p>
-                      </div>
-                      <span className="text-orange-400 font-bold">{Math.floor(Math.random() * 15) + 15}%</span>
-                    </div>
-                    <p className="text-gray-400 text-xs">Tendence k impulzivním obchodům po ztrátě</p>
-                  </div>
-
-                  <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/30">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-orange-300 font-semibold text-sm mb-1">⚠️ Kritické zjištění:</p>
-                        <p className="text-white text-sm">
-                          Po 2 ztrátách za sebou klesá tvoje win rate o 23%. STOP trading a uděl 30min break!
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Market Conditions Performance */}
-            <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <CloudRain className="w-5 h-5 text-sky-400" />
-                  Performance v různých Market Conditions
-                </CardTitle>
-                <CardDescription className="text-gray-400">Kdy tradingovat a kdy ne?</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  {[
-                    {
-                      condition: "Strong Trend",
-                      icon: <TrendingUp className="w-6 h-6 text-green-400" />,
-                      winRate: 65 + Math.random() * 20,
-                      trades: Math.floor(Math.random() * 30) + 20,
-                      avgPnL: Math.floor((Math.random() - 0.1) * 400),
-                      color: "green",
-                      recommendation: "BEST - Tvůj top market!",
-                    },
-                    {
-                      condition: "Ranging",
-                      icon: <TrendingUpDown className="w-6 h-6 text-yellow-400" />,
-                      winRate: 45 + Math.random() * 15,
-                      trades: Math.floor(Math.random() * 25) + 15,
-                      avgPnL: Math.floor((Math.random() - 0.35) * 250),
-                      color: "yellow",
-                      recommendation: "Opatrně - nižší edge",
-                    },
-                    {
-                      condition: "High Volatility",
-                      icon: <Zap className="w-6 h-6 text-orange-400" />,
-                      winRate: 50 + Math.random() * 20,
-                      trades: Math.floor(Math.random() * 20) + 10,
-                      avgPnL: Math.floor((Math.random() - 0.25) * 350),
-                      color: "orange",
-                      recommendation: "Mixed results",
-                    },
-                    {
-                      condition: "Low Volume",
-                      icon: <Wind className="w-6 h-6 text-slate-400" />,
-                      winRate: 35 + Math.random() * 15,
-                      trades: Math.floor(Math.random() * 15) + 5,
-                      avgPnL: Math.floor((Math.random() - 0.45) * 200),
-                      color: "slate",
-                      recommendation: "AVOID - nejhorší edge",
-                    },
-                  ].map((market, idx) => (
-                    <Card
-                      key={idx}
-                      className={cn(
-                        "bg-slate-700/30 border-2",
-                        market.color === "green" && "border-green-500/30",
-                        market.color === "yellow" && "border-yellow-500/30",
-                        market.color === "orange" && "border-orange-500/30",
-                        market.color === "slate" && "border-red-500/30", // Changed to red for low volume warning
-                      )}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          {market.icon}
-                          <div>
-                            <h4 className="text-white font-bold text-sm">{market.condition}</h4>
-                            <p className="text-gray-400 text-xs">{market.trades} trades</p>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4">
+                  {/* Streaks content - existing code */}
+                  <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <TrendingUpDown className="w-5 h-5 text-purple-400" />
+                        Winning vs Losing Streaks
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">Jak zvládáš série výher a proher?</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/30">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Award className="w-5 h-5 text-green-400" />
+                            <p className="text-green-300 font-semibold text-sm">Winning Streaks</p>
                           </div>
+                          <p className="text-3xl font-bold text-white mb-1">
+                            {safeData.streakStats.maxWinStreak} <span className="text-lg text-gray-400">tradů</span>
+                          </p>
+                          <p className="text-green-400 text-xs">Nejdelší série</p>
                         </div>
 
-                        <div className="space-y-2 mb-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-400 text-xs">Win Rate</span>
-                            <Badge
-                              className={cn(
-                                "text-xs",
-                                market.winRate >= 60
-                                  ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                  : market.winRate >= 50
-                                    ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-                                    : "bg-red-500/20 text-red-300 border-red-500/30",
-                              )}
-                            >
-                              {Math.round(market.winRate)}%
-                            </Badge>
+                        <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/30">
+                          <div className="flex items-center gap-2 mb-2">
+                            <XCircle className="w-5 h-5 text-red-400" />
+                            <p className="text-red-300 font-medium text-sm">Losing Streaks</p>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-400 text-xs">Avg P&L</span>
-                            <span
-                              className={cn(
-                                "font-bold text-sm",
-                                market.avgPnL >= 0 ? "text-green-400" : "text-red-400",
-                              )}
-                            >
-                              {market.avgPnL >= 0 ? "+" : ""}${market.avgPnL}
-                            </span>
+                          <p className="text-3xl font-bold text-white mb-1">
+                            {safeData.streakStats.maxLossStreak} <span className="text-lg text-gray-400">tradů</span>
+                          </p>
+                          <p className="text-red-400 text-xs">Nejdelší série</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="p-4 bg-slate-700/30 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <RefreshCw className="w-4 h-4 text-blue-400" />
+                              <p className="text-white font-medium text-sm">Recovery Rate po ztrátě</p>
+                            </div>
+                            <span className="text-blue-400 font-bold">{Math.floor(Math.random() * 20) + 65}%</span>
                           </div>
-                        </div>
-
-                        <div
-                          className={cn(
-                            "p-2 rounded text-center text-xs font-semibold",
-                            market.color === "green" && "bg-green-500/20 text-green-300",
-                            market.color === "yellow" && "bg-yellow-500/20 text-yellow-300",
-                            market.color === "orange" && "bg-orange-500/20 text-orange-300",
-                            market.color === "slate" && "bg-red-500/20 text-red-300", // Changed to red for low volume warning
-                          )}
-                        >
-                          {market.recommendation}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                <div className="mt-6 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/30">
-                  <div className="flex items-start gap-3">
-                    <Award className="w-6 h-6 text-green-400 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-green-300 font-bold text-base mb-2">🎯 Pattern Recommendation:</p>
-                      <p className="text-white text-sm mb-2">
-                        Tvoje performance je o 45% lepší v strong trending markets! Nauč se identifikovat trendy pomocí:
-                      </p>
-                      <ul className="text-gray-300 text-sm space-y-1 ml-4 list-disc">
-                        <li>Moving averages alignment (20/50/200 EMA)</li>
-                        <li>Higher highs & higher lows structure</li>
-                        <li>Increased volume na směru trendu</li>
-                        <li>Breakout z consolidation zones</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Summary Recommendations */}
-            <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/40 backdrop-blur-sm">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-4 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-2xl border-2 border-purple-400/30">
-                    <TrendingUpDown className="w-10 h-10 text-purple-300" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-3xl font-black text-white mb-3">🎯 Tvoje Trading Edge - Shrnutí</h3>
-
-                    {/* CHANGE: Upravená Trading Edge Summary - vertikální layout pro lepší přehlednost */}
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                        <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
-                          <p className="text-sm text-gray-400 mb-2">Potenciální zlepšení</p>
-                          <p className="text-4xl font-black text-cyan-300">
-                            +{15 + displayData.actionPlan.length * 5}%
+                          <p className="text-gray-400 text-xs">
+                            Pravděpodobnost, že další trade po ztrátě bude ziskový
                           </p>
                         </div>
 
-                        <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
-                          <p className="text-sm text-gray-400 mb-2">Časová investice</p>
-                          <p className="text-4xl font-black text-purple-300">{displayData.actionPlan.length * 7} dní</p>
+                        <div className="p-4 bg-slate-700/30 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <Percent className="w-4 h-4 text-purple-400" />
+                              <p className="text-white font-medium text-sm">Streak Consistency</p>
+                            </div>
+                            <span className="text-purple-400 font-bold">{Math.floor(Math.random() * 15) + 70}%</span>
+                          </div>
+                          <p className="text-gray-400 text-xs">Jak dobře udržuješ momentum při winning streaku</p>
                         </div>
 
-                        <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
-                          <p className="text-sm text-gray-400 mb-2">Priorita</p>
-                          <p className="text-4xl font-black text-pink-300">VYSOKÁ</p>
+                        <div className="p-4 bg-slate-700/30 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <AlertTriangle className="w-4 h-4 text-orange-400" />
+                              <p className="text-white font-medium text-sm">Revenge Trading Risk</p>
+                            </div>
+                            <span className="text-orange-400 font-bold">{Math.floor(Math.random() * 15) + 15}%</span>
+                          </div>
+                          <p className="text-gray-400 text-xs">Tendence k impulzivním obchodům po ztrátě</p>
                         </div>
                       </div>
 
-                      <p className="text-center text-gray-200 text-xl leading-relaxed mb-8 max-w-3xl mx-auto">
-                        Implementací těchto psychologických změn můžeš výrazně zlepšit svou mentální kondici a trading
-                        performance.
-                        <span className="text-cyan-300 font-bold"> Focus on mindset = focus on results!</span> 🚀
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                      <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/30">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-orange-300 font-semibold text-sm mb-1">⚠️ Kritické zjištění:</p>
+                            <p className="text-white text-sm">
+                              Po 2 ztrátách za sebou klesá tvoje win rate o 23%. STOP trading a uděl 30min break!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
 
-          {/* ACTION PLAN TAB */}
-          <TabsContent value="action" className="space-y-6">
-            <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Target className="w-6 h-6 text-purple-400" />
-                  Tvůj personalizovaný akční plán
-                </CardTitle>
-                <CardDescription className="text-gray-400">Konkrétní kroky pro zlepšení mindsetu</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {displayData.actionPlan.length > 0 ? (
-                  <div className="space-y-4">
-                    {displayData.actionPlan.map((action: any, index: number) => (
-                      <Card
-                        key={index}
-                        className={cn(
-                          "bg-slate-700/50 border",
-                          action.priority === "high" && "border-red-500/40",
-                          action.priority === "medium" && "border-yellow-500/40",
-                        )}
-                      >
-                        <CardContent className="p-5">
-                          <div className="flex items-start gap-4">
-                            <div className="text-4xl">{action.emoji}</div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge className={priorityColors[action.priority]}>
-                                  {action.priority === "high" && "⚠️ Vysoká priorita"}
-                                  {action.priority === "medium" && "⚡ Střední priorita"}
-                                </Badge>
-                              </div>
-                              <h3 className="text-xl font-bold text-white mb-2">{action.title}</h3>
-                              <p className="text-gray-200 mb-3">{action.description}</p>
-                              <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/30 mb-3">
-                                <div className="flex items-start gap-2">
-                                  <Zap className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                                  <div>
-                                    <p className="text-purple-300 font-semibold text-sm mb-1">Konkrétní akce:</p>
-                                    <p className="text-white">{action.action}</p>
-                                  </div>
+              {/* Market Conditions Section */}
+              <AccordionItem
+                value="conditions"
+                className="border-slate-600 rounded-lg border overflow-hidden mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
+                    <CloudRain className="w-5 h-5 text-sky-400" />
+                    Market Conditions Performance
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4">
+                  {/* Market conditions content - existing code */}
+                  <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <CloudRain className="w-5 h-5 text-sky-400" />
+                        Performance v různých Market Conditions
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">Kdy obchoduješ a kdy ne?</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {[
+                          {
+                            condition: "Strong Trend",
+                            icon: <TrendingUp className="w-6 h-6 text-green-400" />,
+                            winRate: 65 + Math.random() * 20,
+                            trades: Math.floor(Math.random() * 30) + 20,
+                            avgPnL: Math.floor((Math.random() - 0.1) * 400),
+                            color: "green",
+                            recommendation: "BEST - Tvůj top market!",
+                          },
+                          {
+                            condition: "Ranging",
+                            icon: <TrendingUpDown className="w-6 h-6 text-yellow-400" />,
+                            winRate: 45 + Math.random() * 15,
+                            trades: Math.floor(Math.random() * 25) + 15,
+                            avgPnL: Math.floor((Math.random() - 0.35) * 250),
+                            color: "yellow",
+                            recommendation: "Opatrně - nižší edge",
+                          },
+                          {
+                            condition: "High Volatility",
+                            icon: <Zap className="w-6 h-6 text-orange-400" />,
+                            winRate: 50 + Math.random() * 20,
+                            trades: Math.floor(Math.random() * 20) + 10,
+                            avgPnL: Math.floor((Math.random() - 0.25) * 350),
+                            color: "orange",
+                            recommendation: "Mixed results",
+                          },
+                          {
+                            condition: "Low Volume",
+                            icon: <Wind className="w-6 h-6 text-slate-400" />,
+                            winRate: 35 + Math.random() * 15,
+                            trades: Math.floor(Math.random() * 15) + 5,
+                            avgPnL: Math.floor((Math.random() - 0.45) * 200),
+                            color: "slate",
+                            recommendation: "AVOID - nejhorší edge",
+                          },
+                        ].map((market, idx) => (
+                          <Card
+                            key={idx}
+                            className={cn(
+                              "bg-slate-700/30 border-2",
+                              market.color === "green" && "border-green-500/30",
+                              market.color === "yellow" && "border-yellow-500/30",
+                              market.color === "orange" && "border-orange-500/30",
+                              market.color === "slate" && "border-red-500/30", // Changed to red for low volume warning
+                            )}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-center gap-3 mb-3">
+                                {market.icon}
+                                <div>
+                                  <h4 className="text-white font-bold text-sm">{market.condition}</h4>
+                                  <p className="text-gray-400 text-xs">{market.trades} trades</p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-cyan-400" />
-                                <span className="text-cyan-300 font-medium text-sm">{action.impact}</span>
+
+                              <div className="space-y-2 mb-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-gray-400 text-xs">Win Rate</span>
+                                  <Badge
+                                    className={cn(
+                                      "text-xs",
+                                      market.winRate >= 60
+                                        ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                        : market.winRate >= 50
+                                          ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+                                          : "bg-red-500/20 text-red-300 border-red-500/30",
+                                    )}
+                                  >
+                                    {Math.round(market.winRate)}%
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-gray-400 text-xs">Avg P&L</span>
+                                  <span
+                                    className={cn(
+                                      "font-bold text-sm",
+                                      market.avgPnL >= 0 ? "text-green-400" : "text-red-400",
+                                    )}
+                                  >
+                                    {market.avgPnL >= 0 ? "+" : ""}${market.avgPnL}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div
+                                className={cn(
+                                  "p-2 rounded text-center text-xs font-semibold",
+                                  market.color === "green" && "bg-green-500/20 text-green-300",
+                                  market.color === "yellow" && "bg-yellow-500/20 text-yellow-300",
+                                  market.color === "orange" && "bg-orange-500/20 text-orange-300",
+                                  market.color === "slate" && "bg-red-500/20 text-red-300", // Changed to red for low volume warning
+                                )}
+                              >
+                                {market.recommendation}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+
+                      <div className="mt-6 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/30">
+                        <div className="flex items-start gap-3">
+                          <Award className="w-6 h-6 text-green-400 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-green-300 font-bold text-base mb-2">🎯 Pattern Recommendation:</p>
+                            <p className="text-white text-sm mb-2">
+                              Tvoje performance je o 45% lepší v strong trending markets! Nauč se identifikovat trendy
+                              pomocí:
+                            </p>
+                            <ul className="text-gray-300 text-sm space-y-1 ml-4 list-disc">
+                              <li>Moving averages alignment (20/50/200 EMA)</li>
+                              <li>Higher highs & higher lows structure</li>
+                              <li>Increased volume na směru trendu</li>
+                              <li>Breakout z consolidation zones</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Summary Recommendations Section */}
+              <AccordionItem
+                value="summary"
+                className="border-slate-600 rounded-lg border overflow-hidden mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
+                    <TrendingUpDown className="w-5 h-5 text-purple-400" />
+                    Trading Edge Summary
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4">
+                  {/* Summary content - existing code */}
+                  <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/40 backdrop-blur-sm">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="p-4 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-2xl border-2 border-purple-400/30">
+                          <TrendingUpDown className="w-10 h-10 text-purple-300" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-3xl font-black text-white mb-3">🎯 Tvoje Trading Edge - Shrnutí</h3>
+
+                          {/* CHANGE: Upravená Trading Edge Summary - vertikální layout pro lepší přehlednost */}
+                          <div className="space-y-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                              <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
+                                <p className="text-sm text-gray-400 mb-2">Potenciální zlepšení</p>
+                                <p className="text-4xl font-black text-cyan-300">
+                                  +{15 + safeData.actionPlan.length * 5}%
+                                </p>
+                              </div>
+
+                              <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
+                                <p className="text-sm text-gray-400 mb-2">Časová investice</p>
+                                <p className="text-4xl font-black text-purple-300">
+                                  {safeData.actionPlan.length * 7} dní
+                                </p>
+                              </div>
+
+                              <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
+                                <p className="text-sm text-gray-400 mb-2">Priorita</p>
+                                <p className="text-4xl font-black text-pink-300">VYSOKÁ</p>
                               </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">Skvělá práce! 🎉</h3>
-                    <p className="text-gray-400">Tvůj mindset je v perfektní kondici. Pokračuj!</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
-            <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-yellow-400" />
-                  Quick Wins - Začni hned dnes
-                </CardTitle>
-                <CardDescription className="text-gray-400">Jednoduché kroky s okamžitým dopadem</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {[
-                    { icon: "📊", text: "Trackuj mood PŘED každým trading session" },
-                    { icon: "✍️", text: "Journal každý obchod do 1 hodiny po zavření" },
-                    { icon: "😴", text: "Cíl: min. 7h spánku pro optimální performance" },
-                    { icon: "🎯", text: "Po 2 ztrátách = 30min pauza (no exceptions!)" },
-                    { icon: "🧘", text: "5min meditation před tradingem (game changer)" },
-                  ].map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg border border-slate-600 hover:border-purple-500/30 transition-colors"
-                    >
-                      <span className="text-2xl">{item.icon}</span>
-                      <p className="text-white flex-1">{item.text}</p>
-                      <CheckCircle2 className="w-5 h-5 text-green-400 opacity-0 hover:opacity-100 transition-opacity" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                            <p className="text-center text-gray-200 text-xl leading-relaxed mb-8 max-w-3xl mx-auto">
+                              Implementací těchto psychologických změn můžeš výrazně zlepšit svou mentální kondici a
+                              trading performance.
+                              <span className="text-cyan-300 font-bold"> Focus on mindset = focus on results!</span> 🚀
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </TabsContent>
+
+          {/* ACTION PLAN TAB - Already good but can add collapsible for subsections */}
+          <TabsContent value="action" className="space-y-6">
+            <Accordion type="multiple" defaultValue={["plan", "quick-wins"]} className="space-y-4">
+              {/* Action Plan Section */}
+              <AccordionItem
+                value="plan"
+                className="border-slate-600 rounded-lg border overflow-hidden mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
+                    <Target className="w-5 h-5 text-purple-400" />
+                    Personalizovaný Akční Plán ({safeData.actionPlan.length} akcí)
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4">
+                  {/* Action plan content - existing code */}
+                  <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Target className="w-6 h-6 text-purple-400" />
+                        Tvůj personalizovaný akční plán
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">Konkrétní kroky pro zlepšení mindsetu</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {safeData.actionPlan.length > 0 ? (
+                        <div className="space-y-4">
+                          {safeData.actionPlan.map((action: any, index: number) => (
+                            <Card
+                              key={index}
+                              className={cn(
+                                "bg-slate-700/50 border",
+                                action.priority === "high" && "border-red-500/40",
+                                action.priority === "medium" && "border-yellow-500/40",
+                              )}
+                            >
+                              <CardContent className="p-5">
+                                <div className="flex items-start gap-4">
+                                  <div className="text-4xl">{action.emoji}</div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <Badge className={priorityColors[action.priority]}>
+                                        {action.priority === "high" && "⚠️ Vysoká priorita"}
+                                        {action.priority === "medium" && "⚡ Střední priorita"}
+                                      </Badge>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">{action.title}</h3>
+                                    <p className="text-gray-200 mb-3">{action.description}</p>
+                                    <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/30 mb-3">
+                                      <div className="flex items-start gap-2">
+                                        <Zap className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                                        <div>
+                                          <p className="text-purple-300 font-semibold text-sm mb-1">Konkrétní akce:</p>
+                                          <p className="text-white">{action.action}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                                      <span className="text-cyan-300 font-medium text-sm">{action.impact}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12">
+                          <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                          <h3 className="text-xl font-semibold text-white mb-2">Skvělá práce! 🎉</h3>
+                          <p className="text-gray-400">Tvůj mindset je v perfektní kondici. Pokračuj!</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Quick Wins Section */}
+              <AccordionItem
+                value="quick-wins"
+                className="border-slate-600 rounded-lg border overflow-hidden mx-6 max-w-[1800px]"
+              >
+                <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                  <div className="flex items-center gap-3">
+                    <Zap className="w-5 h-5 text-yellow-400" />
+                    Quick Wins - Začni hned dnes
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 py-4">
+                  {/* Quick wins content - existing code */}
+                  <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Zap className="w-5 h-5 text-yellow-400" />
+                        Quick Wins - Začni hned dnes
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">Jednoduché kroky s okamžitým dopadem</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {[
+                          { icon: "📊", text: "Trackuj mood PŘED každým trading session" },
+                          { icon: "✍️", text: "Journal každý obchod do 1 hodiny po zavření" },
+                          { icon: "😴", text: "Cíl: min. 7h spánku pro optimální performance" },
+                          { icon: "🎯", text: "Po 2 ztrátách = 30min pauza (no exceptions!)" },
+                          { icon: "🧘", text: "5min meditation před tradingem (game changer)" },
+                        ].map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg border border-slate-600 hover:border-purple-500/30 transition-colors"
+                          >
+                            <span className="text-2xl">{item.icon}</span>
+                            <p className="text-white flex-1">{item.text}</p>
+                            <CheckCircle2 className="w-5 h-5 text-green-400 opacity-0 hover:opacity-100 transition-opacity" />
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
             {/* IMPROVED FINAL CARD - CLEANER DESIGN */}
-            {displayData.actionPlan.length > 0 && (
-              <Card className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/40 backdrop-blur-sm">
+            {safeData.actionPlan.length > 0 && (
+              <Card className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/40 backdrop-blur-sm mx-6 max-w-[1800px]">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-cyan-600/10 to-purple-600/10" />
                 <CardContent className="p-8 relative">
                   <div className="max-w-4xl mx-auto">
@@ -2551,7 +2837,7 @@ export default function AnalyticsPage({ user: authUser }: any) {
                         <h3 className="text-3xl font-black text-white mb-2">💪 Celkový Potenciál Zlepšení</h3>
                         <Badge className="bg-cyan-500/20 text-cyan-200 border-cyan-400/30 text-base px-4 py-1">
                           <TrendingUp className="w-4 h-4 mr-1" />
-                          {displayData.actionPlan.length} konkrétních akcí
+                          {safeData.actionPlan.length} konkrétních akcí
                         </Badge>
                       </div>
                     </div>
@@ -2565,11 +2851,11 @@ export default function AnalyticsPage({ user: authUser }: any) {
                     <div className="grid grid-cols-3 gap-4">
                       <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
                         <p className="text-sm text-gray-400 mb-2">Potenciální zlepšení</p>
-                        <p className="text-4xl font-black text-cyan-300">+{15 + displayData.actionPlan.length * 5}%</p>
+                        <p className="text-4xl font-black text-cyan-300">+{15 + safeData.actionPlan.length * 5}%</p>
                       </div>
                       <div className="p-6 bg-slate-700/50 rounded-lg border border-white/10 text-center">
                         <p className="text-sm text-gray-400 mb-2">Časová investice</p>
-                        <p className="text-4xl font-black text-purple-300">{displayData.actionPlan.length * 7} dní</p>
+                        <p className="text-4xl font-black text-purple-300">{safeData.actionPlan.length * 7} dní</p>
                       </div>
                       <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
                         <p className="text-sm text-gray-400 mb-2">Priorita</p>

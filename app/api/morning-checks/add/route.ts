@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         exercised: check.exercised === true || check.exercised === "true",
         meditation: Number(check.meditationTime) || 0,
         morning_routine: check.morningRoutine === true || check.morningRoutine === "true",
-        hydration: Number(check.hydration) || 0,
+        hydration: check.hydration === true || check.hydration === "true" || Number(check.hydration) > 0, // Convert number to boolean
         locked: check.locked === true || check.locked === "true",
         score: Number(check.score) || 0,
         created_at: new Date().toISOString(),

@@ -1,15 +1,15 @@
 "use client"
 
-import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from "react"
-import { useToast } from "@/hooks/use-toast"
+import React, { createContext, useContext, useReducer, useEffect, useMemo } from "react"
 import { useAuth } from "./auth-context"
-import { createClient } from "@/lib/supabase-client"
+import { createClient } from "@/lib/supabase/client" // Fixed import to use createClient singleton instead of createBrowserClient
 import {
   generateVirtualTrades,
   generateVirtualMorningChecks,
   generateVirtualJournalEntries,
 } from "@/lib/virtual-data-generator"
 import { useSubscription } from "@/hooks/use-subscription" // Import useSubscription hook
+import { useLiveMode } from "./live-mode-context" // Import useLiveMode hook
 
 // Demo trades data for virtual mode
 const DEMO_TRADES = [
@@ -222,11 +222,19 @@ interface MorningCheck {
   [key: string]: any
 }
 
+interface WeeklyReview {
+  id: string
+  date: string
+  notes: string
+  [key: string]: any
+}
+
 interface DataState {
   trades: Trade[]
   morningChecks: MorningCheck[]
   journalEntries: any[]
-  isLiveMode: boolean
+  weeklyReviews: WeeklyReview[]
+  isLiveMode: boolean | undefined
   hasEverSwitchedToLive: boolean
   showLiveWarning: boolean
   portfolioValue: number
@@ -243,7 +251,9 @@ type DataAction =
   | { type: "SET_MORNING_CHECKS"; payload: MorningCheck[] }
   | { type: "ADD_JOURNAL_ENTRY"; payload: any }
   | { type: "SET_JOURNAL_ENTRIES"; payload: any[] }
-  | { type: "SET_LIVE_MODE"; payload: boolean }
+  | { type: "ADD_WEEKLY_REVIEW"; payload: WeeklyReview }
+  | { type: "SET_WEEKLY_REVIEWS"; payload: WeeklyReview[] }
+  | { type: "SET_LIVE_MODE"; payload: boolean | undefined }
   | { type: "SET_EVER_SWITCHED_LIVE"; payload: boolean }
   | { type: "SET_SHOW_WARNING"; payload: boolean }
   | { type: "SET_PORTFOLIO_VALUE"; payload: number }
@@ -278,30 +288,29 @@ function dataReducer(state: DataState, action: DataAction): DataState {
     }
     case "SET_JOURNAL_ENTRIES":
       return { ...state, journalEntries: action.payload }
+    case "ADD_WEEKLY_REVIEW": {
+      const newReviews = [...state.weeklyReviews, action.payload]
+      return { ...state, weeklyReviews: newReviews }
+    }
+    case "SET_WEEKLY_REVIEWS":
+      return { ...state, weeklyReviews: action.payload }
     case "SET_LIVE_MODE": {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("trader-mindset-live-mode", action.payload.toString())
-      }
+      console.log(`[v0] SET_LIVE_MODE: ${action.payload}`)
       return { ...state, isLiveMode: action.payload }
     }
     case "SET_EVER_SWITCHED_LIVE": {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("trader-mindset-ever-switched-live", action.payload.toString())
-      }
+      console.log(`[v0] SET_EVER_SWITCHED_LIVE: ${action.payload}`)
       return { ...state, hasEverSwitchedToLive: action.payload }
     }
     case "SET_SHOW_WARNING":
       return { ...state, showLiveWarning: action.payload }
     case "SET_PORTFOLIO_VALUE": {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("trader-mindset-portfolio-value", action.payload.toString())
-      }
       return { ...state, portfolioValue: action.payload }
     }
     case "SET_USER_ID":
       return { ...state, userId: action.payload }
     case "CLEAR_ALL_DATA": {
-      return { ...state, trades: [], morningChecks: [], journalEntries: [] }
+      return { ...state, trades: [], morningChecks: [], journalEntries: [], weeklyReviews: [] }
     }
     default:
       return state
@@ -313,7 +322,8 @@ interface DataContextType {
   trades: Trade[]
   morningChecks: MorningCheck[]
   journalEntries: any[]
-  isLiveMode: boolean
+  weeklyReviews: WeeklyReview[]
+  isLiveMode: boolean | undefined
   hasEverSwitchedToLive: boolean
   showLiveWarning: boolean
   portfolioValue: number
@@ -325,20 +335,27 @@ interface DataContextType {
   deleteTrade: (id: string) => void
   addMorningCheck: (check: MorningCheck) => void
   addJournalEntry: (entry: any) => void
+  updateJournalEntry: (entry: any) => void
+  deleteJournalEntry: (id: string) => void
+  addWeeklyReview: (review: WeeklyReview) => void
+  updateWeeklyReview: (review: WeeklyReview) => void
+  deleteWeeklyReview: (id: string) => void
   setShowLiveWarning: (show: boolean) => void
   setPortfolioValue: (value: number) => void
   switchToLive: () => void
-  switchToVirtual: () => void
   clearAllData: () => void
   setUserId: (userId: string | null) => void
 
   // Computed values (kept for backwards compatibility)
   getAllTrades: () => Trade[]
   getAllJournalEntries: () => any[]
+  getAllMorningChecks: () => MorningCheck[]
+  getAllWeeklyReviews: () => WeeklyReview[]
   getTradingStats: () => any
   resetAllScores: () => void
   isOwner: boolean
   canSwitchModes: boolean
+  isVirtualMode: boolean
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -347,23 +364,22 @@ const initialState: DataState = {
   trades: [],
   morningChecks: [],
   journalEntries: [],
-  isLiveMode: false,
+  weeklyReviews: [],
+  isLiveMode: undefined as any, // Will be set from profile.mode
   hasEverSwitchedToLive: false,
   showLiveWarning: false,
-  portfolioValue: 0,
+  portfolioValue: 10000,
   userId: null,
 }
 
-export function DataProvider({ children }: { children: ReactNode }) {
+export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth()
-  const { isPremium } = useSubscription()
-  const toast = useToast()
-
-  const prevUserIdRef = React.useRef<string | null>(null)
-
-  const supabase = createClient()
-
+  const { isLiveMode, isLoading: modeLoading } = useLiveMode() // Use LiveModeContext instead of managing mode internally
   const [state, dispatch] = useReducer(dataReducer, initialState)
+  const supabase = useMemo(() => createClient(), [])
+
+  const { profile } = useAuth()
+  const { isPremium } = useSubscription()
 
   const isOwner = user?.email === "honza.newage@gmail.com"
   const canSwitchModes = isPremium || isOwner
@@ -406,89 +422,160 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [state.userId, getUserKey],
   )
 
+  const saveWeeklyReviewsForUser = React.useCallback(
+    (reviews: WeeklyReview[]) => {
+      if (typeof window === "undefined" || !state.userId) return
+      const key = getUserKey("user-weekly-reviews")
+      localStorage.setItem(key, JSON.stringify(reviews))
+      console.log(`[v0] Saved ${reviews.length} weekly reviews to ${key}`)
+    },
+    [state.userId, getUserKey],
+  )
+
+  const resetState = () => {
+    dispatch({ type: "SET_TRADES", payload: [] })
+    dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
+    dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
+    dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
+    dispatch({ type: "SET_PORTFOLIO_VALUE", payload: 10000 })
+  }
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const newUserId = session?.user?.id || null
+
+      if (state.userId && newUserId && state.userId !== newUserId) {
+        console.log(`[v0] User changed from ${state.userId} to ${newUserId} - resetting all state`)
+        resetState()
+      }
+
+      if (newUserId !== state.userId) {
+        dispatch({ type: "SET_USER_ID", payload: newUserId })
+      }
+    })
+  }, []) // Empty dependency array - runs once on mount to get initial session
+
   useEffect(() => {
     if (!state.userId) {
-      console.log("[v0] No authenticated user")
+      console.log("[v0] No authenticated user - showing empty state")
       return
     }
 
-    console.log(`[v0] User ID changed to: ${state.userId}, Live mode: ${state.isLiveMode}`)
+    if (modeLoading) {
+      console.log("[v0] Mode still loading - waiting...")
+      return
+    }
 
-    if (state.isLiveMode) {
+    console.log("[v0] Mode loaded, starting data load. isLiveMode:", isLiveMode)
+
+    if (isLiveMode) {
       console.log("[v0] Loading LIVE data from Supabase")
       loadDataFromSupabase(state.userId)
     } else {
       console.log("[v0] Loading VIRTUAL data")
       loadVirtualData(state.userId)
     }
-  }, [state.userId, state.isLiveMode])
+  }, [state.userId, isLiveMode, modeLoading])
 
   function loadVirtualData(userId: string) {
+    if (isLiveMode) {
+      console.log("[v0] Skipping virtual data - user is in LIVE mode")
+      return false
+    }
+
     console.log(`[v0] Generating virtual demo data for user: ${userId}`)
 
     const virtualTrades = generateVirtualTrades(30)
     const virtualChecks = generateVirtualMorningChecks(30)
     const virtualJournal = generateVirtualJournalEntries(15)
+    const virtualReviews = [] // Placeholder for virtual weekly reviews
 
     console.log(`[v0] Generated ${virtualTrades.length} virtual trades`)
     console.log(`[v0] Generated ${virtualChecks.length} virtual morning checks`)
     console.log(`[v0] Generated ${virtualJournal.length} virtual journal entries`)
+    console.log(`[v0] Generated ${virtualReviews.length} virtual weekly reviews`)
 
     dispatch({ type: "SET_TRADES", payload: virtualTrades as any })
     dispatch({ type: "SET_MORNING_CHECKS", payload: virtualChecks as any })
     dispatch({ type: "SET_JOURNAL_ENTRIES", payload: virtualJournal })
+    dispatch({ type: "SET_WEEKLY_REVIEWS", payload: virtualReviews })
 
-    toast({
-      title: "Virtual Mode",
-      description: "Zobrazují se demo data. Můžete přepnout na Live Mode pro reálná data.",
-    })
+    return true
   }
 
   async function loadDataFromSupabase(userId: string) {
     console.log(`[v0] Loading LIVE data for user: ${userId}`)
 
     try {
-      const { data: trades, error: tradesError } = await supabase
-        .from("journal_entries")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
+      await new Promise((resolve) => setTimeout(resolve, 50))
 
-      if (tradesError) throw tradesError
+      const { data: sessionData } = await supabase.auth.getSession()
+      if (!sessionData.session) {
+        console.error("[v0] No active session - cannot load data")
+        resetState()
+        return
+      }
 
-      console.log(`[v0] Loaded ${trades?.length || 0} trades from Supabase for user ${userId}`)
-      dispatch({ type: "SET_TRADES", payload: trades || [] })
+      const [tradesResult, checksResult, reviewsResult, journalResult] = await Promise.all([
+        supabase
+          .from("journal_entries")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("type", "trade")
+          .order("created_at", { ascending: false }),
+        supabase.from("morning_checks").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+        supabase.from("weekly_reviews").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+        supabase
+          .from("journal_entries")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("type", "journal")
+          .order("created_at", { ascending: false }),
+      ])
 
-      const { data: checks, error: checksError } = await supabase
-        .from("morning_checks")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
+      if (tradesResult.error) {
+        console.error("[v0] Error loading trades:", tradesResult.error)
+        dispatch({ type: "SET_TRADES", payload: [] })
+      } else {
+        console.log(`[v0] Loaded ${tradesResult.data?.length || 0} trades from Supabase for user ${userId}`)
+        dispatch({ type: "SET_TRADES", payload: tradesResult.data || [] })
+      }
 
-      if (checksError) throw checksError
+      if (checksResult.error) {
+        console.error("[v0] Error loading morning checks:", checksResult.error)
+        dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
+      } else {
+        console.log(`[v0] Loaded ${checksResult.data?.length || 0} morning checks from Supabase for user ${userId}`)
+        dispatch({ type: "SET_MORNING_CHECKS", payload: checksResult.data || [] })
+      }
 
-      console.log(`[v0] Loaded ${checks?.length || 0} morning checks from Supabase for user ${userId}`)
-      dispatch({ type: "SET_MORNING_CHECKS", payload: checks || [] })
+      if (reviewsResult.error) {
+        console.error("[v0] Error loading weekly reviews:", reviewsResult.error)
+        dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
+      } else {
+        console.log(`[v0] Loaded ${reviewsResult.data?.length || 0} weekly reviews from Supabase for user ${userId}`)
+        dispatch({ type: "SET_WEEKLY_REVIEWS", payload: reviewsResult.data || [] })
+      }
+
+      if (journalResult.error) {
+        console.error("[v0] Error loading journal entries:", journalResult.error)
+        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
+      } else {
+        console.log(`[v0] Loaded ${journalResult.data?.length || 0} journal entries from Supabase for user ${userId}`)
+        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: journalResult.data || [] })
+      }
     } catch (error) {
       console.error("[v0] Error loading data from Supabase:", error)
       dispatch({ type: "SET_TRADES", payload: [] })
       dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
-      toast({
-        title: "Chyba načítání dat",
-        description: "Nepodařilo se načíst data ze serveru",
-        variant: "destructive",
-      })
+      dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
+      dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
     }
   }
 
   const addTrade = async (trade: Trade) => {
     if (!state.userId) {
-      console.error("[v0] Cannot add trade: No authenticated user")
-      toast({
-        title: "Chyba autentizace",
-        description: "Musíte být přihlášeni",
-        variant: "destructive",
-      })
+      // Removed: toast({ title: "Chyba autentizace", ... })
       return
     }
 
@@ -501,44 +588,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            trade,
-            userId: state.userId,
-          }),
+          body: JSON.stringify({ trade, userId: state.userId }),
         })
-
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || "Failed to add trade")
-        }
 
         const { data } = await response.json()
 
         if (data) {
           console.log(`[v0] Trade saved to Supabase: ${data.id}`)
           dispatch({ type: "ADD_TRADE", payload: data })
-          toast({
-            title: "Obchod uložen",
-            description: "Data byla úspěšně uložena do cloudu",
-          })
         }
       } catch (error) {
         console.error("[v0] Error adding trade to Supabase:", error)
-        toast({
-          title: "Chyba ukládání",
-          description: error instanceof Error ? error.message : "Nepodařilo se uložit obchod",
-          variant: "destructive",
-        })
       }
     } else {
       console.log(`[v0] Adding trade to localStorage for user: ${state.userId}`)
       dispatch({ type: "ADD_TRADE", payload: trade })
       const newTrades = [...state.trades, trade]
       saveTradesForUser(newTrades)
-      toast({
-        title: "Obchod uložen",
-        description: "Data byla uložena lokálně",
-      })
     }
   }
 
@@ -557,11 +623,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "UPDATE_TRADE", payload: trade })
       } catch (error) {
         console.error("[v0] Error updating trade:", error)
-        toast({
-          title: "Chyba aktualizace",
-          description: "Nepodařilo se aktualizovat obchod",
-          variant: "destructive",
-        })
       }
     } else {
       dispatch({ type: "UPDATE_TRADE", payload: trade })
@@ -581,11 +642,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "DELETE_TRADE", payload: id })
       } catch (error) {
         console.error("[v0] Error deleting trade:", error)
-        toast({
-          title: "Chyba mazání",
-          description: "Nepodařilo se smazat obchod",
-          variant: "destructive",
-        })
       }
     } else {
       dispatch({ type: "DELETE_TRADE", payload: id })
@@ -605,10 +661,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const response = await fetch("/api/morning-checks/add", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            check,
-            userId: state.userId,
-          }),
+          body: JSON.stringify({ check, userId: state.userId }),
         })
 
         if (!response.ok) {
@@ -620,11 +673,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "ADD_MORNING_CHECK", payload: data })
       } catch (error: any) {
         console.error("[v0] Error adding morning check:", error.message)
-        toast({
-          title: "Chyba ukládání",
-          description: "Nepodařilo se uložit ranní check",
-          variant: "destructive",
-        })
       }
     } else {
       dispatch({ type: "ADD_MORNING_CHECK", payload: check })
@@ -633,50 +681,189 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updateMorningCheck = async (check: MorningCheck) => {
+    if (!state.userId) return
+
+    if (state.isLiveMode) {
+      try {
+        const { error } = await supabase
+          .from("morning_checks")
+          .update(check)
+          .eq("id", check.id)
+          .eq("user_id", state.userId)
+
+        if (error) throw error
+        dispatch({ type: "SET_MORNING_CHECKS", payload: [check] })
+      } catch (error) {
+        console.error("[v0] Error updating morning check:", error)
+      }
+    } else {
+      dispatch({ type: "SET_MORNING_CHECKS", payload: [check] })
+      const updatedChecks = state.morningChecks.map((c) => (c.id === check.id ? check : c))
+      saveMorningChecksForUser(updatedChecks)
+    }
+  }
+
+  const deleteMorningCheck = async (id: string) => {
+    if (!state.userId) return
+
+    if (state.isLiveMode) {
+      try {
+        const { error } = await supabase.from("morning_checks").delete().eq("id", id).eq("user_id", state.userId)
+
+        if (error) throw error
+        dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
+      } catch (error) {
+        console.error("[v0] Error deleting morning check:", error)
+      }
+    } else {
+      dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
+      const filteredChecks = state.morningChecks.filter((c) => c.id !== id)
+      saveMorningChecksForUser(filteredChecks)
+    }
+  }
+
   const addJournalEntry = async (entry: any) => {
     if (!state.userId) return
+
+    const entryWithTitle = {
+      ...entry,
+      title: entry.title || `Journal Entry - ${entry.date || new Date().toISOString().split("T")[0]}`,
+      date: entry.date || new Date().toISOString().split("T")[0],
+    }
 
     if (state.isLiveMode) {
       try {
         const { data, error } = await supabase
           .from("journal_entries")
-          .insert({
-            ...entry,
-            user_id: state.userId,
-          })
+          .insert({ ...entryWithTitle, user_id: state.userId })
           .select()
           .single()
 
-        if (error) throw error
+        if (error) {
+          console.error("[v0] Error adding journal entry:", error)
+          throw error
+        }
         if (data) {
           dispatch({ type: "ADD_JOURNAL_ENTRY", payload: data })
+          console.log("[v0] Journal entry added successfully to database")
         }
       } catch (error) {
         console.error("[v0] Error adding journal entry:", error)
       }
     } else {
-      dispatch({ type: "ADD_JOURNAL_ENTRY", payload: entry })
-      const newEntries = [...state.journalEntries, entry]
+      dispatch({ type: "ADD_JOURNAL_ENTRY", payload: entryWithTitle })
+      const newEntries = [...state.journalEntries, entryWithTitle]
       saveJournalEntriesForUser(newEntries)
     }
   }
 
-  const switchToLive = async () => {
-    if (!state.hasEverSwitchedToLive) {
-      dispatch({ type: "SET_SHOW_WARNING", payload: true })
-    } else {
-      dispatch({ type: "SET_LIVE_MODE", payload: true })
-      if (state.userId) {
-        await loadDataFromSupabase(state.userId)
+  const updateJournalEntry = async (entry: any) => {
+    if (!state.userId) return
+
+    if (state.isLiveMode) {
+      try {
+        const { error } = await supabase
+          .from("journal_entries")
+          .update(entry)
+          .eq("id", entry.id)
+          .eq("user_id", state.userId)
+
+        if (error) throw error
+        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [entry] })
+      } catch (error) {
+        console.error("[v0] Error updating journal entry:", error)
       }
+    } else {
+      dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [entry] })
+      const updatedEntries = state.journalEntries.map((e) => (e.id === entry.id ? entry : e))
+      saveJournalEntriesForUser(updatedEntries)
     }
   }
 
-  const switchToVirtual = () => {
-    dispatch({ type: "SET_LIVE_MODE", payload: false })
+  const deleteJournalEntry = async (id: string) => {
+    if (!state.userId) return
 
-    if (state.userId) {
-      loadVirtualData(state.userId)
+    if (state.isLiveMode) {
+      try {
+        const { error } = await supabase.from("journal_entries").delete().eq("id", id).eq("user_id", state.userId)
+
+        if (error) throw error
+        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
+      } catch (error) {
+        console.error("[v0] Error deleting journal entry:", error)
+      }
+    } else {
+      dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
+      const filteredEntries = state.journalEntries.filter((e) => e.id !== id)
+      saveJournalEntriesForUser(filteredEntries)
+    }
+  }
+
+  const addWeeklyReview = async (review: WeeklyReview) => {
+    if (!state.userId) return
+
+    if (state.isLiveMode) {
+      try {
+        const { data, error } = await supabase
+          .from("weekly_reviews")
+          .insert({ ...review, user_id: state.userId })
+          .select()
+          .single()
+
+        if (error) throw error
+        if (data) {
+          dispatch({ type: "ADD_WEEKLY_REVIEW", payload: data })
+        }
+      } catch (error) {
+        console.error("[v0] Error adding weekly review:", error)
+      }
+    } else {
+      dispatch({ type: "ADD_WEEKLY_REVIEW", payload: review })
+      const newReviews = [...state.weeklyReviews, review]
+      saveWeeklyReviewsForUser(newReviews)
+    }
+  }
+
+  const updateWeeklyReview = async (review: WeeklyReview) => {
+    if (!state.userId) return
+
+    if (state.isLiveMode) {
+      try {
+        const { error } = await supabase
+          .from("weekly_reviews")
+          .update(review)
+          .eq("id", review.id)
+          .eq("user_id", state.userId)
+
+        if (error) throw error
+        dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [review] })
+      } catch (error) {
+        console.error("[v0] Error updating weekly review:", error)
+      }
+    } else {
+      dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [review] })
+      const updatedReviews = state.weeklyReviews.map((r) => (r.id === review.id ? review : r))
+      saveWeeklyReviewsForUser(updatedReviews)
+    }
+  }
+
+  const deleteWeeklyReview = async (id: string) => {
+    if (!state.userId) return
+
+    if (state.isLiveMode) {
+      try {
+        const { error } = await supabase.from("weekly_reviews").delete().eq("id", id).eq("user_id", state.userId)
+
+        if (error) throw error
+        dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
+      } catch (error) {
+        console.error("[v0] Error deleting weekly review:", error)
+      }
+    } else {
+      dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
+      const filteredReviews = state.weeklyReviews.filter((r) => r.id !== id)
+      saveWeeklyReviewsForUser(filteredReviews)
     }
   }
 
@@ -686,10 +873,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const tradesKey = `user-${state.userId}-mindtrader-trades`
     const checksKey = `user-${state.userId}-mindtrader-morning-checks`
     const journalKey = `user-${state.userId}-user-journal-entries`
+    const reviewsKey = `user-${state.userId}-user-weekly-reviews`
 
     localStorage.removeItem(tradesKey)
     localStorage.removeItem(checksKey)
     localStorage.removeItem(journalKey)
+    localStorage.removeItem(reviewsKey)
 
     dispatch({ type: "CLEAR_ALL_DATA" })
 
@@ -698,6 +887,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const getAllTrades = () => state.trades
   const getAllJournalEntries = () => state.journalEntries
+  const getAllMorningChecks = () => state.morningChecks
+  const getAllWeeklyReviews = () => state.weeklyReviews
 
   const getTradingStats = () => {
     const trades = state.trades
@@ -706,9 +897,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
         totalTrades: 0,
         winRate: 0,
         totalPnL: 0,
-        avgWin: 0,
-        avgLoss: 0,
+        averageWin: 0,
+        averageLoss: 0,
         profitFactor: 0,
+        maxDrawdown: 0,
+        sharpeRatio: 0,
+        consecutiveWins: 0,
+        consecutiveLosses: 0,
+        bestTrade: 0,
+        worstTrade: 0,
       }
     }
 
@@ -719,13 +916,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const avgLoss = losses.length ? Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0) / losses.length) : 0
     const profitFactor = avgLoss > 0 ? avgWin / avgLoss : 0
 
+    const maxDrawdown = 0
+    const sharpeRatio = 0
+    const consecutiveWins = 0
+    const consecutiveLosses = 0
+    const bestTrade = 0
+    const worstTrade = 0
+
     return {
       totalTrades: trades.length,
       winRate: (wins.length / trades.length) * 100,
       totalPnL,
-      avgWin,
-      avgLoss,
+      averageWin: avgWin,
+      averageLoss: avgLoss,
       profitFactor,
+      maxDrawdown,
+      sharpeRatio,
+      consecutiveWins,
+      consecutiveLosses,
+      bestTrade,
+      worstTrade,
     }
   }
 
@@ -750,44 +960,77 @@ export function DataProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "SET_USER_ID", payload: userId })
   }
 
-  return (
-    <DataContext.Provider
-      value={{
-        trades: state.trades,
-        morningChecks: state.morningChecks,
-        journalEntries: state.journalEntries,
-        isLiveMode: state.isLiveMode,
-        hasEverSwitchedToLive: state.hasEverSwitchedToLive,
-        showLiveWarning: state.showLiveWarning,
-        portfolioValue: state.portfolioValue,
-        userId: state.userId,
-        addTrade,
-        updateTrade,
-        deleteTrade,
-        addMorningCheck,
-        addJournalEntry,
-        setShowLiveWarning,
-        setPortfolioValue,
-        switchToLive,
-        switchToVirtual,
-        clearAllData,
-        setUserId,
-        getAllTrades,
-        getAllJournalEntries,
-        getTradingStats,
-        resetAllScores,
-        isOwner,
-        canSwitchModes,
-      }}
-    >
-      {children}
-    </DataContext.Provider>
-  )
+  const value = {
+    ...state,
+    isLiveMode, // Use value from LiveModeContext
+    isVirtualMode: !isLiveMode,
+    getAllTrades,
+    getAllJournalEntries,
+    getAllMorningChecks,
+    getAllWeeklyReviews,
+    addTrade,
+    updateTrade,
+    deleteTrade,
+    addMorningCheck,
+    updateMorningCheck,
+    deleteMorningCheck,
+    addJournalEntry,
+    updateJournalEntry,
+    deleteJournalEntry,
+    addWeeklyReview,
+    updateWeeklyReview,
+    deleteWeeklyReview,
+    setShowLiveWarning,
+    setPortfolioValue,
+    clearAllData,
+    setUserId,
+    getTradingStats,
+    resetAllScores,
+    isOwner,
+    canSwitchModes,
+  }
+
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }
 
 export function useData() {
   const context = useContext(DataContext)
   if (context === undefined) {
+    if (typeof window === "undefined") {
+      return {
+        getTradingStats: () => ({
+          totalTrades: 0,
+          winRate: 0,
+          totalPnL: 0,
+          averageWin: 0,
+          averageLoss: 0,
+          profitFactor: 0,
+          maxDrawdown: 0,
+          sharpeRatio: 0,
+          consecutiveWins: 0,
+          consecutiveLosses: 0,
+          bestTrade: 0,
+          worstTrade: 0,
+        }),
+        trades: [],
+        journalEntries: [],
+        morningChecks: [],
+        weeklyReviews: [],
+        isLiveMode: false,
+        toggleMode: () => {},
+        portfolioValue: 10000,
+        addTrade: async () => {},
+        updateTrade: async () => {},
+        deleteTrade: async () => {},
+        getAllTrades: async () => [],
+        addJournalEntry: async () => {},
+        addMorningCheck: async () => {},
+        addWeeklyReview: async () => {},
+        getAllJournalEntries: async () => [],
+        getAllMorningChecks: async () => [],
+        getAllWeeklyReviews: async () => [],
+      } as any
+    }
     throw new Error("useData must be used within a DataProvider")
   }
   return context

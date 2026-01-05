@@ -9,7 +9,10 @@ export async function POST(request: Request) {
     const { userId, review } = body
 
     if (!userId || !review) {
-      return NextResponse.json({ error: "Missing userId or review data" }, { status: 400 })
+      return NextResponse.json(
+        { ok: false, error: { code: "MISSING_FIELDS", message: "Missing userId or review data" } },
+        { status: 400 },
+      )
     }
 
     const { data, error } = await supabase
@@ -33,17 +36,17 @@ export async function POST(request: Request) {
         stress_management: review.stressManagement,
       })
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error("[v0] Error inserting weekly review:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: false, error: { code: error.code, message: error.message } }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ ok: true, data })
   } catch (error: any) {
     console.error("[v0] Error in weekly review API:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: false, error: { code: "INTERNAL_ERROR", message: error.message } }, { status: 500 })
   }
 }
 
@@ -53,7 +56,10 @@ export async function GET(request: Request) {
     const userId = searchParams.get("userId")
 
     if (!userId) {
-      return NextResponse.json({ error: "Missing userId" }, { status: 400 })
+      return NextResponse.json(
+        { ok: false, error: { code: "MISSING_USER_ID", message: "Missing userId" } },
+        { status: 400 },
+      )
     }
 
     const { data, error } = await supabase
@@ -64,12 +70,12 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error("[v0] Error fetching weekly reviews:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: false, error: { code: error.code, message: error.message } }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, data: data || [] })
+    return NextResponse.json({ ok: true, data: data || [] })
   } catch (error: any) {
     console.error("[v0] Error in weekly review API:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ ok: false, error: { code: "INTERNAL_ERROR", message: error.message } }, { status: 500 })
   }
 }

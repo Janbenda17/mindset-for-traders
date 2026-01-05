@@ -1,10 +1,10 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { clearUserData } from "@/lib/user-storage"
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient } from "@/lib/supabase/client"
 import { v4 as generateUUID } from "uuid"
 
 interface User {
@@ -44,9 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
-  const [supabase] = useState(() =>
-    createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!),
-  )
+  const supabase = useMemo(() => createClient(), [])
 
   const clearAllAccounts = () => {
     localStorage.setItem("trader-mindset-registered-users", JSON.stringify([]))
@@ -58,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       console.log("[v0] Checking authentication state...")
+
+      await new Promise((resolve) => setTimeout(resolve, 50))
 
       const {
         data: { session },
@@ -85,6 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && debounceTimer) {
+        return // Skip redundant SIGNED_IN if already processing
+      }
+
       console.log("[v0] Auth state changed:", event)
 
       if (debounceTimer) {
@@ -93,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       debounceTimer = setTimeout(() => {
         if (session?.user) {
+          console.log("[v0] Setting user from auth state change:", session.user.email)
           const userData = {
             id: session.user.id,
             email: session.user.email!,
@@ -101,19 +106,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           setUser(userData)
         } else {
+          console.log("[v0] Clearing user - no session")
           setUser(null)
         }
-      }, 300) // 300ms debounce to prevent rapid flapping
+      }, 300)
     })
 
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer)
       subscription.unsubscribe()
     }
-  }, [supabase])
+  }, [supabase]) // Only supabase in dependency (memoized singleton)
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log("[v0] Attempting login for:", email)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -130,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
+        console.log("[v0] Login successful, setting user state")
         const userData = {
           id: data.user.id,
           email: data.user.email!,
@@ -143,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description: "Vítejte zpět!",
         })
 
+        await new Promise((resolve) => setTimeout(resolve, 500))
         router.push("/")
         return true
       }
@@ -172,7 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             name: name,
           },
-          emailRedirectTo: undefined, // Disable email confirmation
+          emailRedirectTo: undefined,
         },
       })
 
@@ -181,7 +190,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           code: error.code,
           message: error.message,
           status: error.status,
-          name: error.name,
         })
 
         let errorMessage = error.message
@@ -210,26 +218,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       console.log("[v0] User created successfully:", authData.user.id)
-      console.log("[v0] Session status:", authData.session ? "Active" : "No session (email confirmation required)")
 
       if (!authData.session) {
-        console.log("[v0] No session - email confirmation required")
+        console.log("[v0] No session - waiting for email confirmation or auth callback")
         toast({
-          title: "Potvrďte email",
-          description: "Na váš email byl odeslán odkaz k potvrzení účtu. Po kliknutí na odkaz budete moci pokračovat.",
+          title: "Registrace úspěšná",
+          description: "Účet byl vytvořen. Přihlašuji...",
         })
-        router.push("/auth/sign-up-success")
+
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+
+        router.push("/onboarding")
         return true
       }
 
-      console.log("[v0] Waiting for profile creation...")
+      console.log("[v0] Session active, waiting for profile creation...")
       let profile = null
       let attempts = 0
       const maxAttempts = 10
 
       while (!profile && attempts < maxAttempts) {
         attempts++
-        const waitTime = Math.min(300 * attempts, 2000)
+        const waitTime = Math.min(500 * attempts, 3000)
 
         await new Promise((resolve) => setTimeout(resolve, waitTime))
 
@@ -241,36 +251,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (profileError) {
           console.error(`[v0] Profile check error (attempt ${attempts}):`, profileError)
+          continue
         }
 
         profile = profileData
 
         if (profile) {
-          console.log("[v0] Profile found after", attempts, "attempts:", profile)
+          console.log("[v0] Profile found after", attempts, "attempts")
           break
         }
 
-        console.log(`[v0] Profile not found yet (attempt ${attempts}/${maxAttempts})`)
+        console.log(`[v0] Waiting for profile (attempt ${attempts}/${maxAttempts})`)
       }
 
       if (!profile) {
-        console.error("[v0] Profile was not created by database trigger after", maxAttempts, "attempts")
-        toast({
-          title: "Chyba registrace",
-          description: "Profil se nepodařilo vytvořit. Kontaktujte podporu.",
-          variant: "destructive",
-        })
-        await supabase.auth.signOut()
-        return false
+        console.warn("[v0] Profile not created yet after", maxAttempts, "attempts - continuing anyway")
       }
-
-      const userData = {
-        id: authData.user.id,
-        email: authData.user.email!,
-        name: name,
-        isOwner: authData.user.email === OWNER_EMAIL,
-      }
-      setUser(userData)
 
       const userStorageKey = `user-${authData.user.id}-trader-mindset-data`
       const initialUserData = {
@@ -321,6 +317,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(userStorageKey, JSON.stringify(initialUserData))
       localStorage.setItem("mindtrader-show-tour", "true")
 
+      const userData = {
+        id: authData.user.id,
+        email: authData.user.email!,
+        name: name,
+        isOwner: authData.user.email === OWNER_EMAIL,
+      }
+      setUser(userData)
+
       console.log("[v0] Registration complete - redirecting to onboarding")
       toast({
         title: "Registrace úspěšná!",
@@ -333,7 +337,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("[v0] Registration unexpected error:", {
         message: error?.message,
         name: error?.name,
-        stack: error?.stack,
       })
 
       toast({
@@ -371,6 +374,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
+    if (typeof window === "undefined") {
+      return {
+        user: null,
+        login: async () => false,
+        register: async () => false,
+        logout: () => {},
+        isLoading: true,
+        clearAllAccounts: () => {},
+      }
+    }
     throw new Error("useAuth must be used within an AuthProvider")
   }
   return context

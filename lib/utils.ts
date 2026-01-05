@@ -114,14 +114,13 @@ export function generateMoodData(days = 30) {
   return data
 }
 
+// These functions are kept for backwards compatibility but always return false/do nothing
 export function isLiveMode(): boolean {
-  if (typeof window === "undefined") return false
-  return localStorage.getItem("trader-mindset-live-mode") === "true"
+  console.warn("[v0] DEPRECATED: isLiveMode() from lib/utils.ts - Use useData().isLiveMode instead")
+  return false
 }
 
 export function toggleLiveMode(): void {
-  if (typeof window === "undefined") return
-  const currentMode = isLiveMode()
-  localStorage.setItem("trader-mindset-live-mode", (!currentMode).toString())
-  window.location.reload()
+  console.warn("[v0] DEPRECATED: toggleLiveMode() from lib/utils.ts - Mode is managed by database")
+  // Do nothing - mode is managed by DataProvider and database
 }

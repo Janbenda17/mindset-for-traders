@@ -2,6 +2,8 @@
 // This function resets all localStorage data to default demo state
 
 export function resetDemoAccount() {
+  console.warn("[v0] DEPRECATED: resetDemoAccount() - Mode is managed by database, not localStorage")
+
   // Clear all existing data
   const keysToKeep = ["trader-mindset-user", "trader-mindset-registered-users"]
   const allKeys = Object.keys(localStorage)
@@ -12,8 +14,8 @@ export function resetDemoAccount() {
     }
   })
 
-  // Set virtual mode
-  localStorage.setItem("trader-mindset-mode", "virtual")
+  // NOTE: Mode is no longer stored in localStorage - it's managed by profiles.trading_mode in database
+  // localStorage.setItem("trader-mindset-mode", "virtual") // REMOVED
 
   // Set onboarding as completed
   localStorage.setItem("trader-mindset-onboarding-completed", "true")
@@ -52,5 +54,5 @@ export function resetDemoAccount() {
   // Initialize demo weekly reviews
   localStorage.setItem("weekly-reviews", JSON.stringify([]))
 
-  console.log("[v0] Demo account reset complete")
+  console.log("[v0] Demo account reset complete (mode managed by database)")
 }

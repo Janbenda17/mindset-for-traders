@@ -21,6 +21,7 @@ import {
   AlertCircle,
 } from "lucide-react"
 import { useData } from "@/contexts/data-context"
+import { useAdmin } from "@/contexts/admin-context"
 
 interface AdminPanelProps {
   isVisible: boolean
@@ -49,10 +50,14 @@ const DEMO_ADMIN_DATA = {
 export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState("overview")
   const { isLiveMode, getAllTrades, getAllJournalEntries } = useData()
+  const { isAdmin, isTestModeEnabled, simulatedDaysOffset, setSimulatedDaysOffset, toggleTestMode, checkSystemHealth } =
+    useAdmin()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState("")
   const [passwordError, setPasswordError] = useState("")
   const [adminStats, setAdminStats] = useState(DEMO_ADMIN_DATA)
+  const [sanityCheck, setSanityCheck] = useState<any>(null)
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated && isLiveMode) {
@@ -155,6 +160,18 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
     )
   }
 
+  const runSanityCheck = async () => {
+    setIsCheckingHealth(true)
+    try {
+      const health = await checkSystemHealth()
+      setSanityCheck(health)
+    } catch (error) {
+      console.error("[Admin] Sanity check failed:", error)
+    } finally {
+      setIsCheckingHealth(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
@@ -170,6 +187,9 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
             <Badge className={isLiveMode ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}>
               {isLiveMode ? "LIVE DATA" : "DEMO DATA"}
             </Badge>
+            {isTestModeEnabled && (
+              <Badge className="bg-yellow-500/20 text-yellow-300">TEST MODE +{simulatedDaysOffset}d</Badge>
+            )}
           </div>
           <Button variant="ghost" onClick={onClose} className="text-gray-400 hover:text-white">
             <EyeOff className="w-5 h-5" />
@@ -182,11 +202,12 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
               <TabsTrigger value="overview">📊 Přehled</TabsTrigger>
               <TabsTrigger value="users">👥 Uživatelé</TabsTrigger>
               <TabsTrigger value="trades">💹 Obchody</TabsTrigger>
+              <TabsTrigger value="testmode">🧪 Test Mode</TabsTrigger>
+              <TabsTrigger value="sanity">✅ Sanity Check</TabsTrigger>
               <TabsTrigger value="system">⚙️ Systém</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
-              {/* KPI Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card className="bg-slate-800/50 border-slate-700">
                   <CardContent className="p-4">
@@ -245,7 +266,6 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                 </Card>
               </div>
 
-              {/* Top Traders & Recent Activity */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card className="bg-slate-800/50 border-slate-700">
                   <CardHeader>
@@ -353,6 +373,205 @@ export function AdminPanel({ isVisible, onClose }: AdminPanelProps) {
                       ? `Celkem ${adminStats.totalTrades} obchodů v Live režimu`
                       : "Demo data - pokročilá analýza obchodů bude dostupná v plné verzi."}
                   </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="testmode" className="space-y-4">
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardHeader>
+                  <CardTitle className="text-white">🧪 Admin Test Mode</CardTitle>
+                  <p className="text-sm text-gray-400">Simulace času pro testování analytics a unlock logiky</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg">
+                    <div>
+                      <p className="font-medium text-white">Test Mode</p>
+                      <p className="text-sm text-gray-400">Povolí simulaci času pouze pro adminy</p>
+                    </div>
+                    <Button
+                      onClick={toggleTestMode}
+                      className={
+                        isTestModeEnabled ? "bg-yellow-600 hover:bg-yellow-700" : "bg-slate-700 hover:bg-slate-600"
+                      }
+                    >
+                      {isTestModeEnabled ? "Vypnout" : "Zapnout"}
+                    </Button>
+                  </div>
+
+                  {isTestModeEnabled && (
+                    <>
+                      <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                        <p className="text-yellow-300 font-semibold mb-2">⚠️ Test Mode Aktivní</p>
+                        <p className="text-sm text-yellow-200">
+                          Simulace času je zapnutá. Toto ovlivňuje POUZE vaše admin zobrazení analytics a unlock logiky.
+                          Normální uživatelé vidí reálná data.
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-white">Simulovat dny vpřed:</p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          {[1, 3, 7, 10, 14, 30].map((days) => (
+                            <Button
+                              key={days}
+                              onClick={() => setSimulatedDaysOffset(days)}
+                              variant={simulatedDaysOffset === days ? "default" : "outline"}
+                              className="w-full"
+                            >
+                              +{days} {days === 1 ? "den" : "dny"}
+                            </Button>
+                          ))}
+                        </div>
+                        <Button
+                          onClick={() => setSimulatedDaysOffset(0)}
+                          variant="outline"
+                          className="w-full border-red-500/30 text-red-300 hover:bg-red-500/10"
+                        >
+                          Reset na dnes
+                        </Button>
+                      </div>
+
+                      <div className="p-4 bg-slate-700/30 rounded-lg">
+                        <p className="text-sm text-gray-400">
+                          <span className="font-medium text-white">Aktuální simulace:</span> +{simulatedDaysOffset} dny
+                          od dneška
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          <span className="font-medium text-white">Simulované datum:</span>{" "}
+                          {new Date(Date.now() + simulatedDaysOffset * 24 * 60 * 60 * 1000).toLocaleDateString("cs-CZ")}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="sanity" className="space-y-4">
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-white">✅ Pre-Launch Sanity Check</CardTitle>
+                      <p className="text-sm text-gray-400">Ověření systémové integrity před spuštěním</p>
+                    </div>
+                    <Button onClick={runSanityCheck} disabled={isCheckingHealth}>
+                      {isCheckingHealth ? "Kontroluji..." : "Spustit kontrolu"}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {!sanityCheck && (
+                    <p className="text-gray-400 text-center py-8">Klikněte na "Spustit kontrolu" pro ověření systému</p>
+                  )}
+
+                  {sanityCheck && (
+                    <>
+                      <div
+                        className={`flex items-center justify-between p-4 rounded-lg ${sanityCheck.authOk ? "bg-green-500/10 border border-green-500/30" : "bg-red-500/10 border border-red-500/30"}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {sanityCheck.authOk ? (
+                            <CheckCircle className="w-5 h-5 text-green-400" />
+                          ) : (
+                            <AlertCircle className="w-5 h-5 text-red-400" />
+                          )}
+                          <div>
+                            <p className="font-medium text-white">Authentication</p>
+                            <p className="text-sm text-gray-400">{sanityCheck.details.auth}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`flex items-center justify-between p-4 rounded-lg ${sanityCheck.profileOk ? "bg-green-500/10 border border-green-500/30" : "bg-red-500/10 border border-red-500/30"}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {sanityCheck.profileOk ? (
+                            <CheckCircle className="w-5 h-5 text-green-400" />
+                          ) : (
+                            <AlertCircle className="w-5 h-5 text-red-400" />
+                          )}
+                          <div>
+                            <p className="font-medium text-white">Profile OK</p>
+                            <p className="text-sm text-gray-400">{sanityCheck.details.profile}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`flex items-center justify-between p-4 rounded-lg ${sanityCheck.dataIsolationOk ? "bg-green-500/10 border border-green-500/30" : "bg-red-500/10 border border-red-500/30"}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {sanityCheck.dataIsolationOk ? (
+                            <CheckCircle className="w-5 h-5 text-green-400" />
+                          ) : (
+                            <AlertCircle className="w-5 h-5 text-red-400" />
+                          )}
+                          <div>
+                            <p className="font-medium text-white">Live Data Isolation</p>
+                            <p className="text-sm text-gray-400">{sanityCheck.details.dataIsolation}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`flex items-center justify-between p-4 rounded-lg ${sanityCheck.analyticsOk ? "bg-green-500/10 border border-green-500/30" : "bg-red-500/10 border border-red-500/30"}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {sanityCheck.analyticsOk ? (
+                            <CheckCircle className="w-5 h-5 text-green-400" />
+                          ) : (
+                            <AlertCircle className="w-5 h-5 text-red-400" />
+                          )}
+                          <div>
+                            <p className="font-medium text-white">Analytics Rendering</p>
+                            <p className="text-sm text-gray-400">{sanityCheck.details.analytics}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`flex items-center justify-between p-4 rounded-lg ${sanityCheck.noSharedData ? "bg-green-500/10 border border-green-500/30" : "bg-red-500/10 border border-red-500/30"}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {sanityCheck.noSharedData ? (
+                            <CheckCircle className="w-5 h-5 text-green-400" />
+                          ) : (
+                            <AlertCircle className="w-5 h-5 text-red-400" />
+                          )}
+                          <div>
+                            <p className="font-medium text-white">No Shared Data Detected</p>
+                            <p className="text-sm text-gray-400">{sanityCheck.details.sharedData}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`p-4 rounded-lg border ${sanityCheck.authOk && sanityCheck.profileOk && sanityCheck.dataIsolationOk && sanityCheck.analyticsOk && sanityCheck.noSharedData ? "bg-green-500/10 border-green-500/30" : "bg-yellow-500/10 border-yellow-500/30"}`}
+                      >
+                        <p className="font-semibold text-white mb-1">
+                          {sanityCheck.authOk &&
+                          sanityCheck.profileOk &&
+                          sanityCheck.dataIsolationOk &&
+                          sanityCheck.analyticsOk &&
+                          sanityCheck.noSharedData
+                            ? "✅ Všechny kontroly prošly!"
+                            : "⚠️ Některé kontroly selhaly"}
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          {sanityCheck.authOk &&
+                          sanityCheck.profileOk &&
+                          sanityCheck.dataIsolationOk &&
+                          sanityCheck.analyticsOk &&
+                          sanityCheck.noSharedData
+                            ? "Systém je připraven k produkčnímu nasazení."
+                            : "Zkontrolujte selhavší komponenty před nasazením."}
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
