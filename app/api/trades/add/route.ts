@@ -74,8 +74,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    if (!data) {
+      console.error("[v0] No data returned after insert - possible RLS issue")
+      return NextResponse.json({ error: "Failed to insert trade - check permissions" }, { status: 500 })
+    }
+
     console.log("[v0] Trade inserted successfully with RLS protection")
-    return NextResponse.json({ data: data || supabaseFields })
+    return NextResponse.json({ data })
   } catch (error: any) {
     console.error("[v0] API error:", error)
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 })

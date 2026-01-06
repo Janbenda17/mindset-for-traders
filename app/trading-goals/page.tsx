@@ -34,7 +34,8 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useData } from "@/contexts/data-context"
-import { getUserStorageKey } from "@/utils/storage-namespace"
+import { createStorageClient } from "@/lib/storage-client"
+import { useAuth } from "@/contexts/auth-context"
 
 interface Goal {
   id: string
@@ -134,6 +135,8 @@ const demoGoals: Goal[] = [
 export default function TradingGoalsPage() {
   const { toast } = useToast()
   const { isLiveMode } = useData()
+  const { user } = useAuth()
+  const storage = createStorageClient(user?.id || null)
   const [goals, setGoals] = useState<Goal[]>([])
   const [isAddingGoal, setIsAddingGoal] = useState(false)
 
@@ -152,34 +155,24 @@ export default function TradingGoalsPage() {
 
   useEffect(() => {
     if (isLiveMode) {
-      const goalsKey = getUserStorageKey("trading-goals")
-      const saved = localStorage.getItem(goalsKey)
-      if (saved) {
-        setGoals(JSON.parse(saved))
-      } else {
-        setGoals([])
-      }
+      const saved = storage.get<Goal[]>("trading-goals", [])
+      setGoals(saved)
     } else {
       setGoals(demoGoals)
     }
 
     checkAndSendReminders()
-  }, [isLiveMode])
+  }, [isLiveMode, user?.id])
 
   const saveGoals = (updatedGoals: Goal[]) => {
     setGoals(updatedGoals)
     if (isLiveMode) {
-      const goalsKey = getUserStorageKey("trading-goals")
-      localStorage.setItem(goalsKey, JSON.stringify(updatedGoals))
+      storage.set("trading-goals", updatedGoals)
     }
   }
 
   const checkAndSendReminders = () => {
-    const goalsKey = getUserStorageKey("trading-goals")
-    const saved = localStorage.getItem(goalsKey)
-    if (!saved) return
-
-    const goals: Goal[] = JSON.parse(saved)
+    const goals = storage.get<Goal[]>("trading-goals", [])
     const now = new Date()
     let updated = false
 
@@ -200,7 +193,7 @@ export default function TradingGoalsPage() {
     })
 
     if (updated) {
-      localStorage.setItem(goalsKey, JSON.stringify(goals))
+      storage.set("trading-goals", goals)
       setGoals(goals)
     }
   }

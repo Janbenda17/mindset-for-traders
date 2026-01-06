@@ -17,7 +17,19 @@ export async function POST(request: Request) {
 
     console.log("[v0] Creating Supabase profile for user:", userId)
 
-    const { data: existingProfile } = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle()
+    const { data: existingProfile, error: checkError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle()
+
+    if (checkError) {
+      console.error("[v0] Error checking existing profile:", checkError.message)
+      return NextResponse.json(
+        { ok: false, error: { code: checkError.code, message: checkError.message } },
+        { status: 500 },
+      )
+    }
 
     if (existingProfile) {
       console.log("[v0] Profile already exists for user:", userId)

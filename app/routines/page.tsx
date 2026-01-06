@@ -45,7 +45,9 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { getUserData, saveUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
+import { useAuth } from "@/contexts/auth-context"
 import { cn } from "@/lib/utils"
+import { createStorageClient } from "@/lib/storage-client"
 
 const iconMap: Record<string, LucideIcon> = {
   Brain,
@@ -250,8 +252,11 @@ const generateDemoHistory = (): RoutineHistory[] => {
 }
 
 export default function RoutinesPage() {
-  const { toast } = useToast()
   const { isLiveMode } = useData()
+  const { user } = useAuth()
+  const { toast } = useToast()
+
+  const storage = createStorageClient(user?.id || null)
 
   const [morningRoutine, setMorningRoutine] = useState<RoutineItem[]>(defaultMorningRoutine)
   const [eveningRoutine, setEveningRoutine] = useState<RoutineItem[]>(defaultEveningRoutine)
@@ -274,9 +279,7 @@ export default function RoutinesPage() {
 
   useEffect(() => {
     if (!isLiveMode) {
-      // Virtual mode - load demo data
       setHistory(generateDemoHistory())
-      // Set some items as completed for demo
       setMorningRoutine((prev) =>
         prev.map((item, idx) => ({
           ...item,
@@ -292,41 +295,32 @@ export default function RoutinesPage() {
       return
     }
 
-    // Live mode - load from localStorage
-    const savedData = localStorage.getItem("trading-routines")
+    const savedData = storage.get("trading-routines", null)
     if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData)
-
-        if (parsed.lastDate !== today) {
-          // Reset for new day but keep custom items and active states
-          const resetMorning = (parsed.morningRoutine || defaultMorningRoutine).map((item: RoutineItem) => ({
-            ...item,
-            completed: false,
-          }))
-          const resetEvening = (parsed.eveningRoutine || defaultEveningRoutine).map((item: RoutineItem) => ({
-            ...item,
-            completed: false,
-          }))
-          setMorningRoutine(resetMorning)
-          setEveningRoutine(resetEvening)
-          setMorningNotes("")
-          setEveningNotes("")
-        } else {
-          if (parsed.morningRoutine) setMorningRoutine(parsed.morningRoutine)
-          if (parsed.eveningRoutine) setEveningRoutine(parsed.eveningRoutine)
-          if (parsed.morningNotes) setMorningNotes(parsed.morningNotes)
-          if (parsed.eveningNotes) setEveningNotes(parsed.eveningNotes)
-        }
-
-        if (parsed.history) setHistory(parsed.history)
-      } catch (e) {
-        console.error("Error loading routines:", e)
+      if (savedData.lastDate !== today) {
+        const resetMorning = (savedData.morningRoutine || defaultMorningRoutine).map((item: RoutineItem) => ({
+          ...item,
+          completed: false,
+        }))
+        const resetEvening = (savedData.eveningRoutine || defaultEveningRoutine).map((item: RoutineItem) => ({
+          ...item,
+          completed: false,
+        }))
+        setMorningRoutine(resetMorning)
+        setEveningRoutine(resetEvening)
+        setMorningNotes("")
+        setEveningNotes("")
+      } else {
+        if (savedData.morningRoutine) setMorningRoutine(savedData.morningRoutine)
+        if (savedData.eveningRoutine) setEveningRoutine(savedData.eveningRoutine)
+        if (savedData.morningNotes) setMorningNotes(savedData.morningNotes)
+        if (savedData.eveningNotes) setEveningNotes(savedData.eveningNotes)
       }
-    }
-  }, [today, isLiveMode])
 
-  // Save to localStorage (only in live mode)
+      if (savedData.history) setHistory(savedData.history)
+    }
+  }, [today, isLiveMode, user?.id])
+
   useEffect(() => {
     if (!isLiveMode) return
 
@@ -338,9 +332,8 @@ export default function RoutinesPage() {
       history,
       lastDate: today,
     }
-    localStorage.setItem("trading-routines", JSON.stringify(dataToSave))
+    storage.set("trading-routines", dataToSave)
 
-    // Save to userData for analytics
     const userData = getUserData()
     saveUserData({
       ...userData,

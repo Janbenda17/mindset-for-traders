@@ -182,7 +182,7 @@ function generateDemoData(tradingStyle: string) {
         type: "success",
         icon: "😴",
         title: "Spánek je tvůj superpower!",
-        description: `Průměrně spíš ${7.5}h, což je SKVĚLÉ! Studie ukazují, že 7+ hodin spánku zlepšuje rozhodování o 40%.`,
+        description: `Průměrně spíš ${7.5}h, což je SKVÉLÉ! Studie ukazují, že 7+ hodin spánku zlepšuje rozhodování o 40%.`,
         action: "Pokračuj v pravidelném spánkovém režimu - funguje to!",
         impact: "high",
       },
@@ -915,13 +915,29 @@ export default function AnalyticsPage() {
   const [timeframe, setTimeframe] = useState<"week" | "month" | "all">("month")
   const [activeTab, setActiveTab] = useState("mindset")
   const { tradingStyle } = useTradingStyle()
-  const { user } = useAuth()
+  const { user, profile } = useAuth() // Added profile
   const { isAdmin, isTestModeEnabled, simulatedDaysOffset, getSimulatedDate } = useAdmin()
   const { isLiveMode, getAllTrades, getAllJournalEntries } = useData()
 
   const { analytics, isLoading: analyticsLoading } = useAnalytics()
 
   const trades = getAllTrades() || []
+
+  const daysSinceRegistration = useMemo(() => {
+    if (!profile?.created_at) return null
+    const registrationDate = new Date(profile.created_at)
+    const today = new Date()
+    const days = Math.floor((today.getTime() - registrationDate.getTime()) / (1000 * 60 * 60 * 24))
+    return days
+  }, [profile?.created_at])
+
+  const daysUntilAnalyticsUnlock = useMemo(() => {
+    if (daysSinceRegistration === null) return null
+    const remaining = 10 - daysSinceRegistration
+    return remaining > 0 ? remaining : 0
+  }, [daysSinceRegistration])
+
+  const isAnalyticsLocked = isLiveMode && daysUntilAnalyticsUnlock !== null && daysUntilAnalyticsUnlock > 0
 
   const isUnlocked = useMemo(() => {
     if (isAdmin && isTestModeEnabled) {
@@ -933,6 +949,7 @@ export default function AnalyticsPage() {
     const today = new Date()
     const currentDate = isTestModeEnabled ? getSimulatedDate() : today
 
+    // Safely calculate daysSinceFirstTrade
     const daysSinceFirstTrade =
       trades.length > 0
         ? Math.floor(
@@ -995,7 +1012,54 @@ export default function AnalyticsPage() {
     )
   }, [isLiveMode, analytics, tradingStyle])
 
-  const showEmptyState = false // Always false now based on the change above
+  const showEmptyState = false
+
+  if (isAnalyticsLocked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-2xl bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border-slate-700/50 backdrop-blur-sm">
+          <CardContent className="p-12 text-center space-y-6">
+            <div className="flex justify-center">
+              <div className="text-6xl text-purple-400">⏳</div>
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-2">Analytics se odemykají</h2>
+              <p className="text-slate-300 text-lg">
+                Chceme, aby jste měl(a) dost dat pro přesné analýzy. Vaše statistiky se zobrazí za:
+              </p>
+            </div>
+            <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-lg p-8">
+              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+                {daysUntilAnalyticsUnlock} dní
+              </div>
+              <p className="text-slate-400">
+                {daysSinceRegistration !== null && daysSinceRegistration > 0
+                  ? `Už máte za sebou ${daysSinceRegistration} den/ů`
+                  : "Právě jste se zaregistroval(a)"}
+              </p>
+            </div>
+            <div className="space-y-3 text-left">
+              <h3 className="text-lg font-semibold text-white mb-2">Mezitím si můžete:</h3>
+              <ul className="space-y-2 text-slate-300">
+                <li className="flex items-center gap-2">
+                  <span className="text-purple-400">✓</span> Vyplňovat denní check-in
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-purple-400">✓</span> Zaznamenávat obchody
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-purple-400">✓</span> Psát do deníku
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-purple-400">✓</span> Komunikovat s AI Coachem
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   if (analyticsLoading) {
     return (
@@ -1163,6 +1227,19 @@ export default function AnalyticsPage() {
       : 0
 
   const winRate = safeData?.summary?.winRate || avgWinRate || 0
+
+  const moodDistribution =
+    filteredDailyData && filteredDailyData.length > 0
+      ? {
+          good: Math.round(
+            (filteredDailyData.filter((m: any) => m.mood >= 70).length / filteredDailyData.length) * 100,
+          ),
+          neutral: Math.round(
+            (filteredDailyData.filter((m: any) => m.mood >= 40 && m.mood < 70).length / filteredDailyData.length) * 100,
+          ),
+          poor: Math.round((filteredDailyData.filter((m: any) => m.mood < 40).length / filteredDailyData.length) * 100),
+        }
+      : { good: 0, neutral: 0, poor: 0 }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -2001,13 +2078,7 @@ export default function AnalyticsPage() {
                       <div className="flex items-center justify-between mb-4">
                         <Smile className="w-12 h-12 text-green-400" />
                         <div className="text-right">
-                          <p className="text-4xl font-bold text-green-400">
-                            {Math.round(
-                              (filteredDailyData.filter((m: any) => m.mood >= 70).length / filteredDailyData.length) *
-                                100,
-                            )}
-                            %
-                          </p>
+                          <p className="text-4xl font-bold text-green-400">{moodDistribution.good}%</p>
                           <p className="text-gray-400 text-sm">
                             {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
                           </p>
@@ -2038,14 +2109,7 @@ export default function AnalyticsPage() {
                       <div className="flex items-center justify-between mb-4">
                         <Meh className="w-12 h-12 text-yellow-400" />
                         <div className="text-right">
-                          <p className="text-4xl font-bold text-yellow-400">
-                            {Math.round(
-                              (filteredDailyData.filter((m: any) => m.mood >= 40 && m.mood < 70).length /
-                                filteredDailyData.length) *
-                                100,
-                            )}
-                            %
-                          </p>
+                          <p className="text-4xl font-bold text-yellow-400">{moodDistribution.neutral}%</p>
                           <p className="text-gray-400 text-sm">
                             {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
                           </p>
@@ -2077,14 +2141,7 @@ export default function AnalyticsPage() {
                       <div className="flex items-center justify-between mb-4">
                         <Frown className="w-12 h-12 text-red-400" />
                         <div className="text-right">
-                          <p className="text-4xl font-bold text-red-400">
-                            {Math.round(
-                              (filteredDailyData.filter((m: any) => m.mood > 0 && m.mood < 40).length /
-                                filteredDailyData.length) *
-                                100,
-                            )}
-                            %
-                          </p>
+                          <p className="text-4xl font-bold text-red-400">{moodDistribution.poor}%</p>
                           <p className="text-gray-400 text-sm">
                             {timeframe === "week" ? "dnů" : timeframe === "month" ? "týdnů" : "období"}
                           </p>
@@ -2213,42 +2270,6 @@ export default function AnalyticsPage() {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
-
-            {/* IMPROVED INSIGHT CARD */}
-            <Card className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/40 backdrop-blur-sm mx-6 max-w-[1800px]">
-              <div className="absolute top-0 right-0 p-4 opacity-10">
-                <Heart className="w-32 h-32 text-pink-500" />
-              </div>
-              <CardContent className="p-8 relative">
-                <div className="flex items-start gap-4">
-                  <div className="p-4 bg-gradient-to-br from-pink-500/30 to-purple-500/30 rounded-2xl border-2 border-pink-400/30">
-                    <Heart className="w-10 h-10 text-pink-300" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-3">
-                      <h3 className="text-2xl font-black text-white mb-2">💡 Klíčový Insight</h3>
-                      <Badge className="bg-pink-500/20 text-pink-200 border-pink-400/30">
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        AI Analysis
-                      </Badge>
-                    </div>
-                    <p className="text-gray-100 text-lg leading-relaxed mb-4">
-                      {avgMood > 70
-                        ? `Tvoje průměrná nálada ${Math.round(avgMood)}% je skvělá! Když se cítíš dobře, tvoje performance je o ${Math.round((avgMood - 50) * 0.8)}% lepší. Udržuj pozitivní mindset! 🚀`
-                        : avgMood > 50
-                          ? `Tvoje průměrná nálada ${Math.round(avgMood)}% je OK, ale data ukazují, že když se dostaneš nad 70%, tvoje win rate roste o 15-25%. Focus na mental health! 🎯`
-                          : `Tvoje průměrná nálada ${Math.round(avgMood)}% je pod optimální úrovní. Data jasně ukazují, že špatná nálada = horší rozhodování = ztráty. Priorita #1: mental health! ⚠️`}
-                    </p>
-                    <div className="flex items-center gap-2 p-3 bg-white/10 rounded-lg border border-white/20">
-                      <Target className="w-5 h-5 text-cyan-300" />
-                      <p className="text-cyan-200 text-sm font-semibold">
-                        Doporučení: Začni trackovat svou náladu před každým trading sessionem. Data jsou jasná!
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* PATTERNS TAB - Now with collapsible sections */}

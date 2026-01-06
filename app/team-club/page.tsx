@@ -53,6 +53,7 @@ import {
 } from "lucide-react"
 import { useData } from "@/contexts/data-context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useAuth } from "@/contexts/auth-context" // ADDED: Import useAuth
 
 // Types
 interface CommunityPost {
@@ -614,8 +615,10 @@ function calculateReadiness(entries: any[]): number {
   return Math.round(avg * 10)
 }
 
-function generateStudentsFromRealData(trades: any[], journals: any[], moodEntries: any[]): Student[] {
-  if (trades.length === 0 && journals.length === 0) {
+function generateStudentsFromRealData(trades: any[], journals: any[], moodEntries: any[], userId: string): Student[] {
+  // In LIVE mode, only show the current user's data
+  if (trades.length === 0 && journals.length === 0 && moodEntries.length === 0) {
+    // No data yet - return empty array
     return []
   }
 
@@ -626,23 +629,24 @@ function generateStudentsFromRealData(trades: any[], journals: any[], moodEntrie
 
   return [
     {
-      id: "user-1",
-      name: "Ty (Student)",
-      nickname: "MyTrader",
+      id: userId,
+      name: "Ty",
+      nickname: "Můj Profil",
       avatar: "/trader-avatar.png",
       traderType: "day-trader",
       readiness: readiness,
-      readinessHistory: [],
+      readinessHistory: moodEntries.slice(-7).map((m: any) => (m.mood || 0) * 10),
       discipline: discipline,
       pnl: totalPnL,
-      pnlHistory: [],
+      pnlHistory: trades.slice(-7).map((t: any) => t.pnl || t.profitLoss || 0),
       journalStreak: journalStreak,
       status: readiness < 50 ? "critical" : readiness < 70 ? "warning" : "stable",
       lastActive: "právě teď",
       triggers: [],
       strengths: [],
       weaknesses: [],
-      aiDiagnosis: "Analyzujem tvoje data...",
+      aiDiagnosis:
+        trades.length > 0 ? "Analyzuji tvoje data..." : "Začni tradovat a přidávat záznamy do deníku pro AI analýzu.",
       mentorNotes: [],
       todos: [],
     },
@@ -652,21 +656,25 @@ function generateStudentsFromRealData(trades: any[], journals: any[], moodEntrie
 // MENTOR VIEW
 function MentorTeamClubView() {
   const { getAllTrades, getAllJournalEntries, isLiveMode } = useData()
+  const { user } = useAuth() // ADDED: Get user from AuthContext
   const [students, setStudents] = useState<Student[]>([])
 
   useEffect(() => {
     const trades = getAllTrades()
     const journals = getAllJournalEntries()
-    const moodEntries = JSON.parse(localStorage.getItem("user-mood-entries") || "[]")
+
+    const moodEntries: any[] = JSON.parse(localStorage.getItem("user-mood-entries") || "[]")
 
     if (isLiveMode) {
-      const realStudents = generateStudentsFromRealData(trades, journals, moodEntries)
+      const realStudents = generateStudentsFromRealData(trades, journals, moodEntries, user?.id || "unknown")
       setStudents(realStudents)
+      console.log("[v0] Team Club: Generated LIVE student data for user:", user?.id)
     } else {
       // In virtual mode, show demo students
       setStudents(DEMO_STUDENTS)
+      console.log("[v0] Team Club: Using DEMO students in virtual mode")
     }
-  }, [isLiveMode]) // Removed functions from dependency array to prevent infinite loop
+  }, [isLiveMode, user?.id]) // Only depend on mode and user ID, not functions
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -750,6 +758,7 @@ function MentorTeamClubView() {
 // STUDENT VIEW
 function StudentTeamClubView() {
   const { isLiveMode, getAllTrades, getAllJournalEntries } = useData()
+  const { user } = useAuth() // ADDED: Get user from AuthContext
   const [activeTab, setActiveTab] = useState("overview")
   const [posts, setPosts] = useState<CommunityPost[]>([])
   const [buddies, setBuddies] = useState<StudyBuddy[]>([])
@@ -944,7 +953,7 @@ function StudentTeamClubView() {
 
   const trades = getAllTrades()
   const journals = getAllJournalEntries()
-  const moodEntries = JSON.parse(localStorage.getItem("user-mood-entries") || "[]")
+  const moodEntries: any[] = JSON.parse(localStorage.getItem("user-mood-entries") || "[]")
 
   const gamificationData =
     typeof window !== "undefined" ? JSON.parse(localStorage.getItem("gamification-data") || "{}") : {}
@@ -2098,12 +2107,12 @@ function StudentTeamClubView() {
                   <Button
                     key={filter}
                     size="sm"
-                    variant={challengeFilter === filter ? "default" : "outline"}
+                    variant="outline"
                     onClick={() => setChallengeFilter(filter)}
                     className={`rounded-xl text-xs ${
                       challengeFilter === filter
-                        ? "bg-gradient-to-r from-purple-600 to-pink-600"
-                        : "bg-transparent border-slate-700"
+                        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent"
+                        : "bg-transparent border-slate-700 text-slate-300 hover:bg-slate-800"
                     }`}
                   >
                     {filter === "all"

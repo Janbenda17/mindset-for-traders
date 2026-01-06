@@ -10,6 +10,7 @@ import {
 } from "@/lib/virtual-data-generator"
 import { useSubscription } from "@/hooks/use-subscription" // Import useSubscription hook
 import { useLiveMode } from "./live-mode-context" // Import useLiveMode hook
+import { toast } from "@/hooks/use-toast" // Added toast import for error notifications
 
 // Demo trades data for virtual mode
 const DEMO_TRADES = [
@@ -504,14 +505,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   async function loadDataFromSupabase(userId: string) {
-    console.log(`[v0] Loading LIVE data for user: ${userId}`)
-
     try {
       await new Promise((resolve) => setTimeout(resolve, 50))
 
       const { data: sessionData } = await supabase.auth.getSession()
       if (!sessionData.session) {
         console.error("[v0] No active session - cannot load data")
+        toast({
+          title: "Chyba autentizace",
+          description: "Není aktivní relace. Přihlaš se prosím znovu.",
+          variant: "destructive",
+        })
         resetState()
         return
       }
@@ -535,6 +539,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (tradesResult.error) {
         console.error("[v0] Error loading trades:", tradesResult.error)
+        toast({
+          title: "Chyba načítání obchodů",
+          description: "Nepodařilo se načíst obchody z databáze.",
+          variant: "destructive",
+        })
         dispatch({ type: "SET_TRADES", payload: [] })
       } else {
         console.log(`[v0] Loaded ${tradesResult.data?.length || 0} trades from Supabase for user ${userId}`)
@@ -543,6 +552,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (checksResult.error) {
         console.error("[v0] Error loading morning checks:", checksResult.error)
+        toast({
+          title: "Chyba načítání ranních kontrol",
+          description: "Nepodařilo se načíst ranní kontroly z databáze.",
+          variant: "destructive",
+        })
         dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
       } else {
         console.log(`[v0] Loaded ${checksResult.data?.length || 0} morning checks from Supabase for user ${userId}`)
@@ -566,6 +580,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error("[v0] Error loading data from Supabase:", error)
+      toast({
+        title: "Kritická chyba",
+        description: "Nepodařilo se načíst data z databáze. Zkus to prosím znovu.",
+        variant: "destructive",
+      })
       dispatch({ type: "SET_TRADES", payload: [] })
       dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
       dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
@@ -575,7 +594,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addTrade = async (trade: Trade) => {
     if (!state.userId) {
-      // Removed: toast({ title: "Chyba autentizace", ... })
+      toast({
+        title: "Chyba autentizace",
+        description: "Musíš být přihlášený pro přidání obchodu.",
+        variant: "destructive",
+      })
       return
     }
 
@@ -653,6 +676,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addMorningCheck = async (check: MorningCheck) => {
     if (!state.userId) {
       console.error("[v0] Cannot add morning check: No authenticated user")
+      toast({
+        title: "Chyba autentizace",
+        description: "Musíš být přihlášený pro přidání ranní kontroly.",
+        variant: "destructive",
+      })
       return
     }
 
