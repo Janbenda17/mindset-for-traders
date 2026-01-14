@@ -173,15 +173,15 @@ export default function JournalPage() {
   }, [isLiveMode]) // Recalculate when isLiveMode changes
 
   const loadEntries = () => {
-    if (!isLiveMode) {
-      const virtualEntries = generateDemoEntries()
-      setEntries(virtualEntries)
-      setSortedJournalEntries(virtualEntries)
-    } else if (user) {
+    if (isLiveMode && user) {
       const journalEntries = getAllJournalEntries() || []
       const sortedEntries = [...journalEntries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       setEntries(journalEntries)
       setSortedJournalEntries(sortedEntries)
+    } else if (!isLiveMode) {
+      const virtualEntries = generateDemoEntries()
+      setEntries(virtualEntries)
+      setSortedJournalEntries(virtualEntries)
     } else {
       setEntries([])
       setSortedJournalEntries([])
@@ -729,7 +729,7 @@ export default function JournalPage() {
 
         <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
           <CardContent className="p-3 md:p-6">
-            <Tabs defaultValue="new" className="w-full">
+            <Tabs defaultValue="calendar" className="w-full">
               <TabsList className="grid w-full grid-cols-4 gap-2 md:gap-4 bg-slate-800 border border-slate-600 p-1">
                 <TabsTrigger
                   value="new"

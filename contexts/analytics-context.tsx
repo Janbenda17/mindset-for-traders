@@ -15,7 +15,7 @@ interface AnalyticsContextType {
 const AnalyticsContext = createContext<AnalyticsContextType | undefined>(undefined)
 
 export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
-  const { getAllTrades, getAllJournalEntries, getAllMorningChecks } = useData()
+  const { getAllTrades, getAllJournalEntries, getAllMorningChecks, userId } = useData() // Add userId dependency
   const [analytics, setAnalytics] = useState<ComputedAnalytics | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -24,6 +24,13 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const morningChecks = getAllMorningChecks() || []
 
   useEffect(() => {
+    if (!userId) {
+      console.log("[v0] [Analytics] No user - skipping analytics computation")
+      setAnalytics(null)
+      setIsLoading(false)
+      return
+    }
+
     console.log("[v0] [Analytics] Recomputing analytics from live data...")
     setIsLoading(true)
 
@@ -45,7 +52,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [trades, journalEntries, morningChecks]) // Recompute when data changes
+  }, [trades, journalEntries, morningChecks, userId]) // Added userId to deps - recompute when user changes
 
   const refresh = () => {
     setIsLoading(true)

@@ -6,19 +6,23 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Users, Mail, Calendar, Trash2 } from "lucide-react"
+import { Users, Mail, Calendar, Trash2, Loader2 } from "lucide-react"
+import { supabase } from "@/lib/supabase/client"
 
 interface RegisteredUser {
   id: string
   email: string
   name: string
   stripeCustomerId?: string
+  createdAt: string
 }
 
 export default function AdminPage() {
   const { user } = useAuth()
   const router = useRouter()
   const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>([])
+  const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   useEffect(() => {
     // Only owner can access
@@ -27,26 +31,74 @@ export default function AdminPage() {
       return
     }
 
-    // Load all registered users
-    const users = JSON.parse(localStorage.getItem("trader-mindset-registered-users") || "[]")
-    setRegisteredUsers(users)
+    loadUsers()
   }, [user, router])
 
-  const handleDeleteUser = (userId: string) => {
+  const loadUsers = async () => {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, email, full_name, stripe_customer_id, created_at")
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+
+      const users = data.map((profile) => ({
+        id: profile.id,
+        email: profile.email || "",
+        name: profile.full_name || "",
+        stripeCustomerId: profile.stripe_customer_id || undefined,
+        createdAt: profile.created_at,
+      }))
+
+      setRegisteredUsers(users)
+    } catch (error) {
+      console.error("Error loading users:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
     if (!confirm("Opravdu chcete smazat tohoto uživatele?")) return
 
-    const users = registeredUsers.filter((u) => u.id !== userId)
-    localStorage.setItem("trader-mindset-registered-users", JSON.stringify(users))
-    setRegisteredUsers(users)
+    try {
+      setDeleting(userId)
+      const { error: authError } = await supabase.auth.admin.deleteUser(userId)
 
-    // Also clean up user's data
-    localStorage.removeItem(`user-${userId}-mindtrader-trades`)
-    localStorage.removeItem(`user-${userId}-mindtrader-morning-checks`)
-    localStorage.removeItem(`user-${userId}-user-journal-entries`)
+      if (authError) {
+        console.error("Error deleting auth user:", authError)
+        // Continue to delete profile even if auth deletion fails
+      }
+
+      // Delete the profile (this will cascade delete related data due to foreign keys)
+      const { error: profileError } = await supabase.from("profiles").delete().eq("user_id", userId)
+
+      if (profileError) throw profileError
+
+      // Update local state
+      setRegisteredUsers((prev) => prev.filter((u) => u.id !== userId))
+    } catch (error) {
+      console.error("Error deleting user:", error)
+      alert("Chyba při mazání uživatele")
+    } finally {
+      setDeleting(null)
+    }
   }
 
   if (!user?.isOwner) {
     return null
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -82,8 +134,17 @@ export default function AdminPage() {
                     {regUser.email}
                   </CardDescription>
                 </div>
-                <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(regUser.id)}>
-                  <Trash2 className="h-4 w-4 mr-2" />
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteUser(regUser.id)}
+                  disabled={deleting === regUser.id}
+                >
+                  {deleting === regUser.id ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
                   Smazat
                 </Button>
               </CardHeader>
@@ -91,7 +152,7 @@ export default function AdminPage() {
                 <div className="flex gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    ID: {regUser.id.slice(0, 8)}...
+                    {new Date(regUser.createdAt).toLocaleDateString("cs-CZ")}
                   </div>
                   {regUser.stripeCustomerId && (
                     <div className="flex items-center gap-1">

@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
+import { useAuth } from "@/contexts/auth-context" // Import useAuth to check if user exists
 
 interface Challenge {
   id: string
@@ -49,12 +50,17 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [userProgress, setUserProgress] = useState<UserChallengeProgress[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const { user } = useAuth() // Import useAuth to check if user exists
 
   // Load challenges and leaderboard
   useEffect(() => {
-    loadChallenges()
-    loadUserProgress()
-  }, [])
+    if (user) {
+      loadChallenges()
+      loadUserProgress()
+    } else {
+      setIsLoading(false)
+    }
+  }, [user])
 
   const loadChallenges = async () => {
     try {

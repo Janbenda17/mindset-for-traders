@@ -1,5 +1,6 @@
 // Two-Factor Authentication service
 import { createClient } from "@/lib/supabase/client"
+import { getScoped, setScoped } from "@/lib/storage"
 
 export type TwoFactorMethod = "email" | "sms" | "totp"
 
@@ -13,13 +14,14 @@ export interface TwoFactorSettings {
 }
 
 // Get 2FA settings from localStorage
-export function getTwoFactorSettings(): TwoFactorSettings {
+export function getTwoFactorSettings(userId?: string): TwoFactorSettings {
   if (typeof window === "undefined") {
     return { enabled: false, method: "email" }
   }
 
   try {
-    const userData = localStorage.getItem("user-data")
+    const userData = userId ? getScoped(userId, "user-data") : localStorage.getItem("user-data") // Fallback for backwards compat
+
     if (userData) {
       const parsed = JSON.parse(userData)
       return parsed.settings?.twoFactor || { enabled: false, method: "email" }
@@ -32,16 +34,25 @@ export function getTwoFactorSettings(): TwoFactorSettings {
 }
 
 // Save 2FA settings to localStorage
-export function saveTwoFactorSettings(settings: TwoFactorSettings): void {
+export function saveTwoFactorSettings(settings: TwoFactorSettings, userId?: string): void {
   if (typeof window === "undefined") return
 
   try {
-    const userData = JSON.parse(localStorage.getItem("user-data") || "{}")
+    const userData = userId
+      ? JSON.parse(getScoped(userId, "user-data") || "{}")
+      : JSON.parse(localStorage.getItem("user-data") || "{}")
+
     if (!userData.settings) {
       userData.settings = {}
     }
     userData.settings.twoFactor = settings
-    localStorage.setItem("user-data", JSON.stringify(userData))
+
+    if (userId) {
+      setScoped(userId, "user-data", JSON.stringify(userData))
+    } else {
+      localStorage.setItem("user-data", JSON.stringify(userData))
+    }
+
     window.dispatchEvent(new Event("settings-updated"))
   } catch (error) {
     console.error("Error saving 2FA settings:", error)

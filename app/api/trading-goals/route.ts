@@ -1,24 +1,35 @@
-import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { userId, goal } = body
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!userId || !goal) {
+    if (authError || !user) {
+      console.error("[v0] Unauthorized trading goal add attempt")
+      return NextResponse.json({ ok: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { goal } = body
+
+    if (!goal) {
       return NextResponse.json(
-        { ok: false, error: { code: "MISSING_FIELDS", message: "Missing userId or goal data" } },
+        { ok: false, error: { code: "MISSING_FIELDS", message: "Missing goal data" } },
         { status: 400 },
       )
     }
 
+    console.log("[v0] Adding trading goal for authenticated user:", user.id)
+
     const { data, error } = await supabase
       .from("trading_goals")
       .insert({
-        user_id: userId,
+        user_id: user.id,
         title: goal.title,
         description: goal.description,
         goal_type: goal.goalType,
@@ -41,6 +52,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: { code: error.code, message: error.message } }, { status: 500 })
     }
 
+    console.log("[v0] Trading goal inserted successfully with RLS protection")
     return NextResponse.json({ ok: true, data })
   } catch (error: any) {
     console.error("[v0] Error in trading goals API:", error)
@@ -50,20 +62,20 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId")
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!userId) {
-      return NextResponse.json(
-        { ok: false, error: { code: "MISSING_USER_ID", message: "Missing userId" } },
-        { status: 400 },
-      )
+    if (authError || !user) {
+      return NextResponse.json({ ok: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } }, { status: 401 })
     }
 
     const { data, error } = await supabase
       .from("trading_goals")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
 
     if (error) {
@@ -80,10 +92,20 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const body = await request.json()
-    const { userId, goalId, updates } = body
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!userId || !goalId || !updates) {
+    if (authError || !user) {
+      return NextResponse.json({ ok: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { goalId, updates } = body
+
+    if (!goalId || !updates) {
       return NextResponse.json(
         { ok: false, error: { code: "MISSING_FIELDS", message: "Missing required fields" } },
         { status: 400 },
@@ -94,7 +116,7 @@ export async function PATCH(request: Request) {
       .from("trading_goals")
       .update(updates)
       .eq("id", goalId)
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .select()
       .maybeSingle()
 

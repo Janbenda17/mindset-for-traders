@@ -141,10 +141,10 @@ export default function WeeklyReviewPage() {
   const [viewingReview, setViewingReview] = useState<any | null>(null)
 
   useEffect(() => {
-    if (!isLiveMode) {
-      loadVirtualData()
-    } else {
+    if (isLiveMode) {
       loadWeekData()
+    } else {
+      loadVirtualData()
     }
     loadSavedReviews()
   }, [isLiveMode])

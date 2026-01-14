@@ -150,20 +150,21 @@ export default function FailLogPage() {
   })
 
   useEffect(() => {
-    if (!isLiveMode) {
-      setEntries(generateDemoFails())
-      return
-    }
-
-    const failLogKey = getUserStorageKey("fail-log-entries")
-    const saved = localStorage.getItem(failLogKey)
-    if (saved) {
-      try {
-        setEntries(JSON.parse(saved))
-      } catch (e) {
-        console.error("Error loading fail log:", e)
+    if (isLiveMode) {
+      const failLogKey = getUserStorageKey("fail-log-entries")
+      const saved = localStorage.getItem(failLogKey)
+      if (saved) {
+        try {
+          setEntries(JSON.parse(saved))
+        } catch (e) {
+          console.error("Error loading fail log:", e)
+          setEntries([])
+        }
+      } else {
         setEntries([])
       }
+    } else {
+      setEntries(generateDemoFails())
     }
   }, [isLiveMode])
 

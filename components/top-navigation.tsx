@@ -34,7 +34,7 @@ import {
   AlertTriangle,
 } from "lucide-react"
 import LiveModeToggle from "@/components/live-mode-toggle"
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/auth-context"
 
 interface TopNavigationProps {
@@ -86,8 +86,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     if (hasLoadedOnce && !isLoading) return
 
     setIsLoading(true)
-
-    const supabase = createClient()
 
     const {
       data: { user },

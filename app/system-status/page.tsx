@@ -10,7 +10,8 @@ import { CheckCircle2, XCircle, AlertCircle, Database, RefreshCw, Trash2, Downlo
 import { useData } from "@/contexts/data-context"
 import { useGamification } from "@/contexts/gamification-context"
 import { useAuth } from "@/contexts/auth-context"
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client"
+import { exportData } from "@/utils/export-utils" // Import the exportData function
 
 interface SystemCheck {
   name: string
@@ -296,45 +297,6 @@ export default function SystemStatusPage() {
     }
   }
 
-  const resetWejzrAccount = () => {
-    if (confirm("Opravdu chceš resetovat účet wejzr a smazat všechna jeho data? Tato akce je nevratná!")) {
-      const keysToDelete = [
-        "mindtrader-trades",
-        "mindtrader-morning-checks",
-        "mindtrader-daily-entries",
-        "journal-entries",
-        "mindtrader-messages",
-        "initial-capital",
-        "trader-mindset-gamification",
-        "mindtrader-show-tour",
-        "trader-mindset-onboarding-completed",
-      ]
-
-      keysToDelete.forEach((key) => localStorage.removeItem(key))
-      runSystemChecks()
-      alert("Účet wejzr byl resetován! Uživatel může začít od nuly.")
-    }
-  }
-
-  const exportData = () => {
-    const data = {
-      trades: JSON.parse(localStorage.getItem("mindtrader-trades") || "[]"),
-      morningChecks: JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]"),
-      dailyEntries: JSON.parse(localStorage.getItem("mindtrader-daily-entries") || "[]"),
-      journalEntries: JSON.parse(localStorage.getItem("journal-entries") || "[]"),
-      profile: JSON.parse(localStorage.getItem("trader-mindset-profile") || "null"),
-      initialCapital: localStorage.getItem("initial-capital"),
-      exportedAt: new Date().toISOString(),
-    }
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `mindtrader-backup-${new Date().toISOString().split("T")[0]}.json`
-    a.click()
-  }
-
   const resetAllTrades = async () => {
     if (
       !confirm(
@@ -345,7 +307,6 @@ export default function SystemStatusPage() {
     }
 
     try {
-      const supabase = createClient()
       const { error } = await supabase
         .from("journal_entries")
         .delete()
@@ -466,10 +427,6 @@ export default function SystemStatusPage() {
         <Button onClick={exportData} variant="outline" className="gap-2 bg-transparent">
           <Download className="w-4 h-4" />
           Exportovat Data
-        </Button>
-        <Button onClick={resetWejzrAccount} variant="destructive" className="gap-2">
-          <Trash2 className="w-4 h-4" />
-          Reset účtu wejzr
         </Button>
         <Button onClick={resetAllTrades} variant="destructive" className="gap-2 bg-red-600 hover:bg-red-700">
           <Trash2 className="w-4 h-4" />

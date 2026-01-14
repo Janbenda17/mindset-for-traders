@@ -1,24 +1,35 @@
-import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { userId, review } = body
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!userId || !review) {
+    if (authError || !user) {
+      console.error("[v0] Unauthorized weekly review add attempt")
+      return NextResponse.json({ ok: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { review } = body
+
+    if (!review) {
       return NextResponse.json(
-        { ok: false, error: { code: "MISSING_FIELDS", message: "Missing userId or review data" } },
+        { ok: false, error: { code: "MISSING_FIELDS", message: "Missing review data" } },
         { status: 400 },
       )
     }
 
+    console.log("[v0] Adding weekly review for authenticated user:", user.id)
+
     const { data, error } = await supabase
       .from("weekly_reviews")
       .insert({
-        user_id: userId,
+        user_id: user.id,
         week_start_date: review.weekStartDate,
         week_end_date: review.weekEndDate,
         total_trades: review.totalTrades || 0,
@@ -43,6 +54,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: { code: error.code, message: error.message } }, { status: 500 })
     }
 
+    console.log("[v0] Weekly review inserted successfully with RLS protection")
     return NextResponse.json({ ok: true, data })
   } catch (error: any) {
     console.error("[v0] Error in weekly review API:", error)
@@ -52,20 +64,20 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId")
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!userId) {
-      return NextResponse.json(
-        { ok: false, error: { code: "MISSING_USER_ID", message: "Missing userId" } },
-        { status: 400 },
-      )
+    if (authError || !user) {
+      return NextResponse.json({ ok: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } }, { status: 401 })
     }
 
     const { data, error } = await supabase
       .from("weekly_reviews")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .order("week_start_date", { ascending: false })
 
     if (error) {

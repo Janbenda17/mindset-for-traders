@@ -30,12 +30,15 @@ import {
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
 import { cn } from "@/lib/utils"
-import { useData } from "@/contexts/data-context"
 import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useTradingStyle } from "@/contexts/trading-style-context"
 import { generateVirtualDailyTrackerData } from "@/data/demo-daily-tracker"
 import { useAuth } from "@/contexts/auth-context" // Import useAuth
+import { useToast } from "@/components/ui/use-toast" // Import useToast
+import { useLiveMode } from "@/contexts/live-mode-context" // Import isLiveMode
+import { useData } from "@/contexts/data-context" // Import useData
+import { createBrowserClient } from "@/lib/supabase/client"
 
 interface MorningCheckData {
   id: string
@@ -131,9 +134,9 @@ const stageData = [
   },
   {
     id: 4,
-    name: "Execution",
+    name: "Record Trades",
     icon: Clock,
-    href: "/execution",
+    href: "/record-trades",
     color: "from-blue-500 to-indigo-500",
     bgColor: "bg-gradient-to-br from-blue-500/20 to-indigo-500/20",
     borderColor: "border-blue-500/30",
@@ -150,8 +153,11 @@ const stageData = [
 ]
 
 export default function DailyTrackerPage() {
-  const { isLiveMode } = useData()
+  const { isLiveMode } = useLiveMode()
+  const supabase = createBrowserClient()
   const router = useRouter()
+  const { toast } = useToast() // Initialize useToast
+  const { morningChecks, trades, dailyIntentions, tradingPlans } = useData() // Get from DataContext
 
   const { stages } = useDailyStage()
 
@@ -162,6 +168,7 @@ export default function DailyTrackerPage() {
   const [activeTab, setActiveTab] = useState("today")
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
   const [virtualData, setVirtualData] = useState<any>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0) // State for triggering refresh
 
   useEffect(() => {
     if (!isLiveMode) {
@@ -169,67 +176,58 @@ export default function DailyTrackerPage() {
       console.log("[v0] Virtual data generated:", data)
       setVirtualData(data)
     }
+    // In LIVE mode, virtualData stays null - no demo data
   }, [isLiveMode])
 
   const loadEntries = () => {
-    if (!isLiveMode) {
-      // Virtual mode uses virtualData set in useEffect
-      return
-    } else {
-      // Live mode logic
-      const morningChecksKey = user?.id ? `user-${user.id}-mindtrader-morning-checks` : "mindtrader-morning-checks"
-      const intentionsKey = user?.id ? `user-${user.id}-daily-intentions` : "daily-intentions"
-      const plansKey = user?.id ? `user-${user.id}-trading-plans` : "trading-plans"
-      const tradesKey = user?.id ? `user-${user.id}-trade-records` : "trade-records"
+    if (isLiveMode) {
+      console.log("[v0] LIVE MODE: Loading entries from Supabase")
 
-      const morningChecks = JSON.parse(localStorage.getItem(morningChecksKey) || "[]")
-      const intentions = JSON.parse(localStorage.getItem(intentionsKey) || "[]")
-      const plans = JSON.parse(localStorage.getItem(plansKey) || "[]")
-      const allTrades = JSON.parse(localStorage.getItem(tradesKey) || "[]")
+      // Load from Supabase via DataContext instead of localStorage
+      // The DataContext already loads all data, so we just need to map it
+      // const { morningChecks, trades } = useData() // Get from DataContext - This line was moved outside the function
 
+      // Construct daily summaries from DataContext data
       const combinedData: DailySummary[] = []
-      const dates = new Set([
-        ...morningChecks.map((m: any) => m.date),
-        ...intentions.map((i: any) => i.date),
-        ...plans.map((p: any) => p.date),
-      ])
+      const dates = new Set(morningChecks.map((m: any) => m.date))
 
       dates.forEach((date) => {
         const morningCheck = morningChecks.find((m: any) => m.date === date)
-        const intention = intentions.find((i: any) => i.date === date)
-        const plan = plans.find((p: any) => p.date === date)
-        const trades = allTrades.filter((t: Trade) => t.date === date)
+        const dayTrades = trades.filter((t: any) => t.date === date)
+        const intention = dailyIntentions.find((i: any) => i.date === date)
+        const plan = tradingPlans.find((p: any) => p.date === date)
 
         // Only push if at least one stage is present for the date
-        if (morningCheck || intention || plan || trades.length > 0) {
+        if (morningCheck || intention || plan || dayTrades.length > 0) {
           let stagesCompleted = 0
           if (morningCheck) stagesCompleted++
           if (intention) stagesCompleted++
           if (plan) stagesCompleted++
-          if (trades.length > 0) stagesCompleted++
-
-          const overallScore = morningCheck?.score || 0
+          if (dayTrades.length > 0) stagesCompleted++
 
           combinedData.push({
-            date: date as string,
+            date,
             morningCheck,
             intention,
             plan,
-            trades,
-            overallScore,
-            stagesCompleted,
+            trades: dayTrades,
+            overallScore: morningCheck?.score || 0,
+            stagesCompleted: stagesCompleted,
           })
         }
       })
 
       combinedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       setEntries(combinedData)
+      console.log(`[v0] Loaded ${combinedData.length} daily entries from Supabase data`)
+    } else {
+      return
     }
   }
 
   useEffect(() => {
     loadEntries()
-  }, [isLiveMode, user?.id]) // Re-fetch entries when user changes
+  }, [isLiveMode, user?.id, refreshTrigger, morningChecks, trades, dailyIntentions, tradingPlans]) // Re-fetch entries when user changes or refreshTrigger updates, or context data changes
 
   const todayEntry = isLiveMode
     ? entries.find((e) => e.date === format(new Date(), "yyyy-MM-dd"))
@@ -251,20 +249,10 @@ export default function DailyTrackerPage() {
     return { text: "Neobchoduj 🛑", color: "from-red-500 to-rose-500" }
   }
 
-  // Calculate readinessScore here
-  // const readinessScore = todayEntry?.morningCheck?.score ?? null; // Moved up
-
-  const generateTradingDecision = (morningCheck?: MorningCheckData, readinessScore?: number | null) => {
-    if (!morningCheck && !virtualData) {
-      return {
-        message: "Vyplň Morning Check pro získání doporučení.",
-        tips: ["Dokončete ranní vyhodnocení pro personalizované tipy"],
-        details: ["Morning Check nevyplněn"],
-      }
-    }
-
-    const currentMorningCheck = morningCheck || virtualData?.morningCheck
-    const currentReadinessScore = readinessScore ?? virtualData?.todayScore ?? null
+  // Generate trading decision based on readiness score and morning check data
+  const generateTradingDecision = (morningCheckData?: MorningCheckData, score?: number | null) => {
+    const currentMorningCheck = morningCheckData || virtualData?.morningCheck
+    const currentReadinessScore = score ?? virtualData?.todayScore ?? null
 
     if (!currentMorningCheck || currentReadinessScore === undefined || currentReadinessScore === null) {
       return {
@@ -274,12 +262,11 @@ export default function DailyTrackerPage() {
       }
     }
 
-    // CHANGE: Simplified generateTradingDecision to avoid duplicate tips and added positive reinforcement
     let message = ""
     const tips: string[] = []
     const details: string[] = []
 
-    // Analyze metrics
+    // Analyze metrics for potential issues
     const poorSleep = currentMorningCheck.sleepQuality < 6 || currentMorningCheck.sleepHours < 6
     const highStress = currentMorningCheck.stressLevel > 7
     const lowFocus = currentMorningCheck.focus < 6
@@ -445,6 +432,125 @@ export default function DailyTrackerPage() {
   }))
 
   const isMorningCheckCompleted = todayStages.find((s) => s.id === 1)?.completed || false
+
+  // Update handleStageComplete to save to Supabase in LIVE mode
+  const handleStageComplete = async (stageNum: number, data: Record<string, unknown>) => {
+    try {
+      if (stageNum === 1) {
+        // Stage 1 = Morning Check
+        if (isLiveMode) {
+          const { error } = await supabase.from("morning_checks").upsert(
+            {
+              user_id: user?.id,
+              date: new Date().toISOString().split("T")[0],
+              sleep_hours: data.sleepHours || 0,
+              sleep_quality: data.sleepQuality || 0,
+              energy_level: data.energyLevel || 0,
+              stress_level: data.stressLevel || 0,
+              focus: data.focus || 0,
+              physical_health: data.physicalHealth || 0,
+              emotional_state: data.emotionalState || 0,
+              exercised: data.exercised || false,
+              meditation: data.meditationTime || 0,
+              morning_routine: data.morningRoutine || false,
+              hydration: data.hydration || false,
+              score: data.score || 0,
+            },
+            { onConflict: "user_id,date" },
+          )
+
+          if (error) throw error
+          console.log("[v0] Morning check saved to Supabase for LIVE mode")
+
+          setRefreshTrigger((prev) => prev + 1)
+        } else {
+          // Keep existing localStorage logic for VIRTUAL mode
+          // In virtual mode, we don't need to save to localStorage here as virtualData is static for the session
+          // If you were to implement a virtual mode that persists, you would add localStorage logic here.
+          console.log("[v0] Virtual mode: Morning check data not saved to localStorage.")
+        }
+      } else if (stageNum === 2) {
+        // Stage 2 = Daily Intention
+        if (isLiveMode) {
+          const { error } = await supabase.from("daily_intentions").upsert(
+            {
+              user_id: user?.id,
+              date: new Date().toISOString().split("T")[0],
+              goals: data.goals || "",
+              max_risk_percent: data.maxRiskPercent || 0,
+              emotional_goal: data.emotionalGoal || "",
+              strategy: data.strategy || "",
+            },
+            { onConflict: "user_id,date" },
+          )
+
+          if (error) throw error
+          console.log("[v0] Daily intention saved to Supabase for LIVE mode")
+          setRefreshTrigger((prev) => prev + 1)
+        } else {
+          console.log("[v0] Virtual mode: Daily intention data not saved to localStorage.")
+        }
+      } else if (stageNum === 3) {
+        // Stage 3 = Trading Plan
+        if (isLiveMode) {
+          const { error } = await supabase.from("trading_plans").upsert(
+            {
+              user_id: user?.id,
+              date: new Date().toISOString().split("T")[0],
+              setups: data.setups || "",
+              pairs: data.pairs || "",
+              timeframes: data.timeframes || "",
+              entry_rules: data.entryRules || "",
+              exit_rules: data.exitRules || "",
+              stop_loss: data.stopLoss || "",
+              take_profit: data.takeProfit || "",
+              market_analysis: data.marketAnalysis || "",
+              key_levels: data.keyLevels || "",
+              notes: data.notes || "",
+            },
+            { onConflict: "user_id,date" },
+          )
+
+          if (error) throw error
+          console.log("[v0] Trading plan saved to Supabase for LIVE mode")
+          setRefreshTrigger((prev) => prev + 1)
+        } else {
+          console.log("[v0] Virtual mode: Trading plan data not saved to localStorage.")
+        }
+      } else if (stageNum === 4) {
+        // Stage 4 = Record Trades
+        if (isLiveMode) {
+          // This part is more complex as it involves an array of trades.
+          // We might need to fetch existing trades for the day and then update/add.
+          // For simplicity here, we'll assume 'data' contains an array of trades to be added.
+          // A more robust solution would involve fetching, merging, and then upserting.
+          const dailyTrades = (data.trades as Trade[]) || []
+          const date = new Date().toISOString().split("T")[0]
+
+          for (const trade of dailyTrades) {
+            const { error } = await supabase.from("trade_records").upsert({
+              user_id: user?.id,
+              date: date,
+              pair: trade.pair,
+              direction: trade.direction,
+              entry_price: trade.entryPrice,
+              exit_price: trade.exitPrice,
+              pnl: trade.pnl,
+              notes: trade.notes,
+            })
+            if (error) throw error
+          }
+          console.log("[v0] Trade records saved to Supabase for LIVE mode")
+          setRefreshTrigger((prev) => prev + 1)
+        } else {
+          console.log("[v0] Virtual mode: Trade records data not saved to localStorage.")
+        }
+      }
+    } catch (error) {
+      console.error(`[v0] Error saving stage ${stageNum}:`, error)
+      toast({ title: "Error", description: `Failed to save stage ${stageNum}` })
+    }
+  }
 
   return (
     <div className="min-h-screen p-3 sm:p-6 space-y-4 sm:space-y-6 pt-4 sm:pt-6">
@@ -776,10 +882,12 @@ export default function DailyTrackerPage() {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {stageData.map((stage, index) => {
               // Use virtualData for stage status in virtual mode
-              const isCompleted =
-                !isLiveMode || (todayEntry?.morningCheck && stages.find((s) => s.id === stage.id)?.completed)
-              const isUnlocked =
-                !isLiveMode || (todayEntry?.morningCheck && stages.find((s) => s.id === stage.id)?.unlocked)
+              const isCompleted = !isLiveMode
+                ? true
+                : todayEntry?.morningCheck && stages.find((s) => s.id === stage.id)?.completed
+              const isUnlocked = !isLiveMode
+                ? true
+                : todayEntry?.morningCheck && stages.find((s) => s.id === stage.id)?.unlocked
               const isActive = !isCompleted && isUnlocked
 
               return (

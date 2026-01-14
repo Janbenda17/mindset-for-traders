@@ -23,10 +23,20 @@ export interface ComputedAnalytics {
     consistencyScore: number
     revengeIncidents: number
   }
+  progression?: {
+    currentDay: number
+    daysCompleted: number
+    todayComplete: boolean
+    morningCheckDone: boolean
+    tradesRecorded: number
+    canAdvance: boolean
+    isUnlocked: boolean
+    requirementsText: string[]
+  }
   stages: {
     shouldUnlockStage2: boolean // Has morning check data
     shouldUnlockStage3: boolean // Has daily intention data
-    shouldUnlockStage4: boolean // Has trading plan
+    shouldUnlockStage4: boolean // Has trades recorded
     shouldUnlockStage5: boolean // Has trades recorded
   }
   weeklyInsights: {
@@ -131,7 +141,7 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
   // Stage progression conditions
   const shouldUnlockStage2 = morningChecks.length > 0
   const shouldUnlockStage3 = shouldUnlockStage2 && journalEntries.some((j) => j.type === "intention")
-  const shouldUnlockStage4 = shouldUnlockStage3 && journalEntries.some((j) => j.type === "plan")
+  const shouldUnlockStage4 = shouldUnlockStage3 && trades.length > 0
   const shouldUnlockStage5 = shouldUnlockStage4 && trades.length > 0
 
   // Weekly insights (last 7 days)
@@ -181,6 +191,30 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
   if (revengeIncidents > 0) nextWeekFocus.push("Eliminate revenge trading - implement 30min pause after losses")
   if (nextWeekFocus.length === 0) nextWeekFocus.push("Maintain current performance and consistency")
 
+  // Progression tracking for 10-day system
+  const tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000)
+  const last10DaysTrades = trades.filter((t) => {
+    const tradeDate = new Date(t.date || t.created_at)
+    return tradeDate >= tenDaysAgo && tradeDate <= now
+  })
+
+  const currentDay = new Date().getDate()
+  const daysCompleted =
+    last10DaysTrades.length > 0
+      ? Math.max(...last10DaysTrades.map((t) => new Date(t.date || t.created_at).getDate()))
+      : 0
+  const todayComplete = last10DaysTrades.some((t) => new Date(t.date || t.created_at).getDate() === currentDay)
+  const morningCheckDone = morningChecks.some((mc) => new Date(mc.date).getDate() === currentDay)
+  const tradesRecorded = last10DaysTrades.filter(
+    (t) => new Date(t.date || t.created_at).getDate() === currentDay,
+  ).length
+  const canAdvance = todayComplete
+  const isUnlocked = daysCompleted >= 10
+  const requirementsText = []
+
+  if (!morningCheckDone) requirementsText.push("Complete morning check")
+  if (tradesRecorded === 0) requirementsText.push("Record trades for today")
+
   return {
     summary: {
       totalTrades: trades.length,
@@ -199,6 +233,16 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
       disciplineScore,
       consistencyScore,
       revengeIncidents,
+    },
+    progression: {
+      currentDay,
+      daysCompleted,
+      todayComplete,
+      morningCheckDone,
+      tradesRecorded,
+      canAdvance,
+      isUnlocked,
+      requirementsText,
     },
     stages: {
       shouldUnlockStage2,

@@ -4,11 +4,11 @@ import type React from "react"
 
 import { useToast } from "@/hooks/use-toast"
 import { format } from "date-fns"
-import { useRouter } from "next/navigation" // Changed from useRouterNav to useRouter
-import { useDailyStage } from "@/contexts/daily-stage-context" // Správný import pro completeStage
-import { useData } from "@/contexts/data-context" // Import addTrade from data context
-import { useAuth } from "@/contexts/auth-context" // Import useAuth hook
-import { TrendingUp, DollarSign, BarChart3, Brain } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useDailyStage } from "@/contexts/daily-stage-context"
+import { useData } from "@/contexts/data-context"
+import { useAuth } from "@/contexts/auth-context"
+import { TrendingUp, DollarSign, BarChart3, Brain, Zap } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -87,10 +87,10 @@ const EMOTIONS_AFTER = ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Pou
 
 export function RecordTrades() {
   const { toast } = useToast()
-  const router = useRouter() // Changed from useRouterNav to useRouter
-  const { completeStage } = useDailyStage() // Použít hook pro získání completeStage funkce
-  const { addTrade, deleteTrade } = useData() // Import addTrade from data context
-  const { user } = useAuth() // Use the useAuth hook to get user information
+  const router = useRouter()
+  const { completeStage } = useDailyStage()
+  const { addTrade, deleteTrade } = useData()
+  const { user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [todayPlan, setTodayPlan] = useState<TradingPlanData | null>(null)
   const [morningCheck, setMorningCheck] = useState<MorningCheckData | null>(null)
@@ -149,18 +149,13 @@ export function RecordTrades() {
     const [openHour, openMin] = openTime.split(":").map(Number)
     const [closeHour, closeMin] = closeTime.split(":").map(Number)
 
-    // Vytvoření Date objektů pro přesný výpočet
     const openDateTime = new Date(`${openDate}T${openTime}:00`)
     const closeDateTime = new Date(`${closeDate}T${closeTime}:00`)
 
-    // Výpočet rozdílu v minutách
     const durationMinutes = Math.floor((closeDateTime.getTime() - openDateTime.getTime()) / (1000 * 60))
 
-    // Scalp: 1-15 minut
     if (durationMinutes >= 1 && durationMinutes <= 15) return "Scalp"
-    // Day Trade: 16 minut - 24 hodin (1440 minut)
     if (durationMinutes >= 16 && durationMinutes <= 1440) return "Day Trade"
-    // Swing: 25+ hodin (1500+ minut)
     if (durationMinutes >= 1500) return "Swing"
 
     return ""
@@ -182,8 +177,6 @@ export function RecordTrades() {
       setCurrentTrade((prev) => ({ ...prev, tradeType }))
     }
   }, [currentTrade.openDate, currentTrade.openTime, currentTrade.closeDate, currentTrade.closeTime])
-
-  // useEffect pro P&L výpočet odstraněn
 
   useEffect(() => {
     const today = format(new Date(), "yyyy-MM-dd")
@@ -211,7 +204,7 @@ export function RecordTrades() {
     const allTrades = JSON.parse(localStorage.getItem(tradesKey) || "[]")
     const todayTrades = allTrades.filter((t: Trade) => t.date === today)
     setTrades(todayTrades)
-  }, [user?.id]) // Dependency array includes user?.id to re-run when user changes
+  }, [user?.id])
 
   const handleAddTrade = () => {
     if (!currentTrade.pair || !currentTrade.pips || !currentTrade.openTime || !currentTrade.closeTime) {
@@ -260,7 +253,6 @@ export function RecordTrades() {
       behaviorDescription: currentTrade.behaviorDescription as string,
       tags: tagsArray,
       notes: currentTrade.notes as string,
-      // Resetování datumů otevření a zavření pro nový trade
       openDate: currentTrade.openDate as string,
       closeDate: currentTrade.closeDate as string,
     }
@@ -271,7 +263,6 @@ export function RecordTrades() {
 
     setCurrentTrade({
       date: format(new Date(), "yyyy-MM-dd"),
-      title: "", // Reset title field if it were to be added back
       pair: currentTrade.pair,
       direction: "LONG",
       openTime: "",
@@ -297,7 +288,6 @@ export function RecordTrades() {
       behaviorDescription: "",
       tags: [],
       notes: "",
-      // Resetování datumů otevření a zavření pro nový trade
       openDate: format(new Date(), "yyyy-MM-dd"),
       closeDate: format(new Date(), "yyyy-MM-dd"),
     })
@@ -327,22 +317,24 @@ export function RecordTrades() {
   const todayPnL = trades.reduce((sum, t) => sum + t.pnl, 0)
 
   return (
-    <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20 p-6 border border-blue-500/30">
-        <div className="absolute inset-0 bg-grid-white/[0.02]" />
+    <div className="space-y-6 pb-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600/30 via-purple-600/20 to-pink-600/10 p-8 border border-blue-500/20 backdrop-blur-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent" />
         <div className="relative flex items-center gap-4">
-          <div className="p-3 bg-blue-500/20 rounded-xl backdrop-blur-sm">
-            <TrendingUp className="w-8 h-8 text-blue-400" />
+          <div className="p-4 bg-gradient-to-br from-blue-500/30 to-blue-600/20 rounded-xl backdrop-blur-sm border border-blue-400/20 shadow-lg">
+            <TrendingUp className="w-7 h-7 text-blue-300" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white mb-1">Zaznamenat obchod</h2>
-            <p className="text-gray-300 text-sm">Zaznamenejte svůj trading a analyzujte svůj výkon</p>
+            <h1 className="text-3xl font-bold text-white mb-1">Zaznamenat obchod</h1>
+            <p className="text-blue-200/80 text-sm">
+              Zaznamenejte své obchody a získejte hlubší náhled na svůj trading
+            </p>
           </div>
         </div>
       </div>
 
-      <Card className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 border-slate-600 backdrop-blur-sm">
-        <CardHeader className="pb-3">
+      <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50 backdrop-blur-lg shadow-xl">
+        <CardHeader className="pb-4">
           <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-emerald-400" />
             Dnešní přehled
@@ -350,19 +342,19 @@ export function RecordTrades() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-3 bg-slate-700/50 rounded-lg">
-              <p className="text-xs text-gray-400 mb-1">Celkem obchodů</p>
-              <p className="text-2xl font-bold text-white">{trades.length}</p>
+            <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-xl border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
+              <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">Celkem obchodů</p>
+              <p className="text-3xl font-bold text-white">{trades.length}</p>
             </div>
-            <div className="text-center p-3 bg-slate-700/50 rounded-lg">
-              <p className="text-xs text-gray-400 mb-1">Win Rate</p>
-              <p className="text-2xl font-bold text-white">
+            <div className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-600/5 rounded-xl border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
+              <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">Win Rate</p>
+              <p className="text-3xl font-bold text-white">
                 {trades.length > 0 ? Math.round((trades.filter((t) => t.pnl > 0).length / trades.length) * 100) : 0}%
               </p>
             </div>
-            <div className="text-center p-3 bg-slate-700/50 rounded-lg">
-              <p className="text-xs text-gray-400 mb-1">P&L</p>
-              <p className={cn("text-2xl font-bold", todayPnL >= 0 ? "text-emerald-400" : "text-rose-400")}>
+            <div className="p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 rounded-xl border border-emerald-500/20 hover:border-emerald-400/40 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10">
+              <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">P&L</p>
+              <p className={cn("text-3xl font-bold", todayPnL >= 0 ? "text-emerald-400" : "text-rose-400")}>
                 {todayPnL >= 0 ? "+" : ""}${todayPnL.toFixed(2)}
               </p>
             </div>
@@ -371,15 +363,14 @@ export function RecordTrades() {
       </Card>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Trade Info Section */}
-        <Card className="bg-slate-800/90 border-slate-600">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+        <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-700/50 backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardHeader className="pb-4 border-b border-slate-700/50">
+            <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-blue-400" />
               Základní informace
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5 pt-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-gray-300 block mb-2">Měnový pár *</label>
@@ -469,7 +460,6 @@ export function RecordTrades() {
               </div>
             </div>
 
-            {/* Performance */}
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-sm text-gray-300 block mb-2">Pips *</label>
@@ -507,15 +497,14 @@ export function RecordTrades() {
           </CardContent>
         </Card>
 
-        {/* Psychology Section */}
-        <Card className="bg-slate-800/90 border-slate-600">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+        <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-700/50 backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardHeader className="pb-4 border-b border-slate-700/50">
+            <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
               <Brain className="w-5 h-5 text-purple-400" />
               Psychologická analýza
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5 pt-6">
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-sm text-gray-300 block mb-2">
@@ -604,7 +593,6 @@ export function RecordTrades() {
               </div>
             </div>
 
-            {/* Reasons */}
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-gray-300 block mb-2">Důvod vstupu</label>
@@ -638,7 +626,6 @@ export function RecordTrades() {
               </div>
             </div>
 
-            {/* Behavior Checkboxes */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm text-gray-300">
                 <input
@@ -678,7 +665,6 @@ export function RecordTrades() {
               </label>
             </div>
 
-            {/* Behavior Description */}
             <div>
               <label className="text-sm text-gray-300 block mb-2">Popis chování</label>
               <textarea
@@ -690,7 +676,6 @@ export function RecordTrades() {
               />
             </div>
 
-            {/* Tags & Notes */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-gray-300 block mb-2">Tagy (oddělené čárkou)</label>
@@ -716,36 +701,38 @@ export function RecordTrades() {
           </CardContent>
         </Card>
 
-        {/* Submit Button */}
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-6 text-lg"
+          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold py-7 text-lg rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
+          <Zap className="w-5 h-5" />
           {isLoading ? "Ukládám..." : "Uložit obchod"}
         </Button>
       </form>
 
-      {/* Today's Trades List */}
       {trades.length > 0 && (
-        <Card className="bg-slate-800/90 border-slate-600">
-          <CardHeader>
-            <CardTitle className="text-white">Dnešní obchody ({trades.length})</CardTitle>
+        <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-700/50 backdrop-blur-lg shadow-lg">
+          <CardHeader className="pb-4 border-b border-slate-700/50">
+            <CardTitle className="text-lg font-semibold text-white">Dnešní obchody ({trades.length})</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3 pt-6">
             {trades.map((trade) => (
-              <div key={trade.id} className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
-                <div className="flex justify-between items-start mb-2">
+              <div
+                key={trade.id}
+                className="bg-gradient-to-r from-slate-700/30 to-slate-800/30 rounded-xl p-4 border border-slate-600/50 hover:border-slate-500/80 hover:bg-gradient-to-r hover:from-slate-700/50 hover:to-slate-800/50 transition-all duration-300 hover:shadow-lg"
+              >
+                <div className="flex justify-between items-start mb-3">
                   <div>
-                    <p className="text-white font-semibold">
-                      {trade.direction} {trade.pair}
+                    <p className="text-white font-semibold text-lg">
+                      {trade.direction === "LONG" ? "📈" : "📉"} {trade.direction} {trade.pair}
                     </p>
                     <p className="text-sm text-gray-400">
                       {trade.openTime} - {trade.closeTime} • {trade.session}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className={`text-lg font-bold ${trade.pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    <p className={`text-xl font-bold ${trade.pnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                       {trade.pnl >= 0 ? "+" : ""}${trade.pnl.toFixed(2)}
                     </p>
                     <p className="text-sm text-gray-400">{trade.pips} pips</p>

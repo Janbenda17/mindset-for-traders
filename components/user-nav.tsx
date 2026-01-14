@@ -16,6 +16,7 @@ import { useLanguage } from "@/contexts/language-context"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Settings, User, LogOut, Crown } from "lucide-react"
+import { getScoped } from "@/lib/storage"
 
 export function UserNav() {
   const { user, logout } = useAuth()
@@ -28,7 +29,7 @@ export function UserNav() {
   useEffect(() => {
     const loadUserData = () => {
       if (user) {
-        const userData = localStorage.getItem(`user_${user.id}`)
+        const userData = user.id ? getScoped(user.id, "user-data") : null
         if (userData) {
           const parsed = JSON.parse(userData)
           setDisplayName(parsed.displayName || user.name || "User")

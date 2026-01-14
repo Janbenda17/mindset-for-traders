@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client" // Import singleton directly
 
 interface AdminContextType {
   isAdmin: boolean
@@ -44,7 +44,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const supabase = createClient()
       const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", user.id).maybeSingle()
 
       setIsAdmin(profile?.role === "admin")
@@ -86,7 +85,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }
 
   const checkSystemHealth = async (): Promise<SystemHealthCheck> => {
-    const supabase = createClient()
     const health: SystemHealthCheck = {
       authOk: false,
       profileOk: false,

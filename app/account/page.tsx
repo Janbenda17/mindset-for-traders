@@ -1,62 +1,62 @@
 "use client"
 
+import { CardFooter } from "@/components/ui/card"
+
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Textarea } from "@/components/ui/textarea"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   User,
+  Lock,
   Bell,
   Shield,
+  Eye,
+  EyeOff,
+  Upload,
   Download,
   Trash2,
   Crown,
-  Activity,
-  TrendingUp,
-  Target,
-  Clock,
-  Database,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  AlertTriangle,
-  CheckCircle,
-  Save,
-  Sparkles,
-  Upload,
-  Smartphone,
-  Monitor,
-  MapPin,
-  Key,
-  Star,
-  ArrowRight,
-  Brain,
   Check,
-  Loader2,
-  BarChart3,
-  Phone,
-  Send,
+  Smartphone,
+  Mail,
   Copy,
+  AlertTriangle,
+  TrendingUp,
+  Award,
+  Star,
   Zap,
   Heart,
+  Activity,
+  Loader2,
+  Save,
+  BarChart3,
+  Clock,
+  Brain,
+  Sparkles,
+  Key,
+  CheckCircle,
+  Monitor,
+  MapPin,
+  Database,
   ExternalLink,
+  ArrowRight,
+  Target,
+  Phone,
+  Send,
 } from "lucide-react"
-import { useAuth } from "@/contexts/auth-context"
-import { useSubscription } from "@/contexts/subscription-context"
-import { useLanguage } from "@/contexts/language-context"
-import { useGamification } from "@/contexts/gamification-context"
 import {
   getUserData,
   saveUserData,
@@ -67,7 +67,13 @@ import {
 } from "@/utils/storage-utils"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter, useSearchParams } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client"
+
+import { useAuth } from "@/contexts/auth-context"
+import { useSubscription } from "@/contexts/subscription-context"
+import { useGamification } from "@/contexts/gamification-context"
+import { useLanguage } from "@/contexts/language-context"
+import { useLiveMode } from "@/contexts/live-mode-context"
 
 export default function AccountPage() {
   const { user, logout } = useAuth()
@@ -84,6 +90,7 @@ export default function AccountPage() {
   const { language, setLanguage, t } = useLanguage()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { data: gamificationData } = useGamification()
+  const { isLiveMode, toggleLiveMode } = useLiveMode()
 
   const [activeTab, setActiveTab] = useState("profile")
   const [loading, setLoading] = useState(false)
@@ -503,8 +510,7 @@ export default function AccountPage() {
 
     setChangingPassword(true)
     try {
-      const supabase = createClient()
-
+      // Use imported singleton
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       })
@@ -776,7 +782,7 @@ export default function AccountPage() {
     setTwoFactorContact("")
     setVerificationCode("")
     setPendingCode("")
-    setShowDemoCode(false)
+    setShow2FADialog(false)
     setShow2FADialog(true)
   }
 
@@ -983,7 +989,7 @@ export default function AccountPage() {
                   {/* Avatar Section */}
                   <div className="relative group">
                     <Avatar className="h-28 w-28 ring-4 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all">
-                      <AvatarImage src={avatarUrl || "/placeholder.svg"} />
+                      <AvatarImage src={avatarUrl || "/trader-avatar.png"} />
                       <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white text-3xl font-bold">
                         {name
                           ?.split(" ")
@@ -1034,6 +1040,12 @@ export default function AccountPage() {
                         <Zap className="w-3 h-3 mr-1" />
                         {currentXP} XP
                       </Badge>
+                      {isLiveMode && (
+                        <Badge className="bg-red-500/20 text-red-300 border-red-500/30">
+                          <Award className="w-3 h-3 mr-1 fill-red-400" />
+                          Live Mode
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
@@ -1707,6 +1719,29 @@ export default function AccountPage() {
 
           {/* SUBSCRIPTION TAB */}
           <TabsContent value="subscription" className="space-y-8">
+            {/* Live Mode Toggle */}
+            <div className="flex items-center justify-center space-x-4 p-6 border border-yellow-500/20 rounded-xl bg-yellow-900/10 backdrop-blur-lg">
+              <div className="flex items-center gap-3">
+                <Award className="h-6 w-6 text-yellow-400" />
+                <h3 className="text-lg font-bold text-yellow-400">{language === "cs" ? "Režim Live" : "Live Mode"}</h3>
+              </div>
+              <Separator orientation="vertical" className="bg-yellow-500/30 h-8" />
+              <div className="flex items-center gap-2">
+                <p className={`font-medium transition-colors ${isLiveMode ? "text-white" : "text-gray-400"}`}>
+                  {language === "cs" ? "Vypnuto" : "Off"}
+                </p>
+                <Switch checked={isLiveMode} onCheckedChange={toggleLiveMode} />
+                <p className={`font-medium transition-colors ${isLiveMode ? "text-white" : "text-gray-400"}`}>
+                  {language === "cs" ? "Zapnuto" : "On"}
+                </p>
+              </div>
+              <p className="text-xs text-yellow-500/80 ml-4">
+                {language === "cs"
+                  ? "Přepněte do Live režimu pro reálné obchodování a statistiky."
+                  : "Switch to Live mode for real trading and statistics."}
+              </p>
+            </div>
+
             {/* Billing Toggle */}
             <div className="flex items-center justify-center space-x-4">
               <span
@@ -1736,7 +1771,7 @@ export default function AccountPage() {
               <Card
                 className={`relative flex flex-col border-2 transition-all duration-300 hover:shadow-xl ${
                   subscription?.plan !== "premium"
-                    ? "border-blue-500/50 bg-slate-900/80"
+                    ? "border-blue-500/50 bg-slate-900"
                     : "border-slate-700/50 bg-slate-900/60"
                 } backdrop-blur-xl`}
               >
@@ -1791,7 +1826,7 @@ export default function AccountPage() {
                 className={`relative flex flex-col border-2 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl ${
                   subscription?.plan === "premium"
                     ? "border-yellow-500/50 shadow-yellow-500/10 bg-gradient-to-br from-purple-900/60 via-purple-800/40 to-pink-900/60"
-                    : "border-blue-600 shadow-blue-600/10 bg-slate-900/80"
+                    : "border-blue-600 shadow-blue-600/10 bg-slate-900"
                 } backdrop-blur-xl`}
               >
                 <div className="absolute -top-5 left-0 right-0 flex justify-center">

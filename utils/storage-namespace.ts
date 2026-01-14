@@ -1,16 +1,20 @@
 // Storage Namespace Utility
 // Ensures each user has completely separate data
 
+import { scopedKey as createScopedKey, getScoped, setScoped, removeScoped } from "@/lib/storage"
+
 export function getUserStorageKey(baseKey: string): string {
   if (typeof window === "undefined") return baseKey
 
+  // This function is deprecated - use scopedKey(userId, key) directly
+  console.warn("[storage-namespace] DEPRECATED: Use lib/storage.ts scopedKey() instead")
+
   const userStr = localStorage.getItem("trader-mindset-user")
-  if (!userStr) return baseKey // No user logged in, use base key
+  if (!userStr) return baseKey
 
   try {
     const user = JSON.parse(userStr)
-    // Each user gets their own prefixed keys
-    return `user-${user.id}-${baseKey}`
+    return createScopedKey(user.id, baseKey)
   } catch {
     return baseKey
   }
@@ -18,17 +22,17 @@ export function getUserStorageKey(baseKey: string): string {
 
 export function getItem(key: string): string | null {
   if (typeof window === "undefined") return null
-  return localStorage.getItem(getUserStorageKey(key))
+  return getScoped(key)
 }
 
 export function setItem(key: string, value: string): void {
   if (typeof window === "undefined") return
-  localStorage.setItem(getUserStorageKey(key), value)
+  setScoped(key, value)
 }
 
 export function removeItem(key: string): void {
   if (typeof window === "undefined") return
-  localStorage.removeItem(getUserStorageKey(key))
+  removeScoped(key)
 }
 
 // Clear only data for current user

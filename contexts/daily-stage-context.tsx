@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { useAnalytics } from "./analytics-context"
+import { useAuth } from "./auth-context" // Import useAuth
 
 interface Stage {
   id: number
@@ -85,12 +86,26 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
   const [currentStage, setCurrentStage] = useState<number>(1)
   const [isLoading, setIsLoading] = useState(true)
   const { analytics } = useAnalytics()
+  const { user } = useAuth() // Add useAuth to guard against null user
 
   useEffect(() => {
-    loadStagesFromSupabase()
-  }, [])
+    if (user) {
+      loadStagesFromSupabase()
+    } else {
+      console.log("[v0] [DailyStage] No user - skipping stage load")
+      setStages(initialStages)
+      setIsLoading(false)
+    }
+  }, [user])
 
   const loadStagesFromSupabase = async () => {
+    if (!user) {
+      console.log("[v0] [DailyStage] No user - cannot load stages")
+      setStages(initialStages)
+      setIsLoading(false)
+      return
+    }
+
     try {
       setIsLoading(true)
       const response = await fetch("/api/daily-stages/get")
@@ -234,10 +249,6 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
         console.log("[v0] [Stages] Auto-unlocking Stage 3: Trading Plan (daily intention set)")
         await completeStage(2)
       }
-      if (stageConditions.shouldUnlockStage4 && !stages[3].unlocked && !stages[3].completed) {
-        console.log("[v0] [Stages] Auto-unlocking Stage 4: Record Trades (trading plan created)")
-        await completeStage(3)
-      }
       if (stageConditions.shouldUnlockStage5 && !stages[4].unlocked && !stages[4].completed) {
         console.log("[v0] [Stages] Auto-unlocking Stage 5: Daily Summary (trades recorded)")
         await completeStage(4)
@@ -245,7 +256,7 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
     }
 
     autoProgressStages()
-  }, [analytics]) // Updated to use the entire analytics object
+  }, [analytics])
 
   return (
     <DailyStageContext.Provider

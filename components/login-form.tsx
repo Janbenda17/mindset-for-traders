@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Brain, Mail, Lock, LogIn, Sparkles, Shield, Zap } from "lucide-react"
 import Link from "next/link"
 import { Checkbox } from "@/components/ui/checkbox"
+import { supabase } from "@/lib/supabase/browser"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -38,6 +39,12 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!email || !password) {
+      console.error("[v0] Email or password missing")
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -56,7 +63,10 @@ export function LoginForm() {
       if (!success) {
         console.error("[v0] Login failed")
       } else {
-        console.log("[v0] Login successful")
+        await supabase.auth.getSession()
+        console.log("[v0] Login successful and session synced")
+        // Auth context handles redirect, but we ensure proper navigation
+        window.location.replace("/")
       }
     } catch (error) {
       console.error("[v0] Login error:", error)

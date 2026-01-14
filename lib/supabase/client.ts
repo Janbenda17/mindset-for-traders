@@ -1,18 +1,10 @@
-import { createBrowserClient, type SupabaseClient } from "@supabase/ssr"
+export { supabase, getSupabaseBrowserClient } from "./browser"
 
-let supabaseClient: SupabaseClient | null = null
-
+// Legacy exports for backwards compatibility - all point to singleton
 export function createClient() {
-  // Return existing instance if already created
-  if (supabaseClient) {
-    return supabaseClient
-  }
-
-  // Create new instance only once
-  supabaseClient = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  )
-
-  return supabaseClient
+  const { supabase } = require("./browser")
+  return supabase
 }
+
+// Re-export createBrowserClient for any code that imports it from here
+export { createBrowserClient } from "@supabase/ssr"

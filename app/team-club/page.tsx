@@ -615,6 +615,16 @@ function calculateReadiness(entries: any[]): number {
   return Math.round(avg * 10)
 }
 
+// Helper function to get scoped data from localStorage
+const getScoped = (userId: string, key: string): string | null => {
+  return localStorage.getItem(`user-${userId}-${key}`)
+}
+
+// Helper function to set scoped data in localStorage
+const setScoped = (userId: string, key: string, value: string): void => {
+  localStorage.setItem(`user-${userId}-${key}`, value)
+}
+
 function generateStudentsFromRealData(trades: any[], journals: any[], moodEntries: any[], userId: string): Student[] {
   // In LIVE mode, only show the current user's data
   if (trades.length === 0 && journals.length === 0 && moodEntries.length === 0) {
@@ -663,7 +673,7 @@ function MentorTeamClubView() {
     const trades = getAllTrades()
     const journals = getAllJournalEntries()
 
-    const moodEntries: any[] = JSON.parse(localStorage.getItem("user-mood-entries") || "[]")
+    const moodEntries: any[] = [] // TODO: Get from DataContext once morning_checks are exposed
 
     if (isLiveMode) {
       const realStudents = generateStudentsFromRealData(trades, journals, moodEntries, user?.id || "unknown")
@@ -757,7 +767,7 @@ function MentorTeamClubView() {
 
 // STUDENT VIEW
 function StudentTeamClubView() {
-  const { isLiveMode, getAllTrades, getAllJournalEntries } = useData()
+  const { getAllTrades, getAllJournalEntries, isLiveMode } = useData()
   const { user } = useAuth() // ADDED: Get user from AuthContext
   const [activeTab, setActiveTab] = useState("overview")
   const [posts, setPosts] = useState<CommunityPost[]>([])
@@ -790,6 +800,7 @@ function StudentTeamClubView() {
   const [selectedMonth2, setSelectedMonth2] = useState("")
   const [postError, setPostError] = useState("")
   const [reportedPosts, setReportedPosts] = useState<string[]>([])
+  const [newMessage, setNewMessage] = useState("") // Added for chat functionality
 
   // Add admin password dialog and new challenge form states
   const [showAdminDialog, setShowAdminDialog] = useState(false)
@@ -808,11 +819,16 @@ function StudentTeamClubView() {
     reward: "",
   })
 
-  // ADD: Function to get monthly stats from localStorage
+  // ADD: Get monthly stats from localStorage
   const getMonthlyStats = (year: number, month: number) => {
     try {
-      const journalData = localStorage.getItem("trader-mindset-journal")
-      const readinessData = localStorage.getItem("trader-mindset-readiness-history")
+      // Adjusted to get data based on user ID in live mode
+      const journalData =
+        isLiveMode && user?.id ? getScoped(user.id, "journal-entries") : localStorage.getItem("trader-mindset-journal")
+      const readinessData =
+        isLiveMode && user?.id
+          ? getScoped(user.id, "mood-entries")
+          : localStorage.getItem("trader-mindset-readiness-history")
 
       let winRate = 0
       let pnl = 0
@@ -844,8 +860,8 @@ function StudentTeamClubView() {
       }
 
       if (readinessData) {
-        const readiness = JSON.parse(readinessData)
-        const monthReadiness = readiness.filter((entry: any) => {
+        const readinessEntries = JSON.parse(readinessData)
+        const monthReadiness = readinessEntries.filter((entry: any) => {
           const entryDate = new Date(entry.date)
           return entryDate.getFullYear() === year && entryDate.getMonth() === month
         })
@@ -902,22 +918,33 @@ function StudentTeamClubView() {
   useEffect(() => {
     if (isLiveMode) {
       // Load saved data from localStorage
-      const savedPosts = localStorage.getItem("team-club-posts")
-      const savedQA = localStorage.getItem("team-club-qa")
-      const savedStories = localStorage.getItem("team-club-stories")
-      const savedBuddies = localStorage.getItem("team-club-buddies")
-      const savedChallenges = localStorage.getItem("team-club-challenges")
-      if (savedChallenges) {
-        setChallenges(JSON.parse(savedChallenges))
-      } else {
-        setChallenges([]) // Start with empty challenges in live mode
+      // Use scoped keys if user is logged in
+      const savedPosts = user?.id ? getScoped(user.id, "team-club-posts") : localStorage.getItem("team-club-posts")
+      const savedQA = user?.id ? getScoped(user.id, "team-club-qa") : localStorage.getItem("team-club-qa")
+      const savedStories = user?.id
+        ? getScoped(user.id, "team-club-stories")
+        : localStorage.getItem("team-club-stories")
+      const savedBuddies = user?.id
+        ? getScoped(user.id, "team-club-buddies")
+        : localStorage.getItem("team-club-buddies")
+      const savedChallenges = user?.id
+        ? getScoped(user.id, "team-club-challenges")
+        : localStorage.getItem("team-club-challenges")
+
+      if (savedPosts && posts.length === 0) setPosts(JSON.parse(savedPosts))
+      if (savedQA && mentorQA.length === 0) setMentorQA(JSON.parse(savedQA))
+      if (savedStories && successStories.length === 0) setSuccessStories(JSON.parse(savedStories))
+      if (savedBuddies && buddies.length === 0) setBuddies(JSON.parse(savedBuddies))
+      if (savedChallenges && challenges.length === 0) {
+        const parsedChallenges = JSON.parse(savedChallenges)
+        setChallenges(parsedChallenges)
+      } else if (!savedChallenges) {
+        // If no saved challenges, initialize with demo challenges for now, but consider fetching from backend
+        setChallenges(DEMO_CHALLENGES)
       }
 
-      setPosts(savedPosts ? JSON.parse(savedPosts) : [])
-      setMentorQA(savedQA ? JSON.parse(savedQA) : [])
-      setSuccessStories(savedStories ? JSON.parse(savedStories) : [])
-      setBuddies(savedBuddies ? JSON.parse(savedBuddies) : [])
-      setRooms([]) // Clear demo rooms in live mode
+      // Clear demo rooms in live mode
+      setRooms([])
     } else {
       setPosts(DEMO_POSTS)
       setBuddies(DEMO_BUDDIES)
@@ -926,19 +953,18 @@ function StudentTeamClubView() {
       setMentorQA(DEMO_MENTOR_QA)
       setSuccessStories(DEMO_SUCCESS_STORIES)
     }
-  }, [isLiveMode])
+  }, [isLiveMode, user?.id, posts.length, mentorQA.length, successStories.length, buddies.length, challenges.length]) // Add dependencies to prevent stale state
 
-  // ADD: Save data to localStorage in live mode
   useEffect(() => {
-    if (isLiveMode) {
-      if (posts.length > 0) localStorage.setItem("team-club-posts", JSON.stringify(posts))
-      if (mentorQA.length > 0) localStorage.setItem("team-club-qa", JSON.stringify(mentorQA))
-      if (successStories.length > 0) localStorage.setItem("team-club-stories", JSON.stringify(successStories))
-      if (buddies.length > 0) localStorage.setItem("team-club-buddies", JSON.stringify(buddies))
+    if (isLiveMode && user?.id) {
+      if (posts.length > 0) setScoped(user.id, "team-club-posts", JSON.stringify(posts))
+      if (mentorQA.length > 0) setScoped(user.id, "team-club-qa", JSON.stringify(mentorQA))
+      if (successStories.length > 0) setScoped(user.id, "team-club-stories", JSON.stringify(successStories))
+      if (buddies.length > 0) setScoped(user.id, "team-club-buddies", JSON.stringify(buddies))
       // Challenges are now saved in handleAddChallenge and handleDeleteChallenge
-      // localStorage.setItem("team-club-challenges", JSON.stringify(challenges))
+      // setScoped(user.id, "team-club-challenges", JSON.stringify(challenges))
     }
-  }, [posts, mentorQA, successStories, buddies, isLiveMode])
+  }, [posts, mentorQA, successStories, buddies, isLiveMode, user?.id, challenges]) // Challenges are now saved in handleAddChallenge and handleDeleteChallenge
 
   useEffect(() => {
     const savedLimits = localStorage.getItem("teamclub-daily-limits")
@@ -953,7 +979,7 @@ function StudentTeamClubView() {
 
   const trades = getAllTrades()
   const journals = getAllJournalEntries()
-  const moodEntries: any[] = JSON.parse(localStorage.getItem("user-mood-entries") || "[]")
+  const moodEntries: any[] = user?.id ? JSON.parse(getScoped(user.id, "mood-entries") || "[]") : []
 
   const gamificationData =
     typeof window !== "undefined" ? JSON.parse(localStorage.getItem("gamification-data") || "{}") : {}
@@ -965,7 +991,9 @@ function StudentTeamClubView() {
         ? Math.round((trades.filter((t) => (t.pnl || t.profitLoss || 0) > 0).length / trades.length) * 100)
         : 0,
     journalStreak: calculateJournalStreak(journals),
-    activeChallenges: challenges.filter((c) => c.joined).length,
+    activeChallenges: isLiveMode
+      ? challenges.filter((c) => c.joined).length
+      : challenges.filter((c) => c.joined).length,
     weeklyPnL: trades.slice(-7).reduce((sum, t) => sum + (t.pnl || t.profitLoss || 0), 0),
     avgMood:
       moodEntries.length > 0
@@ -986,9 +1014,9 @@ function StudentTeamClubView() {
   const communityStats = {
     onlineMembers: isLiveMode ? 1 : 487,
     totalMembers: isLiveMode ? 1 : 1243,
-    activeChallenges: isLiveMode ? challenges.filter((c) => c.joined).length : challenges.length,
-    liveRooms: isLiveMode ? 0 : rooms.filter((r) => r.status === "live").length,
-    todayPosts: isLiveMode ? posts.length : posts.length,
+    activeChallenges: challenges.filter((c) => c.joined).length,
+    liveRooms: rooms.filter((r) => r.status === "live").length,
+    todayPosts: posts.length,
     avgCommunityMood: isLiveMode ? userStats.avgMood : 68,
     frustrationRate: isLiveMode ? 0 : 32,
     improvementRate: isLiveMode
@@ -1218,6 +1246,11 @@ function StudentTeamClubView() {
     return 15 // Example fallback
   }
 
+  // Function to get today's date string for daily limits
+  const getTodayString = (): string => {
+    return new Date().toISOString().split("T")[0]
+  }
+
   const canPostToday = (type: "feed" | "qa" | "success"): boolean => {
     const today = getTodayString()
     const limit = dailyLimits[type]
@@ -1425,7 +1458,12 @@ function StudentTeamClubView() {
       reward: "",
     })
     setShowChallengeForm(false)
-    localStorage.setItem("team-club-challenges", JSON.stringify([...challenges, challengeToAdd]))
+    // Save challenges to localStorage if in live mode
+    if (isLiveMode && user?.id) {
+      setScoped(user.id, "team-club-challenges", JSON.stringify([...challenges, challengeToAdd]))
+    } else {
+      localStorage.setItem("team-club-challenges", JSON.stringify([...challenges, challengeToAdd]))
+    }
   }
 
   const handleUpdateChallenge = () => {
@@ -1442,19 +1480,45 @@ function StudentTeamClubView() {
     )
     setEditingChallenge(null)
     setShowChallengeForm(false)
-    localStorage.setItem("team-club-challenges", JSON.stringify(challenges))
+    // Save challenges to localStorage if in live mode
+    if (isLiveMode && user?.id) {
+      setScoped(user.id, "team-club-challenges", JSON.stringify(challenges))
+    } else {
+      localStorage.setItem("team-club-challenges", JSON.stringify(challenges))
+    }
   }
 
   const handleDeleteChallenge = (challengeId: string) => {
     if (confirm("Opravdu chcete tuto výzvu smazat?")) {
-      setChallenges(challenges.filter((c) => c.id !== challengeId))
-      localStorage.setItem("team-club-challenges", JSON.stringify(challenges.filter((c) => c.id !== challengeId)))
+      const updatedChallenges = challenges.filter((c) => c.id !== challengeId)
+      setChallenges(updatedChallenges)
+      // Save challenges to localStorage if in live mode
+      if (isLiveMode && user?.id) {
+        setScoped(user.id, "team-club-challenges", JSON.stringify(updatedChallenges))
+      } else {
+        localStorage.setItem("team-club-challenges", JSON.stringify(updatedChallenges))
+      }
     }
   }
 
   const handleEditChallenge = (challenge: Challenge) => {
     setEditingChallenge(challenge)
     setShowChallengeForm(true)
+  }
+
+  // ADD: handleSendMessage function
+  const handleSendMessage = () => {
+    if (!newMessage.trim()) return
+
+    const newMsg = {
+      id: Date.now().toString(),
+      sender: "Já",
+      message: newMessage,
+      timestamp: new Date().toISOString(),
+    }
+    // Placeholder for actual message sending logic
+    console.log("Sending message:", newMsg)
+    setNewMessage("")
   }
 
   return (
@@ -1640,7 +1704,7 @@ function StudentTeamClubView() {
                             <p className="text-gray-400 text-xs font-medium mb-2">Showing Improvement</p>
                             <p className="text-4xl font-bold text-white mb-1">{communityStats.improvementRate}%</p>
                             <p className="text-cyan-400 text-sm font-semibold flex items-center gap-1">
-                              <ArrowUp className="w-4 h-4" />
+                              <ArrowUp className="h-4 w-4" />
                               Tento týden
                             </p>
                           </div>
@@ -3377,24 +3441,28 @@ const containsVulgarWords = (text: string): boolean => {
   return VULGAR_WORDS.some((word) => lowerText.includes(word))
 }
 
-const getTodayString = (): string => {
-  return new Date().toISOString().split("T")[0]
-}
-
+// Moved isMentor definition outside of the component to avoid re-declaration
 function isMentor(): boolean {
   if (typeof window === "undefined") return false
   const userData = JSON.parse(localStorage.getItem("user-settings") || "{}")
   return userData.accountType === "mentor"
 }
 
-export default function TeamClubPage() {
+function TeamClubPage() {
   const [userIsMentor, setUserIsMentor] = useState<boolean | null>(null)
+  const { user, isLoading } = useAuth() // Added isLoading from auth
 
   useEffect(() => {
-    setUserIsMentor(isMentor())
-  }, [])
+    // Check if user data is available before determining mentor status
+    if (user) {
+      setUserIsMentor(isMentor())
+    } else {
+      // If user is not logged in, assume not a mentor for now, or handle accordingly
+      setUserIsMentor(false)
+    }
+  }, [user]) // Depend on the user object
 
-  if (userIsMentor === null) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
@@ -3405,5 +3473,8 @@ export default function TeamClubPage() {
     )
   }
 
-  return userIsMentor ? <MentorTeamClubView /> : <StudentTeamClubView />
+  // Render based on mentor status, ensuring userIsMentor is not null
+  return userIsMentor !== null ? userIsMentor ? <MentorTeamClubView /> : <StudentTeamClubView /> : null
 }
+
+export default TeamClubPage

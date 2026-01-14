@@ -374,14 +374,21 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
   })
 
   useEffect(() => {
+    // When user logs in/out, AuthContext clears gamification-data localStorage, so fresh data is loaded
     const saved = localStorage.getItem("gamification-data")
     if (saved) {
-      const parsed = JSON.parse(saved)
-      // Ensure dailyXPLog exists for backwards compatibility
-      if (!parsed.dailyXPLog) {
-        parsed.dailyXPLog = []
+      try {
+        const parsed = JSON.parse(saved)
+        // Ensure dailyXPLog exists for backwards compatibility
+        if (!parsed.dailyXPLog) {
+          parsed.dailyXPLog = []
+        }
+        // Only use saved data if it exists - logout cleanup ensures it's fresh
+        setData(parsed)
+      } catch (e) {
+        console.error("[v0] Failed to parse gamification data:", e)
+        localStorage.removeItem("gamification-data")
       }
-      setData(parsed)
     }
   }, [])
 

@@ -8,13 +8,20 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { error, data } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      const response = NextResponse.redirect(`${origin}${next}`)
+
+      const cookieStore = await (await import("next/headers")).cookies()
+      // Copy all current cookies to the response
+      cookieStore.getAll().forEach(({ name, value }) => {
+        response.cookies.set(name, value)
+      })
+
+      return response
     }
   }
 
-  // Return to error page if something went wrong
   return NextResponse.redirect(`${origin}/auth/error`)
 }

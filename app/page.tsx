@@ -65,6 +65,12 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/auth/login")
+    }
+  }, [user, isLoading, router])
+
+  useEffect(() => {
     if (!isMounted || !user?.id) {
       console.log("[v0] No authenticated user - showing empty state")
       return
@@ -307,22 +313,12 @@ export default function DashboardPage() {
     },
   ]
 
-  if (!isMounted || isLoading) {
+  if (!isMounted) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Načítání...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground">Pro přístup k dashboardu se prosím přihlašte.</p>
         </div>
       </div>
     )

@@ -37,18 +37,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [customerId, setCustomerId] = useState<string | null>(null)
 
   const { user } = useAuth()
-  const isOwnerAccount = user?.email === "jankrupicka.jan@gmail.com"
 
-  const isPremium = isOwnerAccount || (plan === "premium" && isActive)
+  const isPremium = plan === "premium" && isActive
 
   useEffect(() => {
-    if (isOwnerAccount) {
-      setPlan("premium")
-      setIsActive(true)
-    } else {
+    if (user) {
       checkSubscriptionStatus()
     }
-  }, [isOwnerAccount])
+  }, [user])
 
   useEffect(() => {
     if (typeof window !== "undefined") {

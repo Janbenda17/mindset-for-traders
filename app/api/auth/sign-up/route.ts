@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       email,
       password,
       options: {
-        emailRedirectTo: undefined, // No email confirmation needed
+        emailRedirectTo: undefined,
       },
     })
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Profile creation failed" }, { status: 500 })
     }
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         user: data.user,
         session: data.session,
@@ -64,6 +64,21 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 },
     )
+
+    // Copy auth cookies if session exists
+    if (data.session) {
+      const supabaseResponse = await supabase.auth.setSession(data.session)
+      if (supabaseResponse.data.session) {
+        const cookiesList = supabaseResponse.data.session ? Object.entries(request.cookies.getAll()) : []
+        cookiesList.forEach(([name, cookie]) => {
+          if (typeof cookie === "object" && "value" in cookie) {
+            response.cookies.set(name, cookie.value, cookie)
+          }
+        })
+      }
+    }
+
+    return response
   } catch (error) {
     console.error("[v0] Signup API error:", error)
     return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 })

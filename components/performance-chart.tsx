@@ -14,11 +14,9 @@ export function PerformanceChart() {
   useEffect(() => {
     const loadData = () => {
       if (isLiveMode) {
-        // In live mode, show real data or empty state
         const trades = getAllTrades()
 
         if (trades.length === 0) {
-          // Empty state for live mode
           setChartData([])
           setStats({ total: 0, change: 0, trend: "neutral" })
           return
@@ -52,7 +50,6 @@ export function PerformanceChart() {
           trend: change >= 0 ? "up" : "down",
         })
       } else {
-        // Virtual mode - show demo data
         const demoData = generateDemoChartData()
         setChartData(demoData)
 

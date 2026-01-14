@@ -74,7 +74,7 @@ export const db = {
       query = query.eq(key, value)
     })
 
-    const { data, error } = await query.single()
+    const { data, error } = await query.maybeSingle()
     return { data: data as T | null, error }
   },
 
@@ -93,7 +93,7 @@ export const db = {
         user_id: userId,
       })
       .select()
-      .single()
+      .maybeSingle()
 
     return { data: result as T | null, error }
   },
@@ -120,7 +120,7 @@ export const db = {
         },
       )
       .select()
-      .single()
+      .maybeSingle()
 
     return { data: result as T | null, error }
   },
@@ -143,7 +143,7 @@ export const db = {
       .eq("id", id)
       .eq("user_id", userId)
       .select()
-      .single()
+      .maybeSingle()
 
     return { data: result as T | null, error }
   },

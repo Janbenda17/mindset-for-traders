@@ -1,26 +1,28 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { userId, email, name } = body
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!userId) {
-      return NextResponse.json(
-        { ok: false, error: { code: "MISSING_USER_ID", message: "User ID is required" } },
-        { status: 400 },
-      )
+    if (authError || !user) {
+      console.error("[v0] Unauthorized profile creation attempt")
+      return NextResponse.json({ ok: false, error: { code: "UNAUTHORIZED", message: "Unauthorized" } }, { status: 401 })
     }
 
-    console.log("[v0] Creating Supabase profile for user:", userId)
+    const body = await request.json()
+    const { email, name } = body
+
+    console.log("[v0] Creating Supabase profile for authenticated user:", user.id)
 
     const { data: existingProfile, error: checkError } = await supabase
       .from("profiles")
-      .select("id")
-      .eq("id", userId)
+      .select("user_id")
+      .eq("user_id", user.id)
       .maybeSingle()
 
     if (checkError) {
@@ -32,16 +34,18 @@ export async function POST(request: Request) {
     }
 
     if (existingProfile) {
-      console.log("[v0] Profile already exists for user:", userId)
+      console.log("[v0] Profile already exists for user:", user.id)
       return NextResponse.json({ ok: true, data: existingProfile }, { status: 200 })
     }
 
     const { data, error } = await supabase
       .from("profiles")
       .insert({
-        id: userId,
-        email: email,
-        name: name || "Trader",
+        user_id: user.id,
+        email: email || user.email,
+        display_name: name || email?.split("@")[0] || "Trader",
+        trading_mode: "virtual",
+        onboarding_completed: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -53,7 +57,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: { code: error.code, message: error.message } }, { status: 500 })
     }
 
-    console.log("[v0] Profile created successfully for user:", userId)
+    console.log("[v0] New user defaults to virtual mode (set in database)")
     return NextResponse.json({ ok: true, data }, { status: 200 })
   } catch (error: any) {
     console.error("[v0] API error:", error)

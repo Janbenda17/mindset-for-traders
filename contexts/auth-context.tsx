@@ -1,17 +1,15 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { clearUserData } from "@/lib/user-storage"
-import { createClient } from "@/lib/supabase/client"
-import { v4 as generateUUID } from "uuid"
+import { supabase } from "@/lib/supabase/browser"
 
 interface User {
   id: string
   email: string
   name: string
-  isOwner?: boolean
   stripeCustomerId?: string
 }
 
@@ -21,30 +19,20 @@ interface AuthContextType {
   register: (data: { email: string; password: string; name: string }) => Promise<boolean>
   logout: () => void
   isLoading: boolean
+  authReady: boolean // New flag to indicate auth initialization is complete
   clearAllAccounts: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const OWNER_EMAIL = "honza.newage@gmail.com"
-
-function migrateUserID(user: User): User {
-  if (/^\d+$/.test(user.id)) {
-    console.log("[v0] Migrating user ID from timestamp to UUID:", user.id)
-    return {
-      ...user,
-      id: generateUUID(),
-    }
-  }
-  return user
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [authReady, setAuthReady] = useState(false) // Track auth initialization
   const router = useRouter()
 
-  const supabase = useMemo(() => createClient(), [])
+  const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
+  const lastUserIdRef = useRef<string | null>(null)
 
   const clearAllAccounts = () => {
     localStorage.setItem("trader-mindset-registered-users", JSON.stringify([]))
@@ -54,69 +42,99 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const checkAuth = async () => {
-      console.log("[v0] Checking authentication state...")
-
-      await new Promise((resolve) => setTimeout(resolve, 50))
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (session?.user) {
-        console.log("[v0] User authenticated:", session.user.email)
-        const userData = {
-          id: session.user.id,
-          email: session.user.email!,
-          name: session.user.user_metadata?.name || "Trader",
-          isOwner: session.user.email === OWNER_EMAIL,
-        }
-        setUser(userData)
-      } else {
-        console.log("[v0] No authenticated user found")
-      }
-      setIsLoading(false)
+    if (subscriptionRef.current) {
+      return
     }
 
-    checkAuth()
+    let isMounted = true
 
-    let debounceTimer: NodeJS.Timeout | null = null
+    const initAuth = async () => {
+      console.log("[v0] Initializing auth...")
+
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession()
+
+        if (error) {
+          console.error("[v0] Error getting session:", error.message)
+        }
+
+        if (isMounted && session?.user) {
+          console.log("[v0] Initial session found:", session.user.email)
+          const userData = {
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Trader",
+          }
+          lastUserIdRef.current = session.user.id
+          setUser(userData)
+        } else if (isMounted) {
+          console.log("[v0] No authenticated user")
+        }
+
+        if (isMounted) {
+          setIsLoading(false)
+          setAuthReady(true)
+        }
+      } catch (err) {
+        console.error("[v0] Auth init error:", err)
+        if (isMounted) {
+          setIsLoading(false)
+          setAuthReady(true)
+        }
+      }
+    }
+
+    initAuth()
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && debounceTimer) {
-        return // Skip redundant SIGNED_IN if already processing
+      if (!isMounted) return
+
+      if (event === "INITIAL_SESSION") {
+        return
       }
 
-      console.log("[v0] Auth state changed:", event)
-
-      if (debounceTimer) {
-        clearTimeout(debounceTimer)
+      if (event === "SIGNED_IN" && session?.user?.id === lastUserIdRef.current) {
+        return
       }
 
-      debounceTimer = setTimeout(() => {
-        if (session?.user) {
-          console.log("[v0] Setting user from auth state change:", session.user.email)
-          const userData = {
-            id: session.user.id,
-            email: session.user.email!,
-            name: session.user.user_metadata?.name || "Trader",
-            isOwner: session.user.email === OWNER_EMAIL,
-          }
-          setUser(userData)
-        } else {
-          console.log("[v0] Clearing user - no session")
-          setUser(null)
+      console.log("[v0] Auth state changed:", event, session?.user?.email ? `(${session.user.email})` : "")
+
+      if (event === "SIGNED_IN" && session?.user) {
+        lastUserIdRef.current = session.user.id
+        const userData = {
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Trader",
         }
-      }, 300)
+        setUser(userData)
+      } else if (event === "SIGNED_OUT") {
+        lastUserIdRef.current = null
+        setUser(null)
+      } else if (event === "TOKEN_REFRESHED" && session?.user) {
+        lastUserIdRef.current = session.user.id
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Trader",
+        })
+      }
     })
 
+    subscriptionRef.current = subscription
+
     return () => {
-      if (debounceTimer) clearTimeout(debounceTimer)
-      subscription.unsubscribe()
+      isMounted = false
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe()
+        subscriptionRef.current = null
+      }
     }
-  }, [supabase]) // Only supabase in dependency (memoized singleton)
+  }, []) // Empty deps - singleton subscription runs once only
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -137,13 +155,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
-        console.log("[v0] Login successful, setting user state")
+        console.log("[v0] Login successful")
         const userData = {
           id: data.user.id,
           email: data.user.email!,
-          name: data.user.user_metadata?.name || "Trader",
-          isOwner: data.user.email === OWNER_EMAIL,
+          name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Trader",
         }
+        lastUserIdRef.current = data.user.id
         setUser(userData)
 
         toast({
@@ -151,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description: "Vítejte zpět!",
         })
 
-        await new Promise((resolve) => setTimeout(resolve, 500))
+        await new Promise((resolve) => setTimeout(resolve, 1500))
         router.push("/")
         return true
       }
@@ -178,19 +196,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
         options: {
-          data: {
-            name: name,
-          },
+          data: { name },
           emailRedirectTo: undefined,
         },
       })
 
       if (error) {
-        console.error("[v0] Supabase registration error:", {
-          code: error.code,
-          message: error.message,
-          status: error.status,
-        })
+        console.error("[v0] Supabase registration error:", error.message)
 
         let errorMessage = error.message
         if (error.status === 504) {
@@ -208,7 +220,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (!authData.user) {
-        console.error("[v0] No user returned from signUp")
         toast({
           title: "Chyba registrace",
           description: "Nepodařilo se vytvořit uživatele",
@@ -220,125 +231,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[v0] User created successfully:", authData.user.id)
 
       if (!authData.session) {
-        console.log("[v0] No session - waiting for email confirmation or auth callback")
         toast({
           title: "Registrace úspěšná",
           description: "Účet byl vytvořen. Přihlašuji...",
         })
-
+        await supabase.auth.getSession()
         await new Promise((resolve) => setTimeout(resolve, 2000))
-
         router.push("/onboarding")
         return true
       }
 
-      console.log("[v0] Session active, waiting for profile creation...")
+      // Wait for profile creation
       let profile = null
       let attempts = 0
       const maxAttempts = 10
 
       while (!profile && attempts < maxAttempts) {
         attempts++
-        const waitTime = Math.min(500 * attempts, 3000)
+        await new Promise((resolve) => setTimeout(resolve, Math.min(500 * attempts, 3000)))
 
-        await new Promise((resolve) => setTimeout(resolve, waitTime))
-
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData } = await supabase
           .from("profiles")
           .select("user_id, onboarding_completed")
           .eq("user_id", authData.user.id)
           .maybeSingle()
 
-        if (profileError) {
-          console.error(`[v0] Profile check error (attempt ${attempts}):`, profileError)
-          continue
-        }
-
         profile = profileData
-
-        if (profile) {
-          console.log("[v0] Profile found after", attempts, "attempts")
-          break
-        }
-
-        console.log(`[v0] Waiting for profile (attempt ${attempts}/${maxAttempts})`)
+        if (profile) break
       }
 
-      if (!profile) {
-        console.warn("[v0] Profile not created yet after", maxAttempts, "attempts - continuing anyway")
-      }
-
-      const userStorageKey = `user-${authData.user.id}-trader-mindset-data`
-      const initialUserData = {
-        profile: {
-          nickname: name.split(" ")[0],
-          bio: "",
-          mentor: "",
-          experienceLevel: "beginner" as const,
-          updatedAt: new Date().toISOString(),
-        },
-        settings: {
-          trading: {
-            style: undefined,
-            riskLevel: "moderate",
-            timezone: "UTC",
-            tradingYears: "",
-            mainMarkets: [],
-            goals: "",
-            averageTradesPerWeek: "",
-            updatedAt: new Date().toISOString(),
-          },
-          notifications: {
-            email: true,
-            push: true,
-            weeklyReport: true,
-            tradingAlerts: true,
-            dailyReminder: true,
-            psychologyInsights: true,
-            updatedAt: new Date().toISOString(),
-          },
-        },
-        dailyTrackerItems: [],
-        tradingShopItems: [],
-        journalEntries: [],
-        moodEntries: [],
-        tradingData: [],
-        dashboardStats: {
-          totalTrades: 0,
-          totalPnL: 0,
-          winRate: 0,
-          consecutiveWins: 0,
-          consecutiveLosses: 0,
-        },
-        mindTraderNotifications: {
-          notifications: [],
-        },
-      }
-      localStorage.setItem(userStorageKey, JSON.stringify(initialUserData))
-      localStorage.setItem("mindtrader-show-tour", "true")
-
-      const userData = {
+      lastUserIdRef.current = authData.user.id
+      setUser({
         id: authData.user.id,
         email: authData.user.email!,
-        name: name,
-        isOwner: authData.user.email === OWNER_EMAIL,
-      }
-      setUser(userData)
+        name,
+      })
 
-      console.log("[v0] Registration complete - redirecting to onboarding")
       toast({
         title: "Registrace úspěšná!",
         description: "Vítejte v MindTrader!",
       })
 
+      await supabase.auth.getSession()
       router.push("/onboarding")
       return true
     } catch (error: any) {
-      console.error("[v0] Registration unexpected error:", {
-        message: error?.message,
-        name: error?.name,
-      })
-
+      console.error("[v0] Registration unexpected error:", error?.message)
       toast({
         title: "Chyba registrace",
         description: "Došlo k neočekávané chybě. Zkuste to prosím znovu.",
@@ -349,13 +287,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
+    const userId = user?.id
+
     supabase.auth.signOut()
 
-    if (user?.id) {
-      clearUserData(user.id)
-    }
-
+    console.log("[v0] Logout - clearing user state")
+    lastUserIdRef.current = null
     setUser(null)
+
+    if (userId) {
+      clearUserData(userId)
+      localStorage.removeItem("gamification-data")
+      localStorage.removeItem(`mindtrader:${userId}:mode`)
+    }
 
     toast({
       title: "Odhlášení úspěšné",
@@ -365,7 +309,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading, clearAllAccounts }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isLoading, authReady, clearAllAccounts }}>
       {children}
     </AuthContext.Provider>
   )
@@ -381,6 +325,7 @@ export function useAuth() {
         register: async () => false,
         logout: () => {},
         isLoading: true,
+        authReady: false,
         clearAllAccounts: () => {},
       }
     }

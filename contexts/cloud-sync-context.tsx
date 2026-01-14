@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { supabase } from "@/lib/supabase/client" // Import singleton directly
 import type { User } from "@supabase/supabase-js"
 import { getUserData, setUserData } from "@/utils/storage-utils"
 import { useAuth } from "@/contexts/auth-context"
@@ -26,8 +26,6 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
 
-  const supabase = useMemo(() => createClient(), [])
-
   useEffect(() => {
     if (authUser?.id) {
       // Get Supabase user object if we only have the auth user
@@ -39,7 +37,7 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
       setUser(null)
       setIsLoading(false)
     }
-  }, [authUser, supabase])
+  }, [authUser]) // Removed supabase from deps - singleton never changes
 
   // Sync localStorage data to Supabase
   const syncToCloud = useCallback(async () => {
@@ -94,7 +92,7 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsSyncing(false)
     }
-  }, [user, supabase])
+  }, [user])
 
   // Sync from cloud to localStorage
   const syncFromCloud = useCallback(async () => {
@@ -152,7 +150,7 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsSyncing(false)
     }
-  }, [user, supabase])
+  }, [user])
 
   // Auto-sync every 5 minutes
   useEffect(() => {

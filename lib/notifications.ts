@@ -65,8 +65,10 @@ export function sendNotification(
   return notification
 }
 
+import { getScoped } from "@/lib/storage"
+
 // Get notification settings from localStorage
-export function getNotificationSettings(): NotificationSettings {
+export function getNotificationSettings(userId?: string): NotificationSettings {
   if (typeof window === "undefined") {
     return {
       email: true,
@@ -79,7 +81,8 @@ export function getNotificationSettings(): NotificationSettings {
   }
 
   try {
-    const userData = localStorage.getItem("user-data")
+    const userData = userId ? getScoped(userId, "user-data") : localStorage.getItem("user-data") // Fallback for backwards compat
+
     if (userData) {
       const parsed = JSON.parse(userData)
       return (
