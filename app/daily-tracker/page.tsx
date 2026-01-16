@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,6 +26,7 @@ import {
   ArrowRight,
   Clock,
   Shield,
+  Loader2,
 } from "lucide-react"
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
@@ -34,11 +35,11 @@ import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useTradingStyle } from "@/contexts/trading-style-context"
 import { generateVirtualDailyTrackerData } from "@/data/demo-daily-tracker"
-import { useAuth } from "@/contexts/auth-context" // Import useAuth
-import { useToast } from "@/components/ui/use-toast" // Import useToast
-import { useLiveMode } from "@/contexts/live-mode-context" // Import isLiveMode
-import { useData } from "@/contexts/data-context" // Import useData
-import { createBrowserClient } from "@/lib/supabase/client"
+import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/components/ui/use-toast"
+import { useLiveMode } from "@/contexts/live-mode-context"
+import { useData } from "@/contexts/data-context"
+import { supabase } from "@/lib/supabase/browser"
 
 interface MorningCheckData {
   id: string
@@ -55,7 +56,6 @@ interface MorningCheckData {
   exerciseDuration: number
   meditationTime: number
   morningRoutine: boolean
-  hydration: number
   score: number
   recommendation: string
 }
@@ -153,8 +153,9 @@ const stageData = [
 ]
 
 export default function DailyTrackerPage() {
-  const { isLiveMode } = useLiveMode()
-  const supabase = createBrowserClient()
+  const { isLiveMode, isLoading: modeLoading } = useLiveMode()
+  // FIX: Moved supabase initialization here to resolve "use before declaration" error.
+  const localSupabase = supabase
   const router = useRouter()
   const { toast } = useToast() // Initialize useToast
   const { morningChecks, trades, dailyIntentions, tradingPlans } = useData() // Get from DataContext
@@ -162,40 +163,71 @@ export default function DailyTrackerPage() {
   const { stages } = useDailyStage()
 
   const { tradingStyle, config } = useTradingStyle()
-  const { user } = useAuth()
+  const { user, authReady } = useAuth()
 
   const [entries, setEntries] = useState<DailySummary[]>([])
   const [activeTab, setActiveTab] = useState("today")
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
   const [virtualData, setVirtualData] = useState<any>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0) // State for triggering refresh
+  const [entriesLoading, setEntriesLoading] = useState(true)
 
   useEffect(() => {
-    if (!isLiveMode) {
+    // Wait for auth and mode to be ready before deciding
+    if (!authReady || modeLoading) {
+      console.log("[v0] [DailyTracker] Waiting for auth/mode to stabilize before data decision...")
+      return
+    }
+
+    // Now we can trust isLiveMode value
+    if (isLiveMode) {
+      console.log("[v0] [DailyTracker] LIVE MODE confirmed - NO virtual data will be generated")
+      setVirtualData(null)
+    } else {
+      // Only generate virtual data in confirmed VIRTUAL mode
       const data = generateVirtualDailyTrackerData()
-      console.log("[v0] Virtual data generated:", data)
+      console.log("[v0] [DailyTracker] VIRTUAL MODE confirmed - generating demo data")
       setVirtualData(data)
     }
-    // In LIVE mode, virtualData stays null - no demo data
-  }, [isLiveMode])
+  }, [isLiveMode, authReady, modeLoading])
 
-  const loadEntries = () => {
-    if (isLiveMode) {
-      console.log("[v0] LIVE MODE: Loading entries from Supabase")
+  const loadEntries = useCallback(async () => {
+    // Guard: wait for auth and mode to be ready
+    if (!authReady || modeLoading) {
+      console.log("[v0] [DailyTracker] loadEntries skipped - waiting for auth/mode")
+      return
+    }
 
-      // Load from Supabase via DataContext instead of localStorage
-      // The DataContext already loads all data, so we just need to map it
-      // const { morningChecks, trades } = useData() // Get from DataContext - This line was moved outside the function
+    if (!isLiveMode) {
+      console.log("[v0] [DailyTracker] VIRTUAL mode - using demo data instead of Supabase")
+      setEntriesLoading(false)
+      return
+    }
 
-      // Construct daily summaries from DataContext data
+    if (!user?.id) {
+      console.log("[v0] [DailyTracker] LIVE mode but no user - skipping load")
+      setEntriesLoading(false)
+      return
+    }
+
+    console.log(`[v0] [DailyTracker] LIVE MODE: Loading entries from Supabase for user ${user.id}`)
+    setEntriesLoading(true)
+
+    try {
+      // Construct daily summaries from DataContext data (already loaded from Supabase)
       const combinedData: DailySummary[] = []
-      const dates = new Set(morningChecks.map((m: any) => m.date))
+      const allDates = new Set<string>()
 
-      dates.forEach((date) => {
+      morningChecks.forEach((m: any) => allDates.add(m.date))
+      trades.forEach((t: any) => allDates.add(t.date))
+      dailyIntentions?.forEach((i: any) => allDates.add(i.date))
+      tradingPlans?.forEach((p: any) => allDates.add(p.date))
+
+      allDates.forEach((date) => {
         const morningCheck = morningChecks.find((m: any) => m.date === date)
         const dayTrades = trades.filter((t: any) => t.date === date)
-        const intention = dailyIntentions.find((i: any) => i.date === date)
-        const plan = tradingPlans.find((p: any) => p.date === date)
+        const intention = dailyIntentions?.find((i: any) => i.date === date)
+        const plan = tradingPlans?.find((p: any) => p.date === date)
 
         // Only push if at least one stage is present for the date
         if (morningCheck || intention || plan || dayTrades.length > 0) {
@@ -219,21 +251,46 @@ export default function DailyTrackerPage() {
 
       combinedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       setEntries(combinedData)
-      console.log(`[v0] Loaded ${combinedData.length} daily entries from Supabase data`)
-    } else {
-      return
+      console.log(`[v0] [DailyTracker] LIVE: Loaded ${combinedData.length} daily entries from Supabase data`)
+    } catch (error) {
+      console.error("[v0] [DailyTracker] Error loading entries:", error)
+    } finally {
+      setEntriesLoading(false)
     }
-  }
+  }, [isLiveMode, user?.id, authReady, modeLoading, morningChecks, trades, dailyIntentions, tradingPlans])
 
   useEffect(() => {
     loadEntries()
-  }, [isLiveMode, user?.id, refreshTrigger, morningChecks, trades, dailyIntentions, tradingPlans]) // Re-fetch entries when user changes or refreshTrigger updates, or context data changes
+  }, [loadEntries, refreshTrigger])
 
-  const todayEntry = isLiveMode
-    ? entries.find((e) => e.date === format(new Date(), "yyyy-MM-dd"))
-    : { morningCheck: virtualData?.morningCheck }
+  if (!authReady || modeLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Načítání...</p>
+        </div>
+      </div>
+    )
+  }
 
-  const readinessScore = isLiveMode ? (todayEntry?.morningCheck?.score ?? null) : (virtualData?.todayScore ?? null)
+  if (isLiveMode && !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <AlertTriangle className="h-8 w-8 text-yellow-500" />
+          <p className="text-muted-foreground">Pro LIVE mód se prosím přihlaste</p>
+          <Button onClick={() => router.push("/auth/login")}>Přihlásit se</Button>
+        </div>
+      </div>
+    )
+  }
+
+  const todayEntry = isLiveMode ? entries.find((e) => e.date === format(new Date(), "yyyy-MM-dd")) : virtualData?.[0] // First entry is today in demo data
+
+  const readinessScore = isLiveMode
+    ? (todayEntry?.morningCheck?.score ?? null)
+    : (virtualData?.[0]?.morningCheck?.score ?? null)
 
   const getReadinessColor = (score: number | null) => {
     if (score === null) return "text-gray-400"
@@ -251,8 +308,8 @@ export default function DailyTrackerPage() {
 
   // Generate trading decision based on readiness score and morning check data
   const generateTradingDecision = (morningCheckData?: MorningCheckData, score?: number | null) => {
-    const currentMorningCheck = morningCheckData || virtualData?.morningCheck
-    const currentReadinessScore = score ?? virtualData?.todayScore ?? null
+    const currentMorningCheck = morningCheckData || virtualData?.[0]?.morningCheck
+    const currentReadinessScore = score ?? virtualData?.[0]?.score ?? null
 
     if (!currentMorningCheck || currentReadinessScore === undefined || currentReadinessScore === null) {
       return {
@@ -348,7 +405,7 @@ export default function DailyTrackerPage() {
   }
 
   const tradingDecision = generateTradingDecision(
-    isLiveMode ? todayEntry?.morningCheck : virtualData?.morningCheck,
+    isLiveMode ? todayEntry?.morningCheck : virtualData?.[0]?.morningCheck,
     readinessScore,
   )
 
@@ -439,7 +496,8 @@ export default function DailyTrackerPage() {
       if (stageNum === 1) {
         // Stage 1 = Morning Check
         if (isLiveMode) {
-          const { error } = await supabase.from("morning_checks").upsert(
+          const { error } = await localSupabase.from("morning_checks").upsert(
+            // FIX: Used localSupabase here
             {
               user_id: user?.id,
               date: new Date().toISOString().split("T")[0],
@@ -453,7 +511,7 @@ export default function DailyTrackerPage() {
               exercised: data.exercised || false,
               meditation: data.meditationTime || 0,
               morning_routine: data.morningRoutine || false,
-              hydration: data.hydration || false,
+              // Removed hydration from upsert data to match updated schema
               score: data.score || 0,
             },
             { onConflict: "user_id,date" },
@@ -472,7 +530,8 @@ export default function DailyTrackerPage() {
       } else if (stageNum === 2) {
         // Stage 2 = Daily Intention
         if (isLiveMode) {
-          const { error } = await supabase.from("daily_intentions").upsert(
+          const { error } = await localSupabase.from("daily_intentions").upsert(
+            // FIX: Used localSupabase here
             {
               user_id: user?.id,
               date: new Date().toISOString().split("T")[0],
@@ -493,7 +552,8 @@ export default function DailyTrackerPage() {
       } else if (stageNum === 3) {
         // Stage 3 = Trading Plan
         if (isLiveMode) {
-          const { error } = await supabase.from("trading_plans").upsert(
+          const { error } = await localSupabase.from("trading_plans").upsert(
+            // FIX: Used localSupabase here
             {
               user_id: user?.id,
               date: new Date().toISOString().split("T")[0],
@@ -528,7 +588,8 @@ export default function DailyTrackerPage() {
           const date = new Date().toISOString().split("T")[0]
 
           for (const trade of dailyTrades) {
-            const { error } = await supabase.from("trade_records").upsert({
+            const { error } = await localSupabase.from("trade_records").upsert({
+              // FIX: Used localSupabase here
               user_id: user?.id,
               date: date,
               pair: trade.pair,
@@ -608,7 +669,7 @@ export default function DailyTrackerPage() {
         </TabsList>
 
         <TabsContent value="today" className="space-y-6 md:space-y-8">
-          {(todayEntry?.morningCheck || virtualData) && (
+          {(todayEntry?.morningCheck || virtualData?.[0]?.morningCheck) && (
             <>
               {isMorningCheckCompleted && readinessScore !== null && (
                 <div className="relative">
@@ -720,7 +781,7 @@ export default function DailyTrackerPage() {
                   <div>
                     <h3 className="text-lg font-bold text-white mb-2">AI Insight</h3>
                     <p className="text-gray-300 leading-relaxed">
-                      {!isLiveMode ? virtualData?.insight : tradingDecision.message}
+                      {!isLiveMode ? virtualData?.[0]?.insight : tradingDecision.message}
                     </p>
                   </div>
                 </div>
@@ -879,115 +940,121 @@ export default function DailyTrackerPage() {
             </>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {stageData.map((stage, index) => {
-              // Use virtualData for stage status in virtual mode
-              const isCompleted = !isLiveMode
-                ? true
-                : todayEntry?.morningCheck && stages.find((s) => s.id === stage.id)?.completed
-              const isUnlocked = !isLiveMode
-                ? true
-                : todayEntry?.morningCheck && stages.find((s) => s.id === stage.id)?.unlocked
-              const isActive = !isCompleted && isUnlocked
+          {/* Render loading state or content */}
+          {entriesLoading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-muted-foreground">Načítání historie...</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              {stageData.map((stage, index) => {
+                // Use virtualData for stage status in virtual mode
+                const isCompleted = !isLiveMode ? true : todayEntry && stages.find((s) => s.id === stage.id)?.completed
+                const isUnlocked = !isLiveMode ? true : todayEntry && stages.find((s) => s.id === stage.id)?.unlocked
+                const isActive = !isCompleted && isUnlocked
 
-              return (
-                <Card
-                  key={stage.id}
-                  className={cn(
-                    "relative overflow-hidden border-2 transition-all duration-300",
-                    isCompleted && `${stage.borderColor} ${stage.bgColor}`,
-                    isActive && "border-yellow-500/50 bg-yellow-500/10 animate-pulse cursor-pointer",
-                    !isUnlocked && "border-slate-700/50 bg-slate-800/30 opacity-40 cursor-not-allowed",
-                    isUnlocked && !isCompleted && "hover:scale-105 cursor-pointer",
-                  )}
-                  onClick={() => {
-                    if (isUnlocked && stage.href) {
-                      router.push(stage.href)
-                    }
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity from-white/5 to-transparent" />
-                  <div className="relative p-6">
-                    <div className="flex flex-col items-center text-center space-y-3">
-                      <div
-                        className={cn(
-                          "relative p-4 rounded-2xl",
-                          isCompleted && `bg-gradient-to-br ${stage.color}`,
-                          isActive && "bg-gradient-to-br from-yellow-500 to-orange-500",
-                          !isUnlocked && "bg-slate-700/50",
-                        )}
-                      >
-                        <stage.icon
+                return (
+                  <Card
+                    key={stage.id}
+                    className={cn(
+                      "relative overflow-hidden border-2 transition-all duration-300",
+                      isCompleted && `${stage.borderColor} ${stage.bgColor}`,
+                      isActive && "border-yellow-500/50 bg-yellow-500/10 animate-pulse cursor-pointer",
+                      !isUnlocked && "border-slate-700/50 bg-slate-800/30 opacity-40 cursor-not-allowed",
+                      isUnlocked && !isCompleted && "hover:scale-105 cursor-pointer",
+                    )}
+                    onClick={() => {
+                      if (isUnlocked && stage.href) {
+                        router.push(stage.href)
+                      }
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity from-white/5 to-transparent" />
+                    <div className="relative p-6">
+                      <div className="flex flex-col items-center text-center space-y-3">
+                        <div
                           className={cn(
-                            "h-8 w-8",
-                            (isCompleted || isActive) && "text-white",
-                            !isUnlocked && "text-slate-500",
+                            "relative p-4 rounded-2xl",
+                            isCompleted && `bg-gradient-to-br ${stage.color}`,
+                            isActive && "bg-gradient-to-br from-yellow-500 to-orange-500",
+                            !isUnlocked && "bg-slate-700/50",
+                          )}
+                        >
+                          <stage.icon
+                            className={cn(
+                              "h-8 w-8",
+                              (isCompleted || isActive) && "text-white",
+                              !isUnlocked && "text-slate-500",
+                            )}
+                          />
+                          {!isUnlocked && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 rounded-2xl">
+                              <Lock className="h-6 w-6 text-slate-400" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <div
+                            className={cn(
+                              "text-sm font-bold mb-1",
+                              isCompleted && "text-white",
+                              isActive && "text-yellow-400",
+                              !isUnlocked && "text-slate-500",
+                            )}
+                          >
+                            Stage {stage.id}
+                          </div>
+                          <div
+                            className={cn(
+                              "text-xs font-medium",
+                              (isCompleted || isActive) && "text-white",
+                              !isUnlocked && "text-slate-600",
+                            )}
+                          >
+                            {stage.name}
+                          </div>
+                        </div>
+
+                        <div>
+                          {isCompleted && (
+                            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Dokončeno
+                            </Badge>
+                          )}
+                          {isActive && (
+                            <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+                              <Unlock className="h-3 w-3 mr-1" />
+                              Aktivní
+                            </Badge>
+                          )}
+                          {!isUnlocked && (
+                            <Badge className="bg-slate-700/20 text-slate-500 border-slate-700/30 text-xs">
+                              <Lock className="h-3 w-3 mr-1" />
+                              Zamčeno
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {index < 4 && (
+                        <div
+                          className={cn(
+                            "absolute top-1/2 -right-2 w-4 h-0.5 transform -translate-y-1/2 z-10",
+                            isCompleted ? "bg-gradient-to-r " + stage.color : "bg-slate-700/50",
                           )}
                         />
-                        {!isUnlocked && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 rounded-2xl">
-                            <Lock className="h-6 w-6 text-slate-400" />
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <div
-                          className={cn(
-                            "text-sm font-bold mb-1",
-                            isCompleted && "text-white",
-                            isActive && "text-yellow-400",
-                            !isUnlocked && "text-slate-500",
-                          )}
-                        >
-                          Stage {stage.id}
-                        </div>
-                        <div
-                          className={cn(
-                            "text-xs font-medium",
-                            (isCompleted || isActive) && "text-white",
-                            !isUnlocked && "text-slate-600",
-                          )}
-                        >
-                          {stage.name}
-                        </div>
-                      </div>
-
-                      <div>
-                        {isCompleted && (
-                          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Dokončeno
-                          </Badge>
-                        )}
-                        {isActive && (
-                          <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
-                            <Unlock className="h-3 w-3 mr-1" />
-                            Aktivní
-                          </Badge>
-                        )}
-                        {!isUnlocked && (
-                          <Badge className="bg-slate-700/20 text-slate-500 border-slate-700/30 text-xs">
-                            <Lock className="h-3 w-3 mr-1" />
-                            Zamčeno
-                          </Badge>
-                        )}
-                      </div>
+                      )}
                     </div>
-
-                    {index < 4 && (
-                      <div
-                        className={cn(
-                          "absolute top-1/2 -right-2 w-4 h-0.5 transform -translate-y-1/2 z-10",
-                          isCompleted ? "bg-gradient-to-r " + stage.color : "bg-slate-700/50",
-                        )}
-                      />
-                    )}
-                  </div>
-                </Card>
-              )
-            })}
-          </div>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
 
           {/* Continue Button */}
           {(!isLiveMode || (todayEntry && todayStages.filter((s) => s.completed).length < 5)) && (
@@ -997,13 +1064,13 @@ export default function DailyTrackerPage() {
                 <h3 className="text-2xl font-black mb-2">Pokračuj v Daily Flow!</h3>
                 <p className="text-muted-foreground mb-6">
                   Dokončil jsi{" "}
-                  {!isLiveMode ? virtualData?.stagesCompleted : todayStages.filter((s) => s.completed).length} z 5
+                  {!isLiveMode ? virtualData?.[0]?.stagesCompleted : todayStages.filter((s) => s.completed).length} z 5
                   stages. Pokračuj dál!
                 </p>
                 <Button
                   onClick={() => {
                     const nextStageId = !isLiveMode
-                      ? virtualData?.nextStageId
+                      ? virtualData?.[0]?.nextStageId
                       : todayStages.find((s) => !s.completed && s.unlocked)?.id
                     if (nextStageId) {
                       const nextStage = stageData.find((sd) => sd.id === nextStageId)
@@ -1362,15 +1429,15 @@ export default function DailyTrackerPage() {
               })}
             </div>
           ) : (
-            <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border border-white/10">
+            <Card className="border-2 border-slate-700/50 bg-slate-800/30">
               <CardContent className="p-16 text-center">
-                <CalendarIcon className="h-24 w-24 mx-auto mb-6 text-muted-foreground opacity-50" />
-                <h3 className="text-3xl font-black mb-4">Zatím Žádné Záznamy</h3>
-                <p className="text-xl text-muted-foreground mb-8">Začni sledovat svůj den!</p>
-                <Button onClick={() => router.push("/morning-check")} size="lg" className="h-14 px-8 text-lg">
-                  <Target className="h-6 w-6 mr-2" />
-                  Začít Morning Check
-                </Button>
+                <CalendarIcon className="h-24 w-24 mx-auto mb-6 text-slate-600" />
+                <h3 className="text-3xl font-black mb-4 text-slate-400">Žádná Historie</h3>
+                <p className="text-xl text-muted-foreground">
+                  {isLiveMode
+                    ? "Zatím nemáš žádné záznamy. Začni vyplněním Morning Check!"
+                    : "V demo režimu se historie nezobrazuje."}
+                </p>
               </CardContent>
             </Card>
           )}

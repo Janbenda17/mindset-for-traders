@@ -1,4 +1,4 @@
-export { supabase, getSupabaseBrowserClient } from "./browser"
+export { supabase, getBrowserSupabase } from "./browser"
 
 // Legacy exports for backwards compatibility - all point to singleton
 export function createClient() {

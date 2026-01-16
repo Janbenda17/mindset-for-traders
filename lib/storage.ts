@@ -1,66 +1,111 @@
 // User-scoped localStorage to prevent cross-account data mixing
+// VIRTUAL mode: "virtual:<userId>:<key>"
+// LIVE mode cache: "live:<userId>:<key>"
 
-export function scopedKey(userId: string, key: string): string {
+export type StorageScope = "virtual" | "live"
+
+export function buildKey(scope: StorageScope, userId: string, key: string): string {
   if (!userId) {
     console.warn(`[storage] Attempted to create scoped key without userId for key: ${key}`)
-    return "" // Return empty string if userId missing
+    return ""
   }
-  return `mindtrader:${userId}:${key}`
+  return `${scope}:${userId}:${key}`
 }
 
-export function getScoped(userId: string, key: string): string | null {
-  if (typeof window === "undefined") return null
-  if (!userId) return null // Don't read if no userId
-
-  const fullKey = scopedKey(userId, key)
-  const value = localStorage.getItem(fullKey)
-
-  if (value === null) {
-    const legacyValue = localStorage.getItem(key)
-    if (legacyValue !== null) {
-      console.log(`[storage] Migrating legacy key "${key}" to scoped key for user ${userId}`)
-      localStorage.setItem(fullKey, legacyValue)
-      localStorage.removeItem(key) // Remove legacy key after migration
-      return legacyValue
-    }
-  }
-
-  return value
+export function scopedKey(userId: string, key: string): string {
+  return buildKey("virtual", userId, key)
 }
 
-export function setScoped(userId: string, key: string, value: string): void {
+export function getScoped<T>(scope: StorageScope, userId: string, key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback
+  if (!userId) return fallback
+
+  const fullKey = buildKey(scope, userId, key)
+  if (!fullKey) return fallback
+
+  try {
+    const value = localStorage.getItem(fullKey)
+    if (value === null) return fallback
+    return JSON.parse(value) as T
+  } catch (e) {
+    console.warn(`[storage] Error parsing ${fullKey}:`, e)
+    return fallback
+  }
+}
+
+export function setScoped<T>(scope: StorageScope, userId: string, key: string, value: T): void {
   if (typeof window === "undefined") return
   if (!userId) {
     console.warn(`[storage] Attempted to write without userId for key: ${key}`)
-    return // No-op if no userId
+    return
   }
 
-  const fullKey = scopedKey(userId, key)
-  localStorage.setItem(fullKey, value)
+  const fullKey = buildKey(scope, userId, key)
+  if (!fullKey) return
+
+  try {
+    localStorage.setItem(fullKey, JSON.stringify(value))
+  } catch (e) {
+    console.warn(`[storage] Error writing ${fullKey}:`, e)
+  }
 }
 
-export function removeScoped(userId: string, key: string): void {
+export function removeScoped(scope: StorageScope, userId: string, key: string): void {
   if (typeof window === "undefined") return
   if (!userId) return
 
-  const fullKey = scopedKey(userId, key)
+  const fullKey = buildKey(scope, userId, key)
+  if (!fullKey) return
+
   localStorage.removeItem(fullKey)
 }
 
-export function clearUserScopedData(userId: string): void {
+export function clearUserScoped(userId: string): void {
   if (typeof window === "undefined") return
   if (!userId) return
 
-  const prefix = `mindtrader:${userId}:`
+  const prefixes = [`virtual:${userId}:`, `live:${userId}:`]
   const keysToRemove: string[] = []
 
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i)
-    if (key && key.startsWith(prefix)) {
-      keysToRemove.push(key)
+    if (key) {
+      for (const prefix of prefixes) {
+        if (key.startsWith(prefix)) {
+          keysToRemove.push(key)
+          break
+        }
+      }
     }
   }
 
   keysToRemove.forEach((key) => localStorage.removeItem(key))
-  console.log(`[storage] Cleared ${keysToRemove.length} scoped keys for user ${userId}`)
+  console.log(`[storage] Cleared ${keysToRemove.length} scoped keys for user ${userId}:`, keysToRemove)
+}
+
+// Legacy compatibility - remove old non-scoped keys
+export function migrateLegacyKeys(userId: string): void {
+  if (typeof window === "undefined") return
+  if (!userId) return
+
+  const legacyKeys = ["trades", "journal-entries", "morning-checks", "weekly-reviews", "gamification-data"]
+  let migratedCount = 0
+
+  for (const key of legacyKeys) {
+    const legacyValue = localStorage.getItem(key)
+    if (legacyValue !== null) {
+      // Migrate to virtual scope (safer default)
+      const newKey = buildKey("virtual", userId, key)
+      if (newKey) {
+        localStorage.setItem(newKey, legacyValue)
+        localStorage.removeItem(key)
+        migratedCount++
+        console.log(`[storage] Migrated legacy key "${key}" to "${newKey}"`)
+      }
+    }
+  }
+
+  if (migratedCount > 0) {
+    console.log(`[storage] Migrated ${migratedCount} legacy keys for user ${userId}`)
+  }
 }

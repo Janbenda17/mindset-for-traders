@@ -50,26 +50,40 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [userProgress, setUserProgress] = useState<UserChallengeProgress[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const { user } = useAuth() // Import useAuth to check if user exists
+  const { user, authReady } = useAuth() // Get authReady flag
 
-  // Load challenges and leaderboard
   useEffect(() => {
-    if (user) {
-      loadChallenges()
-      loadUserProgress()
-    } else {
-      setIsLoading(false)
+    if (authReady) {
+      if (user) {
+        loadChallenges()
+        loadUserProgress()
+      } else {
+        setIsLoading(false)
+      }
     }
-  }, [user])
+  }, [authReady, user])
 
   const loadChallenges = async () => {
     try {
-      const response = await fetch("/api/challenges")
-      const data = await response.json()
-      setChallenges(data.challenges)
-      setLeaderboard(data.leaderboard)
-    } catch (error) {
-      console.error("[v0] Failed to load challenges:", error)
+      const response = await fetch("/api/challenges", {
+        credentials: "include", // Ensure cookies are sent
+      })
+
+      if (response.status === 401) {
+        console.log("[v0] Challenges: Not authenticated")
+        setIsLoading(false)
+        return
+      }
+
+      if (response.ok) {
+        const data = await response.json()
+        setChallenges(data.challenges)
+        setLeaderboard(data.leaderboard)
+      }
+    } catch (error: any) {
+      if (error.name !== "AbortError") {
+        console.error("[v0] Failed to load challenges:", error)
+      }
     } finally {
       setIsLoading(false)
     }

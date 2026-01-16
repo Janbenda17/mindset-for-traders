@@ -43,7 +43,6 @@ interface MorningCheckData {
   exerciseDuration: number
   meditationTime: number
   morningRoutine: boolean
-  hydration: number
   score: number
   recommendation: string
 }
@@ -79,7 +78,6 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
     exerciseDuration: 30,
     meditationTime: 0,
     morningRoutine: false,
-    hydration: 6,
     score: 0,
     recommendation: "",
   })
@@ -103,13 +101,13 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
 
   const calculateScore = () => {
     const weights = {
-      sleepQuality: 0.18, // Sleep je základ - špatný spánek = špatné rozhodování
-      sleepHours: 0.12, // Délka spánku je důležitá ale méně než kvalita
-      energyLevel: 0.18, // Energie ovlivňuje disciplínu a trpělivost
-      stressLevel: 0.15, // Stres vede k impulsivním rozhodnutím
-      focus: 0.2, // Focus je klíčový - bez koncentrace = chyby
-      emotionalState: 0.12, // Emoce ovlivňují risk management
-      physicalHealth: 0.05, // Fyzické zdraví má menší přímý vliv
+      sleepQuality: 0.18,
+      sleepHours: 0.12,
+      energyLevel: 0.18,
+      stressLevel: 0.15,
+      focus: 0.2,
+      emotionalState: 0.12,
+      physicalHealth: 0.05,
     }
 
     const sleepScore = (assessment.sleepQuality / 10) * 100
@@ -117,8 +115,8 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       assessment.sleepHours >= 7 && assessment.sleepHours <= 9
         ? 100
         : assessment.sleepHours < 6
-          ? Math.max(0, (assessment.sleepHours / 6) * 100) // Těžká penalizace pod 6h
-          : Math.max(0, 100 - (assessment.sleepHours - 9) * 10) // Mírná penalizace nad 9h
+          ? Math.max(0, (assessment.sleepHours / 6) * 100)
+          : Math.max(0, 100 - (assessment.sleepHours - 9) * 10)
 
     const energyScore = (assessment.energyLevel / 10) * 100
     const stressScore = ((10 - assessment.stressLevel) / 10) * 100
@@ -136,14 +134,10 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       emotionalScore * weights.emotionalState
 
     let bonus = 0
-    if (assessment.exercised) bonus += 5 // Cvičení zlepšuje fokus a disciplínu
-    if (assessment.meditationTime >= 10)
-      bonus += 5 // Meditace 10+ min = lepší emoční kontrola
-    else if (assessment.meditationTime > 0) bonus += 2 // Krátká meditace = malý bonus
-    if (assessment.morningRoutine) bonus += 3 // Konzistentní rutina = mentální připravenost
-    if (assessment.hydration >= 8)
-      bonus += 3 // Dobrá hydratace = lepší kognitní funkce
-    else if (assessment.hydration >= 6) bonus += 1
+    if (assessment.exercised) bonus += 5
+    if (assessment.meditationTime >= 10) bonus += 5
+    else if (assessment.meditationTime > 0) bonus += 2
+    if (assessment.morningRoutine) bonus += 3
 
     return Math.min(100, Math.round(baseScore + bonus))
   }
@@ -198,10 +192,9 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
     assessment.exercised,
     assessment.meditationTime,
     assessment.morningRoutine,
-    assessment.hydration,
   ])
 
-  const saveAssessment = () => {
+  const saveAssessment = async () => {
     if (!isLiveMode) {
       toast({
         title: "Demo Mode",
@@ -216,16 +209,25 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
     const lockKey = `user-${user?.id}-morning-check-locked-${todayDate}`
     const xpKey = `user-${user?.id}-morning-check-xp-${todayDate}`
 
-    localStorage.setItem(lockKey, "true")
-    setIsLocked(true)
-
     const newCheck = {
       ...assessment,
       id: Date.now().toString(),
       date: todayDate,
     }
 
-    addMorningCheck(newCheck)
+    const success = await addMorningCheck(newCheck)
+
+    if (!success) {
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se uložit ranní kontrolu do databáze",
+        variant: "destructive",
+      })
+      return
+    }
+
+    localStorage.setItem(lockKey, "true")
+    setIsLocked(true)
 
     const storageKey = `user-${user?.id}-daily-tracker-entries-live`
     const entries = JSON.parse(localStorage.getItem(storageKey) || "[]")
@@ -249,7 +251,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
         },
         nutrition: {
           quality: 7,
-          water_intake: assessment.hydration,
+          water_intake: 0,
         },
         mental_state: {
           stress_level: assessment.stressLevel,
@@ -298,7 +300,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       }
       todayEntry.nutrition = {
         ...todayEntry.nutrition,
-        water_intake: assessment.hydration,
+        water_intake: 0,
       }
       todayEntry.mental_state = {
         ...todayEntry.mental_state,
@@ -512,10 +514,6 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Physical Health</span>
                 <span className="text-2xl font-bold text-green-400">{assessment.physicalHealth}/10</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Hydration Level</span>
-                <span className="text-2xl font-bold text-green-400">{assessment.hydration}/10</span>
               </div>
             </CardContent>
           </Card>
@@ -736,20 +734,6 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
               <Slider
                 value={[assessment.physicalHealth]}
                 onValueChange={([val]) => setAssessment({ ...assessment, physicalHealth: val })}
-                min={1}
-                max={10}
-                step={1}
-                className="h-3"
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Hydration Level</span>
-                <span className="text-lg font-bold text-green-400">{assessment.hydration}/10</span>
-              </div>
-              <Slider
-                value={[assessment.hydration]}
-                onValueChange={([val]) => setAssessment({ ...assessment, hydration: val })}
                 min={1}
                 max={10}
                 step={1}

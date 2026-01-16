@@ -3,8 +3,8 @@
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
-import { clearUserData } from "@/lib/user-storage"
-import { supabase } from "@/lib/supabase/browser"
+import { clearUserScoped, migrateLegacyKeys } from "@/lib/storage"
+import { getBrowserSupabase } from "@/lib/supabase/browser"
 
 interface User {
   id: string
@@ -19,7 +19,7 @@ interface AuthContextType {
   register: (data: { email: string; password: string; name: string }) => Promise<boolean>
   logout: () => void
   isLoading: boolean
-  authReady: boolean // New flag to indicate auth initialization is complete
+  authReady: boolean
   clearAllAccounts: () => void
 }
 
@@ -28,11 +28,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [authReady, setAuthReady] = useState(false) // Track auth initialization
+  const [authReady, setAuthReady] = useState(false)
   const router = useRouter()
 
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
   const lastUserIdRef = useRef<string | null>(null)
+
+  const supabase = getBrowserSupabase()
 
   const clearAllAccounts = () => {
     localStorage.setItem("trader-mindset-registered-users", JSON.stringify([]))
@@ -70,6 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           lastUserIdRef.current = session.user.id
           setUser(userData)
+          migrateLegacyKeys(session.user.id)
+          console.log(`[v0] Login debug: userId=${session.user.id}, email=${session.user.email}`)
         } else if (isMounted) {
           console.log("[v0] No authenticated user")
         }
@@ -102,6 +106,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
+      if (event === "SIGNED_OUT") {
+        if (lastUserIdRef.current) {
+          console.log("[v0] Auth state changed: SIGNED_OUT", session?.user?.email ? `(${session.user.email})` : "")
+        }
+        lastUserIdRef.current = null
+        setUser(null)
+        return
+      }
+
       console.log("[v0] Auth state changed:", event, session?.user?.email ? `(${session.user.email})` : "")
 
       if (event === "SIGNED_IN" && session?.user) {
@@ -112,9 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Trader",
         }
         setUser(userData)
-      } else if (event === "SIGNED_OUT") {
-        lastUserIdRef.current = null
-        setUser(null)
+        migrateLegacyKeys(session.user.id)
+        console.log(`[v0] SignIn debug: userId=${session.user.id}, email=${session.user.email}`)
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
         lastUserIdRef.current = session.user.id
         setUser({
@@ -134,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         subscriptionRef.current = null
       }
     }
-  }, []) // Empty deps - singleton subscription runs once only
+  }, [supabase])
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -154,8 +166,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      if (data.user) {
-        console.log("[v0] Login successful")
+      if (data.user && data.session) {
+        console.log("[v0] Login successful - session established")
+        console.log(`[v0] Login debug: userId=${data.user.id}, email=${data.user.email}`)
+
         const userData = {
           id: data.user.id,
           email: data.user.email!,
@@ -163,14 +177,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         lastUserIdRef.current = data.user.id
         setUser(userData)
+        migrateLegacyKeys(data.user.id)
 
         toast({
           title: "Přihlášení úspěšné",
           description: "Vítejte zpět!",
         })
 
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        router.push("/")
+        console.log("[v0] Waiting for cookies to sync...")
+        await new Promise((resolve) => setTimeout(resolve, 500))
+
+        const { data: sessionData } = await supabase.auth.getSession()
+        if (sessionData.session) {
+          console.log("[v0] Session verified, performing hard redirect to /")
+          window.location.href = "/"
+        } else {
+          console.log("[v0] Session not found, redirecting anyway")
+          window.location.href = "/"
+        }
+
         return true
       }
 
@@ -228,20 +253,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      console.log("[v0] User created successfully:", authData.user.id)
+      console.log(`[v0] Register debug: userId=${authData.user.id}, email=${authData.user.email}`)
 
-      if (!authData.session) {
-        toast({
-          title: "Registrace úspěšná",
-          description: "Účet byl vytvořen. Přihlašuji...",
-        })
-        await supabase.auth.getSession()
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-        router.push("/onboarding")
-        return true
-      }
-
-      // Wait for profile creation
       let profile = null
       let attempts = 0
       const maxAttempts = 10
@@ -272,8 +285,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Vítejte v MindTrader!",
       })
 
-      await supabase.auth.getSession()
-      router.push("/onboarding")
+      console.log("[v0] Waiting for cookies to sync after registration...")
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      console.log("[v0] Performing hard redirect to /onboarding")
+      window.location.href = "/onboarding"
       return true
     } catch (error: any) {
       console.error("[v0] Registration unexpected error:", error?.message)
@@ -288,6 +304,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     const userId = user?.id
+    const userEmail = user?.email
+
+    if (userId) {
+      console.log(`[v0] Logout debug: clearing data for userId=${userId}, email=${userEmail}`)
+      clearUserScoped(userId)
+      localStorage.removeItem("gamification-data")
+      localStorage.removeItem(`mindtrader:${userId}:mode`)
+    }
 
     supabase.auth.signOut()
 
@@ -295,17 +319,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     lastUserIdRef.current = null
     setUser(null)
 
-    if (userId) {
-      clearUserData(userId)
-      localStorage.removeItem("gamification-data")
-      localStorage.removeItem(`mindtrader:${userId}:mode`)
-    }
-
     toast({
       title: "Odhlášení úspěšné",
       description: "Nashledanou!",
     })
-    router.push("/login")
+
+    window.location.href = "/auth/login"
   }
 
   return (

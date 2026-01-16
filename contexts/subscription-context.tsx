@@ -36,15 +36,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null)
   const [customerId, setCustomerId] = useState<string | null>(null)
 
-  const { user } = useAuth()
+  const { user, authReady } = useAuth() // Get authReady flag
 
   const isPremium = plan === "premium" && isActive
 
   useEffect(() => {
-    if (user) {
+    if (authReady && user) {
       checkSubscriptionStatus()
     }
-  }, [user])
+  }, [authReady, user])
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -63,7 +63,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         headers: {
           "x-customer-id": storedCustomerId || "",
         },
+        credentials: "include", // Ensure cookies are sent
       })
+
+      if (response.status === 401) {
+        console.log("[v0] Subscription check: Not authenticated")
+        return
+      }
 
       if (response.ok) {
         const data = await response.json()
@@ -85,8 +91,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           setDaysRemaining(Math.max(0, diffDays))
         }
       }
-    } catch (error) {
-      console.error("Error checking subscription status:", error)
+    } catch (error: any) {
+      if (error.name !== "AbortError") {
+        console.error("[v0] Error checking subscription status:", error)
+      }
     }
   }
 

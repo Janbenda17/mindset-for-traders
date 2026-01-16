@@ -7,8 +7,13 @@ import { supabase } from "@/lib/supabase/browser"
 import { useSubscription } from "@/hooks/use-subscription"
 import { useLiveMode } from "./live-mode-context"
 import { toast } from "@/hooks/use-toast"
+import { getScoped, setScoped, type StorageScope } from "@/lib/storage"
+import {
+  generateVirtualTrades,
+  generateVirtualJournalEntries,
+  generateVirtualMorningChecks,
+} from "@/lib/virtual-data-generator"
 
-// TypeScript interfaces for trades and data
 interface Trade {
   id: string
   date: string
@@ -46,7 +51,17 @@ interface MorningCheck {
   id: string
   date: string
   score: number
-  [key: string]: any
+  emotionalState?: number
+  stressLevel?: number
+  sleepHours?: number
+  sleepQuality?: number
+  energyLevel?: number
+  focus?: number
+  physicalHealth?: number
+  exercised?: boolean
+  morningRoutine?: boolean
+  meditation?: number
+  locked?: boolean
 }
 
 interface WeeklyReview {
@@ -67,10 +82,9 @@ interface DataState {
   portfolioValue: number
   userId: string | null
   tradingGoals?: any[]
-  dataLoaded: boolean // Track if data has been loaded
+  dataLoaded: boolean
 }
 
-// Action types for reducer
 type DataAction =
   | { type: "ADD_TRADE"; payload: Trade }
   | { type: "UPDATE_TRADE"; payload: Trade }
@@ -135,7 +149,6 @@ function dataReducer(state: DataState, action: DataAction): DataState {
 }
 
 interface DataContextType {
-  // State
   trades: Trade[]
   morningChecks: MorningCheck[]
   journalEntries: any[]
@@ -148,12 +161,10 @@ interface DataContextType {
   tradingGoals?: any[]
   currentReadiness: number | null
   dataLoaded: boolean
-
-  // Actions
-  addTrade: (trade: Trade) => void
+  addTrade: (trade: Trade) => Promise<boolean>
   updateTrade: (trade: Trade) => void
   deleteTrade: (id: string) => void
-  addMorningCheck: (check: MorningCheck) => void
+  addMorningCheck: (check: MorningCheck) => Promise<boolean>
   addJournalEntry: (entry: any) => void
   updateJournalEntry: (entry: any) => void
   deleteJournalEntry: (id: string) => void
@@ -165,10 +176,8 @@ interface DataContextType {
   switchToLive: () => void
   clearAllData: () => void
   setUserId: (userId: string | null) => void
-  setTradingGoals: (goals: any[]) => void // Added action type for tradingGoals
-  refreshLiveData: () => void // Added refresh method to DataContextType
-
-  // Computed values (kept for backwards compatibility)
+  setTradingGoals: (goals: any[]) => void
+  refreshLiveData: () => void
   getAllTrades: () => Trade[]
   getAllJournalEntries: () => any[]
   getAllMorningChecks: () => MorningCheck[]
@@ -178,7 +187,7 @@ interface DataContextType {
   isOwner: boolean
   canSwitchModes: boolean
   isVirtualMode: boolean
-  getTraderProfile: (days: number) => any // Added getTraderProfile to DataContextType
+  getTraderProfile: (days: number) => any
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -188,7 +197,7 @@ const initialState: DataState = {
   morningChecks: [],
   journalEntries: [],
   weeklyReviews: [],
-  isLiveMode: undefined as any, // Will be set from profile.mode
+  isLiveMode: undefined as any,
   hasEverSwitchedToLive: false,
   showLiveWarning: false,
   portfolioValue: 10000,
@@ -198,20 +207,24 @@ const initialState: DataState = {
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, authReady } = useAuth()
-  const { isLiveMode, isLoading: modeLoading } = useLiveMode() // Use LiveModeContext instead of managing mode internally
+  const { isLiveMode, isLoading: modeLoading } = useLiveMode()
   const [state, dispatch] = useReducer(dataReducer, initialState)
 
   const { isPremium } = useSubscription()
 
   const prevUserIdRef = useRef<string | null>(null)
+  const prevModeRef = useRef<boolean | null>(null)
   const loadingRef = useRef(false)
 
   const canSwitchModes = isPremium
 
+  const getScope = useCallback((): StorageScope => {
+    return isLiveMode ? "live" : "virtual"
+  }, [isLiveMode])
+
   useEffect(() => {
     const newUserId = user?.id || null
 
-    // Detect user change - clear data if user switched
     if (prevUserIdRef.current !== null && prevUserIdRef.current !== newUserId) {
       console.log("[v0] User changed - clearing all data")
       dispatch({ type: "CLEAR_ALL_DATA" })
@@ -221,33 +234,97 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: "SET_USER_ID", payload: newUserId })
   }, [user?.id])
 
+  const loadVirtualData = useCallback((userId: string) => {
+    console.log(`[v0] ✓ VIRTUAL MODE - Loading from localStorage (virtual:${userId}:*)`)
+
+    // Try to load existing virtual data
+    const storedTrades = getScoped<Trade[]>("virtual", userId, "trades", [])
+    const storedMorningChecks = getScoped<MorningCheck[]>("virtual", userId, "morning-checks", [])
+    const storedJournalEntries = getScoped<any[]>("virtual", userId, "journal-entries", [])
+    const storedWeeklyReviews = getScoped<WeeklyReview[]>("virtual", userId, "weekly-reviews", [])
+
+    // If no data exists, generate demo data and save it
+    if (storedTrades.length === 0 && storedMorningChecks.length === 0 && storedJournalEntries.length === 0) {
+      console.log("[v0] No virtual data found - generating demo data")
+      const demoTrades = generateVirtualTrades(30)
+      const demoMorningChecks = generateVirtualMorningChecks(30)
+      const demoJournalEntries = generateVirtualJournalEntries(15)
+
+      // Save to namespaced localStorage
+      setScoped("virtual", userId, "trades", demoTrades)
+      setScoped("virtual", userId, "morning-checks", demoMorningChecks)
+      setScoped("virtual", userId, "journal-entries", demoJournalEntries)
+
+      dispatch({ type: "SET_TRADES", payload: demoTrades })
+      dispatch({ type: "SET_MORNING_CHECKS", payload: demoMorningChecks })
+      dispatch({ type: "SET_JOURNAL_ENTRIES", payload: demoJournalEntries })
+
+      console.log(
+        `[v0] Generated and saved ${demoTrades.length} trades, ${demoMorningChecks.length} morning checks, ${demoJournalEntries.length} journal entries`,
+      )
+    } else {
+      // Load existing data
+      dispatch({ type: "SET_TRADES", payload: storedTrades })
+      dispatch({ type: "SET_MORNING_CHECKS", payload: storedMorningChecks })
+      dispatch({ type: "SET_JOURNAL_ENTRIES", payload: storedJournalEntries })
+      dispatch({ type: "SET_WEEKLY_REVIEWS", payload: storedWeeklyReviews })
+
+      console.log(
+        `[v0] Loaded from localStorage: ${storedTrades.length} trades, ${storedMorningChecks.length} morning checks, ${storedJournalEntries.length} journal entries`,
+      )
+    }
+
+    dispatch({ type: "SET_DATA_LOADED", payload: true })
+  }, [])
+
   const loadDataFromSupabase = useCallback(async () => {
     if (!user?.id || loadingRef.current) return
 
     loadingRef.current = true
-    console.log("[v0] ✓ LIVE MODE ACTIVE - Loading ONLY from Supabase")
+    console.log(`[v0] ✓ LIVE MODE ACTIVE - Loading ONLY from Supabase for user ${user.id}`)
 
     try {
-      // Load trades
-      const { data: trades, error: tradesError } = await supabase
-        .from("trades")
+      const { data: journalData, error: tradesError } = await supabase
+        .from("journal_entries")
         .select("*")
         .eq("user_id", user.id)
+        .not("pair", "is", null) // Filter for trade entries (have pair/pnl)
         .order("created_at", { ascending: false })
 
-      if (!tradesError && trades) {
-        console.log(`[v0] Loaded ${trades.length} trades from Supabase for user ${user.id}`)
+      if (!tradesError && journalData) {
+        const trades = journalData.map((entry: any) => ({
+          id: entry.id,
+          date: entry.date,
+          pair: entry.pair,
+          direction: entry.direction || "long",
+          entryPrice: entry.entry_price || 0,
+          exitPrice: entry.exit_price || 0,
+          quantity: entry.quantity || 0,
+          pnl: entry.pnl || 0,
+          mood: entry.mood,
+          confidence: entry.confidence,
+          stress: entry.stress,
+          discipline: entry.discipline,
+          emotionBefore: entry.emotion_before,
+          emotionDuring: entry.emotion_during,
+          emotionAfter: entry.emotion_after,
+          notes: entry.notes,
+          entryReason: entry.entry_reason,
+          exitReason: entry.exit_reason,
+          marketConditions: entry.market_conditions,
+          revengeTrade: entry.revenge_trade,
+          exitedEarly: entry.exited_early,
+          missedDueToHesitation: entry.missed_due_to_hesitation,
+          matchedPlan: entry.matched_plan,
+          tags: entry.tags,
+        }))
+        console.log(`[v0] Loaded ${trades.length} trades from journal_entries`)
         dispatch({ type: "SET_TRADES", payload: trades })
       } else if (tradesError) {
-        console.error("[v0] Error loading trades:", tradesError)
-        toast({
-          title: "Chyba načítání obchodů",
-          description: "Nepodařilo se načíst obchody z databáze.",
-          variant: "destructive",
-        })
+        console.error("[v0] Error loading trades:", tradesError.message)
+        dispatch({ type: "SET_TRADES", payload: [] })
       }
 
-      // Load morning checks
       const { data: morningChecks, error: morningError } = await supabase
         .from("morning_checks")
         .select("*")
@@ -255,10 +332,29 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .order("date", { ascending: false })
 
       if (!morningError && morningChecks) {
-        console.log(`[v0] Loaded ${morningChecks.length} morning checks from Supabase for user ${user.id}`)
-        dispatch({ type: "SET_MORNING_CHECKS", payload: morningChecks })
+        // Map snake_case to camelCase for frontend
+        const mappedChecks = morningChecks.map((check: any) => ({
+          id: check.id,
+          date: check.date,
+          score: check.score,
+          emotionalState: check.emotional_state,
+          stressLevel: check.stress_level,
+          sleepHours: check.sleep_hours,
+          sleepQuality: check.sleep_quality,
+          energyLevel: check.energy_level,
+          focus: check.focus,
+          physicalHealth: check.physical_health,
+          hydration: check.hydration,
+          exercised: check.exercised,
+          morningRoutine: check.morning_routine,
+          meditation: check.meditation,
+          locked: check.locked,
+        }))
+        console.log(`[v0] Loaded ${mappedChecks.length} morning checks from Supabase`)
+        dispatch({ type: "SET_MORNING_CHECKS", payload: mappedChecks })
       } else if (morningError) {
-        console.error("[v0] Error loading morning checks:", morningError)
+        console.error("[v0] Error loading morning checks:", morningError.message)
+        dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
       }
 
       // Load journal entries
@@ -269,15 +365,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .order("created_at", { ascending: false })
 
       if (!journalError && journalEntries) {
-        console.log(`[v0] Loaded ${journalEntries.length} journal entries from Supabase for user ${user.id}`)
+        console.log(`[v0] Loaded ${journalEntries.length} journal entries from Supabase`)
         dispatch({ type: "SET_JOURNAL_ENTRIES", payload: journalEntries })
       } else if (journalError) {
         console.error("[v0] Error loading journal entries:", journalError)
-        toast({
-          title: "Chyba načítání položek dne",
-          description: "Nepodařilo se načíst položky dne z databáze.",
-          variant: "destructive",
-        })
+        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
       }
 
       // Load weekly reviews
@@ -288,41 +380,62 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .order("created_at", { ascending: false })
 
       if (!weeklyError && weeklyReviews) {
-        console.log(`[v0] Loaded ${weeklyReviews.length} weekly reviews from Supabase for user ${user.id}`)
+        console.log(`[v0] Loaded ${weeklyReviews.length} weekly reviews from Supabase`)
         dispatch({ type: "SET_WEEKLY_REVIEWS", payload: weeklyReviews })
       } else if (weeklyError) {
-        console.error("[v0] Error loading weekly reviews:", weeklyError)
+        if (weeklyError.message !== "signal is aborted without reason") {
+          console.error("[v0] Error loading weekly reviews:", weeklyError)
+        }
+        dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
       }
 
       dispatch({ type: "SET_DATA_LOADED", payload: true })
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === "AbortError" || error?.message?.includes("aborted")) {
+        return
+      }
       console.error("[v0] Error loading data from Supabase:", error)
+      dispatch({ type: "SET_TRADES", payload: [] })
+      dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
+      dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
+      dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
+      dispatch({ type: "SET_DATA_LOADED", payload: true })
     } finally {
       loadingRef.current = false
     }
   }, [user?.id])
 
   useEffect(() => {
-    // Wait for auth and mode to be ready
     if (!authReady || modeLoading) {
       console.log("[v0] Waiting for auth/mode to be ready...")
       return
     }
 
-    // No user - clear data and return
     if (!user?.id) {
-      console.log("[v0] No user - clearing data")
-      dispatch({ type: "CLEAR_ALL_DATA" })
+      console.log("[v0] No user - skipping data load")
       return
     }
 
-    if (isLiveMode === true) {
-      console.log("[v0] Mode loaded, starting data load. isLiveMode:", isLiveMode)
-      loadDataFromSupabase()
+    // Detect mode change
+    if (prevModeRef.current !== null && prevModeRef.current !== isLiveMode) {
+      console.log(
+        `[v0] Mode changed from ${prevModeRef.current ? "LIVE" : "VIRTUAL"} to ${isLiveMode ? "LIVE" : "VIRTUAL"} - clearing data`,
+      )
+      dispatch({ type: "CLEAR_ALL_DATA" })
     }
-  }, [user?.id, isLiveMode, authReady, modeLoading, loadDataFromSupabase])
+    prevModeRef.current = isLiveMode
 
-  // Compute currentReadiness from today's morning check
+    console.log(`[v0] Mode debug: isLiveMode=${isLiveMode}, userId=${user.id}`)
+
+    if (isLiveMode) {
+      // LIVE MODE: Supabase ONLY
+      loadDataFromSupabase()
+    } else {
+      // VIRTUAL MODE: localStorage ONLY with namespaced keys
+      loadVirtualData(user.id)
+    }
+  }, [user?.id, isLiveMode, authReady, modeLoading, loadDataFromSupabase, loadVirtualData])
+
   const currentReadiness = useMemo(() => {
     if (!state.morningChecks || state.morningChecks.length === 0) return null
 
@@ -340,166 +453,222 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [isLiveMode, user?.id, loadDataFromSupabase])
 
   const addTrade = useCallback(
-    async (trade: Trade) => {
+    async (trade: Trade): Promise<boolean> => {
       if (isLiveMode && user?.id) {
-        const { error } = await supabase.from("trades").insert({
-          ...trade,
+        const tradeTitle = `${trade.pair} ${trade.direction.toUpperCase()}`
+        const tradeContent = `Trade: ${trade.pair} ${trade.direction.toUpperCase()} | Entry: ${trade.entryPrice} | Exit: ${trade.exitPrice} | PnL: ${trade.pnl >= 0 ? "+" : ""}$${trade.pnl}${trade.notes ? ` | Notes: ${trade.notes}` : ""}`
+
+        const { error } = await supabase.from("journal_entries").insert({
           user_id: user.id,
+          title: tradeTitle,
+          content: tradeContent,
+          date: trade.date,
+          pair: trade.pair,
+          direction: trade.direction,
+          entry_price: trade.entryPrice,
+          exit_price: trade.exitPrice,
+          quantity: trade.quantity,
+          pnl: trade.pnl,
+          mood: trade.mood,
+          confidence: trade.confidence,
+          stress: trade.stress,
+          discipline: trade.discipline,
+          emotion_before: trade.emotionBefore,
+          emotion_during: trade.emotionDuring,
+          emotion_after: trade.emotionAfter,
+          notes: trade.notes,
+          entry_reason: trade.entryReason,
+          exit_reason: trade.exitReason,
+          market_conditions: trade.marketConditions,
+          revenge_trade: trade.revengeTrade,
+          exited_early: trade.exitedEarly,
+          missed_due_to_hesitation: trade.missedDueToHesitation,
+          matched_plan: trade.matchedPlan,
+          tags: trade.tags,
+          type: "trade",
         })
 
         if (error) {
-          console.error("[v0] Error adding trade to Supabase:", error)
-          toast({ title: "Chyba", description: "Nepodařilo se uložit obchod", variant: "destructive" })
-          return
+          console.error("[LIVE] insert trade FAIL:", error.message)
+          toast({
+            title: "Chyba",
+            description: "Nepodařilo se uložit obchod: " + error.message,
+            variant: "destructive",
+          })
+          return false
         }
 
-        // Refresh to get the inserted row with server-generated ID
+        console.log("[LIVE] insert trade OK")
         refreshLiveData()
-      } else {
+        return true
+      } else if (user?.id) {
+        const newTrades = [...state.trades, trade]
         dispatch({ type: "ADD_TRADE", payload: trade })
+        setScoped("virtual", user.id, "trades", newTrades)
+        return true
       }
+      return false
     },
-    [isLiveMode, user?.id, refreshLiveData],
+    [isLiveMode, user?.id, refreshLiveData, state.trades],
   )
 
   const updateTrade = useCallback(
     async (trade: Trade) => {
       if (isLiveMode && user?.id) {
-        const { error } = await supabase.from("trades").update(trade).eq("id", trade.id).eq("user_id", user.id)
-
+        const { error } = await supabase.from("journal_entries").update(trade).eq("id", trade.id).eq("user_id", user.id)
         if (error) {
           console.error("[v0] Error updating trade:", error)
           toast({ title: "Chyba", description: "Nepodařilo se aktualizovat obchod", variant: "destructive" })
           return
         }
         refreshLiveData()
-      } else {
+      } else if (user?.id) {
         dispatch({ type: "UPDATE_TRADE", payload: trade })
+        const updatedTrades = state.trades.map((t) => (t.id === trade.id ? trade : t))
+        setScoped("virtual", user.id, "trades", updatedTrades)
       }
     },
-    [isLiveMode, user?.id, refreshLiveData],
+    [isLiveMode, user?.id, refreshLiveData, state.trades],
   )
 
   const deleteTrade = useCallback(
     async (id: string) => {
       if (isLiveMode && user?.id) {
-        const { error } = await supabase.from("trades").delete().eq("id", id).eq("user_id", user.id)
-
+        const { error } = await supabase.from("journal_entries").delete().eq("id", id).eq("user_id", user.id)
         if (error) {
-          console.error("[v0] Error deleting trade:", error)
+          console.error("[v0] Error deleting trade:", error.message)
           toast({ title: "Chyba", description: "Nepodařilo se smazat obchod", variant: "destructive" })
           return
         }
         refreshLiveData()
-      } else {
+      } else if (user?.id) {
         dispatch({ type: "DELETE_TRADE", payload: id })
+        const filteredTrades = state.trades.filter((t) => t.id !== id)
+        setScoped("virtual", user.id, "trades", filteredTrades)
       }
     },
-    [isLiveMode, user?.id, refreshLiveData],
+    [isLiveMode, user?.id, refreshLiveData, state.trades],
   )
 
   const addMorningCheck = useCallback(
-    async (check: MorningCheck) => {
+    async (check: MorningCheck): Promise<boolean> => {
       if (isLiveMode && user?.id) {
         const { error } = await supabase.from("morning_checks").upsert(
           {
-            ...check,
             user_id: user.id,
+            date: check.date,
+            score: check.score,
+            emotional_state: check.emotionalState,
+            stress_level: check.stressLevel,
+            sleep_hours: check.sleepHours,
+            sleep_quality: check.sleepQuality,
+            energy_level: check.energyLevel,
+            focus: check.focus,
+            physical_health: check.physicalHealth,
+            exercised: check.exercised,
+            morning_routine: check.morningRoutine,
+            meditation: check.meditation || 0,
           },
-          {
-            onConflict: "user_id,date",
-          },
+          { onConflict: "user_id,date" },
         )
-
         if (error) {
-          console.error("[v0] Error adding morning check:", error)
-          toast({ title: "Chyba", description: "Nepodařilo se uložit ranní kontrolu", variant: "destructive" })
-          return
+          console.error("[LIVE] insert morning_check FAIL:", error.message)
+          toast({
+            title: "Chyba",
+            description: "Nepodařilo se uložit ranní kontrolu: " + error.message,
+            variant: "destructive",
+          })
+          return false
         }
+
+        console.log("[LIVE] insert morning_check OK")
         refreshLiveData()
-      } else {
+        return true
+      } else if (user?.id) {
         dispatch({ type: "ADD_MORNING_CHECK", payload: check })
+        const newChecks = [...state.morningChecks, check]
+        setScoped("virtual", user.id, "morning-checks", newChecks)
+        return true
       }
+      return false
     },
-    [isLiveMode, user?.id, refreshLiveData],
+    [isLiveMode, user?.id, refreshLiveData, state.morningChecks],
   )
 
   const addJournalEntry = useCallback(
     async (entry: any) => {
       if (isLiveMode && user?.id) {
-        const { error } = await supabase.from("journal_entries").insert({
-          ...entry,
-          user_id: user.id,
-        })
-
+        const { error } = await supabase.from("journal_entries").insert({ ...entry, user_id: user.id })
         if (error) {
-          console.error("[v0] Error adding journal entry:", error)
+          console.error("[v0] Error adding journal entry:", error.message)
           toast({ title: "Chyba", description: "Nepodařilo se uložit položku deníku", variant: "destructive" })
           return
         }
         refreshLiveData()
-      } else {
+      } else if (user?.id) {
         dispatch({ type: "ADD_JOURNAL_ENTRY", payload: entry })
+        const newEntries = [...state.journalEntries, entry]
+        setScoped("virtual", user.id, "journal-entries", newEntries)
       }
     },
-    [isLiveMode, user?.id, refreshLiveData],
+    [isLiveMode, user?.id, refreshLiveData, state.journalEntries],
   )
 
   const updateJournalEntry = useCallback(
     async (entry: any) => {
       if (isLiveMode && user?.id) {
         const { error } = await supabase.from("journal_entries").update(entry).eq("id", entry.id).eq("user_id", user.id)
-
         if (error) {
-          console.error("[v0] Error updating journal entry:", error)
+          console.error("[v0] Error updating journal entry:", error.message)
           toast({ title: "Chyba", description: "Nepodařilo se aktualizovat položku deníku", variant: "destructive" })
           return
         }
         refreshLiveData()
-      } else {
-        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [entry] })
+      } else if (user?.id) {
+        const updatedEntries = state.journalEntries.map((e) => (e.id === entry.id ? entry : e))
+        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: updatedEntries })
+        setScoped("virtual", user.id, "journal-entries", updatedEntries)
       }
     },
-    [isLiveMode, user?.id, refreshLiveData],
+    [isLiveMode, user?.id, refreshLiveData, state.journalEntries],
   )
 
   const deleteJournalEntry = useCallback(
     async (id: string) => {
       if (isLiveMode && user?.id) {
         const { error } = await supabase.from("journal_entries").delete().eq("id", id).eq("user_id", user.id)
-
         if (error) {
-          console.error("[v0] Error deleting journal entry:", error)
+          console.error("[v0] Error deleting journal entry:", error.message)
           toast({ title: "Chyba", description: "Nepodařilo se smazat položku deníku", variant: "destructive" })
           return
         }
         refreshLiveData()
-      } else {
-        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
+      } else if (user?.id) {
+        const filteredEntries = state.journalEntries.filter((e) => e.id !== id)
+        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: filteredEntries })
+        setScoped("virtual", user.id, "journal-entries", filteredEntries)
       }
     },
-    [isLiveMode, user?.id, refreshLiveData],
+    [isLiveMode, user?.id, refreshLiveData, state.journalEntries],
   )
 
   const addWeeklyReview = useCallback(
     async (review: WeeklyReview) => {
       if (isLiveMode && user?.id) {
-        const { error } = await supabase.from("weekly_reviews").insert({
-          ...review,
-          user_id: user.id,
-        })
-
+        const { error } = await supabase.from("weekly_reviews").insert({ ...review, user_id: user.id })
         if (error) {
-          console.error("[v0] Error adding weekly review:", error)
+          console.error("[v0] Error adding weekly review:", error.message)
           toast({ title: "Chyba", description: "Nepodařilo se uložit týdenní shrnutí", variant: "destructive" })
           return
         }
         refreshLiveData()
-      } else {
+      } else if (user?.id) {
         dispatch({ type: "ADD_WEEKLY_REVIEW", payload: review })
+        const newReviews = [...state.weeklyReviews, review]
+        setScoped("virtual", user.id, "weekly-reviews", newReviews)
       }
     },
-    [isLiveMode, user?.id, refreshLiveData],
+    [isLiveMode, user?.id, refreshLiveData, state.weeklyReviews],
   )
 
   const updateWeeklyReview = useCallback(
@@ -510,36 +679,38 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .update(review)
           .eq("id", review.id)
           .eq("user_id", user.id)
-
         if (error) {
-          console.error("[v0] Error updating weekly review:", error)
+          console.error("[v0] Error updating weekly review:", error.message)
           toast({ title: "Chyba", description: "Nepodařilo se aktualizovat týdenní shrnutí", variant: "destructive" })
           return
         }
         refreshLiveData()
-      } else {
-        dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [review] })
+      } else if (user?.id) {
+        const updatedReviews = state.weeklyReviews.map((r) => (r.id === review.id ? review : r))
+        dispatch({ type: "SET_WEEKLY_REVIEWS", payload: updatedReviews })
+        setScoped("virtual", user.id, "weekly-reviews", updatedReviews)
       }
     },
-    [isLiveMode, user?.id, refreshLiveData],
+    [isLiveMode, user?.id, refreshLiveData, state.weeklyReviews],
   )
 
   const deleteWeeklyReview = useCallback(
     async (id: string) => {
       if (isLiveMode && user?.id) {
         const { error } = await supabase.from("weekly_reviews").delete().eq("id", id).eq("user_id", user.id)
-
         if (error) {
-          console.error("[v0] Error deleting weekly review:", error)
+          console.error("[v0] Error deleting weekly review:", error.message)
           toast({ title: "Chyba", description: "Nepodařilo se smazat týdenní shrnutí", variant: "destructive" })
           return
         }
         refreshLiveData()
-      } else {
-        dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
+      } else if (user?.id) {
+        const filteredReviews = state.weeklyReviews.filter((r) => r.id !== id)
+        dispatch({ type: "SET_WEEKLY_REVIEWS", payload: filteredReviews })
+        setScoped("virtual", user.id, "weekly-reviews", filteredReviews)
       }
     },
-    [isLiveMode, user?.id, refreshLiveData],
+    [isLiveMode, user?.id, refreshLiveData, state.weeklyReviews],
   )
 
   const setShowLiveWarning = useCallback((show: boolean) => {
@@ -577,189 +748,60 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!trades.length) {
       return {
         totalTrades: 0,
+        winningTrades: 0,
+        losingTrades: 0,
         winRate: 0,
         totalPnL: 0,
+        averagePnL: 0,
+        profitFactor: 0,
+        largestWin: 0,
+        largestLoss: 0,
         averageWin: 0,
         averageLoss: 0,
-        profitFactor: 0,
-        maxDrawdown: 0,
-        sharpeRatio: 0,
-        consecutiveWins: 0,
-        consecutiveLosses: 0,
-        bestTrade: 0,
-        worstTrade: 0,
       }
     }
 
-    const wins = trades.filter((t) => t.pnl > 0)
-    const losses = trades.filter((t) => t.pnl < 0)
+    const winningTrades = trades.filter((t) => t.pnl > 0)
+    const losingTrades = trades.filter((t) => t.pnl < 0)
     const totalPnL = trades.reduce((sum, t) => sum + t.pnl, 0)
-    const avgWin = wins.length ? wins.reduce((sum, t) => sum + t.pnl, 0) / wins.length : 0
-    const avgLoss = losses.length ? Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0) / losses.length) : 0
-    const profitFactor = avgLoss > 0 ? avgWin / avgLoss : 0
-
-    const maxDrawdown = 0
-    const sharpeRatio = 0
-    const consecutiveWins = 0
-    const consecutiveLosses = 0
-    const bestTrade = 0
-    const worstTrade = 0
+    const totalWins = winningTrades.reduce((sum, t) => sum + t.pnl, 0)
+    const totalLosses = Math.abs(losingTrades.reduce((sum, t) => sum + t.pnl, 0))
 
     return {
       totalTrades: trades.length,
-      winRate: (wins.length / trades.length) * 100,
+      winningTrades: winningTrades.length,
+      losingTrades: losingTrades.length,
+      winRate: (winningTrades.length / trades.length) * 100,
       totalPnL,
-      averageWin: avgWin,
-      averageLoss: avgLoss,
-      profitFactor,
-      maxDrawdown,
-      sharpeRatio,
-      consecutiveWins,
-      consecutiveLosses,
-      bestTrade,
-      worstTrade,
+      averagePnL: totalPnL / trades.length,
+      profitFactor: totalLosses > 0 ? totalWins / totalLosses : totalWins > 0 ? Number.POSITIVE_INFINITY : 0,
+      largestWin: winningTrades.length > 0 ? Math.max(...winningTrades.map((t) => t.pnl)) : 0,
+      largestLoss: losingTrades.length > 0 ? Math.min(...losingTrades.map((t) => t.pnl)) : 0,
+      averageWin: winningTrades.length > 0 ? totalWins / winningTrades.length : 0,
+      averageLoss: losingTrades.length > 0 ? totalLosses / losingTrades.length : 0,
     }
   }, [state.trades])
 
   const resetAllScores = useCallback(() => {
     dispatch({ type: "CLEAR_ALL_DATA" })
-
-    console.log(`[v0] Reset all scores`)
   }, [])
 
+  const isOwner = useMemo(() => {
+    return user?.email === process.env.NEXT_PUBLIC_OWNER_EMAIL
+  }, [user?.email])
+
   const getTraderProfile = useCallback(
-    (days = 30) => {
-      if (!state.userId) return null
-
-      const cutoffDate = new Date()
-      cutoffDate.setDate(cutoffDate.getDate() - days)
-      const cutoffStr = cutoffDate.toISOString().split("T")[0]
-
-      // Filter data by date range
-      const recentTrades = state.trades.filter((t) => t.date >= cutoffStr)
-      const recentChecks = state.morningChecks.filter((c) => c.date >= cutoffStr)
-      const recentReviews = state.weeklyReviews.filter((r) => r.date >= cutoffStr) // Assuming 'date' field for reviews
-      const recentJournals = state.journalEntries.filter((j) => j.date >= cutoffStr)
-
-      // Calculate trading stats
-      const wins = recentTrades.filter((t) => t.pnl > 0)
-      const losses = recentTrades.filter((t) => t.pnl < 0)
-      const totalPnL = recentTrades.reduce((sum, t) => sum + t.pnl, 0)
-      const winRate = recentTrades.length > 0 ? (wins.length / recentTrades.length) * 100 : 0
-
-      // Calculate psychological metrics
-      const avgMood =
-        recentChecks.length > 0
-          ? recentChecks.reduce((sum, c) => sum + (c.mood || 0), 0) / recentChecks.length // Assuming 'mood' field in morning checks
-          : 0
-      const avgStress =
-        recentChecks.length > 0
-          ? recentChecks.reduce((sum, c) => sum + (c.stress || 0), 0) / recentChecks.length // Assuming 'stress' field in morning checks
-          : 0
-      const avgReadiness =
-        recentChecks.length > 0 ? recentChecks.reduce((sum, c) => sum + (c.score || 0), 0) / recentChecks.length : 0
-
-      // Detect trading patterns
-      const revengeTrades = recentTrades.filter((t) => t.revengeTrade).length
-      const revengeRate = recentTrades.length > 0 ? (revengeTrades / recentTrades.length) * 100 : 0
-
-      // Calculate consecutive wins/losses
-      let consecutiveWins = 0
-      let consecutiveLosses = 0
-      let currentStreak = 0
-      let currentStreakType = ""
-
-      for (const trade of recentTrades.slice().reverse()) {
-        if (trade.pnl > 0) {
-          if (currentStreakType === "win") {
-            currentStreak++
-          } else {
-            consecutiveLosses = Math.max(consecutiveLosses, currentStreak)
-            currentStreak = 1
-            currentStreakType = "win"
-          }
-        } else if (trade.pnl < 0) {
-          if (currentStreakType === "loss") {
-            currentStreak++
-          } else {
-            consecutiveWins = Math.max(consecutiveWins, currentStreak)
-            currentStreak = 1
-            currentStreakType = "loss"
-          }
-        }
-      }
-
-      if (currentStreakType === "win") consecutiveWins = Math.max(consecutiveWins, currentStreak)
-      if (currentStreakType === "loss") consecutiveLosses = Math.max(consecutiveLosses, currentStreak)
-
-      // Best/worst trading days
-      const bestTrade = recentTrades.length > 0 ? Math.max(...recentTrades.map((t) => t.pnl)) : 0
-      const worstTrade = recentTrades.length > 0 ? Math.min(...recentTrades.map((t) => t.pnl)) : 0
-
+    (days: number) => {
       return {
-        // Trading Performance
-        performance: {
-          totalTrades: recentTrades.length,
-          winningTrades: wins.length,
-          losingTrades: losses.length,
-          winRate: winRate.toFixed(1),
-          totalPnL: totalPnL.toFixed(2),
-          bestTrade: bestTrade.toFixed(2),
-          worstTrade: worstTrade.toFixed(2),
-          consecutiveWins,
-          consecutiveLosses,
-          averageWin: wins.length > 0 ? (wins.reduce((sum, t) => sum + t.pnl, 0) / wins.length).toFixed(2) : "0",
-          averageLoss: losses.length > 0 ? (losses.reduce((sum, t) => sum + t.pnl, 0) / losses.length).toFixed(2) : "0",
-        },
-
-        // Psychological Metrics
-        psychology: {
-          averageMood: avgMood.toFixed(1),
-          averageStress: avgStress.toFixed(1),
-          averageReadiness: avgReadiness.toFixed(1),
-          morningChecksCompleted: recentChecks.length,
-          morningCheckRate: days > 0 ? ((recentChecks.length / days) * 100).toFixed(0) : "0",
-        },
-
-        // Behavioral Patterns
-        patterns: {
-          revengeTradeRate: revengeRate.toFixed(1),
-          revengeTrades: revengeTrades,
-          emotionalTrades: recentTrades.filter(
-            (t) => t.emotionBefore === "fear" || t.emotionBefore === "fomo" || t.emotionBefore === "revenge",
-          ).length,
-        },
-
-        // Recent Activity
-        recentActivity: {
-          lastTrade: recentTrades.length > 0 ? recentTrades[recentTrades.length - 1] : null,
-          lastCheck: recentChecks.length > 0 ? recentChecks[recentChecks.length - 1] : null,
-          lastReview: recentReviews.length > 0 ? recentReviews[0] : null,
-          lastJournal: recentJournals.length > 0 ? recentJournals[recentJournals.length - 1] : null,
-        },
-
-        // Goals Progress (if available)
-        goals:
-          state.tradingGoals?.slice(0, 3).map((g) => ({
-            title: g.title,
-            progress: g.progress_percentage || 0,
-            status: g.status,
-            targetValue: g.target_value,
-            currentValue: g.current_value,
-          })) || [],
-
-        // Time period
-        period: {
-          days,
-          startDate: cutoffStr,
-          endDate: new Date().toISOString().split("T")[0],
-        },
+        winRate: getTradingStats().winRate,
+        tradeCount: state.trades.length,
+        averageReadiness: currentReadiness,
       }
     },
-    [state.trades, state.morningChecks, state.weeklyReviews, state.journalEntries, state.tradingGoals],
+    [getTradingStats, state.trades.length, currentReadiness],
   )
 
-  const value = useMemo<DataContextType>(
+  const value = useMemo(
     () => ({
       trades: state.trades,
       morningChecks: state.morningChecks,
@@ -771,43 +813,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       portfolioValue: state.portfolioValue,
       userId: state.userId,
       tradingGoals: state.tradingGoals,
-      currentReadiness, // Expose currentReadiness for MindTrader AI
-      dataLoaded: state.dataLoaded,
-
-      addTrade,
-      updateTrade,
-      deleteTrade,
-      addMorningCheck,
-      addJournalEntry,
-      updateJournalEntry,
-      deleteJournalEntry,
-      addWeeklyReview,
-      updateWeeklyReview,
-      deleteWeeklyReview,
-      setShowLiveWarning,
-      setPortfolioValue,
-      switchToLive,
-      clearAllData,
-      setUserId,
-      setTradingGoals,
-      refreshLiveData, // Expose refresh method
-
-      getAllTrades,
-      getAllJournalEntries,
-      getAllMorningChecks,
-      getAllWeeklyReviews,
-      getTradingStats,
-      resetAllScores,
-      isOwner: false,
-      canSwitchModes,
-      isVirtualMode: !isLiveMode,
-      getTraderProfile,
-    }),
-    [
-      state,
-      isLiveMode,
       currentReadiness,
-      canSwitchModes,
+      dataLoaded: state.dataLoaded,
       addTrade,
       updateTrade,
       deleteTrade,
@@ -831,6 +838,40 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getAllWeeklyReviews,
       getTradingStats,
       resetAllScores,
+      isOwner,
+      canSwitchModes,
+      isVirtualMode: !isLiveMode,
+      getTraderProfile,
+    }),
+    [
+      state,
+      isLiveMode,
+      currentReadiness,
+      addTrade,
+      updateTrade,
+      deleteTrade,
+      addMorningCheck,
+      addJournalEntry,
+      updateJournalEntry,
+      deleteJournalEntry,
+      addWeeklyReview,
+      updateWeeklyReview,
+      deleteWeeklyReview,
+      setShowLiveWarning,
+      setPortfolioValue,
+      switchToLive,
+      clearAllData,
+      setUserId,
+      setTradingGoals,
+      refreshLiveData,
+      getAllTrades,
+      getAllJournalEntries,
+      getAllMorningChecks,
+      getAllWeeklyReviews,
+      getTradingStats,
+      resetAllScores,
+      isOwner,
+      canSwitchModes,
       getTraderProfile,
     ],
   )
@@ -841,55 +882,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export function useData() {
   const context = useContext(DataContext)
   if (context === undefined) {
-    // Provide a safe default for server-side rendering or tests
-    if (typeof window === "undefined") {
-      return {
-        getTradingStats: () => ({
-          totalTrades: 0,
-          winRate: 0,
-          totalPnL: 0,
-          averageWin: 0,
-          averageLoss: 0,
-          profitFactor: 0,
-          maxDrawdown: 0,
-          sharpeRatio: 0,
-          consecutiveWins: 0,
-          consecutiveLosses: 0,
-          bestTrade: 0,
-          worstTrade: 0,
-        }),
-        trades: [],
-        journalEntries: [],
-        morningChecks: [],
-        weeklyReviews: [],
-        isLiveMode: false,
-        portfolioValue: 10000,
-        addTrade: async () => {},
-        updateTrade: async () => {},
-        deleteTrade: async () => {},
-        getAllTrades: async () => [],
-        addJournalEntry: async () => {},
-        addMorningCheck: async () => {},
-        addWeeklyReview: async () => {},
-        getAllJournalEntries: async () => [],
-        getAllMorningChecks: async () => [],
-        getAllWeeklyReviews: async () => [],
-        currentReadiness: null,
-        dataLoaded: false,
-        refreshLiveData: () => {},
-        getTraderProfile: () => null,
-        canSwitchModes: false,
-        isVirtualMode: true,
-        isOwner: false,
-        setShowLiveWarning: () => {},
-        setPortfolioValue: () => {},
-        switchToLive: () => {},
-        clearAllData: () => {},
-        setUserId: () => {},
-        setTradingGoals: () => {},
-        resetAllScores: () => {},
-      } as any
-    }
     throw new Error("useData must be used within a DataProvider")
   }
   return context

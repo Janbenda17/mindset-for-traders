@@ -1,42 +1,40 @@
 import { createBrowserClient } from "@supabase/ssr"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-const STORAGE_KEY = "mindtrader-auth-token"
+const STORAGE_KEY = "sb-bctenuyfrkhdxbhgkvlz-auth-token"
 
-// Store client on globalThis to survive HMR in development
-const getGlobalSupabase = (): SupabaseClient | undefined => {
-  if (typeof window === "undefined") return undefined
-  return (globalThis as any).__supabase_browser_client
+declare global {
+  var __supabaseBrowserClient: SupabaseClient | undefined
 }
 
-const setGlobalSupabase = (client: SupabaseClient) => {
-  if (typeof window !== "undefined") {
-    ;(globalThis as any).__supabase_browser_client = client
-  }
-}
-
-export function getSupabaseBrowserClient(): SupabaseClient {
-  const existing = getGlobalSupabase()
-  if (existing) {
-    return existing
-  }
-
-  const client = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        storageKey: STORAGE_KEY,
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
+function createSupabaseBrowserClient(): SupabaseClient {
+  return createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    cookieOptions: {
+      // Ensure cookies are set for server-side reading
+      name: STORAGE_KEY,
+      domain: typeof window !== "undefined" ? window.location.hostname : undefined,
+      path: "/",
+      sameSite: "lax",
+      secure: typeof window !== "undefined" && window.location.protocol === "https:",
     },
-  )
-
-  setGlobalSupabase(client)
-  return client
+    auth: {
+      flowType: "pkce",
+      persistSession: true,
+      detectSessionInUrl: true,
+      autoRefreshToken: true,
+    },
+  })
 }
 
-// Export singleton directly
-export const supabase = getSupabaseBrowserClient()
+export function getBrowserSupabase(): SupabaseClient {
+  if (typeof window === "undefined") {
+    return createSupabaseBrowserClient()
+  }
+
+  if (!globalThis.__supabaseBrowserClient) {
+    globalThis.__supabaseBrowserClient = createSupabaseBrowserClient()
+  }
+  return globalThis.__supabaseBrowserClient
+}
+
+export const supabase = typeof window !== "undefined" ? getBrowserSupabase() : createSupabaseBrowserClient()

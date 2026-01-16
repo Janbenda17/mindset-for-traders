@@ -206,7 +206,7 @@ export function RecordTrades() {
     setTrades(todayTrades)
   }, [user?.id])
 
-  const handleAddTrade = () => {
+  const handleAddTrade = async () => {
     if (!currentTrade.pair || !currentTrade.pips || !currentTrade.openTime || !currentTrade.closeTime) {
       toast({
         title: "Chybí data",
@@ -257,9 +257,18 @@ export function RecordTrades() {
       closeDate: currentTrade.closeDate as string,
     }
 
-    setTrades([...trades, newTrade])
+    const success = await addTrade(newTrade)
 
-    addTrade(newTrade)
+    if (!success) {
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se uložit obchod do databáze",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setTrades([...trades, newTrade])
 
     setCurrentTrade({
       date: format(new Date(), "yyyy-MM-dd"),

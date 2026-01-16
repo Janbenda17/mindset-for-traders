@@ -15,7 +15,6 @@ export interface DemoMorningCheck {
   exerciseDuration: number
   meditationTime: number
   morningRoutine: boolean
-  hydration: number
   score: number
   recommendation: string
 }
@@ -72,7 +71,6 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
       exerciseDuration: 45,
       meditationTime: 15,
       morningRoutine: true,
-      hydration: 9,
       score: 78,
       recommendation: "Excellent readiness! Perfect day for trading with high confidence.",
     },
@@ -127,7 +125,6 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
       exerciseDuration: 30,
       meditationTime: 10,
       morningRoutine: true,
-      hydration: 8,
       score: 75,
       recommendation: "Good readiness. Stay disciplined and follow your plan.",
     },
@@ -182,7 +179,6 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
       exerciseDuration: 0,
       meditationTime: 5,
       morningRoutine: false,
-      hydration: 6,
       score: 72,
       recommendation: "Moderate readiness. Be extra cautious and reduce position sizes.",
     },
@@ -226,7 +222,6 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
       exerciseDuration: 0,
       meditationTime: 0,
       morningRoutine: false,
-      hydration: 5,
       score: 70,
       recommendation: "Low readiness. Consider taking a break or paper trading only.",
     },
@@ -281,7 +276,6 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
       exerciseDuration: 60,
       meditationTime: 20,
       morningRoutine: true,
-      hydration: 9,
       score: 80,
       recommendation: "Outstanding readiness! Perfect mental state for high-performance trading.",
     },
@@ -336,7 +330,6 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
       exerciseDuration: 30,
       meditationTime: 15,
       morningRoutine: true,
-      hydration: 8,
       score: 80,
       recommendation: "Great readiness! Maintain consistency and stick to your rules.",
     },
@@ -391,7 +384,6 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
       exerciseDuration: 0,
       meditationTime: 10,
       morningRoutine: true,
-      hydration: 7,
       score: 73,
       recommendation: "Solid readiness. Stick to your A-setups and follow the plan.",
     },

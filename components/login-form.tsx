@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Brain, Mail, Lock, LogIn, Sparkles, Shield, Zap } from "lucide-react"
 import Link from "next/link"
 import { Checkbox } from "@/components/ui/checkbox"
-import { supabase } from "@/lib/supabase/browser"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -19,6 +18,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const { login } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
     const teaserEarlyAccess = localStorage.getItem("teaser-early-access")
@@ -62,16 +62,11 @@ export function LoginForm() {
 
       if (!success) {
         console.error("[v0] Login failed")
-      } else {
-        await supabase.auth.getSession()
-        console.log("[v0] Login successful and session synced")
-        // Auth context handles redirect, but we ensure proper navigation
-        window.location.replace("/")
+        setIsLoading(false) // Reset loading state on failure
       }
     } catch (error) {
       console.error("[v0] Login error:", error)
-    } finally {
-      setIsLoading(false)
+      setIsLoading(false) // Reset loading state on error
     }
   }
 

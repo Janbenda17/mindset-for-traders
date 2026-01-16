@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient()
 
@@ -12,13 +12,7 @@ export async function GET() {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({
-        current_stage: 1,
-        morning_check_completed: false,
-        daily_intention_completed: false,
-        trading_plan_completed: false,
-        record_trades_completed: false,
-      })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const today = new Date().toISOString().split("T")[0]
@@ -32,17 +26,7 @@ export async function GET() {
 
     if (fetchError) {
       console.error("[v0] Error fetching daily stages:", fetchError)
-      return NextResponse.json(
-        {
-          error: fetchError.message,
-          current_stage: 1,
-          morning_check_completed: false,
-          daily_intention_completed: false,
-          trading_plan_completed: false,
-          record_trades_completed: false,
-        },
-        { status: 500 },
-      )
+      return NextResponse.json({ error: fetchError.message }, { status: 500 })
     }
 
     if (!existingStages) {
@@ -57,17 +41,10 @@ export async function GET() {
 
     return NextResponse.json(existingStages)
   } catch (error: any) {
-    console.error("[v0] Unexpected error in daily-stages GET:", error)
-    return NextResponse.json(
-      {
-        error: error.message || "Internal server error",
-        current_stage: 1,
-        morning_check_completed: false,
-        daily_intention_completed: false,
-        trading_plan_completed: false,
-        record_trades_completed: false,
-      },
-      { status: 500 },
-    )
+    if (error.name === "AbortError") {
+      return NextResponse.json({ error: "Request aborted" }, { status: 499 })
+    }
+    console.error("[v0] Unexpected error in daily-stages GET:", error.message)
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 })
   }
 }

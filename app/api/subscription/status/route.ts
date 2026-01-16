@@ -13,15 +13,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({
-        isPremium: false,
-        tier: "free",
-        plan: "free",
-        isActive: false,
-        trialEndsAt: null,
-        subscriptionId: null,
-        customerId: null,
-      })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const { data: profile, error } = await supabase
@@ -58,16 +50,11 @@ export async function GET(request: NextRequest) {
       status: profile?.subscription_status,
       cancelAtPeriodEnd: false,
     })
-  } catch (error) {
-    console.error("[v0] Error checking subscription status:", error)
-    return NextResponse.json({
-      isPremium: false,
-      tier: "free",
-      plan: "free",
-      isActive: false,
-      trialEndsAt: null,
-      subscriptionId: null,
-      customerId: null,
-    })
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      return NextResponse.json({ error: "Request aborted" }, { status: 499 })
+    }
+    console.error("[v0] Error checking subscription status:", error.message)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

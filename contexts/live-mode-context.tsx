@@ -8,7 +8,7 @@ interface LiveModeContextType {
   isLiveMode: boolean
   isLoading: boolean
   switchToLive: () => Promise<void>
-  canSwitchMode: boolean // Add flag to indicate if user has already switched to LIVE (one-way)
+  canSwitchMode: boolean
 }
 
 const LiveModeContext = createContext<LiveModeContextType | undefined>(undefined)
@@ -17,7 +17,7 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
   const { user, authReady } = useAuth()
   const [isLiveMode, setIsLiveMode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [canSwitchMode, setCanSwitchMode] = useState(true) // Track if user can still switch
+  const [canSwitchMode, setCanSwitchMode] = useState(true)
   const modeLoadedRef = useRef(false)
   const cachedModeRef = useRef<boolean | null>(null)
   const prevUserIdRef = useRef<string | null>(null)
@@ -46,7 +46,7 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
     if (!user) {
       console.log("[v0] [LiveMode] No user - setting to VIRTUAL")
       setIsLiveMode(false)
-      setCanSwitchMode(true) // New users can always switch
+      setCanSwitchMode(true)
       setIsLoading(false)
       return
     }
@@ -60,7 +60,7 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    console.log("[v0] [LiveMode] Loading mode from database for user:", user.id)
+    console.log(`[v0] [LiveMode] Loading mode from database for user: ${user.id} (${user.email})`)
     setIsLoading(true)
 
     try {
@@ -73,7 +73,7 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error("[v0] [LiveMode] Error loading mode:", error)
         setIsLiveMode(false)
-        setCanSwitchMode(true) // On error, default to VIRTUAL and allow switching
+        setCanSwitchMode(true)
         cachedModeRef.current = false
         modeLoadedRef.current = true
       } else if (data) {
@@ -82,18 +82,20 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
         setCanSwitchMode(!isLive)
         cachedModeRef.current = isLive
         modeLoadedRef.current = true
-        console.log(`[v0] [LiveMode] ✓ Loaded from database: ${isLive ? "LIVE" : "VIRTUAL"} (can switch: ${!isLive})`)
+        console.log(
+          `[v0] [LiveMode] ✓ Loaded from database: ${isLive ? "LIVE" : "VIRTUAL"} (userId: ${user.id}, canSwitch: ${!isLive})`,
+        )
       } else {
         setIsLiveMode(false)
-        setCanSwitchMode(true) // New users start in VIRTUAL and can switch
+        setCanSwitchMode(true)
         cachedModeRef.current = false
         modeLoadedRef.current = true
-        console.log("[v0] [LiveMode] No profile found - defaulting to VIRTUAL (new user)")
+        console.log(`[v0] [LiveMode] No profile found - defaulting to VIRTUAL (new user, userId: ${user.id})`)
       }
     } catch (err) {
       console.error("[v0] [LiveMode] Exception loading mode:", err)
       setIsLiveMode(false)
-      setCanSwitchMode(true) // On exception, stay VIRTUAL and allow switching
+      setCanSwitchMode(true)
       cachedModeRef.current = false
       modeLoadedRef.current = true
     } finally {
@@ -112,7 +114,7 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    console.log("[v0] [LiveMode] Switching to LIVE mode... (permanent change)")
+    console.log(`[v0] [LiveMode] Switching to LIVE mode for user: ${user.id} (${user.email}) - PERMANENT CHANGE`)
 
     try {
       const { error } = await supabase.from("profiles").update({ trading_mode: "live" }).eq("user_id", user.id)
@@ -122,7 +124,11 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
         throw error
       }
 
-      console.log("[v0] [LiveMode] ✓ Database updated to LIVE mode (permanent)")
+      console.log(`[v0] [LiveMode] ✓ Database updated to LIVE mode (userId: ${user.id})`)
+
+      // Note: We don't clear virtual data here - user might want to keep it for reference
+      // But we log that the mode switched
+      console.log(`[v0] [LiveMode] Mode switched -> LIVE, userId: ${user.id}, virtual data preserved in localStorage`)
 
       cachedModeRef.current = true
       setIsLiveMode(true)
