@@ -1,6 +1,6 @@
 "use client"
 
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/browser"
 import { toast } from "@/hooks/use-toast"
 
 /**
@@ -8,8 +8,6 @@ import { toast } from "@/hooks/use-toast"
  */
 
 export async function migrateVirtualDataToLive(userId: string): Promise<boolean> {
-  const supabase = createClient()
-
   try {
     console.log("[Migration] Starting virtual → live data migration for user:", userId)
 

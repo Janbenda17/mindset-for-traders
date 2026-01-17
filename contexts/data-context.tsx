@@ -83,6 +83,7 @@ interface DataState {
   userId: string | null
   tradingGoals?: any[]
   dataLoaded: boolean
+  dataOwnerUserId: string | null
 }
 
 type DataAction =
@@ -104,6 +105,8 @@ type DataAction =
   | { type: "SET_TRADING_GOALS"; payload: any[] }
   | { type: "SET_DATA_LOADED"; payload: boolean }
   | { type: "CLEAR_ALL_DATA" }
+  | { type: "RESET_FOR_USER"; payload: string | null }
+  | { type: "SET_DATA_OWNER"; payload: string | null }
 
 function dataReducer(state: DataState, action: DataAction): DataState {
   switch (action.type) {
@@ -142,7 +145,28 @@ function dataReducer(state: DataState, action: DataAction): DataState {
     case "SET_DATA_LOADED":
       return { ...state, dataLoaded: action.payload }
     case "CLEAR_ALL_DATA":
-      return { ...state, trades: [], morningChecks: [], journalEntries: [], weeklyReviews: [], dataLoaded: false }
+      return {
+        ...state,
+        trades: [],
+        morningChecks: [],
+        journalEntries: [],
+        weeklyReviews: [],
+        dataLoaded: false,
+        dataOwnerUserId: null,
+      }
+    case "RESET_FOR_USER":
+      return {
+        ...state,
+        trades: [],
+        morningChecks: [],
+        journalEntries: [],
+        weeklyReviews: [],
+        dataLoaded: false,
+        userId: action.payload,
+        dataOwnerUserId: action.payload,
+      }
+    case "SET_DATA_OWNER":
+      return { ...state, dataOwnerUserId: action.payload }
     default:
       return state
   }
@@ -161,6 +185,7 @@ interface DataContextType {
   tradingGoals?: any[]
   currentReadiness: number | null
   dataLoaded: boolean
+  dataOwnerUserId: string | null
   addTrade: (trade: Trade) => Promise<boolean>
   updateTrade: (trade: Trade) => void
   deleteTrade: (id: string) => void
@@ -203,6 +228,7 @@ const initialState: DataState = {
   portfolioValue: 10000,
   userId: null,
   dataLoaded: false,
+  dataOwnerUserId: null,
 }
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -225,13 +251,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const newUserId = user?.id || null
 
-    if (prevUserIdRef.current !== null && prevUserIdRef.current !== newUserId) {
-      console.log("[v0] User changed - clearing all data")
-      dispatch({ type: "CLEAR_ALL_DATA" })
+    if (prevUserIdRef.current !== newUserId) {
+      if (prevUserIdRef.current !== null) {
+        console.log(`[v0] User changed from ${prevUserIdRef.current} to ${newUserId} - resetting all data atomically`)
+      }
+      // Use RESET_FOR_USER to atomically clear data and set new owner
+      dispatch({ type: "RESET_FOR_USER", payload: newUserId })
     }
 
     prevUserIdRef.current = newUserId
-    dispatch({ type: "SET_USER_ID", payload: newUserId })
   }, [user?.id])
 
   const loadVirtualData = useCallback((userId: string) => {
@@ -274,6 +302,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       )
     }
 
+    dispatch({ type: "SET_DATA_OWNER", payload: userId })
     dispatch({ type: "SET_DATA_LOADED", payload: true })
   }, [])
 
@@ -288,7 +317,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from("journal_entries")
         .select("*")
         .eq("user_id", user.id)
-        .not("pair", "is", null) // Filter for trade entries (have pair/pnl)
+        .not("pair", "is", null)
         .order("created_at", { ascending: false })
 
       if (!tradesError && journalData) {
@@ -318,7 +347,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           matchedPlan: entry.matched_plan,
           tags: entry.tags,
         }))
-        console.log(`[v0] Loaded ${trades.length} trades from journal_entries`)
+        console.log(`[v0] Loaded ${trades.length} trades from journal_entries for user ${user.id}`)
         dispatch({ type: "SET_TRADES", payload: trades })
       } else if (tradesError) {
         console.error("[v0] Error loading trades:", tradesError.message)
@@ -332,7 +361,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .order("date", { ascending: false })
 
       if (!morningError && morningChecks) {
-        // Map snake_case to camelCase for frontend
         const mappedChecks = morningChecks.map((check: any) => ({
           id: check.id,
           date: check.date,
@@ -350,14 +378,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           meditation: check.meditation,
           locked: check.locked,
         }))
-        console.log(`[v0] Loaded ${mappedChecks.length} morning checks from Supabase`)
+        console.log(`[v0] Loaded ${mappedChecks.length} morning checks from Supabase for user ${user.id}`)
         dispatch({ type: "SET_MORNING_CHECKS", payload: mappedChecks })
       } else if (morningError) {
         console.error("[v0] Error loading morning checks:", morningError.message)
         dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
       }
 
-      // Load journal entries
       const { data: journalEntries, error: journalError } = await supabase
         .from("journal_entries")
         .select("*")
@@ -365,14 +392,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .order("created_at", { ascending: false })
 
       if (!journalError && journalEntries) {
-        console.log(`[v0] Loaded ${journalEntries.length} journal entries from Supabase`)
+        console.log(`[v0] Loaded ${journalEntries.length} journal entries from Supabase for user ${user.id}`)
         dispatch({ type: "SET_JOURNAL_ENTRIES", payload: journalEntries })
       } else if (journalError) {
         console.error("[v0] Error loading journal entries:", journalError)
         dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
       }
 
-      // Load weekly reviews
       const { data: weeklyReviews, error: weeklyError } = await supabase
         .from("weekly_reviews")
         .select("*")
@@ -380,7 +406,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .order("created_at", { ascending: false })
 
       if (!weeklyError && weeklyReviews) {
-        console.log(`[v0] Loaded ${weeklyReviews.length} weekly reviews from Supabase`)
+        console.log(`[v0] Loaded ${weeklyReviews.length} weekly reviews from Supabase for user ${user.id}`)
         dispatch({ type: "SET_WEEKLY_REVIEWS", payload: weeklyReviews })
       } else if (weeklyError) {
         if (weeklyError.message !== "signal is aborted without reason") {
@@ -389,6 +415,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
       }
 
+      dispatch({ type: "SET_DATA_OWNER", payload: user.id })
       dispatch({ type: "SET_DATA_LOADED", payload: true })
     } catch (error: any) {
       if (error?.name === "AbortError" || error?.message?.includes("aborted")) {
@@ -428,10 +455,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log(`[v0] Mode debug: isLiveMode=${isLiveMode}, userId=${user.id}`)
 
     if (isLiveMode) {
-      // LIVE MODE: Supabase ONLY
       loadDataFromSupabase()
     } else {
-      // VIRTUAL MODE: localStorage ONLY with namespaced keys
       loadVirtualData(user.id)
     }
   }, [user?.id, isLiveMode, authReady, modeLoading, loadDataFromSupabase, loadVirtualData])
@@ -557,20 +582,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           {
             user_id: user.id,
             date: check.date,
-            score: check.score,
-            emotional_state: check.emotionalState,
-            stress_level: check.stressLevel,
             sleep_hours: check.sleepHours,
             sleep_quality: check.sleepQuality,
             energy_level: check.energyLevel,
+            stress_level: check.stressLevel,
+            emotional_state: check.emotionalState,
             focus: check.focus,
             physical_health: check.physicalHealth,
+            score: check.score,
             exercised: check.exercised,
             morning_routine: check.morningRoutine,
-            meditation: check.meditation || 0,
+            meditation: check.meditation,
           },
-          { onConflict: "user_id,date" },
+          {
+            onConflict: "user_id,date", // Changed from "date" to "user_id,date"
+          },
         )
+
         if (error) {
           console.error("[LIVE] insert morning_check FAIL:", error.message)
           toast({
@@ -585,8 +613,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshLiveData()
         return true
       } else if (user?.id) {
-        dispatch({ type: "ADD_MORNING_CHECK", payload: check })
         const newChecks = [...state.morningChecks, check]
+        dispatch({ type: "ADD_MORNING_CHECK", payload: check })
         setScoped("virtual", user.id, "morning-checks", newChecks)
         return true
       }
@@ -815,6 +843,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       tradingGoals: state.tradingGoals,
       currentReadiness,
       dataLoaded: state.dataLoaded,
+      dataOwnerUserId: state.dataOwnerUserId,
       addTrade,
       updateTrade,
       deleteTrade,

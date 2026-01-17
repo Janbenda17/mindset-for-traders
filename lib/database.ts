@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/browser"
 
 export type DatabaseTable =
   | "profiles"
@@ -33,8 +33,6 @@ export const db = {
       limit?: number
     },
   ): Promise<{ data: T[] | null; error: Error | null }> {
-    const supabase = createClient()
-
     let query = supabase
       .from(table)
       .select(options?.columns || "*")
@@ -66,8 +64,6 @@ export const db = {
     userId: string,
     filter: Record<string, unknown>,
   ): Promise<{ data: T | null; error: Error | null }> {
-    const supabase = createClient()
-
     let query = supabase.from(table).select("*").eq("user_id", userId)
 
     Object.entries(filter).forEach(([key, value]) => {
@@ -84,8 +80,6 @@ export const db = {
     userId: string,
     data: Omit<T, "id" | "user_id" | "created_at" | "updated_at">,
   ): Promise<{ data: T | null; error: Error | null }> {
-    const supabase = createClient()
-
     const { data: result, error } = await supabase
       .from(table)
       .insert({
@@ -105,8 +99,6 @@ export const db = {
     data: Partial<T>,
     conflictColumns: string[],
   ): Promise<{ data: T | null; error: Error | null }> {
-    const supabase = createClient()
-
     const { data: result, error } = await supabase
       .from(table)
       .upsert(
@@ -132,8 +124,6 @@ export const db = {
     id: string,
     data: Partial<T>,
   ): Promise<{ data: T | null; error: Error | null }> {
-    const supabase = createClient()
-
     const { data: result, error } = await supabase
       .from(table)
       .update({
@@ -150,8 +140,6 @@ export const db = {
 
   // DELETE - filtered by user_id + id
   async delete(table: DatabaseTable, userId: string, id: string): Promise<{ error: Error | null }> {
-    const supabase = createClient()
-
     const { error } = await supabase.from(table).delete().eq("id", id).eq("user_id", userId)
 
     return { error }
@@ -160,7 +148,6 @@ export const db = {
   // Team Club special methods (can read all, but write own)
   teamClub: {
     async getPosts(limit = 50): Promise<{ data: unknown[] | null; error: Error | null }> {
-      const supabase = createClient()
       const { data, error } = await supabase
         .from("team_club_posts")
         .select("*, author:profiles(name)")
@@ -170,7 +157,6 @@ export const db = {
     },
 
     async getComments(postId: string): Promise<{ data: unknown[] | null; error: Error | null }> {
-      const supabase = createClient()
       const { data, error } = await supabase
         .from("team_club_comments")
         .select("*")
@@ -183,8 +169,6 @@ export const db = {
   // Analytics helpers - computed from real data only
   analytics: {
     async getTradeStats(userId: string, dateRange?: { start: string; end: string }) {
-      const supabase = createClient()
-
       let query = supabase.from("journal_entries").select("*").eq("user_id", userId).eq("type", "trade")
 
       if (dateRange) {

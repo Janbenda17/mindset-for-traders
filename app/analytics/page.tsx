@@ -2,12 +2,11 @@
 
 // import { Label } from "@/components/ui/label" // Removed
 
-import { useState } from "react" // Added useEffect
+import { useState, useMemo } from "react" // Added useEffect
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton" // Added
 import { AlertTriangle } from "lucide-react"
 import {
   Brain,
@@ -41,7 +40,6 @@ import {
   Percent,
   TrendingDown as TrendingUpDown,
   Clipboard,
-  Circle,
 } from "lucide-react"
 import {
   XAxis,
@@ -904,231 +902,128 @@ function generatePsychologicalAnalysis(
   }
 }
 
-const AnalyticsPage = () => {
-  const { isLiveMode } = useLiveMode()
-  const { analytics, isLoading, refresh } = useAnalytics()
-  const { user } = useAuth()
+// Renamed function to PsychologyAnalyticsPage as per update
+export default function PsychologyAnalyticsPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("overview") // Initialize activeTab state
-  const [timeframe, setTimeframe] = useState("month") // Initialize timeframe state
-  const tradingStyle = "daytrader" // Declare tradingStyle
+  const { user, authReady } = useAuth()
+  const { isLiveMode, isLoading: modeLoading } = useLiveMode()
+  const {
+    analytics,
+    isLoading: analyticsLoading,
+    // Use refresh function from context instead of direct call
+    refresh,
+  } = useAnalytics()
+  const [selectedMetric, setSelectedMetric] = useState("pnl")
+  const [activeTab, setActiveTab] = useState("overview") // FIX: undeclared variable activeTab and setActiveTab
 
-  if (!user) {
+  const safeData = analytics // FIX: undeclared variable safeData
+
+  const daysWithData = useMemo(() => {
+    if (!safeData) return 0
+
+    // Count unique dates from trades and morning checks
+    const tradeDates = new Set(safeData.trades?.map((t: any) => t.date) || []) // Corrected: analytics.trades instead of analytics.summary?.trades
+    const morningCheckDates = new Set(safeData.summary?.morningChecks?.map((m: any) => m.date) || [])
+    const allDates = new Set([...tradeDates, ...morningCheckDates])
+
+    return allDates.size
+  }, [safeData])
+
+  const isAnalyticsLocked = daysWithData < 10
+  const daysRemaining = Math.max(0, 10 - daysWithData)
+
+  if (!authReady || modeLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
-        <div className="text-center">
-          <p className="text-gray-400 mb-4">Načítání...</p>
-        </div>
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500" />
       </div>
     )
   }
 
-  const safeData = isLiveMode
-    ? analytics // In LIVE mode: NEVER fall back to demo data, use null if no data
-    : analytics || generateDemoData(tradingStyle || "daytrader") // Virtual mode: Allow demo fallback
+  if (!user) {
+    router.push("/auth/login")
+    return null
+  }
 
-  if (isLiveMode && !analytics) {
+  if (isAnalyticsLocked) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                <Brain className="w-8 h-8 text-purple-400" />
-                Psychologická Analytics
-                <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Live Mode
-                </Badge>
-              </h1>
-              <p className="text-gray-300 text-lg">Tvůj mentální profil</p>
-            </div>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 p-8">
+        <div className="mx-auto max-w-4xl">
+          <Card className="border-purple-500/20 bg-slate-900/50 backdrop-blur">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-purple-500/10">
+                <Brain className="h-12 w-12 text-purple-400" />
+              </div>
+              <CardTitle className="text-3xl font-bold text-white">Analytics Locked 🔒</CardTitle>
+              <CardDescription className="text-lg text-gray-300">
+                Sbírej data prvních 10 dní pro smysluplnou analýzu
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Progress Bar */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400">Progress</span>
+                  <span className="font-bold text-white">{daysWithData} / 10 dní</span>
+                </div>
+                <div className="h-4 overflow-hidden rounded-full bg-slate-800">
+                  <div
+                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+                    style={{ width: `${(daysWithData / 10) * 100}%` }}
+                  />
+                </div>
+                <p className="text-center text-sm text-gray-400">
+                  Ještě {daysRemaining} {daysRemaining === 1 ? "den" : daysRemaining < 5 ? "dny" : "dní"} do odemčení!
+                </p>
+              </div>
 
-          <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700">
-            <CardContent className="p-16 text-center">
-              <Brain className="h-24 w-24 mx-auto mb-6 text-purple-400 opacity-50" />
-              <h3 className="text-3xl font-black mb-4 text-white">Žádná Data k Analýze</h3>
-              <p className="text-xl text-gray-400 mb-8">
-                Jsi v LIVE režimu, ale zatím nemáš žádné obchody nebo morning checks.
-                <br />
-                Začni sledovat své trading data pro získání AI insights!
-              </p>
-              <div className="flex gap-4 justify-center">
-                <Button
-                  onClick={() => router.push("/daily-tracker")}
-                  size="lg"
-                  className="h-14 px-8 text-lg bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600"
-                >
-                  <Sun className="h-6 w-6 mr-2" />
-                  Morning Check
-                </Button>
-                <Button
-                  onClick={() => router.push("/record-trades")}
-                  size="lg"
-                  variant="outline"
-                  className="h-14 px-8 text-lg"
-                >
-                  <Target className="h-6 w-6 mr-2" />
-                  Log Trade
-                </Button>
+              {/* Why 10 days? */}
+              <div className="rounded-lg border border-purple-500/20 bg-purple-500/5 p-4">
+                <h3 className="mb-2 font-semibold text-white flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-purple-400" />
+                  Proč 10 dní?
+                </h3>
+                <p className="text-sm text-gray-300 leading-relaxed">
+                  Pro smysluplnou analýzu potřebujeme minimální množství dat. 10 dní ti umožní vidět:
+                </p>
+                <ul className="mt-3 space-y-2 text-sm text-gray-400">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-400 flex-shrink-0" />
+                    <span>Pattery v tvém tradingu (winning/losing days)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-400 flex-shrink-0" />
+                    <span>Korelaci mezi mood, readiness a výsledky</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-400 flex-shrink-0" />
+                    <span>Emocionální triggery a chyby</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* What to do now */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-white flex items-center gap-2">
+                  <Target className="h-5 w-5 text-purple-400" />
+                  Co dělat teď?
+                </h3>
+                <div className="space-y-2">
+                  <Button onClick={() => router.push("/")} className="w-full bg-purple-600 hover:bg-purple-700">
+                    Vyplnit Morning Check
+                  </Button>
+                  <Button
+                    onClick={() => router.push("/daily-tracker")}
+                    variant="outline"
+                    className="w-full border-purple-500/30 text-white hover:bg-purple-500/10"
+                  >
+                    Zaznamenat Trade
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
-    )
-  }
-
-  const userHasAnyData = analytics?.summary?.totalTrades > 0
-
-  if (isLiveMode && !userHasAnyData && !isLoading) {
-    const currentDay = 1 // TODO: Get from actual stage data
-    const completedDays = Math.max(0, currentDay - 1)
-    const todayHasMorningCheck = false // TODO: Get from current stage completion
-    const todayHasTrade =
-      analytics?.trades?.some((trade: any) => {
-        const tradeDate = new Date(trade.created_at).toDateString()
-        const today = new Date().toDateString()
-        return tradeDate === today
-      }) || false
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
-        <div className="max-w-2xl mx-auto px-4 py-16">
-          {/* Enhanced Header */}
-          <div className="text-center mb-16">
-            <div className="inline-block px-4 py-2 rounded-full bg-purple-500/20 border border-purple-500/50 mb-4">
-              <span className="text-sm font-semibold text-purple-300">Zaměřte se na základy</span>
-            </div>
-            <h1 className="text-5xl font-bold text-white mb-4">10denní Trading Challenge</h1>
-            <p className="text-lg text-gray-300 mb-2">
-              Ověřte si disciplínu a konzistenci v obchodování. Každý den musíte vyplnit morning check a zaznamenat
-              minimálně jeden obchod.
-            </p>
-            <p className="text-sm text-gray-400">
-              Po dokončení všech 10 dní budete moci vidět podrobné analitiky a insights o vašem obchodování.
-            </p>
-          </div>
-
-          <div className="bg-gradient-to-br from-slate-800/80 to-slate-800/40 backdrop-blur-md border border-purple-500/20 rounded-2xl p-10 mb-10 shadow-2xl">
-            {/* Progress Header */}
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <p className="text-gray-400 text-sm mb-1">Váš Pokrok</p>
-                <p className="text-4xl font-bold text-white">
-                  {completedDays}/10 <span className="text-lg text-gray-400">dnů</span>
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                  {Math.round((completedDays / 10) * 100)}%
-                </p>
-                <p className="text-gray-400 text-sm">hotovo</p>
-              </div>
-            </div>
-
-            <div className="mb-10">
-              <div className="h-3 bg-slate-700/50 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-purple-600 transition-all duration-700 ease-out shadow-lg shadow-purple-500/50"
-                  style={{ width: `${(completedDays / 10) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              {/* Morning Check Task */}
-              <div className="flex items-start gap-4 p-4 rounded-lg bg-slate-700/30 border border-blue-500/20 hover:border-blue-500/40 transition-all">
-                <div
-                  className={cn(
-                    "w-14 h-14 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                    todayHasMorningCheck
-                      ? "bg-blue-500/30 border-blue-400 shadow-lg shadow-blue-500/30"
-                      : "bg-slate-700/50 border-slate-600",
-                  )}
-                >
-                  {todayHasMorningCheck ? (
-                    <CheckCircle2 className="w-7 h-7 text-blue-300" />
-                  ) : (
-                    <Circle className="w-7 h-7 text-blue-400" fill="currentColor" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-white mb-1">Morning Check</p>
-                  <p className="text-sm text-gray-400">
-                    {todayHasMorningCheck
-                      ? "Splněno! Výborně. Již jste připraveni."
-                      : "Vyplňte svůj počáteční check - nálada, stress, energie."}
-                  </p>
-                </div>
-              </div>
-
-              {/* Record Trade Task */}
-              <div className="flex items-start gap-4 p-4 rounded-lg bg-slate-700/30 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-                <div
-                  className={cn(
-                    "w-14 h-14 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                    todayHasTrade
-                      ? "bg-purple-500/30 border-purple-400 shadow-lg shadow-purple-500/30"
-                      : "bg-slate-700/50 border-slate-600",
-                  )}
-                >
-                  {todayHasTrade ? (
-                    <CheckCircle2 className="w-7 h-7 text-purple-300" />
-                  ) : (
-                    <Circle className="w-7 h-7 text-purple-400" fill="currentColor" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-white mb-1">Record Trade</p>
-                  <p className="text-sm text-gray-400">
-                    {todayHasTrade
-                      ? "Skvělé! Zaznamenali jste trade."
-                      : "Zaznamenejte minimálně jeden obchod z dnešního dne."}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <Button
-              onClick={() => router.push("/daily-tracker")}
-              className={cn(
-                "font-semibold h-14 rounded-lg transition-all duration-300",
-                todayHasMorningCheck
-                  ? "bg-blue-500/20 border border-blue-500/50 text-blue-300 hover:bg-blue-500/30"
-                  : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-600/30",
-              )}
-            >
-              {todayHasMorningCheck ? "✓ Morning Check splněn" : "→ Vyplnit Morning Check"}
-            </Button>
-            <Button
-              onClick={() => router.push("/record-trades")}
-              className={cn(
-                "font-semibold h-14 rounded-lg transition-all duration-300 border",
-                todayHasTrade
-                  ? "bg-purple-500/20 border-purple-500/50 text-purple-300 hover:bg-purple-500/30"
-                  : "bg-slate-800/50 border-purple-500/70 text-purple-300 hover:bg-purple-500/10",
-              )}
-            >
-              {todayHasTrade ? "✓ Obchod zaznamenán" : "→ Zaznamenat Obchod"}
-            </Button>
-          </div>
-
-          <div className="mt-12 text-center text-sm text-gray-500">
-            <p>💪 Zvládnete to! Každý den se posouváte blíž k lepšímu obchodování.</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center p-4">
-        <Skeleton className="w-96 h-96 bg-slate-800" />
       </div>
     )
   }
@@ -1146,7 +1041,7 @@ const AnalyticsPage = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-300">Unable to load your analytics. Please try again later.</p>
-            <Button onClick={() => refresh()} className="mt-4">
+            <Button onClick={() => router.push("/analytics")} className="mt-4">
               Retry
             </Button>
           </CardContent>
@@ -1155,7 +1050,8 @@ const AnalyticsPage = () => {
     )
   }
 
-  // Render analytics content
+  const timeframe = "month" // FIX: undeclared variable timeframe
+
   const getFilteredData = (data: any[], type: "daily" | "weekly") => {
     if (!Array.isArray(data) || !data) {
       return []
@@ -1315,8 +1211,9 @@ const AnalyticsPage = () => {
               {isLiveMode ? "Live Mode - Tvůj mentální profil" : "Virtual Mode - Demo data"}
             </p>
           </div>
+          {/* CHANGE: Use refresh function from context */}
           <Button
-            onClick={() => refresh()}
+            onClick={refresh}
             variant="outline"
             size="sm"
             className="gap-2 bg-slate-800/80 backdrop-blur-sm border-slate-600 text-white hover:bg-slate-700"
@@ -1605,8 +1502,6 @@ const AnalyticsPage = () => {
         </div>
         {/* Tabs for navigation */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)}>
-          {" "}
-          {/* Changed value to activeTab */}
           <TabsList className="bg-slate-800/80 backdrop-blur-sm border border-slate-600 p-1 grid grid-cols-4">
             <TabsTrigger
               value="overview"
@@ -2611,11 +2506,8 @@ const AnalyticsPage = () => {
               )}
             </div>
           </TabsContent>
-        </Tabs>{" "}
-        {/* Closing Tabs wrapper */}
+        </Tabs>
       </div>
     </div>
   )
 }
-
-export default AnalyticsPage

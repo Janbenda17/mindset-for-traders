@@ -36,6 +36,10 @@ export async function updateSession(request: NextRequest) {
   // Check if public path
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) || pathname === "/"
 
+  if (isPublicPath) {
+    return NextResponse.next()
+  }
+
   // Create response first
   let supabaseResponse = NextResponse.next({ request })
 
@@ -62,21 +66,18 @@ export async function updateSession(request: NextRequest) {
   )
 
   // Get user - this refreshes the session if needed
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-
-  if (error) {
-    console.log("[v0] Middleware auth error:", error.message)
+  let user = null
+  try {
+    const { data, error } = await supabase.auth.getUser()
+    if (!error) {
+      user = data.user
+    }
+    // Don't log auth errors - they're expected on first load or expired sessions
+  } catch {
+    // Silently ignore auth errors
   }
 
   console.log("[v0] Middleware - path:", pathname, "user:", user?.email || "none")
-
-  // If public path, allow access
-  if (isPublicPath) {
-    return supabaseResponse
-  }
 
   // Protected path without user - redirect to login
   if (!user) {

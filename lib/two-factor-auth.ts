@@ -1,5 +1,3 @@
-// Two-Factor Authentication service
-import { createClient } from "@/lib/supabase/client"
 import { getScoped, setScoped } from "@/lib/storage"
 
 export type TwoFactorMethod = "email" | "sms" | "totp"
@@ -62,8 +60,6 @@ export function saveTwoFactorSettings(settings: TwoFactorSettings, userId?: stri
 // Send verification code via email
 export async function sendEmailVerificationCode(email: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = createClient()
-
     // Generate a 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString()
 
@@ -88,8 +84,6 @@ export async function sendEmailVerificationCode(email: string): Promise<{ succes
 // Send verification code via SMS
 export async function sendSMSVerificationCode(phoneNumber: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = createClient()
-
     // Generate a 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString()
 

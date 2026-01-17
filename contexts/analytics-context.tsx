@@ -4,6 +4,8 @@ import type React from "react"
 
 import { createContext, useContext, useEffect, useState } from "react"
 import { useData } from "./data-context"
+import { useAuth } from "./auth-context"
+import { useLiveMode } from "./live-mode-context"
 import { computeAnalytics, type ComputedAnalytics } from "@/lib/analytics-engine"
 
 interface AnalyticsContextType {
@@ -15,7 +17,10 @@ interface AnalyticsContextType {
 const AnalyticsContext = createContext<AnalyticsContextType | undefined>(undefined)
 
 export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
-  const { getAllTrades, getAllJournalEntries, getAllMorningChecks, userId } = useData() // Add userId dependency
+  const { user, authReady } = useAuth()
+  const { isLoading: modeLoading } = useLiveMode()
+  const { getAllTrades, getAllJournalEntries, getAllMorningChecks, userId, dataOwnerUserId, dataLoaded } = useData()
+
   const [analytics, setAnalytics] = useState<ComputedAnalytics | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -24,14 +29,40 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const morningChecks = getAllMorningChecks() || []
 
   useEffect(() => {
-    if (!userId) {
+    if (!authReady) {
+      console.log("[v0] [Analytics] Waiting for authReady...")
+      setIsLoading(true)
+      return
+    }
+
+    if (modeLoading) {
+      console.log("[v0] [Analytics] Waiting for modeLoading...")
+      setIsLoading(true)
+      return
+    }
+
+    if (!user?.id) {
       console.log("[v0] [Analytics] No user - skipping analytics computation")
       setAnalytics(null)
       setIsLoading(false)
       return
     }
 
-    console.log("[v0] [Analytics] Recomputing analytics from live data...")
+    if (dataOwnerUserId !== user.id) {
+      console.log(
+        `[v0] [Analytics] Data owner mismatch: dataOwnerUserId=${dataOwnerUserId}, userId=${user.id} - waiting for data reload`,
+      )
+      setIsLoading(true)
+      return
+    }
+
+    if (!dataLoaded) {
+      console.log("[v0] [Analytics] Data not loaded yet - waiting")
+      setIsLoading(true)
+      return
+    }
+
+    console.log(`[v0] [Analytics] Computing analytics for user ${user.id} (data owner: ${dataOwnerUserId})`)
     setIsLoading(true)
 
     try {
@@ -52,9 +83,14 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [trades, journalEntries, morningChecks, userId]) // Added userId to deps - recompute when user changes
+  }, [trades, journalEntries, morningChecks, user?.id, authReady, modeLoading, dataOwnerUserId, dataLoaded])
 
   const refresh = () => {
+    if (!user?.id || dataOwnerUserId !== user.id) {
+      console.log("[v0] [Analytics] Refresh blocked - user/owner mismatch")
+      return
+    }
+
     setIsLoading(true)
     const computed = computeAnalytics({
       trades,

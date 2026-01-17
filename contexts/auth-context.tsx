@@ -25,6 +25,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+const IS_DEV = typeof window !== "undefined" && window.location.hostname === "localhost"
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -65,6 +67,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (isMounted && session?.user) {
           console.log("[v0] Initial session found:", session.user.email)
+          if (IS_DEV) {
+            console.log(
+              `[v0] Auth sanity check: userId=${session.user.id}, email=${session.user.email}, token=${session.access_token?.slice(0, 10)}...`,
+            )
+          }
           const userData = {
             id: session.user.id,
             email: session.user.email!,
@@ -73,7 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           lastUserIdRef.current = session.user.id
           setUser(userData)
           migrateLegacyKeys(session.user.id)
-          console.log(`[v0] Login debug: userId=${session.user.id}, email=${session.user.email}`)
         } else if (isMounted) {
           console.log("[v0] No authenticated user")
         }
@@ -98,6 +104,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (!isMounted) return
 
+      if (IS_DEV) {
+        console.log(
+          `[v0] Auth state change: event=${event}, userId=${session?.user?.id || "none"}, email=${session?.user?.email || "none"}, token=${session?.access_token?.slice(0, 10) || "none"}...`,
+        )
+      }
+
       if (event === "INITIAL_SESSION") {
         return
       }
@@ -108,7 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (event === "SIGNED_OUT") {
         if (lastUserIdRef.current) {
-          console.log("[v0] Auth state changed: SIGNED_OUT", session?.user?.email ? `(${session.user.email})` : "")
+          console.log(`[v0] SIGNED_OUT: Clearing data for userId=${lastUserIdRef.current}`)
+          clearUserScoped(lastUserIdRef.current)
         }
         lastUserIdRef.current = null
         setUser(null)
@@ -118,6 +131,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[v0] Auth state changed:", event, session?.user?.email ? `(${session.user.email})` : "")
 
       if (event === "SIGNED_IN" && session?.user) {
+        if (lastUserIdRef.current && lastUserIdRef.current !== session.user.id) {
+          console.log(
+            `[v0] User switch detected: ${lastUserIdRef.current} -> ${session.user.id}, clearing old user data`,
+          )
+          clearUserScoped(lastUserIdRef.current)
+        }
+
         lastUserIdRef.current = session.user.id
         const userData = {
           id: session.user.id,
@@ -126,7 +146,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         setUser(userData)
         migrateLegacyKeys(session.user.id)
-        console.log(`[v0] SignIn debug: userId=${session.user.id}, email=${session.user.email}`)
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
         lastUserIdRef.current = session.user.id
         setUser({
@@ -168,7 +187,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.user && data.session) {
         console.log("[v0] Login successful - session established")
-        console.log(`[v0] Login debug: userId=${data.user.id}, email=${data.user.email}`)
 
         const userData = {
           id: data.user.id,
@@ -253,8 +271,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      console.log(`[v0] Register debug: userId=${authData.user.id}, email=${authData.user.email}`)
-
       let profile = null
       let attempts = 0
       const maxAttempts = 10
@@ -307,7 +323,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userEmail = user?.email
 
     if (userId) {
-      console.log(`[v0] Logout debug: clearing data for userId=${userId}, email=${userEmail}`)
+      console.log(`[v0] Logout: clearing data for userId=${userId}, email=${userEmail}`)
       clearUserScoped(userId)
       localStorage.removeItem("gamification-data")
       localStorage.removeItem(`mindtrader:${userId}:mode`)

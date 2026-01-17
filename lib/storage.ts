@@ -80,7 +80,7 @@ export function clearUserScoped(userId: string): void {
   }
 
   keysToRemove.forEach((key) => localStorage.removeItem(key))
-  console.log(`[storage] Cleared ${keysToRemove.length} scoped keys for user ${userId}:`, keysToRemove)
+  console.log(`[storage] Cleared ${keysToRemove.length} scoped keys for user ${userId}`)
 }
 
 // Legacy compatibility - remove old non-scoped keys
