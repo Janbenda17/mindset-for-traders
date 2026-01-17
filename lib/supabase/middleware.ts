@@ -1,7 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-// Public paths that don't require authentication
 const PUBLIC_PATHS = [
   "/auth/login",
   "/auth/signup",
@@ -13,17 +12,18 @@ const PUBLIC_PATHS = [
   "/privacy",
   "/teaser",
   "/intro",
-  "/landing", // Added landing page to public paths
+  "/landing",
 ]
 
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
+  let user = null
 
   if (pathname.startsWith("/api")) {
     return NextResponse.next()
   }
 
-  // Skip static files and Next.js internals
+  // Skip static files and Next.js internals (including video files)
   if (
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
@@ -35,9 +35,19 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Check if public path
-  const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) || pathname === "/"
+  const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
 
-  if (isPublicPath) {
+  if (pathname === "/") {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/landing"
+      return NextResponse.redirect(url)
+    }
+    // Authenticated users go to dashboard
+    const url = request.nextUrl.clone()
+    url.pathname = "/daily-tracker"
+    return NextResponse.redirect(url)
+  } else if (isPublicPath) {
     return NextResponse.next()
   }
 
@@ -67,25 +77,20 @@ export async function updateSession(request: NextRequest) {
   )
 
   // Get user - this refreshes the session if needed
-  let user = null
   try {
     const { data, error } = await supabase.auth.getUser()
     if (!error) {
       user = data.user
     }
-    // Don't log auth errors - they're expected on first load or expired sessions
   } catch {
     // Silently ignore auth errors
   }
 
-  console.log("[v0] Middleware - path:", pathname, "user:", user?.email || "none")
-
   // Protected path without user - redirect to login
   if (!user) {
     const url = request.nextUrl.clone()
-    url.pathname = "/landing" // Redirect to landing instead of /auth/login
+    url.pathname = "/auth/login"
     url.searchParams.set("redirectedFrom", pathname)
-    console.log("[v0] Redirecting to landing - protected path without auth")
     return NextResponse.redirect(url)
   }
 
