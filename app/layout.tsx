@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import ClientLayout from "./ClientLayout"
+import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { DataProvider } from "@/contexts/data-context"
 import { SubscriptionProvider } from "@/contexts/subscription-context"
@@ -36,47 +37,53 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className={inter.className}>
-        <AuthProvider>
-          <LiveModeProvider>
-            {" "}
-            {/* Add LiveModeProvider right after AuthProvider */}
-            <AdminProvider>
-              <SubscriptionProvider>
-                <GamificationProvider>
-                  <TradingStyleProvider>
-                    <DataProvider>
-                      <AnalyticsProvider>
-                        <DailyStageProvider>
-                          <LossResetProvider>
-                            <AIInsightsProvider>
-                              <CommunityChallengesProvider>
-                                <MilestoneCelebrationsProvider>
-                                  <StreakProvider>
-                                    <NotificationsProvider>
-                                      <CloudSyncProvider>
-                                        <TradingIntegrationProvider>
-                                          <LanguageProvider>
-                                            <ClientLayout>{children}</ClientLayout>
-                                          </LanguageProvider>
-                                        </TradingIntegrationProvider>
-                                      </CloudSyncProvider>
-                                    </NotificationsProvider>
-                                  </StreakProvider>
-                                </MilestoneCelebrationsProvider>
-                              </CommunityChallengesProvider>
-                            </AIInsightsProvider>
-                          </LossResetProvider>
-                        </DailyStageProvider>
-                      </AnalyticsProvider>
-                    </DataProvider>
-                  </TradingStyleProvider>
-                </GamificationProvider>
-              </SubscriptionProvider>
-            </AdminProvider>
-          </LiveModeProvider>
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          forcedTheme="dark"
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <LiveModeProvider>
+              <AdminProvider>
+                <SubscriptionProvider>
+                  <GamificationProvider>
+                    <TradingStyleProvider>
+                      <DataProvider>
+                        <AnalyticsProvider>
+                          <DailyStageProvider>
+                            <LossResetProvider>
+                              <AIInsightsProvider>
+                                <CommunityChallengesProvider>
+                                  <MilestoneCelebrationsProvider>
+                                    <StreakProvider>
+                                      <NotificationsProvider>
+                                        <CloudSyncProvider>
+                                          <TradingIntegrationProvider>
+                                            <LanguageProvider>
+                                              <ClientLayout>{children}</ClientLayout>
+                                            </LanguageProvider>
+                                          </TradingIntegrationProvider>
+                                        </CloudSyncProvider>
+                                      </NotificationsProvider>
+                                    </StreakProvider>
+                                  </MilestoneCelebrationsProvider>
+                                </CommunityChallengesProvider>
+                              </AIInsightsProvider>
+                            </LossResetProvider>
+                          </DailyStageProvider>
+                        </AnalyticsProvider>
+                      </DataProvider>
+                    </TradingStyleProvider>
+                  </GamificationProvider>
+                </SubscriptionProvider>
+              </AdminProvider>
+            </LiveModeProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
