@@ -38,15 +38,14 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
 
   if (pathname === "/") {
-    if (!user) {
+    if (user) {
+      // Authenticated users go to dashboard
       const url = request.nextUrl.clone()
-      url.pathname = "/landing"
+      url.pathname = "/daily-tracker"
       return NextResponse.redirect(url)
     }
-    // Authenticated users go to dashboard
-    const url = request.nextUrl.clone()
-    url.pathname = "/daily-tracker"
-    return NextResponse.redirect(url)
+    // Unauthenticated users see landing page at root
+    return NextResponse.next()
   } else if (isPublicPath) {
     return NextResponse.next()
   }

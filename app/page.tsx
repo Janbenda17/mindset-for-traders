@@ -80,11 +80,7 @@ export default function DashboardPage() {
     setIsMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (!isLoading && user) {
-      router.push("/daily-tracker")
-    }
-  }, [user, isLoading, router])
+  // Middleware handles authenticated user redirect to dashboard
 
   // Logo animation sequence
   useEffect(() => {
@@ -115,11 +111,7 @@ export default function DashboardPage() {
     return () => clearInterval(timer)
   }, [launchDate])
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/auth/login")
-    }
-  }, [user, isLoading, router])
+  // Landing page is public - no auth redirect needed
 
   useEffect(() => {
     if (!isMounted || !user?.id) {
