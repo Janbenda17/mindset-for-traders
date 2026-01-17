@@ -29,6 +29,8 @@ import {
   AlertTriangle,
   Zap,
   Activity,
+  Lock,
+  CheckCircle,
 } from "lucide-react"
 import Link from "next/link"
 import { getTimeOfDay } from "@/lib/utils"
@@ -39,7 +41,7 @@ import { useTradingStyle } from "@/contexts/trading-style-context"
 import { useGamification, LEVEL_XP_REQUIREMENTS } from "@/contexts/gamification-context"
 import { useAuth } from "@/contexts/auth-context"
 
-export default function DashboardPage() {
+export default function HomePage() {
   const [timeOfDay, setTimeOfDay] = useState("")
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
@@ -51,13 +53,15 @@ export default function DashboardPage() {
     trend: { description: "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu." },
     action: { description: "Začni Morning Check a uzamkni svůj readiness před tradingem." },
   })
+  const [daysWithData, setDaysWithData] = useState(0)
+  const [isUnlocked, setIsUnlocked] = useState(false)
 
   const { getTradingStats, trades, morningChecks, journalEntries, isLiveMode, portfolioValue } = useData()
   const { plan, isActive, daysRemaining } = useSubscription()
   const { startReset } = useLossReset()
   const { tradingStyle, config } = useTradingStyle()
   const { data: gamificationData } = useGamification()
-  const { user, isLoading } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -65,10 +69,10 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/auth/login")
+    if (!authLoading && !user) {
+      router.push("/landing") // Redirect to landing instead of /auth/login
     }
-  }, [user, isLoading, router])
+  }, [user, authLoading, router])
 
   useEffect(() => {
     if (!isMounted || !user?.id) {
@@ -187,6 +191,37 @@ export default function DashboardPage() {
       setCachedStats(initialStats)
     }
   }, [portfolioValue, isMounted])
+
+  useEffect(() => {
+    if (!user) return
+
+    try {
+      const allTrades = trades
+      const allMorningChecks = morningChecks
+      const allJournalEntries = journalEntries
+
+      // Get unique dates across all data sources
+      const tradeDates = new Set(allTrades.map((t: any) => t.date))
+      const morningCheckDates = new Set(allMorningChecks.map((m: any) => m.date))
+      const journalDates = new Set(allJournalEntries.map((j: any) => j.date))
+
+      const allDates = new Set([...tradeDates, ...morningCheckDates, ...journalDates])
+      const daysCount = allDates.size
+
+      setDaysWithData(daysCount)
+      setIsUnlocked(daysCount >= 7)
+
+      console.log(`[v0] User has ${daysCount} days with data. Unlocked: ${daysCount >= 7}`)
+    } catch (error) {
+      console.error("[v0] Error calculating days with data:", error)
+    }
+  }, [user, trades, morningChecks, journalEntries])
+
+  useEffect(() => {
+    if (!authLoading && user && isUnlocked) {
+      router.push("/dashboard")
+    }
+  }, [user, authLoading, isUnlocked, router])
 
   const getStatsForStyle = () => {
     if (typeof window === "undefined") {
@@ -320,6 +355,214 @@ export default function DashboardPage() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Načítání...</p>
         </div>
+      </div>
+    )
+  }
+
+  if (!user && !authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950/30 to-gray-950 relative overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/30 via-slate-950 to-slate-950"></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(2px 2px at 20% 30%, white, transparent),
+                         radial-gradient(2px 2px at 60% 70%, white, transparent),
+                         radial-gradient(1px 1px at 50% 50%, white, transparent)`,
+            backgroundSize: "200% 200%",
+            opacity: 0.3,
+          }}
+        ></div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-3 mb-6 p-4 bg-purple-500/10 rounded-2xl border border-purple-500/30 backdrop-blur-sm">
+              <Brain className="w-8 h-8 text-purple-400" />
+              <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                MindTrader AI
+              </span>
+            </div>
+
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+              Transform Your Trading Psychology
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-8">
+              The first AI-powered platform that combines trading journal, mental readiness tracking, and psychological
+              coaching to help you become a consistently profitable trader.
+            </p>
+
+            {/* Video Preview */}
+            <div className="max-w-4xl mx-auto mb-12">
+              <Card className="bg-slate-900/50 border-2 border-purple-500/50 backdrop-blur-sm shadow-2xl shadow-purple-500/20 overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="relative aspect-video bg-gradient-to-br from-purple-900/20 to-pink-900/20 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <PlayCircle className="w-24 h-24 text-purple-400 mb-4 mx-auto opacity-80 hover:opacity-100 transition-opacity cursor-pointer" />
+                        <p className="text-gray-400 text-lg">Software Preview Video</p>
+                        <p className="text-gray-500 text-sm">Watch how MindTrader AI works</p>
+                      </div>
+                    </div>
+                    {/* Placeholder for actual video - replace with your video URL */}
+                    <video
+                      className="w-full h-full object-cover opacity-30"
+                      poster="/placeholder-video-thumbnail.jpg"
+                      controls
+                    >
+                      <source src="/preview-video.mp4" type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link href="/auth/signup">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-8 py-6 text-lg shadow-xl shadow-purple-500/30"
+                >
+                  Start Your Journey
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+              <Link href="/auth/login">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-purple-500/50 hover:bg-purple-500/10 text-purple-300 px-8 py-6 text-lg bg-transparent"
+                >
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-3 gap-6 sm:gap-6 mt-20">
+            {[
+              {
+                icon: Brain,
+                title: "AI Trading Coach",
+                description: "Get personalized insights and mental readiness analysis before every trading session",
+                color: "from-purple-500 to-pink-500",
+              },
+              {
+                icon: TrendingUp,
+                title: "Advanced Analytics",
+                description: "Track your performance, psychology patterns, and identify areas for improvement",
+                color: "from-blue-500 to-cyan-500",
+              },
+              {
+                icon: Target,
+                title: "Daily Flow System",
+                description: "Structured morning checks, trading journal, and evening reviews to build consistency",
+                color: "from-green-500 to-emerald-500",
+              },
+            ].map((feature, index) => (
+              <Card
+                key={index}
+                className="bg-slate-900/50 border-2 border-purple-500/30 backdrop-blur-sm hover:border-purple-500/60 transition-all hover:scale-105"
+              >
+                <CardContent className="p-6 sm:p-12">
+                  <div className={`p-3 bg-gradient-to-r ${feature.color} rounded-xl w-fit mb-4`}>
+                    <feature.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
+                  <p className="text-gray-400">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (user && !authLoading && !isUnlocked) {
+    const progressPercentage = (daysWithData / 7) * 100
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950/30 to-gray-950 flex items-center justify-center p-6">
+        <Card className="max-w-2xl w-full bg-slate-900/50 border-2 border-purple-500/50 backdrop-blur-sm shadow-2xl">
+          <CardContent className="p-8 md:p-12">
+            <div className="text-center">
+              {/* Lock Icon */}
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full mb-6 border-2 border-purple-500/30">
+                <Lock className="w-10 h-10 text-purple-400" />
+              </div>
+
+              <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Building Your Trading Foundation
+              </h2>
+              <p className="text-gray-400 text-lg mb-8">
+                Complete 7 days of data entry to unlock the full platform experience. Consistency is key to trading
+                success!
+              </p>
+
+              {/* Progress Bar */}
+              <div className="mb-8">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-400">Progress</span>
+                  <span className="text-sm font-semibold text-purple-400">{daysWithData} / 7 days completed</span>
+                </div>
+                <Progress value={progressPercentage} className="h-3" />
+              </div>
+
+              {/* Checklist */}
+              <div className="space-y-3 mb-8 text-left">
+                {[
+                  { label: "Complete Morning Checks", done: daysWithData >= 1 },
+                  { label: "Record Your Trades", done: daysWithData >= 3 },
+                  { label: "Build Consistency Habit", done: daysWithData >= 5 },
+                  { label: "Unlock Full Platform", done: daysWithData >= 7 },
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 bg-slate-800/30 rounded-lg">
+                    {item.done ? (
+                      <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full border-2 border-gray-600 flex-shrink-0" />
+                    )}
+                    <span className={item.done ? "text-white" : "text-gray-500"}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/daily-tracker">
+                  <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-6">
+                    Complete Morning Check
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/journal">
+                  <Button
+                    variant="outline"
+                    className="border-blue-500/50 hover:bg-blue-500/10 text-blue-300 px-6 bg-transparent"
+                  >
+                    Record Trade
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Motivation */}
+              <div className="mt-8 p-4 bg-purple-500/10 rounded-lg border border-purple-500/30">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                  <p className="text-sm text-gray-300 text-left">
+                    <strong className="text-purple-400">Pro Tip:</strong> Focus on building the habit first. The data
+                    you collect now will power your analytics and AI coaching once unlocked.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }

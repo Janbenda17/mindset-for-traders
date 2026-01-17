@@ -16,7 +16,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     pathname === "/teaser" ||
     pathname === "/login" ||
     pathname === "/sign-up" ||
-    pathname === "/signup"
+    pathname === "/signup" ||
+    pathname === "/landing"
 
   return (
     <div className="flex flex-col min-h-screen">

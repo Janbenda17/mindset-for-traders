@@ -13,6 +13,7 @@ const PUBLIC_PATHS = [
   "/privacy",
   "/teaser",
   "/intro",
+  "/landing", // Added landing page to public paths
 ]
 
 export async function updateSession(request: NextRequest) {
@@ -28,7 +29,7 @@ export async function updateSession(request: NextRequest) {
     pathname === "/favicon.ico" ||
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml" ||
-    /\.(?:svg|png|jpg|jpeg|webp|gif|ico|css|js|json|map|txt|woff|woff2|ttf|eot|xml)$/i.test(pathname)
+    /\.(?:svg|png|jpg|jpeg|webp|gif|ico|css|js|json|map|txt|woff|woff2|ttf|eot|xml|mp4|webm|ogg|mov)$/i.test(pathname)
   ) {
     return NextResponse.next()
   }
@@ -82,9 +83,9 @@ export async function updateSession(request: NextRequest) {
   // Protected path without user - redirect to login
   if (!user) {
     const url = request.nextUrl.clone()
-    url.pathname = "/auth/login"
+    url.pathname = "/landing" // Redirect to landing instead of /auth/login
     url.searchParams.set("redirectedFrom", pathname)
-    console.log("[v0] Redirecting to login - protected path without auth")
+    console.log("[v0] Redirecting to landing - protected path without auth")
     return NextResponse.redirect(url)
   }
 
