@@ -252,6 +252,9 @@ export function MindTraderAI() {
       }))
       localStorage.setItem(messagesKey, JSON.stringify(messagesToStore))
       localStorage.setItem(messagesDateKey, new Date().toDateString())
+      
+      // Scroll to the latest message
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }
   }, [messages])
 
@@ -399,6 +402,16 @@ export function MindTraderAI() {
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return
 
+    // Kontrola limitu zpráv ve Virtual Mode
+    if (!isLiveMode && virtualMessageCount >= 3) {
+      toast({
+        title: "Limit zpráv dosažen",
+        description: "Ve Virtual Mode můžeš poslat maximálně 3 zprávy. Upgraduj na Premium a přepni do Live Mode pro neomezené zprávy.",
+        variant: "destructive",
+      })
+      return
+    }
+
     const messageContent = input.trim()
 
     const userMessage: Message = {
@@ -413,7 +426,6 @@ export function MindTraderAI() {
 
     try {
       const traderProfile = getTraderProfile?.(30)
-
       const isAnalyticsMode = aiMode === "analytics"
 
       const controller = new AbortController()
@@ -497,19 +509,19 @@ export function MindTraderAI() {
             patterns: isAnalyticsMode
               ? {
                   fomoRate: "0",
-                  revengeRate: traderProfile?.patterns.revengeTradeRate || "0",
+                  revengeRate: traderProfile?.patterns?.revengeTradeRate || "0",
                   overconfidenceRate: "0",
                   fearRate: "0",
                 }
               : null,
             morningCheck: currentMorningCheck,
             stats: {
-              totalPnL: traderProfile?.performance.totalPnL || 0,
-              winRate: Number.parseFloat(traderProfile?.performance.winRate || "0"),
-              totalTrades: traderProfile?.performance.totalTrades || 0,
-              averageMood: Number.parseFloat(traderProfile?.psychology.averageMood || "5"),
-              consecutiveWins: traderProfile?.performance.consecutiveWins || 0,
-              consecutiveLosses: traderProfile?.performance.consecutiveLosses || 0,
+              totalPnL: Number(traderProfile?.performance?.totalPnL || 0),
+              winRate: Number.parseFloat(String(traderProfile?.performance?.winRate || "0")),
+              totalTrades: Number(traderProfile?.performance?.totalTrades || 0),
+              averageMood: Number.parseFloat(String(traderProfile?.psychology?.averageMood || "5")),
+              consecutiveWins: Number(traderProfile?.performance?.consecutiveWins || 0),
+              consecutiveLosses: Number(traderProfile?.performance?.consecutiveLosses || 0),
             },
           },
         }),
@@ -728,11 +740,11 @@ export function MindTraderAI() {
         </div>
 
         {/* Right Chat Area - Enhanced */}
-        <div className="flex-1 order-2 lg:order-2 flex flex-col">
-          <Card className="bg-gradient-to-br from-slate-900/80 to-slate-950/80 border-2 border-purple-500/30 backdrop-blur-xl flex-1 flex flex-col shadow-2xl">
-            <CardContent className="p-0 h-full flex flex-col">
+        <div className="flex-1 order-2 lg:order-2 flex flex-col min-h-0">
+          <Card className="bg-gradient-to-br from-slate-900/80 to-slate-950/80 border-2 border-purple-500/30 backdrop-blur-xl flex-1 flex flex-col shadow-2xl min-h-0">
+            <CardContent className="p-0 flex-1 flex flex-col min-h-0">
               {/* Messages Area - Enhanced with better spacing */}
-              <ScrollArea className="flex-1 p-6 space-y-4">
+              <ScrollArea className="flex-1 p-6 min-h-0">
                 <div className="space-y-5">
                   {messages.length === 0 ? (
                     <div className="h-full flex items-center justify-center">
@@ -818,27 +830,38 @@ export function MindTraderAI() {
                 )}
 
                 {/* Message Input - Enhanced */}
-                <div className="flex gap-3">
-                  <Textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder={language === "cs" ? "Piš svou zprávu..." : "Type your message..."}
-                    className="bg-slate-800 border-2 border-purple-400/30 focus:border-purple-400/60 text-white placeholder-slate-500 resize-none h-12 rounded-lg"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSendMessage()
-                      }
-                    }}
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={isLoading || !input.trim()}
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-200"
-                    size="lg"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
+                <div className="space-y-2">
+                  {!isLiveMode && (
+                    <div className="text-xs text-amber-400/70 flex items-center gap-2">
+                      <span>Zprávy: {virtualMessageCount}/3 (Virtual Mode limit)</span>
+                      {virtualMessageCount >= 3 && (
+                        <span className="text-red-400 font-semibold">- Limit dosažen</span>
+                      )}
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <Textarea
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder={language === "cs" ? "Piš svou zprávu..." : "Type your message..."}
+                      className="bg-slate-800 border-2 border-purple-400/30 focus:border-purple-400/60 text-white placeholder-slate-500 resize-none h-12 rounded-lg"
+                      disabled={!isLiveMode && virtualMessageCount >= 3}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault()
+                          handleSendMessage()
+                        }
+                      }}
+                    />
+                    <Button
+                      onClick={handleSendMessage}
+                      disabled={isLoading || !input.trim() || (!isLiveMode && virtualMessageCount >= 3)}
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-200"
+                      size="lg"
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>

@@ -820,13 +820,52 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const getTraderProfile = useCallback(
     (days: number) => {
+      const stats = getTradingStats()
+      const now = new Date()
+      const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+      
+      const recentTrades = state.trades.filter(
+        (t) => new Date(t.entryTime) >= startDate
+      )
+      
+      const recentMorningChecks = state.morningChecks.filter(
+        (m) => new Date(m.date) >= startDate
+      )
+      
+      const avgMood = recentMorningChecks.length > 0
+        ? recentMorningChecks.reduce((sum, m) => sum + m.mood, 0) / recentMorningChecks.length
+        : 5
+      
+      const avgStress = recentMorningChecks.length > 0
+        ? recentMorningChecks.reduce((sum, m) => sum + (m.stress || 5), 0) / recentMorningChecks.length
+        : 5
+      
       return {
-        winRate: getTradingStats().winRate,
-        tradeCount: state.trades.length,
-        averageReadiness: currentReadiness,
+        performance: {
+          totalTrades: recentTrades.length,
+          winRate: String(stats.winRate),
+          totalPnL: String(stats.totalPnL || 0),
+          consecutiveWins: stats.currentStreak > 0 ? stats.currentStreak : 0,
+          consecutiveLosses: stats.currentStreak < 0 ? Math.abs(stats.currentStreak) : 0,
+        },
+        psychology: {
+          averageMood: String(avgMood.toFixed(1)),
+          averageStress: String(avgStress.toFixed(1)),
+          averageReadiness: String(currentReadiness),
+        },
+        patterns: {
+          revengeTradeRate: "0",
+          emotionalTrades: 0,
+        },
+        period: {
+          days,
+          startDate: startDate.toISOString().split("T")[0],
+          endDate: now.toISOString().split("T")[0],
+        },
+        goals: state.tradingGoals || [],
       }
     },
-    [getTradingStats, state.trades.length, currentReadiness],
+    [getTradingStats, state.trades, state.morningChecks, state.tradingGoals, currentReadiness],
   )
 
   const value = useMemo(

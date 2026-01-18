@@ -381,10 +381,10 @@ export default function DashboardPage() {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                  Good {timeOfDay}! 🚀
+                  {timeOfDay === "ráno" ? "Dobré" : timeOfDay === "odpoledne" ? "Dobré" : "Dobrý"} {timeOfDay}! 🚀
                 </h1>
                 <p className="text-sm sm:text-xl text-gray-300 mt-0.5 sm:mt-1">
-                  {isLiveMode ? "Welcome back" : "Demo mode"}
+                  {isLiveMode ? "Vítej zpět" : "Demo mode"}
                 </p>
                 <div className="flex items-center space-x-2 mt-1 sm:mt-2 flex-wrap gap-1">
                   <Badge className="bg-green-600/20 text-green-400 border-green-500/30 text-xs">

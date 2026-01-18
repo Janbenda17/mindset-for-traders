@@ -664,6 +664,114 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                       )}
                     </div>
 
+                    {/* Additional Trade Details */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {(detailEntry as any).stopLoss && (
+                        <Card className="bg-red-500/10 border-red-500/30">
+                          <CardContent className="p-4">
+                            <p className="text-xs text-gray-300 mb-1">Stop Loss</p>
+                            <p className="text-xl font-bold text-red-400">{(detailEntry as any).stopLoss}</p>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {(detailEntry as any).takeProfit && (
+                        <Card className="bg-green-500/10 border-green-500/30">
+                          <CardContent className="p-4">
+                            <p className="text-xs text-gray-300 mb-1">Take Profit</p>
+                            <p className="text-xl font-bold text-green-400">{(detailEntry as any).takeProfit}</p>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {(detailEntry as any).riskRewardRatio && (
+                        <Card className="bg-purple-500/10 border-purple-500/30">
+                          <CardContent className="p-4">
+                            <p className="text-xs text-gray-300 mb-1">Risk/Reward</p>
+                            <p className="text-xl font-bold text-purple-400">1:{(detailEntry as any).riskRewardRatio}</p>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {(detailEntry as any).timeframe && (
+                        <Card className="bg-blue-500/10 border-blue-500/30">
+                          <CardContent className="p-4">
+                            <p className="text-xs text-gray-300 mb-1">Timeframe</p>
+                            <p className="text-xl font-bold text-blue-400">{(detailEntry as any).timeframe}</p>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {(detailEntry as any).setup && (
+                        <Card className="bg-cyan-500/10 border-cyan-500/30">
+                          <CardContent className="p-4">
+                            <p className="text-xs text-gray-300 mb-1">Setup</p>
+                            <p className="text-sm font-semibold text-cyan-400">{(detailEntry as any).setup}</p>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {(detailEntry as any).duration && (
+                        <Card className="bg-yellow-500/10 border-yellow-500/30">
+                          <CardContent className="p-4">
+                            <p className="text-xs text-gray-300 mb-1">Délka pozice</p>
+                            <p className="text-xl font-bold text-yellow-400">{Math.floor((detailEntry as any).duration / 60)}h {(detailEntry as any).duration % 60}m</p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+
+                    {/* Trading Times */}
+                    {((detailEntry as any).entryTime || (detailEntry as any).exitTime) && (
+                      <div className="grid grid-cols-2 gap-4">
+                        {(detailEntry as any).entryTime && (
+                          <Card className="bg-slate-700/50 border-slate-600">
+                            <CardContent className="p-4">
+                              <p className="text-xs text-gray-300 mb-1">Čas vstupu</p>
+                              <p className="text-xl font-bold text-white">{(detailEntry as any).entryTime}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                        {(detailEntry as any).exitTime && (
+                          <Card className="bg-slate-700/50 border-slate-600">
+                            <CardContent className="p-4">
+                              <p className="text-xs text-gray-300 mb-1">Čas výstupu</p>
+                              <p className="text-xl font-bold text-white">{(detailEntry as any).exitTime}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Market Conditions & Setup Info */}
+                    {(detailEntry as any).marketConditions && (
+                      <Card className="bg-slate-700/50 border-slate-600">
+                        <CardHeader>
+                          <CardTitle className="text-sm text-gray-300">Tržní podmínky</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-gray-200">{(detailEntry as any).marketConditions}</p>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Risk & Reward Amounts */}
+                    {((detailEntry as any).riskAmount || (detailEntry as any).rewardAmount) && (
+                      <div className="grid grid-cols-2 gap-4">
+                        {(detailEntry as any).riskAmount && (
+                          <Card className="bg-red-500/10 border-red-500/30">
+                            <CardContent className="p-4">
+                              <p className="text-xs text-gray-300 mb-1">Riskovaná částka</p>
+                              <p className="text-xl font-bold text-red-400">${(detailEntry as any).riskAmount}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                        {(detailEntry as any).rewardAmount && (
+                          <Card className="bg-green-500/10 border-green-500/30">
+                            <CardContent className="p-4">
+                              <p className="text-xs text-gray-300 mb-1">Cílová odměna</p>
+                              <p className="text-xl font-bold text-green-400">${(detailEntry as any).rewardAmount}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    )}
+
                     {(detailEntry.positionSize || detailEntry.pips) && (
                       <div className="grid grid-cols-2 gap-4">
                         {detailEntry.positionSize && (
@@ -681,6 +789,27 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                               <p className="text-xl font-bold text-cyan-300">{detailEntry.pips}</p>
                             </CardContent>
                           </Card>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Behavioral Flags */}
+                    {((detailEntry as any).revengeTrade || (detailEntry as any).exitedEarly || (detailEntry as any).matchedPlan !== undefined) && (
+                      <div className="flex flex-wrap gap-3">
+                        {(detailEntry as any).matchedPlan !== undefined && (
+                          <Badge className={`text-sm font-semibold ${(detailEntry as any).matchedPlan ? 'bg-green-500 border-green-400' : 'bg-red-500 border-red-400'} text-white`}>
+                            {(detailEntry as any).matchedPlan ? '✓ Podle plánu' : '✗ Mimo plán'}
+                          </Badge>
+                        )}
+                        {(detailEntry as any).revengeTrade && (
+                          <Badge className="text-sm font-semibold bg-red-600 text-white border-red-500">
+                            ⚠️ Revenge Trade
+                          </Badge>
+                        )}
+                        {(detailEntry as any).exitedEarly && (
+                          <Badge className="text-sm font-semibold bg-orange-500 text-white border-orange-400">
+                            ⏱️ Předčasný exit
+                          </Badge>
                         )}
                       </div>
                     )}

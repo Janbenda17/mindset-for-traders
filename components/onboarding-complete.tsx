@@ -209,7 +209,7 @@ export function OnboardingComplete() {
         {step === 4 && (
           <Card className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50">
             <CardContent className="pt-8 pb-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Jak dlouho tradinguješ?</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">Jak dlouho tradíš?</h2>
 
               <RadioGroup value={experienceLevel} onValueChange={setExperienceLevel} className="space-y-3">
                 {experienceLevels.map(({ id, label }) => (

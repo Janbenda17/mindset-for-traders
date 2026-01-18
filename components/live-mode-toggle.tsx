@@ -1,10 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Zap, Shield, Lock, Download } from "lucide-react"
+import { Zap, Shield, Lock, Download, Crown } from "lucide-react"
 import { useLiveMode } from "@/contexts/live-mode-context"
 import { useAuth } from "@/contexts/auth-context"
+import { useSubscription } from "@/hooks/use-subscription"
 import { useToast } from "@/hooks/use-toast"
 import { offerMigration, migrateVirtualDataToLive } from "@/lib/data-migration"
 import {
@@ -19,8 +21,10 @@ import {
 } from "@/components/ui/alert-dialog"
 
 const LiveModeToggle = () => {
+  const router = useRouter()
   const { isLiveMode, switchToLive } = useLiveMode()
   const { user } = useAuth()
+  const { isPremium } = useSubscription()
   const { toast } = useToast()
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showMigrationDialog, setShowMigrationDialog] = useState(false)
@@ -28,6 +32,12 @@ const LiveModeToggle = () => {
 
   const handleModeSwitch = () => {
     if (!isLiveMode) {
+      // Kontrola premium předplatného
+      if (!isPremium) {
+        router.push("/pricing")
+        return
+      }
+      
       // Check if user has data worth migrating
       if (user && offerMigration(user.id)) {
         setShowMigrationDialog(true)
@@ -138,7 +148,12 @@ const LiveModeToggle = () => {
           <div className="w-2 h-2 bg-amber-400 rounded-full" />
           <Shield className="w-4 h-4 text-amber-400" />
           <span className="font-semibold text-amber-300">{isMigrating ? "Migruji..." : "Virtual Mode"}</span>
-          {!isMigrating && <span className="text-xs text-amber-400/70 ml-2">→ Přepnout na Live</span>}
+          {!isMigrating && (
+            <>
+              <span className="text-xs text-amber-400/70 ml-2">→ Přepnout na Live</span>
+              {!isPremium && <Crown className="w-3 h-3 text-yellow-400 ml-1" />}
+            </>
+          )}
         </div>
       </Button>
 

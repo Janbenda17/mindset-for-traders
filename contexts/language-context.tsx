@@ -179,6 +179,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("trader-mindset-language") as Language
     if (saved && (saved === "cs" || saved === "en")) {
       setLanguage(saved)
+    } else {
+      // Pokud není uložený jazyk, nastavíme češtinu jako výchozí
+      setLanguage("cs")
+      localStorage.setItem("trader-mindset-language", "cs")
     }
   }, [])
 

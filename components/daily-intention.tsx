@@ -48,7 +48,7 @@ export function DailyIntention() {
     if (!isLiveMode) {
       toast({
         title: "Demo Mode",
-        description: "This feature is only available in Live Mode",
+        description: "Tato funkce je dostupná pouze v Live Mode. Tvoje data se v Demo Mode neuloží.",
         variant: "destructive",
         duration: 3000,
       })

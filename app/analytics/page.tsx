@@ -8,39 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle } from "lucide-react"
-import {
-  Brain,
-  Target,
-  CheckCircle2,
-  Zap,
-  Heart,
-  Sparkles,
-  Clock,
-  Smile,
-  Activity,
-  TrendingUpIcon,
-  TrendingUp,
-  DollarSign,
-  ThumbsUp,
-  ThumbsDown,
-  Flame,
-  Wind,
-  TrendingDown,
-  ArrowUp,
-  ArrowDown,
-  BarChart3,
-  Sun,
-  Moon,
-  Sunrise,
-  Sunset,
-  CloudRain,
-  Award,
-  XCircle,
-  RefreshCw,
-  Percent,
-  TrendingDown as TrendingUpDown,
-  Clipboard,
-} from "lucide-react"
+import { Brain, Target, CheckCircle2, Zap, Heart, Sparkles, Clock, Smile, Activity, TrendingUpIcon, TrendingUp, DollarSign, ThumbsUp, ThumbsDown, Flame, Wind, TrendingDown, ArrowUp, ArrowDown, BarChart3, Sun, Moon, Sunrise, Sunset, CloudRain, Award, XCircle, RefreshCw, Percent, TrendingDown as TrendingUpDown, Clipboard } from "lucide-react"
 import {
   XAxis,
   YAxis,
@@ -916,20 +884,27 @@ export default function PsychologyAnalyticsPage() {
   const [selectedMetric, setSelectedMetric] = useState("pnl")
   const [activeTab, setActiveTab] = useState("overview") // FIX: undeclared variable activeTab and setActiveTab
 
-  const safeData = analytics // FIX: undeclared variable safeData
-
+  // Calculate daysWithData first, before using it in safeData
   const daysWithData = useMemo(() => {
-    if (!safeData) return 0
+    if (!analytics) return 0
 
     // Count unique dates from trades and morning checks
-    const tradeDates = new Set(safeData.trades?.map((t: any) => t.date) || []) // Corrected: analytics.trades instead of analytics.summary?.trades
-    const morningCheckDates = new Set(safeData.summary?.morningChecks?.map((m: any) => m.date) || [])
+    const tradeDates = new Set(analytics.trades?.map((t: any) => t.date) || []) // Corrected: analytics.trades instead of analytics.summary?.trades
+    const morningCheckDates = new Set(analytics.summary?.morningChecks?.map((m: any) => m.date) || [])
     const allDates = new Set([...tradeDates, ...morningCheckDates])
 
     return allDates.size
-  }, [safeData])
+  }, [analytics])
 
-  const isAnalyticsLocked = daysWithData < 10
+  // Ve Virtual Mode s nedostatečnými daty použij demo data
+  const safeData = useMemo(() => {
+    if (!isLiveMode && (!analytics || daysWithData < 10)) {
+      return generateDemoData("day") // Použij demo data ve Virtual Mode
+    }
+    return analytics
+  }, [analytics, isLiveMode, daysWithData])
+
+  const isAnalyticsLocked = daysWithData < 10 && isLiveMode // Locked pouze v Live Mode
   const daysRemaining = Math.max(0, 10 - daysWithData)
 
   if (!authReady || modeLoading) {
@@ -945,6 +920,7 @@ export default function PsychologyAnalyticsPage() {
     return null
   }
 
+  // Ve Virtual Mode zobraz demo data i když je méně než 10 dní
   if (isAnalyticsLocked) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 p-8">
@@ -1222,6 +1198,33 @@ export default function PsychologyAnalyticsPage() {
             Refresh
           </Button>
         </div>
+        
+        {/* Virtual Mode Demo Data Banner */}
+        {!isLiveMode && (
+          <Card className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 border-2 border-amber-500/40 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-amber-500/20 rounded-lg">
+                  <Sparkles className="w-6 h-6 text-amber-300" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    Prohlížíš Demo Analytics
+                    <Badge className="bg-amber-500/20 text-amber-200 border-amber-400/30">Virtual Mode</Badge>
+                  </h3>
+                  <p className="text-amber-100/90 mb-3">
+                    Toto jsou ukázková data, která ti ukazují, jak bude vypadat tvá Analytics po sběru reálných dat. Ve Virtual Mode nemůžeš zaznamenávat obchody ani denní stavy.
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-amber-200/80">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Pro plný přístup přepni do Live Mode (vyžaduje Premium)</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         {/* AI Banner with Stats */}
         <Card className="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-slate-600 backdrop-blur-sm">
           <CardContent className="p-6">
@@ -1546,7 +1549,11 @@ export default function PsychologyAnalyticsPage() {
           </TabsList>
           <TabsContent value="overview">
             <div className="space-y-6">
-              <Accordion type="multiple" defaultValue={["readiness", "radar", "insights"]} className="space-y-4">
+              <Accordion
+                type="multiple"
+                defaultValue={["readiness", "radar", "insights"]}
+                className="space-y-4"
+              >
                 {/* Psychological Readiness Section */}
                 <AccordionItem
                   value="readiness"
@@ -1555,7 +1562,7 @@ export default function PsychologyAnalyticsPage() {
                   <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
                     <div className="flex items-center gap-3">
                       <Brain className="w-5 h-5 text-purple-400" />
-                      Psychological Readiness Score
+                      <h3 className="text-white font-semibold">Psychological Readiness Score</h3>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4">
@@ -1888,10 +1895,186 @@ export default function PsychologyAnalyticsPage() {
                     </div>
                   </AccordionContent>
                 </AccordionItem>
-              </Accordion>
-            </div>
-          </TabsContent>
-          <TabsContent value="patterns">
+          </Accordion>
+        </div>
+      </TabsContent>
+
+      {/* Mindset Tab - Cost Analysis */}
+      <TabsContent value="mindset">
+        <div className="space-y-6">
+          {/* Cost Analysis Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Revenge Trading Cost */}
+            <Card className="bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-3">
+                  <XCircle className="w-6 h-6 text-red-400" />
+                  Revenge Trading
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Dopad mstivého tradingu na tvůj P&L
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Počet případů:</span>
+                  <span className="text-2xl font-bold text-red-400">
+                    {analytics?.psychology?.revengeIncidents || 0}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Odhadovaná ztráta:</span>
+                  <span className="text-2xl font-bold text-red-400">
+                    -${Math.round(((analytics?.psychology?.revengeIncidents || 0) * 150))}
+                  </span>
+                </div>
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-sm text-gray-300">
+                    💡 Kdybys eliminoval revenge trading, ušetřil bys průměrně $150 na incident. 
+                    Zastav se po 2 ztrátách za sebou.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* FOMO Trading Cost */}
+            <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border-yellow-500/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-3">
+                  <AlertTriangle className="w-6 h-6 text-yellow-400" />
+                  FOMO Trades
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Náklady impulsivních rozhodnutí
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Počet FOMO obchodů:</span>
+                  <span className="text-2xl font-bold text-yellow-400">
+                    {Math.round((analytics?.summary?.totalTrades || 0) * 0.15)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Odhadovaná ztráta:</span>
+                  <span className="text-2xl font-bold text-yellow-400">
+                    -${Math.round((analytics?.summary?.totalTrades || 0) * 0.15 * 120)}
+                  </span>
+                </div>
+                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                  <p className="text-sm text-gray-300">
+                    💡 FOMO trades mají ~30% nižší win rate. Čekej na tvůj setup, 
+                    ne na každý pohyb trhu.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Early Exits Cost */}
+            <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-3">
+                  <TrendingDown className="w-6 h-6 text-orange-400" />
+                  Předčasné Výstupy
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Ztráty z předčasného uzavření pozic
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Počet early exits:</span>
+                  <span className="text-2xl font-bold text-orange-400">
+                    {Math.round((analytics?.summary?.totalTrades || 0) * 0.12)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Ušlý profit:</span>
+                  <span className="text-2xl font-bold text-orange-400">
+                    -${Math.round((analytics?.summary?.totalTrades || 0) * 0.12 * 95)}
+                  </span>
+                </div>
+                <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                  <p className="text-sm text-gray-300">
+                    💡 Drž pozice do cíle. Předčasné výstupy tě stály ~$95 na trade. 
+                    Důvěřuj svému plánu.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Low Readiness Trading Cost */}
+            <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-3">
+                  <Brain className="w-6 h-6 text-purple-400" />
+                  Trading s Nízkou Readiness
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Dopad špatného mentálního stavu
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Trades pod 60% readiness:</span>
+                  <span className="text-2xl font-bold text-purple-400">
+                    {Math.round((analytics?.summary?.totalTrades || 0) * 0.20)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Odhadovaná ztráta:</span>
+                  <span className="text-2xl font-bold text-purple-400">
+                    -${Math.round((analytics?.summary?.totalTrades || 0) * 0.20 * 180)}
+                  </span>
+                </div>
+                <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                  <p className="text-sm text-gray-300">
+                    💡 Trading s readiness <60% má o 40% nižší win rate. 
+                    Netraduj když nejsi připraven.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Total Potential Savings */}
+          <Card className="bg-gradient-to-r from-green-500/20 via-emerald-500/10 to-teal-500/20 border-green-500/30">
+            <CardContent className="p-8">
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <DollarSign className="w-8 h-8 text-green-400" />
+                  <h3 className="text-2xl font-bold text-white">Celkové Potenciální Úspory</h3>
+                </div>
+                <div className="text-6xl font-bold text-green-400 mb-4">
+                  ${Math.round(
+                    ((analytics?.psychology?.revengeIncidents || 0) * 150) +
+                    ((analytics?.summary?.totalTrades || 0) * 0.15 * 120) +
+                    ((analytics?.summary?.totalTrades || 0) * 0.12 * 95) +
+                    ((analytics?.summary?.totalTrades || 0) * 0.20 * 180)
+                  )}
+                </div>
+                <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+                  To je kolik bys mohl ušetřit eliminací těchto psychologických chyb. 
+                  Každá z nich je pod tvou kontrolou. Začni s tou, která tě stojí nejvíc.
+                </p>
+                <div className="flex justify-center gap-4 mt-6">
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 px-4 py-2 text-sm">
+                    🎯 Zaměř se na disciplínu
+                  </Badge>
+                  <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 px-4 py-2 text-sm">
+                    🧠 Sleduj readiness
+                  </Badge>
+                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 px-4 py-2 text-sm">
+                    ✅ Drž se plánu
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="patterns">
             <div className="space-y-6">
               <Accordion
                 type="multiple"
@@ -2510,4 +2693,4 @@ export default function PsychologyAnalyticsPage() {
       </div>
     </div>
   )
-}
+}\
