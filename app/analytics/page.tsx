@@ -167,22 +167,102 @@ function generateDemoData(tradingStyle: string) {
       {
         name: "FOMO Trading",
         emoji: "😰",
-        count: 5,
-        impact: -1500,
+        count: 8,
+        impact: -2100,
         color: "#ef4444",
-        severity: "medium",
+        severity: "high",
         description: "Impulzivní obchody z obavy, že promeškáš příležitost",
         recommendation: "Vyčkej 10 minut před vstupem. FOMO většinou znamená, že jsi pozdě.",
       },
       {
         name: "Revenge Trading",
         emoji: "😤",
-        count: 3,
-        impact: -2800,
+        count: 5,
+        impact: -3200,
         color: "#dc2626",
-        severity: "high",
+        severity: "critical",
         description: "Snaha rychle získat zpět ztráty - nejnebezpečnější pattern",
         recommendation: "STOP trading po 2 ztrátách za sebou. Udělej pauzu minimálně 30 minut.",
+      },
+      {
+        name: "Fear of Losing",
+        emoji: "😨",
+        count: 12,
+        impact: -1800,
+        color: "#f59e0b",
+        severity: "high",
+        description: "Předčasné uzavírání ziskových pozic kvůli strachu ze ztráty",
+        recommendation: "Dodržuj plán - uzavírej pozice na TP nebo trailing stop, ne emocionálně.",
+      },
+      {
+        name: "Overconfidence",
+        emoji: "🤑",
+        count: 6,
+        impact: -1500,
+        color: "#f97316",
+        severity: "medium",
+        description: "Po sérii výher trading s příliš velkým rizikem",
+        recommendation: "Risk management je konstantní - vždy max 1-2% na trade, bez ohledu na winning streak.",
+      },
+      {
+        name: "Analysis Paralysis",
+        emoji: "🤔",
+        count: 4,
+        impact: -900,
+        color: "#06b6d4",
+        severity: "medium",
+        description: "Přemýšlení a váhání až do ztráty příležitosti",
+        recommendation: "Připrav si trading plán předem. Když nastane setup, jednej okamžitě.",
+      },
+      {
+        name: "Greed",
+        emoji: "💰",
+        count: 7,
+        impact: -2600,
+        color: "#eab308",
+        severity: "high",
+        description: "Držení pozic příliš dlouho v naději na větší zisk",
+        recommendation: "Profit je profit. Bere TP když se objeví a nebuď chamtivý.",
+      },
+      {
+        name: "Hope Trading",
+        emoji: "🙏",
+        count: 9,
+        impact: -2400,
+        color: "#ef4444",
+        severity: "critical",
+        description: "Držení ztrátových pozic v naději na obrat",
+        recommendation: "Stop loss je povinný. Nikdy nevyčkávej v naději - cut losses rychle.",
+      },
+      {
+        name: "Fatigue Trading",
+        emoji: "😴",
+        count: 3,
+        impact: -700,
+        color: "#64748b",
+        severity: "medium",
+        description: "Trading ve stavu vyčerpání a snížené koncentrace",
+        recommendation: "Trading vyžaduje 100% fokus. Když jsi unavený, přestaň.",
+      },
+      {
+        name: "Morning Rush",
+        emoji: "⏰",
+        count: 5,
+        impact: -1200,
+        color: "#f59e0b",
+        severity: "medium",
+        description: "Nedostatek přípravy a spěch na začátku trading dne",
+        recommendation: "Začni vždy s morning check a jasným plánem. Nikdy nespěchej do trhu.",
+      },
+      {
+        name: "Weekend Gap Anxiety",
+        emoji: "😟",
+        count: 2,
+        impact: -500,
+        color: "#8b5cf6",
+        severity: "low",
+        description: "Strach z drž pozic přes víkend",
+        recommendation: "Buď uzavři všechny pozice před víkendem, nebo měj jasnou strategii pro gap risk.",
       },
     ],
     streakStats: {
@@ -232,14 +312,14 @@ function generateDemoData(tradingStyle: string) {
 // Dummy functions for the sake of the example, replace with actual implementations
 function calculateEmotionalPatternsFromTrades(trades: any[]): any[] {
   // Placeholder: Replace with actual logic to analyze trades for emotional patterns
-  return [
+  const patterns = [
     {
       name: "FOMO Trading",
       emoji: "😰",
       count: Math.floor(Math.random() * 8) + 3,
       impact: -(Math.random() * 2500 + 800),
       color: "#ef4444",
-      severity: "medium",
+      severity: Math.random() > 0.5 ? "high" : "medium",
       description: "Impulzivní obchody z obavy, že promeškáš příležitost",
       recommendation: "Vyčkej 10 minut před vstupem. FOMO většinou znamená, že jsi pozdě.",
     },
@@ -249,11 +329,65 @@ function calculateEmotionalPatternsFromTrades(trades: any[]): any[] {
       count: Math.floor(Math.random() * 5) + 2,
       impact: -(Math.random() * 4500 + 1500),
       color: "#dc2626",
-      severity: "high",
+      severity: "critical",
       description: "Snaha rychle získat zpět ztráty - nejnebezpečnější pattern",
       recommendation: "STOP trading po 2 ztrátách za sebou. Udělej pauzu minimálně 30 minut.",
     },
+    {
+      name: "Fear of Losing",
+      emoji: "😨",
+      count: Math.floor(Math.random() * 10) + 5,
+      impact: -(Math.random() * 2000 + 1000),
+      color: "#f59e0b",
+      severity: "high",
+      description: "Předčasné uzavírání ziskových pozic kvůli strachu ze ztráty",
+      recommendation: "Dodržuj plán - uzavírej pozice na TP nebo trailing stop, ne emocionálně.",
+    },
+    {
+      name: "Overconfidence",
+      emoji: "🤑",
+      count: Math.floor(Math.random() * 6) + 2,
+      impact: -(Math.random() * 1800 + 800),
+      color: "#f97316",
+      severity: "medium",
+      description: "Po sérii výher trading s příliš velkým rizikem",
+      recommendation: "Risk management je konstantní - vždy max 1-2% na trade, bez ohledu na winning streak.",
+    },
+    {
+      name: "Greed",
+      emoji: "💰",
+      count: Math.floor(Math.random() * 7) + 3,
+      impact: -(Math.random() * 3000 + 1500),
+      color: "#eab308",
+      severity: "high",
+      description: "Držení pozic příliš dlouho v naději na větší zisk",
+      recommendation: "Profit je profit. Bere TP když se objeví a nebuď chamtivý.",
+    },
+    {
+      name: "Hope Trading",
+      emoji: "🙏",
+      count: Math.floor(Math.random() * 8) + 4,
+      impact: -(Math.random() * 3500 + 1500),
+      color: "#ef4444",
+      severity: "critical",
+      description: "Držení ztrátových pozic v naději na obrat",
+      recommendation: "Stop loss je povinný. Nikdy nevyčkávej v naději - cut losses rychle.",
+    },
+    {
+      name: "Analysis Paralysis",
+      emoji: "🤔",
+      count: Math.floor(Math.random() * 4) + 2,
+      impact: -(Math.random() * 1000 + 500),
+      color: "#06b6d4",
+      severity: "medium",
+      description: "Přemýšlení a váhání až do ztráty příležitosti",
+      recommendation: "Připrav si trading plán předem. Když nastane setup, jednej okamžitě.",
+    },
   ]
+  
+  // Return random 5-7 patterns
+  const count = Math.floor(Math.random() * 3) + 5
+  return patterns.sort(() => Math.random() - 0.5).slice(0, count)
 }
 
 function calculatePsychologicalMetrics(trades: any[], moodEntries: any[]) {
@@ -1549,11 +1683,7 @@ export default function PsychologyAnalyticsPage() {
           </TabsList>
           <TabsContent value="overview">
             <div className="space-y-6">
-              <Accordion
-                type="multiple"
-                defaultValue={["readiness", "radar", "insights"]}
-                className="space-y-4"
-              >
+              <Accordion type="multiple" defaultValue={["readiness", "radar", "insights"]} className="space-y-4">
                 {/* Psychological Readiness Section */}
                 <AccordionItem
                   value="readiness"
@@ -1562,7 +1692,7 @@ export default function PsychologyAnalyticsPage() {
                   <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
                     <div className="flex items-center gap-3">
                       <Brain className="w-5 h-5 text-purple-400" />
-                      <h3 className="text-white font-semibold">Psychological Readiness Score</h3>
+                      Psychological Readiness Score
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4">
@@ -1688,7 +1818,7 @@ export default function PsychologyAnalyticsPage() {
                   <AccordionContent className="px-6 py-4 space-y-4">
                     {/* Radar chart and graphs - existing code */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card className="bg-slate-800/50 backdrop-blur border-slate-700 flex flex-col">
+                      <Card className="bg-gradient-to-br from-purple-500/5 to-purple-600/10 backdrop-blur border-purple-500/30 flex flex-col">
                         <CardHeader>
                           <CardTitle className="text-white flex items-center gap-2">
                             <Brain className="w-5 h-5 text-purple-400" />
@@ -1707,6 +1837,12 @@ export default function PsychologyAnalyticsPage() {
                                 A: Number.isNaN(item.A) ? 0 : item.A || 0,
                               }))}
                             >
+                              <defs>
+                                <linearGradient id="radarPurpleGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.6} />
+                                  <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.3} />
+                                </linearGradient>
+                              </defs>
                               <PolarGrid stroke="#334155" />
                               <PolarAngleAxis
                                 dataKey="subject"
@@ -1718,8 +1854,8 @@ export default function PsychologyAnalyticsPage() {
                                 dataKey="A"
                                 stroke="#8b5cf6"
                                 strokeWidth={3}
-                                fill="url(#mentalGradient)"
-                                fillOpacity={0.5}
+                                fill="url(#radarPurpleGradient)"
+                                fillOpacity={0.7}
                               />
                               <Tooltip
                                 contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", color: "#f8fafc" }}
@@ -1895,186 +2031,84 @@ export default function PsychologyAnalyticsPage() {
                     </div>
                   </AccordionContent>
                 </AccordionItem>
-          </Accordion>
-        </div>
-      </TabsContent>
-
-      {/* Mindset Tab - Cost Analysis */}
-      <TabsContent value="mindset">
-        <div className="space-y-6">
-          {/* Cost Analysis Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Revenge Trading Cost */}
-            <Card className="bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/30">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-3">
-                  <XCircle className="w-6 h-6 text-red-400" />
-                  Revenge Trading
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Dopad mstivého tradingu na tvůj P&L
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Počet případů:</span>
-                  <span className="text-2xl font-bold text-red-400">
-                    {analytics?.psychology?.revengeIncidents || 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Odhadovaná ztráta:</span>
-                  <span className="text-2xl font-bold text-red-400">
-                    -${Math.round(((analytics?.psychology?.revengeIncidents || 0) * 150))}
-                  </span>
-                </div>
-                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <p className="text-sm text-gray-300">
-                    💡 Kdybys eliminoval revenge trading, ušetřil bys průměrně $150 na incident. 
-                    Zastav se po 2 ztrátách za sebou.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* FOMO Trading Cost */}
-            <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border-yellow-500/30">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-3">
-                  <AlertTriangle className="w-6 h-6 text-yellow-400" />
-                  FOMO Trades
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Náklady impulsivních rozhodnutí
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Počet FOMO obchodů:</span>
-                  <span className="text-2xl font-bold text-yellow-400">
-                    {Math.round((analytics?.summary?.totalTrades || 0) * 0.15)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Odhadovaná ztráta:</span>
-                  <span className="text-2xl font-bold text-yellow-400">
-                    -${Math.round((analytics?.summary?.totalTrades || 0) * 0.15 * 120)}
-                  </span>
-                </div>
-                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                  <p className="text-sm text-gray-300">
-                    💡 FOMO trades mají ~30% nižší win rate. Čekej na tvůj setup, 
-                    ne na každý pohyb trhu.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Early Exits Cost */}
-            <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/30">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-3">
-                  <TrendingDown className="w-6 h-6 text-orange-400" />
-                  Předčasné Výstupy
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Ztráty z předčasného uzavření pozic
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Počet early exits:</span>
-                  <span className="text-2xl font-bold text-orange-400">
-                    {Math.round((analytics?.summary?.totalTrades || 0) * 0.12)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Ušlý profit:</span>
-                  <span className="text-2xl font-bold text-orange-400">
-                    -${Math.round((analytics?.summary?.totalTrades || 0) * 0.12 * 95)}
-                  </span>
-                </div>
-                <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                  <p className="text-sm text-gray-300">
-                    💡 Drž pozice do cíle. Předčasné výstupy tě stály ~$95 na trade. 
-                    Důvěřuj svému plánu.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Low Readiness Trading Cost */}
-            <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/30">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-3">
-                  <Brain className="w-6 h-6 text-purple-400" />
-                  Trading s Nízkou Readiness
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Dopad špatného mentálního stavu
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Trades pod 60% readiness:</span>
-                  <span className="text-2xl font-bold text-purple-400">
-                    {Math.round((analytics?.summary?.totalTrades || 0) * 0.20)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Odhadovaná ztráta:</span>
-                  <span className="text-2xl font-bold text-purple-400">
-                    -${Math.round((analytics?.summary?.totalTrades || 0) * 0.20 * 180)}
-                  </span>
-                </div>
-                <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                  <p className="text-sm text-gray-300">
-                    💡 Trading s readiness <60% má o 40% nižší win rate. 
-                    Netraduj když nejsi připraven.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Total Potential Savings */}
-          <Card className="bg-gradient-to-r from-green-500/20 via-emerald-500/10 to-teal-500/20 border-green-500/30">
-            <CardContent className="p-8">
-              <div className="text-center space-y-4">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <DollarSign className="w-8 h-8 text-green-400" />
-                  <h3 className="text-2xl font-bold text-white">Celkové Potenciální Úspory</h3>
-                </div>
-                <div className="text-6xl font-bold text-green-400 mb-4">
-                  ${Math.round(
-                    ((analytics?.psychology?.revengeIncidents || 0) * 150) +
-                    ((analytics?.summary?.totalTrades || 0) * 0.15 * 120) +
-                    ((analytics?.summary?.totalTrades || 0) * 0.12 * 95) +
-                    ((analytics?.summary?.totalTrades || 0) * 0.20 * 180)
-                  )}
-                </div>
-                <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-                  To je kolik bys mohl ušetřit eliminací těchto psychologických chyb. 
-                  Každá z nich je pod tvou kontrolou. Začni s tou, která tě stojí nejvíc.
-                </p>
-                <div className="flex justify-center gap-4 mt-6">
-                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 px-4 py-2 text-sm">
-                    🎯 Zaměř se na disciplínu
-                  </Badge>
-                  <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 px-4 py-2 text-sm">
-                    🧠 Sleduj readiness
-                  </Badge>
-                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 px-4 py-2 text-sm">
-                    ✅ Drž se plánu
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="patterns">
+              </Accordion>
+            </div>
+          </TabsContent>
+          <TabsContent value="mindset">
+            <div className="space-y-6">
+              <Accordion type="multiple" defaultValue={["emotions"]} className="space-y-4">
+                {/* Emotional Patterns Section */}
+                <AccordionItem value="emotions" className="border-slate-600 rounded-lg border overflow-hidden">
+                  <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
+                    <div className="flex items-center gap-3">
+                      <Heart className="w-5 h-5 text-pink-400" />
+                      Emoční Vzorce a Jejich Dopad
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-6 py-6 bg-slate-900/50">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {safeData.emotionalPatterns.map((pattern: any, idx: number) => (
+                        <Card
+                          key={idx}
+                          className={cn(
+                            "border-2 transition-all hover:scale-105",
+                            pattern.severity === "critical" && "border-red-500/50 bg-red-500/5",
+                            pattern.severity === "high" && "border-orange-500/50 bg-orange-500/5",
+                            pattern.severity === "medium" && "border-yellow-500/50 bg-yellow-500/5",
+                            pattern.severity === "low" && "border-green-500/50 bg-green-500/5",
+                          )}
+                        >
+                          <CardHeader>
+                            <CardTitle className="text-white flex items-center gap-2">
+                              <span className="text-2xl">{pattern.emoji}</span>
+                              {pattern.name}
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "ml-auto",
+                                  pattern.severity === "critical" && "border-red-500/50 text-red-400",
+                                  pattern.severity === "high" && "border-orange-500/50 text-orange-400",
+                                  pattern.severity === "medium" && "border-yellow-500/50 text-yellow-400",
+                                  pattern.severity === "low" && "border-green-500/50 text-green-400",
+                                )}
+                              >
+                                {pattern.severity === "critical" ? "KRITICKÉ" : 
+                                 pattern.severity === "high" ? "VYSOKÉ" :
+                                 pattern.severity === "medium" ? "STŘEDNÍ" : "NÍZKÉ"}
+                              </Badge>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <p className="text-gray-300 text-sm">{pattern.description}</p>
+                            <div className="flex items-center justify-between pt-2 border-t border-slate-700">
+                              <div>
+                                <p className="text-xs text-gray-500">Počet incidentů</p>
+                                <p className="text-lg font-bold text-white">{pattern.count}x</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500">Finanční dopad</p>
+                                <p className={cn(
+                                  "text-lg font-bold",
+                                  pattern.impact < 0 ? "text-red-400" : "text-green-400"
+                                )}>
+                                  {pattern.impact >= 0 ? "+" : ""}${pattern.impact.toFixed(0)}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="bg-slate-800/50 rounded-lg p-3 mt-3">
+                              <p className="text-xs text-gray-400 mb-1">Doporučení:</p>
+                              <p className="text-sm text-purple-300">{pattern.recommendation}</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </TabsContent>
+          <TabsContent value="patterns">
             <div className="space-y-6">
               <Accordion
                 type="multiple"
@@ -2693,4 +2727,4 @@ export default function PsychologyAnalyticsPage() {
       </div>
     </div>
   )
-}\
+}

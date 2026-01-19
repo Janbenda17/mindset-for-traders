@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react"
 import { supabase } from "@/lib/supabase/browser"
 import { useAuth } from "./auth-context"
+import { initVirtualTradingData } from "@/lib/demo/init-virtual-data"
 
 interface LiveModeContextType {
   isLiveMode: boolean
@@ -102,6 +103,17 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)
     }
   }
+
+  // CRITICAL: Initialize virtual trading data when in VIRTUAL mode
+  useEffect(() => {
+    if (!isLoading && !isLiveMode && user?.id) {
+      console.log("[v0] [LiveMode] VIRTUAL mode active - ensuring demo trades exist")
+      const success = initVirtualTradingData(user.id)
+      if (!success) {
+        console.error("[v0] [LiveMode] CRITICAL - Failed to initialize demo trades!")
+      }
+    }
+  }, [isLiveMode, isLoading, user?.id])
 
   const switchToLive = async () => {
     if (!user) {

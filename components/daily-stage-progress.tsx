@@ -66,14 +66,14 @@ export function DailyStageProgress() {
             return (
               <div
                 key={stage.id}
-                className={`relative p-4 rounded-lg border transition-all ${
+                className={`relative p-4 rounded-lg border transition-all cursor-pointer ${
                   isCompleted
-                    ? "bg-green-500/10 border-green-500/30"
+                    ? "bg-green-500/10 border-green-500/30 hover:bg-green-500/15 hover:shadow-lg hover:shadow-green-500/20"
                     : isActive
-                      ? "bg-purple-500/10 border-purple-500/50 ring-2 ring-purple-500/30"
+                      ? "bg-purple-500/10 border-purple-500/50 ring-2 ring-purple-500/30 hover:bg-purple-500/15 hover:shadow-lg hover:shadow-purple-500/20"
                       : isLocked
                         ? "bg-slate-800/30 border-slate-700/30 opacity-60"
-                        : "bg-slate-800/50 border-slate-700/50"
+                        : "bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 hover:shadow-lg hover:shadow-slate-600/20"
                 }`}
               >
                 {/* Stage Number Badge */}
@@ -132,7 +132,7 @@ export function DailyStageProgress() {
                     >
                       <Link href={stage.href}>
                         <Check className="w-4 h-4 mr-2" />
-                        View
+                        View Results
                       </Link>
                     </Button>
                   ) : isActive ? (

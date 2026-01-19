@@ -15,6 +15,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Check if user is in VIRTUAL mode
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("mode")
+      .eq("id", user.id)
+      .maybeSingle()
+
+    const isVirtualMode = profile?.mode === "VIRTUAL"
+
     const today = new Date().toISOString().split("T")[0]
 
     const { data: existingStages, error: fetchError } = await supabase
@@ -30,6 +39,22 @@ export async function GET(request: Request) {
     }
 
     if (!existingStages) {
+      // Demo data for VIRTUAL mode - with stage 5 unlocked
+      if (isVirtualMode) {
+        return NextResponse.json({
+          current_stage: 1,
+          morning_check_completed: true,
+          morning_check_completed_at: new Date(Date.now() - 3600000).toISOString(),
+          daily_intention_completed: true,
+          daily_intention_completed_at: new Date(Date.now() - 2400000).toISOString(),
+          trading_plan_completed: true,
+          trading_plan_completed_at: new Date(Date.now() - 1800000).toISOString(),
+          record_trades_completed: true,
+          record_trades_completed_at: new Date(Date.now() - 600000).toISOString(),
+          daily_summary_completed: false,
+        })
+      }
+
       return NextResponse.json({
         current_stage: 1,
         morning_check_completed: false,

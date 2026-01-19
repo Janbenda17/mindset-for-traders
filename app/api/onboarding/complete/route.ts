@@ -33,10 +33,58 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "This nickname is reserved" }, { status: 400 })
   }
 
+  // Check if profile already exists
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("user_id, username")
+    .eq("user_id", user.id)
+    .single()
+
+  let finalUsername = nickname.toLowerCase()
+
+  // If profile doesn't exist, check if username is available
+  if (!existingProfile) {
+    const { data: usernameCheck } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("username", finalUsername)
+      .single()
+
+    // If username is taken, generate a unique one
+    if (usernameCheck) {
+      let suffix = 1
+      let isUnique = false
+      
+      while (!isUnique && suffix < 100) {
+        const testUsername = `${finalUsername}${suffix}`
+        const { data: check } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("username", testUsername)
+          .single()
+        
+        if (!check) {
+          finalUsername = testUsername
+          isUnique = true
+        } else {
+          suffix++
+        }
+      }
+      
+      if (!isUnique) {
+        // Fallback to random suffix if we couldn't find a unique one
+        finalUsername = `${finalUsername}${Math.floor(Math.random() * 10000)}`
+      }
+      
+      console.log(`[v0] Username '${nickname.toLowerCase()}' was taken, using '${finalUsername}' instead`)
+    }
+  }
+
+  // Now do the upsert with the confirmed unique username
   const { error } = await supabase.from("profiles").upsert(
     {
       user_id: user.id,
-      username: nickname.toLowerCase(),
+      username: existingProfile ? existingProfile.username : finalUsername,
       display_name: nickname,
       onboarding_completed: true,
       trader_type,
