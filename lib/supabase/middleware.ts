@@ -73,30 +73,19 @@ export async function updateSession(request: NextRequest) {
 
   console.log("[v0] Middleware - path:", pathname, "user:", user?.email || "none")
 
-  // Handle "/" path
-  if (pathname === "/") {
-    if (!user) {
-      // Not authenticated - check for landing cookie
-      const hasSeenLanding = request.cookies.get("mt_seen_landing")
-      if (!hasSeenLanding) {
-        console.log("[v0] First visit - redirecting to /landing")
-        const url = request.nextUrl.clone()
-        url.pathname = "/landing"
-        return NextResponse.redirect(url)
-      }
-    } else {
-      // Authenticated user - redirect to login
-      console.log("[v0] Authenticated user on /, redirecting to /auth/login")
+  // First-visit landing logic: if "/" and no auth and no mt_seen_landing cookie -> rewrite to /landing
+  if (pathname === "/" && !user) {
+    const hasSeenLanding = request.cookies.get("mt_seen_landing")
+    if (!hasSeenLanding) {
+      console.log("[v0] First visit - rewriting / to /landing")
       const url = request.nextUrl.clone()
-      url.pathname = "/auth/login"
-      return NextResponse.redirect(url)
+      url.pathname = "/landing"
+      return NextResponse.rewrite(url)
     }
-    // If not authenticated but has seen landing, allow "/"
-    return NextResponse.next()
   }
 
   // Check if public path
-  const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
+  const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) || pathname === "/"
 
   if (isPublicPath) {
     return NextResponse.next()
