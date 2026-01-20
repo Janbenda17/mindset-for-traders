@@ -73,14 +73,14 @@ export async function updateSession(request: NextRequest) {
 
   console.log("[v0] Middleware - path:", pathname, "user:", user?.email || "none")
 
-  // First-visit landing logic: if "/" and no auth and no mt_seen_landing cookie -> rewrite to /landing
+  // First-visit landing logic: if "/" and no auth and no mt_seen_landing cookie -> redirect to /landing
   if (pathname === "/" && !user) {
     const hasSeenLanding = request.cookies.get("mt_seen_landing")
     if (!hasSeenLanding) {
-      console.log("[v0] First visit - rewriting / to /landing")
+      console.log("[v0] First visit - redirecting to /landing")
       const url = request.nextUrl.clone()
       url.pathname = "/landing"
-      return NextResponse.rewrite(url)
+      return NextResponse.redirect(url)
     }
   }
 
