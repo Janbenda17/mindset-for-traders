@@ -34,13 +34,6 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check if public path
-  const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) || pathname === "/"
-
-  if (isPublicPath) {
-    return NextResponse.next()
-  }
-
   // Create response first
   let supabaseResponse = NextResponse.next({ request })
 
@@ -79,6 +72,24 @@ export async function updateSession(request: NextRequest) {
   }
 
   console.log("[v0] Middleware - path:", pathname, "user:", user?.email || "none")
+
+  // First-visit landing logic: if "/" and no auth and no mt_seen_landing cookie -> rewrite to /landing
+  if (pathname === "/" && !user) {
+    const hasSeenLanding = request.cookies.get("mt_seen_landing")
+    if (!hasSeenLanding) {
+      console.log("[v0] First visit - rewriting / to /landing")
+      const url = request.nextUrl.clone()
+      url.pathname = "/landing"
+      return NextResponse.rewrite(url)
+    }
+  }
+
+  // Check if public path
+  const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/")) || pathname === "/"
+
+  if (isPublicPath) {
+    return NextResponse.next()
+  }
 
   // Protected path without user - redirect to login
   if (!user) {

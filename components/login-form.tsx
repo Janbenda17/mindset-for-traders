@@ -17,6 +17,9 @@ export function LoginForm() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  const [error, setError] = useState("")
+  const [showResetForm, setShowResetForm] = useState(false)
+  const [resetEmail, setResetEmail] = useState("")
   const { login } = useAuth()
   const router = useRouter()
 
@@ -39,9 +42,17 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
 
-    if (!email || !password) {
-      console.error("[v0] Email or password missing")
+    // Validace emailu
+    if (!email.trim()) {
+      setError("Prosím zadejte svůj email")
+      return
+    }
+
+    // Validace hesla
+    if (!password) {
+      setError("Prosím zadejte své heslo")
       return
     }
 
@@ -62,12 +73,36 @@ export function LoginForm() {
 
       if (!success) {
         console.error("[v0] Login failed")
-        setIsLoading(false) // Reset loading state on failure
+        setError("Nesprávný email nebo heslo. Prosím zkuste znovu.")
+        setPassword("")
+        setIsLoading(false)
       }
     } catch (error) {
       console.error("[v0] Login error:", error)
-      setIsLoading(false) // Reset loading state on error
+      setError("Chyba při přihlášení. Prosím zkuste znovu.")
+      setIsLoading(false)
     }
+  }
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+
+    if (!resetEmail.trim()) {
+      setError("Prosím zadejte svůj email")
+      return
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(resetEmail)) {
+      setError("Prosím zadejte platný email")
+      return
+    }
+
+    setError("")
+    alert(`Email pro reset hesla byl poslán na: ${resetEmail}`)
+    setShowResetForm(false)
+    setResetEmail("")
   }
 
   return (
@@ -97,73 +132,155 @@ export function LoginForm() {
             <CardDescription className="text-gray-400">Zadejte své přihlašovací údaje</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-300">
-                  Email / Uživatelské jméno
-                </Label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
-                  <Input
-                    id="email"
-                    type="text"
-                    placeholder="váš@email.com nebo demo"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-300">
-                  Heslo
-                </Label>
-                <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="remember"
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked === true)}
-                  className="border-slate-700 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                />
-                <Label htmlFor="remember" className="text-sm text-gray-400 cursor-pointer select-none">
-                  Zapamatovat přihlašovací údaje
-                </Label>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full h-13 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 text-base"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Přihlašuji...</span>
+            {!showResetForm ? (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-300">
+                    Email / Uživatelské jméno
+                  </Label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+                    <Input
+                      id="email"
+                      type="text"
+                      placeholder="váš@email.com nebo demo"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        setError("")
+                      }}
+                      className="pl-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
+                      required
+                    />
                   </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <LogIn className="w-5 h-5" />
-                    <span>Přihlásit se</span>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-300">
+                    Heslo
+                  </Label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value)
+                        setError("")
+                      }}
+                      className="pl-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-3 animate-in fade-in">
+                    <p className="text-red-400 text-sm font-medium">{error}</p>
                   </div>
                 )}
-              </Button>
-            </form>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    className="border-slate-700 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                  />
+                  <Label htmlFor="remember" className="text-sm text-gray-400 cursor-pointer select-none">
+                    Zapamatovat přihlašovací údaje
+                  </Label>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full h-13 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 text-base"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Přihlašuji...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <LogIn className="w-5 h-5" />
+                      <span>Přihlásit se</span>
+                    </div>
+                  )}
+                </Button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowResetForm(true)
+                    setError("")
+                  }}
+                  className="w-full text-sm text-blue-400 hover:text-blue-300 transition-colors font-medium mt-2"
+                >
+                  Zapomněli jste heslo?
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPassword} className="space-y-5">
+                <div className="text-center mb-6">
+                  <h3 className="text-lg font-semibold text-white mb-2">Obnovení hesla</h3>
+                  <p className="text-sm text-gray-400">
+                    Zadejte svůj email a pošleme vám pokyny pro obnovení hesla
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email" className="text-sm font-medium text-gray-300">
+                    Email
+                  </Label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="váš@email.com"
+                      value={resetEmail}
+                      onChange={(e) => {
+                        setResetEmail(e.target.value)
+                        setError("")
+                      }}
+                      className="pl-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-3 animate-in fade-in">
+                    <p className="text-red-400 text-sm font-medium">{error}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <Button
+                    type="submit"
+                    className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200"
+                  >
+                    Poslat instrukce
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setShowResetForm(false)
+                      setResetEmail("")
+                      setError("")
+                    }}
+                    variant="outline"
+                    className="flex-1 h-12 border-slate-700 text-gray-300 hover:bg-slate-800/50 rounded-xl"
+                  >
+                    Zpět
+                  </Button>
+                </div>
+              </form>
+            )}
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-400">
