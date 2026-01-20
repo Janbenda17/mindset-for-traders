@@ -15,6 +15,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     pathname === "/onboarding" ||
     pathname === "/teaser" ||
     pathname === "/landing" ||
+    pathname === "/" ||
     pathname === "/login" ||
     pathname === "/sign-up" ||
     pathname === "/signup"

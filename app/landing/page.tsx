@@ -190,7 +190,7 @@ export default function LandingPage() {
                 <h2 className="text-2xl font-semibold text-white">Launching Soon</h2>
               </div>
               
-              <div className="grid grid-cols-4 gap-4 max-w-2xl mx-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 max-w-2xl mx-auto">
                 {[
                   { value: timeRemaining.days, label: "Dny" },
                   { value: timeRemaining.hours, label: "Hodiny" },
@@ -204,17 +204,17 @@ export default function LandingPage() {
                     transition={{ delay: 1 + index * 0.1, duration: 0.5 }}
                   >
                     <Card className="bg-slate-900/50 border-purple-500/30 backdrop-blur-sm shadow-xl">
-                      <CardContent className="p-6">
+                      <CardContent className="p-3 sm:p-6">
                         <motion.div
                           key={item.value}
                           initial={{ scale: 1.2, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ duration: 0.3 }}
-                          className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-2"
+                          className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-1 sm:mb-2"
                         >
                           {String(item.value).padStart(2, "0")}
                         </motion.div>
-                        <div className="text-sm text-gray-400 uppercase tracking-wider">
+                        <div className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider">
                           {item.label}
                         </div>
                       </CardContent>
