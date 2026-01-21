@@ -185,7 +185,7 @@ export function ProductTour() {
 
   const completeTour = () => {
     localStorage.setItem("mindtrader-product-tour-completed", "true")
-    console.log("[v0] Tour completed - mode controlled by database (trading_mode column)")
+    console.log("[v0] Tour completed - redirecting to dashboard")
     setIsVisible(false)
     router.push("/")
   }

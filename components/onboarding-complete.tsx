@@ -76,8 +76,7 @@ export function OnboardingComplete() {
       console.log("[v0] New user defaults to virtual mode (set in database)")
 
       localStorage.removeItem("mindtrader-product-tour-completed")
-      localStorage.setItem("mindtrader-show-tour", "true")
-      console.log("[v0] Onboarding complete - ProductTour flag set, redirecting to dashboard")
+      console.log("[v0] Onboarding complete - redirecting to product-tour")
 
       confetti({
         particleCount: 100,
@@ -86,7 +85,7 @@ export function OnboardingComplete() {
         colors: ["#8B5CF6", "#EC4899", "#10B981"],
       })
 
-      router.push("/")
+      router.push("/product-tour")
     } catch (err) {
       setError("An error occurred")
     } finally {

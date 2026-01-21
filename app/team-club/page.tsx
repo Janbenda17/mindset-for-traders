@@ -2682,7 +2682,7 @@ function StudentTeamClubView() {
                     <div>
                       <h3 className="text-white font-bold text-xl mb-2">AI-Powered Study Buddy Matching</h3>
                       <p className="text-white/90 text-sm leading-relaxed mb-3">
-                        Náš AI algoritmus najde tradeře s podobným stylem, cíli, časovou zónou a úrovní. Společně se
+                        Náš AI algoritmus najde tradera s podobným stylem, cílem, časovou zónou a úrovní. Společně se
                         učte, rostěte, motivujte a sdílejte zkušenosti. Study buddies mají o 34% vyšší success rate!
                       </p>
                       <div className="flex gap-2">

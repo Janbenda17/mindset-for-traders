@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle, CheckCircle2 } from "lucide-react"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
@@ -17,6 +19,18 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const { register } = useAuth()
+
+  const validatePassword = (pwd: string) => {
+    return {
+      hasMinLength: pwd.length >= 6,
+      hasLowercase: /[a-z]/.test(pwd),
+      hasUppercase: /[A-Z]/.test(pwd),
+      hasNumbers: /[0-9]/.test(pwd),
+    }
+  }
+
+  const passwordReqs = validatePassword(password)
+  const isPasswordValid = Object.values(passwordReqs).every(Boolean)
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,8 +43,8 @@ export default function SignUpPage() {
       return
     }
 
-    if (password.length < 6) {
-      setError("Heslo musí mít alespoň 6 znaků")
+    if (!isPasswordValid) {
+      setError("Heslo musí obsahovat: malá + velká písmena + čísla (min. 6 znaků)")
       setIsLoading(false)
       return
     }
@@ -68,6 +82,7 @@ export default function SignUpPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="bg-slate-800/50 border-slate-700 text-white"
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -82,6 +97,7 @@ export default function SignUpPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="bg-slate-800/50 border-slate-700 text-white"
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -91,12 +107,37 @@ export default function SignUpPage() {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Alespoň 6 znaků"
+                    placeholder="Např: Trader2024"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="bg-slate-800/50 border-slate-700 text-white"
+                    disabled={isLoading}
                   />
+                  
+                  {password && (
+                    <div className="mt-2 p-3 bg-slate-800/30 rounded border border-slate-700/50 space-y-1.5">
+                      <p className="text-xs font-medium text-gray-300">Požadavky:</p>
+                      <div className="space-y-1 text-xs">
+                        <div className={`flex items-center gap-2 ${passwordReqs.hasMinLength ? "text-green-400" : "text-gray-500"}`}>
+                          <div className={`w-2 h-2 rounded-full ${passwordReqs.hasMinLength ? "bg-green-500" : "bg-slate-600"}`} />
+                          Min. 6 znaků
+                        </div>
+                        <div className={`flex items-center gap-2 ${passwordReqs.hasLowercase ? "text-green-400" : "text-gray-500"}`}>
+                          <div className={`w-2 h-2 rounded-full ${passwordReqs.hasLowercase ? "bg-green-500" : "bg-slate-600"}`} />
+                          Malá písmena (a-z)
+                        </div>
+                        <div className={`flex items-center gap-2 ${passwordReqs.hasUppercase ? "text-green-400" : "text-gray-500"}`}>
+                          <div className={`w-2 h-2 rounded-full ${passwordReqs.hasUppercase ? "bg-green-500" : "bg-slate-600"}`} />
+                          Velká písmena (A-Z)
+                        </div>
+                        <div className={`flex items-center gap-2 ${passwordReqs.hasNumbers ? "text-green-400" : "text-gray-500"}`}>
+                          <div className={`w-2 h-2 rounded-full ${passwordReqs.hasNumbers ? "bg-green-500" : "bg-slate-600"}`} />
+                          Číslice (0-9)
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="repeat-password" className="text-slate-200">
@@ -109,10 +150,20 @@ export default function SignUpPage() {
                     value={repeatPassword}
                     onChange={(e) => setRepeatPassword(e.target.value)}
                     className="bg-slate-800/50 border-slate-700 text-white"
+                    disabled={isLoading}
                   />
                 </div>
-                {error && <p className="text-sm text-red-400">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                {error && (
+                  <Alert className="border-red-500/50 bg-red-500/10">
+                    <AlertCircle className="h-4 w-4 text-red-400" />
+                    <AlertDescription className="text-red-400">{error}</AlertDescription>
+                  </Alert>
+                )}
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isLoading || (password && !isPasswordValid)}
+                >
                   {isLoading ? "Vytvářím účet..." : "Zaregistrovat se"}
                 </Button>
               </div>

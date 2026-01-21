@@ -41,6 +41,25 @@ export function SignupForm() {
 
   const { register } = useAuth()
 
+  const validatePassword = (password: string): string[] => {
+    const errors: string[] = []
+    
+    if (password.length < 6) {
+      errors.push("Heslo musí mít alespoň 6 znaků")
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push("Obsahuje malá písmena (a-z)")
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push("Obsahuje velká písmena (A-Z)")
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push("Obsahuje číslice (0-9)")
+    }
+    
+    return errors
+  }
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
@@ -56,8 +75,11 @@ export function SignupForm() {
 
     if (!formData.password) {
       newErrors.password = "Heslo je povinné"
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Heslo musí mít alespoň 6 znaků"
+    } else {
+      const passwordErrors = validatePassword(formData.password)
+      if (passwordErrors.length > 0) {
+        newErrors.password = "Heslo musí obsahovat: malá + velká písmena + čísla (min. 6 znaků)"
+      }
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -212,7 +234,7 @@ export function SignupForm() {
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Minimálně 6 znaků"
+                        placeholder="Např: Trader2024"
                         value={formData.password}
                         onChange={(e) => handleInputChange("password", e.target.value)}
                         className={`pl-12 pr-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20 transition-all ${
@@ -229,6 +251,32 @@ export function SignupForm() {
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
+                    
+                    {/* Password requirements indicator */}
+                    {formData.password && (
+                      <div className="mt-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 space-y-2">
+                        <p className="text-xs font-medium text-gray-300">Požadavky na heslo:</p>
+                        <div className="space-y-1">
+                          <div className={`flex items-center gap-2 text-xs ${formData.password.length >= 6 ? "text-green-400" : "text-gray-500"}`}>
+                            <div className={`w-3 h-3 rounded-full ${formData.password.length >= 6 ? "bg-green-500" : "bg-slate-600"}`} />
+                            <span>Minimálně 6 znaků</span>
+                          </div>
+                          <div className={`flex items-center gap-2 text-xs ${/[a-z]/.test(formData.password) ? "text-green-400" : "text-gray-500"}`}>
+                            <div className={`w-3 h-3 rounded-full ${/[a-z]/.test(formData.password) ? "bg-green-500" : "bg-slate-600"}`} />
+                            <span>Malá písmena (a-z)</span>
+                          </div>
+                          <div className={`flex items-center gap-2 text-xs ${/[A-Z]/.test(formData.password) ? "text-green-400" : "text-gray-500"}`}>
+                            <div className={`w-3 h-3 rounded-full ${/[A-Z]/.test(formData.password) ? "bg-green-500" : "bg-slate-600"}`} />
+                            <span>Velká písmena (A-Z)</span>
+                          </div>
+                          <div className={`flex items-center gap-2 text-xs ${/[0-9]/.test(formData.password) ? "text-green-400" : "text-gray-500"}`}>
+                            <div className={`w-3 h-3 rounded-full ${/[0-9]/.test(formData.password) ? "bg-green-500" : "bg-slate-600"}`} />
+                            <span>Číslice (0-9)</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     {errors.password && <p className="text-sm text-red-400">{errors.password}</p>}
                   </div>
 

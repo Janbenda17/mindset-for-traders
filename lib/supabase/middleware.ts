@@ -16,6 +16,9 @@ const PUBLIC_PATHS = [
   "/landing",
 ]
 
+// Paths that require authentication but don't need onboarding/tour check
+const AUTH_REQUIRED_PATHS = ["/onboarding", "/product-tour"]
+
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -73,7 +76,7 @@ export async function updateSession(request: NextRequest) {
 
   console.log("[v0] Middleware - path:", pathname, "user:", user?.email || "none")
 
-  // Handle "/" path
+  // Handle "/" path (dashboard)
   if (pathname === "/") {
     if (!user) {
       // Not authenticated - check for landing cookie
@@ -84,14 +87,27 @@ export async function updateSession(request: NextRequest) {
         url.pathname = "/landing"
         return NextResponse.redirect(url)
       }
+      // Has seen landing but not authenticated - stay on "/" or redirect to login later
+      console.log("[v0] Not authenticated on dashboard - allowing for now")
     } else {
-      // Authenticated user - redirect to login
-      console.log("[v0] Authenticated user on /, redirecting to /auth/login")
+      // Authenticated user - allow access to dashboard
+      console.log("[v0] Authenticated user accessing dashboard - allowed")
+    }
+    return NextResponse.next()
+  }
+
+  // Check if auth-required path (onboarding, product-tour)
+  const isAuthRequiredPath = AUTH_REQUIRED_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
+  if (isAuthRequiredPath) {
+    if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = "/auth/login"
+      url.searchParams.set("redirectedFrom", pathname)
+      console.log("[v0] Auth required path without user - redirecting to login")
       return NextResponse.redirect(url)
     }
-    // If not authenticated but has seen landing, allow "/"
+    // Authenticated user can access onboarding/product-tour
+    console.log("[v0] Authenticated user accessing", pathname)
     return NextResponse.next()
   }
 
