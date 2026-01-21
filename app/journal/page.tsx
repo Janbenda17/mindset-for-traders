@@ -33,121 +33,81 @@ import { useAuth } from "@/contexts/auth-context" // Import useAuth hook
 import { generateVirtualJournalStats } from "@/lib/virtual-data-generator" // Import for virtual stats
 
 const generateDemoEntries = () => {
-  const demoEntries = [
-    {
-      id: "demo-1",
+  const pairs = ["EUR/USD", "GBP/USD", "USD/JPY", "XAU/USD", "BTC/USD", "EUR/JPY", "GBP/JPY", "AUD/USD"]
+  const emotions = ["confident", "calm", "focused", "anxious", "excited", "nervous", "stressed", "disciplined"]
+  const sessions = ["London", "New York", "Asian", "Overlap"]
+  
+  const demoEntries = []
+  
+  // Generate 25 random trades
+  for (let i = 0; i < 25; i++) {
+    const isWin = Math.random() > 0.35 // 65% win rate
+    const pair = pairs[Math.floor(Math.random() * pairs.length)]
+    const direction = Math.random() > 0.5 ? "long" : "short"
+    const daysAgo = Math.floor(Math.random() * 30) + 1
+    
+    const profitLoss = isWin 
+      ? Math.floor(Math.random() * 3000) + 500  // Win: 500-3500
+      : -Math.floor(Math.random() * 1500) - 200 // Loss: -200 to -1700
+    
+    const mood = isWin 
+      ? Math.floor(Math.random() * 25) + 70  // 70-95
+      : Math.floor(Math.random() * 30) + 40 // 40-70
+      
+    const stressLevel = isWin
+      ? Math.floor(Math.random() * 4) + 2  // 2-6
+      : Math.floor(Math.random() * 4) + 6 // 6-10
+      
+    const confidenceBefore = isWin
+      ? Math.floor(Math.random() * 3) + 7  // 7-10
+      : Math.floor(Math.random() * 4) + 4 // 4-8
+    
+    const session = sessions[Math.floor(Math.random() * sessions.length)]
+    
+    demoEntries.push({
+      id: `demo-trade-${i + 1}`,
       type: "trade",
-      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      pair: "EUR/USD",
-      direction: "long",
-      entryPrice: 1.085,
-      exitPrice: 1.092,
-      profitLoss: 1450,
-      pnl: 1450,
-      mood: 75,
-      notes: "Perfektní setup na London Open, dodržel jsem plán",
-      emotion: "confident",
-      tags: ["A+ setup", "trend following"],
-      emotionBefore: "neutral",
-      emotionDuring: "confident",
-      emotionAfter: "satisfied",
-      confidenceBefore: 6,
-      stressLevel: 3,
-    },
-    {
-      id: "demo-2",
-      type: "trade",
-      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      pair: "GBP/USD",
-      direction: "short",
-      entryPrice: 1.265,
-      exitPrice: 1.258,
-      profitLoss: 2100,
-      pnl: 2100,
-      mood: 80,
-      notes: "Breakout trade, vysoká conviction",
-      tags: ["breakout", "high conviction"],
-      emotionBefore: "focused",
-      emotionDuring: "determined",
-      emotionAfter: "relieved",
-      confidenceBefore: 8,
-      stressLevel: 5,
-    },
-    {
-      id: "demo-3",
-      type: "trade",
-      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      pair: "XAU/USD",
-      direction: "long",
-      entryPrice: 2340,
-      exitPrice: 2295,
-      profitLoss: -1350,
-      pnl: -1350,
-      mood: 45,
-      notes: "Revenge trade po předchozí ztrátě, měl jsem počkat",
-      tags: ["revenge trade", "impulsive"],
-      emotionBefore: "frustrated",
-      emotionDuring: "angry",
-      emotionAfter: "disappointed",
-      confidenceBefore: 4,
-      stressLevel: 8,
-    },
-    {
-      id: "demo-4",
-      type: "trade",
-      date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      pair: "BTC/USD",
-      direction: "long",
-      entryPrice: 67500,
-      exitPrice: 69200,
-      profitLoss: 3400,
-      pnl: 3400,
-      mood: 85,
-      notes: "Swing trade podle plánu, držel jsem pozici přes noc",
-      tags: ["swing", "planned"],
-      emotionBefore: "confident",
-      emotionDuring: "calm",
-      emotionAfter: "happy",
-      confidenceBefore: 7,
-      stressLevel: 2,
-    },
-    {
-      id: "demo-5",
-      type: "trade",
-      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      pair: "EUR/JPY",
-      direction: "short",
-      entryPrice: 162.5,
-      exitPrice: 163.1,
-      profitLoss: -980,
-      pnl: -980,
-      mood: 55,
-      notes: "Špatný timing, vstoupil jsem příliš brzy",
-      tags: ["bad timing"],
-      emotionBefore: "anxious",
-      emotionDuring: "nervous",
-      emotionAfter: "disappointed",
-      confidenceBefore: 5,
-      stressLevel: 9,
-    },
-    {
-      id: "demo-6",
+      date: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      title: `${direction.toUpperCase()} ${pair}`,
+      content: isWin 
+        ? `Perfektní setup, dodržel jsem plán na ${session} session`
+        : `${Math.random() > 0.5 ? "Měl jsem počkat na lepší setup" : "Příliš brzy vstup, špatný timing"}`,
+      pair,
+      direction,
+      entryPrice: Math.random() * 100 + 1,
+      exitPrice: Math.random() * 100 + 1,
+      profitLoss,
+      pnl: profitLoss,
+      mood,
+      notes: isWin 
+        ? `Perfektní setup, dodržel jsem plán na ${session} session`
+        : `${Math.random() > 0.5 ? "Měl jsem počkat na lepší setup" : "Příliš brzy vstup, špatný timing"}`,
+      emotion: emotions[Math.floor(Math.random() * emotions.length)],
+      tags: isWin ? ["A+ setup", "disciplined"] : ["learning", "improvement needed"],
+      emotionBefore: emotions[Math.floor(Math.random() * emotions.length)],
+      emotionDuring: emotions[Math.floor(Math.random() * emotions.length)],
+      emotionAfter: isWin ? emotions[Math.floor(Math.random() * 3)] : emotions[Math.floor(Math.random() * 3) + 5],
+      confidenceBefore,
+      stressLevel,
+    })
+  }
+  
+  // Add 5 journal entries
+  for (let i = 0; i < 5; i++) {
+    const daysAgo = Math.floor(Math.random() * 30) + 1
+    demoEntries.push({
+      id: `demo-journal-${i + 1}`,
       type: "journal",
-      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      mood: 78,
-      notes: "Dnes se cítím dobře, vyspalý a připravený. Budu se soustředit pouze na A+ setupy.",
-      emotion: "focused",
-    },
-    {
-      id: "demo-7",
-      type: "journal",
-      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      mood: 50,
-      notes: "Špatný den, udělal jsem revenge trade. Musím pracovat na disciplíně.",
-      emotion: "frustrated",
-    },
-  ]
-  return demoEntries
+      date: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      title: `Deník - ${i % 2 === 0 ? "Dobrý" : "Náročný"} den`,
+      content: `${i % 2 === 0 ? "Dobrý" : "Náročný"} den, ${i % 3 === 0 ? "hodně jsem se naučil" : "pracuji na disciplíně"}`,
+      mood: Math.floor(Math.random() * 40) + 50,
+      notes: `${i % 2 === 0 ? "Dobrý" : "Náročný"} den, ${i % 3 === 0 ? "hodně jsem se naučil" : "pracuji na disciplíně"}`,
+      emotion: emotions[Math.floor(Math.random() * emotions.length)],
+    })
+  }
+  
+  return demoEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 }
 
 export default function JournalPage() {
@@ -770,7 +730,7 @@ export default function JournalPage() {
               </TabsContent>
 
               <TabsContent value="calendar" className="mt-0">
-                <JournalCalendar onDateSelect={setSelectedDate} />
+                <JournalCalendar onDateSelect={setSelectedDate} demoEntries={!isLiveMode ? generateDemoEntries() : undefined} />
               </TabsContent>
 
               <TabsContent value="entries" className="mt-0">

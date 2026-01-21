@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
 import { useAuth } from "@/contexts/auth-context"
-import { TrendingUp, DollarSign, BarChart3, Brain, Zap } from "lucide-react"
+import { TrendingUp, DollarSign, BarChart3, Brain, Zap, ChevronDown, Trash2 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -96,6 +96,7 @@ export function RecordTrades() {
   const [morningCheck, setMorningCheck] = useState<MorningCheckData | null>(null)
 
   const [trades, setTrades] = useState<Trade[]>([])
+  const [expandedTradeId, setExpandedTradeId] = useState<string | null>(null)
   const [currentTrade, setCurrentTrade] = useState<Partial<Trade>>({
     date: format(new Date(), "yyyy-MM-dd"),
     openDate: format(new Date(), "yyyy-MM-dd"),
@@ -727,27 +728,217 @@ export function RecordTrades() {
           </CardHeader>
           <CardContent className="space-y-3 pt-6">
             {trades.map((trade) => (
-              <div
-                key={trade.id}
-                className="bg-gradient-to-r from-slate-700/30 to-slate-800/30 rounded-xl p-4 border border-slate-600/50 hover:border-slate-500/80 hover:bg-gradient-to-r hover:from-slate-700/50 hover:to-slate-800/50 transition-all duration-300 hover:shadow-lg"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <p className="text-white font-semibold text-lg">
-                      {trade.direction === "LONG" ? "📈" : "📉"} {trade.direction} {trade.pair}
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      {trade.openTime} - {trade.closeTime} • {trade.session}
-                    </p>
+              <div key={trade.id} className="space-y-2">
+                <button
+                  onClick={() => setExpandedTradeId(expandedTradeId === trade.id ? null : trade.id)}
+                  className="w-full bg-gradient-to-r from-slate-700/30 to-slate-800/30 rounded-xl p-4 border border-slate-600/50 hover:border-slate-500/80 hover:bg-gradient-to-r hover:from-slate-700/50 hover:to-slate-800/50 transition-all duration-300 hover:shadow-lg text-left"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <p className="text-white font-semibold text-lg">
+                        {trade.direction === "LONG" ? "📈" : "📉"} {trade.direction} {trade.pair}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {trade.openTime} - {trade.closeTime} • {trade.session} • {trade.tradeType}
+                      </p>
+                    </div>
+                    <div className="text-right flex items-center gap-3">
+                      <div>
+                        <p className={`text-xl font-bold ${trade.pnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                          {trade.pnl >= 0 ? "+" : ""}${trade.pnl.toFixed(2)}
+                        </p>
+                        <p className="text-sm text-gray-400">{trade.pips} pips</p>
+                      </div>
+                      <ChevronDown
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${expandedTradeId === trade.id ? "rotate-180" : ""}`}
+                      />
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`text-xl font-bold ${trade.pnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                      {trade.pnl >= 0 ? "+" : ""}${trade.pnl.toFixed(2)}
-                    </p>
-                    <p className="text-sm text-gray-400">{trade.pips} pips</p>
+                </button>
+
+                {expandedTradeId === trade.id && (
+                  <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 rounded-xl p-6 border border-slate-600/30 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {/* Trade Details */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-slate-700/30 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Měnový pár</p>
+                        <p className="text-white font-bold">{trade.pair}</p>
+                      </div>
+                      <div className="bg-slate-700/30 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Velikost pozice</p>
+                        <p className="text-white font-bold">{trade.positionSize} Lot</p>
+                      </div>
+                      <div className="bg-slate-700/30 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Session</p>
+                        <p className="text-white font-bold">{trade.session || "Není"}</p>
+                      </div>
+                      <div className="bg-slate-700/30 rounded-lg p-3">
+                        <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Typ tradu</p>
+                        <p className="text-white font-bold">{trade.tradeType || "Není"}</p>
+                      </div>
+                    </div>
+
+                    {/* Psychological Metrics */}
+                    <div className="border-t border-slate-600/30 pt-4">
+                      <p className="text-sm font-semibold text-purple-300 mb-3">Psychologické metriky</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-purple-500/10 rounded-lg p-3 border border-purple-500/20">
+                          <p className="text-xs text-gray-400 mb-1">Důvěra (před)</p>
+                          <div className="flex items-center gap-2">
+                            <div className="w-full bg-slate-700/50 rounded-full h-2">
+                              <div
+                                className="bg-gradient-to-r from-purple-500 to-purple-400 h-2 rounded-full"
+                                style={{ width: `${(trade.confidenceBefore / 10) * 100}%` }}
+                              />
+                            </div>
+                            <p className="text-white font-bold text-sm w-8">{trade.confidenceBefore}/10</p>
+                          </div>
+                        </div>
+                        <div className="bg-red-500/10 rounded-lg p-3 border border-red-500/20">
+                          <p className="text-xs text-gray-400 mb-1">Stres</p>
+                          <div className="flex items-center gap-2">
+                            <div className="w-full bg-slate-700/50 rounded-full h-2">
+                              <div
+                                className="bg-gradient-to-r from-red-500 to-red-400 h-2 rounded-full"
+                                style={{ width: `${(trade.stressLevel / 10) * 100}%` }}
+                              />
+                            </div>
+                            <p className="text-white font-bold text-sm w-8">{trade.stressLevel}/10</p>
+                          </div>
+                        </div>
+                        <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
+                          <p className="text-xs text-gray-400 mb-1">Nálada</p>
+                          <div className="flex items-center gap-2">
+                            <div className="w-full bg-slate-700/50 rounded-full h-2">
+                              <div
+                                className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full"
+                                style={{ width: `${(trade.mood / 10) * 100}%` }}
+                              />
+                            </div>
+                            <p className="text-white font-bold text-sm w-8">{trade.mood}/10</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Emotions */}
+                    <div className="border-t border-slate-600/30 pt-4">
+                      <p className="text-sm font-semibold text-blue-300 mb-3">Emoční cyklus</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
+                          <p className="text-xs text-gray-400 mb-1 font-semibold">Před</p>
+                          <p className="text-white">{trade.emotionBefore || "Není"}</p>
+                        </div>
+                        <div className="bg-amber-500/10 rounded-lg p-3 border border-amber-500/20">
+                          <p className="text-xs text-gray-400 mb-1 font-semibold">Během</p>
+                          <p className="text-white">{trade.emotionDuring || "Není"}</p>
+                        </div>
+                        <div className="bg-green-500/10 rounded-lg p-3 border border-green-500/20">
+                          <p className="text-xs text-gray-400 mb-1 font-semibold">Po</p>
+                          <p className="text-white">{trade.emotionAfter || "Není"}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Entry & Exit Reasons */}
+                    <div className="border-t border-slate-600/30 pt-4 space-y-3">
+                      {trade.entryReason && (
+                        <div>
+                          <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Důvod vstupu</p>
+                          <p className="text-sm text-gray-200">{trade.entryReason}</p>
+                        </div>
+                      )}
+                      {trade.exitReason && (
+                        <div>
+                          <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Důvod výstupu</p>
+                          <p className="text-sm text-gray-200">{trade.exitReason}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Detailed Analysis */}
+                    {trade.detailedAnalysis && (
+                      <div className="border-t border-slate-600/30 pt-4">
+                        <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Detailní analýza</p>
+                        <p className="text-sm text-gray-200 leading-relaxed">{trade.detailedAnalysis}</p>
+                      </div>
+                    )}
+
+                    {/* Behavior Flags */}
+                    <div className="border-t border-slate-600/30 pt-4">
+                      <p className="text-sm font-semibold text-emerald-300 mb-3">Chování & Disciplína</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className={`p-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${trade.followedPlan ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "bg-red-500/20 text-red-300 border border-red-500/30"}`}>
+                          <div className="w-3 h-3 rounded-full" style={{ background: trade.followedPlan ? "currentColor" : "currentColor" }} />
+                          {trade.followedPlan ? "✓ Plán dodržen" : "✗ Porušen plán"}
+                        </div>
+                        <div className={`p-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${trade.exitedEarly ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"}`}>
+                          <div className="w-3 h-3 rounded-full" style={{ background: trade.exitedEarly ? "currentColor" : "currentColor" }} />
+                          {trade.exitedEarly ? "⚠ Časný exit" : "✓ Plánovaný exit"}
+                        </div>
+                        <div className={`p-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${trade.missedDueToHesitation ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"}`}>
+                          <div className="w-3 h-3 rounded-full" style={{ background: trade.missedDueToHesitation ? "currentColor" : "currentColor" }} />
+                          {trade.missedDueToHesitation ? "⚠ Váhání" : "✓ Bez váhání"}
+                        </div>
+                        <div className={`p-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${trade.revengeTrade ? "bg-red-500/20 text-red-300 border border-red-500/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"}`}>
+                          <div className="w-3 h-3 rounded-full" style={{ background: trade.revengeTrade ? "currentColor" : "currentColor" }} />
+                          {trade.revengeTrade ? "✗ Revenge trade" : "✓ Bez revenže"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Additional Info */}
+                    {(trade.behaviorDescription || trade.tags.length > 0 || trade.notes) && (
+                      <div className="border-t border-slate-600/30 pt-4 space-y-3">
+                        {trade.behaviorDescription && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Popis chování</p>
+                            <p className="text-sm text-gray-200">{trade.behaviorDescription}</p>
+                          </div>
+                        )}
+                        {trade.tags.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Tagy</p>
+                            <div className="flex flex-wrap gap-2">
+                              {trade.tags.map((tag) => (
+                                <span key={tag} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-semibold border border-blue-500/30">
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {trade.notes && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Poznámky</p>
+                            <p className="text-sm text-gray-200">{trade.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Delete Button */}
+                    <div className="border-t border-slate-600/30 pt-4 flex gap-2">
+                      <Button
+                        onClick={() => {
+                          const updatedTrades = trades.filter((t) => t.id !== trade.id)
+                          setTrades(updatedTrades)
+                          deleteTrade(trade.id)
+                          toast({
+                            title: "Obchod smazán",
+                            description: `${trade.direction} ${trade.pair} byl odstraněn`,
+                          })
+                        }}
+                        variant="destructive"
+                        size="sm"
+                        className="w-full flex items-center justify-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Smazat obchod
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                {trade.detailedAnalysis && <p className="text-sm text-gray-300 mt-2">{trade.detailedAnalysis}</p>}
+                )}
               </div>
             ))}
           </CardContent>

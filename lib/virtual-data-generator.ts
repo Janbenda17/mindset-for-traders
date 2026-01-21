@@ -346,6 +346,7 @@ export function generateVirtualDailyTrackerData() {
 
 export function generateVirtualJournalStats() {
   const trades = generateVirtualTrades(30)
+  const journalEntries = generateVirtualJournalEntries(10)
 
   const winningTrades = trades.filter((t) => t.pnl > 0)
   const losingTrades = trades.filter((t) => t.pnl < 0)
@@ -362,12 +363,86 @@ export function generateVirtualJournalStats() {
 
   const weekPnL = weekTrades.reduce((sum, t) => sum + t.pnl, 0)
 
+  // This month stats (last 30 days)
+  const monthTrades = trades.filter((t) => {
+    const tradeDate = new Date(t.date)
+    const today = new Date()
+    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+    return tradeDate >= monthAgo
+  })
+
+  // Calculate best and worst days
+  const tradeDays = new Map<string, number>()
+  trades.forEach((trade) => {
+    const current = tradeDays.get(trade.date) || 0
+    tradeDays.set(trade.date, current + trade.pnl)
+  })
+
+  const bestDay = Math.max(...Array.from(tradeDays.values()), 0)
+  const worstDay = Math.min(...Array.from(tradeDays.values()), 0)
+
+  // Average mood from all entries (trades + journal)
+  const allEntries = [...trades, ...journalEntries]
+  const moodEntries = allEntries.filter((e) => e.mood !== undefined && e.mood !== null)
+  const avgMood = moodEntries.length > 0 
+    ? Math.round((moodEntries.reduce((sum, e) => sum + e.mood, 0) / moodEntries.length) * 10) / 10 
+    : 7.5
+
+  // Calculate streak (consecutive days with entries)
+  const sortedDates = Array.from(new Set([...trades.map((t) => t.date), ...journalEntries.map((j) => j.date)]))
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+
+  let streak = 0
+  const currentDate = new Date()
+  currentDate.setHours(0, 0, 0, 0)
+
+  for (const dateStr of sortedDates) {
+    const entryDate = new Date(dateStr)
+    entryDate.setHours(0, 0, 0, 0)
+    const diffDays = Math.floor((currentDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24))
+
+    if (diffDays === streak) {
+      streak++
+    } else if (diffDays > streak) {
+      break
+    }
+  }
+
+  // Average win and loss
+  const avgWin = winningTrades.length > 0 
+    ? Math.round((winningTrades.reduce((s, t) => s + t.pnl, 0) / winningTrades.length) * 100) / 100
+    : 0
+
+  const avgLoss = losingTrades.length > 0 
+    ? Math.round((losingTrades.reduce((s, t) => s + t.pnl, 0) / losingTrades.length) * 100) / 100
+    : 0
+
+  const totalEntries = trades.length + journalEntries.length
+
   return {
-    celkem: trades.length,
-    thisWeek: weekTrades.length,
+    totalEntries,
+    celkem: totalEntries,
+    totalTrades: trades.length,
+    winningTrades: winningTrades.length,
+    losingTrades: losingTrades.length,
+    thisWeek: weekTrades.length + journalEntries.filter((j) => {
+      const entryDate = new Date(j.date)
+      const weekAgo = new Date()
+      weekAgo.setDate(weekAgo.getDate() - 7)
+      return entryDate >= weekAgo
+    }).length,
+    thisMonth: monthTrades.length + journalEntries.length,
+    avgPerDay: (totalEntries / 30).toFixed(1),
     avgPerTrade: trades.length > 0 ? Math.round(totalPnL / trades.length) : 0,
     weekPnL: Math.round(weekPnL),
+    totalPnL: Math.round(totalPnL * 100) / 100,
     winRate: trades.length > 0 ? Math.round((winningTrades.length / trades.length) * 100) : 0,
+    streak,
+    bestDay: Math.round(bestDay * 100) / 100,
+    worstDay: Math.round(worstDay * 100) / 100,
+    avgMood,
+    avgWin,
+    avgLoss,
   }
 }
 

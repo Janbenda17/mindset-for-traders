@@ -659,6 +659,11 @@ export function MindTraderAI() {
 
   const readinessDisplay = () => {
     if (currentReadiness === null || currentReadiness === undefined) {
+      // In virtual mode, show a demo readiness score (70-90%)
+      if (!isLiveMode) {
+        const demoScore = Math.floor(Math.random() * 21) + 70 // Random between 70-90
+        return <div className="text-lg font-bold text-green-400">{demoScore}% (Demo)</div>
+      }
       return <div className="text-sm text-slate-400">{t("mindtrader.noReadiness") || "Vyplňte Morning Check"}</div>
     }
     return <div className="text-lg font-bold text-blue-400">{Math.round(currentReadiness)}%</div>
@@ -832,11 +837,24 @@ export function MindTraderAI() {
                 {/* Message Input - Enhanced */}
                 <div className="space-y-2">
                   {!isLiveMode && (
-                    <div className="text-xs text-amber-400/70 flex items-center gap-2">
-                      <span>Zprávy: {virtualMessageCount}/3 (Virtual Mode limit)</span>
-                      {virtualMessageCount >= 3 && (
-                        <span className="text-red-400 font-semibold">- Limit dosažen</span>
-                      )}
+                    <div className="text-xs text-amber-400/70 flex items-center gap-2 justify-between">
+                      <div className="flex items-center gap-2">
+                        <span>Zprávy: {virtualMessageCount}/3 (Virtual Mode limit)</span>
+                        {virtualMessageCount >= 3 && (
+                          <span className="text-red-400 font-semibold">- Limit dosažen</span>
+                        )}
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setVirtualMessageCount(0)
+                          localStorage.setItem("virtualMessageCount", "0")
+                        }}
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs text-slate-400 hover:text-amber-400 hover:bg-slate-800/50"
+                      >
+                        Reset na 0/3
+                      </Button>
                     </div>
                   )}
                   <div className="flex gap-3">

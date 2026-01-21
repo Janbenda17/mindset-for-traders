@@ -257,34 +257,84 @@ function generateEnhancedMockResponse(request: ChatRequest): string {
   const { mood, stress, readiness, sleep, energy } = context
   const { stats, patterns, morningCheck } = userData
 
+  // Add variety with random response selection
+  const randomFactor = Math.random()
   let response = ""
 
   if (mode === "mind") {
     const consecutiveLosses = stats.consecutiveLosses
     const highStress = stress >= 7
+    const lowMood = mood <= 4
 
     if (consecutiveLosses >= 3 && highStress) {
-      response = `Máš ${consecutiveLosses} po sobě jdoucích ztrát se stresem na ${stress}/10. Naposledy když se to stalo, mstil ses dalším obchodem. PŘESTAŇ obchodovat TEĎKA. Udělej 4-7-8 dýchání 3 kola, pak minimálně 2 hodiny pauza.`
+      const responses = [
+        `Máš ${consecutiveLosses} po sobě jdoucích ztrát se stresem na ${stress}/10. Naposledy když se to stalo, mstil ses dalším obchodem. PŘESTAŇ obchodovat TEĎKA. Udělej 4-7-8 dýchání 3 kola, pak minimálně 2 hodiny pauza.`,
+        `${consecutiveLosses} ztráty, stres ${stress}/10 – tohle je červená zóna pro revenge trading. Tvůj mozek je teď v režimu "vyhraj zpátky". Zavři platformu na 2h. Dýchej: 4 sekundy nádech, 7 držení, 8 výdech. Opakuj 5x.`,
+        `Detekuji pattern: ${consecutiveLosses} ztráty + vysoký stres. V minulosti to vedlo k dalším chybám v 89% případů. Okamžitá akce: Odstup od obrazovek 90 minut. Jdi ven. Vrať se až když stres klesne pod 5.`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     } else if (consecutiveLosses >= 2) {
-      response = `${consecutiveLosses} ztráty za sebou. ${traderProfile ? `Tvůj revenge trade rate je ${traderProfile.patterns.revengeTradeRate}% – ` : ""}tohle je nebezpečná zóna. Vezmi si 1 hodinu pauzu před dalším obchodem. Při návratu poloviční pozice.`
+      const responses = [
+        `${consecutiveLosses} ztráty za sebou. ${traderProfile ? `Tvůj revenge trade rate je ${traderProfile.patterns.revengeTradeRate}% – ` : ""}tohle je nebezpečná zóna. Vezmi si 1 hodinu pauzu před dalším obchodem. Při návratu poloviční pozice.`,
+        `Dvě ztráty za sebou. Zkontroluj: děláš teď rozhodnutí mozkem nebo emocemi? ${traderProfile ? `Poslední ${traderProfile.patterns.revengeTrades} revenge trades tě stály peníze.` : ""} Pauza 60 minut, pak přehodnoť setup s čistou hlavou.`,
+        `Pattern alert: 2 ztráty série. Když jsi tady naposledy, udělal jsi FOMO obchod. Tentokrát: přeruš. Projdi si trading plan. Najdi chybu v těch 2 obchodech. Pak rozhodni jestli pokračovat.`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     } else if (morningCheck && morningCheck.sleepHours < 6) {
-      response = `Spánek ${morningCheck.sleepHours}h je pod 6h. ${traderProfile ? `Historicky spánek <6h koreluje s ${((6 - morningCheck.sleepHours) * 8).toFixed(0)}% horším výkonem.` : "To ovlivňuje rozhodování."} Zkrať session nebo vynech trading dnes.`
+      const responses = [
+        `Spánek ${morningCheck.sleepHours}h je pod 6h. ${traderProfile ? `Historicky spánek <6h koreluje s ${((6 - morningCheck.sleepHours) * 8).toFixed(0)}% horším výkonem.` : "To ovlivňuje rozhodování."} Zkrať session nebo vynech trading dnes.`,
+        `${morningCheck.sleepHours}h spánku = špatná startovní pozice. Tvé rozhodovací schopnosti jsou o ${((6 - morningCheck.sleepHours) * 12).toFixed(0)}% slabší. Doporučuji: polovina pozic nebo paper trading dnes.`,
+        `Nedostatek spánku detekován: ${morningCheck.sleepHours}h. Amygdala (emoční centrum) je hyperaktivní, prefrontální kůra (logika) oslabená. Vysoké riziko impulzivních rozhodnutí. Buď opatrný nebo vynech session.`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     } else if (highStress) {
-      response = `Stres na ${stress}/10 je zvýšený. ${patterns?.revengeRate ? `Revenge-tradoval jsi ${patterns.revengeRate}% když stres dosáhl této úrovně.` : ""} 5minutový reset: 5-4-3-2-1 grounding technika. Obchoduj jen pokud stres klesne pod 6.`
+      const responses = [
+        `Stres na ${stress}/10 je zvýšený. ${patterns?.revengeRate ? `Revenge-tradoval jsi ${patterns.revengeRate}% když stres dosáhl této úrovně.` : ""} 5minutový reset: 5-4-3-2-1 grounding technika. Obchoduj jen pokud stres klesne pod 6.`,
+        `Tvůj stres ${stress}/10 je nad bezpečnou hranicí. Před tradingem: Pojmenuj 5 věcí co vidíš, 4 které slyšíš, 3 které cítíš, 2 které čucháš, 1 chuť. Pak zhodnoť jestli jsi připravený.`,
+        `Zvýšený stres level ${stress}/10. Když trader obchoduje v tomto stavu, chybovost roste o 300%. Zklidni se nejprve: Box breathing 4-4-4-4, pak 2 minuty meditace. Teprve pak se vrať k obchodování.`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
+    } else if (lowMood) {
+      const responses = [
+        `Nálada na ${mood}/10 je nízká. Špatná nálada = špatné rozhodování. Buď extra opatrný s risk managementem dnes. Zkus kratší session nebo menší pozice.`,
+        `Detekuji nízkou náladu ${mood}/10. Když se takhle cítíš, tvá tolerance k riziku je zkresleá. Doporučuji: Traduj jen A+ setupy dnes. Ostatní přeskoč.`,
+        `Mood check: ${mood}/10 je pod průměrem. Není to ideální den na agresivní trading. Fokus na ochranu kapitálu, ne na zisk. Defensive mindset dnes.`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     } else {
-      response = `Mentální stav: Nálada ${mood}/10, Stres ${stress}/10. ${stats.consecutiveWins > 0 ? `Máš ${stats.consecutiveWins}-win streak – zůstaň disciplinovaný.` : "Připraven k tradingu."} ${energy && energy < 5 ? "Detekována nízká energie – zvaž menší pozice." : ""}`
+      const responses = [
+        `Mentální stav: Nálada ${mood}/10, Stres ${stress}/10. ${stats.consecutiveWins > 0 ? `Máš ${stats.consecutiveWins}-win streak – zůstaň disciplinovaný.` : "Připraven k tradingu."} ${energy && energy < 5 ? "Detekována nízká energie – zvaž menší pozice." : ""}`,
+        `Check passed. Mood ${mood}, Stress ${stress}, Readiness ${readiness}%. ${stats.consecutiveWins > 0 ? `Win streak ${stats.consecutiveWins} – pozor na overconfidence.` : "Jsi v zóně."} Drž se plánu, exekutuj bez emocí.`,
+        `Tvůj mentální state je solidní. Nálada ${mood}, stres pod kontrolou na ${stress}. ${energy && energy >= 7 ? "Energie vysoká – využij to." : ""} Dnešní fokus: kvalitní setupy nad kvantitu.`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     }
   } else if (mode === "analytics") {
     const revengeRate = Number.parseFloat(traderProfile?.patterns.revengeTradeRate || patterns?.revengeRate || "0")
     const winRate = Number.parseFloat(traderProfile?.performance.winRate || String(stats.winRate))
 
     if (revengeRate > 15 && stats.consecutiveLosses >= 2) {
-      response = `Tvůj revenge trade rate je ${revengeRate.toFixed(0)}% (${traderProfile?.patterns.revengeTrades || 0} případů). Aktuální ${stats.consecutiveLosses} po sobě jdoucích ztrát = 78% pravděpodobnost revenge trade v příštích 2 hodinách. Náklady doposud: $${(Number.parseFloat(traderProfile?.performance.totalPnL || "0") * (revengeRate / 100)).toFixed(0)}.`
+      const responses = [
+        `Tvůj revenge trade rate je ${revengeRate.toFixed(0)}% (${traderProfile?.patterns.revengeTrades || 0} případů). Aktuální ${stats.consecutiveLosses} po sobě jdoucích ztrát = 78% pravděpodobnost revenge trade v příštích 2 hodinách. Náklady doposud: $${(Number.parseFloat(traderProfile?.performance.totalPnL || "0") * (revengeRate / 100)).toFixed(0)}.`,
+        `Data analýza: Revenge rate ${revengeRate.toFixed(0)}% = tvůj největší leak. ${traderProfile?.patterns.revengeTrades || 0} revenge obchodů stály průměrně $${(Number.parseFloat(traderProfile?.performance.averageLoss || "0") * 1.5).toFixed(0)}. Eliminací tohoto patternu zvýšíš P&L o ${(revengeRate * 1.5).toFixed(0)}%.`,
+        `Pattern identifikován: ${stats.consecutiveLosses} ztráty aktivují revenge mode v ${revengeRate.toFixed(0)}% případů. Tvá největší ztráta? Revenge trade. Řešení: Přidej pravidlo "2 ztráty = konec dne". Ušetříš $${(Number.parseFloat(traderProfile?.performance.worstTrade || "0") * 0.7).toFixed(0)}/měsíc.`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     } else if (morningCheck && morningCheck.sleepHours < 6) {
       const sleepImpact = ((6 - morningCheck.sleepHours) * 8).toFixed(0)
-      response = `Detekován spánek ${morningCheck.sleepHours}h. Tvůj win rate klesá ${sleepImpact}% když spánek <6h (${morningCheck.sleepHours < 5 ? "kritická úroveň" : "suboptimální"}). ${stats.totalTrades > 20 ? `Tento pattern se objevil ${Math.floor(stats.totalTrades / 10)}x v tomto období.` : ""}`
+      const responses = [
+        `Detekován spánek ${morningCheck.sleepHours}h. Tvůj win rate klesá ${sleepImpact}% když spánek <6h (${morningCheck.sleepHours < 5 ? "kritická úroveň" : "suboptimální"}). ${stats.totalTrades > 20 ? `Tento pattern se objevil ${Math.floor(stats.totalTrades / 10)}x v tomto období.` : ""}`,
+        `Korelace spánek/výkon: ${morningCheck.sleepHours}h = -${sleepImpact}% win rate. Data z ${stats.totalTrades} obchodů ukazují že spánek <6h stojí průměrně $${(Number.parseFloat(traderProfile?.performance.averageLoss || "50") * 2).toFixed(0)}/session. ROI zlepšení spánku: masivní.`,
+        `Sleep analysis: ${morningCheck.sleepHours}h. Historická data: Pod 6h spánku tvá reakce se zpomaluje o ${((6 - morningCheck.sleepHours) * 15).toFixed(0)}ms, chybovost roste ${sleepImpact}%. ${stats.totalTrades > 30 ? `Stalo se to ${Math.floor(stats.totalTrades / 8)}x tento měsíc.` : ""}`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     } else {
-      response = `Win rate: ${winRate.toFixed(1)}%, P&L: $${traderProfile?.performance.totalPnL || stats.totalPnL.toFixed(0)}. ${stats.consecutiveLosses >= 3 ? `UPOZORNĚNÍ: ${stats.consecutiveLosses} po sobě jdoucích ztrát = vysoká riziková zóna.` : `Výkon stabilní.`} ${patterns?.emotionalTrades ? `Emocionální obchody: ${traderProfile?.patterns.emotionalTrades || 0} (je třeba snížit).` : ""}`
+      const responses = [
+        `Win rate: ${winRate.toFixed(1)}%, P&L: $${traderProfile?.performance.totalPnL || stats.totalPnL.toFixed(0)}. ${stats.consecutiveLosses >= 3 ? `UPOZORNĚNÍ: ${stats.consecutiveLosses} po sobě jdoucích ztrát = vysoká riziková zóna.` : `Výkon stabilní.`} ${traderProfile?.patterns.emotionalTrades ? `Emocionální obchody: ${traderProfile.patterns.emotionalTrades} (je třeba snížit).` : ""}`,
+        `Performance snapshot: ${winRate.toFixed(1)}% WR, ${stats.totalTrades} obchodů. ${stats.consecutiveWins > 0 ? `Win streak ${stats.consecutiveWins} = pozitivní momentum.` : "Konzistentní execution."} ${traderProfile?.performance.averageWin ? `R:R ratio ${(Number.parseFloat(traderProfile.performance.averageWin) / Math.abs(Number.parseFloat(traderProfile.performance.averageLoss))).toFixed(2)}:1` : ""}`,
+        `Analytics report: ${traderProfile?.performance.totalTrades || stats.totalTrades} trades, ${winRate.toFixed(1)}% win rate. ${traderProfile?.patterns.emotionalTrades ? `${((traderProfile.patterns.emotionalTrades / stats.totalTrades) * 100).toFixed(0)}% emotional trades – redukuj na <10%.` : ""} ${stats.consecutiveLosses === 0 ? "Žádné aktivní loss streaky – good." : `${stats.consecutiveLosses} losses active.`}`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     }
   } else {
     // coach mode
@@ -292,13 +342,33 @@ function generateEnhancedMockResponse(request: ChatRequest): string {
     const totalTrades = traderProfile?.performance.totalTrades || stats.totalTrades
 
     if (stats.consecutiveLosses >= 3) {
-      response = `${stats.consecutiveLosses} po sobě jdoucích ztrát. Porušil jsi max loss pravidlo ${stats.consecutiveLosses}x za sebou. Tohle je propad disciplíny. Výzva na 7 dní: Přestaň obchodovat po 2 ztrátách za den. Sleduj to.`
+      const responses = [
+        `${stats.consecutiveLosses} po sobě jdoucích ztrát. Porušil jsi max loss pravidlo ${stats.consecutiveLosses}x za sebou. Tohle je propad disciplíny. Výzva na 7 dní: Přestaň obchodovat po 2 ztrátách za den. Sleduj to.`,
+        `Discipline check failed. ${stats.consecutiveLosses} ztráty série = ignoroval jsi svoje pravidla. Nový commitment na příštích 7 dní: 2 ztráty = STOP. Žádné výjimky. Dokážeš to dodržet?`,
+        `${stats.consecutiveLosses} losses streak znamená breakdown v disciplíně. Tento týden: Po každé ztrátě 15min pauza POVINNĚ. Po 2 ztrátách KONEC dne. Trackuj compliance – potřebuji 7/7 dní perfektní execution.`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     } else if (totalTrades < 50) {
-      response = `Máš ${totalTrades} obchodů v záznamu. Stále ve fázi učení – potřebuješ 100+ pro statistickou významnost. Zaměř se: Prováděj svůj plán 7/7 dní tento týden. Win rate zatím není důležitý, provedení ano.`
+      const responses = [
+        `Máš ${totalTrades} obchodů v záznamu. Stále ve fázi učení – potřebuješ 100+ pro statistickou významnost. Zaměř se: Prováděj svůj plán 7/7 dní tento týden. Win rate zatím není důležitý, provedení ano.`,
+        `Sample size: ${totalTrades} trades. Příliš málo na závěry. Tvůj fokus příštích 30 dní: ${100 - totalTrades} dalších obchodů s PERFEKTNÍ execution. Neřeš win rate, řeš dodržování plánu. Potom vyhodnotíme.`,
+        `${totalTrades} obchodů = začátek cesty. Cíl: 100 trades, 90%+ rule compliance. Každý den: Check, plan, execute, review. Win rate přijde časem. Teď buduj proces jako stroj.`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     } else if (winRate > 55) {
-      response = `Win rate ${winRate.toFixed(1)}% je nad 55% prahem. ${totalTrades > 100 ? "Máš edge – teď zvětši pozici o 20%." : `Pokračuj v provádění do 100 obchodů (aktuálně ${totalTrades}).`} ${traderProfile?.goals[0] ? `Tvůj cíl "${traderProfile.goals[0].title}" je ${traderProfile.goals[0].progress.toFixed(0)}% hotový.` : ""}`
+      const responses = [
+        `Win rate ${winRate.toFixed(1)}% je nad 55% prahem. ${totalTrades > 100 ? "Máš edge – teď zvětši pozici o 20%." : `Pokračuj v provádění do 100 obchodů (aktuálně ${totalTrades}).`} ${traderProfile?.goals[0] ? `Tvůj cíl "${traderProfile.goals[0].title}" je ${traderProfile.goals[0].progress.toFixed(0)}% hotový.` : ""}`,
+        `${winRate.toFixed(1)}% WR = prokázaná edge. ${totalTrades > 100 ? "Scale-up ready. +20% position size příštích 30 dní." : `Build to 100 trades first (${totalTrades} done).`} ${traderProfile?.goals[0]?.progress ? `Goal progress ${traderProfile.goals[0].progress.toFixed(0)}% – good pace.` : ""}`,
+        `Performance unlock: ${winRate.toFixed(1)}% win rate. Tested edge confirmed. ${totalTrades > 100 ? "Action: Increase risk 0.5% → 0.7% per trade." : `Get to 100 trades first (${totalTrades}/100).`} Stay consistent.`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     } else {
-      response = `Win rate ${winRate.toFixed(1)}% potřebuje zlepšení před škálováním. ${patterns?.revengeRate && Number.parseFloat(patterns.revengeRate) > 10 ? `Omez revenge trades (${patterns.revengeRate}%) – ` : ""}Příštích 30 dní: Zaměř se jen na vysokopravděpodobné setupy. Kvalita >kvantita.`
+      const responses = [
+        `Win rate ${winRate.toFixed(1)}% potřebuje zlepšení před škálováním. ${patterns?.revengeRate && Number.parseFloat(patterns.revengeRate) > 10 ? `Omez revenge trades (${patterns.revengeRate}%) – ` : ""}Příštích 30 dní: Zaměř se jen na vysokopravděpodobné setupy. Kvalita >kvantita.`,
+        `${winRate.toFixed(1)}% WR je pod optimal. Příčina? ${patterns?.revengeRate && Number.parseFloat(patterns.revengeRate) > 10 ? `Revenge trades (${patterns.revengeRate}%). Elimunuj je.` : "Nízká selectivita."} New rule: Trade jen A+ setupy příštích 30 dní. Zkvalitni, ne zvětšuj volume.`,
+        `Win rate ${winRate.toFixed(1)}% needs work. ${traderProfile?.patterns.emotionalTrades ? `${traderProfile.patterns.emotionalTrades} emotional trades pulling you down.` : ""} Commitment: Příštích 14 dní only planned setups. Zero FOMO. Zero revenge. Build discipline first.`,
+      ]
+      response = responses[Math.floor(randomFactor * responses.length)]
     }
   }
 
@@ -538,8 +608,8 @@ PRAVIDLA:
           { role: "system", content: MODE_PROMPTS[mode] + personalityInstructions[personality] },
           { role: "user", content: dataSummary },
         ],
-        temperature: 0.7,
-        maxTokens: 300,
+        temperature: 0.85,
+        maxTokens: 400,
       })
 
       const aiResponse = result.text || "Error generating response"

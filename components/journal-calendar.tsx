@@ -16,23 +16,38 @@ import {
 import { Button } from "@/components/ui/button"
 import { getJournalEntries } from "@/utils/storage-utils"
 import { cn } from "@/lib/utils"
+import { useData } from "@/contexts/data-context"
+import { generateVirtualTrades, generateVirtualJournalEntries } from "@/lib/virtual-data-generator"
 
 interface JournalCalendarProps {
   onDateSelect?: (date: Date) => void
+  demoEntries?: any[]
 }
 
-export function JournalCalendar({ onDateSelect }: JournalCalendarProps) {
+export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [entries, setEntries] = useState<any[]>([])
+  const { isLiveMode } = useData()
 
   useEffect(() => {
     loadEntries()
-  }, [])
+  }, [isLiveMode, demoEntries])
 
   const loadEntries = () => {
-    const journalEntries = getJournalEntries()
-    setEntries(journalEntries)
+    if (!isLiveMode && demoEntries && demoEntries.length > 0) {
+      // Use demo entries in virtual mode
+      setEntries(demoEntries)
+    } else if (!isLiveMode) {
+      // Generate virtual entries if none provided
+      const virtualTrades = generateVirtualTrades(25)
+      const virtualJournals = generateVirtualJournalEntries(5)
+      setEntries([...virtualTrades, ...virtualJournals])
+    } else {
+      // Use real entries in live mode
+      const journalEntries = getJournalEntries()
+      setEntries(journalEntries)
+    }
   }
 
   const year = currentDate.getFullYear()
