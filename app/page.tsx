@@ -1,5 +1,13 @@
 "use client"
 
+import { cn } from "@/lib/utils"
+
+import { TabsTrigger } from "@/components/ui/tabs"
+
+import { TabsList } from "@/components/ui/tabs"
+
+import { Tabs } from "@/components/ui/tabs"
+
 export const dynamic = "force-dynamic"
 
 import { useState, useEffect } from "react"
@@ -51,6 +59,7 @@ export default function DashboardPage() {
     trend: { description: "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu." },
     action: { description: "Začni Morning Check a uzamkni svůj readiness před tradingem." },
   })
+  const [activeNav, setActiveNav] = useState("dashboard") // Declare activeNav and setActiveNav
 
   const { getTradingStats, trades, morningChecks, journalEntries, isLiveMode, portfolioValue } = useData()
   const { plan, isActive, daysRemaining } = useSubscription()

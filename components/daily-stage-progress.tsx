@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { useDailyStage } from "@/contexts/daily-stage-context"
+import { useData } from "@/contexts/data-context"
 import { Check, Lock, ArrowRight, Clock, Sparkles } from "lucide-react"
 import Link from "next/link"
 
 export function DailyStageProgress() {
   const { stages, currentStage, getProgress } = useDailyStage()
+  const { isLiveMode } = useData()
   const progress = getProgress()
 
   const isWeeklyStageDay = () => {
@@ -66,7 +68,7 @@ export function DailyStageProgress() {
             return (
               <div
                 key={stage.id}
-                className={`relative p-4 rounded-lg border transition-all cursor-pointer ${
+                className={`relative p-4 rounded-lg border transition-all cursor-pointer group ${
                   isCompleted
                     ? "bg-green-500/10 border-green-500/30 hover:bg-green-500/15 hover:shadow-lg hover:shadow-green-500/20"
                     : isActive
@@ -76,6 +78,19 @@ export function DailyStageProgress() {
                         : "bg-slate-800/50 border-slate-700/50 hover:bg-slate-800/70 hover:shadow-lg hover:shadow-slate-600/20"
                 }`}
               >
+                {/* Hover tooltip for all modes and states - positioned on the right */}
+                {!isCompleted && (
+                  <div className="absolute -right-24 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                    <div className={`px-3 py-2 text-white text-xs font-semibold rounded-lg whitespace-nowrap ${
+                      isLocked ? 'bg-slate-600' : isActive ? 'bg-purple-600' : 'bg-blue-600'
+                    }`}>
+                      {isLocked ? 'Odemknuto po Stage ' + (stage.id - 1) : 'Klikni pro náhled'}
+                    </div>
+                    <div className={`w-2 h-2 absolute top-1/2 -left-1 transform -translate-y-1/2 ${
+                      isLocked ? 'bg-slate-600' : isActive ? 'bg-purple-600' : 'bg-blue-600'
+                    }`} style={{clipPath: 'polygon(100% 0%, 0% 50%, 100% 100%)'}} />
+                  </div>
+                )}
                 {/* Stage Number Badge */}
                 <div className="absolute -top-2 -left-2">
                   <div

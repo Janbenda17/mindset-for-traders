@@ -20,6 +20,7 @@ import {
   Shield,
   ChevronRight,
   Eye,
+  Zap
 } from "lucide-react"
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
@@ -97,88 +98,155 @@ export function DailySummary() {
   useEffect(() => {
     const today = format(new Date(), "yyyy-MM-dd")
 
-    // Load morning check
-    const morningChecks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
-    const todayMorningCheck = morningChecks.find((m: MorningCheckData) => m.date === today)
-    setMorningCheck(todayMorningCheck || null)
+    if (!isLiveMode) {
+      // VIRTUAL MODE - Generate demo data
+      const demoDates = [today, format(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), "yyyy-MM-dd")]
+      const selectedDate = demoDates[Math.floor(Math.random() * demoDates.length)]
+      
+      const demoMorningCheck: MorningCheckData = {
+        date: selectedDate,
+        sleepQuality: Math.floor(Math.random() * 10) + 1,
+        sleepHours: Math.floor(Math.random() * 3) + 5.5,
+        energyLevel: Math.floor(Math.random() * 10) + 1,
+        stressLevel: Math.floor(Math.random() * 10) + 1,
+        focus: Math.floor(Math.random() * 10) + 1,
+        emotionalState: Math.floor(Math.random() * 10) + 1,
+        score: Math.floor(Math.random() * 30) + 60,
+      }
 
-    // Load intention
-    const intentions = JSON.parse(localStorage.getItem("daily-intentions") || "[]")
-    const todayIntention = intentions.find((i: DailyIntentionData) => i.date === today)
-    setIntention(todayIntention || null)
+      const demoIntention: DailyIntentionData = {
+        date: selectedDate,
+        goals: ["Najít A+ setup na EUR/USD", "Dodržet 2% risk per trade", "Bez revenge tradingu"][Math.floor(Math.random() * 3)],
+        maxRiskPercent: 2,
+        emotionalGoal: ["Zůstat klidný a disciplinovaný", "Převzít odpovědnost za chyby", "Cítit se sebevědomě"][Math.floor(Math.random() * 3)],
+      }
 
-    // Load trading plan
-    const plans = JSON.parse(localStorage.getItem("trading-plans") || "[]")
-    const todayPlan = plans.find((p: TradingPlanData) => p.date === today)
-    setTradingPlan(todayPlan || null)
+      const demoPlan: TradingPlanData = {
+        date: selectedDate,
+        setups: "Breakout z resistance levelu + konfirmace z Fibs",
+        pairs: "EUR/USD, GBP/USD, XAU/USD",
+        strategy: "Trend following s 3:1 risk reward",
+      }
 
-    const allTrades = getAllTrades()
-    const trades = allTrades.filter((t: Trade) => t.date === today)
-    setTodayTrades(trades)
+      const demoDates2 = [selectedDate, format(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), "yyyy-MM-dd")]
+      const demoTrades: Trade[] = []
+      
+      for (let i = 0; i < Math.floor(Math.random() * 5) + 2; i++) {
+        const isWin = Math.random() > 0.35
+        demoTrades.push({
+          id: `demo-${i}`,
+          pair: ["EUR/USD", "GBP/USD", "USD/JPY", "XAU/USD"][Math.floor(Math.random() * 4)],
+          direction: Math.random() > 0.5 ? "LONG" : "SHORT",
+          pnl: isWin ? Math.floor(Math.random() * 3000) + 500 : -Math.floor(Math.random() * 1500) - 100,
+          mood: Math.floor(Math.random() * 40) + (isWin ? 60 : 30),
+          entry: Math.random() * 100,
+          exit: Math.random() * 100,
+          size: Math.floor(Math.random() * 2) + 0.5,
+          notes: isWin ? "Dobré setup, dodržel jsem plán" : "Příliš brzy vstup, měl jsem čekat",
+          date: demoDates2[Math.floor(Math.random() * demoDates2.length)],
+        })
+      }
 
-    generateAdvancedInsights(todayMorningCheck, trades, todayIntention)
-  }, [getAllTrades])
+      setMorningCheck(demoMorningCheck)
+      setIntention(demoIntention)
+      setTradingPlan(demoPlan)
+      setTodayTrades(demoTrades)
+      generateAdvancedInsights(demoMorningCheck, demoTrades, demoIntention)
+    } else {
+      // LIVE MODE - Load from localStorage
+      // Load morning check
+      const morningChecks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
+      const todayMorningCheck = morningChecks.find((m: MorningCheckData) => m.date === today)
+      setMorningCheck(todayMorningCheck || null)
+
+      // Load intention
+      const intentions = JSON.parse(localStorage.getItem("daily-intentions") || "[]")
+      const todayIntention = intentions.find((i: DailyIntentionData) => i.date === today)
+      setIntention(todayIntention || null)
+
+      // Load trading plan
+      const plans = JSON.parse(localStorage.getItem("trading-plans") || "[]")
+      const todayPlan = plans.find((p: TradingPlanData) => p.date === today)
+      setTradingPlan(todayPlan || null)
+
+      const allTrades = getAllTrades()
+      const trades = allTrades.filter((t: Trade) => t.date === today)
+      setTodayTrades(trades)
+
+      generateAdvancedInsights(todayMorningCheck, trades, todayIntention)
+    }
+  }, [getAllTrades, isLiveMode])
 
   const generateAdvancedInsights = (
     check: MorningCheckData | null,
     trades: Trade[],
     intention: DailyIntentionData | null,
   ) => {
-    const strengths = []
-    const weaknesses = []
-    const tomorrowPlan = []
-    const patternRecognition = []
+    const strengths: string[] = []
+    const weaknesses: string[] = []
+    const tomorrowPlan: string[] = []
+    const patternRecognition: string[] = []
     let psychologicalAnalysis = ""
     let riskAssessment = ""
     let performancePrediction = ""
 
     // Analyze Morning Routine & Mental State
     if (check) {
-      if (check.score >= 80) {
-        strengths.push("🎯 Excelentní ranní příprava - tvá mysl je v optimálním stavu pro trading")
-        psychologicalAnalysis =
-          "Tvůj mentální stav je výborný. Vysoký focus a nízký stres vytváří ideální podmínky pro disciplinované rozhodování. Pokračuj v této rutině."
-      } else if (check.score >= 70) {
-        strengths.push("✅ Solidní ranní příprava - dobrá základna pro obchodování")
-        psychologicalAnalysis =
-          "Tvůj mentální stav je dobrý, ale existuje prostor pro zlepšení. Zaměř se na oblasti s nižším skóre pro optimalizaci výkonu."
-      } else {
-        weaknesses.push("⚠️ Suboptimální ranní příprava ovlivnila tvé rozhodování")
-        psychologicalAnalysis =
-          "Tvůj mentální stav vyžaduje pozornost. Nízké skóre v klíčových oblastech (spánek, focus, stres) může vést k impulzivním rozhodnutím. Prioritizuj odpočinek."
-      }
+      psychologicalAnalysis = `Tvůj psychologický profil dnes: Nálada ${check.emotionalState}/10, Stres ${check.stressLevel}/10, Focus ${check.focus}/10. `
 
-      // Specific metric analysis
-      if (check.sleepQuality < 6 || check.sleepHours < 6.5) {
-        weaknesses.push("😴 Nedostatečný spánek snížil kognitivní funkce o 30-40%")
-        tomorrowPlan.push("Jít spát o 1-2 hodiny dříve, cíl: 7-8 hodin kvalitního spánku")
-        patternRecognition.push("Pattern: Špatný spánek → Snížená trpělivost → Předčasné vstupy")
-      } else if (check.sleepQuality >= 8) {
-        strengths.push("💤 Výborný spánek poskytl mentální ostrost a jasnost")
-      }
-
-      if (check.stressLevel > 7) {
-        weaknesses.push("😰 Vysoký stres zvýšil riziko emočního tradingu o 60%")
-        tomorrowPlan.push("Zařadit 15-20min meditaci nebo dechová cvičení před tradingem")
-        patternRecognition.push("Pattern: Vysoký stres → Revenge trading → Zvýšené ztráty")
+      if (check.stressLevel >= 8) {
+        psychologicalAnalysis += `Vysoký stres je tvou největší překážkou. Tvůj amygdala (emoční mozek) je nyní dominantní, což snižuje logické rozhodování. Doporučuji: Učiň pauzu, projdi 4-7-8 dechování 5x. Bez snížení stresu riskuješ revenge trading a horší exekuci.`
       } else if (check.stressLevel <= 3) {
-        strengths.push("😌 Nízký stres umožnil klidné a racionální rozhodování")
+        psychologicalAnalysis += `Nízký stres je tvou silnou stránkou. Tvůj prefrontální kůra (logika) dominuje, což vede k lepším rozhodnutím. Udržuj tenhle stav - to je ideální podmínka pro obchodování.`
+      } else {
+        psychologicalAnalysis += `Stres na normální úrovni. Dej si pozor na eskalaci - mnoho traderů neznamená kdy jejich stres překročil bezpečný práh, dokud není pozdě.`
       }
 
-      if (check.focus < 6) {
-        weaknesses.push("🎯 Nízký focus vedl k přehlédnutí důležitých signálů")
-        tomorrowPlan.push("Zkusit Pomodoro techniku: 25min focus + 5min pauza")
-        patternRecognition.push("Pattern: Nízký focus → Missed opportunities → Frustrace")
+      if (check.focus < 5) {
+        psychologicalAnalysis += ` Tvůj focus je slabý - to znamená vynechávání signálů a nízká kvalita exekuce. Zkus Pomodoro techniku: 25min intenzivního soustředění, pak 5min pauza.`
       } else if (check.focus >= 8) {
-        strengths.push("🔍 Vysoký focus umožnil zachytit všechny klíčové signály")
+        psychologicalAnalysis += ` Tvůj focus je excelentní - to je super-schopnost pro trading. Využij tohoto okna zvaného "flow state" - je to měsíce, kdy nejlepší tradery tráví.`
       }
 
-      if (check.emotionalState < 6) {
-        weaknesses.push("😔 Negativní emoční stav ovlivnil objektivitu")
-        tomorrowPlan.push("Journaling: Zapsat emoce před tradingem pro lepší sebeuvědomění")
-      } else if (check.emotionalState >= 8) {
-        strengths.push("😊 Pozitivní nálada podpořila důvěru a disciplínu")
+      if (check.emotionalState >= 8) {
+        psychologicalAnalysis += ` Pozitivní emoční stav podporuje sebedůvěru, ale pozor na overconfidence. Právě teď je největší riziko brát větší pozice než je racionální.`
+      } else if (check.emotionalState <= 4) {
+        psychologicalAnalysis += ` Negativní emoce jsou signál k opatrnosti. Když je nálada nízká, zvyšuje se pravděpodobnost ztrát o 40%. Zvažte kratší session nebo menší pozice.`
       }
+    } else {
+      psychologicalAnalysis = "Chybí Morning Check data. Bez toho nemůžu posoudit tvůj psychologický stav. Vyplň Morning Check pro detailní analýzu."
+    }
+
+    // Specific metric analysis
+    if (check && (check.sleepQuality < 6 || check.sleepHours < 6.5)) {
+      weaknesses.push("😴 Nedostatečný spánek snížil kognitivní funkce o 30-40%")
+      tomorrowPlan.push("Jít spát o 1-2 hodiny dříve, cíl: 7-8 hodin kvalitního spánku")
+      patternRecognition.push("Pattern: Špatný spánek → Snížená trpělivost → Předčasné vstupy")
+    } else if (check && check.sleepQuality >= 8) {
+      strengths.push("💤 Výborný spánek poskytl mentální ostrost a jasnost")
+    }
+
+    if (check && check.stressLevel > 7) {
+      weaknesses.push("😰 Vysoký stres zvýšil riziko emočního tradingu o 60%")
+      tomorrowPlan.push("Zařadit 15-20min meditaci nebo dechová cvičení před tradingem")
+      patternRecognition.push("Pattern: Vysoký stres → Revenge trading → Zvýšené ztráty")
+    } else if (check && check.stressLevel <= 3) {
+      strengths.push("😌 Nízký stres umožnil klidné a racionální rozhodování")
+    }
+
+    if (check && check.focus < 6) {
+      weaknesses.push("🎯 Nízký focus vedl k přehlédnutí důležitých signálů")
+      tomorrowPlan.push("Zkusit Pomodoro techniku: 25min focus + 5min pauza")
+      patternRecognition.push("Pattern: Nízký focus → Missed opportunities → Frustrace")
+    } else if (check && check.focus >= 8) {
+      strengths.push("🔍 Vysoký focus umožnil zachytit všechny klíčové signály")
+    }
+
+    if (check && check.emotionalState < 6) {
+      weaknesses.push("😔 Negativní emoční stav ovlivnil objektivitu")
+      tomorrowPlan.push("Journaling: Zapsat emoce před tradingem pro lepší sebeuvědomění")
+    } else if (check && check.emotionalState >= 8) {
+      strengths.push("😊 Pozitivní nálada podpořila důvěru a disciplínu")
     }
 
     // Analyze Trading Performance
@@ -425,24 +493,38 @@ export function DailySummary() {
                     <div className="flex items-center gap-4">
                       <div className={cn("w-2 h-2 rounded-full", trade.pnl > 0 ? "bg-emerald-500" : "bg-rose-500")} />
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-white">{trade.pair}</span>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "text-[10px] px-1.5 py-0 h-5 border-0",
-                              trade.direction === "Long"
-                                ? "bg-emerald-500/10 text-emerald-400"
-                                : "bg-rose-500/10 text-rose-400",
-                            )}
-                          >
-                            {trade.direction.toUpperCase()}
-                          </Badge>
+                        <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                          <Eye className="w-3 h-3" /> Rozpoznané Psychologické Patterny
+                        </h4>
+                        <div className="space-y-2">
+                          {aiInsights.patternRecognition.length > 0 ? (
+                            aiInsights.patternRecognition.map((pattern, i) => (
+                              <div key={i} className="p-2 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
+                                <p className="text-sm text-zinc-300">{pattern}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-muted-foreground">Zatím žádné stabilní patterny detekovány</p>
+                          )}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {trade.size} lot • {trade.entry} → {trade.exit}
-                        </p>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-white">{trade.pair}</span>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] px-1.5 py-0 h-5 border-0",
+                            trade.direction === "Long"
+                              ? "bg-emerald-500/10 text-emerald-400"
+                              : "bg-rose-500/10 text-rose-400",
+                          )}
+                        >
+                          {trade.direction.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {trade.size} lot • {trade.entry} → {trade.exit}
+                      </p>
                     </div>
                     <div className="text-right">
                       <span
@@ -519,47 +601,56 @@ export function DailySummary() {
             </CardContent>
           </Card>
 
-          <Card className="bg-zinc-900/50 border-white/10">
+          <Card className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border-indigo-500/30 overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Brain className="w-5 h-5 text-indigo-400" />
-                Psychologická Analýza
+                Psychologická Analýza & Mentální Stav
               </CardTitle>
+              <p className="text-xs text-gray-400 mt-2 font-normal">Hlubší pohled na tvůj mindset a psychologické vzorce</p>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-zinc-300 leading-relaxed">{aiInsights.psychologicalAnalysis}</p>
+            <CardContent className="space-y-4">
+              <div className="p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  <span className="font-semibold text-indigo-300">Aktuální stav: </span>
+                  {aiInsights.psychologicalAnalysis}
+                </p>
+              </div>
+              
+              {/* Quick Mental Metrics */}
+              <div className="grid grid-cols-3 gap-2">
+                {morningCheck && (
+                  <>
+                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                      <p className="text-xs text-gray-400 mb-1">Nálada</p>
+                      <p className="text-lg font-bold text-yellow-400">{morningCheck.emotionalState}/10</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                      <p className="text-xs text-gray-400 mb-1">Stres</p>
+                      <p className="text-lg font-bold text-orange-400">{morningCheck.stressLevel}/10</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                      <p className="text-xs text-gray-400 mb-1">Focus</p>
+                      <p className="text-lg font-bold text-blue-400">{morningCheck.focus}/10</p>
+                    </div>
+                  </>
+                )}
+              </div>
             </CardContent>
           </Card>
-
-          {aiInsights.patternRecognition.length > 0 && (
-            <Card className="bg-zinc-900/50 border-white/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Eye className="w-5 h-5 text-cyan-400" />
-                  Rozpoznané Patterny
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {aiInsights.patternRecognition.map((pattern, i) => (
-                    <div key={i} className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
-                      <p className="text-sm text-zinc-300">{pattern}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           <Card className="bg-zinc-900/50 border-white/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Shield className="w-5 h-5 text-amber-400" />
-                Risk Assessment
+                Risk Assessment & Správa Rizika
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-zinc-300 leading-relaxed">{aiInsights.riskAssessment}</p>
+            <CardContent className="space-y-3">
+              <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <p className="text-sm text-zinc-300 leading-relaxed">{aiInsights.riskAssessment}</p>
+              </div>
             </CardContent>
           </Card>
 
@@ -567,20 +658,23 @@ export function DailySummary() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <TrendingUp className="w-5 h-5 text-green-400" />
-                Predikce Výkonu
+                Predikce Výkonu & Šance na Úspěch
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-zinc-300 leading-relaxed">{aiInsights.performancePrediction}</p>
+              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                <p className="text-sm text-zinc-300 leading-relaxed font-medium">{aiInsights.performancePrediction}</p>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Plan for Tomorrow */}
-          <Card className="bg-zinc-900/50 border-white/10">
+          {/* Plan for Tomorrow - Action Steps */}
+          <Card className="bg-gradient-to-br from-blue-900/20 to-indigo-900/20 border-blue-500/30 overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Target className="w-5 h-5 text-blue-400" />
-                Plán na Zítřek
+                <Zap className="w-5 h-5 text-blue-400" />
+                🎯 Akční Kroky na Zítřek
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -588,12 +682,12 @@ export function DailySummary() {
                 {aiInsights.tomorrowPlan.map((item, i) => (
                   <div
                     key={i}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10"
+                    className="flex items-start gap-3 p-3 rounded-lg bg-blue-500/10 border-l-4 border-blue-500/50"
                   >
-                    <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-bold text-blue-400">{i + 1}</span>
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0 font-bold text-xs text-white">
+                      {i + 1}
                     </div>
-                    <p className="text-sm text-zinc-300">{item}</p>
+                    <p className="text-sm text-zinc-200 font-medium">{item}</p>
                   </div>
                 ))}
               </div>

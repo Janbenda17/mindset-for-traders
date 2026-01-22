@@ -128,6 +128,7 @@ interface ChatRequest {
   message: string
   personality: "calm" | "strict" | "analytical" | "balanced"
   mode: "mind" | "analytics" | "coach"
+  isVirtualMode?: boolean
   context: {
     mood: number
     stress: number
@@ -253,10 +254,48 @@ interface ChatRequest {
 }
 
 function generateEnhancedMockResponse(request: ChatRequest): string {
-  const { message, personality, mode, context, userData, traderProfile } = request
+  const { message, personality, mode, context, userData, traderProfile, isVirtualMode } = request
   const { mood, stress, readiness, sleep, energy } = context
   const { stats, patterns, morningCheck } = userData
 
+  // Add virtual mode disclaimer
+  const virtualPrefix = isVirtualMode ? "Máš stres na 5/10. " : ""
+
+  // VIRTUAL MODE: Ignore stats/data, just respond naturally to the question
+  if (isVirtualMode) {
+    const questionResponses: Record<string, string[]> = {
+      recovery: [
+        "Ztráty jsou součástí obchodování. Klíč je se od nich naučit, ne je hned dohánět. Věnuj čas analýze co se stalo špatně.",
+        "Po ztrátě je normální mít negativní emoce. Dej si pauzu, projdi co ses naučil, a pak s čistou hlavou se vrať.",
+        "Nejlepší způsob jak se zotavit je přijmout ztrátu a fokusovat se na příští obchod. Nesnažej se ztrátě vykompenzovat hned.",
+      ],
+      fear: [
+        "Strach je při obchodování normální. Pokud ho ignoruješ, chybíš se. Pokud ti ale strach zabrání v tradingu, zjistit proč a pracuj na tom.",
+        "Strach často ochrání tvůj kapitál více než chytrost. Když máš špatný pocit z obchodu, poslechni si ho a přeskoč.",
+        "Trénuj si: Nejprve si jasně definuj kdy wstoupíš a kdy vyjdeš. Pak strachem nekomplikuješ rozhodování.",
+      ],
+      discipline: [
+        "Disciplína je 80% úspěchu v tradingu. Bez ní nebude fungovat žádná strategie. Žádné výjimky z pravidel.",
+        "Začni malým: Vezmout jedno pravidlo a drž se ho bez výjimky jeden týden. Pak přidej další.",
+        "Nejlepší způsob jak si vytvořit disciplínu je vidět kolik tě stojí obchodování bez ní.",
+      ],
+      plan: [
+        "Pokud porušuješ plán, znamená to že jsi pravděpodobně neviděl důvod proč existuje. Zjisti co tě vede k porušování a pracuj na tom.",
+        "Přetradováváš? To znamená že je tvůj maximální loss příliš vysoký nebo postavení špatný. Zmen parametry tak aby bylo těžší porušit plán.",
+        "Najdi způsob jak si plán připomenuješ během trading. Napsaný plán na papír vedle obrazovky pomáhá víc než myslíš.",
+      ],
+    }
+
+    let selectedResponses = questionResponses.recovery
+    if (message.toLowerCase().includes("strach")) selectedResponses = questionResponses.fear
+    if (message.toLowerCase().includes("disciplín")) selectedResponses = questionResponses.discipline
+    if (message.toLowerCase().includes("plan")) selectedResponses = questionResponses.plan
+
+    const randomResponse = selectedResponses[Math.floor(Math.random() * selectedResponses.length)]
+    return virtualPrefix + randomResponse
+  }
+
+  // LIVE MODE: Use real data and stats
   // Add variety with random response selection
   const randomFactor = Math.random()
   let response = ""

@@ -730,7 +730,7 @@ export default function JournalPage() {
               </TabsContent>
 
               <TabsContent value="calendar" className="mt-0">
-                <JournalCalendar onDateSelect={setSelectedDate} demoEntries={!isLiveMode ? generateDemoEntries() : undefined} />
+                <JournalCalendar onDateSelect={setSelectedDate} demoEntries={!isLiveMode ? entries : undefined} />
               </TabsContent>
 
               <TabsContent value="entries" className="mt-0">

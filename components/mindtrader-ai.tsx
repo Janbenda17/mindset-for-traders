@@ -10,52 +10,8 @@ import { useToast } from "@/hooks/use-toast"
 import { getUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
 import { useSubscription } from "@/contexts/subscription-context"
-import { useLanguage } from "@/contexts/language-context"
 import { getUserStorageKey } from "@/utils/storage-namespace"
 import { useTranslation } from "react-i18next"
-
-interface Message {
-  role: "user" | "assistant"
-  content: string
-  timestamp: Date
-  mode?: string
-  personality?: string
-  type?: "chat" | "insight" | "recovery" | "report"
-}
-
-interface ReadinessFactors {
-  sleep: number
-  stress: number
-  routine: number
-  weather: number
-  nutrition: number
-  mood: number
-  previousResults: number
-}
-
-interface DailyEntry {
-  id: string
-  date: string
-  weather: { condition: string; mood_impact: number }
-  sleep: { bedtime: string; wake_time: string; quality: number }
-  exercise: { type: string; duration: number; intensity: number }
-  nutrition: { quality: number; water_intake: number }
-  mental_state: { stress_level: number; focus_level: number; confidence: number; mood: number }
-  trading_psychology: { patience: number; emotional_control: number }
-  trading_session: {
-    trades_taken: number
-    profit_loss: number
-    followed_plan: number
-    journal_reviewed: boolean
-    meditation: number
-    screen_time: number
-  }
-  notes: string
-  wins: string
-  improvements: string
-  ai_score: number
-  sleep_hours: number
-}
 
 const GalaxyBackground = () => (
   <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-purple-900 to-slate-950 overflow-hidden pointer-events-none z-0">
@@ -91,9 +47,33 @@ const GalaxyBackground = () => (
   </div>
 )
 
-export function MindTraderAI() {
-  const { t, language } = useLanguage()
-  const { i18n } = useTranslation()
+const MindTraderAI = () => {
+  const { t, i18n } = useTranslation()
+  const language = i18n.language
+
+  const scenarios = [
+    {
+      id: "recovery",
+      label: "🔴 Jak se zotavit po ztrátě?",
+      content: "Jak se zotavit po ztrátě?"
+    },
+    {
+      id: "fear",
+      label: "😰 Jak zvládat strach?",
+      content: "Jak zvládat strach?"
+    },
+    {
+      id: "discipline",
+      label: "⚠️ Pomoz mi s disciplínou",
+      content: "Pomoz mi s disciplínou"
+    },
+    {
+      id: "plan-violation",
+      label: "❌ Porušil jsem plán, co dělat?",
+      content: "Porušil jsem plán, co dělat?"
+    }
+  ]
+
   const {
     isLiveMode,
     getAllTrades,
@@ -109,13 +89,13 @@ export function MindTraderAI() {
   const isPremium = plan === "premium" && isActive
 
   // AI State
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
   // AI Configuration
-  const [aiMode, setAiMode] = useState<"mind" | "analytics" | "coach">("mind")
-  const [aiPersonality, setAiPersonality] = useState<"calm" | "strict" | "analytical" | "balanced">("calm")
+  const [aiMode, setAiMode] = useState("mind")
+  const [aiPersonality, setAiPersonality] = useState("calm")
 
   // Voice
   const [isListening, setIsListening] = useState(false)
@@ -129,7 +109,7 @@ export function MindTraderAI() {
   const [liveMessageCount, setLiveMessageCount] = useState(0)
   const [liveMessageDate, setLiveMessageDate] = useState("")
 
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef(null)
 
   const userData = getUserData()
   const moodEntries = userData.moodEntries || []
@@ -158,9 +138,9 @@ export function MindTraderAI() {
   // Check for losses in recent trades to trigger recovery mode
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0]
-    const todayTrades = trades.filter((t: any) => t.date === today || t.closeDate === today)
+    const todayTrades = trades.filter((t) => t.date === today || t.closeDate === today)
 
-    const totalLoss = todayTrades.reduce((sum: number, trade: any) => {
+    const totalLoss = todayTrades.reduce((sum, trade) => {
       const pnl = trade.pnl || trade.profitLoss || 0
       return sum + (pnl < 0 ? pnl : 0)
     }, 0)
@@ -217,7 +197,7 @@ export function MindTraderAI() {
       try {
         const parsed = JSON.parse(storedMessages)
         setMessages(
-          parsed.map((msg: any) => ({
+          parsed.map((msg) => ({
             ...msg,
             timestamp: new Date(msg.timestamp),
           })),
@@ -367,7 +347,7 @@ export function MindTraderAI() {
         ? `🚨 Recovery Mode aktivní - AI detekoval obtížný den. Následuj doporučení níže.\n\n1. **Dýchání** - 4-7-8 technika (4s nádech, 7s hold, 8s výdech)\n2. **Zapiš si myšlenky** - Co cítíš právě teď?\n3. **Odpočinek** - Minimálně 2 hodiny pauza\n4. **Návrat** - Až readiness >70%\n\nNejlepší obchod = žádný obchod. 💪`
         : `🚨 Recovery Mode active - AI detected a difficult day. Follow recommendations below.\n\n1. **Breathing** - 4-7-8 technique (4s inhale, 7s hold, 8s exhale)\n2. **Journal** - What are you feeling right now?\n3. **Rest** - Minimum 2 hours break\n4. **Return** - When readiness >70%\n\nBest trade = no trade. 💪`
 
-    const recoveryMsg: Message = {
+    const recoveryMsg = {
       role: "assistant",
       content: recoveryMessage,
       timestamp: new Date(),
@@ -376,7 +356,7 @@ export function MindTraderAI() {
     setMessages((prev) => [...prev, recoveryMsg])
   }
 
-  const formatAIResponse = (text: string): string => {
+  const formatAIResponse = (text) => {
     return text
       .replace(/[#*`]/g, "")
       .replace(/\*\*/g, "")
@@ -401,20 +381,15 @@ export function MindTraderAI() {
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return
-
-    // Kontrola limitu zpráv ve Virtual Mode
-    if (!isLiveMode && virtualMessageCount >= 3) {
-      toast({
-        title: "Limit zpráv dosažen",
-        description: "Ve Virtual Mode můžeš poslat maximálně 3 zprávy. Upgraduj na Premium a přepni do Live Mode pro neomezené zprávy.",
-        variant: "destructive",
-      })
-      return
+    
+    // VIRTUAL MODE: Block free text input - only scénáře allowed
+    if (!isLiveMode) {
+      return // Do nothing - only scénáře can be clicked
     }
 
     const messageContent = input.trim()
 
-    const userMessage: Message = {
+    const userMessage = {
       role: "user",
       content: messageContent,
       timestamp: new Date(),
@@ -441,6 +416,7 @@ export function MindTraderAI() {
           message: messageContent,
           personality: aiPersonality,
           mode: aiMode,
+          isVirtualMode: !isLiveMode, // Add flag to indicate virtual mode
           context: {
             mood: currentMorningCheck?.sleep_quality || 5,
             stress: currentMorningCheck?.stress_level || 5,
@@ -546,7 +522,7 @@ export function MindTraderAI() {
         throw new Error("Empty response from AI")
       }
 
-      const aiMessage: Message = {
+      const aiMessage = {
         role: "assistant",
         content: formatAIResponse(data.response),
         timestamp: new Date(),
@@ -558,9 +534,9 @@ export function MindTraderAI() {
       setMessages((prev) => [...prev, aiMessage])
 
       if (!isLiveMode) {
-        incrementVirtualMessageCount?.()
+        incrementVirtualMessageCount()
       } else {
-        incrementLiveMessageCount?.()
+        incrementLiveMessageCount()
       }
 
       toast({
@@ -570,7 +546,7 @@ export function MindTraderAI() {
     } catch (error) {
       console.error("[v0] AI Chat Error:", error)
 
-      const errorMessage: Message = {
+      const errorMessage = {
         role: "assistant",
         content: error instanceof Error ? `⚠️ Chyba: ${error.message}` : "⚠️ Chyba: Nepodařilo se získat odpověď",
         timestamp: new Date(),
@@ -596,7 +572,7 @@ export function MindTraderAI() {
           ? `📊 AI INSIGHTS - POSLEDNÍ TÝDEN\n\n🧠 Co se děje:\n- Tvůj průměrný readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Není dostupné"}\n- Spánek: ${currentMorningCheck?.sleep_quality || 5}/10\n- Stres: ${currentMorningCheck?.stress_level || 5}/10\n- Nálada: ${currentMorningCheck?.mood || 5}/10\n\n💡 Proč se to děje:\n${currentMorningCheck?.sleep_quality < 7 ? "- Nedostatečný spánek ovlivňuje výkon\n" : ""}${currentMorningCheck?.stress_level > 6 ? "- Vysoký stres snižuje koncentraci\n" : ""}${trades.length === 0 ? "- Zatím nemám dostatek dat z obchodů\n" : ""}\n\n🎯 Co udělat dál:\n1. ${currentMorningCheck?.sleep_quality < 7 ? "Zlepši kvalitu spánku (cíl 7-9h)" : "Udržuj dobré spánkové návyky"}\n2. ${currentMorningCheck?.stress_level > 6 ? "Sniž stres (meditace, procházky)" : "Pokračuj v dobrém managementu stresu"}\n3. Pravidelně zapisuj do journalu\n\nDisciplína = dlouhodobý úspěch! 💪`
           : `📊 AI INSIGHTS - LAST WEEK\n\n🧠 What's happening:\n- Your average readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Not available"}\n- Sleep: ${currentMorningCheck?.sleep_quality || 5}/10\n- Stress: ${currentMorningCheck?.stress_level || 5}/10\n- Mood: ${currentMorningCheck?.mood || 5}/10\n\n💡 Why it's happening:\n${currentMorningCheck?.sleep_quality < 7 ? "- Insufficient sleep affects performance\n" : ""}${currentMorningCheck?.stress_level > 6 ? "- High stress reduces concentration\n" : ""}${trades.length === 0 ? "- Not enough trading data yet\n" : ""}\n\n🎯 What to do next:\n1. ${currentMorningCheck?.sleep_quality < 7 ? "Improve sleep quality (target 7-9h)" : "Maintain good sleep habits"}\n2. ${currentMorningCheck?.stress_level > 6 ? "Reduce stress (meditation, walks)" : "Continue good stress management"}\n3. Journal regularly\n\nDisciplína = long-term success! 💪`
 
-      const insightMsg: Message = {
+      const insightMsg = {
         role: "assistant",
         content: formatAIResponse(insightMessage),
         timestamp: new Date(),
@@ -643,14 +619,14 @@ export function MindTraderAI() {
     })
   }
 
-  const getReadinessColor = (score: number | null) => {
+  const getReadinessColor = (score) => {
     if (score === null) return "text-gray-500"
     if (score >= 75) return "text-green-500"
     if (score >= 60) return "text-yellow-500"
     return "text-red-500"
   }
 
-  const getReadinessStatus = (score: number | null) => {
+  const getReadinessStatus = (score) => {
     if (score === null) return language === "cs" ? "Není dostupné" : "Not available"
     if (score >= 75) return language === "cs" ? "Dobré podmínky ✅" : "Good conditions ✅"
     if (score >= 60) return language === "cs" ? "Buď opatrný ⚠️" : "Be cautious ⚠️"
@@ -718,7 +694,7 @@ export function MindTraderAI() {
                     return (
                       <button
                         key={key}
-                        onClick={() => setAiMode(key as any)}
+                        onClick={() => setAiMode(key)}
                         className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-300 font-semibold text-sm group ${
                           aiMode === key
                             ? "border-amber-400 bg-gradient-to-r from-amber-950/80 to-amber-900/60 text-amber-100 shadow-lg shadow-amber-500/20"
@@ -837,65 +813,65 @@ export function MindTraderAI() {
                 {/* Message Input - Enhanced */}
                 <div className="space-y-2">
                   {!isLiveMode && (
-                    <div className="text-xs text-amber-400/70 flex items-center gap-2 justify-between">
-                      <div className="flex items-center gap-2">
-                        <span>Zprávy: {virtualMessageCount}/3 (Virtual Mode limit)</span>
-                        {virtualMessageCount >= 3 && (
-                          <span className="text-red-400 font-semibold">- Limit dosažen</span>
-                        )}
-                      </div>
-                      <Button
-                        onClick={() => {
-                          setVirtualMessageCount(0)
-                          localStorage.setItem("virtualMessageCount", "0")
-                        }}
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-xs text-slate-400 hover:text-amber-400 hover:bg-slate-800/50"
-                      >
-                        Reset na 0/3
-                      </Button>
+                    <div className="text-xs text-blue-400/70 text-center py-2 px-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      Jen v live modu můžeš psát vlastní zprávy
                     </div>
                   )}
-                  <div className="flex gap-3">
-                    <Textarea
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder={language === "cs" ? "Piš svou zprávu..." : "Type your message..."}
-                      className="bg-slate-800 border-2 border-purple-400/30 focus:border-purple-400/60 text-white placeholder-slate-500 resize-none h-12 rounded-lg"
-                      disabled={!isLiveMode && virtualMessageCount >= 3}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault()
-                          handleSendMessage()
-                        }
-                      }}
-                    />
-                    <Button
-                      onClick={handleSendMessage}
-                      disabled={isLoading || !input.trim() || (!isLiveMode && virtualMessageCount >= 3)}
-                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-200"
-                      size="lg"
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  {!isLiveMode && messages.length === 0 ? (
+                    <div className="space-y-3">
+                      <p className="text-xs text-gray-400 font-semibold uppercase">Vyber si scénář:</p>
+                      <div className="flex flex-col gap-2">
+                        {scenarios.map((scenario) => (
+                          <Button
+                            key={scenario.id}
+                            onClick={() => {
+                              setInput(scenario.content)
+                              setTimeout(() => {
+                                handleSendMessage()
+                              }, 100)
+                            }}
+                            disabled={isLoading}
+                            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold shadow-lg shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-200 justify-start text-left h-auto py-2 px-4"
+                          >
+                            {scenario.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : isLiveMode || messages.length > 0 ? (
+                    <div className="flex gap-3">
+                      <Textarea
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Piš svou zprávu..."
+                        disabled={!isLiveMode}
+                        className="bg-slate-800 border-2 border-purple-400/30 focus:border-purple-400/60 text-white placeholder-slate-500 resize-none h-12 rounded-lg flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey && isLiveMode) {
+                            e.preventDefault()
+                            handleSendMessage()
+                          }
+                        }}
+                      />
+                      <Button
+                        onClick={handleSendMessage}
+                        disabled={isLoading || !input.trim() || !isLiveMode}
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-200"
+                        size="lg"
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-
-      {/* Twinkle animation CSS */}
-      <style>{`
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
-        }
-      `}</style>
     </div>
   )
 }
 
+export { MindTraderAI }
 export default MindTraderAI
