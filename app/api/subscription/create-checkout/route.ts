@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     const priceId = "price_1S59GOL0tgTNaSwwEqyW1brC" // Your MindTrader Premium price
     
-    // Create checkout session with 7-day trial
+    // Create checkout session with 7-day trial and promotion codes enabled
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
           user_email: userEmail,
         },
       },
+      allow_promotion_codes: true,
       success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/upgrade`,
       metadata: {

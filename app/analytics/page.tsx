@@ -1639,41 +1639,41 @@ export default function PsychologyAnalyticsPage() {
         </div>
         {/* Tabs for navigation */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full">
-          <TabsList className="w-full bg-slate-800/80 backdrop-blur-sm border border-slate-600 p-2 grid grid-cols-4 gap-2 h-auto rounded-lg">
+          <TabsList className="w-full bg-slate-800/80 backdrop-blur-sm border border-slate-600 p-2 grid grid-cols-2 md:grid-cols-4 gap-2 h-auto rounded-lg">
             <TabsTrigger
               value="overview"
               className={cn(
-                "gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 transition-all duration-300 py-3 px-4 rounded-md",
+                "gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 transition-all duration-300 py-3 px-4 rounded-md text-sm md:text-base",
                 activeTab === "overview" && "shadow-lg",
               )}
             >
-              <Brain className="w-5 h-5" />
-              <span className="font-semibold">Overview</span>
+              <Brain className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="font-semibold hidden sm:inline">Overview</span>
             </TabsTrigger>
             <TabsTrigger
               value="mindset"
               className={cn(
-                "gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 transition-all duration-300 py-3 px-4 rounded-md",
+                "gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 transition-all duration-300 py-3 px-4 rounded-md text-sm md:text-base",
                 activeTab === "mindset" && "shadow-lg",
               )}
             >
-              <Heart className="w-5 h-5" />
-              <span className="font-semibold">Mindset</span>
+              <Heart className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="font-semibold hidden sm:inline">Mindset</span>
             </TabsTrigger>
             <TabsTrigger
               value="patterns"
               className={cn(
-                "gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 transition-all duration-300 py-3 px-4 rounded-md",
+                "gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 transition-all duration-300 py-3 px-4 rounded-md text-sm md:text-base",
                 activeTab === "patterns" && "shadow-lg",
               )}
             >
-              <TrendingUpDown className="w-5 h-5" />
-              <span className="font-semibold">Patterns</span>
+              <TrendingUpDown className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="font-semibold hidden md:inline">Patterns</span>
             </TabsTrigger>
             <TabsTrigger
               value="action"
               className={cn(
-                "gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 transition-all duration-300 py-3 px-4 rounded-md",
+                "gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 transition-all duration-300 py-3 px-4 rounded-md text-sm md:text-base",
                 activeTab === "action" && "shadow-lg",
               )}
             >
