@@ -24,7 +24,7 @@ const LiveModeToggle = () => {
   const router = useRouter()
   const { isLiveMode, switchToLive } = useLiveMode()
   const { user } = useAuth()
-  const { isPremium } = useSubscription()
+  const { isPremium, isLoading: isPremiumLoading } = useSubscription()
   const { toast } = useToast()
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showMigrationDialog, setShowMigrationDialog] = useState(false)
@@ -32,7 +32,16 @@ const LiveModeToggle = () => {
 
   const handleModeSwitch = () => {
     if (!isLiveMode) {
-      // Kontrola premium předplatného
+      // Čekej na načtení stavu předplatného
+      if (isPremiumLoading) {
+        toast({
+          title: "Načítám data",
+          description: "Čekej prosím na načtení tvého předplatného...",
+        })
+        return
+      }
+
+      // Jenom když SKUTEČNĚ víme, že user NENÍ premium
       if (!isPremium) {
         router.push("/pricing")
         return
