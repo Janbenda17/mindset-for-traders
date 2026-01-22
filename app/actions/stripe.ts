@@ -19,7 +19,6 @@ export async function startCheckoutSession(email: string, name: string) {
       trial_period_days: 7,
     },
     customer_email: email,
-    allow_promotion_codes: true,
     metadata: {
       userName: name,
     },

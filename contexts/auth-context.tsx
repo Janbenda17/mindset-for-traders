@@ -11,7 +11,6 @@ interface User {
   email: string
   name: string
   stripeCustomerId?: string
-  isOwner?: boolean
 }
 
 interface AuthContextType {
@@ -52,23 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let isMounted = true
-    let abortController: AbortController | null = null
 
     const initAuth = async () => {
       console.log("[v0] Initializing auth...")
 
       try {
-        abortController = new AbortController()
-
         const {
           data: { session },
           error,
         } = await supabase.auth.getSession()
-
-        if (!isMounted) {
-          console.log("[v0] Auth init cancelled - component unmounted")
-          return
-        }
 
         if (error) {
           console.error("[v0] Error getting session:", error.message)
@@ -81,35 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               `[v0] Auth sanity check: userId=${session.user.id}, email=${session.user.email}, token=${session.access_token?.slice(0, 10)}...`,
             )
           }
-          
-          // Fetch user role from database
-          let isOwner = false
-          const profilePromise = supabase
-            .from("profiles")
-            .select("role")
-            .eq("user_id", session.user.id)
-            .single()
-          
-          profilePromise.then(({ data: profile, error: profileError }) => {
-            if (!profileError && profile?.role === "owner") {
-              isOwner = true
-              console.log("[v0] User is OWNER")
-            }
-          }).catch(err => {
-            console.log("[v0] Could not fetch role:", err)
-          }).finally(() => {
-            if (isMounted) {
-              const userData = {
-                id: session.user.id,
-                email: session.user.email!,
-                name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Trader",
-                isOwner,
-              }
-              lastUserIdRef.current = session.user.id
-              setUser(userData)
-              migrateLegacyKeys(session.user.id)
-            }
-          })
+          const userData = {
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Trader",
+          }
+          lastUserIdRef.current = session.user.id
+          setUser(userData)
+          migrateLegacyKeys(session.user.id)
         } else if (isMounted) {
           console.log("[v0] No authenticated user")
         }
@@ -119,10 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAuthReady(true)
         }
       } catch (err) {
-        // Only log if it's not an abort error
-        if (err instanceof Error && err.name !== "AbortError") {
-          console.error("[v0] Auth init error:", err)
-        }
+        console.error("[v0] Auth init error:", err)
         if (isMounted) {
           setIsLoading(false)
           setAuthReady(true)
@@ -171,32 +138,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           clearUserScoped(lastUserIdRef.current)
         }
 
-        // Fetch user role from database
-        let isOwner = false
-        const profilePromise = supabase
-          .from("profiles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .single()
-        
-        profilePromise.then(({ data: profile, error: profileError }) => {
-          if (!profileError && profile?.role === "owner") {
-            isOwner = true
-            console.log("[v0] User is OWNER")
-          }
-        }).catch(err => {
-          console.log("[v0] Could not fetch role:", err)
-        }).finally(() => {
-          lastUserIdRef.current = session.user.id
-          const userData = {
-            id: session.user.id,
-            email: session.user.email!,
-            name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Trader",
-            isOwner,
-          }
-          setUser(userData)
-          migrateLegacyKeys(session.user.id)
-        })
+        lastUserIdRef.current = session.user.id
+        const userData = {
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Trader",
+        }
+        setUser(userData)
+        migrateLegacyKeys(session.user.id)
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
         lastUserIdRef.current = session.user.id
         setUser({
