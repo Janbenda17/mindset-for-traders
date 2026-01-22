@@ -56,18 +56,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, [])
 
   const checkSubscriptionStatus = async () => {
+    setIsLoading(true)
     try {
-      const storedCustomerId = localStorage.getItem("stripe-customer-id")
-
       const response = await fetch("/api/subscription/status", {
-        headers: {
-          "x-customer-id": storedCustomerId || "",
-        },
         credentials: "include", // Ensure cookies are sent
       })
 
       if (response.status === 401) {
         console.log("[v0] Subscription check: Not authenticated")
+        setIsLoading(false)
         return
       }
 
@@ -90,11 +87,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
           setDaysRemaining(Math.max(0, diffDays))
         }
+
+        console.log("[v0] Subscription status checked:", data.plan, "isPremium:", data.isActive)
       }
     } catch (error: any) {
       if (error.name !== "AbortError") {
         console.error("[v0] Error checking subscription status:", error)
       }
+    } finally {
+      setIsLoading(false)
     }
   }
 
