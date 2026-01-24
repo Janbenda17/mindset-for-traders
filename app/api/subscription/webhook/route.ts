@@ -70,25 +70,43 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log("✅ Checkout completed:", session.id)
 
   const customerEmail = session.customer_details?.email
-  if (!customerEmail) return
-
-  const { data: profile, error } = await supabase.from("profiles").select("id").eq("email", customerEmail).maybeSingle()
-
-  if (error || !profile) {
-    console.error("Profile not found for email:", customerEmail)
+  if (!customerEmail) {
+    console.error("No customer email in checkout session")
     return
   }
 
-  // Update profile with Stripe customer ID
-  await supabase
+  // First, find the user by email in auth.users
+  const { data: authUser, error: authError } = await supabase.auth.admin.listUsers()
+  
+  if (authError) {
+    console.error("Error fetching auth users:", authError)
+    return
+  }
+
+  const user = authUser?.users?.find(u => u.email === customerEmail)
+  
+  if (!user) {
+    console.error("User not found for email:", customerEmail)
+    return
+  }
+
+  console.log("[v0] Webhook: Found user for email:", customerEmail, "userId:", user.id)
+
+  // Now update the profile with the user_id
+  const { error: updateError } = await supabase
     .from("profiles")
     .update({
       stripe_customer_id: session.customer as string,
       subscription_status: session.subscription ? "premium" : "free",
+      subscription_tier: session.subscription ? "premium" : "free",
     })
-    .eq("id", profile.id)
+    .eq("user_id", user.id)
 
-  console.log("Updated profile with Stripe customer ID for:", customerEmail)
+  if (updateError) {
+    console.error("[v0] Error updating profile:", updateError)
+  } else {
+    console.log("[v0] ✅ Updated profile with Stripe customer ID for user:", user.id)
+  }
 }
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
@@ -103,15 +121,16 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     .update({
       stripe_subscription_id: subscription.id,
       subscription_status: status,
+      subscription_tier: status === "premium" ? "premium" : "trial",
       subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       trial_ends_at: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
     })
     .eq("stripe_customer_id", customerId)
 
   if (error) {
-    console.error("Error updating subscription:", error)
+    console.error("[v0] Error updating subscription:", error)
   } else {
-    console.log("Subscription activated for customer:", customerId)
+    console.log("[v0] ✅ Subscription activated for customer:", customerId)
   }
 }
 
@@ -120,22 +139,33 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   const customerId = subscription.customer as string
   let status = "premium"
+  let tier = "premium"
 
   // Map Stripe status to our status
-  if (subscription.status === "trialing") status = "trial"
-  else if (subscription.status === "canceled" || subscription.cancel_at_period_end) status = "canceled"
-  else if (subscription.status === "active") status = "premium"
+  if (subscription.status === "trialing") {
+    status = "trial"
+    tier = "trial"
+  } else if (subscription.status === "canceled" || subscription.cancel_at_period_end) {
+    status = "canceled"
+    tier = "free"
+  } else if (subscription.status === "active") {
+    status = "premium"
+    tier = "premium"
+  }
 
   const { error } = await supabase
     .from("profiles")
     .update({
       subscription_status: status,
+      subscription_tier: tier,
       subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
     })
     .eq("stripe_customer_id", customerId)
 
   if (error) {
-    console.error("Error updating subscription:", error)
+    console.error("[v0] Error updating subscription:", error)
+  } else {
+    console.log("[v0] ✅ Subscription updated - status:", status, "tier:", tier)
   }
 }
 
@@ -149,15 +179,16 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .from("profiles")
     .update({
       subscription_status: "free",
+      subscription_tier: "free",
       stripe_subscription_id: null,
       subscription_current_period_end: null,
     })
     .eq("stripe_customer_id", customerId)
 
   if (error) {
-    console.error("Error downgrading to free:", error)
+    console.error("[v0] Error downgrading to free:", error)
   } else {
-    console.log("User downgraded to free:", customerId)
+    console.log("[v0] ✅ User downgraded to free:", customerId)
   }
 }
 
