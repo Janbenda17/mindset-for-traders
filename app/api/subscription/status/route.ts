@@ -39,13 +39,12 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Check if subscription is premium
-    const isPremium = 
-      (profile?.subscription_status === "premium" || profile?.subscription_status === "pro") &&
-      profile?.subscription_tier !== "free"
+    // Check if subscription is ACTIVE (premium or trialing)
+    // Zdroj pravdy je subscription_status v databázi!
+    const isActive = profile?.subscription_status === "active" || profile?.subscription_status === "trialing"
+    const isPremium = isActive
 
     const tier = profile?.subscription_tier || "free"
-    const isActive = profile?.subscription_status === "premium" || profile?.subscription_status === "pro"
 
     console.log(
       "[v0] Subscription status:",
@@ -59,14 +58,14 @@ export async function GET(request: NextRequest) {
     )
 
     return NextResponse.json({
-      isPremium,
-      tier,
+      isPremium,  // TRUE = user has premium
+      tier,       // "premium", "trialing", or "free"
       plan: isPremium ? "premium" : "free",
       isActive,
       trialEndsAt: null,
       subscriptionId: null,
       customerId: profile?.stripe_customer_id,
-      status: profile?.subscription_status,
+      status: profile?.subscription_status,  // "active", "trialing", "canceled", etc.
       cancelAtPeriodEnd: false,
     })
   } catch (error: any) {

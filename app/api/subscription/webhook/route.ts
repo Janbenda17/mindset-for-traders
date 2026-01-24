@@ -67,128 +67,209 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  console.log("✅ Checkout completed:", session.id)
+  console.log("[v0] ✅ Checkout completed:", session.id)
 
-  const customerEmail = session.customer_details?.email
-  if (!customerEmail) {
-    console.error("No customer email in checkout session")
+  // Get user_id from metadata - MOST RELIABLE SOURCE
+  const userId = session.metadata?.user_id
+  const userEmail = session.customer_details?.email
+
+  if (!userId) {
+    console.error("[v0] ❌ No user_id in checkout session metadata. Email:", userEmail)
+    // Fallback: try to find user by email
+    if (!userEmail) {
+      console.error("[v0] ❌ No user_id and no email - cannot process checkout")
+      return
+    }
+    
+    console.log("[v0] ⚠️ Attempting fallback: finding user by email:", userEmail)
+    try {
+      const { data: authUsers } = await supabase.auth.admin.listUsers()
+      const user = authUsers?.users?.find(u => u.email === userEmail)
+      
+      if (!user) {
+        console.error("[v0] ❌ User not found by email:", userEmail)
+        return
+      }
+      
+      await updateProfileForCheckout(user.id, session)
+    } catch (error) {
+      console.error("[v0] ❌ Error in fallback lookup:", error)
+    }
     return
   }
 
-  // First, find the user by email in auth.users
-  const { data: authUser, error: authError } = await supabase.auth.admin.listUsers()
-  
-  if (authError) {
-    console.error("Error fetching auth users:", authError)
-    return
-  }
+  console.log("[v0] Found user_id in metadata:", userId)
+  await updateProfileForCheckout(userId, session)
+}
 
-  const user = authUser?.users?.find(u => u.email === customerEmail)
-  
-  if (!user) {
-    console.error("User not found for email:", customerEmail)
-    return
-  }
+async function updateProfileForCheckout(userId: string, session: Stripe.Checkout.Session) {
+  console.log("[v0] Updating profile for user:", userId, "with customer:", session.customer)
 
-  console.log("[v0] Webhook: Found user for email:", customerEmail, "userId:", user.id)
-
-  // Now update the profile with the user_id
-  const { error: updateError } = await supabase
+  const { error } = await supabase
     .from("profiles")
     .update({
       stripe_customer_id: session.customer as string,
       subscription_status: session.subscription ? "premium" : "free",
       subscription_tier: session.subscription ? "premium" : "free",
     })
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
 
-  if (updateError) {
-    console.error("[v0] Error updating profile:", updateError)
+  if (error) {
+    console.error("[v0] ❌ Error updating profile:", error)
   } else {
-    console.log("[v0] ✅ Updated profile with Stripe customer ID for user:", user.id)
+    console.log("[v0] ✅ Profile updated with Stripe customer for user:", userId)
   }
 }
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
-  console.log("✅ Subscription created:", subscription.id)
+  console.log("[v0] ✅ Subscription created:", subscription.id)
 
   const customerId = subscription.customer as string
-  const status = subscription.status === "trialing" ? "trial" : "premium"
+  const status = subscription.status === "trialing" ? "trialing" : "active"
 
-  // Update user subscription in database
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      stripe_subscription_id: subscription.id,
-      subscription_status: status,
-      subscription_tier: status === "premium" ? "premium" : "trial",
-      subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      trial_ends_at: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-    })
-    .eq("stripe_customer_id", customerId)
+  console.log("[v0] Subscription status:", status, "for customer:", customerId)
 
-  if (error) {
-    console.error("[v0] Error updating subscription:", error)
-  } else {
-    console.log("[v0] ✅ Subscription activated for customer:", customerId)
+  try {
+    // Find user by stripe_customer_id FIRST
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("stripe_customer_id", customerId)
+      .maybeSingle()
+
+    if (profileError || !profile) {
+      console.error("[v0] ❌ Could not find user for customer:", customerId, "Error:", profileError)
+      return
+    }
+
+    const userId = profile.user_id
+    console.log("[v0] Found user:", userId, "for customer:", customerId)
+
+    // Map Stripe status to our status
+    let ourStatus = "premium"
+    if (subscription.status === "trialing") {
+      ourStatus = "trialing"
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        stripe_subscription_id: subscription.id,
+        subscription_status: ourStatus,
+        subscription_tier: ourStatus === "trialing" ? "trialing" : "premium",
+        subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        trial_ends_at: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+      })
+      .eq("user_id", userId)
+
+    if (error) {
+      console.error("[v0] ❌ Error updating subscription:", error)
+    } else {
+      console.log("[v0] ✅ Subscription activated for user:", userId, "status:", ourStatus)
+    }
+  } catch (error) {
+    console.error("[v0] ❌ Error processing subscription created:", error)
   }
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  console.log("🔄 Subscription updated:", subscription.id)
+  console.log("[v0] 🔄 Subscription updated:", subscription.id)
 
   const customerId = subscription.customer as string
-  let status = "premium"
-  let tier = "premium"
 
-  // Map Stripe status to our status
-  if (subscription.status === "trialing") {
-    status = "trial"
-    tier = "trial"
-  } else if (subscription.status === "canceled" || subscription.cancel_at_period_end) {
-    status = "canceled"
-    tier = "free"
-  } else if (subscription.status === "active") {
-    status = "premium"
-    tier = "premium"
-  }
+  try {
+    // Find user by stripe_customer_id
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("stripe_customer_id", customerId)
+      .maybeSingle()
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      subscription_status: status,
-      subscription_tier: tier,
-      subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-    })
-    .eq("stripe_customer_id", customerId)
+    if (profileError || !profile) {
+      console.error("[v0] ❌ Could not find user for customer:", customerId)
+      return
+    }
 
-  if (error) {
-    console.error("[v0] Error updating subscription:", error)
-  } else {
-    console.log("[v0] ✅ Subscription updated - status:", status, "tier:", tier)
+    const userId = profile.user_id
+    console.log("[v0] Processing subscription update for user:", userId, "status:", subscription.status)
+
+    // Map Stripe status to our status
+    let status = "premium"
+    let tier = "premium"
+
+    if (subscription.status === "trialing") {
+      status = "trialing"
+      tier = "trialing"
+    } else if (subscription.status === "canceled" || subscription.cancel_at_period_end) {
+      status = "canceled"
+      tier = "free"
+    } else if (subscription.status === "past_due") {
+      status = "past_due"
+      tier = "premium" // Still premium until payment fails
+    } else if (subscription.status === "active") {
+      status = "active"
+      tier = "premium"
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        subscription_status: status,
+        subscription_tier: tier,
+        subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      })
+      .eq("user_id", userId)
+
+    if (error) {
+      console.error("[v0] ❌ Error updating subscription:", error)
+    } else {
+      console.log("[v0] ✅ Subscription updated - user:", userId, "status:", status, "tier:", tier)
+    }
+  } catch (error) {
+    console.error("[v0] ❌ Error processing subscription updated:", error)
   }
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  console.log("❌ Subscription deleted:", subscription.id)
+  console.log("[v0] ❌ Subscription deleted:", subscription.id)
 
   const customerId = subscription.customer as string
 
-  // Downgrade user to free
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      subscription_status: "free",
-      subscription_tier: "free",
-      stripe_subscription_id: null,
-      subscription_current_period_end: null,
-    })
-    .eq("stripe_customer_id", customerId)
+  try {
+    // Find user by stripe_customer_id
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("stripe_customer_id", customerId)
+      .maybeSingle()
 
-  if (error) {
-    console.error("[v0] Error downgrading to free:", error)
-  } else {
-    console.log("[v0] ✅ User downgraded to free:", customerId)
+    if (profileError || !profile) {
+      console.error("[v0] ❌ Could not find user for customer:", customerId)
+      return
+    }
+
+    const userId = profile.user_id
+    console.log("[v0] Downgrading user to free:", userId)
+
+    // Downgrade user to free but KEEP live data
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        subscription_status: "canceled",
+        subscription_tier: "free",
+        stripe_subscription_id: null,
+        subscription_current_period_end: null,
+        // IMPORTANT: DO NOT RESET trading_mode - let user keep access to historical LIVE data
+      })
+      .eq("user_id", userId)
+
+    if (error) {
+      console.error("[v0] ❌ Error downgrading to free:", error)
+    } else {
+      console.log("[v0] ✅ User downgraded to free (data preserved):", userId)
+    }
+  } catch (error) {
+    console.error("[v0] ❌ Error processing subscription deleted:", error)
   }
 }
 
