@@ -63,7 +63,13 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.vercel.app"
     const baseUrl = origin.startsWith("http") ? origin : `https://${origin}`
 
-    const priceId = "price_1S59GOL0tgTNaSwwEqyW1brC" // Your MindTrader Premium price
+    console.log("[v0] Base URL:", baseUrl)
+    console.log("[v0] Customer ID:", customerId)
+
+    // IMPORTANT: Find correct price ID from YOUR account
+    // You can find this by running: stripe prices list --product prod_***
+    const priceId = process.env.STRIPE_PRICE_ID || "price_1S59GOL0tgTNaSwwEqyW1brC"
+    console.log("[v0] Using price ID:", priceId)
 
     // Create checkout session with 7-day trial
     const session = await stripe.checkout.sessions.create({
@@ -90,11 +96,16 @@ export async function POST(request: NextRequest) {
         plan: "premium",
         user_id: user.id,
         user_email: user.email,
-        product_id: "prod_T1Bd0pGy0wj1AU",
       },
     })
 
     console.log("[v0] Checkout session created:", session.id)
+    console.log("[v0] Checkout URL:", session.url)
+
+    if (!session.url) {
+      console.error("[v0] ERROR: No checkout URL returned from Stripe")
+      return NextResponse.json({ error: "Failed to create checkout session - no URL" }, { status: 500 })
+    }
 
     return NextResponse.json({ url: session.url })
   } catch (error) {

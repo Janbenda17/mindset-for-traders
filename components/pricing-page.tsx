@@ -63,23 +63,33 @@ export function PricingPage() {
         body: JSON.stringify({ plan: "premium" }),
       })
 
+      console.log("[v0] Response status:", response.status)
+      const data = await response.json()
+      console.log("[v0] Response data:", JSON.stringify(data, null, 2))
+
       if (!response.ok) {
-        const error = await response.json()
+        const error = data.error || "Failed to create checkout session"
         console.error("[v0] Checkout error:", error)
-        throw new Error(error.error || "Failed to create checkout session")
+        alert("Chyba: " + error)
+        throw new Error(error)
       }
 
-      const { url } = await response.json()
-      console.log("[v0] Checkout URL received, redirecting...")
+      const { url } = data
+      console.log("[v0] Checkout URL:", url)
       
       if (url) {
+        console.log("[v0] Redirecting to Stripe checkout...")
         window.location.href = url
       } else {
+        console.error("[v0] No URL in response:", data)
+        alert("Chyba: Checkout URL nebyla vrácena")
         throw new Error("No checkout URL returned")
       }
     } catch (error) {
       console.error("[v0] Error initiating checkout:", error)
-      alert("Chyba při inicializaci platby. Zkuste znovu.")
+      if (!(error instanceof Error && error.message.includes("Chyba:"))) {
+        alert("Chyba při inicializaci platby: " + (error instanceof Error ? error.message : "Neznámá chyba"))
+      }
     } finally {
       setIsLoadingCheckout(false)
     }
