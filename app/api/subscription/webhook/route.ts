@@ -2,22 +2,39 @@ import { type NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createClient } from "@supabase/supabase-js"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-06-20",
-})
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
+// NOTE: These are initialized inside POST handler to get fresh env variables
+// (Vercel caches env variables at startup, so we read them on each request)
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
   const sig = request.headers.get("stripe-signature")!
 
+  // Initialize with fresh env variables
+  const secretKey = process.env.STRIPE_SECRET_KEY
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!secretKey) {
+    console.error("[v0] STRIPE_SECRET_KEY not configured")
+    return NextResponse.json({ error: "Stripe not configured" }, { status: 500 })
+  }
+
+  if (!webhookSecret) {
+    console.error("[v0] STRIPE_WEBHOOK_SECRET not configured")
+    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 })
+  }
+
+  const stripe = new Stripe(secretKey, {
+    apiVersion: "2024-06-20",
+  })
+
+  const supabase = createClient(supabaseUrl!, supabaseServiceKey!)
+
   let event: Stripe.Event
 
   try {
-    event = stripe.webhooks.constructEvent(body, sig, endpointSecret)
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
   } catch (err) {
     console.error("Webhook signature verification failed:", err)
     return NextResponse.json({ error: "Webhook signature verification failed" }, { status: 400 })
@@ -27,32 +44,32 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case "checkout.session.completed":
         const session = event.data.object as Stripe.Checkout.Session
-        await handleCheckoutCompleted(session)
+        await handleCheckoutCompleted(session, supabase)
         break
 
       case "customer.subscription.created":
         const createdSubscription = event.data.object as Stripe.Subscription
-        await handleSubscriptionCreated(createdSubscription)
+        await handleSubscriptionCreated(createdSubscription, supabase)
         break
 
       case "customer.subscription.updated":
         const updatedSubscription = event.data.object as Stripe.Subscription
-        await handleSubscriptionUpdated(updatedSubscription)
+        await handleSubscriptionUpdated(updatedSubscription, supabase)
         break
 
       case "customer.subscription.deleted":
         const deletedSubscription = event.data.object as Stripe.Subscription
-        await handleSubscriptionDeleted(deletedSubscription)
+        await handleSubscriptionDeleted(deletedSubscription, supabase)
         break
 
       case "invoice.payment_succeeded":
         const invoice = event.data.object as Stripe.Invoice
-        await handlePaymentSucceeded(invoice)
+        await handlePaymentSucceeded(invoice, stripe)
         break
 
       case "invoice.payment_failed":
         const failedInvoice = event.data.object as Stripe.Invoice
-        await handlePaymentFailed(failedInvoice)
+        await handlePaymentFailed(failedInvoice, supabase)
         break
 
       default:
@@ -66,7 +83,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabase: any) {
   console.log("[v0] ✅ Checkout completed:", session.id)
 
   // Get user_id from metadata - MOST RELIABLE SOURCE
@@ -91,7 +108,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         return
       }
       
-      await updateProfileForCheckout(user.id, session)
+      await updateProfileForCheckout(user.id, session, supabase)
     } catch (error) {
       console.error("[v0] ❌ Error in fallback lookup:", error)
     }
@@ -99,10 +116,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   console.log("[v0] Found user_id in metadata:", userId)
-  await updateProfileForCheckout(userId, session)
+  await updateProfileForCheckout(userId, session, supabase)
 }
 
-async function updateProfileForCheckout(userId: string, session: Stripe.Checkout.Session) {
+async function updateProfileForCheckout(userId: string, session: Stripe.Checkout.Session, supabase: any) {
   console.log("[v0] Updating profile for user:", userId, "with customer:", session.customer)
 
   const { error } = await supabase
@@ -121,7 +138,7 @@ async function updateProfileForCheckout(userId: string, session: Stripe.Checkout
   }
 }
 
-async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
+async function handleSubscriptionCreated(subscription: Stripe.Subscription, supabase: any) {
   console.log("[v0] ✅ Subscription created:", subscription.id)
 
   const customerId = subscription.customer as string
@@ -172,7 +189,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   }
 }
 
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription, supabase: any) {
   console.log("[v0] 🔄 Subscription updated:", subscription.id)
 
   const customerId = subscription.customer as string
@@ -230,7 +247,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   }
 }
 
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supabase: any) {
   console.log("[v0] ❌ Subscription deleted:", subscription.id)
 
   const customerId = subscription.customer as string
@@ -273,7 +290,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   }
 }
 
-async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
+async function handlePaymentSucceeded(invoice: Stripe.Invoice, stripe: any) {
   console.log("💰 Payment succeeded:", invoice.id)
 
   // Ensure subscription is active
@@ -283,7 +300,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   }
 }
 
-async function handlePaymentFailed(invoice: Stripe.Invoice) {
+async function handlePaymentFailed(invoice: Stripe.Invoice, supabase: any) {
   console.log("❌ Payment failed:", invoice.id)
 
   const customerId = invoice.customer as string
