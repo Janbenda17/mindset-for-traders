@@ -7,78 +7,64 @@ const PRICE_ID = 'price_1S59GOL0tgTNaSwwEqyW1brC'
 
 export async function startCheckoutSession(email: string, name: string) {
   try {
-    console.log("[v0] startCheckoutSession: START - email:", email)
-    
     // Get authenticated user
     const supabase = await createServerClient()
-    console.log("[v0] startCheckoutSession: Supabase created")
-    
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    console.log("[v0] startCheckoutSession: getUser - error:", authError, "user:", user?.id)
 
-    if (authError) {
-      console.error("[v0] startCheckoutSession: Auth error:", authError)
-      throw new Error("Autentizace selhala: " + authError.message)
-    }
-    
-    if (!user) {
-      console.error("[v0] startCheckoutSession: No user found")
-      throw new Error("Uživatel není přihlášen")
+    if (authError || !user) {
+      console.error("[v0] startCheckoutSession: Not authenticated")
+      throw new Error("Not authenticated")
     }
 
-    console.log("[v0] startCheckoutSession: User authenticated:", user.id, "email:", user.email)
+    console.log("[v0] startCheckoutSession: Creating checkout for user:", user.id)
 
     // Get or create Stripe customer
-    let customerId = null
-    
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("stripe_customer_id")
       .eq("user_id", user.id)
       .maybeSingle()
 
-    console.log("[v0] startCheckoutSession: Profile lookup - error:", profileError, "stripe_customer_id:", profile?.stripe_customer_id)
-
     if (profileError) {
-      console.error("[v0] startCheckoutSession: Profile error:", profileError)
-      throw profileError
+      console.error("[v0] startCheckoutSession: Error fetching profile:", profileError)
+      throw new Error("Database error")
     }
 
-    customerId = profile?.stripe_customer_id
+    let customerId = profile?.stripe_customer_id
     
-    if (customerId) {
-      console.log("[v0] startCheckoutSession: Using existing customer:", customerId)
-    } else {
-      console.log("[v0] startCheckoutSession: Creating new Stripe customer for email:", email)
-      
+    if (!customerId) {
+      console.log("[v0] startCheckoutSession: Creating new customer for:", email)
       const customer = await stripe.customers.create({
         email: email,
         name: name,
         metadata: {
           user_id: user.id,
+          app: "mindtrader",
         },
       })
       customerId = customer.id
-      console.log("[v0] startCheckoutSession: Stripe customer created:", customerId)
+      console.log("[v0] startCheckoutSession: New customer created:", customerId)
 
-      // Store customer ID in Supabase
+      // Store customer ID immediately
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ stripe_customer_id: customerId })
         .eq("user_id", user.id)
 
       if (updateError) {
-        console.error("[v0] startCheckoutSession: Failed to store customer ID:", updateError)
-        throw new Error("Nelze uložit customer ID: " + updateError.message)
+        console.error("[v0] startCheckoutSession: Error storing customer ID:", updateError)
+        throw new Error("Failed to store customer")
       }
-      console.log("[v0] startCheckoutSession: Customer ID uložen v Supabase")
+      console.log("[v0] startCheckoutSession: ✓ Customer ID stored")
+    } else {
+      console.log("[v0] startCheckoutSession: Using existing customer:", customerId)
     }
 
-    // Create checkout session
-    console.log("[v0] startCheckoutSession: Creating Stripe checkout session")
-    
+    // Create embedded checkout session
+    // IMPORTANT: Include user_id in metadata AND client_reference_id for webhook to identify user
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
+      client_reference_id: user.id, // CRITICAL: This allows webhook to identify user
       ui_mode: 'embedded',
       redirect_on_completion: 'never',
       line_items: [
@@ -93,26 +79,21 @@ export async function startCheckoutSession(email: string, name: string) {
         metadata: {
           plan: "premium",
           user_id: user.id,
+          user_email: email,
         },
+      },
+      metadata: {
+        plan: "premium",
+        user_id: user.id,
+        user_email: email,
       },
     })
 
-    console.log("[v0] startCheckoutSession: Stripe session vytvořena:", session.id)
-    
-    if (!session.client_secret) {
-      console.error("[v0] startCheckoutSession: Stripe session nemá client_secret!")
-      throw new Error("Chyba Stripe: chybí client_secret")
-    }
-    
-    console.log("[v0] startCheckoutSession: SUCCESS - client_secret je připravena")
+    console.log("[v0] startCheckoutSession: Session created:", session.id, "client_secret:", session.client_secret ? "✓" : "✗")
+
     return session.client_secret
-    
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error)
-    console.error("[v0] startCheckoutSession: CHYBA -", errorMsg)
-    if (error instanceof Error && error.stack) {
-      console.error("[v0] startCheckoutSession: Stack trace:", error.stack)
-    }
+    console.error("[v0] startCheckoutSession error:", error instanceof Error ? error.message : String(error))
     throw error
   }
 }

@@ -12,10 +12,6 @@ import { Alert, AlertDescription } from './ui/alert'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
-if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-  console.error("[v0] NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY není nastavena!")
-}
-
 interface StripeCheckoutProps {
   email: string
   name: string
@@ -33,21 +29,13 @@ export default function StripeCheckout({ email, name, onBack, onSuccess }: Strip
       try {
         setIsLoading(true)
         setError(null)
-        console.log("[v0] StripeCheckout: fetchClientSecret - START for", email)
-        
+        console.log("[v0] StripeCheckout: Fetching client secret for", email)
         const secret = await startCheckoutSession(email, name)
-        
-        if (!secret) {
-          console.error("[v0] StripeCheckout: startCheckoutSession vrátila empty secret")
-          throw new Error("Stripe session není dostupná")
-        }
-        
-        console.log("[v0] StripeCheckout: fetchClientSecret - SUCCESS, secret length:", secret.length)
+        console.log("[v0] StripeCheckout: Got client secret")
         return secret
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Neznámá chyba"
-        console.error("[v0] StripeCheckout: fetchClientSecret FAILED:", errorMessage)
-        console.error("[v0] StripeCheckout: Full error:", err)
+        console.error("[v0] StripeCheckout: Error:", errorMessage)
         setError(errorMessage)
         throw err
       } finally {

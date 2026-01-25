@@ -102,8 +102,10 @@ export async function POST(request: NextRequest) {
     console.log("[v0] Using price ID:", priceId)
 
     // Create checkout session with 7-day trial
+    // IMPORTANT: Include user_id in metadata AND client_reference_id for webhook to identify user
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
+      client_reference_id: user.id, // CRITICAL: This allows webhook to identify user
       payment_method_types: ["card"],
       line_items: [
         {
@@ -117,7 +119,7 @@ export async function POST(request: NextRequest) {
         metadata: {
           plan: "premium",
           user_id: user.id,
-          user_email: user.email,
+          user_email: user.email || "",
         },
       },
       success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -125,7 +127,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         plan: "premium",
         user_id: user.id,
-        user_email: user.email,
+        user_email: user.email || "",
       },
     })
 

@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     const activeSubscription = subscriptions.data[0]
     const isPremium = activeSubscription?.status === "active" || activeSubscription?.status === "trialing"
 
-    console.log("[v0] refresh-subscription: Active subscription:", activeSubscription?.id, "status:", activeSubscription?.status, "isPremium:", isPremium)
+    console.log("[v0] refresh-subscription: Active subscription:', activeSubscription?.id, 'status:', activeSubscription?.status, 'isPremium:', isPremium)
 
     // Update profile if needed
     if (isPremium !== profile.is_premium) {

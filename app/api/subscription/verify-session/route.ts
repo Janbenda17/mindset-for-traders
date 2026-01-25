@@ -1,87 +1,144 @@
 import { type NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { createServerClient } from "@/lib/supabase/server"
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * Verify Stripe checkout session and update Supabase profile.
+ * This acts as a FALLBACK in case webhooks are delayed.
+ * Updates are idempotent - safe to call multiple times.
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const sessionId = searchParams.get("session_id")
 
-    console.log("[v0] verify-session: sessionId:", sessionId)
+    console.log("[VERIFY] ========== START ==========")
+    console.log("[VERIFY] session_id:", sessionId)
 
     if (!sessionId) {
       return NextResponse.json({ error: "Session ID required" }, { status: 400 })
     }
 
-    // Get environment variables for Stripe
     const secretKey = process.env.STRIPE_SECRET_KEY
     if (!secretKey) {
-      console.error("[v0] verify-session: STRIPE_SECRET_KEY not configured")
+      console.error("[VERIFY] ERROR: STRIPE_SECRET_KEY not configured")
       return NextResponse.json({ error: "Stripe not configured" }, { status: 500 })
     }
 
-    const stripe = new Stripe(secretKey, {
-      apiVersion: "2024-06-20",
-    })
+    const stripe = new Stripe(secretKey, { apiVersion: "2024-12-18" })
 
-    // Get authenticated user from Supabase
-    const supabase = await createServerClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Get authenticated user
+    const supabaseAuth = await createServerClient()
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
 
     if (authError || !user) {
-      console.log("[v0] verify-session: Not authenticated")
+      console.log("[VERIFY] Not authenticated")
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
 
-    console.log("[v0] verify-session: user_id:", user.id)
+    console.log("[VERIFY] Authenticated user:", user.id)
 
-    // Retrieve the checkout session
-    const session = await stripe.checkout.sessions.retrieve(sessionId)
+    // Retrieve checkout session from Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['subscription']
+    })
 
     if (!session) {
-      console.error("[v0] verify-session: Session not found:", sessionId)
+      console.error("[VERIFY] ERROR: Session not found:", sessionId)
       return NextResponse.json({ error: "Session not found" }, { status: 404 })
     }
 
-    console.log("[v0] verify-session: payment_status:", session.payment_status, "customer:", session.customer)
+    console.log("[VERIFY] Session retrieved:")
+    console.log("[VERIFY]   payment_status:", session.payment_status)
+    console.log("[VERIFY]   customer:", session.customer)
+    console.log("[VERIFY]   subscription:", session.subscription)
+    console.log("[VERIFY]   mode:", session.mode)
+    console.log("[VERIFY]   metadata:", JSON.stringify(session.metadata))
 
-    // If payment was successful, update user subscription in database
-    if (session.payment_status === 'paid' || session.payment_status === 'no_payment_required') {
-      console.log("[v0] verify-session: Payment successful, updating profile")
-      
-      // Store customer ID so webhook can find the user later
-      const customerId = session.customer as string
-      
-      // Update profile with Stripe customer ID
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
+    const customerId = session.customer as string
+    const isPaymentSuccessful = session.payment_status === 'paid' || session.payment_status === 'no_payment_required'
+
+    // Use admin client to bypass RLS (same as webhook)
+    const supabaseAdmin = createAdminClient()
+
+    if (isPaymentSuccessful) {
+      console.log("[VERIFY] Payment successful - updating profile")
+
+      if (session.mode === 'subscription' && session.subscription) {
+        // Get full subscription details
+        const subscription = typeof session.subscription === 'string' 
+          ? await stripe.subscriptions.retrieve(session.subscription)
+          : session.subscription as Stripe.Subscription
+
+        console.log("[VERIFY] Subscription status:", subscription.status)
+        console.log("[VERIFY] Subscription current_period_end:", subscription.current_period_end)
+
+        const isPremium = subscription.status === 'active' || subscription.status === 'trialing'
+        const priceId = subscription.items.data[0]?.price?.id || null
+
+        const updateData = {
           stripe_customer_id: customerId,
-        })
-        .eq("user_id", user.id)
+          stripe_subscription_id: subscription.id,
+          subscription_status: subscription.status,
+          subscription_tier: isPremium ? "premium" : "free",
+          is_premium: isPremium,
+          subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          ...(priceId && { stripe_price_id: priceId }),
+        }
 
-      if (updateError) {
-        console.error("[v0] verify-session: Error storing customer_id:", updateError)
+        console.log("[VERIFY] Updating profile with:", JSON.stringify(updateData))
+
+        const { data, error: updateError } = await supabaseAdmin
+          .from("profiles")
+          .update(updateData)
+          .eq("user_id", user.id)
+          .select()
+
+        if (updateError) {
+          console.error("[VERIFY] ERROR updating profile:", updateError.message)
+        } else {
+          console.log("[VERIFY] Profile updated successfully:", JSON.stringify(data?.[0] || {}))
+        }
       } else {
-        console.log("[v0] verify-session: ✓ Stored customer_id:", customerId)
-        console.log("[v0] verify-session: Now webhook can match this customer to user")
+        // Non-subscription payment
+        const { data, error: updateError } = await supabaseAdmin
+          .from("profiles")
+          .update({
+            stripe_customer_id: customerId,
+            subscription_status: "active",
+            subscription_tier: "premium",
+            is_premium: true,
+          })
+          .eq("user_id", user.id)
+          .select()
+
+        if (updateError) {
+          console.error("[VERIFY] ERROR updating profile:", updateError.message)
+        } else {
+          console.log("[VERIFY] Profile updated (non-subscription):", JSON.stringify(data?.[0] || {}))
+        }
       }
+    } else {
+      console.log("[VERIFY] Payment not yet successful - status:", session.payment_status)
     }
 
+    console.log("[VERIFY] ========== DONE ==========")
+
     return NextResponse.json({
-      success: session.payment_status === 'paid' || session.payment_status === 'no_payment_required',
+      success: isPaymentSuccessful,
       session: {
         id: session.id,
         customer: session.customer,
-        subscription: session.subscription,
+        subscription: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
         payment_status: session.payment_status,
         customer_email: session.customer_details?.email,
       },
     })
   } catch (error) {
-    console.error("[v0] verify-session error:", error)
+    console.error("[VERIFY] ERROR:", error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: "Failed to verify session" }, { status: 500 })
   }
 }
