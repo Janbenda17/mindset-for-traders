@@ -6,7 +6,10 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 export async function POST(req: NextRequest) {
+  console.log("[v0] WEBHOOK: POST request received!")
   const sig = req.headers.get("stripe-signature")
+  console.log("[v0] WEBHOOK: stripe-signature header:", sig ? "✓ present" : "❌ missing")
+  
   if (!sig) {
     console.error("[v0] WEBHOOK ERROR: Missing stripe-signature header")
     return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 })
