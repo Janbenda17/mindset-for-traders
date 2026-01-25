@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
       case "invoice.payment_succeeded":
         const invoice = event.data.object as Stripe.Invoice
-        await handlePaymentSucceeded(invoice, stripe)
+        await handlePaymentSucceeded(invoice, supabase)
         break
 
       case "invoice.payment_failed":
@@ -298,22 +298,35 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supa
   }
 }
 
-async function handlePaymentSucceeded(invoice: Stripe.Invoice, stripe: any) {
-  console.log("💰 Payment succeeded:", invoice.id)
+async function handlePaymentSucceeded(invoice: Stripe.Invoice, supabase: any) {
+  console.log("[v0] 💰 Payment succeeded:", invoice.id)
 
   // Ensure subscription is active
   if (invoice.subscription) {
-    const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
-    await handleSubscriptionUpdated(subscription)
+    // Just log - subscription events will be handled by customer.subscription.updated webhook
+    console.log("[v0] Payment succeeded for subscription:", invoice.subscription)
   }
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice, supabase: any) {
-  console.log("❌ Payment failed:", invoice.id)
+  console.log("[v0] ❌ Payment failed:", invoice.id)
 
   const customerId = invoice.customer as string
 
-  // Mark subscription as having payment issues
-  // Don't immediately downgrade - Stripe will retry
-  console.warn("Payment failed for customer:", customerId)
+  try {
+    // Find user by stripe_customer_id
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("stripe_customer_id", customerId)
+      .maybeSingle()
+
+    if (profile) {
+      // Mark subscription as past_due - don't immediately downgrade
+      // Stripe will retry payment and send subscription.updated event
+      console.log("[v0] Payment failed for user:", profile.user_id, "- Stripe will handle retries")
+    }
+  } catch (error) {
+    console.error("[v0] Error in handlePaymentFailed:", error)
+  }
 }
