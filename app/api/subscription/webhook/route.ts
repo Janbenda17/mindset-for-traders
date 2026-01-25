@@ -6,10 +6,7 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 export async function POST(req: NextRequest) {
-  console.log("[v0] WEBHOOK: POST request received!")
   const sig = req.headers.get("stripe-signature")
-  console.log("[v0] WEBHOOK: stripe-signature header:", sig ? "✓ present" : "❌ missing")
-  
   if (!sig) {
     console.error("[v0] WEBHOOK ERROR: Missing stripe-signature header")
     return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 })
@@ -42,7 +39,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
   }
 
-  // Handle events
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -51,63 +47,78 @@ export async function POST(req: NextRequest) {
   try {
     switch (event.type) {
       case "checkout.session.completed":
-        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session, supabase)
+        const session = event.data.object as Stripe.Checkout.Session
+        await handleCheckoutCompleted(session, supabase)
         break
+
       case "customer.subscription.created":
-        await handleSubscriptionCreated(event.data.object as Stripe.Subscription, supabase)
+        const created = event.data.object as Stripe.Subscription
+        await handleSubscriptionCreated(created, supabase)
         break
+
       case "customer.subscription.updated":
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription, supabase)
+        const updated = event.data.object as Stripe.Subscription
+        await handleSubscriptionUpdated(updated, supabase)
         break
+
       case "customer.subscription.deleted":
-        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription, supabase)
+        const deleted = event.data.object as Stripe.Subscription
+        await handleSubscriptionDeleted(deleted, supabase)
         break
+
       case "invoice.payment_succeeded":
-        console.log("[v0] WEBHOOK: Payment succeeded for invoice", (event.data.object as Stripe.Invoice).id)
+        const invoice = event.data.object as Stripe.Invoice
+        await handleInvoicePaymentSucceeded(invoice, supabase)
         break
+
       case "invoice.payment_failed":
-        console.log("[v0] WEBHOOK: Payment failed for invoice", (event.data.object as Stripe.Invoice).id)
+        const failedInvoice = event.data.object as Stripe.Invoice
+        await handleInvoicePaymentFailed(failedInvoice, supabase)
         break
+
       default:
         console.log("[v0] WEBHOOK: Unhandled event type -", event.type)
     }
 
+    // Always return 200 OK for idempotence
     return NextResponse.json({ received: true }, { status: 200 })
   } catch (error) {
     console.error("[v0] WEBHOOK ERROR: Processing failed -", error instanceof Error ? error.message : String(error))
-    return NextResponse.json({ error: "Error processing webhook" }, { status: 500 })
+    // Still return 200 to prevent Stripe from retrying
+    return NextResponse.json({ received: true }, { status: 200 })
   }
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabase: any) {
-  console.log("[v0] WEBHOOK: checkout.session.completed - sessionId:", session.id)
+  console.log("[v0] WEBHOOK: checkout.session.completed - session:", session.id, "customer:", session.customer)
 
   const userId = session.metadata?.user_id
-  const userEmail = session.customer_details?.email
+  const customerId = session.customer as string
 
-  if (!userId) {
-    console.error("[v0] WEBHOOK: No user_id in metadata for session", session.id, "- Email:", userEmail)
+  if (!userId || !customerId) {
+    console.error("[v0] WEBHOOK ERROR: Missing user_id or customer in checkout session")
     return
   }
 
-  console.log("[v0] WEBHOOK: Updating profile for user:", userId, "with customer:", session.customer)
-
-  const { error } = await supabase
+  // Store customer ID if this is first checkout
+  const { error: customerError } = await supabase
     .from("profiles")
-    .update({
-      stripe_customer_id: session.customer as string,
-    })
+    .update({ stripe_customer_id: customerId })
     .eq("user_id", userId)
 
-  if (error) {
-    console.error("[v0] WEBHOOK ERROR: Failed to update customer_id:", error)
-  } else {
-    console.log("[v0] WEBHOOK: ✓ Stored stripe_customer_id for user:", userId)
+  if (customerError) {
+    console.error("[v0] WEBHOOK ERROR: Failed to store customer ID:", customerError)
+    return
   }
+
+  console.log("[v0] WEBHOOK: ✓ Stored customer_id for user:", userId)
+
+  // If subscription was created in this checkout, customer.subscription.created will also fire
+  // So we just store the customer ID here and let subscription events handle activation
 }
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription, supabase: any) {
-  console.log("[v0] WEBHOOK: customer.subscription.created - subscriptionId:", subscription.id, "status:", subscription.status)
+  console.log("[v0] WEBHOOK: customer.subscription.created - subscription:", subscription.id, "status:", subscription.status)
 
   const customerId = subscription.customer as string
 
@@ -124,30 +135,32 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, supa
   }
 
   const userId = profile.user_id
-  const status = subscription.status === "trialing" ? "trialing" : subscription.status === "active" ? "active" : "pending"
 
-  console.log("[v0] WEBHOOK: Activating subscription for user:", userId, "status:", status)
+  // Map Stripe status to our status - activate if active or trialing
+  const isActive = subscription.status === "active" || subscription.status === "trialing"
+  const subscriptionStatus = isActive ? "active" : "pending"
 
-  const { error } = await supabase
+  console.log("[v0] WEBHOOK: Activating premium for user:", userId, "subscription:", subscription.id, "status:", subscriptionStatus)
+
+  const { error: updateError } = await supabase
     .from("profiles")
     .update({
       stripe_subscription_id: subscription.id,
-      subscription_status: status,
-      subscription_tier: status === "active" || status === "trialing" ? "premium" : "free",
+      subscription_status: subscriptionStatus,
+      subscription_tier: isActive ? "premium" : "free",
       subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      trial_ends_at: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
     })
     .eq("user_id", userId)
 
-  if (error) {
-    console.error("[v0] WEBHOOK ERROR: Failed to update subscription:", error)
+  if (updateError) {
+    console.error("[v0] WEBHOOK ERROR: Failed to activate premium:", updateError)
   } else {
-    console.log("[v0] WEBHOOK: ✓ Subscription created for user:", userId, "status:", status)
+    console.log("[v0] WEBHOOK: ✓ Premium activated for user:", userId)
   }
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription, supabase: any) {
-  console.log("[v0] WEBHOOK: customer.subscription.updated - subscriptionId:", subscription.id, "status:", subscription.status)
+  console.log("[v0] WEBHOOK: customer.subscription.updated - subscription:", subscription.id, "status:", subscription.status)
 
   const customerId = subscription.customer as string
 
@@ -165,46 +178,40 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, supa
   const userId = profile.user_id
 
   // Map Stripe status to app status
-  let appStatus: string
-  let tier: string
+  let isPremium = false
+  let subscriptionStatus = "inactive"
 
-  if (subscription.status === "active") {
-    appStatus = "active"
-    tier = "premium"
-  } else if (subscription.status === "trialing") {
-    appStatus = "trialing"
-    tier = "premium"
+  if (subscription.status === "active" || subscription.status === "trialing") {
+    isPremium = true
+    subscriptionStatus = "active"
   } else if (subscription.status === "past_due") {
-    appStatus = "past_due"
-    tier = "premium"
-  } else if (subscription.status === "canceled") {
-    appStatus = "canceled"
-    tier = "free"
-  } else {
-    appStatus = subscription.status
-    tier = "free"
+    isPremium = false
+    subscriptionStatus = "past_due"
+  } else if (subscription.status === "canceled" || subscription.status === "unpaid" || subscription.status === "incomplete_expired") {
+    isPremium = false
+    subscriptionStatus = "canceled"
   }
 
-  console.log("[v0] WEBHOOK: Updating subscription for user:", userId, "appStatus:", appStatus, "tier:", tier)
+  console.log("[v0] WEBHOOK: Updating subscription for user:", userId, "isPremium:", isPremium, "status:", subscriptionStatus)
 
-  const { error } = await supabase
+  const { error: updateError } = await supabase
     .from("profiles")
     .update({
-      subscription_status: appStatus,
-      subscription_tier: tier,
+      subscription_status: subscriptionStatus,
+      subscription_tier: isPremium ? "premium" : "free",
       subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
     })
     .eq("user_id", userId)
 
-  if (error) {
-    console.error("[v0] WEBHOOK ERROR: Failed to update subscription:", error)
+  if (updateError) {
+    console.error("[v0] WEBHOOK ERROR: Failed to update subscription:", updateError)
   } else {
-    console.log("[v0] WEBHOOK: ✓ Subscription updated for user:", userId, "status:", appStatus)
+    console.log("[v0] WEBHOOK: ✓ Subscription updated for user:", userId, "isPremium:", isPremium)
   }
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supabase: any) {
-  console.log("[v0] WEBHOOK: customer.subscription.deleted - subscriptionId:", subscription.id)
+  console.log("[v0] WEBHOOK: customer.subscription.deleted - subscription:", subscription.id)
 
   const customerId = subscription.customer as string
 
@@ -222,7 +229,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supa
   const userId = profile.user_id
   console.log("[v0] WEBHOOK: Downgrading user to free:", userId)
 
-  const { error } = await supabase
+  const { error: updateError } = await supabase
     .from("profiles")
     .update({
       subscription_status: "canceled",
@@ -232,17 +239,91 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supa
     })
     .eq("user_id", userId)
 
-  if (error) {
-    console.error("[v0] WEBHOOK ERROR: Failed to downgrade subscription:", error)
+  if (updateError) {
+    console.error("[v0] WEBHOOK ERROR: Failed to downgrade subscription:", updateError)
   } else {
     console.log("[v0] WEBHOOK: ✓ User downgraded to free:", userId)
   }
 }
 
-async function handlePaymentSucceeded(invoice: Stripe.Invoice, supabase: any) {
-  console.log("[v0] WEBHOOK: invoice.payment_succeeded - invoiceId:", invoice.id)
+async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice, supabase: any) {
+  console.log("[v0] WEBHOOK: invoice.payment_succeeded - invoice:", invoice.id, "subscription:", invoice.subscription)
+
+  if (!invoice.subscription) {
+    console.log("[v0] WEBHOOK: Payment succeeded but no subscription attached, skipping")
+    return
+  }
+
+  const customerId = invoice.customer as string
+
+  // Find user by customer ID
+  const { data: profile, error: lookupError } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle()
+
+  if (lookupError || !profile) {
+    console.error("[v0] WEBHOOK ERROR: Could not find user for customer:", customerId)
+    return
+  }
+
+  const userId = profile.user_id
+  console.log("[v0] WEBHOOK: Payment succeeded for user:", userId, "keeping premium status")
+
+  // Ensure user stays premium after payment
+  const { error: updateError } = await supabase
+    .from("profiles")
+    .update({
+      subscription_status: "active",
+      subscription_tier: "premium",
+    })
+    .eq("user_id", userId)
+
+  if (updateError) {
+    console.error("[v0] WEBHOOK ERROR: Failed to update after payment:", updateError)
+  } else {
+    console.log("[v0] WEBHOOK: ✓ Premium status confirmed for user:", userId)
+  }
 }
 
-async function handlePaymentFailed(invoice: Stripe.Invoice, supabase: any) {
-  console.log("[v0] WEBHOOK: invoice.payment_failed - invoiceId:", invoice.id)
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice, supabase: any) {
+  console.log("[v0] WEBHOOK: invoice.payment_failed - invoice:", invoice.id, "subscription:", invoice.subscription)
+
+  if (!invoice.subscription) {
+    console.log("[v0] WEBHOOK: Payment failed but no subscription attached, skipping")
+    return
+  }
+
+  const customerId = invoice.customer as string
+
+  // Find user by customer ID
+  const { data: profile, error: lookupError } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle()
+
+  if (lookupError || !profile) {
+    console.error("[v0] WEBHOOK ERROR: Could not find user for customer:", customerId)
+    return
+  }
+
+  const userId = profile.user_id
+  console.log("[v0] WEBHOOK: Payment failed for user:", userId, "setting past_due")
+
+  // Mark as past due - Stripe will retry, subscription.updated will handle further status
+  const { error: updateError } = await supabase
+    .from("profiles")
+    .update({
+      subscription_status: "past_due",
+      subscription_tier: "free", // No premium access until payment succeeds
+    })
+    .eq("user_id", userId)
+
+  if (updateError) {
+    console.error("[v0] WEBHOOK ERROR: Failed to update after payment failure:", updateError)
+  } else {
+    console.log("[v0] WEBHOOK: ✓ User marked as past_due:", userId)
+  }
 }
