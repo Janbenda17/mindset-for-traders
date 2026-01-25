@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      console.log("[v0] Subscription check - not authenticated")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -22,7 +23,10 @@ export async function GET(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle()
 
+    console.log("[v0] Subscription check for user:", user.id, "profile:", profile)
+
     if (error || !profile) {
+      console.log("[v0] Profile not found - returning free tier")
       return NextResponse.json({
         isPremium: false,
         tier: "free",
@@ -31,23 +35,37 @@ export async function GET(request: NextRequest) {
         trialEndsAt: null,
         subscriptionId: null,
         customerId: null,
+        status: "inactive",
       })
     }
 
-    const isActive = profile?.subscription_status === "premium" || profile?.subscription_status === "pro"
+    // Check if subscription is ACTIVE (premium or trialing)
+    // Zdroj pravdy je subscription_status v databázi!
+    const isActive = profile?.subscription_status === "active" || profile?.subscription_status === "trialing"
+    const isPremium = isActive
 
     const tier = profile?.subscription_tier || "free"
-    const isPremium = isActive && tier !== "free"
+
+    console.log(
+      "[v0] Subscription status:",
+      {
+        user_id: user.id,
+        status: profile?.subscription_status,
+        tier: profile?.subscription_tier,
+        isPremium,
+        isActive,
+      },
+    )
 
     return NextResponse.json({
-      isPremium,
-      tier,
+      isPremium,  // TRUE = user has premium
+      tier,       // "premium", "trialing", or "free"
       plan: isPremium ? "premium" : "free",
       isActive,
       trialEndsAt: null,
       subscriptionId: null,
       customerId: profile?.stripe_customer_id,
-      status: profile?.subscription_status,
+      status: profile?.subscription_status,  // "active", "trialing", "canceled", etc.
       cancelAtPeriodEnd: false,
     })
   } catch (error: any) {

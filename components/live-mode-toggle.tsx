@@ -32,20 +32,23 @@ const LiveModeToggle = () => {
 
   const handleModeSwitch = () => {
     if (!isLiveMode) {
-      // Čekej na načtení stavu předplatného
+      // Pokud se ještě načítá subscription status, čekáme
       if (isPremiumLoading) {
         toast({
-          title: "Načítám data",
-          description: "Čekej prosím na načtení tvého předplatného...",
+          title: "Načítám tvůj subscription",
+          description: "Prosím čekej na ověření tvého předplatného...",
         })
         return
       }
 
-      // Jenom když SKUTEČNĚ víme, že user NENÍ premium
+      // Když VÍME, že uživatel NENÍ premium, přesměruj na pricing
       if (!isPremium) {
+        console.log("[v0] User not premium - redirecting to pricing")
         router.push("/pricing")
         return
       }
+      
+      console.log("[v0] User is premium - allowing live mode switch")
       
       // Check if user has data worth migrating
       if (user && offerMigration(user.id)) {

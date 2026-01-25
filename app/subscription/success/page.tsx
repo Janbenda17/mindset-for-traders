@@ -5,12 +5,12 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, Crown, ArrowRight, Loader2 } from "lucide-react"
-import { useSubscription } from "@/contexts/subscription-context"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function SubscriptionSuccessPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { checkSubscriptionStatus } = useSubscription()
+  const { user } = useAuth()
   const [isVerifying, setIsVerifying] = useState(true)
   const [verificationSuccess, setVerificationSuccess] = useState(false)
 
@@ -26,16 +26,21 @@ export default function SubscriptionSuccessPage() {
 
   const verifySession = async (sessionId: string) => {
     try {
+      console.log("[v0] Verifying session:", sessionId)
       const response = await fetch(`/api/subscription/verify-session?session_id=${sessionId}`)
       const data = await response.json()
 
+      console.log("[v0] Verification response:", data)
+
       if (data.success) {
         setVerificationSuccess(true)
-        // Refresh subscription status
-        await checkSubscriptionStatus()
+        // Wait a moment for DB to be updated
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+        // The user's subscription data will be refreshed automatically
+        // when the useSubscription hook re-checks on the dashboard
       }
     } catch (error) {
-      console.error("Error verifying session:", error)
+      console.error("[v0] Error verifying session:", error)
     } finally {
       setIsVerifying(false)
     }

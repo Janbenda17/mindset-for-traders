@@ -246,16 +246,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const needsOnboarding = !profileData?.onboarding_completed
 
+        // Wait a moment more for React state to update
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        
         if (needsOnboarding) {
           console.log("[v0] User potřebuje onboarding - redirect na /onboarding")
-          window.location.href = "/onboarding"
+          router.push("/onboarding")
         } else {
           console.log("[v0] User má hotový onboarding - redirect na /")
-          window.location.href = "/"
+          router.push("/")
         }
       } else {
-        console.log("[v0] ⚠️ Session chybí ale redirect stejně")
-        window.location.href = "/"
+        console.log("[v0] ⚠️ Session chybí - přesto redirect na /")
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        router.push("/")
       }
 
       return true

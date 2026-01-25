@@ -1,23 +1,67 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Check, Star, Crown, Loader2, ArrowRight, TrendingUp, Brain, Target } from "lucide-react"
-import { useSubscription } from "@/contexts/subscription-context"
+import { useSubscription } from "@/hooks/use-subscription"
+import { useAuth } from "@/contexts/auth-context"
 import { cn } from "@/lib/utils"
 
 export function PricingPage() {
-  const { plan, isActive, daysRemaining } = useSubscription()
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  const { user } = useAuth()
+  const { isPremium, isLoading } = useSubscription()
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
+  const [isLoadingCheckout, setIsLoadingCheckout] = useState(false)
+  const plan = "free" // Declare plan variable
+  const isActive = false // Declare isActive variable
+  const daysRemaining = 0 // Declare daysRemaining variable
+
+  // If user is premium, redirect to dashboard
+  if (!isLoading && isPremium) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+        <Card className="max-w-md w-full mx-4">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Crown className="w-5 h-5 text-yellow-500" />
+              Máš Premium
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-muted-foreground mb-6">
+              Jsi již přihlášen k našemu Premium plánu. Přejeď do Live Mode pro přístup k pokročilým funkcím.
+            </p>
+            <Button onClick={() => router.push("/")} className="w-full">
+              Zpět na Dashboard
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const handleUpgrade = () => {
-    setIsLoading(true)
-    // Open in new window instead of redirect
-    window.open("https://buy.stripe.com/3cI8wQ6U01QIfee8jy1B601", "_blank")
-    setIsLoading(false)
+    if (!user) {
+      router.push("/auth/sign-up")
+      return
+    }
+
+    setIsLoadingCheckout(true)
+    try {
+      console.log("[v0] Opening Stripe payment link in new window")
+      const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/3cI8wQ6U01QIfee8jy1B601"
+      window.open(STRIPE_PAYMENT_LINK, "_blank")
+    } catch (error) {
+      console.error("[v0] Error:", error)
+      alert("Chyba: " + (error instanceof Error ? error.message : "Neznámá chyba"))
+    } finally {
+      setIsLoadingCheckout(false)
+    }
   }
 
   const features = {
@@ -208,12 +252,12 @@ export function PricingPage() {
               <Button
                 className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
                 onClick={handleUpgrade}
-                disabled={isActive || isLoading}
+                disabled={isActive || isLoadingCheckout}
               >
-                {isLoading ? (
+                {isLoadingCheckout ? (
                   <>
                     <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Zpracování...
+                    Přesměrování na platbu...
                   </>
                 ) : isActive ? (
                   "Váš plán je aktivní"

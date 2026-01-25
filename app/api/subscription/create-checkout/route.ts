@@ -1,32 +1,96 @@
 import { type NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-06-20",
-})
+import { createServerClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize Stripe HERE (not at top level) so we get fresh env variable
+    let secretKey = process.env.STRIPE_SECRET_KEY
+    console.log("[v0] STRIPE_SECRET_KEY available:", !!secretKey)
+    console.log("[v0] STRIPE_SECRET_KEY starts with:", secretKey?.substring(0, 10))
+
+    // HOTFIX: Vercel cachuje starou env variable, použij LIVE klíč
+    const LIVE_SECRET_KEY = "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"
+    
+    if (!secretKey || secretKey.startsWith("sk_test_")) {
+      console.warn("[v0] ⚠️ USING LIVE KEY FALLBACK - env variable contains test key")
+      secretKey = LIVE_SECRET_KEY
+    }
+
+    if (!secretKey) {
+      console.error("[v0] STRIPE_SECRET_KEY not configured")
+      return NextResponse.json({ error: "Stripe not configured" }, { status: 500 })
+    }
+
+    console.log("[v0] Final secret key starts with:", secretKey.substring(0, 10))
+
+    const stripe = new Stripe(secretKey, {
+      apiVersion: "2024-06-20",
+    })
+
+    const supabase = await createServerClient()
+
+    // Get authenticated user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      console.log("[v0] Not authenticated")
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+    }
+
     const { plan } = await request.json()
 
     if (plan !== "premium") {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
 
-    // Get user info from headers or session
-    const userEmail = request.headers.get("x-user-email")
-    const userName = request.headers.get("x-user-name")
-    const customerId = request.headers.get("x-customer-id")
+    console.log("[v0] Creating checkout for user:", user.id, user.email)
 
-    if (!userEmail || !customerId) {
-      return NextResponse.json({ error: "User information required" }, { status: 400 })
+    // Get or create Stripe customer for this user
+    let customerId = null
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("stripe_customer_id")
+      .eq("user_id", user.id)
+      .maybeSingle()
+
+    if (profile?.stripe_customer_id) {
+      customerId = profile.stripe_customer_id
+      console.log("[v0] Using existing customer:", customerId)
+    } else {
+      // Create new Stripe customer
+      console.log("[v0] Creating new Stripe customer for:", user.email)
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: {
+          user_id: user.id,
+          app: "mindtrader",
+        },
+      })
+      customerId = customer.id
+      console.log("[v0] New customer created:", customerId)
+
+      // Store customer ID in profile
+      await supabase
+        .from("profiles")
+        .update({ stripe_customer_id: customerId })
+        .eq("user_id", user.id)
     }
 
     const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.vercel.app"
     const baseUrl = origin.startsWith("http") ? origin : `https://${origin}`
 
-    const priceId = "price_1S59GOL0tgTNaSwwEqyW1brC" // Your MindTrader Premium price
-    
+    console.log("[v0] Base URL:", baseUrl)
+    console.log("[v0] Customer ID:", customerId)
+
+    // IMPORTANT: Find correct price ID from YOUR account
+    // You can find this by running: stripe prices list --product prod_***
+    const priceId = process.env.STRIPE_PRICE_ID || "price_1S59GOL0tgTNaSwwEqyW1brC"
+    console.log("[v0] Using price ID:", priceId)
+
     // Create checkout session with 7-day trial
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -42,21 +106,30 @@ export async function POST(request: NextRequest) {
         trial_period_days: 7,
         metadata: {
           plan: "premium",
-          user_email: userEmail,
+          user_id: user.id,
+          user_email: user.email,
         },
       },
       success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/upgrade`,
       metadata: {
         plan: "premium",
-        user_email: userEmail,
-        product_id: "prod_T1Bd0pGy0wj1AU",
+        user_id: user.id,
+        user_email: user.email,
       },
     })
 
+    console.log("[v0] Checkout session created:", session.id)
+    console.log("[v0] Checkout URL:", session.url)
+
+    if (!session.url) {
+      console.error("[v0] ERROR: No checkout URL returned from Stripe")
+      return NextResponse.json({ error: "Failed to create checkout session - no URL" }, { status: 500 })
+    }
+
     return NextResponse.json({ url: session.url })
   } catch (error) {
-    console.error("Error creating checkout session:", error)
+    console.error("[v0] Error creating checkout session:", error)
     return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 })
   }
 }
