@@ -79,7 +79,13 @@ export function PricingPage() {
       
       if (url) {
         console.log("[v0] Redirecting to Stripe checkout...")
-        window.location.href = url
+        // Use window.open instead of window.location.href to avoid Vercel blocking
+        const newWindow = window.open(url, "_blank")
+        if (!newWindow) {
+          // Fallback if popup is blocked
+          console.warn("[v0] Popup blocked, trying direct navigation...")
+          window.location.href = url
+        }
       } else {
         console.error("[v0] No URL in response:", data)
         alert("Chyba: Checkout URL nebyla vrácena")
