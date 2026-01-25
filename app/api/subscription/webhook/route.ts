@@ -165,6 +165,57 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, supa
   console.log("[v0] WEBHOOK:   Lookup result - profile:", profile ? "FOUND" : "NOT FOUND", "error:", lookupError ? "YES" : "NO")
 
   if (lookupError) {
+    console.error("[v0] WEBHOOK ERROR: Supabase error looking up customer:", lookupError)
+    return
+  }
+
+  if (!profile) {
+    console.error("[v0] WEBHOOK ERROR: No profile found for customer:", customerId)
+    console.log("[v0] WEBHOOK: Customer probably just created - subscription event will be handled by invoice.paid")
+    return
+  }
+
+  const userId = profile.user_id
+  const isPremium = subscription.status === "active" || subscription.status === "trialing"
+
+  console.log("[v0] WEBHOOK:   Found user_id:", userId)
+  console.log("[v0] WEBHOOK:   isPremium:", isPremium, "subscription.status:", subscription.status)
+  console.log("[v0] WEBHOOK:   Updating profile...")
+
+  const { data: updateData, error: updateError } = await supabase
+    .from("profiles")
+    .update({
+      stripe_subscription_id: subscription.id,
+      subscription_status: subscription.status,
+      subscription_tier: isPremium ? "premium" : "free",
+      subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    })
+    .eq("user_id", userId)
+    .select()
+
+  if (updateError) {
+    console.error("[v0] WEBHOOK ERROR: Failed to update subscription:")
+    console.error("[v0]   Code:", updateError.code)
+    console.error("[v0]   Message:", updateError.message)
+  } else {
+    console.log("[v0] WEBHOOK: ✓ Subscription created!")
+    console.log("[v0] WEBHOOK:   subscription_tier:", updateData?.[0]?.subscription_tier)
+    console.log("[v0] WEBHOOK:   subscription_status:", updateData?.[0]?.subscription_status)
+  }
+}
+
+  console.log("[v0] WEBHOOK:   Looking up profile with customer_id:", customerId)
+
+  // Find user by stripe_customer_id
+  const { data: profile, error: lookupError } = await supabase
+    .from("profiles")
+    .select("user_id, stripe_customer_id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle()
+
+  console.log("[v0] WEBHOOK:   Lookup result - profile:", profile ? "FOUND" : "NOT FOUND", "error:", lookupError ? "YES" : "NO")
+
+  if (lookupError) {
     console.error("[v0] WEBHOOK ERROR: Supabase error looking up customer:")
     console.error("[v0]   Code:", lookupError.code)
     console.error("[v0]   Message:", lookupError.message)
@@ -297,7 +348,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, supa
 }
 
 async function handleInvoicePaid(invoice: Stripe.Invoice, supabase: any) {
-  console.log("[v0] WEBHOOK: invoice.paid - invoice:", invoice.id, "subscription:", invoice.subscription)
+  console.log("[v0] WEBHOOK: >> handleInvoicePaid START")
+  console.log("[v0] WEBHOOK:   invoice.id:", invoice.id)
+  console.log("[v0] WEBHOOK:   invoice.subscription:", invoice.subscription)
+  console.log("[v0] WEBHOOK:   invoice.customer:", invoice.customer)
+  console.log("[v0] WEBHOOK:   invoice.status:", invoice.status)
 
   if (!invoice.subscription) {
     console.log("[v0] WEBHOOK: No subscription attached, skipping")
@@ -306,34 +361,52 @@ async function handleInvoicePaid(invoice: Stripe.Invoice, supabase: any) {
 
   const customerId = invoice.customer as string
 
+  if (!customerId) {
+    console.error("[v0] WEBHOOK ERROR: No customer ID in invoice")
+    return
+  }
+
+  console.log("[v0] WEBHOOK:   Looking up profile with customer_id:", customerId)
+
   // Find user by customer ID
   const { data: profile, error: lookupError } = await supabase
     .from("profiles")
-    .select("user_id")
+    .select("user_id, stripe_customer_id")
     .eq("stripe_customer_id", customerId)
     .maybeSingle()
 
-  if (lookupError || !profile) {
-    console.error("[v0] WEBHOOK ERROR: Could not find user for customer:", customerId)
+  if (lookupError) {
+    console.error("[v0] WEBHOOK ERROR: Supabase error:", lookupError)
+    return
+  }
+
+  if (!profile) {
+    console.error("[v0] WEBHOOK ERROR: Could not find profile for customer:", customerId)
     return
   }
 
   const userId = profile.user_id
-  console.log("[v0] WEBHOOK: Payment received for user:", userId)
+  console.log("[v0] WEBHOOK:   Found user_id:", userId)
+  console.log("[v0] WEBHOOK:   Setting subscription_status=active, subscription_tier=premium")
 
   // Activate premium on successful payment
-  const { error: updateError } = await supabase
+  const { data: updateData, error: updateError } = await supabase
     .from("profiles")
     .update({
       subscription_status: "active",
       subscription_tier: "premium",
     })
     .eq("user_id", userId)
+    .select()
 
   if (updateError) {
-    console.error("[v0] WEBHOOK ERROR: Failed to update after payment:", updateError)
+    console.error("[v0] WEBHOOK ERROR: Failed to update after payment:")
+    console.error("[v0]   Code:", updateError.code)
+    console.error("[v0]   Message:", updateError.message)
   } else {
-    console.log("[v0] WEBHOOK: Premium activated for user:", userId)
+    console.log("[v0] WEBHOOK: ✓ Premium activated!")
+    console.log("[v0] WEBHOOK:   subscription_tier:", updateData?.[0]?.subscription_tier)
+    console.log("[v0] WEBHOOK:   subscription_status:", updateData?.[0]?.subscription_status)
   }
 }
 
