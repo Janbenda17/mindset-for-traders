@@ -10,6 +10,8 @@ export async function POST(req: NextRequest) {
   const body = await req.text()
   const signature = req.headers.get("stripe-signature")
 
+  console.log("[v0] WEBHOOK: Request received -", signature ? "has signature" : "NO SIGNATURE")
+
   if (!signature) {
     console.error("[v0] WEBHOOK ERROR: Missing stripe-signature header")
     return new Response("Missing stripe-signature", { status: 400 })
@@ -18,10 +20,23 @@ export async function POST(req: NextRequest) {
   // Get environment variables
   const secretKey = process.env.STRIPE_SECRET_KEY
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  console.log("[v0] WEBHOOK: Env vars check:")
+  console.log("[v0]   STRIPE_SECRET_KEY:", secretKey ? "✓" : "✗")
+  console.log("[v0]   STRIPE_WEBHOOK_SECRET:", webhookSecret ? "✓" : "✗")
+  console.log("[v0]   NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "✓" : "✗")
+  console.log("[v0]   SUPABASE_SERVICE_ROLE_KEY:", supabaseKey ? "✓" : "✗")
 
   if (!secretKey || !webhookSecret) {
     console.error("[v0] WEBHOOK ERROR: Stripe credentials not configured")
     return new Response("Stripe not configured", { status: 500 })
+  }
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error("[v0] WEBHOOK ERROR: Supabase credentials not configured")
+    return new Response("Supabase not configured", { status: 500 })
   }
 
   // Initialize Stripe
@@ -33,17 +48,14 @@ export async function POST(req: NextRequest) {
   let event: Stripe.Event
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
-    console.log("[v0] WEBHOOK: Event verified -", event.type, "id:", event.id)
+    console.log("[v0] WEBHOOK: ✓ Event verified -", event.type, "id:", event.id)
   } catch (err: any) {
     console.error("[v0] WEBHOOK ERROR: Signature verification failed -", err?.message)
     return new Response("Invalid signature", { status: 400 })
   }
 
   // Initialize Supabase admin client
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const supabase = createClient(supabaseUrl, supabaseKey)
 
   // Process the event
   try {
@@ -82,10 +94,14 @@ export async function POST(req: NextRequest) {
         console.log("[v0] WEBHOOK: Unhandled event type -", event.type)
     }
 
+    console.log("[v0] WEBHOOK: ✓ Event processed successfully")
     // Always return 200 to acknowledge receipt
     return new Response("received", { status: 200 })
   } catch (error) {
     console.error("[v0] WEBHOOK ERROR: Processing failed -", error instanceof Error ? error.message : String(error))
+    if (error instanceof Error) {
+      console.error("[v0] WEBHOOK ERROR: Stack -", error.stack)
+    }
     // Still return 200 to prevent Stripe from retrying
     return new Response("received", { status: 200 })
   }
@@ -125,9 +141,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 }
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription, supabase: any) {
-  console.log("[v0] WEBHOOK: customer.subscription.created - subscription:", subscription.id, "status:", subscription.status)
-  console.log("[v0] WEBHOOK: subscription.customer:", subscription.customer)
-  console.log("[v0] WEBHOOK: subscription.metadata:", subscription.metadata)
+  console.log("[v0] WEBHOOK: >> handleSubscriptionCreated START")
+  console.log("[v0] WEBHOOK:   subscription.id:", subscription.id)
+  console.log("[v0] WEBHOOK:   subscription.status:", subscription.status)
+  console.log("[v0] WEBHOOK:   subscription.customer:", subscription.customer)
 
   const customerId = subscription.customer as string
 
@@ -136,6 +153,8 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, supa
     return
   }
 
+  console.log("[v0] WEBHOOK:   Looking up profile with customer_id:", customerId)
+
   // Find user by stripe_customer_id
   const { data: profile, error: lookupError } = await supabase
     .from("profiles")
@@ -143,22 +162,29 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, supa
     .eq("stripe_customer_id", customerId)
     .maybeSingle()
 
+  console.log("[v0] WEBHOOK:   Lookup result - profile:", profile ? "FOUND" : "NOT FOUND", "error:", lookupError ? "YES" : "NO")
+
   if (lookupError) {
-    console.error("[v0] WEBHOOK ERROR: Supabase error looking up customer:", lookupError)
+    console.error("[v0] WEBHOOK ERROR: Supabase error looking up customer:")
+    console.error("[v0]   Code:", lookupError.code)
+    console.error("[v0]   Message:", lookupError.message)
+    console.error("[v0]   Details:", lookupError.details)
     return
   }
 
   if (!profile) {
-    console.error("[v0] WEBHOOK ERROR: Could not find profile for customer:", customerId, "- checking if customer exists in stripe...")
+    console.error("[v0] WEBHOOK ERROR: No profile found for customer:", customerId)
+    console.log("[v0] WEBHOOK: This means customer_id was NOT stored before webhook fired!")
+    console.log("[v0] WEBHOOK: Customer probably just got created in checkout, need to wait for subscription metadata")
     return
   }
 
   const userId = profile.user_id
-
-  // Activate premium if subscription is active or trialing
   const isPremium = subscription.status === "active" || subscription.status === "trialing"
 
-  console.log("[v0] WEBHOOK: Creating subscription for user:", userId, "premium:", isPremium, "subscription_status:", subscription.status)
+  console.log("[v0] WEBHOOK:   Found user_id:", userId)
+  console.log("[v0] WEBHOOK:   isPremium:", isPremium)
+  console.log("[v0] WEBHOOK:   Updating profile...")
 
   const { data: updateData, error: updateError } = await supabase
     .from("profiles")
@@ -172,9 +198,14 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, supa
     .select()
 
   if (updateError) {
-    console.error("[v0] WEBHOOK ERROR: Failed to create subscription:", updateError)
+    console.error("[v0] WEBHOOK ERROR: Failed to update subscription:")
+    console.error("[v0]   Code:", updateError.code)
+    console.error("[v0]   Message:", updateError.message)
+    console.error("[v0]   Details:", updateError.details)
   } else {
-    console.log("[v0] WEBHOOK: ✓ Subscription created for user:", userId, "premium:", isPremium, "updated data:", updateData)
+    console.log("[v0] WEBHOOK: ✓ Subscription updated!")
+    console.log("[v0] WEBHOOK:   subscription_tier:", updateData?.[0]?.subscription_tier)
+    console.log("[v0] WEBHOOK:   subscription_status:", updateData?.[0]?.subscription_status)
   }
 }
 
