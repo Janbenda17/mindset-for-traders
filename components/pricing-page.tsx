@@ -53,49 +53,16 @@ export function PricingPage() {
 
     setIsLoadingCheckout(true)
     try {
-      console.log("[v0] Starting checkout for user:", user.email)
+      console.log("[v0] Redirecting to Stripe payment link for user:", user.email)
       
-      const response = await fetch("/api/subscription/create-checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ plan: "premium" }),
-      })
-
-      console.log("[v0] Response status:", response.status)
-      const data = await response.json()
-      console.log("[v0] Response data:", JSON.stringify(data, null, 2))
-
-      if (!response.ok) {
-        const error = data.error || "Failed to create checkout session"
-        console.error("[v0] Checkout error:", error)
-        alert("Chyba: " + error)
-        throw new Error(error)
-      }
-
-      const { url } = data
-      console.log("[v0] Checkout URL:", url)
+      // Use static Stripe payment link - webhook handles subscription updates
+      const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/3cI8wQ6U01QIfee8jy1B601"
       
-      if (url) {
-        console.log("[v0] Redirecting to Stripe checkout...")
-        // Use window.open instead of window.location.href to avoid Vercel blocking
-        const newWindow = window.open(url, "_blank")
-        if (!newWindow) {
-          // Fallback if popup is blocked
-          console.warn("[v0] Popup blocked, trying direct navigation...")
-          window.location.href = url
-        }
-      } else {
-        console.error("[v0] No URL in response:", data)
-        alert("Chyba: Checkout URL nebyla vrácena")
-        throw new Error("No checkout URL returned")
-      }
+      // Redirect directly to payment link
+      window.location.href = STRIPE_PAYMENT_LINK
     } catch (error) {
       console.error("[v0] Error initiating checkout:", error)
-      if (!(error instanceof Error && error.message.includes("Chyba:"))) {
-        alert("Chyba při inicializaci platby: " + (error instanceof Error ? error.message : "Neznámá chyba"))
-      }
+      alert("Chyba při inicializaci platby: " + (error instanceof Error ? error.message : "Neznámá chyba"))
     } finally {
       setIsLoadingCheckout(false)
     }
