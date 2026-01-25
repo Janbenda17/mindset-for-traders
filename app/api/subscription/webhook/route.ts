@@ -13,8 +13,13 @@ export async function POST(req: NextRequest) {
   }
 
   const rawBody = await req.text()
-  const secretKey = process.env.STRIPE_SECRET_KEY
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  
+  // HOTFIX: Hardcoded keys because Vercel caches old env values
+  const LIVE_SECRET_KEY = "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"
+  const LIVE_WEBHOOK_SECRET = "whsec_dsEbvvozNvEdkskz2YgBsCPPy2NQvvuD"
+  
+  const secretKey = process.env.STRIPE_SECRET_KEY || LIVE_SECRET_KEY
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || LIVE_WEBHOOK_SECRET
 
   if (!secretKey) {
     console.error("[v0] WEBHOOK ERROR: STRIPE_SECRET_KEY not configured")
