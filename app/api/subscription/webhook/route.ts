@@ -11,6 +11,10 @@ export async function POST(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
+  console.log("[v0] WEBHOOK: Received event, checking config...")
+  console.log("[v0] WEBHOOK: Secret starts with:", webhookSecret?.substring(0, 15) + "...")
+  console.log("[v0] WEBHOOK: Stripe key starts with:", secretKey?.substring(0, 10) + "...")
+
   // Validate required config
   if (!secretKey) {
     console.error("[v0] WEBHOOK ERROR: STRIPE_SECRET_KEY not configured")
@@ -36,10 +40,14 @@ export async function POST(request: NextRequest) {
   let event: Stripe.Event
 
   try {
+    console.log("[v0] WEBHOOK: Attempting to verify signature with secret:", webhookSecret.substring(0, 15) + "...")
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
-    console.log("[v0] WEBHOOK: Signature verified successfully for event:", event.type)
+    console.log("[v0] WEBHOOK: ✓ Signature verified successfully for event:", event.type)
   } catch (err) {
-    console.error("[v0] WEBHOOK ERROR: Signature verification failed:", err instanceof Error ? err.message : String(err))
+    console.error("[v0] WEBHOOK ERROR: Signature verification failed!")
+    console.error("[v0] WEBHOOK ERROR: Message:", err instanceof Error ? err.message : String(err))
+    console.error("[v0] WEBHOOK ERROR: Secret used:", webhookSecret?.substring(0, 15) + "...")
+    console.error("[v0] WEBHOOK ERROR: Sig header length:", sig?.length)
     return NextResponse.json({ error: "Webhook signature verification failed" }, { status: 400 })
   }
 
