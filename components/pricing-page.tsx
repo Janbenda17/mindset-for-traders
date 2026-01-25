@@ -53,16 +53,32 @@ export function PricingPage() {
 
     setIsLoadingCheckout(true)
     try {
-      console.log("[v0] Redirecting to Stripe payment link for user:", user.email)
+      console.log("[v0] Starting checkout for user:", user.email)
       
-      // Use static Stripe payment link - webhook handles subscription updates
-      const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/3cI8wQ6U01QIfee8jy1B601"
-      
-      // Redirect directly to payment link
-      window.location.href = STRIPE_PAYMENT_LINK
+      const response = await fetch("/api/subscription/create-checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ plan: "premium" }),
+      })
+
+      const data = await response.json()
+      console.log("[v0] Response:", data)
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create checkout")
+      }
+
+      if (data.url) {
+        console.log("[v0] Redirecting to checkout...")
+        window.location.href = data.url
+      } else {
+        throw new Error("No checkout URL returned")
+      }
     } catch (error) {
-      console.error("[v0] Error initiating checkout:", error)
-      alert("Chyba při inicializaci platby: " + (error instanceof Error ? error.message : "Neznámá chyba"))
+      console.error("[v0] Checkout error:", error)
+      alert("Chyba: " + (error instanceof Error ? error.message : "Neznámá chyba"))
     } finally {
       setIsLoadingCheckout(false)
     }
