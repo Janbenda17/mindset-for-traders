@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Check, Star, Crown, Loader2, ArrowRight, TrendingUp, Brain, Target } from "lucide-react"
 import { useSubscription } from "@/hooks/use-subscription"
 import { useAuth } from "@/contexts/auth-context"
+import StripeCheckout from "./stripe-checkout"
 import { cn } from "@/lib/utils"
 
 export function PricingPage() {
@@ -15,7 +16,7 @@ export function PricingPage() {
   const { user } = useAuth()
   const { isPremium, isLoading } = useSubscription()
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
-  const [isLoadingCheckout, setIsLoadingCheckout] = useState(false)
+  const [showCheckout, setShowCheckout] = useState(false)
   const plan = "free" // Declare plan variable
   const isActive = false // Declare isActive variable
   const daysRemaining = 0 // Declare daysRemaining variable
@@ -45,23 +46,31 @@ export function PricingPage() {
     )
   }
 
+  // Show embedded checkout if user clicked upgrade
+  if (showCheckout && user) {
+    return (
+      <StripeCheckout
+        email={user.email || ""}
+        name={user.user_metadata?.full_name || "Uživatel"}
+        onBack={() => setShowCheckout(false)}
+        onSuccess={() => {
+          // Reload to refresh subscription status
+          setTimeout(() => {
+            window.location.reload()
+          }, 2000)
+        }}
+      />
+    )
+  }
+
   const handleUpgrade = () => {
     if (!user) {
       router.push("/auth/sign-up")
       return
     }
 
-    setIsLoadingCheckout(true)
-    try {
-      console.log("[v0] Opening Stripe payment link in new window")
-      const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/3cI8wQ6U01QIfee8jy1B601"
-      window.open(STRIPE_PAYMENT_LINK, "_blank")
-    } catch (error) {
-      console.error("[v0] Error:", error)
-      alert("Chyba: " + (error instanceof Error ? error.message : "Neznámá chyba"))
-    } finally {
-      setIsLoadingCheckout(false)
-    }
+    console.log("[v0] Opening embedded checkout for user:", user.email)
+    setShowCheckout(true)
   }
 
   const features = {
@@ -252,14 +261,9 @@ export function PricingPage() {
               <Button
                 className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
                 onClick={handleUpgrade}
-                disabled={isActive || isLoadingCheckout}
+                disabled={isActive}
               >
-                {isLoadingCheckout ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Přesměrování na platbu...
-                  </>
-                ) : isActive ? (
+                {isActive ? (
                   "Váš plán je aktivní"
                 ) : (
                   <>
