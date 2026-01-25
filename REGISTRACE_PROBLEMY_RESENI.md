@@ -5,10 +5,10 @@
 Supabase má přísné požadavky na hesla, ale aplikace to neuživateli jasně nebylo sdělovat:
 
 **Chyba z debug logů:**
-```
+\`\`\`
 ❌ SIGNUP ERROR: Password should contain at least one character of each: 
 abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ, 0123456789.
-```
+\`\`\`
 
 Uživatel zapsal heslo "TestTest" (které se zdálo správné), ale Supabase to odmítlo,
 protože chyběla čísla!
@@ -21,12 +21,12 @@ protože chyběla čísla!
 
 Když napíšeš heslo, vidíš živý checklist s požadavky:
 
-```
+\`\`\`
 ✓ Minimálně 6 znaků
 ✓ Malá písmena (a-z)
 ✓ Velká písmena (A-Z)
 ✓ Číslice (0-9)
-```
+\`\`\`
 
 Pokud některé nesplňují, tlačítko "Zaregistrovat se" je zakázáno.
 
@@ -35,10 +35,10 @@ Pokud některé nesplňují, tlačítko "Zaregistrovat se" je zakázáno.
 Pokud se přesto registrace nepovede (třeba heslo má speciální znak, který Supabase nechce),
 dostaneš jasnou zprávu v češtině:
 
-```
+\`\`\`
 Heslo musí obsahovat: malá + velká písmena + čísla (min. 6 znaků)
 Např: Trader2024
-```
+\`\`\`
 
 Místo technické chyby od Supabase.
 
@@ -108,7 +108,7 @@ Místo technické chyby od Supabase.
 ## Debug Logy - Co Očekávat
 
 **Při úspěšné Registraci:**
-```
+\`\`\`
 [v0] ===== REGISTRACE START =====
 [v0] Email: tvuj@email.com
 [v0] Supabase URL: ✓
@@ -116,18 +116,18 @@ Místo technické chyby od Supabase.
 [v0] ✅ User vytvořen: 56660715-...
 [v0] ✅ Profil nalezen!
 [v0] ✅ Registrace HOTOVA - redirect na /onboarding
-```
+\`\`\`
 
 **Při Chybě v Heslu (DŘÍV):**
-```
+\`\`\`
 [v0] ❌ SIGNUP ERROR: Password should contain at least...
-```
+\`\`\`
 
 **Při Chybě v Heslu (TEĎKA):**
-```
+\`\`\`
 Formulář zobrazí: "Heslo musí obsahovat: malá + velká písmena + čísla"
 + Checklist ukazuje co chybí
-```
+\`\`\`
 
 ---
 

@@ -4,9 +4,9 @@
 
 **Musí být nakonfigurován:**
 
-```
+\`\`\`
 POST https://tvoje-domena.vercel.app/api/subscription/webhook
-```
+\`\`\`
 
 **Kroky:**
 1. Jdi do https://dashboard.stripe.com/
@@ -30,9 +30,9 @@ POST https://tvoje-domena.vercel.app/api/subscription/webhook
 - Zkopíruj: `whsec_xxx...`
 
 **Nastav v Vercel:**
-```
+\`\`\`
 STRIPE_WEBHOOK_SECRET=whsec_xxx...
-```
+\`\`\`
 
 ### 3. Ověření, že webhook funguje
 
@@ -53,7 +53,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx...
 
 Aby to fungovalo lokálně, potřebuješ Stripe CLI:
 
-```bash
+\`\`\`bash
 # 1. Nainstaluj Stripe CLI
 # https://stripe.com/docs/stripe-cli
 
@@ -68,7 +68,7 @@ STRIPE_WEBHOOK_SECRET=whsec_test_yyy...
 
 # 5. Testuj checkout:
 stripe trigger checkout.session.completed
-```
+\`\`\`
 
 ### 5. Co se stane po zaplacení
 
@@ -83,7 +83,7 @@ stripe trigger checkout.session.completed
 
 ### 6. Production Checklist
 
-```
+\`\`\`
 ☐ Webhook secret nastavený v Vercel
 ☐ Webhook endpoint URL je https (NIKDY http)
 ☐ Webhook endpoint je v /api/subscription/webhook
@@ -91,15 +91,15 @@ stripe trigger checkout.session.completed
 ☐ Test: Zaplacení test kartou "4242 4242 4242 4242"
 ☐ Ověřit: V Stripe Dashboard vidím "successful delivery"
 ☐ Ověřit: V DB je aktualizován subscription_status
-```
+\`\`\`
 
 ### 7. Testovací karta
 
-```
+\`\`\`
 Číslo: 4242 4242 4242 4242
 Expiry: 12/34
 CVC: 123
-```
+\`\`\`
 
 Tato karta:
 - Vždy projde platbu ✓
@@ -133,7 +133,7 @@ Tato karta:
 
 **Ověř že webhook běží každý den:**
 
-```sql
+\`\`\`sql
 -- V Supabase, koukej na profiles kde se mění subscription_status
 SELECT 
   user_id, 
@@ -142,6 +142,6 @@ SELECT
 FROM profiles
 WHERE updated_at > NOW() - INTERVAL '24 hours'
 ORDER BY updated_at DESC;
-```
+\`\`\`
 
 Měl by tam být minimálně jeden záznam ze včerejšku (z testování nebo skutečné platby).
