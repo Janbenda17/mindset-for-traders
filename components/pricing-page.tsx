@@ -72,14 +72,16 @@ export function PricingPage() {
 
       if (data.url) {
         console.log("[v0] Redirecting to checkout...")
-        window.location.href = data.url
+        // Use a link redirect instead of window.location
+        const link = document.createElement("a")
+        link.href = data.url
+        link.click()
       } else {
         throw new Error("No checkout URL returned")
       }
     } catch (error) {
       console.error("[v0] Checkout error:", error)
       alert("Chyba: " + (error instanceof Error ? error.message : "Neznámá chyba"))
-    } finally {
       setIsLoadingCheckout(false)
     }
   }
