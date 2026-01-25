@@ -45,7 +45,7 @@ export function PricingPage() {
     )
   }
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = () => {
     if (!user) {
       router.push("/auth/sign-up")
       return
@@ -53,35 +53,13 @@ export function PricingPage() {
 
     setIsLoadingCheckout(true)
     try {
-      console.log("[v0] Starting checkout for user:", user.email)
-      
-      const response = await fetch("/api/subscription/create-checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ plan: "premium" }),
-      })
-
-      const data = await response.json()
-      console.log("[v0] Response:", data)
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create checkout")
-      }
-
-      if (data.url) {
-        console.log("[v0] Redirecting to checkout...")
-        // Use a link redirect instead of window.location
-        const link = document.createElement("a")
-        link.href = data.url
-        link.click()
-      } else {
-        throw new Error("No checkout URL returned")
-      }
+      console.log("[v0] Opening Stripe payment link in new window")
+      const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/3cI8wQ6U01QIfee8jy1B601"
+      window.open(STRIPE_PAYMENT_LINK, "_blank")
     } catch (error) {
-      console.error("[v0] Checkout error:", error)
+      console.error("[v0] Error:", error)
       alert("Chyba: " + (error instanceof Error ? error.message : "Neznámá chyba"))
+    } finally {
       setIsLoadingCheckout(false)
     }
   }
