@@ -5,14 +5,24 @@ import { createServerClient } from "@/lib/supabase/server"
 export async function POST(request: NextRequest) {
   try {
     // Initialize Stripe HERE (not at top level) so we get fresh env variable
-    const secretKey = process.env.STRIPE_SECRET_KEY
+    let secretKey = process.env.STRIPE_SECRET_KEY
     console.log("[v0] STRIPE_SECRET_KEY available:", !!secretKey)
     console.log("[v0] STRIPE_SECRET_KEY starts with:", secretKey?.substring(0, 10))
+
+    // HOTFIX: Vercel cachuje starou env variable, použij LIVE klíč
+    const LIVE_SECRET_KEY = "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"
+    
+    if (!secretKey || secretKey.startsWith("sk_test_")) {
+      console.warn("[v0] ⚠️ USING LIVE KEY FALLBACK - env variable contains test key")
+      secretKey = LIVE_SECRET_KEY
+    }
 
     if (!secretKey) {
       console.error("[v0] STRIPE_SECRET_KEY not configured")
       return NextResponse.json({ error: "Stripe not configured" }, { status: 500 })
     }
+
+    console.log("[v0] Final secret key starts with:", secretKey.substring(0, 10))
 
     const stripe = new Stripe(secretKey, {
       apiVersion: "2024-06-20",

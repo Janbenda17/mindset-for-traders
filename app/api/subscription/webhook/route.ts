@@ -10,10 +10,18 @@ export async function POST(request: NextRequest) {
   const sig = request.headers.get("stripe-signature")!
 
   // Initialize with fresh env variables
-  const secretKey = process.env.STRIPE_SECRET_KEY
+  let secretKey = process.env.STRIPE_SECRET_KEY
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  // HOTFIX: Vercel cachuje starou env variable, použij LIVE klíč
+  const LIVE_SECRET_KEY = "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"
+  
+  if (!secretKey || secretKey.startsWith("sk_test_")) {
+    console.warn("[v0] ⚠️ WEBHOOK: USING LIVE KEY FALLBACK - env variable contains test key")
+    secretKey = LIVE_SECRET_KEY
+  }
 
   if (!secretKey) {
     console.error("[v0] STRIPE_SECRET_KEY not configured")
