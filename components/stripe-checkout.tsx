@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider
@@ -22,6 +22,7 @@ interface StripeCheckoutProps {
 export default function StripeCheckout({ email, name, onBack, onSuccess }: StripeCheckoutProps) {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isPaid, setIsPaid] = useState(false)
 
   const fetchClientSecret = useCallback(
     async () => {
@@ -43,6 +44,56 @@ export default function StripeCheckout({ email, name, onBack, onSuccess }: Strip
     },
     [email, name]
   )
+
+  // Monitor payment completion - check subscription status every 2 seconds after checkout loads
+  useEffect(() => {
+    if (!isPaid && !isLoading) {
+      // Set up polling to check payment status
+      const interval = setInterval(async () => {
+        try {
+          const response = await fetch("/api/subscription/status", {
+            credentials: "include",
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            console.log("[v0] StripeCheckout: Subscription check - isPremium:", data.isPremium)
+            
+            if (data.isPremium) {
+              console.log("[v0] StripeCheckout: ✓ Payment successful! User is now premium")
+              setIsPaid(true)
+              clearInterval(interval)
+              
+              // Wait 1 second then call success callback
+              setTimeout(() => {
+                if (onSuccess) {
+                  onSuccess()
+                }
+              }, 1000)
+            }
+          }
+        } catch (err) {
+          console.error("[v0] StripeCheckout: Status check error:", err)
+        }
+      }, 2000)
+      
+      return () => clearInterval(interval)
+    }
+  }, [isPaid, isLoading, onSuccess])
+
+  if (isPaid) {
+    return (
+      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+        <div className="max-w-md w-full">
+          <Alert className="mb-4 border-green-200 bg-green-50">
+            <AlertDescription className="text-green-900">
+              ✓ Platba byla úspěšně zpracována! Váš účet je nyní Premium. Aktualizuji...
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
+  }
   
   return (
     <div className="min-h-screen bg-background p-6">
