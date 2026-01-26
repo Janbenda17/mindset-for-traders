@@ -5,23 +5,11 @@ import { createServerClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
-/**
- * Verify Stripe checkout session and update Supabase profile.
- * This endpoint is called after successful payment redirect.
- * Format: POST /api/subscription/verify?session_id=cs_xxx
- */
 export async function POST(request: NextRequest) {
+  console.log("[VERIFY] ========== VERIFY ENDPOINT CALLED ==========")
+  console.log("[VERIFY] Request URL:", request.url)
+  
   try {
-    const { searchParams } = new URL(request.url)
-    const sessionId = searchParams.get("session_id")
-
-    console.log("[VERIFY] ========== START ==========")
-    console.log("[VERIFY] session_id:", sessionId)
-
-    if (!sessionId) {
-      return NextResponse.json({ error: "Session ID required" }, { status: 400 })
-    }
-
     const secretKey = process.env.STRIPE_SECRET_KEY
     if (!secretKey) {
       console.error("[VERIFY] ERROR: STRIPE_SECRET_KEY not configured")

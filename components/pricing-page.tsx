@@ -26,6 +26,7 @@ export function PricingPage() {
   // Auto-verify payment when session_id is present
   useEffect(() => {
     const sessionId = searchParams.get("session_id")
+    console.log("[v0] Verify useEffect triggered - sessionId:", sessionId, "user:", !!user, "isVerifying:", isVerifying)
     
     if (sessionId && user && !isVerifying) {
       console.log("[v0] Detected session_id - auto-verifying payment:", sessionId)
