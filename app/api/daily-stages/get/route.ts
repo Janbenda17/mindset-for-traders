@@ -18,11 +18,11 @@ export async function GET(request: Request) {
     // Check if user is in VIRTUAL mode
     const { data: profile } = await supabase
       .from("profiles")
-      .select("mode")
+      .select("trading_mode")
       .eq("user_id", user.id)
       .maybeSingle()
 
-    const isVirtualMode = profile?.mode === "VIRTUAL"
+    const isVirtualMode = profile?.trading_mode === "virtual"
 
     const today = new Date().toISOString().split("T")[0]
 
