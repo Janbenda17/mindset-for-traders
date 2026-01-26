@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useSubscription } from "@/contexts/subscription-context"
 import { Crown, CreditCard, Calendar, AlertTriangle, CheckCircle } from "lucide-react"
+import Link from "next/link"
 
 export function SubscriptionStatus() {
   const {
@@ -140,28 +141,19 @@ export function SubscriptionStatus() {
         <div className="flex flex-col gap-2">
           {isPremium ? (
             <>
-              <Button
-                onClick={handleManageBilling}
-                disabled={isLoading}
-                className="w-full bg-transparent"
-                variant="outline"
-              >
-                <CreditCard className="h-4 w-4 mr-2" />
-                {isLoading ? "Načítání..." : "Spravovat platby"}
+              <Button asChild className="w-full">
+                <Link href="/subscription/manage">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Spravovat předplatné
+                </Link>
               </Button>
-
-              {subscriptionId && (
-                <Button onClick={handleCancelSubscription} disabled={isLoading} variant="destructive" size="sm">
-                  Zrušit předplatné
-                </Button>
-              )}
             </>
           ) : (
             <Button asChild className="w-full">
-              <a href="/upgrade">
+              <Link href="/upgrade">
                 <Crown className="h-4 w-4 mr-2" />
                 Upgradovat na Premium
-              </a>
+              </Link>
             </Button>
           )}
         </div>
