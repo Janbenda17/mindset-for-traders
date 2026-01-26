@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No active subscription" }, { status: 404 })
     }
 
-    const stripe = new Stripe(secretKey, { apiVersion: "2024-12-18" })
+    const stripe = new Stripe(secretKey, { apiVersion: "2024-06-20" })
     
     // Get base URL from environment or request
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || new URL(request.url).origin

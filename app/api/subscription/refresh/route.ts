@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Stripe not configured" }, { status: 500 })
     }
 
-    const stripe = new Stripe(secretKey, { apiVersion: "2024-12-18" })
+    const stripe = new Stripe(secretKey, { apiVersion: "2024-06-20" })
 
     const customer = await stripe.customers.retrieve(profile.stripe_customer_id)
     const subscriptions = await stripe.subscriptions.list({

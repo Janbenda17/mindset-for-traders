@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     console.log("[CANCEL] Subscription ID:", profile.stripe_subscription_id)
 
-    const stripe = new Stripe(secretKey, { apiVersion: "2024-12-18" })
+    const stripe = new Stripe(secretKey, { apiVersion: "2024-06-20" })
 
     // Cancel subscription at period end (user keeps access until end of billing period)
     const subscription = await stripe.subscriptions.update(profile.stripe_subscription_id, {
