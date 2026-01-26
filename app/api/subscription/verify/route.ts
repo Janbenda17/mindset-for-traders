@@ -96,11 +96,13 @@ export async function POST(request: NextRequest) {
         console.log("[VERIFY] Updating profile with:", JSON.stringify(updateData))
 
         // Update by user_id (current user)
-        const { data, error: updateError } = await supabaseAdmin
+        const { data, error: updateError, count } = await supabaseAdmin
           .from("profiles")
           .update(updateData)
           .eq("user_id", user.id)
           .select()
+
+        console.log("[VERIFY] Update response - affected rows:", count, "error:", updateError?.message || "null")
 
         if (updateError) {
           console.error("[VERIFY] ERROR updating profile:", updateError.message)

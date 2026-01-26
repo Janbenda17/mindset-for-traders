@@ -43,16 +43,19 @@ export function PricingPage() {
           
           if (data.success) {
             setVerificationMessage("✓ Platba ověřena! Předplatné je aktivní.")
+            console.log("[v0] Payment successful - refreshing subscription status...")
             
-            // Refresh subscription status
+            // Refresh subscription status immediately AFTER verification
             if (checkSubscriptionStatus) {
-              checkSubscriptionStatus()
+              setTimeout(() => {
+                checkSubscriptionStatus()
+              }, 500)
             }
             
-            // Remove session_id from URL after 2 seconds
+            // Redirect to dashboard after 3 seconds
             setTimeout(() => {
-              router.replace("/pricing")
-            }, 2000)
+              router.push("/")
+            }, 3000)
           } else {
             setVerificationMessage("Platba ještě není dokončena. Zkuste to prosím za chvíli.")
           }
