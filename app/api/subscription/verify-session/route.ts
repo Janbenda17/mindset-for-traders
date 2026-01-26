@@ -77,7 +77,6 @@ export async function GET(request: NextRequest) {
         console.log("[VERIFY] Subscription current_period_end:", subscription.current_period_end)
 
         const isPremium = subscription.status === 'active' || subscription.status === 'trialing'
-        const priceId = subscription.items.data[0]?.price?.id || null
 
         const updateData = {
           stripe_customer_id: customerId,
@@ -86,7 +85,6 @@ export async function GET(request: NextRequest) {
           subscription_tier: isPremium ? "premium" : "free",
           is_premium: isPremium,
           subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-          ...(priceId && { stripe_price_id: priceId }),
         }
 
         console.log("[VERIFY] Updating profile with:", JSON.stringify(updateData))
