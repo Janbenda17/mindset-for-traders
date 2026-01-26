@@ -9,6 +9,7 @@ import { Check, Star, Crown, Loader2, ArrowRight, TrendingUp, Brain, Target } fr
 import { useSubscription } from "@/hooks/use-subscription"
 import { useAuth } from "@/contexts/auth-context"
 import { cn } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
 
 export function PricingPage() {
   const router = useRouter()
@@ -19,6 +20,8 @@ export function PricingPage() {
   const [isLoadingCheckout, setIsLoadingCheckout] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null)
+  const [couponCode, setCouponCode] = useState("")
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null)
   const plan = "free" // Declare plan variable
   const isActive = false // Declare isActive variable
   const daysRemaining = 0 // Declare daysRemaining variable
@@ -320,11 +323,25 @@ export function PricingPage() {
               </CardDescription>
               <div className="mt-6 flex items-baseline">
                 <span className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-                  {billingCycle === "monthly" ? "1499 Kč" : "1199 Kč"}
+                  {appliedCoupon ? (
+                    <>
+                      <span className="line-through text-2xl text-gray-500 mr-3">
+                        {billingCycle === "monthly" ? "2499 Kč" : "1999 Kč"}
+                      </span>
+                      {billingCycle === "monthly" ? "1499 Kč" : "1199 Kč"}
+                    </>
+                  ) : (
+                    billingCycle === "monthly" ? "1499 Kč" : "1199 Kč"
+                  )}
                 </span>
                 <span className="text-gray-500 ml-2 text-lg">/měsíc</span>
               </div>
-              {billingCycle === "yearly" && (
+              {appliedCoupon && (
+                <p className="text-sm text-green-600 font-medium mt-2">
+                  Sleva {appliedCoupon.discount}% - Kupón: {appliedCoupon.code}
+                </p>
+              )}
+              {billingCycle === "yearly" && !appliedCoupon && (
                 <p className="text-sm text-green-600 font-medium mt-2">Ušetříte 3 600 Kč ročně</p>
               )}
             </CardHeader>
@@ -339,6 +356,53 @@ export function PricingPage() {
                   </li>
                 ))}
               </ul>
+
+              {/* Coupon Section */}
+              <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Máte kupón?
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Zadejte kód kupónu..."
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    className="flex-1 h-10 text-sm"
+                    disabled={appliedCoupon !== null}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (couponCode === "TRADER2024") {
+                        setAppliedCoupon({ code: "TRADER2024", discount: 40 })
+                        setCouponCode("")
+                      } else if (couponCode) {
+                        alert("Neplatný kupón")
+                      }
+                    }}
+                    disabled={!couponCode || appliedCoupon !== null}
+                  >
+                    Použít
+                  </Button>
+                  {appliedCoupon && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setAppliedCoupon(null)}
+                      className="text-xs"
+                    >
+                      Zrušit
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Tip: Zkuste "TRADER2024" pro speciální slevu
+                </p>
+              </div>
             </CardContent>
             <CardFooter className="pt-8 pb-8">
               <Button
