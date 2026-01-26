@@ -126,13 +126,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ 
-          email: user.email,
-          name: user.name || "User"
+          plan: "premium"
         })
       })
 
       if (!response.ok) {
-        throw new Error("Failed to create checkout session")
+        const errorData = await response.json()
+        console.error("[v0] Upgrade: API error:", errorData.error)
+        throw new Error(errorData.error || "Failed to create checkout session")
       }
 
       const data = await response.json()
