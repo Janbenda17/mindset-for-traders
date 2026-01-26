@@ -28,8 +28,23 @@ export function SubscriptionStatus() {
     checkSubscriptionStatus()
   }, [])
 
-  const handleManageBilling = () => {
-    openBillingPortal()
+  const handleManageBilling = async () => {
+    try {
+      const response = await fetch("/api/subscription/billing-portal", {
+        method: "POST",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to open billing portal")
+      }
+
+      const data = await response.json()
+      if (data.url) {
+        window.open(data.url, "_blank")
+      }
+    } catch (error) {
+      console.error("Error opening billing portal:", error)
+    }
   }
 
   const handleCancelSubscription = async () => {
