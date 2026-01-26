@@ -109,6 +109,8 @@ export function PricingPage() {
         body: JSON.stringify({ plan: "premium" }),
       })
 
+      console.log("[v0] Response status:", response.status, "ok:", response.ok)
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || "Failed to create checkout")
@@ -116,10 +118,17 @@ export function PricingPage() {
 
       const data = await response.json()
       console.log("[v0] Checkout URL received:", data.url ? "✓" : "✗")
+      console.log("[v0] URL starts with:", data.url?.substring(0, 50))
 
       if (data.url) {
-        // Redirect to Stripe checkout
-        window.location.href = data.url
+        console.log("[v0] Redirecting to Stripe checkout...")
+        // Use window.open first to ensure it works, then fall back to location
+        const checkoutWindow = window.open(data.url, "_blank")
+        if (!checkoutWindow) {
+          // If pop-up blocked, use location href
+          console.log("[v0] Pop-up blocked, using window.location.href")
+          window.location.href = data.url
+        }
       } else {
         throw new Error("No checkout URL returned")
       }
