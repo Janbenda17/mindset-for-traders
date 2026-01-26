@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
  * Endpoint to manually verify and update subscription status from Stripe
  * Useful for debugging and ensuring subscription status is correct
  */
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     if (!profile?.stripe_customer_id) {
       console.log("[v0] refresh-subscription: No Stripe customer")
       return NextResponse.json({ 
-        is_premium: false,
+        isPremium: false,
         message: "No Stripe customer found"
       })
     }
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      is_premium: isPremium,
+      isPremium: isPremium,
       subscription_id: activeSubscription?.id,
       subscription_status: activeSubscription?.status,
       subscription_tier: isPremium ? "premium" : "free",
