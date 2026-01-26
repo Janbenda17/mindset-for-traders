@@ -90,11 +90,12 @@ export async function POST(request: NextRequest) {
       console.log("[v0] ✓ Customer ID stored in profile")
     }
 
-    const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "https://your-domain.vercel.app"
-    const baseUrl = origin.startsWith("http") ? origin : `https://${origin}`
+    const origin = request.headers.get("origin")
+    const baseUrl = origin || process.env.NEXT_PUBLIC_BASE_URL || "https://mindtrader.vercel.app"
 
-    console.log("[v0] Base URL:", baseUrl)
-    console.log("[v0] Customer ID:", customerId)
+    console.log("[v0] Request origin:", origin)
+    console.log("[v0] NEXT_PUBLIC_BASE_URL:", process.env.NEXT_PUBLIC_BASE_URL)
+    console.log("[v0] Final base URL:", baseUrl)
 
     // IMPORTANT: Find correct price ID from YOUR account
     // You can find this by running: stripe prices list --product prod_***
