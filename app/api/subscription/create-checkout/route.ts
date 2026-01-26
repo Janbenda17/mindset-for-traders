@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     const priceId = process.env.STRIPE_PRICE_ID || "price_1S59GOL0tgTNaSwwEqyW1brC"
     console.log("[v0] Using price ID:", priceId)
 
-    // Create checkout session with 7-day trial
+    // Create checkout session with discount codes enabled
     // IMPORTANT: Include user_id in metadata AND client_reference_id for webhook to identify user
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -129,6 +129,8 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         user_email: user.email || "",
       },
+      // Enable discount codes in checkout
+      allow_promotion_codes: true,
     })
 
     console.log("[v0] Checkout session created:", session.id)
