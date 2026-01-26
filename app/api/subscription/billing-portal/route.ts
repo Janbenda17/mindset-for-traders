@@ -41,15 +41,19 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = new Stripe(secretKey, { apiVersion: "2024-12-18" })
-    const returnUrl = new URL(request.url)
-    returnUrl.pathname = "/account"
+    
+    // Get base URL from environment or request
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || new URL(request.url).origin
+    const returnUrl = `${baseUrl}/account`
 
+    console.log("[BILLING_PORTAL] Base URL:", baseUrl)
+    console.log("[BILLING_PORTAL] Return URL:", returnUrl)
     console.log("[BILLING_PORTAL] Creating session for customer:", profile.stripe_customer_id)
 
     // Create billing portal session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
-      return_url: returnUrl.toString(),
+      return_url: returnUrl,
     })
 
     console.log("[BILLING_PORTAL] ✓ Portal session created:", portalSession.id)
