@@ -19,6 +19,7 @@ export function PricingPage() {
   const [isLoadingCheckout, setIsLoadingCheckout] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const plan = "free" // Declare plan variable
   const isActive = false // Declare isActive variable
   const daysRemaining = 0 // Declare daysRemaining variable
@@ -94,6 +95,40 @@ export function PricingPage() {
         </Card>
       </div>
     )
+  }
+
+  const handleRefreshSubscription = async () => {
+    if (!user) return
+
+    setIsRefreshing(true)
+    setVerificationMessage("Kontroluji stav předplatného...")
+
+    try {
+      const response = await fetch("/api/subscription/refresh", {
+        method: "POST",
+        credentials: "include",
+      })
+
+      const data = await response.json()
+      console.log("[v0] Refresh result:", data)
+
+      if (data.isPremium) {
+        setVerificationMessage("✓ Premium předplatné aktivováno!")
+        setTimeout(() => {
+          checkSubscriptionStatus?.()
+          router.push("/")
+        }, 2000)
+      } else {
+        setVerificationMessage("Žádné aktivní předplatné nebylo nalezeno. Zkuste to prosím za chvíli.")
+        setTimeout(() => setVerificationMessage(null), 3000)
+      }
+    } catch (error) {
+      console.error("[v0] Refresh error:", error)
+      setVerificationMessage("Chyba při kontrole předplatného.")
+      setTimeout(() => setVerificationMessage(null), 3000)
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
   const handleUpgrade = async () => {
@@ -344,25 +379,45 @@ export function PricingPage() {
               </ul>
             </CardContent>
             <CardFooter className="pt-8 pb-8">
-              <Button
-                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
-                onClick={handleUpgrade}
-                disabled={isActive || isLoadingCheckout}
-              >
-                {isLoadingCheckout ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Přesměrování na platbu...
-                  </>
-                ) : isActive ? (
-                  "Váš plán je aktivní"
-                ) : (
-                  <>
-                    Upgradovat na Live
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
+              <div className="w-full space-y-3">
+                <Button
+                  className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
+                  onClick={handleUpgrade}
+                  disabled={isActive || isLoadingCheckout}
+                >
+                  {isLoadingCheckout ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      Přesměrování na platbu...
+                    </>
+                  ) : isActive ? (
+                    "Váš plán je aktivní"
+                  ) : (
+                    <>
+                      Upgradovat na Live
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
+                </Button>
+                
+                {!isActive && !isPremium && (
+                  <Button
+                    variant="outline"
+                    className="w-full h-10 text-sm"
+                    onClick={handleRefreshSubscription}
+                    disabled={isRefreshing}
+                  >
+                    {isRefreshing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Kontroluji...
+                      </>
+                    ) : (
+                      "Již jsem zaplatil - Zkontrolovat předplatné"
+                    )}
+                  </Button>
                 )}
-              </Button>
+              </div>
               <p className="text-xs text-center text-gray-500 mt-4 w-full">Bez závazků. Zrušit můžete kdykoli.</p>
             </CardFooter>
           </Card>
