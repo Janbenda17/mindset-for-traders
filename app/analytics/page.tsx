@@ -32,6 +32,8 @@ import { useRouter } from "next/navigation" // Added for navigation
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 import { useAnalytics } from "@/contexts/analytics-context" // Updated: useAnalytics hook
 import { useLiveMode } from "@/contexts/live-mode-context" // CHANGE: get isLiveMode from useLiveMode hook instead
+import { MorningAssessment } from "@/components/morning-assessment"
+import { RecordTrades } from "@/components/record-trades"
 
 // Custom Tooltip with better formatting
 const CustomTooltip = ({ active, payload, label, type = "default" }: any) => {
@@ -1017,6 +1019,8 @@ export default function PsychologyAnalyticsPage() {
   } = useAnalytics()
   const [selectedMetric, setSelectedMetric] = useState("pnl")
   const [activeTab, setActiveTab] = useState("overview") // FIX: undeclared variable activeTab and setActiveTab
+  const [showMorningCheck, setShowMorningCheck] = useState(false)
+  const [showRecordTrades, setShowRecordTrades] = useState(false)
 
   // Calculate daysWithData first, before using it in safeData
   const daysWithData = useMemo(() => {
@@ -1119,11 +1123,11 @@ export default function PsychologyAnalyticsPage() {
                   Co dělat teď?
                 </h3>
                 <div className="space-y-2">
-                  <Button onClick={() => router.push("/")} className="w-full bg-purple-600 hover:bg-purple-700">
+                  <Button onClick={() => setShowMorningCheck(true)} className="w-full bg-purple-600 hover:bg-purple-700">
                     Vyplnit Morning Check
                   </Button>
                   <Button
-                    onClick={() => router.push("/daily-tracker")}
+                    onClick={() => setShowRecordTrades(true)}
                     variant="outline"
                     className="w-full border-purple-500/30 text-white hover:bg-purple-500/10"
                   >

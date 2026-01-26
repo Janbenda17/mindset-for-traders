@@ -364,12 +364,17 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       duration: 3000,
     })
 
-    setTimeout(() => {
-      router.push("/daily-tracker")
-      if (onComplete) {
+    // If component is in modal (analytics), just call onComplete
+    // If standalone (morning-check page), redirect
+    if (onComplete) {
+      setTimeout(() => {
         onComplete()
-      }
-    }, 1000)
+      }, 1000)
+    } else {
+      setTimeout(() => {
+        router.push("/daily-tracker")
+      }, 1000)
+    }
   }
 
   const currentScore = calculateScore()
@@ -539,13 +544,22 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
           </Card>
         )}
 
-        <Button
-          onClick={() => router.push("/daily-tracker")}
-          className="w-full h-16 text-xl font-black rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 hover:from-cyan-600 hover:via-blue-600 hover:to-purple-600 shadow-2xl"
-        >
-          <Eye className="w-6 h-6 mr-2" />
-          Zobrazit v Daily Tracker
-        </Button>
+        <div className="flex gap-4">
+          <Button
+            onClick={() => router.push("/record-trades")}
+            className="flex-1 h-14 text-lg font-bold rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-lg"
+          >
+            <CheckCircle className="w-5 h-5 mr-2" />
+            Zaznamenat Trade
+          </Button>
+          <Button
+            onClick={() => onComplete?.()}
+            variant="outline"
+            className="flex-1 h-14 text-lg font-bold rounded-2xl"
+          >
+            Zavřít
+          </Button>
+        </div>
       </div>
     )
   }
