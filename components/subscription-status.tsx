@@ -48,8 +48,28 @@ export function SubscriptionStatus() {
   }
 
   const handleCancelSubscription = async () => {
-    if (confirm("Opravdu chcete zrušit předplatné? Zůstane aktivní do konce aktuálního období.")) {
-      await cancelSubscription()
+    if (!confirm("Opravdu chcete zrušit předplatné? Zůstane aktivní do konce aktuálního období.")) {
+      return
+    }
+
+    try {
+      const response = await fetch("/api/subscription/cancel", {
+        method: "POST",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to cancel subscription")
+      }
+
+      const data = await response.json()
+      
+      // Show success toast
+      console.log("[v0] Subscription canceled:", data.message)
+      
+      // Refresh subscription status
+      await checkSubscriptionStatus()
+    } catch (error) {
+      console.error("[v0] Error canceling subscription:", error)
     }
   }
 
