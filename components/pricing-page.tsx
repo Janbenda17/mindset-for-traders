@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,13 +12,60 @@ import { cn } from "@/lib/utils"
 
 export function PricingPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
-  const { isPremium, isLoading } = useSubscription()
+  const { isPremium, isLoading, checkSubscriptionStatus } = useSubscription()
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
   const [isLoadingCheckout, setIsLoadingCheckout] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(null)
   const plan = "free" // Declare plan variable
   const isActive = false // Declare isActive variable
   const daysRemaining = 0 // Declare daysRemaining variable
+
+  // Auto-verify payment when session_id is present
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id")
+    
+    if (sessionId && user && !isVerifying) {
+      console.log("[v0] Detected session_id - auto-verifying payment:", sessionId)
+      setIsVerifying(true)
+      setVerificationMessage("Ověřuji platbu...")
+
+      // Call verify endpoint
+      fetch(`/api/subscription/verify?session_id=${sessionId}`, {
+        method: "POST",
+        credentials: "include",
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("[v0] Verification result:", data)
+          
+          if (data.success) {
+            setVerificationMessage("✓ Platba ověřena! Předplatné je aktivní.")
+            
+            // Refresh subscription status
+            if (checkSubscriptionStatus) {
+              checkSubscriptionStatus()
+            }
+            
+            // Remove session_id from URL after 2 seconds
+            setTimeout(() => {
+              router.replace("/pricing")
+            }, 2000)
+          } else {
+            setVerificationMessage("Platba ještě není dokončena. Zkuste to prosím za chvíli.")
+          }
+        })
+        .catch((error) => {
+          console.error("[v0] Verification error:", error)
+          setVerificationMessage("Chyba při ověřování platby. Kontaktujte prosím podporu.")
+        })
+        .finally(() => {
+          setTimeout(() => setIsVerifying(false), 3000)
+        })
+    }
+  }, [searchParams, user, isVerifying, router, checkSubscriptionStatus])
 
   // If user is premium, redirect to dashboard
   if (!isLoading && isPremium) {
@@ -45,7 +92,7 @@ export function PricingPage() {
     )
   }
 
-  const handleUpgrade = () => {
+  const handleUpgrade = async () => {
     if (!user) {
       router.push("/auth/sign-up")
       return
@@ -53,13 +100,32 @@ export function PricingPage() {
 
     setIsLoadingCheckout(true)
     try {
-      console.log("[v0] Opening Stripe payment link in new window")
-      const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/3cI8wQ6U01QIfee8jy1B601"
-      window.open(STRIPE_PAYMENT_LINK, "_blank")
+      console.log("[v0] Creating Stripe checkout session...")
+      
+      const response = await fetch("/api/subscription/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ plan: "premium" }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to create checkout")
+      }
+
+      const data = await response.json()
+      console.log("[v0] Checkout URL received:", data.url ? "✓" : "✗")
+
+      if (data.url) {
+        // Redirect to Stripe checkout
+        window.location.href = data.url
+      } else {
+        throw new Error("No checkout URL returned")
+      }
     } catch (error) {
       console.error("[v0] Error:", error)
-      alert("Chyba: " + (error instanceof Error ? error.message : "Neznámá chyba"))
-    } finally {
+      alert("Chyba při vytváření platby: " + (error instanceof Error ? error.message : "Neznámá chyba"))
       setIsLoadingCheckout(false)
     }
   }
@@ -88,6 +154,23 @@ export function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+      {/* Verification Banner */}
+      {verificationMessage && (
+        <div
+          className={cn(
+            "fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-lg max-w-md text-center font-medium",
+            verificationMessage.includes("✓")
+              ? "bg-green-500 text-white"
+              : verificationMessage.includes("Chyba")
+              ? "bg-red-500 text-white"
+              : "bg-blue-500 text-white"
+          )}
+        >
+          {isVerifying && <Loader2 className="inline-block h-4 w-4 mr-2 animate-spin" />}
+          {verificationMessage}
+        </div>
+      )}
+
       {/* Hero Section */}
       <div className="relative overflow-hidden pt-20 pb-16 lg:pt-32 lg:pb-24">
         <div className="container mx-auto px-4 text-center relative z-10">

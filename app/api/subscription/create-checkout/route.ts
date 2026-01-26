@@ -122,8 +122,8 @@ export async function POST(request: NextRequest) {
           user_email: user.email || "",
         },
       },
-      success_url: `${baseUrl}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/upgrade`,
+      success_url: `${baseUrl}/pricing?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/pricing`,
       metadata: {
         plan: "premium",
         user_id: user.id,
