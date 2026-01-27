@@ -85,7 +85,7 @@ const EMOTIONS_DURING = [
 
 const EMOTIONS_AFTER = ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Poučený", "Naštvaný", "Klidný", "Euforický"]
 
-export function RecordTrades() {
+export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
   const { toast } = useToast()
   const router = useRouter()
   const { completeStage } = useDailyStage()
@@ -307,6 +307,17 @@ export function RecordTrades() {
       description: `${newTrade.direction} ${newTrade.pair} - ${newTrade.pnl >= 0 ? "+" : ""}$${newTrade.pnl}`,
     })
 
+    // Mark record trade as completed in daily tracker
+    try {
+      await fetch("/api/daily-tracker/mark-completed", {
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify({ type: "record_trade" }),
+      })
+    } catch (error) {
+      console.error("[v0] Error marking record trade as completed:", error)
+    }
+
     const tradeEntry = {
       ...newTrade,
       type: "trade",
@@ -317,6 +328,11 @@ export function RecordTrades() {
       confidenceLevel: newTrade.confidenceBefore,
     }
     completeStage("record-trades")
+
+    // If in modal, call onComplete
+    if (onComplete) {
+      setTimeout(() => onComplete(), 500)
+    }
   }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {

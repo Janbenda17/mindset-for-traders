@@ -364,6 +364,17 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       duration: 3000,
     })
 
+    // Mark morning check as completed in daily tracker
+    try {
+      await fetch("/api/daily-tracker/mark-completed", {
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify({ type: "morning_check" }),
+      })
+    } catch (error) {
+      console.error("[v0] Error marking morning check as completed:", error)
+    }
+
     // If component is in modal (analytics), just call onComplete
     // If standalone (morning-check page), redirect
     if (onComplete) {

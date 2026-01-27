@@ -2,13 +2,13 @@
 
 // import { Label } from "@/components/ui/label" // Removed
 
-import { useState, useMemo } from "react" // Added useEffect
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle } from "lucide-react"
-import { Brain, Target, CheckCircle2, Zap, Heart, Sparkles, Clock, Smile, Activity, TrendingUpIcon, TrendingUp, DollarSign, ThumbsUp, ThumbsDown, Flame, Wind, TrendingDown, ArrowUp, ArrowDown, BarChart3, Sun, Moon, Sunrise, Sunset, CloudRain, Award, XCircle, RefreshCw, Percent, TrendingDown as TrendingUpDown, Clipboard } from "lucide-react"
+import { Brain, Target, CheckCircle2, Zap, Heart, Sparkles, Clock, Smile, Activity, TrendingUpIcon, TrendingUp, DollarSign, ThumbsUp, ThumbsDown, Flame, Wind, TrendingDown, ArrowUp, ArrowDown, BarChart3, Sun, Moon, Sunrise, Sunset, CloudRain, Award, XCircle, RefreshCw, Percent, TrendingDown as TrendingUpDown, Clipboard, CheckCircle } from "lucide-react"
 import {
   XAxis,
   YAxis,
@@ -1018,9 +1018,32 @@ export default function PsychologyAnalyticsPage() {
     refresh,
   } = useAnalytics()
   const [selectedMetric, setSelectedMetric] = useState("pnl")
-  const [activeTab, setActiveTab] = useState("overview") // FIX: undeclared variable activeTab and setActiveTab
+  const [activeTab, setActiveTab] = useState("overview")
   const [showMorningCheck, setShowMorningCheck] = useState(false)
   const [showRecordTrades, setShowRecordTrades] = useState(false)
+  const [dailyStages, setDailyStages] = useState<any>(null)
+
+  // Load daily stages to check completion status
+  useEffect(() => {
+    if (!user) return
+
+    const loadDailyStages = async () => {
+      try {
+        const response = await fetch("/api/daily-stages/get", {
+          credentials: "include",
+        })
+        const data = await response.json()
+        console.log("[v0] Analytics - Loaded daily stages:", data)
+        setDailyStages(data)
+      } catch (error) {
+        console.error("[v0] Error loading daily stages:", error)
+      }
+    }
+
+    loadDailyStages()
+    const interval = setInterval(loadDailyStages, 5000) // Refresh every 5 seconds to detect completion
+    return () => clearInterval(interval)
+  }, [user])
 
   // Calculate daysWithData first, before using it in safeData
   const daysWithData = useMemo(() => {
@@ -1123,15 +1146,42 @@ export default function PsychologyAnalyticsPage() {
                   Co dělat teď?
                 </h3>
                 <div className="space-y-2">
-                  <Button onClick={() => setShowMorningCheck(true)} className="w-full bg-purple-600 hover:bg-purple-700">
-                    Vyplnit Morning Check
+                  <Button 
+                    onClick={() => router.push("/morning-check")}
+                    disabled={dailyStages?.completedToday?.includes("morning_check")}
+                    className={`w-full ${
+                      dailyStages?.completedToday?.includes("morning_check")
+                        ? "bg-green-600 hover:bg-green-600 cursor-not-allowed"
+                        : "bg-purple-600 hover:bg-purple-700"
+                    }`}
+                  >
+                    {dailyStages?.completedToday?.includes("morning_check") ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Splneno
+                      </>
+                    ) : (
+                      "Vyplnit Morning Check"
+                    )}
                   </Button>
                   <Button
-                    onClick={() => setShowRecordTrades(true)}
+                    onClick={() => router.push("/record-trades")}
+                    disabled={dailyStages?.completedToday?.includes("record_trade")}
                     variant="outline"
-                    className="w-full border-purple-500/30 text-white hover:bg-purple-500/10"
+                    className={`w-full ${
+                      dailyStages?.completedToday?.includes("record_trade")
+                        ? "border-green-500/50 text-green-400 hover:bg-green-500/10 cursor-not-allowed"
+                        : "border-purple-500/30 text-white hover:bg-purple-500/10"
+                    }`}
                   >
-                    Zaznamenat Trade
+                    {dailyStages?.completedToday?.includes("record_trade") ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Splneno
+                      </>
+                    ) : (
+                      "Zaznamenat Trade"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -2729,6 +2779,24 @@ export default function PsychologyAnalyticsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Morning Check Modal */}
+      {showMorningCheck && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-purple-500/30 shadow-2xl">
+            <MorningAssessment onComplete={() => setShowMorningCheck(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Record Trades Modal */}
+      {showRecordTrades && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-purple-500/30 shadow-2xl">
+            <RecordTrades onComplete={() => setShowRecordTrades(false)} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
