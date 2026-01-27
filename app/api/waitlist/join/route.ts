@@ -35,8 +35,7 @@ export async function POST(request: NextRequest) {
       .insert({
         email: email.toLowerCase(),
         discount_code: discountCode,
-        status: "waiting",
-        subscribed_at: new Date().toISOString(),
+        status: "active",
       })
       .select()
       .single()
