@@ -6,16 +6,46 @@ import { Button } from "@/components/ui/button"
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-      {/* Navigation Links */}
-      <div className="fixed top-0 left-0 right-0 z-40 pt-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
-            <ArrowRight className="w-4 h-4 rotate-180" />
-            Zpět na dashboard
-          </Link>
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Galaxy Background with Stars */}
+      <div className="fixed inset-0 z-0">
+        {/* Gradient galaxy overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/40 via-purple-950/30 to-black" />
+        
+        {/* Animated stars */}
+        <div className="absolute inset-0">
+          {[...Array(100)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: Math.random() * 0.7 + 0.3,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${Math.random() * 3 + 2}s`,
+              }}
+            />
+          ))}
         </div>
+
+        {/* Large glowing orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
       </div>
+
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Navigation Links */}
+        <div className="fixed top-8 left-0 right-0 z-40">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <Link href="/login" className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors backdrop-blur-sm bg-slate-900/30 px-4 py-2 rounded-full border border-slate-700/50">
+              <ArrowRight className="w-4 h-4 rotate-180" />
+              Přihlásit se
+            </Link>
+          </div>
+        </div>
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6">
@@ -273,6 +303,7 @@ export default function AboutPage() {
           </p>
         </div>
       </section>
+      </div>
     </div>
   )
 }
