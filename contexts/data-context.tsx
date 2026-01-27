@@ -45,6 +45,19 @@ interface Trade {
   matchedPlan?: boolean
   tags?: string[]
   followedPlan?: boolean
+  // NEW FIELDS
+  openTime?: string
+  closeTime?: string
+  session?: string
+  tradeType?: string
+  pips?: number
+  positionSize?: number
+  confidenceBefore?: number
+  stressLevel?: number
+  detailedAnalysis?: string
+  behaviorDescription?: string
+  openDate?: string
+  closeDate?: string
 }
 
 interface MorningCheck {
@@ -511,6 +524,20 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           matched_plan: trade.matchedPlan,
           tags: trade.tags,
           type: "trade",
+          // NEW FIELDS
+          open_time: trade.openTime,
+          close_time: trade.closeTime,
+          session: trade.session,
+          trade_type: trade.tradeType,
+          pips: trade.pips,
+          position_size: trade.positionSize,
+          confidence_before: trade.confidenceBefore,
+          stress_level: trade.stressLevel,
+          detailed_analysis: trade.detailedAnalysis,
+          behavior_description: trade.behaviorDescription,
+          open_date: trade.openDate,
+          close_date: trade.closeDate,
+          followed_plan: trade.followedPlan,
         })
 
         if (error) {
