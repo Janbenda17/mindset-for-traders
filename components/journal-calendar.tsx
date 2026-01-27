@@ -74,8 +74,8 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
   const getStatsForDate = (day: number) => {
     const dayEntries = getEntriesForDate(day)
     const trades = dayEntries.filter((e) => e.type === "trade")
-    const totalPnL = trades.reduce((sum, trade) => sum + (trade.profitLoss || 0), 0)
-    const winningTrades = trades.filter((t) => (t.profitLoss || 0) > 0).length
+    const totalPnL = trades.reduce((sum, trade) => sum + (trade.pnl || trade.profitLoss || 0), 0)
+    const winningTrades = trades.filter((t) => (t.pnl || t.profitLoss || 0) > 0).length
 
     return {
       totalEntries: dayEntries.length,
@@ -117,9 +117,11 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
     })
 
     const trades = monthEntries.filter((e) => e.type === "trade")
-    const totalPnL = trades.reduce((sum, trade) => sum + (trade.profitLoss || 0), 0)
-    const winningTrades = trades.filter((t) => (t.profitLoss || 0) > 0).length
+    const totalPnL = trades.reduce((sum, trade) => sum + (trade.pnl || trade.profitLoss || 0), 0)
+    const winningTrades = trades.filter((t) => (t.pnl || t.profitLoss || 0) > 0).length
     const tradingDays = new Set(trades.map((t) => t.date)).size
+
+    console.log("[v0] Calendar monthlyStats:", { tradesCount: trades.length, totalPnL, winningTrades, tradingDays })
 
     return {
       totalEntries: monthEntries.length,
