@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { useAuth } from "./auth-context"
 
 interface Achievement {
   id: string
@@ -340,6 +341,7 @@ const AVAILABLE_CHALLENGES: Omit<Challenge, "current" | "startDate" | "active" |
 ]
 
 export function GamificationProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
   const [data, setData] = useState<GamificationData>({
     xp: 0,
     level: 1,
@@ -373,25 +375,67 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     dailyXPLog: [],
   })
 
+  // Load XP from Supabase when user logs in
   useEffect(() => {
-    // When user logs in/out, AuthContext clears gamification-data localStorage, so fresh data is loaded
-    const saved = localStorage.getItem("gamification-data")
-    if (saved) {
+    const loadXPFromSupabase = async () => {
+      if (!user?.id) {
+        console.log("[v0] GamificationProvider - No user, skipping XP load")
+        return
+      }
+
       try {
-        const parsed = JSON.parse(saved)
-        // Ensure dailyXPLog exists for backwards compatibility
-        if (!parsed.dailyXPLog) {
-          parsed.dailyXPLog = []
+        console.log("[v0] GamificationProvider - Loading XP for user:", user.id)
+        const response = await fetch("/api/xp/get-profile", {
+          credentials: "include",
+        })
+        const profileData = await response.json()
+
+        if (profileData.success && profileData.xp !== undefined) {
+          console.log("[v0] GamificationProvider - Loaded XP from Supabase:", profileData.xp)
+          setData((prev) => ({
+            ...prev,
+            xp: profileData.xp || 0,
+            level: profileData.level || 1,
+          }))
+        } else {
+          // Try to load from localStorage as fallback
+          const saved = localStorage.getItem("gamification-data")
+          if (saved) {
+            try {
+              const parsed = JSON.parse(saved)
+              if (!parsed.dailyXPLog) {
+                parsed.dailyXPLog = []
+              }
+              console.log("[v0] GamificationProvider - Loaded from localStorage:", parsed.xp)
+              setData(parsed)
+            } catch (e) {
+              console.error("[v0] Failed to parse gamification data:", e)
+              localStorage.removeItem("gamification-data")
+            }
+          }
         }
-        // Only use saved data if it exists - logout cleanup ensures it's fresh
-        setData(parsed)
-      } catch (e) {
-        console.error("[v0] Failed to parse gamification data:", e)
-        localStorage.removeItem("gamification-data")
+      } catch (error) {
+        console.error("[v0] Error loading XP from Supabase:", error)
+        // Fallback to localStorage
+        const saved = localStorage.getItem("gamification-data")
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved)
+            if (!parsed.dailyXPLog) {
+              parsed.dailyXPLog = []
+            }
+            setData(parsed)
+          } catch (e) {
+            console.error("[v0] Failed to parse gamification data:", e)
+          }
+        }
       }
     }
-  }, [])
 
+    loadXPFromSupabase()
+  }, [user?.id])
+
+  // Save XP to localStorage (for session persistence)
   useEffect(() => {
     localStorage.setItem("gamification-data", JSON.stringify(data))
   }, [data])
