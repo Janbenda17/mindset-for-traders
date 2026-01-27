@@ -208,57 +208,30 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
   }, [user?.id])
 
   const handleAddTrade = async () => {
-    if (!currentTrade.pair || !currentTrade.pips || !currentTrade.openTime || !currentTrade.closeTime) {
+    console.log("[v0] handleAddTrade called", currentTrade)
+    
+    // Validation
+    if (!currentTrade.pair || !currentTrade.openTime || !currentTrade.closeTime) {
+      console.log("[v0] Validation failed - missing fields")
       toast({
-        title: "Chybí data",
-        description: "Vyplň pair, pips, čas otevření a zavření",
+        title: "Chyba",
+        description: "Vyplňte prosím všechna povinná pole",
         variant: "destructive",
       })
       return
     }
 
-    const tagsArray =
-      typeof currentTrade.tags === "string"
-        ? (currentTrade.tags as string)
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean)
-        : currentTrade.tags || []
-
-    const newTrade: Trade = {
-      id: Date.now().toString(),
-      date: currentTrade.date as string,
-      title: currentTrade.pair as string,
-      pair: currentTrade.pair as string,
-      direction: currentTrade.direction as "LONG" | "SHORT",
-      openTime: currentTrade.openTime as string,
-      closeTime: currentTrade.closeTime as string,
-      session: currentTrade.session as string,
-      tradeType: currentTrade.tradeType as string,
-      pips: currentTrade.pips as number,
-      positionSize: currentTrade.positionSize as number,
-      pnl: currentTrade.pnl as number,
-      confidenceBefore: currentTrade.confidenceBefore as number,
-      stressLevel: currentTrade.stressLevel as number,
-      mood: currentTrade.mood as number,
-      emotionBefore: currentTrade.emotionBefore as string,
-      emotionDuring: currentTrade.emotionDuring as string,
-      emotionAfter: currentTrade.emotionAfter as string,
-      entryReason: currentTrade.entryReason as string,
-      exitReason: currentTrade.exitReason as string,
-      detailedAnalysis: currentTrade.detailedAnalysis as string,
-      followedPlan: currentTrade.followedPlan as boolean,
-      exitedEarly: currentTrade.exitedEarly as boolean,
-      missedDueToHesitation: currentTrade.missedDueToHesitation as boolean,
-      revengeTrade: currentTrade.revengeTrade as boolean,
-      behaviorDescription: currentTrade.behaviorDescription as string,
-      tags: tagsArray,
-      notes: currentTrade.notes as string,
-      openDate: currentTrade.openDate as string,
-      closeDate: currentTrade.closeDate as string,
+    const newTrade = {
+      ...currentTrade,
+      id: `trade-${Date.now()}`,
+      entryPrice: parseFloat(String(currentTrade.entryPrice || 0)),
+      exitPrice: parseFloat(String(currentTrade.exitPrice || 0)),
+      quantity: parseFloat(String(currentTrade.quantity || 0)),
     }
 
+    console.log("[v0] Calling addTrade with:", newTrade)
     const success = await addTrade(newTrade)
+    console.log("[v0] addTrade result:", success)
 
     if (!success) {
       toast({

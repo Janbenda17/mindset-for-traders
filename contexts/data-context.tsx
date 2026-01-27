@@ -492,10 +492,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addTrade = useCallback(
     async (trade: Trade): Promise<boolean> => {
+      console.log("[v0] addTrade context - isLiveMode:", isLiveMode, "user:", !!user?.id)
+      
       if (isLiveMode && user?.id) {
         const tradeTitle = `${trade.pair} ${trade.direction.toUpperCase()}`
         const tradeContent = `Trade: ${trade.pair} ${trade.direction.toUpperCase()} | Entry: ${trade.entryPrice} | Exit: ${trade.exitPrice} | PnL: ${trade.pnl >= 0 ? "+" : ""}$${trade.pnl}${trade.notes ? ` | Notes: ${trade.notes}` : ""}`
 
+        console.log("[v0] Inserting trade to Supabase:", { title: tradeTitle, pair: trade.pair })
         const { error } = await supabase.from("journal_entries").insert({
           user_id: user.id,
           title: tradeTitle,
@@ -522,7 +525,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           exited_early: trade.exitedEarly,
           missed_due_to_hesitation: trade.missedDueToHesitation,
           matched_plan: trade.matchedPlan,
-          tags: trade.tags,
+          tags: Array.isArray(trade.tags) ? trade.tags : (trade.tags ? [trade.tags] : []),
           type: "trade",
           // NEW FIELDS
           open_time: trade.openTime,
@@ -533,8 +536,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           position_size: trade.positionSize,
           confidence_before: trade.confidenceBefore,
           stress_level: trade.stressLevel,
-          detailed_analysis: trade.detailedAnalysis,
-          behavior_description: trade.behaviorDescription,
+          detailed_analysis: trade.detailedAnalysis || "",
+          behavior_description: trade.behaviorDescription || "",
           open_date: trade.openDate,
           close_date: trade.closeDate,
           followed_plan: trade.followedPlan,
