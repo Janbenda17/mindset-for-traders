@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { showXPNotification, showLevelUpNotification } from "@/lib/xp-notifications"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -171,6 +172,10 @@ export default function LossResetPage() {
       const xpData = await xpResponse.json()
       if (xpData.success) {
         console.log("[v0] Loss reset XP awarded:", xpData.xpAwarded)
+        showXPNotification(xpData.xpAwarded, "Loss Reset!")
+        if (xpData.leveledUp) {
+          showLevelUpNotification(xpData.level)
+        }
       } else if (!xpData.alreadyClaimed) {
         console.error("[v0] Failed to award loss reset XP:", xpData.error)
       }

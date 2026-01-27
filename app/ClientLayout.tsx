@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { TopNavigation } from "@/components/top-navigation"
 import { Footer } from "@/components/footer"
 import { ProductTour } from "@/components/product-tour"
+import { XPNotification } from "@/components/xp-notification"
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -37,6 +38,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <div className={hideNavigation ? "flex-1" : "pt-16 flex-1"}>{children}</div>
       {!hideNavigation && <Footer />}
       {!hideNavigation && <ProductTour />}
+      <XPNotification />
     </div>
   )
 }

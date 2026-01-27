@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { showXPNotification, showLevelUpNotification } from "@/lib/xp-notifications"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -386,6 +387,10 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       const xpData = await xpResponse.json()
       if (xpData.success) {
         console.log("[v0] Morning check XP awarded:", xpData.xpAwarded)
+        showXPNotification(xpData.xpAwarded, "Morning Check!")
+        if (xpData.leveledUp) {
+          showLevelUpNotification(xpData.level)
+        }
       }
     } catch (error) {
       console.error("[v0] Error awarding morning check XP:", error)

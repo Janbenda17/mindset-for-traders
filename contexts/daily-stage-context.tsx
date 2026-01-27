@@ -4,6 +4,7 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { useAnalytics } from "./analytics-context"
 import { useAuth } from "./auth-context" // Import useAuth
+import { showXPNotification, showLevelUpNotification } from "@/lib/xp-notifications"
 
 interface Stage {
   id: number
@@ -232,6 +233,10 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
           const xpData = await xpResponse.json()
           if (xpData.success) {
             console.log(`[v0] Stage ${stageId} XP awarded: ${xpData.xpAwarded}`)
+            showXPNotification(xpData.xpAwarded, `Stage ${stageId} Complete!`)
+            if (xpData.leveledUp) {
+              showLevelUpNotification(xpData.level)
+            }
           }
         } catch (error) {
           console.error("[v0] Error awarding stage XP:", error)

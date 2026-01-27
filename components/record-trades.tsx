@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
 import { useAuth } from "@/contexts/auth-context"
+import { showXPNotification, showLevelUpNotification } from "@/lib/xp-notifications"
 import { TrendingUp, DollarSign, BarChart3, Brain, Zap, ChevronDown, Trash2 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -269,120 +270,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
       const xpData = await xpResponse.json()
       if (xpData.success) {
         console.log("[v0] New trade XP awarded:", xpData.xpAwarded)
+        showXPNotification(xpData.xpAwarded, "Trade Recorded!")
+        if (xpData.leveledUp) {
+          showLevelUpNotification(xpData.level)
+        }
       }
     } catch (error) {
       console.error("[v0] Error awarding trade XP:", error)
-    }
-
-    completeStage("record-trades")
-    
-    setIsLoading(false)
-    
-    toast({
-      title: "✅ Obchod uložen!",
-      description: `${newTrade.direction} ${newTrade.pair} - ${newTrade.pnl >= 0 ? "+" : ""}$${newTrade.pnl}`,
-    })
-
-    // Reset form
-    setCurrentTrade({
-      date: format(new Date(), "yyyy-MM-dd"),
-      openDate: format(new Date(), "yyyy-MM-dd"),
-      closeDate: format(new Date(), "yyyy-MM-dd"),
-      pair: "",
-      direction: "LONG",
-      openTime: "",
-      closeTime: "",
-      session: "",
-      tradeType: "",
-      pips: 0,
-      positionSize: 0.01,
-      pnl: 0,
-      confidenceBefore: 7,
-      stressLevel: 5,
-      mood: 7,
-      emotionBefore: "",
-      emotionDuring: "",
-      emotionAfter: "",
-      entryReason: "",
-      exitReason: "",
-      detailedAnalysis: "",
-      followedPlan: true,
-      exitedEarly: false,
-      missedDueToHesitation: false,
-      revengeTrade: false,
-      behaviorDescription: "",
-      tags: [],
-      notes: "",
-    })
-
-    // If in modal, call onComplete after delay
-    if (onComplete) {
-      setTimeout(() => onComplete(), 1500)
-    }
-
-    setTrades([...trades, newTrade])
-
-    setCurrentTrade({
-      date: format(new Date(), "yyyy-MM-dd"),
-      pair: currentTrade.pair,
-      direction: "LONG",
-      openTime: "",
-      closeTime: "",
-      session: "",
-      tradeType: "",
-      pips: 0,
-      positionSize: 0.01,
-      pnl: 0,
-      confidenceBefore: morningCheck?.focus || 7,
-      stressLevel: morningCheck?.stressLevel || 5,
-      mood: morningCheck?.emotionalState || 7,
-      emotionBefore: "",
-      emotionDuring: "",
-      emotionAfter: "",
-      entryReason: "",
-      exitReason: "",
-      detailedAnalysis: "",
-      followedPlan: true,
-      exitedEarly: false,
-      missedDueToHesitation: false,
-      revengeTrade: false,
-      behaviorDescription: "",
-      tags: [],
-      notes: "",
-      openDate: format(new Date(), "yyyy-MM-dd"),
-      closeDate: format(new Date(), "yyyy-MM-dd"),
-    })
-
-    toast({
-      title: "✅ Trade Přidán!",
-      description: `${newTrade.direction} ${newTrade.pair} - ${newTrade.pnl >= 0 ? "+" : ""}$${newTrade.pnl}`,
-    })
-
-    // Mark record trade as completed in daily tracker
-    try {
-      await fetch("/api/daily-tracker/mark-completed", {
-        method: "POST",
-        credentials: "include",
-        body: JSON.stringify({ type: "record_trade" }),
-      })
-    } catch (error) {
-      console.error("[v0] Error marking record trade as completed:", error)
-    }
-
-    const tradeEntry = {
-      ...newTrade,
-      type: "trade",
-      content: newTrade.detailedAnalysis || "",
-      tags: newTrade.tags,
-      mood: newTrade.mood,
-      profitLoss: newTrade.pnl,
-      confidenceLevel: newTrade.confidenceBefore,
-    }
-    completeStage("record-trades")
-
-    // If in modal, call onComplete
-    if (onComplete) {
-      setTimeout(() => onComplete(), 500)
     }
   }
 
