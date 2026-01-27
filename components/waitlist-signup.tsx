@@ -27,10 +27,11 @@ export function WaitlistSignup() {
       const data = await response.json()
 
       if (data.success) {
+        console.log("[v0] Waitlist signup success - Full data:", data)
         setStatus("success")
         setDiscountCode(data.discountCode)
         setEmail("")
-        console.log("[v0] Waitlist signup success:", data.email)
+        console.log("[v0] Discount code set to:", data.discountCode)
       } else {
         setStatus("error")
         setErrorMsg(data.error || "Chyba při přidání na waitlist")
