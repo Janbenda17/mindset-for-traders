@@ -255,6 +255,25 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
       console.error("[v0] Error marking record trade as completed:", error)
     }
 
+    // Award 10 XP for new trade
+    try {
+      const xpResponse = await fetch("/api/xp/award", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          action: "new_trade", 
+          metadata: { pair: newTrade.pair, pnl: newTrade.pnl } 
+        }),
+      })
+      const xpData = await xpResponse.json()
+      if (xpData.success) {
+        console.log("[v0] New trade XP awarded:", xpData.xpAwarded)
+      }
+    } catch (error) {
+      console.error("[v0] Error awarding trade XP:", error)
+    }
+
     completeStage("record-trades")
     
     setIsLoading(false)

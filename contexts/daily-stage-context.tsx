@@ -217,6 +217,27 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
       const data = await response.json()
       console.log(`[v0] ✓ Stage ${stageId} completed successfully`)
 
+      // Award 5 XP for stage completion (except stage 1 which awards 10 XP via morning check)
+      if (stageId > 1) {
+        try {
+          const xpResponse = await fetch("/api/xp/award", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              action: "daily_stage", 
+              metadata: { stage: stageId } 
+            }),
+          })
+          const xpData = await xpResponse.json()
+          if (xpData.success) {
+            console.log(`[v0] Stage ${stageId} XP awarded: ${xpData.xpAwarded}`)
+          }
+        } catch (error) {
+          console.error("[v0] Error awarding stage XP:", error)
+        }
+      }
+
       await loadStagesFromSupabase()
     } catch (error) {
       console.error("[v0] Error completing stage:", error)

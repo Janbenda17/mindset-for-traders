@@ -375,6 +375,22 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       console.error("[v0] Error marking morning check as completed:", error)
     }
 
+    // Award XP for morning check
+    try {
+      const xpResponse = await fetch("/api/xp/award", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "morning_check" }),
+      })
+      const xpData = await xpResponse.json()
+      if (xpData.success) {
+        console.log("[v0] Morning check XP awarded:", xpData.xpAwarded)
+      }
+    } catch (error) {
+      console.error("[v0] Error awarding morning check XP:", error)
+    }
+
     // If component is in modal (analytics), just call onComplete
     // If standalone (morning-check page), redirect
     if (onComplete) {
