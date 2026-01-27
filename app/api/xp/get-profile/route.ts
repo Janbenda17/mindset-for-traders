@@ -42,10 +42,3 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-    console.error("[v0] XP get-profile error:", error)
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Internal error" },
-      { status: 500 }
-    )
-  }
-}

@@ -388,6 +388,14 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         const response = await fetch("/api/xp/get-profile", {
           credentials: "include",
         })
+
+        // Check if response is actually JSON
+        const contentType = response.headers.get("content-type")
+        if (!contentType?.includes("application/json")) {
+          console.error("[v0] API returned non-JSON response:", contentType, "status:", response.status)
+          throw new Error(`Invalid response type: ${contentType}`)
+        }
+
         const profileData = await response.json()
 
         if (profileData.success && profileData.xp !== undefined) {
@@ -398,6 +406,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
             level: profileData.level || 1,
           }))
         } else {
+          console.log("[v0] GamificationProvider - API returned non-success:", profileData)
           // Try to load from localStorage as fallback
           const saved = localStorage.getItem("gamification-data")
           if (saved) {
@@ -415,7 +424,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (error) {
-        console.error("[v0] Error loading XP from Supabase:", error)
+        console.error("[v0] Error loading XP from Supabase:", error instanceof Error ? error.message : String(error))
         // Fallback to localStorage
         const saved = localStorage.getItem("gamification-data")
         if (saved) {
@@ -424,9 +433,10 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
             if (!parsed.dailyXPLog) {
               parsed.dailyXPLog = []
             }
+            console.log("[v0] GamificationProvider - Fallback to localStorage XP:", parsed.xp)
             setData(parsed)
           } catch (e) {
-            console.error("[v0] Failed to parse gamification data:", e)
+            console.error("[v0] Failed to parse gamification data from fallback:", e)
           }
         }
       }
