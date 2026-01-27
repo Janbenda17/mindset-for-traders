@@ -431,7 +431,37 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
                           )}
                         </div>
                         <h4 className="font-semibold text-white text-sm mb-1 line-clamp-1">{entry.title}</h4>
-                        {entry.content && <p className="text-xs text-gray-400 line-clamp-2">{entry.content}</p>}
+                        {entry.content && <p className="text-xs text-gray-400 line-clamp-2 mb-2">{entry.content}</p>}
+                        
+                        {/* Psychology Data */}
+                        {(entry.emotionBefore || entry.mood !== undefined || entry.confidenceBefore !== undefined || entry.stressLevel !== undefined) && (
+                          <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-slate-600">
+                            {entry.emotionBefore && (
+                              <div className="flex flex-col">
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wide">Emoce</span>
+                                <span className="text-xs font-medium text-blue-300">{entry.emotionBefore}</span>
+                              </div>
+                            )}
+                            {entry.mood !== undefined && (
+                              <div className="flex flex-col">
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wide">Nálada</span>
+                                <span className="text-xs font-medium text-emerald-300">{entry.mood}/10</span>
+                              </div>
+                            )}
+                            {entry.confidenceBefore !== undefined && (
+                              <div className="flex flex-col">
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wide">Důvěra</span>
+                                <span className="text-xs font-medium text-cyan-300">{entry.confidenceBefore}/10</span>
+                              </div>
+                            )}
+                            {entry.stressLevel !== undefined && (
+                              <div className="flex flex-col">
+                                <span className="text-[10px] text-gray-400 uppercase tracking-wide">Stres</span>
+                                <span className="text-xs font-medium text-orange-300">{entry.stressLevel}/10</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   )

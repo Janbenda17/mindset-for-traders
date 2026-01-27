@@ -359,6 +359,20 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           missedDueToHesitation: entry.missed_due_to_hesitation,
           matchedPlan: entry.matched_plan,
           tags: entry.tags,
+          // NEW FIELDS
+          openTime: entry.open_time,
+          closeTime: entry.close_time,
+          session: entry.session,
+          tradeType: entry.trade_type,
+          pips: entry.pips,
+          positionSize: entry.position_size,
+          confidenceBefore: entry.confidence_before,
+          stressLevel: entry.stress_level,
+          detailedAnalysis: entry.detailed_analysis,
+          behaviorDescription: entry.behavior_description,
+          openDate: entry.open_date,
+          closeDate: entry.close_date,
+          followedPlan: entry.followed_plan,
         }))
         console.log(`[v0] Loaded ${trades.length} trades from journal_entries for user ${user.id}`)
         dispatch({ type: "SET_TRADES", payload: trades })
@@ -405,8 +419,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .order("created_at", { ascending: false })
 
       if (!journalError && journalEntries) {
-        console.log(`[v0] Loaded ${journalEntries.length} journal entries from Supabase for user ${user.id}`)
-        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: journalEntries })
+        const mappedEntries = journalEntries.map((entry: any) => ({
+          ...entry,
+          emotionBefore: entry.emotion_before,
+          emotionDuring: entry.emotion_during,
+          emotionAfter: entry.emotion_after,
+          entryReason: entry.entry_reason,
+          exitReason: entry.exit_reason,
+          marketConditions: entry.market_conditions,
+          confidenceBefore: entry.confidence_before,
+          stressLevel: entry.stress_level,
+          detailedAnalysis: entry.detailed_analysis,
+          behaviorDescription: entry.behavior_description,
+          openTime: entry.open_time,
+          closeTime: entry.close_time,
+          tradeType: entry.trade_type,
+          positionSize: entry.position_size,
+          profitLoss: entry.pnl,
+        }))
+        console.log(`[v0] Loaded ${mappedEntries.length} journal entries from Supabase for user ${user.id}`)
+        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: mappedEntries })
       } else if (journalError) {
         console.error("[v0] Error loading journal entries:", journalError)
         dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
