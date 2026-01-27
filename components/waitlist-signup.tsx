@@ -84,7 +84,7 @@ export function WaitlistSignup() {
             <div>
               <p className="font-semibold text-emerald-300 text-lg">Právě jsi na waitlistu!</p>
               <p className="text-slate-300 mt-2">
-                Tvůj emailová adresa je zaregistrovaná. Pošleme ti notifikaci den předtím než spustíme, plus den samotného spuštění.
+                Pošleme ti notifikaci den předtím než spustíme, plus den samotného spuštění.
               </p>
             </div>
           </div>
@@ -92,7 +92,7 @@ export function WaitlistSignup() {
           <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
             <p className="text-xs text-slate-400 uppercase tracking-wide mb-2">Tvůj kód pro 5% slevu:</p>
             <div className="flex items-center justify-between gap-3">
-              <code className="text-lg font-mono font-bold text-blue-400">{discountCode}</code>
+              <code className="text-xl font-mono font-bold text-blue-400">{discountCode}</code>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(discountCode)
