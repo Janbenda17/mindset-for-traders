@@ -68,7 +68,7 @@ export default function LandingPage() {
     if (password === "Mindpreview") {
       // Set cookie to mark landing as seen
       document.cookie = "mt_seen_landing=1; path=/; max-age=31536000"
-      router.push("/auth/login")
+      router.push("/about")
     } else {
       setError("Špatné heslo. Prosím zkus znovu.")
       setPassword("")
@@ -96,7 +96,7 @@ export default function LandingPage() {
   const handleEnterApp = () => {
     // Set cookie to mark landing as seen
     document.cookie = "mt_seen_landing=1; path=/; max-age=31536000"
-    router.push("/auth/login")
+    router.push("/about")
   }
 
   return (
