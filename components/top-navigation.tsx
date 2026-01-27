@@ -50,6 +50,7 @@ const mainNavigation = [
 ]
 
 const moreNavigation = [
+  { name: "O MindTrader AI", href: "/about", icon: Brain },
   { name: "Weekly Review", href: "/weekly-review", icon: Calendar },
   { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NEW" },
   { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NEW" },

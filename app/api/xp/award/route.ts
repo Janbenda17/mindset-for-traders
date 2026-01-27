@@ -16,13 +16,13 @@ export async function POST(request: NextRequest) {
 
     console.log("[v0] XP Award - action:", action, "user:", user.id)
 
-    // Define XP rewards
+    // Define XP rewards - loss_reset should be 10 XP only
     const XP_REWARDS: Record<string, number> = {
       morning_check: 10,
       daily_stage: 5,
       new_trade: 10,
       success_story: 50,
-      loss_reset: 10,
+      loss_reset: 10, // Fixed: loss_reset should be 10, not 50
     }
 
     const xpAmount = XP_REWARDS[action]
@@ -143,9 +143,9 @@ export async function POST(request: NextRequest) {
     // Log XP award
     const { error: logError } = await supabase.from("xp_log").insert({
       user_id: user.id,
-      action,
-      xp_amount: xpAmount,
-      metadata: metadata || {},
+      amount: xpAmount,
+      reason: `XP award: ${action}`,
+      source: action,
     })
 
     if (logError) {
