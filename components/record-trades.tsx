@@ -210,16 +210,17 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
   const handleAddTrade = async () => {
     console.log("[v0] handleAddTrade called", currentTrade)
     
-    // Validation
-    if (!currentTrade.pair || !currentTrade.openTime || !currentTrade.closeTime) {
-      console.log("[v0] Validation failed - missing fields")
+    // Minimal validation - just require pair
+    if (!currentTrade.pair) {
       toast({
         title: "Chyba",
-        description: "Vyplňte prosím všechna povinná pole",
+        description: "Vyplňte prosím minimálně měnový pár",
         variant: "destructive",
       })
       return
     }
+
+    setIsLoading(true)
 
     const newTrade = {
       ...currentTrade,
@@ -227,19 +228,77 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
       entryPrice: parseFloat(String(currentTrade.entryPrice || 0)),
       exitPrice: parseFloat(String(currentTrade.exitPrice || 0)),
       quantity: parseFloat(String(currentTrade.quantity || 0)),
-    }
+    } as Trade
 
     console.log("[v0] Calling addTrade with:", newTrade)
     const success = await addTrade(newTrade)
     console.log("[v0] addTrade result:", success)
 
     if (!success) {
+      setIsLoading(false)
       toast({
         title: "Chyba",
-        description: "Nepodařilo se uložit obchod do databáze",
+        description: "Nepodařilo se uložit obchod.",
         variant: "destructive",
       })
       return
+    }
+
+    // Mark record trade as completed in daily tracker
+    try {
+      await fetch("/api/daily-tracker/mark-completed", {
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify({ type: "record_trade" }),
+      })
+    } catch (error) {
+      console.error("[v0] Error marking record trade as completed:", error)
+    }
+
+    completeStage("record-trades")
+    
+    setIsLoading(false)
+    
+    toast({
+      title: "✅ Obchod uložen!",
+      description: `${newTrade.direction} ${newTrade.pair} - ${newTrade.pnl >= 0 ? "+" : ""}$${newTrade.pnl}`,
+    })
+
+    // Reset form
+    setCurrentTrade({
+      date: format(new Date(), "yyyy-MM-dd"),
+      openDate: format(new Date(), "yyyy-MM-dd"),
+      closeDate: format(new Date(), "yyyy-MM-dd"),
+      pair: "",
+      direction: "LONG",
+      openTime: "",
+      closeTime: "",
+      session: "",
+      tradeType: "",
+      pips: 0,
+      positionSize: 0.01,
+      pnl: 0,
+      confidenceBefore: 7,
+      stressLevel: 5,
+      mood: 7,
+      emotionBefore: "",
+      emotionDuring: "",
+      emotionAfter: "",
+      entryReason: "",
+      exitReason: "",
+      detailedAnalysis: "",
+      followedPlan: true,
+      exitedEarly: false,
+      missedDueToHesitation: false,
+      revengeTrade: false,
+      behaviorDescription: "",
+      tags: [],
+      notes: "",
+    })
+
+    // If in modal, call onComplete after delay
+    if (onComplete) {
+      setTimeout(() => onComplete(), 1500)
     }
 
     setTrades([...trades, newTrade])
@@ -885,7 +944,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                             <p className="text-sm text-gray-200">{trade.behaviorDescription}</p>
                           </div>
                         )}
-                        {trade.tags.length > 0 && (
+                        {Array.isArray(trade.tags) && trade.tags.length > 0 && (
                           <div>
                             <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Tagy</p>
                             <div className="flex flex-wrap gap-2">
