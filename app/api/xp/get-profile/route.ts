@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("xp, level")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .single()
 
     if (error) {
