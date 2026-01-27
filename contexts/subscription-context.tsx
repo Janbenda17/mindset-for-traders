@@ -111,8 +111,52 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }
 
   const upgradeToPremium = async (): Promise<boolean> => {
-    window.location.href = STRIPE_PAYMENT_LINK
-    return true
+    if (!user) {
+      console.log("[v0] Upgrade: User not authenticated")
+      return false
+    }
+
+    try {
+      setIsLoading(true)
+      console.log("[v0] Upgrade: Creating checkout session for", user.email)
+      
+      // Call the create-checkout endpoint to get redirect URL
+      const response = await fetch("/api/subscription/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ 
+          plan: "premium"
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("[v0] Upgrade: API error:", errorData.error)
+        throw new Error(errorData.error || "Failed to create checkout session")
+      }
+
+      const data = await response.json()
+      console.log("[v0] Upgrade: Got checkout URL:", data.url ? "✓" : "✗")
+
+      if (data.url) {
+        // Redirect to checkout
+        window.location.href = data.url
+        return true
+      }
+
+      return false
+    } catch (error) {
+      console.error("[v0] Upgrade error:", error)
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se otevřít checkout. Zkuste to prosím později.",
+        variant: "destructive"
+      })
+      return false
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const cancelSubscription = async (): Promise<boolean> => {

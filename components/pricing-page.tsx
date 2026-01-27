@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,13 +12,65 @@ import { cn } from "@/lib/utils"
 
 export function PricingPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
-  const { isPremium, isLoading } = useSubscription()
+  const { isPremium, isLoading, checkSubscriptionStatus } = useSubscription()
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
   const [isLoadingCheckout, setIsLoadingCheckout] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const plan = "free" // Declare plan variable
   const isActive = false // Declare isActive variable
   const daysRemaining = 0 // Declare daysRemaining variable
+
+  // Auto-verify payment when session_id is present
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id")
+    console.log("[v0] Verify useEffect triggered - sessionId:", sessionId, "user:", !!user, "isVerifying:", isVerifying)
+    
+    if (sessionId && user && !isVerifying) {
+      console.log("[v0] Detected session_id - auto-verifying payment:", sessionId)
+      setIsVerifying(true)
+      setVerificationMessage("Ověřuji platbu...")
+
+      // Call verify endpoint
+      fetch(`/api/subscription/verify?session_id=${sessionId}`, {
+        method: "POST",
+        credentials: "include",
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("[v0] Verification result:", data)
+          
+          if (data.success) {
+            setVerificationMessage("✓ Platba ověřena! Předplatné je aktivní.")
+            console.log("[v0] Payment successful - refreshing subscription status...")
+            
+            // Refresh subscription status immediately AFTER verification
+            if (checkSubscriptionStatus) {
+              setTimeout(() => {
+                checkSubscriptionStatus()
+              }, 500)
+            }
+            
+            // Redirect to dashboard after 3 seconds
+            setTimeout(() => {
+              router.push("/")
+            }, 3000)
+          } else {
+            setVerificationMessage("Platba ještě není dokončena. Zkuste to prosím za chvíli.")
+          }
+        })
+        .catch((error) => {
+          console.error("[v0] Verification error:", error)
+          setVerificationMessage("Chyba při ověřování platby. Kontaktujte prosím podporu.")
+        })
+        .finally(() => {
+          setTimeout(() => setIsVerifying(false), 3000)
+        })
+    }
+  }, [searchParams, user, isVerifying, router, checkSubscriptionStatus])
 
   // If user is premium, redirect to dashboard
   if (!isLoading && isPremium) {
@@ -45,7 +97,41 @@ export function PricingPage() {
     )
   }
 
-  const handleUpgrade = () => {
+  const handleRefreshSubscription = async () => {
+    if (!user) return
+
+    setIsRefreshing(true)
+    setVerificationMessage("Kontroluji stav předplatného...")
+
+    try {
+      const response = await fetch("/api/subscription/refresh", {
+        method: "POST",
+        credentials: "include",
+      })
+
+      const data = await response.json()
+      console.log("[v0] Refresh result:", data)
+
+      if (data.isPremium) {
+        setVerificationMessage("✓ Premium předplatné aktivováno!")
+        setTimeout(() => {
+          checkSubscriptionStatus?.()
+          router.push("/")
+        }, 2000)
+      } else {
+        setVerificationMessage("Žádné aktivní předplatné nebylo nalezeno. Zkuste to prosím za chvíli.")
+        setTimeout(() => setVerificationMessage(null), 3000)
+      }
+    } catch (error) {
+      console.error("[v0] Refresh error:", error)
+      setVerificationMessage("Chyba při kontrole předplatného.")
+      setTimeout(() => setVerificationMessage(null), 3000)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  const handleUpgrade = async () => {
     if (!user) {
       router.push("/auth/sign-up")
       return
@@ -53,13 +139,41 @@ export function PricingPage() {
 
     setIsLoadingCheckout(true)
     try {
-      console.log("[v0] Opening Stripe payment link in new window")
-      const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/3cI8wQ6U01QIfee8jy1B601"
-      window.open(STRIPE_PAYMENT_LINK, "_blank")
+      console.log("[v0] Creating Stripe checkout session...")
+      
+      const response = await fetch("/api/subscription/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ plan: "premium" }),
+      })
+
+      console.log("[v0] Response status:", response.status, "ok:", response.ok)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to create checkout")
+      }
+
+      const data = await response.json()
+      console.log("[v0] Checkout URL received:", data.url ? "✓" : "✗")
+      console.log("[v0] URL starts with:", data.url?.substring(0, 50))
+
+      if (data.url) {
+        console.log("[v0] Redirecting to Stripe checkout...")
+        // Use window.open first to ensure it works, then fall back to location
+        const checkoutWindow = window.open(data.url, "_blank")
+        if (!checkoutWindow) {
+          // If pop-up blocked, use location href
+          console.log("[v0] Pop-up blocked, using window.location.href")
+          window.location.href = data.url
+        }
+      } else {
+        throw new Error("No checkout URL returned")
+      }
     } catch (error) {
       console.error("[v0] Error:", error)
-      alert("Chyba: " + (error instanceof Error ? error.message : "Neznámá chyba"))
-    } finally {
+      alert("Chyba při vytváření platby: " + (error instanceof Error ? error.message : "Neznámá chyba"))
       setIsLoadingCheckout(false)
     }
   }
@@ -88,6 +202,23 @@ export function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+      {/* Verification Banner */}
+      {verificationMessage && (
+        <div
+          className={cn(
+            "fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-lg shadow-lg max-w-md text-center font-medium",
+            verificationMessage.includes("✓")
+              ? "bg-green-500 text-white"
+              : verificationMessage.includes("Chyba")
+              ? "bg-red-500 text-white"
+              : "bg-blue-500 text-white"
+          )}
+        >
+          {isVerifying && <Loader2 className="inline-block h-4 w-4 mr-2 animate-spin" />}
+          {verificationMessage}
+        </div>
+      )}
+
       {/* Hero Section */}
       <div className="relative overflow-hidden pt-20 pb-16 lg:pt-32 lg:pb-24">
         <div className="container mx-auto px-4 text-center relative z-10">
@@ -227,14 +358,13 @@ export function PricingPage() {
                 Odemkněte Live Režim a začněte budovat reálnou kariéru.
               </CardDescription>
               <div className="mt-6 flex items-baseline">
+                <span className="text-2xl text-gray-500 line-through mr-3">2499 Kč</span>
                 <span className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-                  {billingCycle === "monthly" ? "1499 Kč" : "1199 Kč"}
+                  1499 Kč
                 </span>
                 <span className="text-gray-500 ml-2 text-lg">/měsíc</span>
               </div>
-              {billingCycle === "yearly" && (
-                <p className="text-sm text-green-600 font-medium mt-2">Ušetříte 3 600 Kč ročně</p>
-              )}
+              <p className="text-sm text-green-600 font-medium mt-2">Sleva 40% z běžné ceny</p>
             </CardHeader>
             <CardContent className="flex-grow">
               <ul className="space-y-4">
@@ -249,25 +379,45 @@ export function PricingPage() {
               </ul>
             </CardContent>
             <CardFooter className="pt-8 pb-8">
-              <Button
-                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
-                onClick={handleUpgrade}
-                disabled={isActive || isLoadingCheckout}
-              >
-                {isLoadingCheckout ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Přesměrování na platbu...
-                  </>
-                ) : isActive ? (
-                  "Váš plán je aktivní"
-                ) : (
-                  <>
-                    Upgradovat na Live
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
+              <div className="w-full space-y-3">
+                <Button
+                  className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
+                  onClick={handleUpgrade}
+                  disabled={isActive || isLoadingCheckout}
+                >
+                  {isLoadingCheckout ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      Přesměrování na platbu...
+                    </>
+                  ) : isActive ? (
+                    "Váš plán je aktivní"
+                  ) : (
+                    <>
+                      Upgradovat na Live
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
+                </Button>
+                
+                {!isActive && !isPremium && (
+                  <Button
+                    variant="outline"
+                    className="w-full h-10 text-sm"
+                    onClick={handleRefreshSubscription}
+                    disabled={isRefreshing}
+                  >
+                    {isRefreshing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Kontroluji...
+                      </>
+                    ) : (
+                      "Již jsem zaplatil - Zkontrolovat předplatné"
+                    )}
+                  </Button>
                 )}
-              </Button>
+              </div>
               <p className="text-xs text-center text-gray-500 mt-4 w-full">Bez závazků. Zrušit můžete kdykoli.</p>
             </CardFooter>
           </Card>

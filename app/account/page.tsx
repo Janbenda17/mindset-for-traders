@@ -600,9 +600,28 @@ export default function AccountPage() {
     }
   }
 
-  const handleManageSubscription = () => {
-    // Open Stripe customer portal directly
-    window.open("https://billing.stripe.com/p/login/test_00g5kK9Xf0YV5G0288", "_blank")
+  const handleManageSubscription = async () => {
+    try {
+      const response = await fetch("/api/subscription/billing-portal", {
+        method: "POST",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to open billing portal")
+      }
+
+      const data = await response.json()
+      if (data.url) {
+        window.open(data.url, "_blank")
+      }
+    } catch (error) {
+      console.error("Error opening billing portal:", error)
+      toast({
+        title: language === "cs" ? "Chyba" : "Error",
+        description: language === "cs" ? "Nepodařilo se otevřít správu předplatného" : "Failed to open subscription management",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleCancelSubscription = async () => {

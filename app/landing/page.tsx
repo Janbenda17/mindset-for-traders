@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Brain, Lock, Sparkles, Timer, Zap } from "lucide-react"
 import { motion } from "framer-motion"
+import { WaitlistSignup } from "@/components/waitlist-signup"
 
 export default function LandingPage() {
   const router = useRouter()
@@ -68,7 +69,7 @@ export default function LandingPage() {
     if (password === "Mindpreview") {
       // Set cookie to mark landing as seen
       document.cookie = "mt_seen_landing=1; path=/; max-age=31536000"
-      router.push("/auth/login")
+      router.push("/about")
     } else {
       setError("Špatné heslo. Prosím zkus znovu.")
       setPassword("")
@@ -96,7 +97,7 @@ export default function LandingPage() {
   const handleEnterApp = () => {
     // Set cookie to mark landing as seen
     document.cookie = "mt_seen_landing=1; path=/; max-age=31536000"
-    router.push("/auth/login")
+    router.push("/about")
   }
 
   return (
@@ -221,6 +222,26 @@ export default function LandingPage() {
                     </Card>
                   </motion.div>
                 ))}
+              </div>
+            </motion.div>
+
+            {/* Waitlist Signup Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2, duration: 0.8 }}
+              className="max-w-2xl mx-auto mb-12"
+            >
+              <div className="bg-slate-900/50 border border-cyan-500/30 backdrop-blur-md rounded-2xl p-8 shadow-xl shadow-cyan-500/10">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    Chceš být mezi prvními?
+                  </h3>
+                  <p className="text-gray-300">
+                    Přidej se na waitlist a získej 5% slevu na launch
+                  </p>
+                </div>
+                <WaitlistSignup />
               </div>
             </motion.div>
 

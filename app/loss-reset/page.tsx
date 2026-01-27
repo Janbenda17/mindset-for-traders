@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { showXPNotification, showLevelUpNotification } from "@/lib/xp-notifications"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -147,7 +148,7 @@ export default function LossResetPage() {
     setStep("completion")
   }
 
-  const handleFinalComplete = (goToAI: boolean) => {
+  const handleFinalComplete = async (goToAI: boolean) => {
     // Save frustration data to localStorage
     const lossResetData = {
       frustrationBefore,
@@ -159,6 +160,28 @@ export default function LossResetPage() {
       timestamp: new Date().toISOString(),
     }
     localStorage.setItem("loss-reset-last-data", JSON.stringify(lossResetData))
+
+    // Award 10 XP for loss reset (max 1x per day)
+    try {
+      const xpResponse = await fetch("/api/xp/award", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "loss_reset" }),
+      })
+      const xpData = await xpResponse.json()
+      if (xpData.success) {
+        console.log("[v0] Loss reset XP awarded:", xpData.xpAwarded)
+        showXPNotification(xpData.xpAwarded, "Loss Reset!")
+        if (xpData.leveledUp) {
+          showLevelUpNotification(xpData.level)
+        }
+      } else if (!xpData.alreadyClaimed) {
+        console.error("[v0] Failed to award loss reset XP:", xpData.error)
+      }
+    } catch (error) {
+      console.error("[v0] Error awarding loss reset XP:", error)
+    }
 
     if (goToAI) {
       // Create prefill prompt for MindTrader AI

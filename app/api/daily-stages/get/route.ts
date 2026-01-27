@@ -18,11 +18,11 @@ export async function GET(request: Request) {
     // Check if user is in VIRTUAL mode
     const { data: profile } = await supabase
       .from("profiles")
-      .select("mode")
-      .eq("id", user.id)
+      .select("trading_mode")
+      .eq("user_id", user.id)
       .maybeSingle()
 
-    const isVirtualMode = profile?.mode === "VIRTUAL"
+    const isVirtualMode = profile?.trading_mode === "virtual"
 
     const today = new Date().toISOString().split("T")[0]
 
@@ -52,6 +52,7 @@ export async function GET(request: Request) {
           record_trades_completed: true,
           record_trades_completed_at: new Date(Date.now() - 600000).toISOString(),
           daily_summary_completed: false,
+          completedToday: ["morning_check", "daily_intention", "trading_plan", "record_trade"],
         })
       }
 
@@ -61,10 +62,22 @@ export async function GET(request: Request) {
         daily_intention_completed: false,
         trading_plan_completed: false,
         record_trades_completed: false,
+        completedToday: [],
       })
     }
 
-    return NextResponse.json(existingStages)
+    // Map completion status to array for easier checking
+    const completedToday = []
+    if (existingStages.morning_check_completed) completedToday.push("morning_check")
+    if (existingStages.daily_intention_completed) completedToday.push("daily_intention")
+    if (existingStages.trading_plan_completed) completedToday.push("trading_plan")
+    if (existingStages.record_trades_completed) completedToday.push("record_trade")
+    if (existingStages.daily_summary_completed) completedToday.push("daily_summary")
+
+    return NextResponse.json({
+      ...existingStages,
+      completedToday,
+    })
   } catch (error: any) {
     if (error.name === "AbortError") {
       return NextResponse.json({ error: "Request aborted" }, { status: 499 })

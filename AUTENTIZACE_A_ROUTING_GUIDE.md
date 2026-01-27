@@ -13,7 +13,7 @@
 
 Aplikace MindTrader používá **Supabase** pro autentizaci a **Next.js middleware** pro řízení přístupu. Zde je vizuální tok:
 
-```
+\`\`\`
 ┌─────────────────────────────────────────────────────────────────┐
 │                        UŽIVATEL SE PŘIPOJÍ                       │
 └──────────────────────────┬──────────────────────────────────────┘
@@ -37,7 +37,7 @@ Aplikace MindTrader používá **Supabase** pro autentizaci a **Next.js middlewa
                                  /               \
                               ↓                   ↓
                        [Pokračuj]      [Přesměruj na /auth/login]
-```
+\`\`\`
 
 ---
 
@@ -45,7 +45,7 @@ Aplikace MindTrader používá **Supabase** pro autentizaci a **Next.js middlewa
 
 ### 1️⃣ REGISTRACE - Tok Nového Uživatele
 
-```
+\`\`\`
 UŽIVATEL NAVŠTÍVÍ: /auth/sign-up nebo /signup
               ↓
     [SignUpPage komponenta]
@@ -69,10 +69,10 @@ UŽIVATEL NAVŠTÍVÍ: /auth/sign-up nebo /signup
          [/onboarding stránka]
          - Výběr stylu tradingu
          - Nastavení účtu
-```
+\`\`\`
 
 **Klíčový soubor:** `/app/auth/sign-up/page.tsx`
-```typescript
+\`\`\`typescript
 const { register } = useAuth()  // z auth-contextu
 
 // Registrace vrací True/False
@@ -83,13 +83,13 @@ const success = await register({
 })
 
 // Po úspěchu -> přesměrování na /onboarding
-```
+\`\`\`
 
 ---
 
 ### 2️⃣ PŘIHLÁŠENÍ - Tok Stávajícího Uživatele
 
-```
+\`\`\`
 UŽIVATEL NAVŠTÍVÍ: /auth/login nebo /login
               ↓
     [LoginForm komponenta]
@@ -116,23 +116,23 @@ UŽIVATEL NAVŠTÍVÍ: /auth/login nebo /login
          [Middleware znovu pracuje s cookies]
               ↓
          [Jde na /landing nebo do aplikace]
-```
+\`\`\`
 
 **Klíčový soubor:** `/components/login-form.tsx`
-```typescript
+\`\`\`typescript
 const { login } = useAuth()
 
 const success = await login(email, password)
 
 // Po úspěchu -> window.location.href = "/"
 // To vynutí refresh a middleware znovu zkontroluje cookies
-```
+\`\`\`
 
 ---
 
 ### 3️⃣ ODHLÁŠENÍ - Logout Tok
 
-```
+\`\`\`
 UŽIVATEL KLIKNE: Na logout tlačítko
               ↓
     contexts/auth-context.tsx → logout()
@@ -140,7 +140,7 @@ UŽIVATEL KLIKNE: Na logout tlačítko
          ├─ Odhlášení: supabase.auth.signOut()
          ├─ Vyčištění: User state
          └─ Přesměrování: window.location.href = "/auth/login"
-```
+\`\`\`
 
 ---
 
@@ -151,7 +151,7 @@ UŽIVATEL KLIKNE: Na logout tlačítko
 Middleware kontroluje KAŽDÝ request na tyto věci:
 
 #### 1. Je to veřejná cesta?
-```typescript
+\`\`\`typescript
 const PUBLIC_PATHS = [
   "/auth/login",
   "/auth/signup", 
@@ -167,10 +167,10 @@ const PUBLIC_PATHS = [
 ]
 
 // Pokud je na seznamu → Pokračuj bez ověření
-```
+\`\`\`
 
 #### 2. Cesta "/" (Home page)
-```typescript
+\`\`\`typescript
 if (pathname === "/") {
   if (!user) {
     // Bez cookies se seen_landing -> redirect na /landing
@@ -183,10 +183,10 @@ if (pathname === "/") {
     return redirect("/auth/login")
   }
 }
-```
+\`\`\`
 
 #### 3. Všechny ostatní cesty (chráněné)
-```typescript
+\`\`\`typescript
 // Pokud NENÍ přihlášen a NENÍ na veřejné cestě:
 if (!user) {
   const url = request.nextUrl.clone()
@@ -197,7 +197,7 @@ if (!user) {
 
 // Pokud je přihlášen -> Pokračuj
 return supabaseResponse
-```
+\`\`\`
 
 ---
 
@@ -205,7 +205,7 @@ return supabaseResponse
 
 ### Jak Middleware Pracuje
 
-```
+\`\`\`
                     REQUEST PŘIJDE
                          ↓
         ┌────────────────────────────────┐
@@ -242,7 +242,7 @@ return supabaseResponse
         │ - NextResponse.next()          │
         │ - NextResponse.redirect()      │
         └────────────────────────────────┘
-```
+\`\`\`
 
 ### Session & Cookies
 
@@ -252,13 +252,13 @@ Když se uživatel přihlásí:
 3. **Browser uloží cookies** s `Set-Cookie` header
 4. **Při dalších requestech** middleware čte cookies a autentifikuje uživatele
 
-```typescript
+\`\`\`typescript
 // Middleware čte cookies:
 request.cookies.getAll()
 
 // A zapisuje je do odpovědi:
 supabaseResponse.cookies.set(name, value, options)
-```
+\`\`\`
 
 ---
 
@@ -278,14 +278,14 @@ supabaseResponse.cookies.set(name, value, options)
 3. Pokud jsi už registrován → Zkus se přihlásit
 4. Zkontroluj debug logy v konzoli
 
-```typescript
+\`\`\`typescript
 // Debug log v auth-context.tsx:
 console.log("[v0] Starting registration for:", email)
 
 // Hlédej v konzoli na:
 // ✅ "[v0] Starting registration for: tvuj@email.com"
 // ❌ "[v0] Supabase registration error: ..."
-```
+\`\`\`
 
 ---
 
@@ -301,14 +301,14 @@ console.log("[v0] Starting registration for:", email)
 1. Ověř přesné zadání emailu a hesla
 2. Zkus se registrovat, pokud účet neexistuje
 3. Vymažte cookies aplikace:
-   ```javascript
+   \`\`\`javascript
    // V konzoli:
    document.cookie.split(";").forEach(c => {
      const cookieName = c.split("=")[0].trim();
      document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC;`;
    });
    location.reload();
-   ```
+   \`\`\`
 
 ---
 
@@ -322,14 +322,14 @@ console.log("[v0] Starting registration for:", email)
 **Řešení - Zkontroluj v DevTools (F12)**:
 
 1. **Application → Cookies** - hledej:
-   ```
+   \`\`\`
    sb-<project-id>-auth-token  (měl by existovat)
-   ```
+   \`\`\`
 
 2. **Application → LocalStorage** - hledej:
-   ```
+   \`\`\`
    supabase.auth.token (backup auth data)
-   ```
+   \`\`\`
 
 3. Pokud cookies chybí:
    - Vymažte Application data a zkuste znovu
@@ -339,7 +339,7 @@ console.log("[v0] Starting registration for:", email)
 ### ❌ Problém 4: "Registrace proběhla, ale nevím kam jít"
 
 **Co se má stát:**
-```
+\`\`\`
 Registrace úspěšná
         ↓
 Zpráva: "Registrace úspěšná! Vítejte v MindTrader!"
@@ -347,7 +347,7 @@ Zpráva: "Registrace úspěšná! Vítejte v MindTrader!"
 Automatické přesměrování na: /onboarding
         ↓
 [Setup stránka - výběr stylu tradingu]
-```
+\`\`\`
 
 **Pokud se nepřesměrovává:**
 1. Zkontroluj developer tools console (F12 → Console)
@@ -355,16 +355,16 @@ Automatické přesměrování na: /onboarding
 3. Pokud tam není → Zastaví se na registraci
 
 **Ručné řešení:**
-```javascript
+\`\`\`javascript
 // V konzoli napíšeš:
 window.location.href = "/onboarding"
-```
+\`\`\`
 
 ---
 
 ## Kompletní Diagram - Uživatelský Životní Cyklus
 
-```
+\`\`\`
         ┌─────────────────────────┐
         │  NOVÝ UŽIVATEL          │
         └───────────┬─────────────┘
@@ -406,7 +406,7 @@ window.location.href = "/onboarding"
     │ 2. signOut() v Supabase            │
     │ 3. Vrátí se na /auth/login         │
     └────────────────────────────────────┘
-```
+\`\`\`
 
 ---
 

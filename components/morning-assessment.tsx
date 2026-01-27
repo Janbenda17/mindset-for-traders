@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { showXPNotification, showLevelUpNotification } from "@/lib/xp-notifications"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -364,12 +365,48 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       duration: 3000,
     })
 
-    setTimeout(() => {
-      router.push("/daily-tracker")
-      if (onComplete) {
-        onComplete()
+    // Mark morning check as completed in daily tracker
+    try {
+      await fetch("/api/daily-tracker/mark-completed", {
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify({ type: "morning_check" }),
+      })
+    } catch (error) {
+      console.error("[v0] Error marking morning check as completed:", error)
+    }
+
+    // Award XP for morning check
+    try {
+      const xpResponse = await fetch("/api/xp/award", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "morning_check" }),
+      })
+      const xpData = await xpResponse.json()
+      if (xpData.success) {
+        console.log("[v0] Morning check XP awarded:", xpData.xpAwarded)
+        showXPNotification(xpData.xpAwarded, "Morning Check!")
+        if (xpData.leveledUp) {
+          showLevelUpNotification(xpData.level)
+        }
       }
-    }, 1000)
+    } catch (error) {
+      console.error("[v0] Error awarding morning check XP:", error)
+    }
+
+    // If component is in modal (analytics), just call onComplete
+    // If standalone (morning-check page), redirect
+    if (onComplete) {
+      setTimeout(() => {
+        onComplete()
+      }, 1000)
+    } else {
+      setTimeout(() => {
+        router.push("/daily-tracker")
+      }, 1000)
+    }
   }
 
   const currentScore = calculateScore()
@@ -539,13 +576,22 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
           </Card>
         )}
 
-        <Button
-          onClick={() => router.push("/daily-tracker")}
-          className="w-full h-16 text-xl font-black rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 hover:from-cyan-600 hover:via-blue-600 hover:to-purple-600 shadow-2xl"
-        >
-          <Eye className="w-6 h-6 mr-2" />
-          Zobrazit v Daily Tracker
-        </Button>
+        <div className="flex gap-4">
+          <Button
+            onClick={() => router.push("/record-trades")}
+            className="flex-1 h-14 text-lg font-bold rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-lg"
+          >
+            <CheckCircle className="w-5 h-5 mr-2" />
+            Zaznamenat Trade
+          </Button>
+          <Button
+            onClick={() => onComplete?.()}
+            variant="outline"
+            className="flex-1 h-14 text-lg font-bold rounded-2xl"
+          >
+            Zavřít
+          </Button>
+        </div>
       </div>
     )
   }

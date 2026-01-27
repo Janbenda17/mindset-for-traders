@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
 import { useAuth } from "@/contexts/auth-context"
+import { showXPNotification, showLevelUpNotification } from "@/lib/xp-notifications"
 import { TrendingUp, DollarSign, BarChart3, Brain, Zap, ChevronDown, Trash2 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -85,7 +86,7 @@ const EMOTIONS_DURING = [
 
 const EMOTIONS_AFTER = ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Poučený", "Naštvaný", "Klidný", "Euforický"]
 
-export function RecordTrades() {
+export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
   const { toast } = useToast()
   const router = useRouter()
   const { completeStage } = useDailyStage()
@@ -208,115 +209,75 @@ export function RecordTrades() {
   }, [user?.id])
 
   const handleAddTrade = async () => {
-    if (!currentTrade.pair || !currentTrade.pips || !currentTrade.openTime || !currentTrade.closeTime) {
-      toast({
-        title: "Chybí data",
-        description: "Vyplň pair, pips, čas otevření a zavření",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const tagsArray =
-      typeof currentTrade.tags === "string"
-        ? (currentTrade.tags as string)
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean)
-        : currentTrade.tags || []
-
-    const newTrade: Trade = {
-      id: Date.now().toString(),
-      date: currentTrade.date as string,
-      title: currentTrade.pair as string,
-      pair: currentTrade.pair as string,
-      direction: currentTrade.direction as "LONG" | "SHORT",
-      openTime: currentTrade.openTime as string,
-      closeTime: currentTrade.closeTime as string,
-      session: currentTrade.session as string,
-      tradeType: currentTrade.tradeType as string,
-      pips: currentTrade.pips as number,
-      positionSize: currentTrade.positionSize as number,
-      pnl: currentTrade.pnl as number,
-      confidenceBefore: currentTrade.confidenceBefore as number,
-      stressLevel: currentTrade.stressLevel as number,
-      mood: currentTrade.mood as number,
-      emotionBefore: currentTrade.emotionBefore as string,
-      emotionDuring: currentTrade.emotionDuring as string,
-      emotionAfter: currentTrade.emotionAfter as string,
-      entryReason: currentTrade.entryReason as string,
-      exitReason: currentTrade.exitReason as string,
-      detailedAnalysis: currentTrade.detailedAnalysis as string,
-      followedPlan: currentTrade.followedPlan as boolean,
-      exitedEarly: currentTrade.exitedEarly as boolean,
-      missedDueToHesitation: currentTrade.missedDueToHesitation as boolean,
-      revengeTrade: currentTrade.revengeTrade as boolean,
-      behaviorDescription: currentTrade.behaviorDescription as string,
-      tags: tagsArray,
-      notes: currentTrade.notes as string,
-      openDate: currentTrade.openDate as string,
-      closeDate: currentTrade.closeDate as string,
-    }
-
-    const success = await addTrade(newTrade)
-
-    if (!success) {
+    console.log("[v0] handleAddTrade called", currentTrade)
+    
+    // Minimal validation - just require pair
+    if (!currentTrade.pair) {
       toast({
         title: "Chyba",
-        description: "Nepodařilo se uložit obchod do databáze",
+        description: "Vyplňte prosím minimálně měnový pár",
         variant: "destructive",
       })
       return
     }
 
-    setTrades([...trades, newTrade])
+    setIsLoading(true)
 
-    setCurrentTrade({
-      date: format(new Date(), "yyyy-MM-dd"),
-      pair: currentTrade.pair,
-      direction: "LONG",
-      openTime: "",
-      closeTime: "",
-      session: "",
-      tradeType: "",
-      pips: 0,
-      positionSize: 0.01,
-      pnl: 0,
-      confidenceBefore: morningCheck?.focus || 7,
-      stressLevel: morningCheck?.stressLevel || 5,
-      mood: morningCheck?.emotionalState || 7,
-      emotionBefore: "",
-      emotionDuring: "",
-      emotionAfter: "",
-      entryReason: "",
-      exitReason: "",
-      detailedAnalysis: "",
-      followedPlan: true,
-      exitedEarly: false,
-      missedDueToHesitation: false,
-      revengeTrade: false,
-      behaviorDescription: "",
-      tags: [],
-      notes: "",
-      openDate: format(new Date(), "yyyy-MM-dd"),
-      closeDate: format(new Date(), "yyyy-MM-dd"),
-    })
+    const newTrade = {
+      ...currentTrade,
+      id: `trade-${Date.now()}`,
+      entryPrice: parseFloat(String(currentTrade.entryPrice || 0)),
+      exitPrice: parseFloat(String(currentTrade.exitPrice || 0)),
+      quantity: parseFloat(String(currentTrade.quantity || 0)),
+    } as Trade
 
-    toast({
-      title: "✅ Trade Přidán!",
-      description: `${newTrade.direction} ${newTrade.pair} - ${newTrade.pnl >= 0 ? "+" : ""}$${newTrade.pnl}`,
-    })
+    console.log("[v0] Calling addTrade with:", newTrade)
+    const success = await addTrade(newTrade)
+    console.log("[v0] addTrade result:", success)
 
-    const tradeEntry = {
-      ...newTrade,
-      type: "trade",
-      content: newTrade.detailedAnalysis || "",
-      tags: newTrade.tags,
-      mood: newTrade.mood,
-      profitLoss: newTrade.pnl,
-      confidenceLevel: newTrade.confidenceBefore,
+    if (!success) {
+      setIsLoading(false)
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se uložit obchod.",
+        variant: "destructive",
+      })
+      return
     }
-    completeStage("record-trades")
+
+    // Mark record trade as completed in daily tracker
+    try {
+      await fetch("/api/daily-tracker/mark-completed", {
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify({ type: "record_trade" }),
+      })
+    } catch (error) {
+      console.error("[v0] Error marking record trade as completed:", error)
+    }
+
+    // Award 10 XP for new trade
+    try {
+      const xpResponse = await fetch("/api/xp/award", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          action: "new_trade", 
+          metadata: { pair: newTrade.pair, pnl: newTrade.pnl } 
+        }),
+      })
+      const xpData = await xpResponse.json()
+      if (xpData.success) {
+        console.log("[v0] New trade XP awarded:", xpData.xpAwarded)
+        showXPNotification(xpData.xpAwarded, "Trade Recorded!")
+        if (xpData.leveledUp) {
+          showLevelUpNotification(xpData.level)
+        }
+      }
+    } catch (error) {
+      console.error("[v0] Error awarding trade XP:", error)
+    }
   }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -896,7 +857,7 @@ export function RecordTrades() {
                             <p className="text-sm text-gray-200">{trade.behaviorDescription}</p>
                           </div>
                         )}
-                        {trade.tags.length > 0 && (
+                        {Array.isArray(trade.tags) && trade.tags.length > 0 && (
                           <div>
                             <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Tagy</p>
                             <div className="flex flex-wrap gap-2">

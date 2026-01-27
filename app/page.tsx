@@ -586,12 +586,29 @@ export default function DashboardPage() {
                 <div className="text-center">
                   <div className="flex justify-center mb-4 sm:mb-6">
                     <div className="p-3 sm:p-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl sm:rounded-2xl border border-yellow-500/30 shadow-lg shadow-yellow-500/20">
-                      <Users className="w-8 h-8 sm:w-12 sm:h-12 text-blue-400" />
+                      <Rocket className="w-8 h-8 sm:w-12 sm:h-12 text-yellow-400" />
                     </div>
                   </div>
-                  <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">Join our community</h3>
-                  <p className="text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto text-sm sm:text-lg">
-                    {isLiveMode ? "Sdílej zkušenosti s ostatními tradery" : "Vyzkoušej demo komunitu"}
+                  <div className="mb-4">
+                    <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-xs sm:text-sm mb-3 inline-block">
+                      <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                      LIMITED TIME OFFER
+                    </Badge>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">Early Bird Special! 🚀</h3>
+                  <p className="text-yellow-300 text-lg sm:text-xl font-bold mb-2">Sleva pro prvních 50 lidí!</p>
+                  <div className="flex justify-center gap-4 mb-4 sm:mb-6">
+                    <div className="text-center">
+                      <p className="text-gray-400 text-sm">Normální cena</p>
+                      <p className="text-2xl font-bold text-gray-500 line-through">2499 Kč</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-gray-400 text-sm">Speciální cena</p>
+                      <p className="text-3xl font-bold text-yellow-400">1499 Kč</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto text-sm sm:text-base">
+                    Jedinečná příležitost: získej Premium přístup s 40% slevou. Tato nabídka je k dispozici pouze pro prvních 50 registrovaných uživatelů.
                   </p>
                   <Button
                     asChild
@@ -599,8 +616,8 @@ export default function DashboardPage() {
                     className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0 shadow-lg shadow-yellow-500/30 text-sm sm:text-base w-full sm:w-auto"
                   >
                     <Link href="/pricing">
-                      <Rocket className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                      Upgrade
+                      <Crown className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                      Buy Premium Now
                       <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                     </Link>
                   </Button>

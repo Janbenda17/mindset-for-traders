@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useSubscription } from "@/contexts/subscription-context"
 import { Crown, CreditCard, Calendar, AlertTriangle, CheckCircle } from "lucide-react"
+import Link from "next/link"
 
 export function SubscriptionStatus() {
   const {
@@ -28,13 +29,48 @@ export function SubscriptionStatus() {
     checkSubscriptionStatus()
   }, [])
 
-  const handleManageBilling = () => {
-    openBillingPortal()
+  const handleManageBilling = async () => {
+    try {
+      const response = await fetch("/api/subscription/billing-portal", {
+        method: "POST",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to open billing portal")
+      }
+
+      const data = await response.json()
+      if (data.url) {
+        window.open(data.url, "_blank")
+      }
+    } catch (error) {
+      console.error("Error opening billing portal:", error)
+    }
   }
 
   const handleCancelSubscription = async () => {
-    if (confirm("Opravdu chcete zrušit předplatné? Zůstane aktivní do konce aktuálního období.")) {
-      await cancelSubscription()
+    if (!confirm("Opravdu chcete zrušit předplatné? Zůstane aktivní do konce aktuálního období.")) {
+      return
+    }
+
+    try {
+      const response = await fetch("/api/subscription/cancel", {
+        method: "POST",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to cancel subscription")
+      }
+
+      const data = await response.json()
+      
+      // Show success toast
+      console.log("[v0] Subscription canceled:", data.message)
+      
+      // Refresh subscription status
+      await checkSubscriptionStatus()
+    } catch (error) {
+      console.error("[v0] Error canceling subscription:", error)
     }
   }
 
@@ -105,28 +141,19 @@ export function SubscriptionStatus() {
         <div className="flex flex-col gap-2">
           {isPremium ? (
             <>
-              <Button
-                onClick={handleManageBilling}
-                disabled={isLoading}
-                className="w-full bg-transparent"
-                variant="outline"
-              >
-                <CreditCard className="h-4 w-4 mr-2" />
-                {isLoading ? "Načítání..." : "Spravovat platby"}
+              <Button asChild className="w-full">
+                <Link href="/subscription/manage">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Spravovat předplatné
+                </Link>
               </Button>
-
-              {subscriptionId && (
-                <Button onClick={handleCancelSubscription} disabled={isLoading} variant="destructive" size="sm">
-                  Zrušit předplatné
-                </Button>
-              )}
             </>
           ) : (
             <Button asChild className="w-full">
-              <a href="/upgrade">
+              <Link href="/upgrade">
                 <Crown className="h-4 w-4 mr-2" />
                 Upgradovat na Premium
-              </a>
+              </Link>
             </Button>
           )}
         </div>
