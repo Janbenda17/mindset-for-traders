@@ -26,11 +26,10 @@ export async function POST(request: NextRequest) {
       }, { status: 409 })
     }
 
-    // Generate unique discount code (5% off) - better random generation
-    const randomPart = Math.random().toString(36).substring(2, 10).toUpperCase()
-    const discountCode = `EARLY5-${randomPart}`
+    // Discount code for 5% off (same for everyone)
+    const discountCode = "EARLY5"
 
-    console.log("[v0] Generating discount code:", discountCode)
+    console.log("[v0] Discount code:", discountCode)
 
     // Add to waitlist
     const { data, error } = await supabase
