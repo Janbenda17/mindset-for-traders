@@ -24,9 +24,9 @@ export default function LandingPage() {
     seconds: 0,
   })
 
-  // Set launch date to February 1, 2026 at midnight
+  // Set launch date to February 1, 2026 at 4 PM (16:00)
   const getLaunchDate = useCallback(() => {
-    const launchDate = new Date(2026, 1, 1, 0, 0, 0, 0) // February 1, 2026 (month is 0-indexed)
+    const launchDate = new Date(2026, 1, 1, 16, 0, 0, 0) // February 1, 2026 at 16:00 (month is 0-indexed)
     return launchDate
   }, [])
 
