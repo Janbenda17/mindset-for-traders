@@ -4,7 +4,7 @@
 
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Brain, Sparkles } from "lucide-react"
 
 export default function StartPage() {
   const router = useRouter()
