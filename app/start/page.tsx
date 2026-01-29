@@ -1,9 +1,20 @@
 "use client"
 
+"use client"
+
+import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowRight, Brain, Sparkles } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
 export default function StartPage() {
+  const router = useRouter()
+
+  const handleEnter = () => {
+    // Mark that user has seen the start page
+    localStorage.setItem("mt_seen_start", "true")
+    // Redirect to about page
+    router.push("/about")
+  }
   return (
     <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
       {/* Animated Galaxy Background */}
@@ -77,12 +88,13 @@ export default function StartPage() {
           <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-3xl blur-2xl opacity-75 group-hover:opacity-100 transition duration-300 animate-pulse" />
           
           {/* Button */}
-          <Link href="/about">
-            <button className="relative px-16 py-8 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 text-white text-2xl sm:text-3xl font-bold rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-2xl shadow-cyan-500/50 flex items-center gap-4 group">
-              <span>Vstoupit</span>
-              <ArrowRight className="w-8 h-8 group-hover:translate-x-2 transition-transform" />
-            </button>
-          </Link>
+          <button
+            onClick={handleEnter}
+            className="relative px-16 py-8 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 text-white text-2xl sm:text-3xl font-bold rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-2xl shadow-cyan-500/50 flex items-center gap-4 group"
+          >
+            <span>Vstoupit</span>
+            <ArrowRight className="w-8 h-8 group-hover:translate-x-2 transition-transform" />
+          </button>
         </div>
 
         {/* Bottom hint */}
