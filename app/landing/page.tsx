@@ -26,14 +26,9 @@ export default function LandingPage() {
 
   // Set launch date to current time + 3 days + 5 hours
   const getLaunchDate = useCallback(() => {
-    const stored = localStorage.getItem("teaser-launch-date")
-    if (stored) {
-      return new Date(stored)
-    }
     const launchDate = new Date()
     launchDate.setDate(launchDate.getDate() + 3)
     launchDate.setHours(launchDate.getHours() + 5)
-    localStorage.setItem("teaser-launch-date", launchDate.toISOString())
     return launchDate
   }, [])
 

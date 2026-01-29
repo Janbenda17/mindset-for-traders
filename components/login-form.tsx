@@ -24,12 +24,6 @@ export function LoginForm() {
   const router = useRouter()
 
   useEffect(() => {
-    const teaserEarlyAccess = localStorage.getItem("teaser-early-access")
-    // User will be redirected by middleware if not authorized
-    if (!teaserEarlyAccess) {
-      return
-    }
-
     const savedEmail = localStorage.getItem("mindtrader-saved-email")
     const savedPassword = localStorage.getItem("mindtrader-saved-password")
 

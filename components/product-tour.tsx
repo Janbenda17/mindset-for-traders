@@ -130,8 +130,8 @@ export function ProductTour() {
   useEffect(() => {
     console.log("[v0] ProductTour: pathname =", pathname)
 
-    // Don't show tour on teaser, login, signup pages
-    if (pathname === "/teaser" || pathname === "/login" || pathname === "/signup" || pathname === "/onboarding") {
+    // Don't show tour on login, signup pages
+    if (pathname === "/login" || pathname === "/signup" || pathname === "/onboarding") {
       console.log("[v0] ProductTour: Skipping tour on auth pages")
       return
     }
