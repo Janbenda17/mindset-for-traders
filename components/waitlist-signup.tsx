@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Mail, Zap, CheckCircle2, AlertCircle, Users, Sparkles, Rocket } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { trackWaitlistSignup, trackWaitlistClick, trackDiscountCodeCopy } from "@/lib/google-analytics"
 
 export function WaitlistSignup() {
   const [email, setEmail] = useState("")
@@ -29,6 +30,7 @@ export function WaitlistSignup() {
 
       if (data.success) {
         console.log("[v0] Waitlist signup success - Full data:", data)
+        trackWaitlistSignup(email)
         setStatus("success")
         setDiscountCode(data.discountCode)
         setEmail("")
@@ -112,6 +114,7 @@ export function WaitlistSignup() {
                     </div>
                     <Button
                       type="submit"
+                      onClick={() => trackWaitlistClick()}
                       disabled={loading || !email}
                       className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 hover:from-cyan-600 hover:via-blue-600 hover:to-purple-600 text-white font-bold px-8 py-4 rounded-xl disabled:opacity-50 whitespace-nowrap transition-all hover:shadow-2xl hover:shadow-cyan-500/50 text-base shadow-xl shadow-cyan-500/30"
                     >
@@ -188,7 +191,9 @@ export function WaitlistSignup() {
                 <code className="text-2xl font-mono font-bold text-cyan-400">{discountCode}</code>
                 <button
                   onClick={() => {
+                    trackWaitlistClick()
                     navigator.clipboard.writeText(discountCode)
+                    trackDiscountCodeCopy(discountCode)
                     alert("Kód zkopírován!")
                   }}
                   className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white text-sm font-bold rounded-lg transition-all shadow-lg hover:shadow-cyan-500/30"
