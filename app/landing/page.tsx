@@ -24,9 +24,10 @@ export default function LandingPage() {
     seconds: 0,
   })
 
-  // Set launch date to February 1, 2026 at 4 PM (16:00)
+  // Set launch date to February 1, 2026 at 4 PM UTC (16:00 UTC)
   const getLaunchDate = useCallback(() => {
-    const launchDate = new Date(2026, 1, 1, 16, 0, 0, 0) // February 1, 2026 at 16:00 (month is 0-indexed)
+    // Use Date.UTC to create a consistent UTC timestamp that everyone sees the same
+    const launchDate = new Date(Date.UTC(2026, 1, 1, 16, 0, 0, 0)) // February 1, 2026 at 16:00 UTC
     return launchDate
   }, [])
 
@@ -37,11 +38,6 @@ export default function LandingPage() {
       const now = new Date()
       const launchDate = getLaunchDate()
       const distance = launchDate.getTime() - now.getTime()
-
-      console.log("[v0] Timer - Current time:", now.toISOString())
-      console.log("[v0] Timer - Launch date:", launchDate.toISOString())
-      console.log("[v0] Timer - Distance (ms):", distance)
-      console.log("[v0] Timer - Days:", Math.floor(distance / (1000 * 60 * 60 * 24)))
 
       if (distance > 0) {
         setTimeRemaining({
