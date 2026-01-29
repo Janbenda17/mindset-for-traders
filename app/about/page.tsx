@@ -37,15 +37,6 @@ export default function AboutPage() {
 
       {/* Content */}
       <div className="relative z-10">
-        {/* Navigation Links */}
-        <div className="fixed top-8 left-0 right-0 z-40">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <Link href="/login" className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors backdrop-blur-sm bg-slate-900/30 px-4 py-2 rounded-full border border-slate-700/50">
-              <ArrowRight className="w-4 h-4 rotate-180" />
-              Přihlásit se
-            </Link>
-          </div>
-        </div>
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6">
