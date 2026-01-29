@@ -34,9 +34,14 @@ export default function LandingPage() {
 
   useEffect(() => {
     const calculateTimeRemaining = () => {
-      const now = new Date().getTime()
+      const now = new Date()
       const launchDate = getLaunchDate()
-      const distance = launchDate.getTime() - now
+      const distance = launchDate.getTime() - now.getTime()
+
+      console.log("[v0] Timer - Current time:", now.toISOString())
+      console.log("[v0] Timer - Launch date:", launchDate.toISOString())
+      console.log("[v0] Timer - Distance (ms):", distance)
+      console.log("[v0] Timer - Days:", Math.floor(distance / (1000 * 60 * 60 * 24)))
 
       if (distance > 0) {
         setTimeRemaining({
