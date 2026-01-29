@@ -31,7 +31,8 @@ export default function TeaserPage() {
       return new Date(stored)
     }
     const launchDate = new Date()
-    launchDate.setDate(launchDate.getDate() + 7)
+    launchDate.setDate(launchDate.getDate() + 3)
+    launchDate.setHours(launchDate.getHours() + 5)
     localStorage.setItem("teaser-launch-date", launchDate.toISOString())
     return launchDate
   }, [])

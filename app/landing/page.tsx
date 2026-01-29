@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,17 +24,25 @@ export default function LandingPage() {
     seconds: 0,
   })
 
-  // Set launch date to 1.2 (February 1st) at 16:00
-  const launchDate = new Date()
-  launchDate.setMonth(1) // February (0-indexed)
-  launchDate.setDate(1)
-  launchDate.setHours(16, 0, 0, 0)
+  // Set launch date to current time + 3 days + 5 hours
+  const getLaunchDate = useCallback(() => {
+    const stored = localStorage.getItem("teaser-launch-date")
+    if (stored) {
+      return new Date(stored)
+    }
+    const launchDate = new Date()
+    launchDate.setDate(launchDate.getDate() + 3)
+    launchDate.setHours(launchDate.getHours() + 5)
+    localStorage.setItem("teaser-launch-date", launchDate.toISOString())
+    return launchDate
+  }, [])
 
   const [isLaunched, setIsLaunched] = useState(false)
 
   useEffect(() => {
     const calculateTimeRemaining = () => {
       const now = new Date().getTime()
+      const launchDate = getLaunchDate()
       const distance = launchDate.getTime() - now
 
       if (distance > 0) {
@@ -53,7 +61,7 @@ export default function LandingPage() {
     const timer = setInterval(calculateTimeRemaining, 1000)
 
     return () => clearInterval(timer)
-  }, [])
+  }, [getLaunchDate])
 
   const handleEarlyAccess = (e: React.FormEvent) => {
     e.preventDefault()
