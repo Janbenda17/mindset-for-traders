@@ -85,7 +85,7 @@ export function WaitlistSignup() {
                 </span>
               </h3>
               <p className="text-lg text-slate-300 font-semibold">
-                Přidej se a získej <span className="text-yellow-400 font-bold">5% slevu</span> navždy
+                Přidej se a získej <span className="text-yellow-400 font-bold">5% slevu</span> po dobu beta
               </p>
             </div>
 
@@ -138,7 +138,7 @@ export function WaitlistSignup() {
                     </div>
                     <div>
                       <div className="font-bold text-yellow-300">5% sleva</div>
-                      <div className="text-sm text-slate-400">navždy na všechno</div>
+                      <div className="text-sm text-slate-400">během beta fáze</div>
                     </div>
                   </div>
                 </div>
