@@ -666,12 +666,20 @@ function generateStudentsFromRealData(trades: any[], journals: any[], moodEntrie
 }
 
 // MENTOR VIEW
-function MentorTeamClubView() {
+function MentorTeamClubView({
+  communityUsers,
+  setCommunityUsers,
+  loadingCommunity,
+  setLoadingCommunity,
+}: {
+  communityUsers: any[]
+  setCommunityUsers: (users: any[]) => void
+  loadingCommunity: boolean
+  setLoadingCommunity: (loading: boolean) => void
+}) {
   const { getAllTrades, getAllJournalEntries, isLiveMode } = useData()
   const { user } = useAuth() // ADDED: Get user from AuthContext
   const [students, setStudents] = useState<Student[]>([])
-  const [communityUsers, setCommunityUsers] = useState<any[]>([])
-  const [loadingCommunity, setLoadingCommunity] = useState(false)
 
   useEffect(() => {
     const trades = getAllTrades()
@@ -796,7 +804,14 @@ function MentorTeamClubView() {
 }
 
 // STUDENT VIEW
-function StudentTeamClubView() {
+// STUDENT VIEW
+function StudentTeamClubView({
+  communityUsers,
+  loadingCommunity,
+}: {
+  communityUsers: any[]
+  loadingCommunity: boolean
+}) {
   const { getAllTrades, getAllJournalEntries, isLiveMode } = useData()
   const { user } = useAuth() // ADDED: Get user from AuthContext
   const [activeTab, setActiveTab] = useState("overview")
@@ -3582,6 +3597,8 @@ function isMentor(): boolean {
 function TeamClubPage() {
   const [userIsMentor, setUserIsMentor] = useState<boolean | null>(null)
   const { user, isLoading } = useAuth() // Added isLoading from auth
+  const [communityUsers, setCommunityUsers] = useState<any[]>([])
+  const [loadingCommunity, setLoadingCommunity] = useState(false)
 
   useEffect(() => {
     // Check if user data is available before determining mentor status
@@ -3605,7 +3622,7 @@ function TeamClubPage() {
   }
 
   // Render based on mentor status, ensuring userIsMentor is not null
-  return userIsMentor !== null ? userIsMentor ? <MentorTeamClubView /> : <StudentTeamClubView /> : null
+  return userIsMentor !== null ? userIsMentor ?       <MentorTeamClubView communityUsers={communityUsers} setCommunityUsers={setCommunityUsers} loadingCommunity={loadingCommunity} setLoadingCommunity={setLoadingCommunity} /> :       <StudentTeamClubView communityUsers={communityUsers} loadingCommunity={loadingCommunity} /> : null
 }
 
 export default TeamClubPage
