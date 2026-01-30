@@ -400,11 +400,39 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
 
         if (profileData.success && profileData.xp !== undefined) {
           console.log("[v0] GamificationProvider - Loaded XP from Supabase:", profileData.xp)
-          setData((prev) => ({
-            ...prev,
-            xp: profileData.xp || 0,
-            level: profileData.level || 1,
-          }))
+          
+          // Also load unlocked achievements from database
+          try {
+            const achievementsResponse = await fetch("/api/achievements/list", {
+              credentials: "include",
+            })
+            if (achievementsResponse.ok) {
+              const achievementsData = await achievementsResponse.json()
+              const unlockedIds = new Set(achievementsData.achievements || [])
+              
+              setData((prev) => ({
+                ...prev,
+                xp: profileData.xp || 0,
+                level: profileData.level || 1,
+                achievements: prev.achievements.map((a) =>
+                  unlockedIds.has(a.id) ? { ...a, unlocked: true } : a,
+                ),
+              }))
+            } else {
+              setData((prev) => ({
+                ...prev,
+                xp: profileData.xp || 0,
+                level: profileData.level || 1,
+              }))
+            }
+          } catch (error) {
+            console.error("[v0] Failed to load achievements:", error)
+            setData((prev) => ({
+              ...prev,
+              xp: profileData.xp || 0,
+              level: profileData.level || 1,
+            }))
+          }
         } else {
           console.log("[v0] GamificationProvider - API returned non-success:", profileData)
           // Try to load from localStorage as fallback
@@ -757,7 +785,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const unlockAchievement = (achievementId: string) => {
+  const unlockAchievement = async (achievementId: string) => {
     setData((prev) => {
       const achievement = prev.achievements.find((a) => a.id === achievementId)
       if (!achievement || achievement.unlocked) return prev
@@ -765,6 +793,20 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       const updatedAchievements = prev.achievements.map((a) =>
         a.id === achievementId ? { ...a, unlocked: true, unlockedAt: new Date().toISOString() } : a,
       )
+
+      // Save to database
+      if (user?.id) {
+        fetch("/api/achievements/unlock", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            achievementId: achievementId,
+            title: achievement.title,
+          }),
+        }).catch((error) => console.error("[v0] Failed to save achievement:", error))
+      }
 
       setTimeout(() => {
         addXP(achievement.xpReward, `Odemknutí: ${achievement.title}`)

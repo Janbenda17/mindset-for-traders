@@ -50,6 +50,8 @@ import {
   Lock,
   Trash2,
   Edit,
+  Zap,
+  Loader2,
 } from "lucide-react"
 import { useData } from "@/contexts/data-context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -668,6 +670,8 @@ function MentorTeamClubView() {
   const { getAllTrades, getAllJournalEntries, isLiveMode } = useData()
   const { user } = useAuth() // ADDED: Get user from AuthContext
   const [students, setStudents] = useState<Student[]>([])
+  const [communityUsers, setCommunityUsers] = useState<any[]>([])
+  const [loadingCommunity, setLoadingCommunity] = useState(false)
 
   useEffect(() => {
     const trades = getAllTrades()
@@ -679,12 +683,38 @@ function MentorTeamClubView() {
       const realStudents = generateStudentsFromRealData(trades, journals, moodEntries, user?.id || "unknown")
       setStudents(realStudents)
       console.log("[v0] Team Club: Generated LIVE student data for user:", user?.id)
+      
+      // Load community users
+      loadCommunityUsers()
     } else {
       // In virtual mode, show demo students
       setStudents(DEMO_STUDENTS)
       console.log("[v0] Team Club: Using DEMO students in virtual mode")
     }
   }, [isLiveMode, user?.id]) // Only depend on mode and user ID, not functions
+
+  const loadCommunityUsers = async () => {
+    setLoadingCommunity(true)
+    try {
+      const response = await fetch("/api/team-club/users", {
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log(`[v0] Loaded ${data.users.length} community users`)
+        setCommunityUsers(data.users)
+      } else {
+        console.error("[v0] Failed to load community users:", response.status)
+        setCommunityUsers([])
+      }
+    } catch (error) {
+      console.error("[v0] Error loading community users:", error)
+      setCommunityUsers([])
+    } finally {
+      setLoadingCommunity(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -1599,6 +1629,14 @@ function StudentTeamClubView() {
               <Target className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
               <span className="hidden sm:inline">Výzvy</span>
               <span className="sm:hidden">Výz</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="members"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
+            >
+              <Users className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
+              <span className="hidden sm:inline">Členové</span>
+              <span className="sm:hidden">Čl</span>
             </TabsTrigger>
             <TabsTrigger
               value="buddies"
@@ -2668,6 +2706,99 @@ function StudentTeamClubView() {
                   ))}
               </div>
             </div>
+          </TabsContent>
+
+          {/* MEMBERS TAB - ALL COMMUNITY USERS */}
+          <TabsContent value="members" className="space-y-6">
+            <Card className="psyche-card">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-400" />
+                  Všichni členové komunity
+                </CardTitle>
+                <CardDescription className="text-slate-400">
+                  {loadingCommunity
+                    ? "Načítám členy..."
+                    : `Celkem ${communityUsers.length} aktivních členů v MindTrader`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loadingCommunity ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+                  </div>
+                ) : communityUsers.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 text-slate-600 mx-auto mb-4" />
+                    <p className="text-slate-400">Zatím žádní členové v komunitě</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {communityUsers.map((member) => (
+                      <Card key={member.id} className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-all">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3 flex-1">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+                                {member.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white font-semibold truncate">{member.name}</p>
+                                <p className="text-slate-400 text-sm truncate">{member.email}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            {/* Level & XP */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Zap className="w-4 h-4 text-yellow-400" />
+                                <span className="text-slate-400 text-sm">Level {member.level}</span>
+                              </div>
+                              <span className="text-yellow-400 font-bold text-sm">{member.xp} XP</span>
+                            </div>
+
+                            {/* Stats Grid */}
+                            <div className="grid grid-cols-2 gap-3">
+                              {/* Win Rate */}
+                              <div className="bg-slate-900/50 rounded-lg p-3">
+                                <p className="text-slate-400 text-xs">Win Rate</p>
+                                <p className={`font-bold ${member.winRate >= 50 ? "text-green-400" : "text-red-400"}`}>
+                                  {member.winRate}%
+                                </p>
+                              </div>
+
+                              {/* P/L */}
+                              <div className="bg-slate-900/50 rounded-lg p-3">
+                                <p className="text-slate-400 text-xs">P&L</p>
+                                <p className={`font-bold ${member.pnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                                  ${member.pnl}
+                                </p>
+                              </div>
+
+                              {/* Trades */}
+                              <div className="bg-slate-900/50 rounded-lg p-3">
+                                <p className="text-slate-400 text-xs">Obchody</p>
+                                <p className="font-bold text-cyan-400">{member.totalTrades}</p>
+                              </div>
+
+                              {/* Joined */}
+                              <div className="bg-slate-900/50 rounded-lg p-3">
+                                <p className="text-slate-400 text-xs">Členem od</p>
+                                <p className="font-bold text-slate-300 text-xs">
+                                  {new Date(member.joinedAt).toLocaleDateString("cs-CZ")}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* STUDY BUDDIES TAB */}

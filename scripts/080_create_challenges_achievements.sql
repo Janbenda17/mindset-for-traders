@@ -21,26 +21,30 @@ CREATE INDEX IF NOT EXISTS idx_user_challenge_progress_completed ON user_challen
 ALTER TABLE user_challenge_progress ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can only see their own challenge progress
-CREATE POLICY IF NOT EXISTS "Users can view own challenge progress"
+DROP POLICY IF EXISTS "Users can view own challenge progress" ON user_challenge_progress;
+CREATE POLICY "Users can view own challenge progress"
   ON user_challenge_progress
   FOR SELECT
   USING (auth.uid() = user_id);
 
 -- Policy: Users can only insert their own challenge progress
-CREATE POLICY IF NOT EXISTS "Users can insert own challenge progress"
+DROP POLICY IF EXISTS "Users can insert own challenge progress" ON user_challenge_progress;
+CREATE POLICY "Users can insert own challenge progress"
   ON user_challenge_progress
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 -- Policy: Users can only update their own challenge progress
-CREATE POLICY IF NOT EXISTS "Users can update own challenge progress"
+DROP POLICY IF EXISTS "Users can update own challenge progress" ON user_challenge_progress;
+CREATE POLICY "Users can update own challenge progress"
   ON user_challenge_progress
   FOR UPDATE
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 -- Policy: Users can only delete their own challenge progress
-CREATE POLICY IF NOT EXISTS "Users can delete own challenge progress"
+DROP POLICY IF EXISTS "Users can delete own challenge progress" ON user_challenge_progress;
+CREATE POLICY "Users can delete own challenge progress"
   ON user_challenge_progress
   FOR DELETE
   USING (auth.uid() = user_id);
@@ -63,19 +67,22 @@ CREATE INDEX IF NOT EXISTS idx_user_achievements_achievement_id ON user_achievem
 ALTER TABLE user_achievements ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can only see their own achievements
-CREATE POLICY IF NOT EXISTS "Users can view own achievements"
+DROP POLICY IF EXISTS "Users can view own achievements" ON user_achievements;
+CREATE POLICY "Users can view own achievements"
   ON user_achievements
   FOR SELECT
   USING (auth.uid() = user_id);
 
 -- Policy: Users can only insert their own achievements
-CREATE POLICY IF NOT EXISTS "Users can insert own achievements"
+DROP POLICY IF EXISTS "Users can insert own achievements" ON user_achievements;
+CREATE POLICY "Users can insert own achievements"
   ON user_achievements
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
 -- Policy: Users can only delete their own achievements
-CREATE POLICY IF NOT EXISTS "Users can delete own achievements"
+DROP POLICY IF EXISTS "Users can delete own achievements" ON user_achievements;
+CREATE POLICY "Users can delete own achievements"
   ON user_achievements
   FOR DELETE
   USING (auth.uid() = user_id);
