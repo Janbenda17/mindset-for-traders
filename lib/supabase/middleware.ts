@@ -14,7 +14,6 @@ const PUBLIC_PATHS = [
   "/intro",
   "/landing",
   "/about",
-  "/start",
 ]
 
 // Paths that require authentication but don't need onboarding/tour check

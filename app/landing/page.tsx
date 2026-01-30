@@ -17,45 +17,7 @@ export default function LandingPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [showResetForm, setShowResetForm] = useState(false)
-  const [timeRemaining, setTimeRemaining] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  })
 
-  // Set launch date to February 1, 2026 at 4 PM UTC (16:00 UTC)
-  const getLaunchDate = useCallback(() => {
-    // Use Date.UTC to create a consistent UTC timestamp that everyone sees the same
-    const launchDate = new Date(Date.UTC(2026, 1, 1, 16, 0, 0, 0)) // February 1, 2026 at 16:00 UTC
-    return launchDate
-  }, [])
-
-  const [isLaunched, setIsLaunched] = useState(false)
-
-  useEffect(() => {
-    const calculateTimeRemaining = () => {
-      const now = new Date()
-      const launchDate = getLaunchDate()
-      const distance = launchDate.getTime() - now.getTime()
-
-      if (distance > 0) {
-        setTimeRemaining({
-          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((distance % (1000 * 60)) / 1000),
-        })
-      } else {
-        setIsLaunched(true)
-      }
-    }
-
-    calculateTimeRemaining()
-    const timer = setInterval(calculateTimeRemaining, 1000)
-
-    return () => clearInterval(timer)
-  }, [getLaunchDate])
 
   const handleEarlyAccess = (e: React.FormEvent) => {
     e.preventDefault()
@@ -181,42 +143,27 @@ export default function LandingPage() {
         {/* Conditional rendering based on launch status */}
         {!isLaunched ? (
           <>
-            {/* Countdown Timer */}
+            {/* Launch CTA */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.8, duration: 0.8 }}
-              className="mb-12"
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="mb-16"
             >
-              <div className="flex items-center justify-center gap-2 mb-6">
-                <Timer className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-semibold text-white">Launching Soon</h2>
-              </div>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 max-w-2xl mx-auto">
-                {[
-                  { value: timeRemaining.days, label: "Dny" },
-                  { value: timeRemaining.hours, label: "Hodiny" },
-                  { value: timeRemaining.minutes, label: "Minuty" },
-                  { value: timeRemaining.seconds, label: "Sekundy" },
-                ].map((item, index) => (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 1 + index * 0.1, duration: 0.5 }}
-                  >
-                    <Card className="bg-slate-900/50 border-purple-500/30 backdrop-blur-sm shadow-xl">
-                      <CardContent className="p-3 sm:p-6">
-                        <motion.div
-                          key={item.value}
-                          initial={{ scale: 1.2, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ duration: 0.3 }}
-                          className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-1 sm:mb-2"
-                        >
-                          {String(item.value).padStart(2, "0")}
-                        </motion.div>
+              <button
+                onClick={handleEnterApp}
+                className="group relative px-16 py-8 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 hover:from-cyan-600 hover:via-blue-600 hover:to-purple-600 text-white text-3xl sm:text-4xl font-bold rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-2xl shadow-cyan-500/50"
+              >
+                <span className="relative z-10 flex items-center gap-4">
+                  Vstoupit
+                  <Sparkles className="w-10 h-10 group-hover:rotate-180 transition-transform duration-500" />
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300" />
+              </button>
+              <p className="mt-6 text-gray-400 text-lg font-medium">
+                Aplikace je nyní dostupná
+              </p>
+            </motion.div>
                         <div className="text-xs sm:text-sm text-gray-400 uppercase tracking-wider">
                           {item.label}
                         </div>
