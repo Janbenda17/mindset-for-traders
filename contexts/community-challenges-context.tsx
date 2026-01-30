@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
-import { useAuth } from "@/contexts/auth-context" // Import useAuth to check if user exists
+import { useAuth } from "@/contexts/auth-context"
 
 interface Challenge {
   id: string
@@ -37,9 +37,9 @@ interface CommunityChallengesContextType {
   challenges: Challenge[]
   leaderboard: LeaderboardEntry[]
   userProgress: UserChallengeProgress[]
-  joinChallenge: (challengeId: string) => void
-  leaveChallenge: (challengeId: string) => void
-  updateProgress: (challengeId: string, progress: number) => void
+  joinChallenge: (challengeId: string) => Promise<void>
+  leaveChallenge: (challengeId: string) => Promise<void>
+  updateProgress: (challengeId: string, progress: number) => Promise<void>
   isLoading: boolean
 }
 
@@ -50,7 +50,7 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [userProgress, setUserProgress] = useState<UserChallengeProgress[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const { user, authReady } = useAuth() // Get authReady flag
+  const { user, authReady } = useAuth()
 
   useEffect(() => {
     if (authReady) {
@@ -66,7 +66,7 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
   const loadChallenges = async () => {
     try {
       const response = await fetch("/api/challenges", {
-        credentials: "include", // Ensure cookies are sent
+        credentials: "include",
       })
 
       if (response.status === 401) {
@@ -89,19 +89,51 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
     }
   }
 
-  const loadUserProgress = () => {
-    const stored = localStorage.getItem("community-challenges-progress")
-    if (stored) {
-      setUserProgress(JSON.parse(stored))
+  const loadUserProgress = async () => {
+    if (!user?.id) return
+
+    try {
+      const response = await fetch(`/api/challenges/user-progress?userId=${user.id}`, {
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setUserProgress(data.progress || [])
+      } else {
+        // Fallback to empty array if no progress exists
+        setUserProgress([])
+      }
+    } catch (error) {
+      console.error("[v0] Failed to load user progress:", error)
+      // Still try to load from localStorage as fallback for non-premium users
+      const stored = localStorage.getItem("community-challenges-progress")
+      if (stored) {
+        setUserProgress(JSON.parse(stored))
+      }
     }
   }
 
-  const saveUserProgress = (progress: UserChallengeProgress[]) => {
-    localStorage.setItem("community-challenges-progress", JSON.stringify(progress))
-    setUserProgress(progress)
+  const saveUserProgress = async (progress: UserChallengeProgress[]) => {
+    if (!user?.id) return
+
+    try {
+      await fetch("/api/challenges/user-progress", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, progress }),
+      })
+      setUserProgress(progress)
+    } catch (error) {
+      console.error("[v0] Failed to save user progress:", error)
+      // Fallback to localStorage
+      localStorage.setItem("community-challenges-progress", JSON.stringify(progress))
+      setUserProgress(progress)
+    }
   }
 
-  const joinChallenge = (challengeId: string) => {
+  const joinChallenge = async (challengeId: string) => {
     const existing = userProgress.find((p) => p.challengeId === challengeId)
     if (existing) return
 
@@ -112,19 +144,19 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
       joinedAt: new Date().toISOString(),
     }
 
-    saveUserProgress([...userProgress, newProgress])
+    await saveUserProgress([...userProgress, newProgress])
   }
 
-  const leaveChallenge = (challengeId: string) => {
+  const leaveChallenge = async (challengeId: string) => {
     const filtered = userProgress.filter((p) => p.challengeId !== challengeId)
-    saveUserProgress(filtered)
+    await saveUserProgress(filtered)
   }
 
-  const updateProgress = (challengeId: string, progress: number) => {
+  const updateProgress = async (challengeId: string, progress: number) => {
     const updated = userProgress.map((p) =>
       p.challengeId === challengeId ? { ...p, progress, completed: progress >= 100 } : p,
     )
-    saveUserProgress(updated)
+    await saveUserProgress(updated)
   }
 
   return (
