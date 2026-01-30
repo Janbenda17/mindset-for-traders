@@ -273,7 +273,7 @@ export default function AboutPage() {
           </div>
 
           <div className="text-center">
-            <Link href="/landing">
+            <Link href="/auth/sign-up">
               <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-lg font-semibold">
                 Začít s MindTrader AI
                 <ArrowRight className="w-5 h-5 ml-2" />
