@@ -585,8 +585,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return false
         }
 
-        console.log("[LIVE] insert trade OK")
-        refreshLiveData()
+        console.log("[LIVE] insert trade OK - refreshing data")
+        // Wait for data to refresh before returning
+        setTimeout(() => {
+          refreshLiveData()
+        }, 500)
         return true
       } else if (user?.id) {
         const newTrades = [...state.trades, trade]

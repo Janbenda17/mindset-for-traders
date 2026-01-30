@@ -32,11 +32,11 @@ export async function POST(request: NextRequest) {
 
     let profile = null
     let attempts = 0
-    const maxAttempts = 10
+    const maxAttempts = 3
 
     while (!profile && attempts < maxAttempts) {
       attempts++
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
       const { data: profileData } = await supabase
         .from("profiles")

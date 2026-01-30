@@ -390,8 +390,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[v0] Čekám na synchronizaci cookies...")
       await new Promise((resolve) => setTimeout(resolve, 500))
 
-      console.log("[v0] ✅ Registrace HOTOVA - redirect na /onboarding")
-      window.location.href = "/onboarding"
+      console.log("[v0] ✅ Registrace HOTOVA - redirect na /auth/login")
+      window.location.href = "/auth/login"
       return true
     } catch (error: any) {
       console.error("[v0] ===== REGISTRACE ERROR =====")

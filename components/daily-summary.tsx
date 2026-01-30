@@ -153,7 +153,13 @@ export function DailySummary() {
       setTodayTrades(demoTrades)
       generateAdvancedInsights(demoMorningCheck, demoTrades, demoIntention)
     } else {
-      // LIVE MODE - Load from localStorage
+      // LIVE MODE - Load fresh data from database
+      const allTrades = getAllTrades()
+      const trades = allTrades.filter((t: Trade) => t.date === today)
+      
+      console.log(`[v0] DailySummary - Loaded ${trades.length} trades for today (${today})`)
+      setTodayTrades(trades)
+
       // Load morning check
       const morningChecks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
       const todayMorningCheck = morningChecks.find((m: MorningCheckData) => m.date === today)
@@ -168,10 +174,6 @@ export function DailySummary() {
       const plans = JSON.parse(localStorage.getItem("trading-plans") || "[]")
       const todayPlan = plans.find((p: TradingPlanData) => p.date === today)
       setTradingPlan(todayPlan || null)
-
-      const allTrades = getAllTrades()
-      const trades = allTrades.filter((t: Trade) => t.date === today)
-      setTodayTrades(trades)
 
       generateAdvancedInsights(todayMorningCheck, trades, todayIntention)
     }
