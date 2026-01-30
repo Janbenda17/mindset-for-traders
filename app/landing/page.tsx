@@ -114,9 +114,7 @@ export default function LandingPage() {
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300" />
           </button>
-          <p className="mt-6 text-gray-400 text-lg font-medium">
-            Ovládni psychiku, ovládneš trading. Začni dnes.
-          </p>
+
         </motion.div>
 
 
