@@ -87,7 +87,7 @@ export function WaitlistSignup() {
                 </span>
               </h3>
               <p className="text-lg text-slate-300 font-semibold">
-                Přidej se a získej <span className="text-yellow-400 font-bold">5% slevu</span>
+                Přidej se - <span className="text-red-400 font-bold">brzy končí</span>
               </p>
             </div>
 
@@ -134,13 +134,13 @@ export function WaitlistSignup() {
               {/* Benefits Grid - Enhanced */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="group relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
-                  <div className="relative flex items-center gap-3 p-4 bg-slate-900/50 border border-slate-700/50 rounded-xl hover:border-yellow-500/50 transition-all backdrop-blur">
-                    <div className="p-2 bg-yellow-500/20 rounded-lg">
-                      <Zap className="w-5 h-5 text-yellow-400" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-300"></div>
+                  <div className="relative flex items-center gap-3 p-4 bg-slate-900/50 border border-slate-700/50 rounded-xl hover:border-red-500/50 transition-all backdrop-blur">
+                    <div className="p-2 bg-red-500/20 rounded-lg">
+                      <Zap className="w-5 h-5 text-red-400" />
                     </div>
                     <div>
-                      <div className="font-bold text-yellow-300">5% sleva</div>
+                      <div className="font-bold text-red-300">Brzy končí</div>
                     </div>
                   </div>
                 </div>
