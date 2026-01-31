@@ -16,7 +16,7 @@ export default function ProductTourPage() {
       const tourCompleted = localStorage.getItem("mindtrader-product-tour-completed")
       if (tourCompleted) {
         // Tour already completed, redirect to dashboard
-        router.push("/")
+        router.push("/dashboard")
       }
     }, 500)
 
