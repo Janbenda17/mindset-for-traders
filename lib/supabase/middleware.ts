@@ -14,6 +14,21 @@ const PUBLIC_PATHS = [
   "/intro",
   "/landing",
   "/about",
+  // Protected app paths (require auth, but won't redirect if user is auth)
+  "/dashboard",
+  "/account",
+  "/trades",
+  "/journal",
+  "/challenges",
+  "/rewards",
+  "/team-club",
+  "/admin",
+  "/morning-check",
+  "/intention",
+  "/trading-plan",
+  "/daily-summary",
+  "/psyche-analysis",
+  "/trading-psychology",
 ]
 
 // Paths that require authentication but don't need onboarding/tour check
@@ -115,6 +130,32 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
 
   if (isPublicPath) {
+    // If it's an app path and user is not authenticated, redirect to login
+    const isAppPath = [
+      "/dashboard",
+      "/account",
+      "/trades",
+      "/journal",
+      "/challenges",
+      "/rewards",
+      "/team-club",
+      "/admin",
+      "/morning-check",
+      "/intention",
+      "/trading-plan",
+      "/daily-summary",
+      "/psyche-analysis",
+      "/trading-psychology",
+    ].some((p) => pathname === p || pathname.startsWith(p + "/"))
+
+    if (isAppPath && !user) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/auth/login"
+      url.searchParams.set("redirectedFrom", pathname)
+      console.log("[v0] App path without auth - redirecting to login:", pathname)
+      return NextResponse.redirect(url)
+    }
+
     return NextResponse.next()
   }
 
