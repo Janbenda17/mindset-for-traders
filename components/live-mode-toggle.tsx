@@ -32,6 +32,19 @@ const LiveModeToggle = () => {
 
   const handleModeSwitch = () => {
     if (!isLiveMode) {
+      // Check if user is authenticated first
+      if (!user) {
+        console.log("[v0] Guest user trying to switch to Live - redirecting to signup")
+        toast({
+          title: "Vyžaduje se registrace",
+          description: "Pro přepnutí do Live módu se musíš nejdřív zaregistrovat. Přesměrovávám...",
+        })
+        setTimeout(() => {
+          router.push("/signup")
+        }, 1500)
+        return
+      }
+
       // Pokud se ještě načítá subscription status, čekáme
       if (isPremiumLoading) {
         toast({

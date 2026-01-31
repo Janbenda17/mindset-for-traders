@@ -53,44 +53,29 @@ export function OnboardingComplete() {
     setLoading(true)
     setError("")
 
-    try {
-      const res = await fetch("/api/onboarding/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nickname,
-          trader_type: traderType,
-          experience_level: experienceLevel,
-          main_problems: selectedProblems,
-          main_goal: selectedGoal,
-        }),
-      })
+    // Save onboarding data to localStorage for guest users
+    localStorage.setItem("mindtrader-onboarding-guest", JSON.stringify({
+      nickname,
+      trader_type: traderType,
+      experience_level: experienceLevel,
+      main_problems: selectedProblems,
+      main_goal: selectedGoal,
+      completed: true,
+    }))
 
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.error || "Failed to complete onboarding")
-        return
-      }
+    localStorage.removeItem("mindtrader-product-tour-completed")
+    console.log("[v0] Guest onboarding complete - redirecting to dashboard in VIRTUAL mode")
 
-      // New users default to 'virtual' mode in database via SQL default value
-      console.log("[v0] New user defaults to virtual mode (set in database)")
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ["#8B5CF6", "#EC4899", "#10B981"],
+    })
 
-      localStorage.removeItem("mindtrader-product-tour-completed")
-      console.log("[v0] Onboarding complete - redirecting to product-tour")
-
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ["#8B5CF6", "#EC4899", "#10B981"],
-      })
-
-      router.push("/product-tour")
-    } catch (err) {
-      setError("An error occurred")
-    } finally {
-      setLoading(false)
-    }
+    // Go directly to dashboard without requiring auth
+    router.push("/dashboard")
+    setLoading(false)
   }
 
   const toggleProblem = (problem: string) => {

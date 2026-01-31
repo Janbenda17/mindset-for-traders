@@ -130,32 +130,9 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
 
   if (isPublicPath) {
-    // If it's an app path and user is not authenticated, redirect to login
-    const isAppPath = [
-      "/dashboard",
-      "/account",
-      "/trades",
-      "/journal",
-      "/challenges",
-      "/rewards",
-      "/team-club",
-      "/admin",
-      "/morning-check",
-      "/intention",
-      "/trading-plan",
-      "/daily-summary",
-      "/psyche-analysis",
-      "/trading-psychology",
-    ].some((p) => pathname === p || pathname.startsWith(p + "/"))
-
-    if (isAppPath && !user) {
-      const url = request.nextUrl.clone()
-      url.pathname = "/auth/login"
-      url.searchParams.set("redirectedFrom", pathname)
-      console.log("[v0] App path without auth - redirecting to login:", pathname)
-      return NextResponse.redirect(url)
-    }
-
+    // Allow app paths without auth - users can explore in VIRTUAL mode as guests
+    // Auth is only required when they try to switch to Live mode (handled in live-mode-toggle)
+    console.log("[v0] Allowing access to:", pathname, "user:", user ? user.email : "guest (virtual mode)")
     return NextResponse.next()
   }
 
