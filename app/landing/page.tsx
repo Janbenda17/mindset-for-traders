@@ -67,7 +67,15 @@ export default function Home() {
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 3, repeat: Infinity }}
             />
-            <h2 className="relative text-7xl md:text-9xl lg:text-10xl font-black bg-gradient-to-r from-purple-300 via-pink-300 to-red-400 bg-clip-text text-transparent drop-shadow-2xl">
+            <h2 
+              className="relative text-9xl md:text-11xl lg:text-12xl font-black drop-shadow-2xl"
+              style={{
+                color: 'transparent',
+                WebkitTextStroke: '3px white',
+                textStroke: '3px white',
+                letterSpacing: '0.05em'
+              }}
+            >
               Mindtrader
             </h2>
           </div>
