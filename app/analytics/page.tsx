@@ -1076,11 +1076,6 @@ export default function PsychologyAnalyticsPage() {
     )
   }
 
-  if (!user) {
-    router.push("/auth/login")
-    return null
-  }
-
   // Ve Virtual Mode zobraz demo data i když je méně než 10 dní
   if (isAnalyticsLocked) {
     return (
