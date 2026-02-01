@@ -1,124 +1,239 @@
 'use client'
 
-import Link from 'next/link'
+import { useState, useEffect } from 'react'
+import { TopNavigation } from '@/components/top-navigation'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Zap, BarChart3, Users, Target } from 'lucide-react'
+import { BarChart3, Zap, Target, Users, ArrowRight, Crown } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-export default function Home() {
+export default function Dashboard() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Mock data
+  const stats = [
+    {
+      title: 'Měsíční Readiness',
+      value: '78%',
+      change: '+5%',
+      icon: Zap,
+      color: 'from-purple-500 to-indigo-600',
+      desc: 'Psychologická připravenost'
+    },
+    {
+      title: 'Konzistence',
+      value: '85%',
+      change: '+12%',
+      icon: Target,
+      color: 'from-blue-500 to-cyan-600',
+      desc: 'Dodržování plánu'
+    },
+    {
+      title: 'Win Rate',
+      value: '62%',
+      change: '+3%',
+      icon: BarChart3,
+      color: 'from-green-500 to-emerald-600',
+      desc: 'Úspěšné obchody'
+    },
+    {
+      title: 'Komunita',
+      value: '1,234',
+      change: '+89',
+      icon: Users,
+      color: 'from-orange-500 to-red-600',
+      desc: 'Aktivní tradera'
+    }
+  ]
+
+  const quickActions = [
+    {
+      title: 'Denní Tracking',
+      desc: 'Zaznamenej si svůj mentální stav',
+      icon: Zap,
+      href: '/daily-tracker',
+      color: 'purple'
+    },
+    {
+      title: 'Analytics',
+      desc: 'Podívej se na svůj pokrok',
+      icon: BarChart3,
+      href: '/analytics',
+      color: 'blue'
+    },
+    {
+      title: 'Journal',
+      desc: 'Zaznamenej své obchody',
+      icon: Target,
+      href: '/journal',
+      color: 'green'
+    },
+    {
+      title: 'MindTrader AI',
+      desc: 'Poraď se s umělou inteligencí',
+      icon: Zap,
+      href: '/mindtrader',
+      color: 'indigo'
+    }
+  ]
+
+  if (!mounted) return null
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <TopNavigation />
       
-      {/* Grid pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `linear-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px)`,
-          backgroundSize: '100px 100px'
-        }} />
-      </div>
-
-      {/* Floating stars */}
-      <div className="absolute inset-0 opacity-40">
-        {[...Array(10)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full"
-            animate={{ y: [0, -20, 0], opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 3 + i, repeat: Infinity, repeatType: 'reverse' }}
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-20">
+      {/* Main Content */}
+      <div className="pt-20 px-4 md:px-8 lg:px-12 pb-20 max-w-7xl mx-auto">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -30 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center space-y-8 max-w-4xl"
+          className="mb-12"
         >
-          {/* Header */}
-          <div className="space-y-4">
-            <h1 className="text-6xl md:text-7xl font-black bg-gradient-to-r from-purple-300 via-white to-indigo-300 bg-clip-text text-transparent">
-              Vitej v MindTrader
-            </h1>
-            <p className="text-xl md:text-2xl text-slate-300">
-              Nástroj pro psychické řízení tradingu
-            </p>
-          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-2">
+            Tvůj Trading Dashboard
+          </h1>
+          <p className="text-lg text-slate-400">
+            Sleduj svůj psychický vývoj a dosahuj lepších výsledků
+          </p>
+        </motion.div>
 
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center pt-8"
-          >
-            <Link href="/landing">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg px-8 py-6 rounded-lg"
-              >
-                Zjistit více <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-            <Link href="/mindtrader">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-2 border-purple-400 text-purple-300 hover:bg-purple-950 font-bold text-lg px-8 py-6 rounded-lg"
-              >
-                Spustit MindTrader
-              </Button>
-            </Link>
-          </motion.div>
+        {/* Statistics Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
+        >
+          {stats.map((stat, i) => (
+            <motion.div
+              key={i}
+              whileHover={{ y: -5, scale: 1.02 }}
+              className="group"
+            >
+              <Card className="bg-slate-900/50 backdrop-blur-md border-slate-800 hover:border-slate-700 transition-all duration-300">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-sm font-medium text-slate-300">
+                      {stat.title}
+                    </CardTitle>
+                    <div className={`p-2 rounded-lg bg-gradient-to-br ${stat.color}`}>
+                      <stat.icon className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-3xl font-bold text-white mb-1">
+                        {stat.value}
+                      </p>
+                      <p className="text-xs text-slate-500">{stat.desc}</p>
+                    </div>
+                    <span className="text-sm font-semibold text-green-400">
+                      {stat.change}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
 
-          {/* Features Grid */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="grid md:grid-cols-3 gap-6 mt-16"
-          >
-            {[
-              {
-                icon: BarChart3,
-                title: 'Analytics',
-                desc: 'Sleduj své psychické stavy a výkonnost'
-              },
-              {
-                icon: Zap,
-                title: 'AI Insights',
-                desc: 'Personalizované doporučení od AI'
-              },
-              {
-                icon: Users,
-                title: 'Komunita',
-                desc: 'Připoj se k ostatním tradera'
-              },
-              {
-                icon: Target,
-                title: 'Plány',
-                desc: 'Strukturovaný přístup k tradingu'
-              }
-            ].map((feature, i) => (
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-12"
+        >
+          <h2 className="text-2xl font-bold text-white mb-6">Rychlé akce</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {quickActions.map((action, i) => (
               <motion.div
                 key={i}
-                whileHover={{ y: -5, scale: 1.02 }}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <feature.icon className="w-8 h-8 text-purple-400 mb-3" />
-                <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm text-slate-400">{feature.desc}</p>
+                <a href={action.href}>
+                  <Card className="bg-slate-900/50 backdrop-blur-md border-slate-800 hover:border-slate-700 transition-all duration-300 cursor-pointer h-full hover:bg-slate-800/50">
+                    <CardContent className="p-6 flex flex-col items-start justify-start h-full">
+                      <div className={`p-3 rounded-lg mb-4 bg-${action.color}-500/20`}>
+                        <action.icon className={`w-6 h-6 text-${action.color}-400`} />
+                      </div>
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        {action.title}
+                      </h3>
+                      <p className="text-sm text-slate-400 mb-4">
+                        {action.desc}
+                      </p>
+                      <div className="mt-auto">
+                        <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </a>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
+        </motion.div>
+
+        {/* Subscription CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/40 via-indigo-900/40 to-blue-900/40 border border-purple-500/20 p-8 md:p-12"
+        >
+          <div className="absolute inset-0 bg-grid-pattern opacity-5" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <Crown className="w-6 h-6 text-yellow-400" />
+                <span className="text-sm font-semibold text-yellow-400">UPGRADE</span>
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-2">
+                Odemkni full potenciál MindTraderu
+              </h3>
+              <p className="text-lg text-slate-300 mb-4">
+                Získej přístup k pokročilé AI analýze, komunitu tradera a exkluzivní insights. Začni s 7 dny zdarma.
+              </p>
+              <div className="flex flex-wrap gap-3 text-sm text-slate-300">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-400">✓</span> Neomezené analyzy
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-400">✓</span> AI coaching
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-400">✓</span> Komunita
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-3 w-full md:w-auto">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold w-full md:w-auto whitespace-nowrap"
+              >
+                Začít premium <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-slate-600 text-slate-300 hover:bg-slate-800/50 w-full md:w-auto"
+              >
+                Více informací
+              </Button>
+            </div>
+          </div>
         </motion.div>
       </div>
     </div>
