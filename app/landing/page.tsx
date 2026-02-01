@@ -21,7 +21,7 @@ export default function LandingPage() {
   const handleEnterApp = () => {
     // Set cookie to mark landing as seen
     document.cookie = "mt_seen_landing=1; path=/; max-age=31536000"
-    router.push("/product-tour")
+    router.push("/onboarding")
   }
 
   return (
@@ -109,7 +109,7 @@ export default function LandingPage() {
             className="group relative w-full sm:w-auto px-8 sm:px-16 py-6 sm:py-8 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 active:from-cyan-600 active:via-blue-600 active:to-purple-600 text-white text-2xl sm:text-3xl md:text-4xl font-bold rounded-2xl transition-all duration-300 active:scale-95 shadow-2xl shadow-cyan-500/50 touch-manipulation"
           >
             <span className="relative z-10 flex items-center justify-center gap-3 sm:gap-4">
-              Vstoupit
+              Vstoupit zdarma
               <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 group-active:rotate-180 transition-transform duration-500" />
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-2xl blur opacity-0 group-active:opacity-50 transition-opacity duration-300" />

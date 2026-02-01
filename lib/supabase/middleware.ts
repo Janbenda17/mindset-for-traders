@@ -14,6 +14,8 @@ const PUBLIC_PATHS = [
   "/intro",
   "/landing",
   "/about",
+  "/onboarding",
+  "/product-tour",
   // Protected app paths (require auth, but won't redirect if user is auth)
   "/dashboard",
   "/account",
@@ -30,9 +32,6 @@ const PUBLIC_PATHS = [
   "/psyche-analysis",
   "/trading-psychology",
 ]
-
-// Paths that require authentication but don't need onboarding/tour check
-const AUTH_REQUIRED_PATHS = ["/onboarding", "/product-tour"]
 
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
