@@ -198,6 +198,8 @@ export default function DailyTrackerPage() {
       return
     }
 
+    console.log("[v0] [DailyTracker] loadEntries called - isLiveMode:", isLiveMode)
+
     if (!isLiveMode) {
       console.log("[v0] [DailyTracker] VIRTUAL mode - generating full month of demo data")
       
@@ -256,7 +258,7 @@ export default function DailyTrackerPage() {
       }
       
       setEntries(demoEntries)
-      console.log(`[v0] [DailyTracker] VIRTUAL: Generated ${demoEntries.length} demo entries for February`)
+      console.log(`[v0] [DailyTracker] VIRTUAL: Generated ${demoEntries.length} demo entries for February - setting now`)
       setEntriesLoading(false)
       return
     }
