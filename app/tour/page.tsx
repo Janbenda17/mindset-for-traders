@@ -93,111 +93,117 @@ export default function TourPage() {
         </section>
 
         {/* Why MindTrader Section */}
-        <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-900/50 backdrop-blur-sm">
-          <div className="max-w-5xl mx-auto space-y-6">
-            <div className="text-center space-y-1 mb-8">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Proč to dělat?</h2>
-              <p className="text-xs sm:text-sm text-slate-400">Tvůj problém není strategie, ale <span className="text-cyan-400 font-semibold">psychika</span></p>
+        <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-slate-900/50 backdrop-blur-sm">
+          <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
+            <div className="text-center space-y-2 sm:space-y-4">
+              <h2 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-white">Proč tohle vlastně existuje</h2>
+              <p className="text-sm sm:text-base lg:text-lg text-slate-400">Protože <span className="text-cyan-400">tvůj problém není strategie</span></p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <Card className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-all">
-                <CardContent className="p-3 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <div className="p-1.5 bg-red-500/20 rounded flex-shrink-0">
-                      <TrendingUp className="w-4 h-4 text-red-400" />
+                <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-red-500/20 rounded-lg flex-shrink-0">
+                      <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-red-400" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-white">Revenge trading</h3>
-                      <p className="text-slate-300 text-xs">Ztráta → hazardérství → 2x větší ztráta</p>
+                    <div>
+                      <h3 className="text-base sm:text-lg font-semibold text-white">Revenge trading</h3>
+                      <p className="text-slate-300 text-xs sm:text-sm">Ztratil jsi a chceš to vrátit. Hazardérsky obchoduješ a prohrál jsi 2x víc.</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-all">
-                <CardContent className="p-3 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <div className="p-1.5 bg-orange-500/20 rounded flex-shrink-0">
-                      <Zap className="w-4 h-4 text-orange-400" />
+                <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-orange-500/20 rounded-lg flex-shrink-0">
+                      <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-white">Porušování plánu</h3>
-                      <p className="text-slate-300 text-xs">3 plánované → 7 emočních obchodů</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-all">
-                <CardContent className="p-3 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <div className="p-1.5 bg-yellow-500/20 rounded flex-shrink-0">
-                      <Brain className="w-4 h-4 text-yellow-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-white">FOMO a eufória</h3>
-                      <p className="text-slate-300 text-xs">Vidíš všechno → riziko je moc vysoké</p>
+                    <div>
+                      <h3 className="text-base sm:text-lg font-semibold text-white">Porušování plánu</h3>
+                      <p className="text-slate-300 text-xs sm:text-sm">Měl jsi 3 obchody. Máš 7. Obchoduješ bez logiky.</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-all">
-                <CardContent className="p-3 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <div className="p-1.5 bg-pink-500/20 rounded flex-shrink-0">
-                      <Trophy className="w-4 h-4 text-pink-400" />
+                <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-yellow-500/20 rounded-lg flex-shrink-0">
+                      <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-white">Bez analýzy</h3>
-                      <p className="text-slate-300 text-xs">Neznáš proč prohrál → se to opakuje</p>
+                    <div>
+                      <h3 className="text-base sm:text-lg font-semibold text-white">FOMO a eufória</h3>
+                      <p className="text-slate-300 text-xs sm:text-sm">Vidíš trade. Nebo jsi ziskový a risk je příliš vysoký.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-all">
+                <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-pink-500/20 rounded-lg flex-shrink-0">
+                      <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-pink-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-base sm:text-lg font-semibold text-white">Neznáš příčinu</h3>
+                      <p className="text-slate-300 text-xs sm:text-sm">Víš že prohrál jsi, ale nevíš proč. Bez analýzy se to opakuje.</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="bg-gradient-to-r from-purple-600/30 to-cyan-600/30 border border-purple-500/40 rounded-lg p-4 text-center mt-6">
-              <div className="space-y-1">
-                <p className="text-lg sm:text-xl font-bold text-white"><span className="text-green-400 text-2xl">90%</span> traderů</p>
-                <p className="text-xs sm:text-sm text-slate-200">ztrácí kvůli <span className="text-cyan-300 font-semibold">emocím</span>, ne strategii</p>
-              </div>
+            <div className="bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border border-purple-500/30 rounded-xl p-4 sm:p-6 text-center">
+              <p className="text-sm sm:text-base lg:text-lg text-slate-200">
+                <span className="font-bold text-white">90% traderů</span> ztrácí ne kvůli strategii, ale kvůli <span className="text-cyan-400">psychice</span>
+              </p>
             </div>
 
-            <div className="text-center space-y-1 mt-6">
-              <p className="text-slate-400 text-xs sm:text-sm">MindTrader = systém, který tě varuje před vlastní psychikou</p>
+            <div className="text-center space-y-2 sm:space-y-4">
+              <p className="text-slate-400 text-sm sm:text-base">MindTrader AI není kurz nebo signály.</p>
+              <p className="text-white text-base sm:text-lg lg:text-xl font-semibold">Je to systém, který ukazuje kde tě tvoje hlava zabíjí.</p>
             </div>
           </div>
         </section>
 
         {/* Features Section */}
-        <section className="py-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto space-y-6">
-            <div className="text-center space-y-1 mb-8">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Co dostaneš v LIVE módu</h2>
-              <p className="text-xs sm:text-sm text-slate-400">7 klíčových funkcí pro konzistentní trading</p>
+        <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto space-y-10 sm:space-y-16">
+            <div className="text-center space-y-2 sm:space-y-4">
+              <h2 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-white">Klíčové funkce</h2>
+              <p className="text-sm sm:text-base lg:text-lg text-slate-400">Všechno co potřebuješ</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {features.map((feature, idx) => {
                 const Icon = feature.icon
                 return (
                   <Card
                     key={idx}
-                    className="bg-slate-800/50 border-slate-700 hover:border-cyan-500/50 transition-all cursor-pointer group active:scale-95 sm:hover:scale-105"
+                    className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-all cursor-pointer group active:scale-95 sm:hover:scale-105"
                   >
-                    <CardContent className="p-2.5 space-y-1.5 h-full flex flex-col">
-                      <div className="p-1.5 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded w-fit group-hover:from-purple-500/30 group-hover:to-cyan-500/30 transition-all">
-                        <Icon className="w-4 h-4 text-cyan-400" />
+                    <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4 h-full flex flex-col">
+                      <div className="p-3 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-lg w-fit group-hover:from-purple-500/30 group-hover:to-cyan-500/30 transition-all">
+                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
                       </div>
 
-                      <div className="flex-1 space-y-0.5">
-                        <h3 className="text-xs font-semibold text-white leading-tight">{feature.title}</h3>
-                        <p className="text-xs text-slate-400 leading-tight">{feature.description}</p>
+                      <div className="flex-1 space-y-1 sm:space-y-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-white">{feature.title}</h3>
+                        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{feature.description}</p>
                       </div>
 
-                      <p className="text-xs text-cyan-300 font-semibold pt-1 border-t border-slate-700/50">{feature.benefit}</p>
+                      <div className="pt-3 sm:pt-4 border-t border-slate-700/50">
+                        <p className="text-xs text-cyan-400 font-semibold">{feature.benefit}</p>
+                      </div>
+
+                      <Button variant="ghost" className="w-full text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 justify-start pl-0 text-xs sm:text-sm">
+                        Vyzkoušet teď <ArrowRight className="ml-auto w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
                     </CardContent>
                   </Card>
                 )
@@ -207,18 +213,24 @@ export default function TourPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-10 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border-t border-slate-700/50">
-          <div className="max-w-4xl mx-auto text-center space-y-4">
-            <div className="space-y-1.5">
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Přejdi do LIVE režimu</h2>
-              <p className="text-xs sm:text-sm text-slate-300">Všechny funkce zdarma • Bez karty • Upgrade kdykoliv</p>
+        <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border-t border-slate-700/50">
+          <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8">
+            <div className="space-y-2 sm:space-y-4">
+              <h2 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-white">Přejdi do LIVE režimu</h2>
+              <p className="text-sm sm:text-base lg:text-xl text-slate-300">
+                Všechny funkce. Žádné riziko. Registrace zdarma, bez karty.
+              </p>
             </div>
 
             <Link href="/">
-              <Button className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold px-6 sm:px-10 py-3 sm:py-4 h-auto text-sm sm:text-base rounded-lg shadow-lg shadow-purple-500/40 active:scale-95 sm:hover:scale-105">
-                Začít teď <ArrowRight className="ml-2 w-3 h-3 sm:w-4 sm:h-4" />
+              <Button className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold px-8 sm:px-12 py-5 sm:py-7 h-auto text-base sm:text-xl rounded-lg shadow-lg shadow-purple-500/40 active:scale-95 sm:hover:scale-105">
+                Začít teď <ArrowRight className="ml-2 w-4 h-4 sm:w-6 sm:h-6" />
               </Button>
             </Link>
+
+            <p className="text-xs sm:text-sm text-slate-400">
+              Všechny funkce odemčené • Virtual Mode bez rizika • Live upgrade kdykoliv
+            </p>
           </div>
         </section>
       </div>
