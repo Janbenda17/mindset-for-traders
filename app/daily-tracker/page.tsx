@@ -168,6 +168,7 @@ export default function DailyTrackerPage() {
   const [entries, setEntries] = useState<DailySummary[]>([])
   const [activeTab, setActiveTab] = useState("today")
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
+  const [expandedStage, setExpandedStage] = useState<number | null>(null)
   const [virtualData, setVirtualData] = useState<any>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0) // State for triggering refresh
   const [entriesLoading, setEntriesLoading] = useState(true)
@@ -1081,7 +1082,7 @@ export default function DailyTrackerPage() {
                 const isCompleted = !isLiveMode ? true : todayEntry && stages.find((s) => s.id === stage.id)?.completed
                 const isUnlocked = !isLiveMode ? true : todayEntry && stages.find((s) => s.id === stage.id)?.unlocked
                 const isActive = !isCompleted && isUnlocked
-                const [isExpanded, setIsExpanded] = useState(false)
+                const isExpanded = expandedStage === stage.id
 
                 return (
                   <div
@@ -1097,12 +1098,12 @@ export default function DailyTrackerPage() {
                     )}
                     onClick={() => {
                       if (isUnlocked && stage.href) {
-                        setIsExpanded(!isExpanded)
+                        setExpandedStage(stage.id)
                         setTimeout(() => router.push(stage.href), 200)
                       }
                     }}
-                    onMouseEnter={() => isUnlocked && setIsExpanded(true)}
-                    onMouseLeave={() => setIsExpanded(false)}
+                    onMouseEnter={() => isUnlocked && setExpandedStage(stage.id)}
+                    onMouseLeave={() => setExpandedStage(null)}
                   >
                     {/* Bubble fill animation */}
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity from-white to-transparent" />
