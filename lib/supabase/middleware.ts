@@ -110,21 +110,6 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check if auth-required path (onboarding, product-tour)
-  const isAuthRequiredPath = AUTH_REQUIRED_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
-  if (isAuthRequiredPath) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = "/auth/login"
-      url.searchParams.set("redirectedFrom", pathname)
-      console.log("[v0] Auth required path without user - redirecting to login")
-      return NextResponse.redirect(url)
-    }
-    // Authenticated user can access onboarding/product-tour
-    console.log("[v0] Authenticated user accessing", pathname)
-    return NextResponse.next()
-  }
-
   // Check if public path
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
 
