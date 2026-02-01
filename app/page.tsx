@@ -146,7 +146,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="pt-4 sm:pt-8 space-y-4"
           >
-            <Link href="/intro">
+            <Link href="/product-tour">
               <Button
                 size="lg"
                 className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold text-lg sm:text-2xl py-6 sm:py-8 px-8 sm:px-12 rounded-xl shadow-2xl shadow-purple-500/30 hover:scale-105 transition-transform duration-300 group"
@@ -278,7 +278,7 @@ export default function LandingPage() {
                   </Button>
                 </Link>
                 
-                <Link href="/intro">
+                <Link href="/product-tour">
                   <Button
                     size="lg"
                     variant="outline"
