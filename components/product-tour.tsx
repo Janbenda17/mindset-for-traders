@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { useData } from "@/contexts/data-context"
+import { Card } from "@/components/ui/card"
 import {
   Brain,
   LayoutDashboard,
@@ -20,6 +21,17 @@ import {
   Sparkles,
   X,
   Eye,
+  TrendingUp,
+  Zap,
+  Trophy,
+  Target,
+  Flame,
+  Heart,
+  Shield,
+  Clock,
+  Users,
+  Activity,
+  Award,
 } from "lucide-react"
 
 const tourSteps = [
@@ -27,49 +39,74 @@ const tourSteps = [
     id: "welcome",
     icon: Sparkles,
     title: "Vítej v MindTraderu",
-    subtitle: "Tohle je tvoje mentální základna pro trading.",
-    description: "Projdeme si společně klíčové funkce, které ti pomohou stát se disciplinovanějším traderem.",
-    cta: "Začít tour",
+    subtitle: "Tvoje mentální základna pro trading",
+    description: "První software, který kombinuje AI coaching s trading psychologií. Projdeme si revoluční funkce, které změnily způsob, jak tradiči přemýšlí o své mysli.",
+    cta: "Začít exploraci",
     route: null,
+    features: ["AI-powered insights", "Real-time tracking", "Gamifikace"],
   },
   {
     id: "dashboard",
     icon: LayoutDashboard,
     title: "Dashboard",
-    subtitle: "Tvůj denní přehled",
+    subtitle: "Tvůj command center",
     description:
-      "Tady budeš sledovat svůj psychologický stav, XP a denní připravenost. Dashboard ti řekne, jak jsi dnes mentálně na trading.",
-    highlight: "Readiness Score • XP Level • Denní statistiky",
+      "Živý přehled tvé psychické připravenosti. Dashboard ti řekne, zda jsi dnes ready na trading nebo potřebuješ pauzu.",
+    highlight: "Readiness Score • XP Progress • Live Metrics",
     route: "/",
+    preview: "dashboard",
+  },
+  {
+    id: "ai-coach",
+    icon: MessageSquare,
+    title: "MindTrader AI",
+    subtitle: "Tvůj 24/7 mentální kouč",
+    description:
+      "Revoluční AI asistent, který rozumí trading psychologii. Pomůže ti při FOMO, frustraci nebo euforii. Jako osobní terapeut, ale pro tradiče.",
+    highlight: "Natural Language • Emoční analýza • Personalizované rady",
+    route: "/mindtrader?tab=ai",
+    preview: "ai",
   },
   {
     id: "daily-tracker",
     icon: ClipboardCheck,
     title: "Daily Tracker",
-    subtitle: "Ranní check-in",
+    subtitle: "Ranní ritual pro úspěch",
     description:
-      "Každý den vyplníš pár informací o spánku, stresu, energii a rutinách. AI ti vypočítá Readiness Score a doporučí, zda obchodovat.",
-    highlight: "Spánek • Stres • Energie • Focus",
+      "Každý den vyplníš rychlý check-in o spánku, stresu a energii. AI ti vypočítá Readiness Score a doporučí, zda dnes tradovat.",
+    highlight: "Spánek • Stres • Energie • AI doporučení",
     route: "/daily-tracker",
-  },
-  {
-    id: "ai-coach",
-    icon: MessageSquare,
-    title: "AI Coach (MindTrader AI)",
-    subtitle: "Tvůj mentální navigátor",
-    description:
-      "Zde můžeš mluvit s AI koučem. Pomůže ti při frustraci, FOMO, euforii nebo pochybnostech. Je to tvůj mentální navigátor.",
-    highlight: "24/7 podpora • Personalizované rady • Emoční analýza",
-    route: "/mindtrader?tab=ai", // Changed from /mindtrader-ai (non-existent) to /mindtrader?tab=ai
+    preview: "tracker",
   },
   {
     id: "trading-diary",
     icon: BookOpen,
-    title: "Trading Deník",
-    subtitle: "Více než jen čísla",
-    description: "Sem si zapisuješ obchody a hlavně emoce. MindTrader sleduje tvé psychologické chyby, ne jen čísla.",
-    highlight: "Emoce • Psychologické vzorce • Sebereflexe",
+    title: "Psychologický deník",
+    subtitle: "Emoce, ne jen čísla",
+    description: "Zaznamenávej své obchody včetně emocí. MindTrader analyzuje tvé psychologické vzorce a odhaluje, co sabotuje tvé výsledky.",
+    highlight: "Emoční tracking • Pattern detection • AI insights",
     route: "/journal",
+    preview: "journal",
+  },
+  {
+    id: "analytics",
+    icon: BarChart3,
+    title: "Advanced Analytics",
+    subtitle: "Data-driven psychology",
+    description: "Korelace mezi tvou psychikou a P&L. Odhaluj, které mentální stavy vedou k nejlepším výsledkům a které k chybám.",
+    highlight: "Korelační grafy • Trend analysis • Predictive insights",
+    route: "/analytics",
+    preview: "analytics",
+  },
+  {
+    id: "xp-system",
+    icon: Trophy,
+    title: "Gamifikace & XP",
+    subtitle: "Disciplína jako hra",
+    description: "Získávej XP za disciplínu, odemykej achievementy a postupuj levely. Mentální trénink nikdy nebyl tak zábavný.",
+    highlight: "10 levelů • 50+ achievementů • Denní streaky",
+    route: "/rewards",
+    preview: "gamification",
   },
   {
     id: "loss-reset",
@@ -77,47 +114,201 @@ const tourSteps = [
     title: "Loss Reset Protocol",
     subtitle: "Zastavení spirály",
     description:
-      "Když přijde ztráta, aktivuje se Reset Mode: krátká rutina, která tě vrátí do klidu a zastaví revenge trading.",
-    highlight: "Dýchání • Meditace • Reset myšlení",
+      "Revoluční systém, který tě zastaví před revenge tradingem. Aktivuje se automaticky po ztrátě a provede tě reseting rituálem.",
+    highlight: "Breathing exercises • Mindfulness • Refocus protocol",
     route: "/loss-reset",
-  },
-  {
-    id: "xp-system",
-    icon: Star,
-    title: "XP & Level systém",
-    subtitle: "Gamifikace disciplíny",
-    description: "Za disciplínu získáváš XP. Levely odemykají nové funkce a posouvají tě k MindMaster úrovni.",
-    highlight: "XP za akce • 10 levelů • Odměny",
-    route: "/rewards",
-  },
-  {
-    id: "analytics",
-    icon: BarChart3,
-    title: "Analytics",
-    subtitle: "Data-driven insights",
-    description: "Zde uvidíš korelace mezi tvou psychikou a výsledky. Čím víc dat, tím chytřejší MindTrader bude.",
-    highlight: "Psychika vs. P&L • Trendy • AI doporučení",
-    route: "/analytics",
-  },
-  {
-    id: "live-mode",
-    icon: Rocket,
-    title: "Připraven na Live?",
-    subtitle: "Závazek k disciplíně",
-    description: "Až budeš připraven, můžeš přejít do LIVE režimu. Ten už nelze vrátit – je to závazek k disciplíně.",
-    highlight: "Reálná data • Plný tracking • Premium funkce",
-    route: "/settings",
+    preview: "reset",
   },
   {
     id: "finish",
-    icon: Brain,
-    title: "Tohle je MindTrader",
-    subtitle: "Teď si vše můžeš vyzkoušet",
-    description: "Virtual Mode ti umožňuje prozkoumat všechny funkce bez rizika. Až budeš připraven, přejdi na Live.",
-    cta: "Dokončit tour",
+    icon: Rocket,
+    title: "Připraven startovat?",
+    subtitle: "Virtual Mode čeká na tebe",
+    description: "Všechny funkce jsou teď dostupné. Vyzkoušej je ve Virtual Mode bez rizika. Až budeš ready, přepni na Live režim.",
+    cta: "Začít používat",
     route: null,
+    features: ["Všechny funkce unlocked", "Virtual Mode aktivní", "Live upgrade kdykoliv"],
   },
 ]
+
+// Animated preview components
+function DashboardPreview() {
+  return (
+    <div className="space-y-4 p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-cyan-500/20">
+      <div className="grid grid-cols-3 gap-4">
+        <MetricCard icon={Activity} label="Readiness" value="87%" color="green" />
+        <MetricCard icon={Zap} label="Level" value="7" color="yellow" />
+        <MetricCard icon={Flame} label="Streak" value="12" color="orange" />
+      </div>
+      <div className="h-32 bg-slate-800/50 rounded-xl relative overflow-hidden">
+        <div className="absolute inset-0 flex items-end justify-around p-4">
+          {[65, 78, 82, 90, 87].map((height, i) => (
+            <div key={i} className="w-8 bg-gradient-to-t from-cyan-500 to-cyan-400 rounded-t-lg animate-pulse" style={{ height: `${height}%`, animationDelay: `${i * 0.1}s` }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AIPreview() {
+  return (
+    <div className="space-y-3 p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-purple-500/20">
+      <div className="flex items-start gap-3">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+          <Brain className="w-4 h-4 text-white" />
+        </div>
+        <div className="flex-1 space-y-2">
+          <div className="h-2 bg-purple-500/20 rounded-full w-full" />
+          <div className="h-2 bg-purple-500/20 rounded-full w-3/4" />
+        </div>
+      </div>
+      <div className="flex items-start gap-3">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+          <Sparkles className="w-4 h-4 text-white" />
+        </div>
+        <div className="flex-1 space-y-2">
+          <div className="h-2 bg-cyan-500/20 rounded-full w-full animate-pulse" />
+          <div className="h-2 bg-cyan-500/20 rounded-full w-4/5 animate-pulse" style={{ animationDelay: '0.2s' }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TrackerPreview() {
+  return (
+    <div className="space-y-3 p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-blue-500/20">
+      {[
+        { icon: Heart, label: "Spánek", value: 8 },
+        { icon: Shield, label: "Stres", value: 3 },
+        { icon: Zap, label: "Energie", value: 9 },
+      ].map((item, i) => (
+        <div key={i} className="flex items-center gap-4">
+          <item.icon className="w-5 h-5 text-blue-400" />
+          <div className="flex-1">
+            <div className="text-sm text-slate-400 mb-1">{item.label}</div>
+            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse" style={{ width: `${(item.value / 10) * 100}%` }} />
+            </div>
+          </div>
+          <span className="text-sm font-bold text-blue-400">{item.value}/10</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function JournalPreview() {
+  return (
+    <div className="space-y-3 p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-green-500/20">
+      {["FOMO", "Disciplína", "Overtrading"].map((emotion, i) => (
+        <div key={i} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+          <span className="text-sm text-slate-300">{emotion}</span>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star key={star} className={`w-3 h-3 ${star <= 4 - i ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'}`} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function AnalyticsPreview() {
+  return (
+    <div className="space-y-4 p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-pink-500/20">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-slate-400">Win Rate Trend</span>
+        <TrendingUp className="w-4 h-4 text-green-400" />
+      </div>
+      <div className="h-24 relative">
+        <svg className="w-full h-full" viewBox="0 0 200 80">
+          <path
+            d="M 0 60 Q 50 50, 100 35 T 200 20"
+            fill="none"
+            stroke="url(#gradient)"
+            strokeWidth="3"
+            className="animate-pulse"
+          />
+          <defs>
+            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ec4899" />
+              <stop offset="100%" stopColor="#8b5cf6" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+function GamificationPreview() {
+  return (
+    <div className="space-y-4 p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-yellow-500/20">
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-4 border-yellow-500/20 flex items-center justify-center">
+            <Trophy className="w-8 h-8 text-yellow-400 animate-pulse" />
+          </div>
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-xs font-bold">
+            7
+          </div>
+        </div>
+        <div className="flex-1">
+          <div className="text-sm text-slate-400 mb-1">Progress to Level 8</div>
+          <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full animate-pulse" style={{ width: '65%' }} />
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {[Trophy, Star, Award].map((Icon, i) => (
+          <div key={i} className="p-3 bg-slate-800/50 rounded-lg flex flex-col items-center gap-2">
+            <Icon className="w-6 h-6 text-yellow-400" />
+            <span className="text-xs text-slate-400">+{(i + 1) * 50} XP</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ResetPreview() {
+  return (
+    <div className="space-y-4 p-6 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-red-500/20">
+      <div className="text-center">
+        <div className="w-20 h-20 mx-auto rounded-full border-4 border-red-500/20 flex items-center justify-center mb-4 animate-pulse">
+          <RefreshCw className="w-10 h-10 text-red-400" />
+        </div>
+        <div className="text-sm text-slate-400 mb-2">Protocol aktivován</div>
+        <div className="text-2xl font-bold text-red-400">00:05:00</div>
+      </div>
+      <div className="flex justify-center gap-2">
+        {[1, 2, 3].map((step) => (
+          <div key={step} className={`w-8 h-1 rounded-full ${step === 1 ? 'bg-red-500' : 'bg-slate-700'}`} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function MetricCard({ icon: Icon, label, value, color }: any) {
+  const colorMap: any = {
+    green: "from-green-500 to-emerald-500",
+    yellow: "from-yellow-500 to-orange-500",
+    orange: "from-orange-500 to-red-500",
+  }
+
+  return (
+    <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-cyan-500/30 transition-all group cursor-pointer">
+      <Icon className="w-5 h-5 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
+      <div className="text-xs text-slate-400 mb-1">{label}</div>
+      <div className={`text-2xl font-bold bg-gradient-to-r ${colorMap[color]} bg-clip-text text-transparent`}>{value}</div>
+    </div>
+  )
+}
 
 export function ProductTour() {
   const [currentStep, setCurrentStep] = useState(0)
@@ -130,7 +321,6 @@ export function ProductTour() {
   useEffect(() => {
     console.log("[v0] ProductTour: pathname =", pathname)
 
-    // Don't show tour on login, signup pages
     if (pathname === "/login" || pathname === "/signup" || pathname === "/onboarding") {
       console.log("[v0] ProductTour: Skipping tour on auth pages")
       return
@@ -141,7 +331,6 @@ export function ProductTour() {
 
     console.log("[v0] ProductTour: tourCompleted =", tourCompleted)
     console.log("[v0] ProductTour: showTour =", showTour)
-    console.log("[v0] ProductTour: isLiveMode =", isLiveMode)
 
     if (!tourCompleted) {
       if (showTour === "true" && !isVisible) {
@@ -157,7 +346,6 @@ export function ProductTour() {
   useEffect(() => {
     if (isVisible && !isMinimized) {
       const step = tourSteps[currentStep]
-      // Only navigate if step has a route AND we're not already on that route
       if (step.route && pathname !== step.route) {
         console.log("[v0] Tour: Navigating to", step.route)
         router.push(step.route)
@@ -190,13 +378,6 @@ export function ProductTour() {
     router.push("/")
   }
 
-  // Start tour function that can be called externally
-  const startTour = () => {
-    setCurrentStep(0)
-    setIsVisible(true)
-    setIsMinimized(false)
-  }
-
   if (!isVisible) return null
 
   const step = tourSteps[currentStep]
@@ -209,195 +390,301 @@ export function ProductTour() {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-6 right-6 z-[100] bg-cyan-500 hover:bg-cyan-600 text-black font-semibold px-4 py-3 rounded-full shadow-lg shadow-cyan-500/30 flex items-center gap-2 transition-all hover:scale-105"
+        className="fixed bottom-6 right-6 z-[100] bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold px-6 py-4 rounded-full shadow-2xl shadow-cyan-500/40 flex items-center gap-3 transition-all hover:scale-105 group"
       >
-        <Brain className="w-5 h-5" />
-        Pokračovat v tour ({currentStep + 1}/{tourSteps.length})
+        <Brain className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+        <span>Pokračovat v tour ({currentStep + 1}/{tourSteps.length})</span>
       </button>
     )
   }
 
-  // Welcome and Finish screens - fullscreen
+  // Welcome and Finish screens - fullscreen immersive
   if (isWelcomeOrFinish) {
     return (
-      <div className="fixed inset-0 z-[100] bg-black overflow-hidden">
-        {/* Animated stars background */}
-        <div className="absolute inset-0">
-          {[...Array(80)].map((_, i) => (
+      <div className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden">
+        {/* Animated particles background */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(100)].map((_, i) => (
             <div
               key={i}
-              className="absolute rounded-full bg-cyan-400 animate-pulse"
+              className="absolute rounded-full"
               style={{
-                width: Math.random() * 3 + 1 + "px",
-                height: Math.random() * 3 + 1 + "px",
+                width: Math.random() * 4 + 1 + "px",
+                height: Math.random() * 4 + 1 + "px",
                 top: Math.random() * 100 + "%",
                 left: Math.random() * 100 + "%",
-                animationDelay: Math.random() * 3 + "s",
-                animationDuration: Math.random() * 3 + 2 + "s",
-                opacity: Math.random() * 0.7 + 0.3,
+                background: i % 3 === 0 ? "#06b6d4" : i % 3 === 1 ? "#8b5cf6" : "#ec4899",
+                animation: `float ${Math.random() * 10 + 5}s ease-in-out infinite`,
+                animationDelay: Math.random() * 5 + "s",
+                opacity: Math.random() * 0.5 + 0.3,
               }}
             />
           ))}
         </div>
 
-        {/* Nebula effects */}
-        <div className="absolute top-1/4 -left-1/4 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
+        {/* Gradient orbs */}
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[150px] animate-pulse" />
         <div
-          className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-cyan-400/10 rounded-full blur-[120px] animate-pulse"
+          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[150px] animate-pulse"
           style={{ animationDelay: "1s" }}
         />
 
         <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4">
           {/* Progress */}
-          <div className="absolute top-6 left-6 right-6">
-            <div className="max-w-md mx-auto">
-              <div className="flex items-center justify-between mb-2 text-xs text-gray-500">
-                <span>
-                  {currentStep + 1} / {tourSteps.length}
+          <div className="absolute top-8 left-8 right-8">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center justify-between mb-3 text-sm text-slate-500">
+                <span className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+                  Krok {currentStep + 1} / {tourSteps.length}
                 </span>
-                <button onClick={handleSkip} className="text-gray-500 hover:text-gray-400 transition-colors">
-                  Přeskočit tour
+                <button 
+                  onClick={handleSkip} 
+                  className="text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1 group"
+                >
+                  Přeskočit
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
-              <Progress value={progress} className="h-1 bg-gray-800" />
-            </div>
-          </div>
-
-          {/* Icon */}
-          <div className="relative mb-8">
-            <div className="absolute inset-0 bg-cyan-500/30 rounded-full blur-2xl scale-150 animate-pulse" />
-            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border border-cyan-500/30 flex items-center justify-center">
-              <Icon className="w-12 h-12 text-cyan-400" />
-            </div>
-          </div>
-
-          {/* Content */}
-          <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent">
-            {step.title}
-          </h1>
-          <p className="text-cyan-400 text-lg mb-6">{step.subtitle}</p>
-          <p className="text-gray-400 text-center max-w-lg mb-10 leading-relaxed">{step.description}</p>
-
-          {/* CTA Button */}
-          <Button
-            onClick={handleNext}
-            size="lg"
-            className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-8 py-6 text-lg rounded-full shadow-lg shadow-cyan-500/30"
-          >
-            {step.cta}
-            <ChevronRight className="w-5 h-5 ml-2" />
-          </Button>
-
-          {/* Back button on finish */}
-          {currentStep > 0 && (
-            <button
-              onClick={handlePrev}
-              className="mt-4 text-gray-500 hover:text-gray-400 transition-colors flex items-center gap-2"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Zpět
-            </button>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  // Page overlay with bottom panel
-  return (
-    <>
-      {/* Semi-transparent overlay */}
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90]" onClick={() => setIsMinimized(true)} />
-
-      <button
-        onClick={() => setIsMinimized(true)}
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[95] bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white font-semibold px-8 py-4 rounded-full shadow-2xl shadow-cyan-500/40 flex items-center gap-3 transition-all hover:scale-105 group"
-      >
-        <Eye className="w-6 h-6 group-hover:scale-110 transition-transform" />
-        <div className="text-left">
-          <div className="text-sm font-bold">Náhled stránky</div>
-          <div className="text-xs opacity-90">Klikni zde pro přiblížení</div>
-        </div>
-      </button>
-
-      {/* Bottom panel */}
-      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-gradient-to-t from-gray-900 via-gray-900 to-gray-900/95 border-t border-cyan-500/20 p-6 pb-8">
-        {/* Close/Minimize button */}
-        <button
-          onClick={() => setIsMinimized(true)}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-300 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Progress */}
-        <div className="max-w-3xl mx-auto mb-4">
-          <div className="flex items-center justify-between mb-2 text-xs text-gray-500">
-            <span>
-              {currentStep + 1} / {tourSteps.length}
-            </span>
-            <button onClick={handleSkip} className="text-gray-500 hover:text-gray-400 transition-colors">
-              Přeskočit tour
-            </button>
-          </div>
-          <Progress value={progress} className="h-1 bg-gray-800" />
-        </div>
-
-        <div className="max-w-3xl mx-auto flex items-center gap-6">
-          {/* Icon */}
-          <div className="hidden sm:flex shrink-0">
-            <div className="relative">
-              <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-xl scale-150" />
-              <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border border-cyan-500/30 flex items-center justify-center">
-                <Icon className="w-8 h-8 text-cyan-400" />
+              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full transition-all duration-700 ease-out"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
             </div>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold text-white mb-1">{step.title}</h2>
-            <p className="text-cyan-400 text-sm mb-2">{step.subtitle}</p>
-            <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">{step.description}</p>
+          {/* Floating icons */}
+          <div className="absolute inset-0 pointer-events-none">
+            {[Brain, Zap, Trophy, Target, Star, Flame].map((FloatIcon, i) => (
+              <div
+                key={i}
+                className="absolute"
+                style={{
+                  top: `${20 + i * 15}%`,
+                  left: i % 2 === 0 ? "10%" : "85%",
+                  animation: `floatSide ${4 + i}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.5}s`,
+                }}
+              >
+                <FloatIcon className="w-8 h-8 text-cyan-400/20" />
+              </div>
+            ))}
+          </div>
 
-            {/* Highlight tags */}
-            {step.highlight && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {step.highlight.split(" • ").map((tag, i) => (
-                  <span
+          {/* Main icon with glow */}
+          <div className="relative mb-10 group">
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full blur-3xl scale-150 opacity-50 group-hover:opacity-70 transition-opacity animate-pulse" />
+            <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-cyan-500/20 via-purple-500/20 to-pink-500/20 border-2 border-cyan-500/30 flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-500">
+              <Icon className="w-16 h-16 text-cyan-400 group-hover:rotate-12 transition-transform duration-500" />
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="max-w-3xl text-center space-y-6">
+            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent leading-tight animate-fadeIn">
+              {step.title}
+            </h1>
+            <p className="text-xl md:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 font-medium">
+              {step.subtitle}
+            </p>
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              {step.description}
+            </p>
+
+            {/* Feature pills */}
+            {step.features && (
+              <div className="flex flex-wrap justify-center gap-3 pt-4">
+                {step.features.map((feature, i) => (
+                  <div
                     key={i}
-                    className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs"
+                    className="px-5 py-2 rounded-full bg-slate-800/50 border border-cyan-500/30 text-cyan-400 text-sm backdrop-blur-sm hover:border-cyan-500/60 hover:bg-slate-800/70 transition-all cursor-default"
                   >
-                    {tag}
-                  </span>
+                    {feature}
+                  </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Navigation buttons */}
-          <div className="flex items-center gap-2 shrink-0">
-            {currentStep > 0 && (
-              <Button
-                onClick={handlePrev}
-                variant="outline"
-                size="sm"
-                className="border-gray-700 text-gray-400 hover:text-white hover:border-gray-600 bg-transparent"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-            )}
+          {/* CTA Button */}
+          <div className="flex flex-col items-center gap-4 mt-12">
             <Button
               onClick={handleNext}
-              size="sm"
-              className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold px-6"
+              size="lg"
+              className="bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:from-cyan-600 hover:via-purple-600 hover:to-pink-600 text-white px-12 py-7 text-xl rounded-full shadow-2xl shadow-cyan-500/40 transition-all hover:scale-105 hover:shadow-cyan-500/60 group"
             >
-              Další
-              <ChevronRight className="w-4 h-4 ml-1" />
+              {step.cta}
+              <ChevronRight className="w-6 h-6 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
+
+            {currentStep > 0 && (
+              <button
+                onClick={handlePrev}
+                className="text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-2 group"
+              >
+                <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                Zpět
+              </button>
+            )}
+          </div>
+        </div>
+
+        <style jsx>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+          }
+          @keyframes floatSide {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-20px, -30px); }
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
+      </div>
+    )
+  }
+
+  // Page overlay with interactive preview
+  const previewComponents: any = {
+    dashboard: DashboardPreview,
+    ai: AIPreview,
+    tracker: TrackerPreview,
+    journal: JournalPreview,
+    analytics: AnalyticsPreview,
+    gamification: GamificationPreview,
+    reset: ResetPreview,
+  }
+
+  const PreviewComponent = step.preview ? previewComponents[step.preview] : null
+
+  return (
+    <>
+      {/* Overlay with blur */}
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[90]" onClick={() => setIsMinimized(true)} />
+
+      {/* Center preview card */}
+      {PreviewComponent && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[95] w-full max-w-md px-4">
+          <Card className="bg-slate-900 border-2 border-cyan-500/30 shadow-2xl shadow-cyan-500/20 overflow-hidden animate-scaleIn">
+            <div className="p-2 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border-b border-cyan-500/20">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                <span className="text-xs text-slate-500 ml-2">Live Preview</span>
+              </div>
+            </div>
+            <PreviewComponent />
+          </Card>
+          <button
+            onClick={() => setIsMinimized(true)}
+            className="mt-4 mx-auto flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/80 border border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-all backdrop-blur-sm"
+          >
+            <Eye className="w-4 h-4" />
+            <span className="text-sm">Klikni pro přiblížení stránky</span>
+          </button>
+        </div>
+      )}
+
+      {/* Bottom control panel */}
+      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-gradient-to-t from-slate-900 via-slate-900/98 to-slate-900/95 border-t-2 border-cyan-500/20 shadow-2xl">
+        <div className="max-w-7xl mx-auto p-6 md:p-8">
+          {/* Close button */}
+          <button
+            onClick={() => setIsMinimized(true)}
+            className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 transition-colors p-2 hover:bg-slate-800 rounded-lg group"
+          >
+            <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+          </button>
+
+          {/* Progress bar */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2 text-sm">
+              <span className="text-slate-500 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+                Krok {currentStep + 1} / {tourSteps.length}
+              </span>
+              <button onClick={handleSkip} className="text-slate-500 hover:text-slate-300 transition-colors">
+                Přeskočit tour
+              </button>
+            </div>
+            <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-start gap-6">
+            {/* Icon */}
+            <div className="hidden md:flex shrink-0">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 to-purple-500/30 rounded-2xl blur-xl scale-110 group-hover:scale-125 transition-transform" />
+                <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500/20 via-purple-500/20 to-pink-500/20 border-2 border-cyan-500/30 flex items-center justify-center backdrop-blur-sm group-hover:border-cyan-500/50 transition-all">
+                  <Icon className="w-10 h-10 text-cyan-400 group-hover:scale-110 group-hover:rotate-12 transition-transform" />
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                {step.title}
+                <Sparkles className="w-5 h-5 text-cyan-400 animate-pulse" />
+              </h2>
+              <p className="text-cyan-400 text-base md:text-lg mb-3">{step.subtitle}</p>
+              <p className="text-slate-400 leading-relaxed mb-4">{step.description}</p>
+
+              {/* Highlight tags */}
+              {step.highlight && (
+                <div className="flex flex-wrap gap-2">
+                  {step.highlight.split(" • ").map((tag, i) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-cyan-400 text-sm backdrop-blur-sm hover:border-cyan-500/50 transition-all cursor-default"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Navigation */}
+            <div className="flex items-center gap-3 shrink-0">
+              {currentStep > 0 && (
+                <Button
+                  onClick={handlePrev}
+                  variant="outline"
+                  className="border-slate-700 text-slate-400 hover:text-white hover:border-slate-600 bg-transparent hover:bg-slate-800 group"
+                >
+                  <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                </Button>
+              )}
+              <Button
+                onClick={handleNext}
+                className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-semibold px-8 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all hover:scale-105 group"
+              >
+                {currentStep === tourSteps.length - 1 ? "Dokončit" : "Další"}
+                <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes scaleIn {
+          from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+          to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+      `}</style>
     </>
   )
 }
