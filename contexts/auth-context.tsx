@@ -188,9 +188,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           message: error.message,
           status: error.status,
         })
+
+        let errorMessage = error.message
+        
+        // Speciální handling pro rate limit
+        if (error.message.includes("rate limit") || error.message.includes("too many")) {
+          errorMessage = "Příliš mnoho pokusů o přihlášení. Prosím čekejte 15 minut a zkuste znovu."
+        } else if (error.message.includes("Invalid login credentials") || error.message.includes("Invalid password")) {
+          errorMessage = "Nesprávný email nebo heslo. Prosím zkontrolujte a zkuste znovu."
+        } else if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Prosím potvrďte svůj email. Podívejte se do schránky (včetně spamu)."
+        }
+
         toast({
           title: "Chyba přihlášení",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive",
         })
         return false
@@ -198,6 +210,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!data.user || !data.session) {
         console.error("[v0] ❌ Žádný user nebo session vrácen")
+        toast({
+          title: "Chyba přihlášení",
+          description: "Přihlášení se nezdařilo. Zkuste to prosím znovu.",
+          variant: "destructive",
+        })
+        return false
+      }
+
+      console.log("[v0] ✅ Přihlášení úspěšné:", data.user.email)
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      console.log("[v0] Ověření session:", {
+        hasSession: !!sessionData.session,
+        sessionError: sessionError?.message,
+      })
+
+      if (sessionData.session) {
+        console.log("[v0] ✅ Session ověřena - kontroluji onboarding status...")
+        
+        // Check if user needs to complete onboarding
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("user_id", data.user.id)
+          .maybeSingle()
+
+        const needsOnboarding = !profileData?.onboarding_completed
+
+        // Wait a moment more for React state to update
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        
+        if (needsOnboarding) {
+          console.log("[v0] User potřebuje onboarding - redirect na /onboarding")
+          router.push("/onboarding")
+        } else {
+          console.log("[v0] User má hotový onboarding - redirect na /")
+          router.push("/")
+        }
+      } else {
+        console.log("[v0] ⚠️ Session chybí - přesto redirect na /")
+        await new Promise((resolve) => setTimeout(resolve, 300))
+        router.push("/")
+      }
+
+      return true
+    } catch (error) {
+      console.error("[v0] ===== LOGIN ERROR =====")
+      console.error("[v0] Error type:", error?.constructor?.name)
+      console.error("[v0] Message:", error?.message)
+      console.error("[v0] Stack:", error?.stack)
+      
+      toast({
+        title: "Chyba přihlášení",
+        description: "Došlo k neočekávané chybě. Zkuste to prosím znovu za chvíli.",
+        variant: "destructive",
+      })
+      return false
+    }
+  }
         console.error("[v0] User:", !!data.user, "Session:", !!data.session)
         toast({
           title: "Chyba přihlášení",
