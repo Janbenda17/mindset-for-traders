@@ -63,7 +63,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="grid md:grid-cols-3 gap-6 mt-16"
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-16"
           >
             {[
               { icon: AlertTriangle, text: 'Impulsivní rozhodnutí', color: 'from-red-500 to-orange-500' },
@@ -76,12 +76,12 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + i * 0.1 }}
                 whileHover={{ scale: 1.05, y: -5 }}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all"
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-8 hover:bg-white/10 transition-all"
               >
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 mx-auto`}>
-                  <item.icon className="w-8 h-8 text-white" />
+                <div className={`w-12 md:w-16 h-12 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 md:mb-4 mx-auto`}>
+                  <item.icon className="w-6 md:w-8 h-6 md:h-8 text-white" />
                 </div>
-                <p className="text-white font-semibold text-lg">{item.text}</p>
+                <p className="text-white font-semibold text-base md:text-lg text-center">{item.text}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -115,7 +115,7 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {[
               {
                 title: 'Pochopení chyb',
@@ -149,13 +149,13 @@ export default function LandingPage() {
                 transition={{ duration: 0.6, delay: i * 0.1 }}
                 viewport={{ once: true }}
                 whileHover={{ scale: 1.03 }}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all group"
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-8 hover:bg-white/10 transition-all group"
               >
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                  <item.icon className="w-8 h-8 text-white" />
+                <div className={`w-12 md:w-16 h-12 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform`}>
+                  <item.icon className="w-6 md:w-8 h-6 md:h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">{item.title}</h3>
-                <p className="text-purple-200 leading-relaxed">{item.desc}</p>
+                <h3 className="text-lg md:text-2xl font-bold text-white mb-2 md:mb-3">{item.title}</h3>
+                <p className="text-sm md:text-base text-purple-200 leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -216,15 +216,15 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 className="relative"
               >
-                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-10 hover:bg-white/10 transition-all group">
-                  <div className="flex items-start gap-8">
-                    <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
-                      <item.icon className="w-10 h-10 text-white" />
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl md:rounded-3xl p-6 md:p-10 hover:bg-white/10 transition-all group">
+                  <div className="flex flex-col md:flex-row items-start gap-4 md:gap-8">
+                    <div className={`w-14 md:w-20 h-14 md:h-20 rounded-xl md:rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                      <item.icon className="w-7 md:w-10 h-7 md:h-10 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-3xl font-bold text-white mb-3">{item.title}</h3>
-                      <p className="text-xl text-purple-200 mb-2">{item.desc}</p>
-                      <p className="text-lg text-purple-300/70 leading-relaxed">{item.detail}</p>
+                      <h3 className="text-xl md:text-3xl font-bold text-white mb-2 md:mb-3">{item.title}</h3>
+                      <p className="text-base md:text-xl text-purple-200 mb-2">{item.desc}</p>
+                      <p className="text-sm md:text-lg text-purple-300/70 leading-relaxed">{item.detail}</p>
                     </div>
                   </div>
                 </div>
@@ -253,7 +253,7 @@ export default function LandingPage() {
               Pro koho je <span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">MindTrader AI</span>
             </h2>
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {[
                 'Víš, že problém není ve strategii, ale v psychice',
                 'Chceš systematický přístup k mentální disciplíně',
@@ -267,11 +267,11 @@ export default function LandingPage() {
                   transition={{ duration: 0.6, delay: i * 0.1 }}
                   viewport={{ once: true }}
                   whileHover={{ scale: 1.02, x: 10 }}
-                  className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 text-left group hover:bg-white/10 transition-all"
+                  className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-8 text-left group hover:bg-white/10 transition-all"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex-shrink-0" />
-                    <p className="text-xl text-white font-medium">{text}</p>
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex-shrink-0" />
+                    <p className="text-base md:text-xl text-white font-medium">{text}</p>
                   </div>
                 </motion.div>
               ))}
@@ -295,7 +295,7 @@ export default function LandingPage() {
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-16 md:mb-20">
             {[
               { step: '01', title: 'Virtuální mód', desc: 'Vyzkoušej bez rizika, naučíš se nástroj používat', icon: Zap },
               { step: '02', title: 'LIVE mód', desc: 'Aplikuj na reálné obchody a sleduj výsledky', icon: TrendingUp },
@@ -308,17 +308,17 @@ export default function LandingPage() {
                 transition={{ duration: 0.6, delay: i * 0.2 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -10 }}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all relative overflow-hidden group"
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl md:rounded-3xl p-5 md:p-8 hover:bg-white/10 transition-all relative overflow-hidden group"
               >
-                <div className="absolute top-4 right-4 text-8xl font-black text-white/5 group-hover:text-white/10 transition-colors">
+                <div className="absolute top-2 md:top-4 right-2 md:right-4 text-4xl md:text-8xl font-black text-white/5 group-hover:text-white/10 transition-colors">
                   {item.step}
                 </div>
                 <div className="relative z-10">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <item.icon className="w-8 h-8 text-white" />
+                  <div className="w-12 md:w-16 h-12 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform">
+                    <item.icon className="w-6 md:w-8 h-6 md:h-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">{item.title}</h3>
-                  <p className="text-purple-200 leading-relaxed">{item.desc}</p>
+                  <h3 className="text-lg md:text-2xl font-bold text-white mb-2 md:mb-3">{item.title}</h3>
+                  <p className="text-sm md:text-base text-purple-200 leading-relaxed">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
