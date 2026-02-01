@@ -116,9 +116,9 @@ export default function LandingPage() {
             className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight"
           >
             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-purple-500 bg-clip-text text-transparent">
-              AI, který tě uchrání
+              Software, který tě
               <br />
-              před tvou hlavou
+              ochrání
             </span>
           </motion.h1>
 
@@ -128,7 +128,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium text-slate-300 max-w-4xl mx-auto px-4"
           >
-            Analyzuje tvé emoce v reálném čase a varuje tě před chybami – ještě předtím, než ztratíš peníze.
+            Nástroj, který analyzuje tvé emoce v reálném čase a varuje tě před chybami – ještě předtím, než ztratíš peníze.
           </motion.p>
 
           <motion.p
