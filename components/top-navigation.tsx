@@ -384,6 +384,16 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
           {/* Right Side */}
           <div className="flex items-center space-x-1.5 md:space-x-2 flex-shrink-0">
+            {/* Virtual Mode Button */}
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-amber-500/50 text-amber-100 hover:bg-amber-900/30 font-semibold px-2 py-1 h-auto text-xs flex flex-col items-center gap-0.5"
+              onClick={handlePricingClick}
+            >
+              <span>Virtual</span>
+              <span className="text-xs font-normal text-amber-300">Switch to Live</span>
+            </Button>
 
             {/* Profile Dropdown - only show if authenticated */}
             {isAuthenticated ? (
