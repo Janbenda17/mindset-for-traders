@@ -385,14 +385,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
           {/* Right Side */}
           <div className="flex items-center space-x-1.5 md:space-x-2 flex-shrink-0">
             <LiveModeToggle />
-            <Button 
-              size="sm" 
-              variant="outline"
-              className="border-yellow-400/50 text-yellow-100 hover:bg-yellow-900/30 font-semibold px-2 py-1 h-auto text-xs hidden md:inline-flex whitespace-nowrap"
-              onClick={handlePricingClick}
-            >
-              Virtual → Live
-            </Button>
 
             {/* Profile Dropdown - only show if authenticated */}
             {isAuthenticated ? (

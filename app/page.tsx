@@ -35,6 +35,12 @@ export default function Dashboard() {
       href: '/daily-tracker'
     },
     {
+      title: 'MindTrader AI',
+      desc: 'Varuje tě v reálném čase před emočními chybami',
+      icon: Zap,
+      href: '/mindtrader'
+    },
+    {
       title: 'Weekly Review',
       desc: 'Shrne týden a řekne, co změnit příště',
       icon: TrendingUp,
