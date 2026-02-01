@@ -118,6 +118,21 @@ export function AnalyticsOverview({
             </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-gradient-to-br from-orange-500/20 to-red-600/10 border-orange-500/30">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-orange-300 mb-1">Mental Score</p>
+                <h3 className="text-3xl font-bold text-white">
+                  {Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4)}
+                </h3>
+                <p className="text-xs text-orange-400 mt-2">Psychological readiness</p>
+              </div>
+              <Brain className="w-12 h-12 text-orange-400/40" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Performance Matrix */}
