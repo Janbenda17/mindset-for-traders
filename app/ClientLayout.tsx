@@ -7,6 +7,7 @@ import { TopNavigation } from "@/components/top-navigation"
 import { Footer } from "@/components/footer"
 import { ProductTour } from "@/components/product-tour"
 import { XPNotification } from "@/components/xp-notification"
+import { LiveModeInterest } from "@/components/live-mode-interest"
 import { useAuth } from "@/contexts/auth-context"
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -42,6 +43,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <div className={hideNavigation ? "flex-1" : "pt-16 flex-1"}>{children}</div>
       {!hideNavigation && <Footer />}
       {!hideNavigation && <ProductTour />}
+      <LiveModeInterest />
       <XPNotification />
     </div>
   )
