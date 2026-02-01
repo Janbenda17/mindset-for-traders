@@ -24,14 +24,10 @@ export function LoginForm() {
   const router = useRouter()
 
   useEffect(() => {
-    const savedEmail = localStorage.getItem("mindtrader-saved-email")
-    const savedPassword = localStorage.getItem("mindtrader-saved-password")
-
-    if (savedEmail && savedPassword) {
-      setEmail(savedEmail)
-      setPassword(savedPassword)
-      setRememberMe(true)
-    }
+    // Don't auto-fill credentials from localStorage for security
+    // This used to cause issues with old credentials being loaded
+    localStorage.removeItem("mindtrader-saved-email")
+    localStorage.removeItem("mindtrader-saved-password")
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,17 +49,16 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      console.log("[v0] Attempting login for:", email)
+      console.log("[v0] Attempting login for:", email.trim())
+      console.log("[v0] Password length:", password.length)
 
-      if (rememberMe) {
-        localStorage.setItem("mindtrader-saved-email", email)
-        localStorage.setItem("mindtrader-saved-password", password)
-      } else {
-        localStorage.removeItem("mindtrader-saved-email")
-        localStorage.removeItem("mindtrader-saved-password")
-      }
+      // Do NOT save password to localStorage - security risk
+      // Just clear any saved credentials
+      localStorage.removeItem("mindtrader-saved-email")
+      localStorage.removeItem("mindtrader-saved-password")
 
-      const success = await login(email, password)
+      // Call login with trimmed email
+      const success = await login(email.trim(), password)
 
       if (!success) {
         console.error("[v0] Login failed")
