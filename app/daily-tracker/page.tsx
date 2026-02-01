@@ -319,6 +319,7 @@ export default function DailyTrackerPage() {
   }, [isLiveMode, user?.id, authReady, modeLoading, morningChecks, trades, dailyIntentions, tradingPlans])
 
   useEffect(() => {
+    console.log("[v0] [DailyTracker] useEffect for loadEntries triggered - loadEntries changed, refreshTrigger:", refreshTrigger)
     loadEntries()
   }, [loadEntries, refreshTrigger])
 
