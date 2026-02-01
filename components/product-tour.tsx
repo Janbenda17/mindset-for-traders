@@ -81,7 +81,7 @@ const tourPages = [
   {
     id: "cta",
     title: "Vyzkoušej si MindTrader teď",
-    subtitle: "45 sekund, žádná registrace, žádné riziko",
+    subtitle: "Žádná registrace, žádné riziko",
     benefits: [
       "Bez registrace – rovnou do akce",
       "Bez kreditní karty",

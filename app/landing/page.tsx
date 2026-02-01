@@ -106,7 +106,7 @@ export default function LandingPage() {
                   className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-lg px-8 py-6 h-auto rounded-xl shadow-lg shadow-purple-500/25 transition-all hover:scale-105"
                 >
                   <Play className="w-5 h-5 mr-2" />
-                  Spustit virtuální demo teď (45 sekund)
+                  Vyzkoušej si MindTrader teď
                 </Button>
 
                 <p className="text-sm text-slate-500 flex items-center justify-center lg:justify-start gap-4 flex-wrap">

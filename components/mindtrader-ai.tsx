@@ -326,9 +326,9 @@ const MindTraderAI = () => {
   useEffect(() => {
     if (messages.length === 0) {
       const welcomeMessage =
-        language === "cs"
-          ? `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nViděl jsem tvoje data a jsem tady, abych ti pomohl s psychologií tradování.\n\nTvoje aktuální readiness skóre: ${currentReadiness !== null ? currentReadiness + "%" : "Vyplňte Morning Check"}\n\nCo tě trápí? Jak ti můžu pomoct?`
-          : `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Complete Morning Check"}\n\nWhat's troubling you? How can I help?`
+      language === "cs"
+        ? `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Complete Morning Check"}\n\nWhat's troubling you? How can I help?`
+        : `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Complete Morning Check"}\n\nWhat's troubling you? How can I help?`
 
       setMessages([
         {
