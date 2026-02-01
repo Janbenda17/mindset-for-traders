@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Brain } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -25,17 +24,7 @@ export default function Home() {
       <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-600/5 rounded-full blur-3xl" />
 
-      <div className="relative z-10 max-w-3xl text-center space-y-10">
-        {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full blur-xl opacity-50" />
-            <div className="relative w-20 h-20 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-2xl">
-              <Brain className="w-10 h-10 text-white" />
-            </div>
-          </div>
-        </div>
-
+      <div className="relative z-10 max-w-3xl text-center space-y-8">
         {/* Main heading */}
         <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight">
           Mindtrader je nástroj pro každodenní řízení psychiky, disciplíny a rozhodování tradera.
