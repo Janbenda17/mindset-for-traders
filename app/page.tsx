@@ -97,6 +97,30 @@ export default function Dashboard() {
       
       {/* Main Content */}
       <div className="relative z-10 pt-32 px-4 md:px-8 lg:px-12 pb-20 max-w-6xl mx-auto">
+        {/* Top Stats - 4 columns */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16"
+        >
+          {[
+            { label: 'Celkový kapitál', value: '$50,000', icon: '💰', gradient: 'from-green-500 to-emerald-600' },
+            { label: 'Měsíční P/L', value: '+$3,240', icon: '📈', gradient: 'from-blue-500 to-cyan-600' },
+            { label: 'Aktuální Readiness', value: '78%', icon: '🧠', gradient: 'from-purple-500 to-indigo-600' },
+            { label: 'Aktuální XP', value: '2,450', icon: '⭐', gradient: 'from-yellow-500 to-orange-600' }
+          ].map((stat, i) => (
+            <motion.div
+              key={i}
+              whileHover={{ scale: 1.05, y: -3 }}
+              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all"
+            >
+              <p className="text-xs md:text-sm font-semibold text-slate-400 mb-2">{stat.label}</p>
+              <p className="text-2xl md:text-3xl font-black text-white">{stat.value}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+
         {/* Main Headline */}
         <motion.div
           initial={{ opacity: 0, y: -30 }}
@@ -194,63 +218,11 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Progress Level Box */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="mb-16"
-        >
-          <Card className="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 backdrop-blur-md border-indigo-500/30">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                  <span className="text-2xl font-black text-white">1</span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-lg font-bold text-white mb-1">Level 1</p>
-                  <p className="text-purple-200">Vyplň stav a získej první insight</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-3xl font-black text-white">0%</p>
-                  <p className="text-sm text-purple-300">dokončeno</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* AI Chat Tip Box */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mb-16"
-        >
-          <Card className="bg-gradient-to-br from-purple-900/40 to-indigo-900/40 backdrop-blur-md border-purple-500/30">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                  <MessageSquare className="w-6 h-6 text-purple-400" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-lg font-semibold text-white mb-2">Dobrý den! Jak se dnes cítíš před tradingem?</p>
-                  <a href="/daily-tracker">
-                    <Button size="sm" variant="outline" className="border-purple-400 text-purple-300 hover:bg-purple-900/50">
-                      Vyplnit stav →
-                    </Button>
-                  </a>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
         {/* Subscription CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
           className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-900/40 via-indigo-900/40 to-blue-900/40 border border-purple-500/20 p-8 md:p-12"
         >
           <div className="absolute inset-0 opacity-5">
