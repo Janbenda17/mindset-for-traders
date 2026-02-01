@@ -61,7 +61,7 @@ export function LiveModeInterest() {
 
         <div className="flex items-center gap-2 mb-3">
           <Brain className="w-4 h-4 text-cyan-400" />
-          <p className="text-sm font-semibold text-white">Jak myslíš jako trader?</p>
+          <p className="text-sm font-semibold text-white">Zajímá tě Live verze?</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex gap-2">
