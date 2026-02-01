@@ -1,18 +1,31 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { TopNavigation } from '@/components/top-navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BarChart3, Zap, Target, Calendar, MessageSquare, AlertCircle, TrendingUp, Crown } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useAuth } from '@/contexts/auth-context'
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
+  const router = useRouter()
+  const { user } = useAuth()
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const handlePricingClick = () => {
+    if (!user) {
+      router.push('/auth')
+    } else {
+      router.push('/pricing')
+    }
+  }
 
   const features = [
     {
@@ -86,7 +99,7 @@ export default function Dashboard() {
             <span className="text-yellow-100">
               <span className="font-bold text-white">Early Bird:</span> prvních 50 lidí jen <span className="font-bold text-white">1499 Kč</span> (místo 2499 Kč)
             </span>
-            <Button size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold">
+            <Button size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold" onClick={handlePricingClick}>
               Přejít do LIVE
             </Button>
           </div>
@@ -203,6 +216,7 @@ export default function Dashboard() {
               <Button
                 size="lg"
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg px-10 py-7 rounded-xl"
+                onClick={handlePricingClick}
               >
                 Aktivovat LIVE (1499 Kč/měsíc)
               </Button>
@@ -210,6 +224,7 @@ export default function Dashboard() {
                 variant="outline"
                 size="lg"
                 className="border-2 border-purple-400 text-purple-200 hover:bg-purple-900/50 font-semibold text-lg px-10 py-7 rounded-xl"
+                onClick={handlePricingClick}
               >
                 Více informací
               </Button>
