@@ -1,25 +1,31 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, Mail } from "lucide-react"
+import { X, Brain } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useData } from "@/contexts/data-context"
+import { usePathname } from "next/navigation"
 
 export function LiveModeInterest() {
   const { user } = useAuth()
   const { isLiveMode } = useData()
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
 
+  // Skrytí cesty - Landing, About, Product Tour
+  const hiddenPaths = ["/landing", "/about", "/product-tour"]
+  const isHiddenPath = hiddenPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))
+
   useEffect(() => {
-    if (user || isLiveMode) {
+    if (user || isLiveMode || isHiddenPath) {
       setIsOpen(false)
       return
     }
-    const timer = setTimeout(() => setIsOpen(true), 3000)
+    const timer = setTimeout(() => setIsOpen(true), 4000)
     return () => clearTimeout(timer)
-  }, [user, isLiveMode])
+  }, [user, isLiveMode, isHiddenPath])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,8 +60,8 @@ export function LiveModeInterest() {
         </button>
 
         <div className="flex items-center gap-2 mb-3">
-          <Mail className="w-4 h-4 text-cyan-400" />
-          <p className="text-sm font-semibold text-white">Zajímá tě Live verze?</p>
+          <Brain className="w-4 h-4 text-cyan-400" />
+          <p className="text-sm font-semibold text-white">Jak myslíš jako trader?</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex gap-2">
