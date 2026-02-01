@@ -54,6 +54,18 @@ export default function Home() {
       />
 
       <div className="relative z-10 w-full max-w-4xl">
+        {/* Brand Name */}
+        <motion.div
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="flex justify-center mb-8 md:mb-12"
+        >
+          <h2 className="text-5xl md:text-7xl lg:text-8xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            Mindtrader
+          </h2>
+        </motion.div>
+
         {/* Logo Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
