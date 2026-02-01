@@ -199,13 +199,18 @@ export default function DailyTrackerPage() {
     }
 
     if (!isLiveMode) {
-      console.log("[v0] [DailyTracker] VIRTUAL mode - using demo data instead of Supabase")
+      console.log("[v0] [DailyTracker] VIRTUAL mode - generating full month of demo data")
       
-      // Generate demo history entries for last 7 days
+      // Generate demo history entries for ENTIRE FEBRUARY
       const demoEntries: DailySummary[] = []
-      for (let i = 0; i < 7; i++) {
-        const date = new Date()
-        date.setDate(date.getDate() - i)
+      const currentDate = new Date()
+      const currentYear = currentDate.getFullYear()
+      
+      // Únor má obvykle 28 nebo 29 dní
+      const februaryDays = new Date(currentYear, 2, 0).getDate() // Get last day of Feb
+      
+      for (let day = februaryDays; day >= 1; day--) {
+        const date = new Date(currentYear, 1, day) // Month is 0-indexed, so 1 = February
         const dateStr = format(date, "yyyy-MM-dd")
         
         const randomScore = Math.floor(Math.random() * 40) + 60 // 60-100
@@ -251,7 +256,7 @@ export default function DailyTrackerPage() {
       }
       
       setEntries(demoEntries)
-      console.log(`[v0] [DailyTracker] VIRTUAL: Generated ${demoEntries.length} demo history entries`)
+      console.log(`[v0] [DailyTracker] VIRTUAL: Generated ${demoEntries.length} demo entries for February`)
       setEntriesLoading(false)
       return
     }
