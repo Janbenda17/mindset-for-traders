@@ -8,7 +8,6 @@ const PUBLIC_PATHS = [
   "/auth/callback",
   "/signup",
   "/login",
-  "/pricing",
   "/terms",
   "/privacy",
   "/intro",
@@ -61,6 +60,7 @@ const PUBLIC_PATHS = [
 // Protected paths that require authentication
 const PROTECTED_PATHS = [
   "/onboarding",
+  "/pricing",
 ]
 
 export async function updateSession(request: NextRequest) {

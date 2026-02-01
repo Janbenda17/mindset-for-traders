@@ -64,7 +64,7 @@ export function OnboardingComplete() {
     }))
 
     localStorage.removeItem("mindtrader-product-tour-completed")
-    console.log("[v0] Guest onboarding complete - redirecting to product tour")
+    console.log("[v0] Onboarding complete - redirecting to pricing")
 
     confetti({
       particleCount: 100,
@@ -73,8 +73,8 @@ export function OnboardingComplete() {
       colors: ["#8B5CF6", "#EC4899", "#10B981"],
     })
 
-    // Go to product tour after onboarding
-    router.push("/product-tour")
+    // Go to pricing page after onboarding (authenticated user)
+    router.push("/pricing")
     setLoading(false)
   }
 
