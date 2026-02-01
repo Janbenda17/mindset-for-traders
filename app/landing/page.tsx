@@ -59,11 +59,18 @@ export default function Home() {
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="flex justify-center mb-8 md:mb-12"
+          className="flex justify-center mb-12 md:mb-16"
         >
-          <h2 className="text-5xl md:text-7xl lg:text-8xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Mindtrader
-          </h2>
+          <div className="relative">
+            <motion.div
+              className="absolute inset-0 blur-3xl opacity-40 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            />
+            <h2 className="relative text-7xl md:text-9xl lg:text-10xl font-black bg-gradient-to-r from-purple-300 via-pink-300 to-red-400 bg-clip-text text-transparent drop-shadow-2xl">
+              Mindtrader
+            </h2>
+          </div>
         </motion.div>
 
         {/* Logo Section */}
