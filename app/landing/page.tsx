@@ -126,52 +126,39 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right - Dashboard Mockup */}
+            {/* Right - Animated Feature Showcase */}
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-2xl blur-3xl" />
-              <div className="relative bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 shadow-2xl">
-                <div className="space-y-4">
-                  {/* Mini dashboard preview */}
-                  <div className="flex items-center justify-between pb-4 border-b border-slate-700/50">
-                    <div className="flex items-center gap-2">
-                      <Brain className="w-5 h-5 text-purple-400" />
-                      <span className="font-semibold text-white">Dashboard Preview</span>
+              <div className="relative space-y-4">
+                {/* Animated cards */}
+                <div className="bg-slate-900/50 backdrop-blur-xl border border-cyan-500/30 rounded-xl p-5 shadow-2xl hover:scale-105 transition-transform">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg">
+                      <Calendar className="w-5 h-5 text-white" />
                     </div>
-                    <div className="px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-xs text-green-400">
-                      Ready
-                    </div>
+                    <span className="font-semibold text-white">Daily Tracker</span>
                   </div>
+                  <p className="text-sm text-slate-400">Naplánuj si den podle podmínek</p>
+                </div>
 
-                  <div className="space-y-3">
-                    <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/30">
-                      <div className="text-sm text-slate-400 mb-1">Readiness Score</div>
-                      <div className="text-3xl font-bold text-white">85%</div>
-                      <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
-                        <div className="h-full w-[85%] bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" />
-                      </div>
+                <div className="bg-slate-900/50 backdrop-blur-xl border border-purple-500/30 rounded-xl p-5 shadow-2xl hover:scale-105 transition-transform ml-8">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                      <Brain className="w-5 h-5 text-white" />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700/30">
-                        <div className="text-xs text-slate-400">Level</div>
-                        <div className="text-xl font-bold text-purple-400">5</div>
-                      </div>
-                      <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700/30">
-                        <div className="text-xs text-slate-400">Streak</div>
-                        <div className="text-xl font-bold text-orange-400">12d</div>
-                      </div>
-                    </div>
-
-                    <div className="p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg">
-                      <div className="flex items-start gap-2">
-                        <Brain className="w-4 h-4 text-purple-400 mt-0.5" />
-                        <div>
-                          <div className="text-xs text-purple-300 font-medium">AI Insight</div>
-                          <div className="text-xs text-slate-400 mt-1">Tvůj stres je dnes vyšší. Zvaž menší pozice.</div>
-                        </div>
-                      </div>
-                    </div>
+                    <span className="font-semibold text-white">AI Asistent</span>
                   </div>
+                  <p className="text-sm text-slate-400">Real-time sledování tvého stavu</p>
+                </div>
+
+                <div className="bg-slate-900/50 backdrop-blur-xl border border-orange-500/30 rounded-xl p-5 shadow-2xl hover:scale-105 transition-transform">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
+                      <BarChart3 className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="font-semibold text-white">Weekly Review</span>
+                  </div>
+                  <p className="text-sm text-slate-400">Shrnutí chyb a tipů na zlepšení</p>
                 </div>
               </div>
             </div>
