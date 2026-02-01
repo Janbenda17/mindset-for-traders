@@ -21,7 +21,7 @@ export default function LandingPage() {
   const handleEnterApp = () => {
     // Set cookie to mark landing as seen
     document.cookie = "mt_seen_landing=1; path=/; max-age=31536000"
-    router.push("/onboarding")
+    router.push("/about")
   }
 
   return (

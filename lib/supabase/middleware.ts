@@ -14,7 +14,6 @@ const PUBLIC_PATHS = [
   "/intro",
   "/landing",
   "/about",
-  "/onboarding",
   "/product-tour",
   // Protected app paths (require auth, but won't redirect if user is auth)
   "/dashboard",
@@ -31,6 +30,11 @@ const PUBLIC_PATHS = [
   "/daily-summary",
   "/psyche-analysis",
   "/trading-psychology",
+]
+
+// Protected paths that require authentication
+const PROTECTED_PATHS = [
+  "/onboarding",
 ]
 
 export async function updateSession(request: NextRequest) {
@@ -107,6 +111,21 @@ export async function updateSession(request: NextRequest) {
       // Authenticated user - allow access to dashboard
       console.log("[v0] Authenticated user accessing dashboard - allowed")
     }
+    return NextResponse.next()
+  }
+
+  // Check if protected path (requires authentication)
+  const isProtectedPath = PROTECTED_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
+  
+  if (isProtectedPath) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/auth/login"
+      url.searchParams.set("redirectedFrom", pathname)
+      console.log("[v0] Protected path without auth - redirecting to login:", pathname)
+      return NextResponse.redirect(url)
+    }
+    console.log("[v0] Allowing authenticated user to:", pathname)
     return NextResponse.next()
   }
 
