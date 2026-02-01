@@ -15,7 +15,7 @@ const PUBLIC_PATHS = [
   "/landing",
   "/about",
   "/product-tour",
-  // Protected app paths (require auth, but won't redirect if user is auth)
+  // App paths - accessible in virtual mode without auth
   "/dashboard",
   "/account",
   "/trades",
@@ -25,11 +25,21 @@ const PUBLIC_PATHS = [
   "/team-club",
   "/admin",
   "/morning-check",
+  "/morning-checks",
+  "/daily-tracker",
+  "/daily-intention",
+  "/daily-summary",
   "/intention",
   "/trading-plan",
-  "/daily-summary",
   "/psyche-analysis",
   "/trading-psychology",
+  "/analytics",
+  "/mindtrader-analytics",
+  "/routines",
+  "/settings",
+  "/streaks",
+  "/system-status",
+  "/weekly-review",
 ]
 
 // Protected paths that require authentication
