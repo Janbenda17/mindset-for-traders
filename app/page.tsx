@@ -35,12 +35,6 @@ export default function Dashboard() {
       href: '/daily-tracker'
     },
     {
-      title: 'MindTrader AI',
-      desc: 'Varuje tě v reálném čase před emočními chybami',
-      icon: Zap,
-      href: '/mindtrader'
-    },
-    {
       title: 'Weekly Review',
       desc: 'Shrne týden a řekne, co změnit příště',
       icon: TrendingUp,
@@ -91,18 +85,13 @@ export default function Dashboard() {
 
       {/* Top LIVE Banner */}
       <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-yellow-900/80 to-orange-900/80 backdrop-blur-sm border-b border-yellow-500/30 py-2 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-sm">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-sm">
           <span className="text-yellow-100">
             <span className="font-bold">Demo mód</span> – data ukázková
           </span>
-          <div className="flex items-center gap-4">
-            <span className="text-yellow-100">
-              <span className="font-bold text-white">Early Bird:</span> prvních 50 lidí jen <span className="font-bold text-white">1499 Kč</span> (místo 2499 Kč)
-            </span>
-            <Button size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold" onClick={handlePricingClick}>
-              Přejít do LIVE
-            </Button>
-          </div>
+          <span className="text-yellow-100 text-xs md:text-sm">
+            <span className="font-bold text-white">Early Bird:</span> prvních 50 lidí jen <span className="font-bold text-white">1499 Kč</span> (místo 2499 Kč)
+          </span>
         </div>
       </div>
 
