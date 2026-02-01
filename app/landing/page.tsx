@@ -56,30 +56,52 @@ export default function Home() {
       <div className="relative z-10 w-full max-w-4xl">
         {/* Brand Name */}
         <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="flex justify-center mb-12 md:mb-16"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="flex justify-center mb-8 md:mb-12"
         >
-          <div className="relative">
+          <div className="relative w-full flex justify-center">
+            {/* Animated glow behind text */}
             <motion.div
-              className="absolute inset-0 blur-3xl opacity-40 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            />
-            <h2 
-              className="relative text-9xl md:text-11xl lg:text-12xl font-black drop-shadow-2xl"
+              className="absolute inset-0 blur-3xl opacity-60"
+              animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.5, 0.8, 0.5] }}
+              transition={{ duration: 4, repeat: Infinity }}
               style={{
-                color: 'transparent',
-                WebkitTextStroke: '3px white',
-                textStroke: '3px white',
-                letterSpacing: '0.05em'
+                background: 'linear-gradient(135deg, #FF006E, #FB5607, #FFBE0B, #8338EC)',
+                width: '100%',
+                height: '100%'
+              }}
+            />
+            
+            {/* Main text with gradient fill */}
+            <motion.h2 
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 3, repeat: Infinity }}
+              className="relative font-black leading-none text-center"
+              style={{
+                fontSize: 'clamp(4rem, 20vw, 18rem)',
+                background: 'linear-gradient(135deg, #FF006E 0%, #FB5607 25%, #FFBE0B 50%, #8338EC 75%, #FF006E 100%)',
+                backgroundSize: '200% 200%',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 20px 40px rgba(255, 0, 110, 0.4))',
+                animation: 'gradient-shift 3s ease infinite'
               }}
             >
               Mindtrader
-            </h2>
+            </motion.h2>
           </div>
         </motion.div>
+
+        <style>{`
+          @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        `}</style>
 
         {/* Logo Section */}
         <motion.div
