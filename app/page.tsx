@@ -85,18 +85,10 @@ export default function Dashboard() {
 
       {/* Top LIVE Banner */}
       <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-yellow-900/80 to-orange-900/80 backdrop-blur-sm border-b border-yellow-500/30 py-1 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 text-xs md:text-sm">
-          <span className="text-yellow-100 flex-1">
+        <div className="max-w-7xl mx-auto flex items-center justify-start gap-2 text-xs md:text-sm">
+          <span className="text-yellow-100">
             <span className="font-bold text-white">Early Bird:</span> prvních 50 lidí jen <span className="font-bold text-white">1499 Kč</span> (místo 2499 Kč)
           </span>
-          <Button 
-            size="sm" 
-            variant="outline"
-            className="border-yellow-400 text-yellow-100 hover:bg-yellow-900/50 font-semibold px-2 py-1 h-auto text-xs whitespace-nowrap"
-            onClick={handlePricingClick}
-          >
-            Virtual → Live
-          </Button>
         </div>
       </div>
 

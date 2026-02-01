@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -63,6 +63,7 @@ const moreNavigation = [
 
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
   const pathname = usePathname()
+  const router = useRouter()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -80,6 +81,14 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false) // Track if we loaded profile once
 
   const { logout } = useAuth()
+
+  const handlePricingClick = () => {
+    if (!isAuthenticated) {
+      router.push('/auth/signup')
+    } else {
+      router.push('/pricing')
+    }
+  }
 
   const loadProfileData = async () => {
     if (typeof window === "undefined") return
@@ -376,6 +385,14 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
           {/* Right Side */}
           <div className="flex items-center space-x-1.5 md:space-x-2 flex-shrink-0">
             <LiveModeToggle />
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="border-yellow-400/50 text-yellow-100 hover:bg-yellow-900/30 font-semibold px-2 py-1 h-auto text-xs hidden md:inline-flex whitespace-nowrap"
+              onClick={handlePricingClick}
+            >
+              Virtual → Live
+            </Button>
 
             {/* Profile Dropdown - only show if authenticated */}
             {isAuthenticated ? (
