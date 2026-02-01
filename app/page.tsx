@@ -169,52 +169,31 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-900/40 via-indigo-900/40 to-blue-900/40 border border-purple-500/20 p-8 md:p-12"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-yellow-900/60 via-yellow-800/40 to-orange-900/60 border-2 border-yellow-400/60 p-8 md:p-12 shadow-2xl shadow-yellow-500/30"
         >
-          <div className="absolute inset-0 opacity-5">
-            <div style={{
-              backgroundImage: `linear-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px)`,
-              backgroundSize: '50px 50px'
-            }} className="w-full h-full" />
-          </div>
+          {/* Golden glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 to-orange-400/5" />
+          <div className="absolute -top-1/2 -right-1/2 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" />
           
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <Crown className="w-8 h-8 text-yellow-400" />
-              <span className="text-lg font-bold text-yellow-400">PŘEJÍT DO LIVE MÓDU</span>
-            </div>
-            <h3 className="text-4xl font-black text-white mb-4">
+            <h3 className="text-4xl md:text-5xl font-black text-white mb-2">
               Odemkni plnou sílu MindTraderu
             </h3>
-            <p className="text-xl text-purple-100 mb-6 max-w-3xl">
-              Tvá reálná data + ukládání + pokročilá AI analýza + komunita tradera. První měsíc jen <span className="font-bold text-white">1499 Kč</span> (místo 2499 Kč).
+            <p className="text-xl text-yellow-50 mb-8 font-semibold">
+              Jen <span className="text-yellow-300 text-2xl">1499 Kč</span>/měsíc <span className="text-sm text-yellow-200">(místo 2499 Kč)</span>
             </p>
-            <div className="flex flex-wrap gap-4 mb-8 text-purple-100">
-              <div className="flex items-center gap-2">
-                <span className="text-green-400 text-xl">✓</span> Neomezené AI insights
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-green-400 text-xl">✓</span> Reálný tracking
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-green-400 text-xl">✓</span> Komunita
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-green-400 text-xl">✓</span> Weekly reviews
-              </div>
-            </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg px-10 py-7 rounded-xl"
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-slate-900 font-black text-lg px-10 py-7 rounded-xl shadow-lg shadow-yellow-500/50"
                 onClick={handlePricingClick}
               >
-                Aktivovat LIVE (1499 Kč/měsíc)
+                Aktivovat LIVE
               </Button>
               <Button
                 variant="outline"
                 size="lg"
-                className="border-2 border-purple-400 text-purple-200 hover:bg-purple-900/50 font-semibold text-lg px-10 py-7 rounded-xl"
+                className="border-2 border-yellow-400 text-yellow-300 hover:bg-yellow-900/40 font-bold text-lg px-10 py-7 rounded-xl"
                 onClick={handlePricingClick}
               >
                 Více informací

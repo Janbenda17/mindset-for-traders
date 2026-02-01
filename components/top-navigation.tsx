@@ -384,7 +384,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
           {/* Right Side */}
           <div className="flex items-center space-x-1.5 md:space-x-2 flex-shrink-0">
-            <LiveModeToggle />
 
             {/* Profile Dropdown - only show if authenticated */}
             {isAuthenticated ? (
