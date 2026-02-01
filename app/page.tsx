@@ -21,7 +21,7 @@ export default function Dashboard() {
 
   const handlePricingClick = () => {
     if (!user) {
-      router.push('/auth/sign-up')
+      router.push('/auth/signup')
     } else {
       router.push('/pricing')
     }
