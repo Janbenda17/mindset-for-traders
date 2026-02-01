@@ -143,12 +143,11 @@ export default function Dashboard() {
         >
           <div className="grid md:grid-cols-2 gap-6">
             {features.map((feature, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ scale: 1.03, y: -5 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <a href={feature.href}>
+              <Link key={i} href={feature.href}>
+                <motion.div
+                  whileHover={{ scale: 1.03, y: -5 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Card className="bg-white/5 backdrop-blur-md border-white/10 hover:bg-white/10 transition-all h-full cursor-pointer group">
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4">
@@ -167,8 +166,8 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                </a>
-              </motion.div>
+                </motion.div>
+              </Link>
             ))}
           </div>
         </motion.div>
