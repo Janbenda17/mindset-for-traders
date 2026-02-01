@@ -123,16 +123,8 @@ export async function updateSession(request: NextRequest) {
   // Handle "/" path (dashboard)
   if (pathname === "/") {
     if (!user) {
-      // Not authenticated - check for landing cookie
-      const hasSeenLanding = request.cookies.get("mt_seen_landing")
-      if (!hasSeenLanding) {
-        console.log("[v0] First visit - redirecting to /landing")
-        const url = request.nextUrl.clone()
-        url.pathname = "/landing"
-        return NextResponse.redirect(url)
-      }
-      // Has seen landing but not authenticated - stay on "/" or redirect to login later
-      console.log("[v0] Not authenticated on dashboard - allowing for now")
+      // Not authenticated - allow access to dashboard in virtual mode
+      console.log("[v0] Not authenticated - allowing access to dashboard")
     } else {
       // Authenticated user - allow access to dashboard
       console.log("[v0] Authenticated user accessing dashboard - allowed")
