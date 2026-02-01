@@ -200,6 +200,58 @@ export default function DailyTrackerPage() {
 
     if (!isLiveMode) {
       console.log("[v0] [DailyTracker] VIRTUAL mode - using demo data instead of Supabase")
+      
+      // Generate demo history entries for last 7 days
+      const demoEntries: DailySummary[] = []
+      for (let i = 0; i < 7; i++) {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        const dateStr = format(date, "yyyy-MM-dd")
+        
+        const randomScore = Math.floor(Math.random() * 40) + 60 // 60-100
+        const randomTrades = Math.floor(Math.random() * 5) + 2 // 2-6 trades
+        
+        const trades = Array.from({ length: randomTrades }, (_, idx) => {
+          const pnl = (Math.random() - 0.4) * 200 // -80 to +120
+          return {
+            id: `demo-trade-${dateStr}-${idx}`,
+            pair: ["BTC/USD", "ETH/USD", "SOL/USD", "AAPL", "TSLA"][Math.floor(Math.random() * 5)],
+            direction: Math.random() > 0.5 ? "Long" : "Short",
+            entryPrice: (Math.random() * 1000 + 100).toFixed(2),
+            exitPrice: (Math.random() * 1000 + 100).toFixed(2),
+            pnl: parseFloat(pnl.toFixed(2)),
+            emotion: ["Confident", "Nervous", "Calm", "FOMO", "Revenge"][Math.floor(Math.random() * 5)],
+            date: dateStr,
+          }
+        })
+        
+        demoEntries.push({
+          date: dateStr,
+          morningCheck: {
+            sleepQuality: Math.floor(Math.random() * 4) + 6,
+            stressLevel: Math.floor(Math.random() * 5) + 3,
+            focus: Math.floor(Math.random() * 4) + 6,
+            energyLevel: Math.floor(Math.random() * 4) + 6,
+            emotionalState: ["Confident", "Calm", "Neutral", "Nervous"][Math.floor(Math.random() * 4)],
+            score: randomScore,
+          },
+          intention: {
+            goals: "Držet se trading plánu, max 3 trades",
+            maxLoss: 200,
+            maxTrades: 3,
+          },
+          plan: {
+            strategy: "Trend following na 15min timeframe",
+            conditions: "Trade pouze A+ setups s potvrzením",
+          },
+          trades,
+          overallScore: randomScore,
+          stagesCompleted: 5,
+        })
+      }
+      
+      setEntries(demoEntries)
+      console.log(`[v0] [DailyTracker] VIRTUAL: Generated ${demoEntries.length} demo history entries`)
       setEntriesLoading(false)
       return
     }
