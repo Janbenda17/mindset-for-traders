@@ -39,7 +39,7 @@ const tourSteps = [
     id: "ai-coach",
     icon: MessageSquare,
     title: "MindTrader AI",
-    description: "Tvůj AI coach. Zadej emoci, dostaneš radu. Snížíš ztráty o 30-50%.",
+    description: "Tvůj AI coach. Emocí → rada. 30-50% méně ztrát.",
     route: "/mindtrader?tab=ai",
   },
   {
@@ -53,7 +53,7 @@ const tourSteps = [
     id: "trading-diary",
     icon: BookOpen,
     title: "Trading Journal",
-    description: "Zaznamenej emocesem. AI ti ukáže, co sabotuje výsledky.",
+    description: "Zaznamenej emoce. AI ti ukáže, co sabotuje výsledky.",
     route: "/journal",
   },
   {
@@ -139,13 +139,13 @@ export function ProductTour() {
   const isLast = currentStep === tourSteps.length - 1
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-6">
-      <div className="w-full max-w-md bg-gradient-to-br from-slate-900 to-slate-800 border border-cyan-500/30 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6">
+      <div className="w-full max-w-sm bg-gradient-to-br from-slate-900 to-slate-800 border border-cyan-500/30 rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden">
         {/* Header s progress */}
-        <div className="relative p-4 md:p-6 border-b border-slate-700/50">
-          <div className="flex items-center justify-between mb-4">
+        <div className="relative p-3 sm:p-4 md:p-6 border-b border-slate-700/50">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
             <div className="flex-1">
-              <p className="text-xs md:text-sm text-slate-400">Krok {currentStep + 1}/{tourSteps.length}</p>
+              <p className="text-xs text-slate-400">Krok {currentStep + 1}/{tourSteps.length}</p>
               <div className="h-1 bg-slate-700/50 rounded-full mt-2 overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-500"
@@ -155,57 +155,56 @@ export function ProductTour() {
             </div>
             <button
               onClick={completeTour}
-              className="ml-4 p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+              className="ml-3 p-1 hover:bg-slate-700 rounded transition-colors flex-shrink-0"
             >
-              <X className="w-5 h-5 text-slate-400" />
+              <X className="w-4 h-4 text-slate-400" />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
           {/* Icon */}
           <div className="flex justify-center">
-            <div className="p-3 md:p-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30">
-              <Icon className="w-8 h-8 md:w-10 md:h-10 text-cyan-400" />
+            <div className="p-2.5 sm:p-3 md:p-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30">
+              <Icon className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-cyan-400" />
             </div>
           </div>
 
           {/* Text */}
-          <div className="space-y-2 text-center">
-            <h2 className="text-xl md:text-2xl font-bold text-white">{step.title}</h2>
+          <div className="space-y-1.5 sm:space-y-2 text-center">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white leading-tight">{step.title}</h2>
             {step.subtitle && (
-              <p className="text-sm text-cyan-400 font-medium">{step.subtitle}</p>
+              <p className="text-xs sm:text-sm text-cyan-400 font-medium">{step.subtitle}</p>
             )}
-            <p className="text-sm md:text-base text-slate-300 leading-relaxed">{step.description}</p>
+            <p className="text-xs sm:text-sm md:text-base text-slate-300 leading-relaxed">{step.description}</p>
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-3 pt-4 md:pt-6">
+          <div className="flex gap-2 pt-3 sm:pt-4 md:pt-6">
             <button
               onClick={handlePrev}
               disabled={isFirst}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 md:py-4 bg-slate-700/50 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 rounded-lg font-medium transition-all text-sm md:text-base"
+              className="flex items-center justify-center gap-1 px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 bg-slate-700/50 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 rounded transition-all text-xs sm:text-sm flex-shrink-0"
             >
-              <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="hidden sm:inline">Zpět</span>
+              <ChevronLeft className="w-4 h-4" />
             </button>
 
             <button
               onClick={handleNext}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 md:py-4 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white rounded-lg font-medium transition-all text-sm md:text-base"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white rounded font-medium transition-all text-xs sm:text-sm md:text-base"
             >
-              <span>{isLast ? step.cta : "Dál"}</span>
-              <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="truncate">{isLast ? step.cta || "Hotovo" : "Dál"}</span>
+              <ChevronRight className="w-4 h-4 flex-shrink-0" />
             </button>
           </div>
 
           {/* Skip link */}
           <button
             onClick={completeTour}
-            className="w-full text-xs md:text-sm text-slate-400 hover:text-slate-300 transition-colors py-2"
+            className="w-full text-xs text-slate-400 hover:text-slate-300 transition-colors py-1.5 sm:py-2"
           >
-            Přeskočit tour
+            Přeskočit
           </button>
         </div>
       </div>
