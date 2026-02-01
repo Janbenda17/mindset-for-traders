@@ -1374,7 +1374,7 @@ export default function DailyTrackerPage() {
                               )}
 
                               {/* AI Insights from that day */}
-                              {(() => {
+                              {entry.morningCheck && (() => {
                                 const dayDecision = generateTradingDecision(entry.morningCheck, entryReadiness)
                                 return (
                                   dayDecision && (
