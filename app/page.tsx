@@ -121,64 +121,6 @@ export default function Dashboard() {
           ))}
         </motion.div>
 
-        {/* Main Headline */}
-        <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight">
-            <span className="bg-gradient-to-r from-purple-200 via-white to-indigo-200 bg-clip-text text-transparent">
-              AI, který tě zastaví dřív,<br />než si sám ublížíš na trhu
-            </span>
-          </h1>
-          <p className="text-xl md:text-2xl text-purple-100 leading-relaxed max-w-4xl mx-auto">
-            Během dne tě sleduje v reálném čase a varuje před impulsy, revanšem nebo tiltem – ještě předtím, než otevřeš špatný obchod. Začni teď a uvidíš, jak to funguje.
-          </p>
-        </motion.div>
-
-        {/* Main CTA Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex justify-center mb-16"
-        >
-          <a href="/daily-tracker">
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xl px-12 py-8 rounded-2xl shadow-2xl shadow-blue-900/50 hover:shadow-blue-900/70 transition-all hover:scale-105"
-            >
-              Začít dnešek – vyplnit stav (30 sekund)
-            </Button>
-          </a>
-        </motion.div>
-
-        {/* Sample Insight Box */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mb-16"
-        >
-          <Card className="bg-gradient-to-br from-red-900/30 to-orange-900/30 backdrop-blur-md border-red-500/30 overflow-hidden">
-            <CardContent className="p-8">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="w-6 h-6 text-red-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-red-300 mb-2">Příklad, co ti AI řekne po ztrátě:</p>
-                  <p className="text-lg text-white leading-relaxed">
-                    "Pozor – tohle je klasický revanšový impuls. Podle tvého plánu pauza 30 minut. Dej si kafe a vrať se s čistou hlavou."
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
         {/* Features Grid */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}

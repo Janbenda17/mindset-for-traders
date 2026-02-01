@@ -332,15 +332,13 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="text-center space-y-8"
           >
-            <Link href="/mindtrader">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xl px-16 py-8 rounded-full shadow-2xl shadow-blue-900/50 hover:shadow-blue-900/70 transition-all"
-                >
-                  Začít s MindTrader AI
-                </Button>
-              </motion.div>
+            <Link href="/">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xl px-12 py-8 rounded-2xl shadow-2xl shadow-blue-900/50 hover:shadow-blue-900/70 transition-all hover:scale-105"
+              >
+                Začít s MindTrader AI
+              </Button>
             </Link>
 
             <motion.p
