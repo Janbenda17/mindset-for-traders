@@ -68,7 +68,7 @@ export default function Home() {
               animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.5, 0.8, 0.5] }}
               transition={{ duration: 4, repeat: Infinity }}
               style={{
-                background: 'linear-gradient(135deg, #FF006E, #FB5607, #FFBE0B, #8338EC)',
+                background: 'linear-gradient(135deg, #a855f7, #6366f1)',
                 width: '100%',
                 height: '100%'
               }}
@@ -81,12 +81,12 @@ export default function Home() {
               className="relative font-black leading-none text-center"
               style={{
                 fontSize: 'clamp(4rem, 20vw, 18rem)',
-                background: 'linear-gradient(135deg, #FF006E 0%, #FB5607 25%, #FFBE0B 50%, #8338EC 75%, #FF006E 100%)',
+                background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
                 backgroundSize: '200% 200%',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
-                filter: 'drop-shadow(0 20px 40px rgba(255, 0, 110, 0.4))',
+                filter: 'drop-shadow(0 20px 40px rgba(168, 85, 247, 0.6))',
                 animation: 'gradient-shift 3s ease infinite'
               }}
             >
