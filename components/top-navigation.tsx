@@ -42,11 +42,11 @@ interface TopNavigationProps {
 }
 
 const mainNavigation = [
-  { name: "Dashboard", href: "/", icon: Home },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Obchod", href: "/journal", icon: TrendingUp },
-  { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI" },
-  { name: "Daily Tracker", href: "/daily-tracker", icon: Calendar },
+  { name: "Dashboard", href: "/", icon: Home, shortName: "Home" },
+  { name: "Analytics", href: "/analytics", icon: BarChart3, shortName: "Stats" },
+  { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Journal" },
+  { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
+  { name: "Daily Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Daily" },
 ]
 
 const moreNavigation = [
@@ -191,22 +191,22 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4">
-        <div className="flex justify-between items-center h-14 md:h-16 gap-2">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="flex justify-between items-center h-14 md:h-16">
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
-            <Link href="/" className="flex items-center space-x-1.5 md:space-x-2">
-              <div className="p-1.5 md:p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-                <Brain className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            <Link href="/" className="flex items-center gap-2">
+              <div className="p-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                <Brain className="w-5 h-5 text-white" />
               </div>
-              <span className="hidden md:block text-lg lg:text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent whitespace-nowrap">
+              <span className="hidden sm:block text-base md:text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 MindTrader
               </span>
             </Link>
           </div>
 
           {/* Main Navigation */}
-          <div className="hidden md:flex items-center space-x-0.5 lg:space-x-1">
+          <div className="hidden md:flex items-center gap-1">
             {mainNavigation.map((item) => {
               const isActive = pathname === item.href
               return (
@@ -214,17 +214,17 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     size="sm"
-                    className={`relative px-2 lg:px-3 py-1 h-8 lg:h-9 ${
+                    className={`relative px-3 h-9 text-sm ${
                       isActive
                         ? "bg-purple-600/20 text-purple-300 hover:bg-purple-600/30"
                         : "text-gray-300 hover:text-white hover:bg-slate-800/50"
                     }`}
                   >
-                    <item.icon className="w-4 h-4 mr-1 lg:mr-1.5" />
-                    <span className="hidden lg:inline text-sm">{item.name}</span>
+                    <item.icon className="w-4 h-4 mr-1.5" />
+                    <span>{item.name}</span>
                     {item.badge && (
                       <Badge
-                        className={`ml-1 lg:ml-1.5 text-[10px] lg:text-xs px-1 py-0 h-4 ${
+                        className={`ml-1.5 text-xs px-1.5 py-0.5 ${
                           item.badge === "AI"
                             ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
                             : item.badge === "PRO"

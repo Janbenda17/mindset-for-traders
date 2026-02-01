@@ -154,9 +154,36 @@ export function ProductTour() {
   const isLast = currentStep === tourSteps.length - 1
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
-      {/* Animated background orbs */}
-      <div className="fixed inset-0 pointer-events-none">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+      {/* Galaxy background for mobile */}
+      <div className="fixed inset-0 pointer-events-none md:hidden">
+        {/* Stars layer */}
+        <div className="absolute inset-0" style={{
+          background: `
+            radial-gradient(2px 2px at 20% 30%, white, transparent),
+            radial-gradient(2px 2px at 60% 70%, white, transparent),
+            radial-gradient(1px 1px at 50% 50%, white, transparent),
+            radial-gradient(1px 1px at 80% 10%, white, transparent),
+            radial-gradient(2px 2px at 90% 60%, white, transparent),
+            radial-gradient(1px 1px at 33% 80%, white, transparent),
+            radial-gradient(2px 2px at 15% 90%, white, transparent),
+            radial-gradient(1px 1px at 75% 40%, rgba(255, 255, 255, 0.8), transparent),
+            radial-gradient(1px 1px at 40% 20%, rgba(255, 255, 255, 0.6), transparent),
+            radial-gradient(1px 1px at 65% 85%, rgba(255, 255, 255, 0.7), transparent),
+            radial-gradient(1px 1px at 25% 60%, white, transparent),
+            radial-gradient(2px 2px at 70% 25%, white, transparent)
+          `,
+          backgroundSize: '200% 200%',
+          animation: 'twinkle 15s ease-in-out infinite'
+        }} />
+        {/* Nebula effects */}
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-blue-500/15 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }} />
+      </div>
+      
+      {/* Desktop subtle orbs */}
+      <div className="fixed inset-0 pointer-events-none hidden md:block">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
