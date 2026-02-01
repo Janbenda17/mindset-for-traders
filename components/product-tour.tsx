@@ -52,8 +52,8 @@ const tourSteps = [
     title: "Přejdi do LIVE režimu",
     subtitle: "Registrace zdarma, 30 sekund",
     description: "Tohle všechno teď běží na testovacích datech. Přepni do LIVE a appka začne pracovat s tvými skutečnými obchody, tvými emocemi a tvými výsledky. Registrace zdarma, bez karty, všechno se uloží.",
-    cta: "Přejít do LIVE",
-    route: "/auth/signup",
+    cta: "Začít v dashboardu",
+    route: null,
   },
 ]
 
