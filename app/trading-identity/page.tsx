@@ -1114,44 +1114,6 @@ export default function TradingIdentityPage() {
             </CardContent>
           </Card>
 
-          {/* Psychological Profile */}
-          <Card className="bg-slate-900/40 backdrop-blur-md border-slate-700/50 mb-6">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-400" />
-                Psychologický profil
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                {Object.entries(profile.psychologicalProfile).map(([key, value]) => {
-                  const labels: Record<string, string> = {
-                    emotionalControl: "Emoční kontrola",
-                    discipline: "Disciplína",
-                    patience: "Trpělivost",
-                    riskTolerance: "Tolerance rizika",
-                    analyticalThinking: "Analytické myšlení",
-                    adaptability: "Adaptabilita",
-                  }
-                  return (
-                    <div key={key} className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/50">
-                      <div className="flex justify-between mb-2">
-                        <span className="text-gray-300">{labels[key]}</span>
-                        <span className="text-white font-medium">{value}%</span>
-                      </div>
-                      <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all"
-                          style={{ width: `${value}%` }}
-                        />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Strengths & Risks */}
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             <Card className="bg-slate-900/40 backdrop-blur-md border-slate-700/50">

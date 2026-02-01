@@ -156,10 +156,9 @@ export function PsychologicalMetricsTracker() {
       </div>
 
       <Tabs defaultValue="metrics">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="metrics">Metrics Over Time</TabsTrigger>
           <TabsTrigger value="balance">Emotional Balance</TabsTrigger>
-          <TabsTrigger value="profile">Psychological Profile</TabsTrigger>
         </TabsList>
 
         <TabsContent value="metrics" className="pt-4">
@@ -226,59 +225,6 @@ export function PsychologicalMetricsTracker() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="profile" className="pt-4">
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <h4 className="font-medium mb-4">Psychological Profile</h4>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={psychologicalProfileData}>
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="metric" />
-                      <PolarRadiusAxis angle={30} domain={[0, 100]} />
-                      <Radar name="Current Score" dataKey="score" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-                      <Radar name="Optimal Score" dataKey="optimal" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
-                      <Legend />
-                      <Tooltip formatter={(value) => `${value}%`} />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <h4 className="font-medium mb-4">Psychological Gap Analysis</h4>
-                <div className="space-y-4">
-                  {psychologicalProfileData.map((item) => (
-                    <div key={item.metric} className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">{item.metric}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {item.score}% / {item.optimal}%
-                        </span>
-                      </div>
-                      <div className="relative pt-1">
-                        <div className="overflow-hidden h-2 text-xs flex rounded bg-muted">
-                          <div
-                            style={{ width: `${item.score}%` }}
-                            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"
-                          ></div>
-                          <div
-                            style={{ width: `${item.optimal - item.score}%` }}
-                            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-muted-foreground/20"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
 
