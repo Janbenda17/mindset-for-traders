@@ -1,10 +1,20 @@
 "use client"
 
 import { Brain, TrendingUp, Users, Target, Zap, CheckCircle2, ArrowRight } from "lucide-react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 
 export default function AboutPage() {
+  const router = useRouter()
+
+  const handleStartTour = () => {
+    // Clear tour completed flag so tour will show
+    localStorage.removeItem("mindtrader-product-tour-completed")
+    localStorage.setItem("mindtrader-show-tour", "true")
+    console.log("[v0] Cleared tour flag - navigating to product-tour")
+    router.push("/product-tour")
+  }
+
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Galaxy Background with Stars */}
@@ -268,12 +278,13 @@ export default function AboutPage() {
           </div>
 
           <div className="text-center">
-            <Link href="/product-tour">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-lg font-semibold">
-                Začít s MindTrader AI
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
+            <Button 
+              onClick={handleStartTour}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-lg font-semibold"
+            >
+              Začít s MindTrader AI
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
           </div>
         </div>
       </section>
