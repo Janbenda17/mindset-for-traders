@@ -54,6 +54,7 @@ const PUBLIC_PATHS = [
   "/fail-log",
   "/risk-calculator",
   "/subscription",
+  "/trading-goals",
 ]
 
 // Protected paths that require authentication
