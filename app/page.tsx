@@ -74,12 +74,6 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/auth/login")
-    }
-  }, [user, isLoading, router])
-
-  useEffect(() => {
     if (!isMounted || !user?.id) {
       console.log("[v0] No authenticated user - showing empty state")
       return
