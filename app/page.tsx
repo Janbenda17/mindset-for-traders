@@ -137,12 +137,12 @@ export default function HomePage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12 md:mb-16 px-4"
         >
-          <h1 className="text-[3rem] leading-[1.1] sm:text-6xl md:text-7xl font-black text-white mb-6 md:mb-8 max-w-5xl mx-auto">
+          <h1 className="text-[2.5rem] sm:text-[3.5rem] md:text-7xl font-black text-white mb-5 sm:mb-6 md:mb-8 leading-[1.15] max-w-5xl mx-auto">
             <span className="bg-gradient-to-r from-purple-200 via-white to-indigo-200 bg-clip-text text-transparent">
               #1 Tool for Psychology<br />in Trading
             </span>
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-purple-100 leading-relaxed max-w-3xl mx-auto font-medium">
+          <p className="text-base sm:text-xl md:text-2xl text-purple-100 leading-snug sm:leading-relaxed max-w-3xl mx-auto font-semibold">
             Analyzes your emotions in real time and stops you before you burn your account
           </p>
         </motion.div>
