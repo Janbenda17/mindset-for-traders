@@ -48,13 +48,16 @@ const mainNavigation = [
   { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
 ]
 
-const moreNavigation = [
+const toolsNavigation = [
   { name: "Weekly Review", href: "/weekly-review", icon: Calendar },
   { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NEW" },
   { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NEW" },
   { name: "Trading Cíle", href: "/trading-goals", icon: Target, badge: "NEW" },
   { name: "Fail Log", href: "/fail-log", icon: AlertTriangle, badge: "NEW" },
   { name: "Trading Identity", href: "/trading-identity", icon: User, badge: "NEW" },
+]
+
+const addonsNavigation = [
   { name: "Odměny", href: "/rewards", icon: Trophy },
   { name: "Team Club", href: "/team-club", icon: Users, badge: "PRO" },
 ]
@@ -225,64 +228,92 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <span>Products</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-slate-900/95 backdrop-blur-md border-slate-700" align="start">
-                <div className="p-2">
-                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">HLAVNÍ PRODUKTY</p>
-                  {mainNavigation.map((item) => {
-                    const isActive = pathname === item.href
-                    return (
-                      <DropdownMenuItem key={item.name} asChild>
-                        <Link
-                          href={item.href}
-                          onClick={() => {}}
-                          className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
-                            isActive ? "bg-purple-600/20" : ""
-                          }`}
-                        >
-                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                            {item.name}
-                          </span>
+              <DropdownMenuContent className="w-96 bg-slate-900/95 backdrop-blur-md border-slate-700 p-4" align="start">
+                {/* Hlavní produkty */}
+                <div className="mb-6">
+                  <p className="text-xs text-gray-400 font-semibold mb-3">HLAVNÍ PRODUKTY</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {mainNavigation.map((item) => {
+                      const isActive = pathname === item.href
+                      return (
+                        <Link key={item.name} href={item.href}>
+                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                            isActive 
+                              ? "bg-purple-600/20 border border-purple-500/30" 
+                              : "hover:bg-slate-800/50 border border-slate-700/50"
+                          }`}>
+                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                              {item.name}
+                            </span>
+                            {item.badge && (
+                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-purple-500/20 text-purple-300 border-purple-500/30">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </div>
                         </Link>
-                      </DropdownMenuItem>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
                 </div>
-                <DropdownMenuSeparator className="bg-slate-700" />
-                <div className="p-2">
-                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">NÁSTROJE & DALŠÍ</p>
-                  {moreNavigation.map((item) => {
-                    const isActive = pathname === item.href
-                    return (
-                      <DropdownMenuItem key={item.name} asChild>
-                        <Link
-                          href={item.href}
-                          onClick={() => {}}
-                          className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
-                            isActive ? "bg-purple-600/20" : ""
-                          }`}
-                        >
-                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                            {item.name}
-                          </span>
-                          {item.badge && (
-                            <Badge
-                              className={`text-xs px-1.5 py-0 h-5 ${
-                                item.badge === "PRO"
-                                  ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
-                                  : item.badge === "NEW"
-                                    ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                    : ""
-                              }`}
-                            >
-                              {item.badge}
-                            </Badge>
-                          )}
+
+                {/* Nástroje */}
+                <div className="mb-6">
+                  <p className="text-xs text-gray-400 font-semibold mb-3">NÁSTROJE</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {toolsNavigation.map((item) => {
+                      const isActive = pathname === item.href
+                      return (
+                        <Link key={item.name} href={item.href}>
+                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                            isActive 
+                              ? "bg-purple-600/20 border border-purple-500/30" 
+                              : "hover:bg-slate-800/50 border border-slate-700/50"
+                          }`}>
+                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                              {item.name}
+                            </span>
+                            {item.badge && (
+                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-green-500/20 text-green-300 border-green-500/30">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </div>
                         </Link>
-                      </DropdownMenuItem>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Doplňky */}
+                <div>
+                  <p className="text-xs text-gray-400 font-semibold mb-3">DOPLŇKY</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {addonsNavigation.map((item) => {
+                      const isActive = pathname === item.href
+                      return (
+                        <Link key={item.name} href={item.href}>
+                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                            isActive 
+                              ? "bg-purple-600/20 border border-purple-500/30" 
+                              : "hover:bg-slate-800/50 border border-slate-700/50"
+                          }`}>
+                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                              {item.name}
+                            </span>
+                            {item.badge && (
+                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-orange-500/20 text-orange-300 border-orange-500/30">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
