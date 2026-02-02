@@ -317,6 +317,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   </div>
                 </div>
               </DropdownMenuContent>
+              </div>
             </DropdownMenu>
 
             {/* Pricing button */}
@@ -615,7 +616,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     </DropdownMenuItem>
                   </div>
               </DropdownMenuContent>
-              </div>
             </DropdownMenu>
             ) : null}
           </div>
