@@ -1382,6 +1382,16 @@ export default function PsychologyAnalyticsPage() {
           </Button>
         </div>
         
+        {/* Virtual Mode Banner */}
+        {!isLiveMode && (
+          <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-xl py-3 px-4 flex items-center gap-3">
+            <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
+            <span className="text-amber-100">
+              <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+            </span>
+          </div>
+        )}
+        
         {/* AI Banner with Stats */}
         <Card className="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-slate-600 backdrop-blur-sm">
           <CardContent className="p-6">

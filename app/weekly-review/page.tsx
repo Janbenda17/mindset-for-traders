@@ -43,6 +43,7 @@ import {
 import { getJournalEntries, getMoodEntries, getUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
 import { useAnalytics } from "@/contexts/analytics-context"
+import { useLiveMode } from "@/contexts/live-mode-context"
 import {
   Line,
   XAxis,

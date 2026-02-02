@@ -6,14 +6,16 @@ import { useRouter } from 'next/navigation'
 import { TopNavigation } from '@/components/top-navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { BarChart3, Zap, Target, Calendar, MessageSquare, AlertCircle, TrendingUp, Crown } from 'lucide-react'
+import { BarChart3, Zap, Target, Calendar, MessageSquare, AlertCircle, TrendingUp, Crown, Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/contexts/auth-context'
+import { useLiveMode } from '@/contexts/live-mode-context'
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const { user } = useAuth()
+  const { isLiveMode } = useLiveMode()
 
   useEffect(() => {
     setMounted(true)
@@ -106,7 +108,25 @@ export default function Dashboard() {
           <p className="text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
         </motion.div>
 
-        {/* Top Stats - 4 columns */}
+        {/* Virtual Mode Banner */}
+        {!isLiveMode && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="fixed top-24 left-0 right-0 z-40 bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border-b border-amber-500/30 py-2 px-4 mb-8"
+          >
+            <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-xs md:text-sm">
+              <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
+              <span className="text-amber-100">
+                <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+              </span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Adjust top padding when banner is visible */}
+        <div className={isLiveMode ? "" : "pt-16"}>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

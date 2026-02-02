@@ -27,6 +27,7 @@ import {
   Clock,
   Shield,
   Loader2,
+  Sparkles,
 } from "lucide-react"
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
@@ -776,6 +777,16 @@ export default function DailyTrackerPage() {
           </div>
         </div>
       </div>
+
+      {/* Virtual Mode Banner */}
+      {!isLiveMode && (
+        <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-xl py-3 px-4 flex items-center gap-3">
+          <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
+          <span className="text-xs sm:text-sm text-amber-100">
+            <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+          </span>
+        </div>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 md:space-y-8">
         <TabsList className="grid w-full grid-cols-2 md:h-16 h-14 bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-2">
