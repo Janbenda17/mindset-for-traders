@@ -143,12 +143,12 @@ export default function HomePage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
+          <h1 className="text-6xl md:text-7xl font-black text-white mb-6 leading-tight">
             <span className="bg-gradient-to-r from-purple-200 via-white to-indigo-200 bg-clip-text text-transparent">
               #1 Tool for Psychology<br />in Trading
             </span>
           </h1>
-          <p className="text-xl md:text-2xl text-purple-100 leading-relaxed max-w-4xl mx-auto">
+          <p className="text-base md:text-2xl text-purple-100 leading-relaxed max-w-4xl mx-auto">
             Analyzes your emotions in real time and stops you before you burn your account
           </p>
         </motion.div>
@@ -168,10 +168,10 @@ export default function HomePage() {
             transition={{ duration: 0.4 }}
             className="mb-6"
           >
-            <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-2">
+            <h2 className="text-xl md:text-4xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-2">
               {slides[currentSlide].title}
             </h2>
-            <p className="text-purple-200/80 text-lg">{slides[currentSlide].description}</p>
+            <p className="text-purple-200/80 text-sm md:text-lg">{slides[currentSlide].description}</p>
           </motion.div>
 
           {/* Carousel Card */}
