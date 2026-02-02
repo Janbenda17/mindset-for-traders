@@ -28,63 +28,51 @@ export default function HomePage() {
   const slides = [
     {
       id: 1,
-      title: 'AI Coach vždy vedle tebe',
-      description: 'Profesionální AI asistent, který tě provádí každým obchodem a učí tě lepší rozhodování',
-      image: '/mindtrader-slide-1.jpg'
+      title: 'Víš, jak si vedeš. Každý den.',
+      description: 'Dashboard s veškerými údaji a AI Coach chatbtem vedle tebe',
+      image: '/slides-1.jpg'
     },
     {
       id: 2,
-      title: 'Skutečné transformace traderů',
-      description: 'Od ztrát k ziskům - vidíš přesné výsledky, které dosahují naši uživatelé',
-      image: '/mindtrader-slide-2.jpg'
+      title: 'Nebojíš se diagnózy. Chceš vyhrát.',
+      description: 'Fail Log s AI analýzou a plánem nápravy pro tvoje obchodní chyby',
+      image: '/slides-2.jpg'
     },
     {
       id: 3,
-      title: 'Rozpozná tvoje emoce',
-      description: 'AI detekuje FOMO, strach, chamtivost a další emocí, které sabotují tvé obchody',
-      image: '/mindtrader-slide-3.jpg'
+      title: 'Najde ti nejlepšího buddyho do páru',
+      description: 'MindTrader najde tě ideálního trading partnera pro rychlejší růst',
+      image: '/slides-3.jpg'
     },
     {
       id: 4,
-      title: 'Sleduj svůj pokrok každý den',
-      description: 'Denní journal, tracker nálady a analýza - vše v jednom místě',
-      image: '/mindtrader-slide-4.jpg'
+      title: 'AI odhalí tvoje slabá místa',
+      description: 'Objev, kde prosakuje tvůj trading mindset - emocí jako FOMO, Revenge, Fear, Greed',
+      image: '/slides-4.jpg'
     },
     {
       id: 5,
-      title: 'Pokročilé analytiky na dosah',
-      description: 'Komplexní statistiky, výkonnost a metriky pro lepší rozhodování',
-      image: '/mindtrader-slide-5.jpg'
+      title: 'AI čte emoce u každého obchodu',
+      description: 'Zjisti, co cítíš před, během a po každém obchodu',
+      image: '/slides-5.jpg'
     },
     {
       id: 6,
-      title: 'Najdi si ideálního trading partnera',
-      description: 'AI matching s kompatibilními tradery pro společný růst a motivaci',
-      image: '/mindtrader-slide-6.jpg'
+      title: 'Z -$2,000 na +$5,400 za 3 měsíce',
+      description: 'Objev, kde prosakuje tvůj trading mindset - skutečné transformace traderů',
+      image: '/slides-6.jpg'
     },
     {
       id: 7,
-      title: 'AI vykomunikuje tvoje chyby',
-      description: 'Detailní rozbor každého neúspěšného obchodu s konkrétním plánem nápravy',
-      image: '/mindtrader-slide-7.jpg'
+      title: 'Trading není o dnešku. Je o dlouhodobě hře.',
+      description: 'Definuj jasné cíle, měř progres a drž disciplínu v čase',
+      image: '/slides-7.jpg'
     },
     {
       id: 8,
-      title: 'Postav si cíle a měř pokrok',
-      description: 'Jaké máš cíle? MindTrader tě motivuje a sleduje tvůj postup',
-      image: '/mindtrader-slide-8.jpg'
-    },
-    {
-      id: 9,
-      title: 'Poznaj své chování v obchodování',
-      description: 'Psychologický profil tvého trading stylu - zjisti, co tě limituje',
-      image: '/mindtrader-slide-9.jpg'
-    },
-    {
-      id: 10,
-      title: 'Nespělíš z chyb. Učíš se z nich.',
-      description: 'Fail log s AI analýzou - každá chyba je oportunita pro zlepšení',
-      image: '/mindtrader-slide-10.jpg'
+      title: 'Znáš tě. A radí přímý to být',
+      description: 'Psychologický profil a personalizované doporučení na míru tvému stylu',
+      image: '/slides-8.jpg'
     }
   ]
 
