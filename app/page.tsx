@@ -27,51 +27,51 @@ export default function HomePage() {
   const slides = [
     {
       id: 1,
-      title: 'Daily Mental Check-In',
-      description: 'Vyplň ranní stav mysli a získej personalizované doporučení pro trading den',
-      image: '/placeholder-1.jpg'
+      title: 'Kontrola nad hlavou',
+      description: 'MindTrader sleduje tvůj stav drží, než riskneš kapitál',
+      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/1trad-LQpvd53448ZGJKO9CkDq0ywkPOmCeO.png'
     },
     {
       id: 2,
-      title: 'AI Real-Time Warnings',
-      description: 'AI tě varuje před emočními rozhodnutími v reálném čase během tradingu',
-      image: '/placeholder-2.jpg'
+      title: 'Success Stories',
+      description: 'Z -$2,000 na +$5,400 za 3 měsíce - objev, kde prosakuje tvůj trading mindset',
+      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/2trad-Qb6D802DGrceTr3vwX8rHuVKNdYIRR.png'
     },
     {
       id: 3,
-      title: 'Loss Reset Protocol',
-      description: 'Rychlý mentální reset po ztrátě - vrať se do hry bez revanšismu',
-      image: '/placeholder-3.jpg'
+      title: 'AI odhalí tvoje slabá místa',
+      description: 'Objev, kde prosakuje tvůj trading mindset - FOMO, Revenge, Fear, Greed a další',
+      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3trad-SNNNBZUkAvOhrGjkH7BPJ0XIqykqal.png'
     },
     {
       id: 4,
-      title: 'Weekly Review',
-      description: 'AI analyzuje tvůj týden a najde vzorce v tvém chování',
-      image: '/placeholder-4.jpg'
+      title: 'Nebojíš se diagnózy. Chceš vyhrát.',
+      description: 'Fail Log s AI analýzou a plánem nápravy pro tvoje obchodní chyby',
+      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/4trad-MuXi3HW1wwXJsxB8Ugt4aci1PfCHUU.png'
     },
     {
       id: 5,
-      title: 'Trading Identity',
-      description: 'Definuj svou trading identitu a sleduj, jak se k ní držíš',
-      image: '/placeholder-5.jpg'
+      title: 'Trading není o dnešku',
+      description: 'Definuj jasné cíle, měř progres a drž disciplínu v čase',
+      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/5trad-i8UVSQQzNAvkgE4FE5ykgz2VYSjfLL.png'
     },
     {
       id: 6,
-      title: 'Risk Calculator',
-      description: 'Spočítej správnou pozici size podle tvého kapitálu a risk tolerance',
-      image: '/placeholder-6.jpg'
+      title: 'Víš, jak si vedeš. Každý den.',
+      description: 'Dashboard s kalendářem, statistikami a všemi tvojimi trading daty na jednom místě',
+      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/6trad-JwhkzN3lvXZnMxeOjyrLep3OZRjlHP.png'
     },
     {
       id: 7,
-      title: 'Fail Log',
-      description: 'Zaznamenej chyby a uč se z nich - AI najde opakující se vzorce',
-      image: '/placeholder-7.jpg'
+      title: 'Máš kontrolu nad hlavou?',
+      description: 'MindTrader sleduje tvůj stav drží, než vstoupíš do trhu',
+      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/7trad-lOEHhB1QY9LQFgAc3cmdNIrsPPuhDQ.png'
     },
     {
       id: 8,
-      title: 'Team Club',
-      description: 'Připoj se k traderské komunitě a sdílej své zkušenosti',
-      image: '/placeholder-8.jpg'
+      title: 'Ukládá tvoje vzorce chování',
+      description: 'Personalizované zpětné vazby - Sleep, Disciplína, Stress level s doporučeními',
+      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/8trad-ajaJJwZ6WZFvYuVLUfHtjNrDodRMcX.png'
     }
   ]
 
@@ -141,20 +141,14 @@ export default function HomePage() {
           <Card className="bg-white/5 backdrop-blur-md border-white/10 overflow-hidden">
             <CardContent className="p-0 relative">
               {/* Carousel Container */}
-              <div className="relative h-[400px] md:h-[500px] flex items-center justify-center">
+              <div className="relative w-full h-auto flex items-center justify-center">
                 {/* Current Slide */}
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/20 to-indigo-900/20 p-8">
-                  <div className="text-center max-w-2xl">
-                    <div className="w-full h-48 md:h-64 bg-slate-800/50 rounded-2xl mb-6 flex items-center justify-center">
-                      <p className="text-slate-400 text-lg">📸 {slides[currentSlide].title}</p>
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
-                      {slides[currentSlide].title}
-                    </h3>
-                    <p className="text-lg text-purple-200">
-                      {slides[currentSlide].description}
-                    </p>
-                  </div>
+                <div className="w-full flex items-center justify-center">
+                  <img 
+                    src={slides[currentSlide].image}
+                    alt={slides[currentSlide].title}
+                    className="w-full h-auto max-h-[600px] object-cover rounded-2xl"
+                  />
                 </div>
 
                 {/* Navigation Buttons */}
