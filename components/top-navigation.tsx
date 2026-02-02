@@ -423,16 +423,15 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               </div>
             )}
 
-            {/* Virtual Mode Button */}
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-amber-500/50 text-amber-100 hover:bg-amber-900/30 font-semibold px-2 py-1 h-auto text-xs flex flex-col items-center gap-0.5"
-              onClick={handlePricingClick}
-            >
-              <span>Virtual</span>
-              <span className="text-xs font-normal text-amber-300">Switch to Live</span>
-            </Button>
+            {/* Get Started Button - Mobile only */}
+            <Link href="/signup" className="md:hidden">
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
+              >
+                Get Started
+              </Button>
+            </Link>
 
             {/* Profile Dropdown - only show if authenticated */}
             {isAuthenticated ? (

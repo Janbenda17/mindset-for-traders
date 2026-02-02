@@ -6,7 +6,7 @@ import { TopNavigation } from '@/components/top-navigation'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ChevronLeft, ChevronRight, Users, TrendingUp, Target, Eye, Rocket } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Users, TrendingUp, Target } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
@@ -260,9 +260,8 @@ export default function HomePage() {
             <div className="w-20 h-20 rounded-full border-2 border-gray-400 flex items-center justify-center mb-6">
               <span className="text-4xl font-bold text-gray-300">1</span>
             </div>
-            <h3 className="text-xl md:text-2xl font-semibold text-white mb-2 flex items-center justify-center gap-2">
+            <h3 className="text-xl md:text-2xl font-semibold text-white mb-2">
               Prohlédni si software ve virtuálním modu
-              <ChevronRight className="w-5 h-5 text-gray-400" />
             </h3>
           </div>
 
