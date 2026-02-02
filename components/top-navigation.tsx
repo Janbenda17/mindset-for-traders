@@ -42,10 +42,10 @@ interface TopNavigationProps {
 }
 
 const mainNavigation = [
-  { name: "MindTrader AI", href: "/", icon: Brain, badge: "AI", shortName: "AI" },
   { name: "Dashboard", href: "/dashboard", icon: Home, shortName: "Home" },
   { name: "Analytics", href: "/analytics", icon: BarChart3, shortName: "Stats" },
   { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Journal" },
+  { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
   { name: "Daily Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Daily" },
 ]
 
