@@ -387,7 +387,7 @@ export default function JournalPage() {
           </div>
 
         {!isLiveMode && (
-          <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-2 px-3 text-xs md:text-sm flex items-center gap-2 w-full">
+          <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-2 px-3 text-xs md:text-sm flex items-center gap-2 w-full mb-4">
             <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
             <span className="text-amber-100">
               <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru

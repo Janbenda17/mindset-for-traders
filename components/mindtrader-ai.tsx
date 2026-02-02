@@ -654,7 +654,7 @@ const MindTraderAI = () => {
       <div className="relative z-10 w-full min-h-screen flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 p-2 sm:p-4 lg:p-6">
         {/* Virtual Mode Banner */}
         {!isLiveMode && (
-          <div className="w-full bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-2 px-3 flex items-center gap-2 mb-2">
+          <div className="w-full bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-2 px-3 flex items-center gap-2 mb-4">
             <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
             <span className="text-xs sm:text-sm text-amber-100">
               <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru

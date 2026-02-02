@@ -780,7 +780,7 @@ export default function DailyTrackerPage() {
 
       {/* Virtual Mode Banner */}
       {!isLiveMode && (
-        <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-xl py-3 px-4 flex items-center gap-3">
+        <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-3 px-4 flex items-center gap-3 mb-6">
           <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
           <span className="text-xs sm:text-sm text-amber-100">
             <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru

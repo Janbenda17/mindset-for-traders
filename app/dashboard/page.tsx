@@ -114,9 +114,9 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="fixed top-24 left-0 right-0 z-40 bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border-b border-amber-500/30 py-2 px-4 mb-8"
+            className="fixed top-24 left-0 right-0 z-40 px-4 md:px-8 lg:px-12"
           >
-            <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 text-xs md:text-sm">
+            <div className="max-w-6xl mx-auto bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border-b border-amber-500/30 rounded-lg py-2 px-4 flex items-center justify-center gap-3 text-xs md:text-sm">
               <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
               <span className="text-amber-100">
                 <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
