@@ -227,7 +227,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="relative px-4 h-10 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-300 group flex items-center gap-2 rounded-lg shadow-lg shadow-purple-500/30"
+                    className="relative px-4 h-10 text-sm font-semibold text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 transition-all duration-300 group flex items-center gap-2 rounded-lg shadow-lg shadow-purple-500/20"
                   >
                     <span>Products</span>
                     <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
@@ -296,8 +296,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 size="sm"
                 className={`relative px-4 h-10 text-sm font-semibold transition-all duration-300 rounded-lg ${
                   pathname === "/pricing"
-                    ? "text-white bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/30"
-                    : "text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/30"
+                    ? "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 shadow-lg shadow-purple-500/20"
+                    : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
                 Pricing
@@ -310,8 +310,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 size="sm"
                 className={`relative px-4 h-10 text-sm font-semibold transition-all duration-300 rounded-lg ${
                   pathname === "/intro"
-                    ? "text-white bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg shadow-purple-500/30"
-                    : "text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/30"
+                    ? "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 shadow-lg shadow-purple-500/20"
+                    : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
                 About
