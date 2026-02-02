@@ -147,52 +147,82 @@ export default function HomePage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-20"
         >
-          <Card className="bg-white/5 backdrop-blur-md border-white/10 overflow-hidden">
-            <CardContent className="p-0 relative">
-              {/* Carousel Container */}
-              <div className="relative w-full h-auto flex items-center justify-center">
-                {/* Current Slide */}
-                <div className="w-full flex items-center justify-center">
-                  <img 
-                    src={slides[currentSlide].image}
-                    alt={slides[currentSlide].title}
-                    className="w-full h-auto max-h-[600px] object-cover rounded-2xl"
-                  />
-                </div>
+          {/* Carousel Title */}
+          <motion.div
+            key={`title-${currentSlide}`}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="mb-6"
+          >
+            <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-2">
+              {slides[currentSlide].title}
+            </h2>
+            <p className="text-purple-200/80 text-lg">{slides[currentSlide].description}</p>
+          </motion.div>
 
-                {/* Navigation Buttons */}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 border-white/20 hover:bg-black/70 text-white"
-                  onClick={prevSlide}
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 border-white/20 hover:bg-black/70 text-white"
-                  onClick={nextSlide}
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </Button>
-              </div>
+          {/* Carousel Card */}
+          <div className="relative bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-md border border-purple-500/20 rounded-3xl p-8 overflow-hidden group">
+            {/* Gradient background effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-              {/* Slide Indicators */}
-              <div className="flex items-center justify-center gap-2 py-4 bg-black/20">
-                {slides.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentSlide ? 'bg-purple-400 w-8' : 'bg-white/30'
-                    }`}
-                  />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+            {/* Carousel Container */}
+            <div className="relative w-full flex items-center justify-center">
+              {/* Current Slide */}
+              <motion.div
+                key={`slide-${currentSlide}`}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                className="w-full flex items-center justify-center"
+              >
+                <img 
+                  src={slides[currentSlide].image}
+                  alt={slides[currentSlide].title}
+                  className="w-full h-auto max-h-[450px] object-contain rounded-2xl shadow-2xl"
+                />
+              </motion.div>
+
+              {/* Navigation Buttons */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg w-12 h-12 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
+                onClick={prevSlide}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg w-12 h-12 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
+                onClick={nextSlide}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </Button>
+            </div>
+
+            {/* Slide Indicators */}
+            <div className="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-purple-500/20">
+              {slides.map((_, index) => (
+                <motion.button
+                  key={index}
+                  whileHover={{ scale: 1.2 }}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`transition-all rounded-full ${
+                    index === currentSlide 
+                      ? 'bg-gradient-to-r from-purple-400 to-pink-400 w-8 h-3' 
+                      : 'bg-white/20 hover:bg-white/40 w-2 h-2'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Slide Counter */}
+            <div className="absolute top-6 right-6 text-xs font-semibold text-purple-300 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-purple-500/20">
+              {currentSlide + 1} / {slides.length}
+            </div>
+          </div>
         </motion.div>
 
         {/* Stats Section */}
