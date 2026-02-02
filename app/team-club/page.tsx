@@ -737,7 +737,7 @@ function MentorTeamClubView({
                 : "Zatím žádní studenti s daty"
               : "Pro mentory - kompletní dashboard v Live režimu"}
           </p>
-          {isLiveMode && students.length > 0 && (
+        </div>
 
         {/* Virtual Mode Banner */}
         {!isLiveMode && (
