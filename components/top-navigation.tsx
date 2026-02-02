@@ -32,6 +32,7 @@ import {
   Sun,
   Target,
   AlertTriangle,
+  ChevronDown,
 } from "lucide-react"
 import LiveModeToggle from "@/components/live-mode-toggle"
 import { supabase } from "@/lib/supabase/client"
@@ -46,20 +47,17 @@ const mainNavigation = [
   { name: "Analytics", href: "/analytics", icon: BarChart3, shortName: "Stats" },
   { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Journal" },
   { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
+  { name: "Weekly Review", href: "/weekly-review", icon: Calendar },
+  { name: "Team Club", href: "/team-club", icon: Users, badge: "PRO" },
 ]
 
 const toolsNavigation = [
-  { name: "Weekly Review", href: "/weekly-review", icon: Calendar },
   { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NEW" },
   { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NEW" },
   { name: "Trading Cíle", href: "/trading-goals", icon: Target, badge: "NEW" },
   { name: "Fail Log", href: "/fail-log", icon: AlertTriangle, badge: "NEW" },
   { name: "Trading Identity", href: "/trading-identity", icon: User, badge: "NEW" },
-]
-
-const addonsNavigation = [
-  { name: "Odměny", href: "/rewards", icon: Trophy },
-  { name: "Team Club", href: "/team-club", icon: Users, badge: "PRO" },
+  { name: "Odměny", href: "/rewards", icon: Trophy, badge: "NEW" },
 ]
 
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
@@ -229,9 +227,10 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="relative px-3 h-9 text-sm text-gray-300 hover:text-white hover:bg-slate-800/50"
+                    className="relative px-3 h-9 text-sm text-gray-300 hover:text-white hover:bg-slate-800/50 flex items-center gap-1"
                   >
                     <span>Products</span>
+                    <ChevronDown className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6" align="start">
@@ -278,35 +277,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                             </span>
                             {item.badge && (
                               <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-green-500/20 text-green-300 border-green-500/30">
-                                {item.badge}
-                              </Badge>
-                            )}
-                          </div>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Řádek 3: Doplňky */}
-                <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Doplňky</p>
-                  <div className="flex gap-3">
-                    {addonsNavigation.map((item) => {
-                      const isActive = pathname === item.href
-                      return (
-                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
-                          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg cursor-pointer transition-colors ${
-                            isActive 
-                              ? "bg-purple-600/20 border border-purple-500/30" 
-                              : "hover:bg-slate-800/50 border border-slate-700/50"
-                          }`}>
-                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                              {item.name}
-                            </span>
-                            {item.badge && (
-                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-orange-500/20 text-orange-300 border-orange-500/30">
                                 {item.badge}
                               </Badge>
                             )}
