@@ -214,39 +214,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
           {/* Main Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            {mainNavigation.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <Link key={item.name} href={item.href}>
-                  <Button
-                    variant={isActive ? "secondary" : "ghost"}
-                    size="sm"
-                    className={`relative px-3 h-9 text-sm ${
-                      isActive
-                        ? "bg-purple-600/20 text-purple-300 hover:bg-purple-600/30"
-                        : "text-gray-300 hover:text-white hover:bg-slate-800/50"
-                    }`}
-                  >
-                    <item.icon className="w-4 h-4 mr-1.5" />
-                    <span>{item.name}</span>
-                    {item.badge && (
-                      <Badge
-                        className={`ml-1.5 text-xs px-1.5 py-0.5 ${
-                          item.badge === "AI"
-                            ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                            : item.badge === "PRO"
-                              ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
-                              : ""
-                        }`}
-                      >
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </Button>
-                </Link>
-              )
-            })}
-
             {/* Products dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -332,6 +299,21 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 }`}
               >
                 Pricing
+              </Button>
+            </Link>
+
+            {/* About button */}
+            <Link href="/intro">
+              <Button
+                variant={pathname === "/intro" ? "secondary" : "ghost"}
+                size="sm"
+                className={`relative px-3 h-9 text-sm ${
+                  pathname === "/intro"
+                    ? "bg-purple-600/20 text-purple-300 hover:bg-purple-600/30"
+                    : "text-gray-300 hover:text-white hover:bg-slate-800/50"
+                }`}
+              >
+                About
               </Button>
             </Link>
           </div>
