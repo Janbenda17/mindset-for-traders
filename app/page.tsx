@@ -28,51 +28,63 @@ export default function HomePage() {
   const slides = [
     {
       id: 1,
-      title: 'Kontrola nad hlavou',
-      description: 'MindTrader sleduje tvůj stav drží, než riskneš kapitál',
-      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/1trad-LQpvd53448ZGJKO9CkDq0ywkPOmCeO.png'
+      title: 'AI Coach vždy vedle tebe',
+      description: 'Profesionální AI asistent, který tě provádí každým obchodem a učí tě lepší rozhodování',
+      image: '/mindtrader-slide-1.jpg'
     },
     {
       id: 2,
-      title: 'Success Stories',
-      description: 'Z -$2,000 na +$5,400 za 3 měsíce - objev, kde prosakuje tvůj trading mindset',
-      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/2trad-Qb6D802DGrceTr3vwX8rHuVKNdYIRR.png'
+      title: 'Skutečné transformace traderů',
+      description: 'Od ztrát k ziskům - vidíš přesné výsledky, které dosahují naši uživatelé',
+      image: '/mindtrader-slide-2.jpg'
     },
     {
       id: 3,
-      title: 'AI odhalí tvoje slabá místa',
-      description: 'Objev, kde prosakuje tvůj trading mindset - FOMO, Revenge, Fear, Greed a další',
-      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3trad-SNNNBZUkAvOhrGjkH7BPJ0XIqykqal.png'
+      title: 'Rozpozná tvoje emoce',
+      description: 'AI detekuje FOMO, strach, chamtivost a další emocí, které sabotují tvé obchody',
+      image: '/mindtrader-slide-3.jpg'
     },
     {
       id: 4,
-      title: 'Nebojíš se diagnózy. Chceš vyhrát.',
-      description: 'Fail Log s AI analýzou a plánem nápravy pro tvoje obchodní chyby',
-      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/4trad-MuXi3HW1wwXJsxB8Ugt4aci1PfCHUU.png'
+      title: 'Sleduj svůj pokrok každý den',
+      description: 'Denní journal, tracker nálady a analýza - vše v jednom místě',
+      image: '/mindtrader-slide-4.jpg'
     },
     {
       id: 5,
-      title: 'Trading není o dnešku',
-      description: 'Definuj jasné cíle, měř progres a drž disciplínu v čase',
-      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/5trad-i8UVSQQzNAvkgE4FE5ykgz2VYSjfLL.png'
+      title: 'Pokročilé analytiky na dosah',
+      description: 'Komplexní statistiky, výkonnost a metriky pro lepší rozhodování',
+      image: '/mindtrader-slide-5.jpg'
     },
     {
       id: 6,
-      title: 'Víš, jak si vedeš. Každý den.',
-      description: 'Dashboard s kalendářem, statistikami a všemi tvojimi trading daty na jednom místě',
-      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/6trad-JwhkzN3lvXZnMxeOjyrLep3OZRjlHP.png'
+      title: 'Najdi si ideálního trading partnera',
+      description: 'AI matching s kompatibilními tradery pro společný růst a motivaci',
+      image: '/mindtrader-slide-6.jpg'
     },
     {
       id: 7,
-      title: 'Máš kontrolu nad hlavou?',
-      description: 'MindTrader sleduje tvůj stav drží, než vstoupíš do trhu',
-      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/7trad-lOEHhB1QY9LQFgAc3cmdNIrsPPuhDQ.png'
+      title: 'AI vykomunikuje tvoje chyby',
+      description: 'Detailní rozbor každého neúspěšného obchodu s konkrétním plánem nápravy',
+      image: '/mindtrader-slide-7.jpg'
     },
     {
       id: 8,
-      title: 'Ukládá tvoje vzorce chování',
-      description: 'Personalizované zpětné vazby - Sleep, Disciplína, Stress level s doporučeními',
-      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/8trad-ajaJJwZ6WZFvYuVLUfHtjNrDodRMcX.png'
+      title: 'Postav si cíle a měř pokrok',
+      description: 'Jaké máš cíle? MindTrader tě motivuje a sleduje tvůj postup',
+      image: '/mindtrader-slide-8.jpg'
+    },
+    {
+      id: 9,
+      title: 'Poznaj své chování v obchodování',
+      description: 'Psychologický profil tvého trading stylu - zjisti, co tě limituje',
+      image: '/mindtrader-slide-9.jpg'
+    },
+    {
+      id: 10,
+      title: 'Nespělíš z chyb. Učíš se z nich.',
+      description: 'Fail log s AI analýzou - každá chyba je oportunita pro zlepšení',
+      image: '/mindtrader-slide-10.jpg'
     }
   ]
 
