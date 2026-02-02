@@ -87,7 +87,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     if (!isAuthenticated) {
       router.push('/signup')
     } else {
-      router.push('/pricing')
+      router.push('/account')
     }
   }
 

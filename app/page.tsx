@@ -20,7 +20,7 @@ export default function HomePage() {
     if (!user) {
       router.push('/signup')
     } else {
-      router.push('/pricing')
+      router.push('/account')
     }
   }
 
