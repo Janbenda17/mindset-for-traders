@@ -93,6 +93,19 @@ export default function Dashboard() {
       
       {/* Main Content */}
       <div className="relative z-10 pt-32 px-4 md:px-8 lg:px-12 pb-20 max-w-6xl mx-auto">
+        {/* Dashboard Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-12"
+        >
+          <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
+            Dashboard
+          </h1>
+          <p className="text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
+        </motion.div>
+
         {/* Top Stats - 4 columns */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
