@@ -3543,7 +3543,18 @@ function TeamClubPage() {
   }
 
   // Render based on mentor status, ensuring userIsMentor is not null
-  return userIsMentor !== null ? userIsMentor ?       <MentorTeamClubView communityUsers={communityUsers} setCommunityUsers={setCommunityUsers} loadingCommunity={loadingCommunity} setLoadingCommunity={setLoadingCommunity} /> :       <StudentTeamClubView communityUsers={communityUsers} loadingCommunity={loadingCommunity} /> : null
+  return userIsMentor !== null ? (
+    userIsMentor ? (
+      <MentorTeamClubView 
+        communityUsers={communityUsers} 
+        setCommunityUsers={setCommunityUsers} 
+        loadingCommunity={loadingCommunity} 
+        setLoadingCommunity={setLoadingCommunity} 
+      />
+    ) : (
+      <StudentTeamClubView communityUsers={communityUsers} loadingCommunity={loadingCommunity} />
+    )
+  ) : null
 }
 
 export default TeamClubPage
