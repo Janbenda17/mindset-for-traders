@@ -209,7 +209,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               <div className="p-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
                 <Brain className="w-5 h-5 text-white" />
               </div>
-              <span className="hidden sm:block text-base md:text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <span className="block text-sm sm:text-base md:text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 MindTrader
               </span>
             </Link>
