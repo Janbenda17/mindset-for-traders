@@ -132,17 +132,17 @@ export default function HomePage() {
       <div className="relative z-10 pt-48 px-4 md:px-8 lg:px-12 pb-20 max-w-7xl mx-auto">
         {/* Hero Section */}
         <motion.div
-          initial={{ opacity: 0, y: -30 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-12 md:mb-16 px-4"
         >
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-4 md:mb-6 leading-tight px-4">
+          <h1 className="text-[3rem] leading-[1.1] sm:text-6xl md:text-7xl font-black text-white mb-6 md:mb-8 max-w-5xl mx-auto">
             <span className="bg-gradient-to-r from-purple-200 via-white to-indigo-200 bg-clip-text text-transparent">
               #1 Tool for Psychology<br />in Trading
             </span>
           </h1>
-          <p className="text-base sm:text-lg md:text-2xl text-purple-100 leading-relaxed max-w-4xl mx-auto px-4 font-medium">
+          <p className="text-lg sm:text-xl md:text-2xl text-purple-100 leading-relaxed max-w-3xl mx-auto font-medium">
             Analyzes your emotions in real time and stops you before you burn your account
           </p>
         </motion.div>
