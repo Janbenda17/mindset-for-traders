@@ -75,7 +75,7 @@ export default function IntroPage() {
             To není tvůj problém v technice - je to v psychologii.
           </p>
 
-          <Link href="/pricing">
+          <Link href="/signup">
             <Button
               size="lg"
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-8 py-6 text-lg rounded-xl shadow-lg shadow-purple-500/50"
