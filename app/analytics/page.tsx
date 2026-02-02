@@ -1382,32 +1382,6 @@ export default function PsychologyAnalyticsPage() {
           </Button>
         </div>
         
-        {/* Virtual Mode Demo Data Banner */}
-        {!isLiveMode && (
-          <Card className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 border-2 border-amber-500/40 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-amber-500/20 rounded-lg">
-                  <Sparkles className="w-6 h-6 text-amber-300" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                    Prohlížíš Demo Analytics
-                    <Badge className="bg-amber-500/20 text-amber-200 border-amber-400/30">Virtual Mode</Badge>
-                  </h3>
-                  <p className="text-amber-100/90 mb-3">
-                    Toto jsou ukázková data, která ti ukazují, jak bude vypadat tvá Analytics po sběru reálných dat. Ve Virtual Mode nemůžeš zaznamenávat obchody ani denní stavy.
-                  </p>
-                  <div className="flex items-center gap-2 text-sm text-amber-200/80">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Pro plný přístup přepni do Live Mode (vyžaduje Premium)</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-        
         {/* AI Banner with Stats */}
         <Card className="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-slate-600 backdrop-blur-sm">
           <CardContent className="p-6">
