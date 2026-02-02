@@ -253,67 +253,27 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="grid md:grid-cols-2 gap-8"
+          className="flex flex-col md:flex-row items-center justify-center gap-12 py-12"
         >
-          {/* Step 1: Virtual Mode Demo */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-purple-500/30 p-8 md:p-10 hover:border-purple-400/60 transition-all duration-300 group">
-            {/* Gradient accent */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            
-            <div className="relative z-10">
-              {/* Icon */}
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-500/30 to-pink-500/30 border border-purple-400/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Eye className="w-8 h-8 text-purple-300" />
-              </div>
-
-              {/* Content */}
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                Prohlédni si software ve virtuálním modu
-              </h3>
-              <p className="text-purple-200/90 text-base md:text-lg leading-relaxed mb-8">
-                Proklikej si všechny složky a funkce (Daily Tracker, MindTrader AI, Weekly Review, Loss Reset, Analytics, Fail Log, Cíle a další) s předvyplněnými příklady. Uvidíš přesně, jak to vypadá a funguje, když to někdo používá naživo – vše je hotové a přehledné.
-              </p>
-
-              {/* CTA Button */}
-              <Link href="/dashboard">
-                <Button
-                  size="lg"
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-6 rounded-xl shadow-lg shadow-purple-500/30"
-                >
-                  Prohlédnout si ukázku teď
-                </Button>
-              </Link>
+          {/* Step 1 */}
+          <div className="flex flex-col items-center text-center max-w-xs">
+            <div className="w-20 h-20 rounded-full border-2 border-gray-400 flex items-center justify-center mb-6">
+              <span className="text-4xl font-bold text-gray-300">1</span>
             </div>
+            <h3 className="text-xl md:text-2xl font-semibold text-white mb-2 flex items-center justify-center gap-2">
+              Prohlédni si software ve virtuálním modu
+              <ChevronRight className="w-5 h-5 text-gray-400" />
+            </h3>
           </div>
 
-          {/* Step 2: Live Mode Premium */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-900/60 to-orange-900/60 border border-amber-400/40 p-8 md:p-10 hover:border-amber-400/80 transition-all duration-300 group">
-            {/* Gradient accent */}
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            
-            <div className="relative z-10">
-              {/* Icon */}
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-amber-500/30 to-orange-500/30 border border-amber-400/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Rocket className="w-8 h-8 text-amber-300" />
-              </div>
-
-              {/* Content */}
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                Zakup premium a přepni na LIVE režim
-              </h3>
-              <p className="text-amber-100/90 text-base md:text-lg leading-relaxed mb-8">
-                Jakmile budeš připravený, zakoup LIVE režim (1499 Kč/měsíc) a software začne pracovat s tvými skutečnými obchody, emocemi a výsledky. Dostaneš ukládání, denní varování, historii, personalizované plány a všechno na 100%.
-              </p>
-
-              {/* CTA Button */}
-              <Button
-                size="lg"
-                className="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-slate-900 font-black py-6 rounded-xl shadow-lg shadow-amber-500/40"
-                onClick={handlePricingClick}
-              >
-                Koupit LIVE teď (Early Bird 1499 Kč)
-              </Button>
+          {/* Step 2 */}
+          <div className="flex flex-col items-center text-center max-w-xs">
+            <div className="w-20 h-20 rounded-full border-2 border-gray-400 flex items-center justify-center mb-6">
+              <span className="text-4xl font-bold text-gray-300">2</span>
             </div>
+            <h3 className="text-xl md:text-2xl font-semibold text-white">
+              Zakup premium a přepni na LIVE režim
+            </h3>
           </div>
         </motion.div>
 
