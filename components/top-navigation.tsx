@@ -201,8 +201,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
         <div className="flex justify-between items-center h-14 md:h-16">
-          {/* Logo */}
-          <div className="flex items-center flex-shrink-0">
+          {/* Logo and Auth Buttons Left Side */}
+          <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
             <Link href="/" className="flex items-center gap-2">
               <div className="p-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
                 <Brain className="w-5 h-5 text-white" />
@@ -211,6 +211,29 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 MindTrader
               </span>
             </Link>
+
+            {/* Login and Get Started - only show if not authenticated */}
+            {!isAuthenticated && (
+              <div className="hidden md:flex items-center gap-2">
+                <Link href="/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-300 hover:text-white h-8 px-3 text-sm"
+                  >
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-8 px-4 text-sm font-semibold"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Main Navigation */}
@@ -248,57 +271,93 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               )
             })}
 
-            {/* More dropdown */}
+            {/* Products dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant={isMoreActive ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="sm"
-                  className={`relative px-2 lg:px-3 py-1 h-8 lg:h-9 ${
-                    isMoreActive
-                      ? "bg-purple-600/20 text-purple-300 hover:bg-purple-600/30"
-                      : "text-gray-300 hover:text-white hover:bg-slate-800/50"
-                  }`}
+                  className="relative px-3 h-9 text-sm text-gray-300 hover:text-white hover:bg-slate-800/50"
                 >
-                  <MoreHorizontal className="w-4 h-4 lg:mr-1.5" />
-                  <span className="hidden lg:inline text-sm">More</span>
+                  <span>Products</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-slate-900/95 backdrop-blur-md border-slate-700" align="end">
-                {moreNavigation.map((item) => {
-                  const isActive = pathname === item.href
-                  return (
-                    <DropdownMenuItem key={item.name} asChild>
-                      <Link
-                        href={item.href}
-                        onClick={() => {}}
-                        className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
-                          isActive ? "bg-purple-600/20" : ""
-                        }`}
-                      >
-                        <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                        <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                          {item.name}
-                        </span>
-                        {item.badge && (
-                          <Badge
-                            className={`text-xs px-1.5 py-0 h-5 ${
-                              item.badge === "PRO"
-                                ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
-                                : item.badge === "NEW"
-                                  ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                  : ""
-                            }`}
-                          >
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </Link>
-                    </DropdownMenuItem>
-                  )
-                })}
+              <DropdownMenuContent className="w-56 bg-slate-900/95 backdrop-blur-md border-slate-700" align="start">
+                <div className="p-2">
+                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">HLAVNÍ PRODUKTY</p>
+                  {mainNavigation.map((item) => {
+                    const isActive = pathname === item.href
+                    return (
+                      <DropdownMenuItem key={item.name} asChild>
+                        <Link
+                          href={item.href}
+                          onClick={() => {}}
+                          className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
+                            isActive ? "bg-purple-600/20" : ""
+                          }`}
+                        >
+                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                            {item.name}
+                          </span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </div>
+                <DropdownMenuSeparator className="bg-slate-700" />
+                <div className="p-2">
+                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">NÁSTROJE & DALŠÍ</p>
+                  {moreNavigation.map((item) => {
+                    const isActive = pathname === item.href
+                    return (
+                      <DropdownMenuItem key={item.name} asChild>
+                        <Link
+                          href={item.href}
+                          onClick={() => {}}
+                          className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
+                            isActive ? "bg-purple-600/20" : ""
+                          }`}
+                        >
+                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                            {item.name}
+                          </span>
+                          {item.badge && (
+                            <Badge
+                              className={`text-xs px-1.5 py-0 h-5 ${
+                                item.badge === "PRO"
+                                  ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
+                                  : item.badge === "NEW"
+                                    ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                    : ""
+                              }`}
+                            >
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </Link>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Pricing button */}
+            <Link href="/pricing">
+              <Button
+                variant={pathname === "/pricing" ? "secondary" : "ghost"}
+                size="sm"
+                className={`relative px-3 h-9 text-sm ${
+                  pathname === "/pricing"
+                    ? "bg-purple-600/20 text-purple-300 hover:bg-purple-600/30"
+                    : "text-gray-300 hover:text-white hover:bg-slate-800/50"
+                }`}
+              >
+                Pricing
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu */}
