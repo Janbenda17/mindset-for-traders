@@ -137,12 +137,12 @@ export default function HomePage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h1 className="text-6xl md:text-7xl font-black text-white mb-6 leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-4 md:mb-6 leading-tight px-4">
             <span className="bg-gradient-to-r from-purple-200 via-white to-indigo-200 bg-clip-text text-transparent">
               #1 Tool for Psychology<br />in Trading
             </span>
           </h1>
-          <p className="text-base md:text-2xl text-purple-100 leading-relaxed max-w-4xl mx-auto">
+          <p className="text-sm sm:text-base md:text-2xl text-purple-100 leading-relaxed max-w-4xl mx-auto px-4">
             Analyzes your emotions in real time and stops you before you burn your account
           </p>
         </motion.div>
@@ -155,9 +155,9 @@ export default function HomePage() {
           className="mb-20"
         >
           {/* 3D Perspective Carousel */}
-          <div className="relative px-4 md:px-20 lg:px-32 py-12">
+          <div className="relative px-2 sm:px-8 md:px-20 lg:px-32 py-8 md:py-12">
             {/* Carousel Container with perspective */}
-            <div className="relative h-[400px] md:h-[500px] flex items-center justify-center" style={{ perspective: '2000px' }}>
+            <div className="relative h-[300px] sm:h-[350px] md:h-[500px] flex items-center justify-center" style={{ perspective: '2000px' }}>
               
               {/* Previous Slide Preview - Left */}
               <motion.div
@@ -184,11 +184,11 @@ export default function HomePage() {
                 transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
                 className="relative z-20"
               >
-                <div className="relative bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-xl border-2 border-purple-500/30 rounded-3xl p-3 shadow-2xl">
+                <div className="relative bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-xl border-2 border-purple-500/30 rounded-2xl md:rounded-3xl p-2 md:p-3 shadow-2xl max-w-[90vw] sm:max-w-none">
                   <img 
                     src={slides[currentSlide].image}
                     alt={slides[currentSlide].title}
-                    className="w-full md:w-[500px] lg:w-[600px] h-auto rounded-2xl shadow-2xl"
+                    className="w-full sm:w-[400px] md:w-[500px] lg:w-[600px] h-auto rounded-xl md:rounded-2xl shadow-2xl"
                   />
                   {/* Glow effect */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl -z-10" />
@@ -249,7 +249,7 @@ export default function HomePage() {
             </div>
 
             {/* Slide Counter */}
-            <div className="absolute top-4 right-8 md:right-24 text-sm font-bold text-purple-300 bg-gradient-to-r from-purple-900/80 to-pink-900/80 px-4 py-2 rounded-full backdrop-blur-md border border-purple-400/30 shadow-lg">
+            <div className="absolute top-2 right-4 sm:right-8 md:right-24 text-xs sm:text-sm font-bold text-purple-300 bg-gradient-to-r from-purple-900/80 to-pink-900/80 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full backdrop-blur-md border border-purple-400/30 shadow-lg">
               {currentSlide + 1} / {slides.length}
             </div>
           </div>
@@ -260,16 +260,16 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="grid grid-cols-3 md:grid-cols-3 gap-4 md:gap-6 mb-20"
+          className="grid grid-cols-3 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-16 md:mb-20 px-4"
         >
           {stats.map((stat, i) => (
             <motion.div
               key={i}
               whileHover={{ scale: 1.05, y: -5 }}
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-8 hover:bg-white/10 transition-all"
+              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-8 hover:bg-white/10 transition-all"
             >
-              <p className="text-2xl md:text-4xl font-black text-white text-center mb-2">{stat.value}</p>
-              <p className="text-xs md:text-base text-purple-200 text-center leading-relaxed">{stat.label}</p>
+              <p className="text-xl sm:text-2xl md:text-4xl font-black text-white text-center mb-1 md:mb-2">{stat.value}</p>
+              <p className="text-[10px] sm:text-xs md:text-base text-purple-200 text-center leading-tight md:leading-relaxed">{stat.label}</p>
             </motion.div>
           ))}
         </motion.div>
@@ -279,24 +279,24 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="flex flex-col md:flex-row items-center justify-center gap-12 py-12"
+          className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 py-8 md:py-12 px-4"
         >
           {/* Step 1 */}
           <div className="flex flex-col items-center text-center max-w-xs">
-            <div className="w-20 h-20 rounded-full border-2 border-gray-400 flex items-center justify-center mb-6">
-              <span className="text-4xl font-bold text-gray-300">1</span>
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-gray-400 flex items-center justify-center mb-4 md:mb-6">
+              <span className="text-3xl md:text-4xl font-bold text-gray-300">1</span>
             </div>
-            <h3 className="text-xl md:text-2xl font-semibold text-white mb-2">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-white mb-2">
               Prohlédni si software ve virtuálním modu
             </h3>
           </div>
 
           {/* Step 2 */}
           <div className="flex flex-col items-center text-center max-w-xs">
-            <div className="w-20 h-20 rounded-full border-2 border-gray-400 flex items-center justify-center mb-6">
-              <span className="text-4xl font-bold text-gray-300">2</span>
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-gray-400 flex items-center justify-center mb-4 md:mb-6">
+              <span className="text-3xl md:text-4xl font-bold text-gray-300">2</span>
             </div>
-            <h3 className="text-xl md:text-2xl font-semibold text-white">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-white">
               Zakup premium a přepni na LIVE režim
             </h3>
           </div>
@@ -307,18 +307,18 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-yellow-900/60 via-yellow-800/40 to-orange-900/60 border-2 border-yellow-400/60 p-8 md:p-12 shadow-2xl shadow-yellow-500/30"
+          className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-yellow-900/60 via-yellow-800/40 to-orange-900/60 border-2 border-yellow-400/60 p-6 sm:p-8 md:p-12 shadow-2xl shadow-yellow-500/30 mx-4"
         >
           {/* Golden glow effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 to-orange-400/5" />
           <div className="absolute -top-1/2 -right-1/2 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" />
           
           <div className="relative z-10 text-center">
-            <h3 className="text-4xl md:text-5xl font-black text-white mb-4">
+            <h3 className="text-2xl sm:text-3xl md:text-5xl font-black text-white mb-3 md:mb-4">
               Premium: <span className="text-yellow-300">Ending soon</span>
             </h3>
-            <p className="text-xl text-yellow-50 mb-8 font-semibold">
-              Jen <span className="text-yellow-300 text-3xl">1499 Kč</span> (místo <span className="text-yellow-200 line-through">2499 Kč</span>)
+            <p className="text-base sm:text-lg md:text-xl text-yellow-50 mb-6 md:mb-8 font-semibold">
+              Jen <span className="text-yellow-300 text-2xl sm:text-2xl md:text-3xl">1499 Kč</span> (místo <span className="text-yellow-200 line-through">2499 Kč</span>)
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
