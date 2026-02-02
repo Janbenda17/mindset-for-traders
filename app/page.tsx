@@ -73,6 +73,12 @@ export default function HomePage() {
       title: 'Znáš tě. A radí přímý to být',
       description: 'Psychologický profil a personalizované doporučení na míru tvému stylu',
       image: '/slides-8.jpg'
+    },
+    {
+      id: 9,
+      title: 'Ukládá tvoje vzorce chování',
+      description: 'Analýza tvého sleep, disciplíny a stress levelu pro personalizované doporučení',
+      image: '/slides-9.jpg'
     }
   ]
 
@@ -148,22 +154,8 @@ export default function HomePage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-20"
         >
-          {/* Carousel Title */}
-          <motion.div
-            key={`title-${currentSlide}`}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mb-6"
-          >
-            <h2 className="text-xl md:text-4xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-2">
-              {slides[currentSlide].title}
-            </h2>
-            <p className="text-purple-200/80 text-sm md:text-lg">{slides[currentSlide].description}</p>
-          </motion.div>
-
           {/* Carousel Card */}
-          <div className="relative bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-md border border-purple-500/20 rounded-3xl p-8 overflow-hidden group">
+          <div className="relative bg-gradient-to-br from-slate-900/30 to-slate-800/30 backdrop-blur-sm border border-purple-500/10 rounded-3xl p-6 overflow-hidden group">
             {/* Gradient background effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
