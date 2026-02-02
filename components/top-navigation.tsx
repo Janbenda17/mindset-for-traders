@@ -227,10 +227,13 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="relative px-3 h-9 text-sm text-gray-300 hover:text-white hover:bg-slate-800/50 flex items-center gap-1"
+                    className="relative px-4 h-10 text-sm font-semibold text-gray-300 hover:text-white transition-all duration-300 group flex items-center gap-2"
                   >
-                    <span>Products</span>
-                    <ChevronDown className="w-4 h-4" />
+                    <span className="relative">
+                      Products
+                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300" />
+                    </span>
+                    <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6" align="start">
@@ -293,30 +296,38 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
             {/* Pricing button */}
             <Link href="/pricing">
               <Button
-                variant={pathname === "/pricing" ? "secondary" : "ghost"}
                 size="sm"
-                className={`relative px-3 h-9 text-sm ${
+                className={`relative px-4 h-10 text-sm font-semibold transition-all duration-300 group flex items-center gap-2 ${
                   pathname === "/pricing"
-                    ? "bg-purple-600/20 text-purple-300 hover:bg-purple-600/30"
-                    : "text-gray-300 hover:text-white hover:bg-slate-800/50"
+                    ? "text-white bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-400/50"
+                    : "text-gray-300 hover:text-white border border-transparent hover:border-purple-400/30"
                 }`}
               >
-                Pricing
+                <span className="relative">
+                  Pricing
+                  {pathname !== "/pricing" && (
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300" />
+                  )}
+                </span>
               </Button>
             </Link>
 
             {/* About button */}
             <Link href="/intro">
               <Button
-                variant={pathname === "/intro" ? "secondary" : "ghost"}
                 size="sm"
-                className={`relative px-3 h-9 text-sm ${
+                className={`relative px-4 h-10 text-sm font-semibold transition-all duration-300 group flex items-center gap-2 ${
                   pathname === "/intro"
-                    ? "bg-purple-600/20 text-purple-300 hover:bg-purple-600/30"
-                    : "text-gray-300 hover:text-white hover:bg-slate-800/50"
+                    ? "text-white bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-400/50"
+                    : "text-gray-300 hover:text-white border border-transparent hover:border-purple-400/30"
                 }`}
               >
-                About
+                <span className="relative">
+                  About
+                  {pathname !== "/intro" && (
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300" />
+                  )}
+                </span>
               </Button>
             </Link>
           </div>
