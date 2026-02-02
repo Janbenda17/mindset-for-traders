@@ -127,68 +127,67 @@ export default function Dashboard() {
 
         {/* Adjust top padding when banner is visible */}
         <div className={isLiveMode ? "" : "pt-16"}>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16"
-        >
-          {[
-            { label: 'Celkový kapitál', value: '$50,000', icon: '💰', gradient: 'from-green-500 to-emerald-600' },
-            { label: 'Měsíční P/L', value: '+$3,240', icon: '📈', gradient: 'from-blue-500 to-cyan-600' },
-            { label: 'Aktuální Readiness', value: '78%', icon: '🧠', gradient: 'from-purple-500 to-indigo-600' },
-            { label: 'Aktuální XP', value: '2,450', icon: '⭐', gradient: 'from-yellow-500 to-orange-600' }
-          ].map((stat, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ scale: 1.05, y: -3 }}
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all"
-            >
-              <p className="text-xs md:text-sm font-semibold text-slate-400 mb-2">{stat.label}</p>
-              <p className="text-2xl md:text-3xl font-black text-white">{stat.value}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16"
+          >
+            {[
+              { label: 'Celkový kapitál', value: '$50,000', icon: '💰', gradient: 'from-green-500 to-emerald-600' },
+              { label: 'Měsíční P/L', value: '+$3,240', icon: '📈', gradient: 'from-blue-500 to-cyan-600' },
+              { label: 'Aktuální Readiness', value: '78%', icon: '🧠', gradient: 'from-purple-500 to-indigo-600' },
+              { label: 'Aktuální XP', value: '2,450', icon: '⭐', gradient: 'from-yellow-500 to-orange-600' }
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.05, y: -3 }}
+                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all"
+              >
+                <p className="text-xs md:text-sm font-semibold text-slate-400 mb-2">{stat.label}</p>
+                <p className="text-2xl md:text-3xl font-black text-white">{stat.value}</p>
+              </motion.div>
+            ))}
+          </motion.div>
 
-        {/* Features Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mb-16"
-        >
-          <div className="grid md:grid-cols-2 gap-6">
-            {features.map((feature, i) => (
-              <Link key={i} href={feature.href}>
-                <motion.div
-                  whileHover={{ scale: 1.03, y: -5 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Card className="bg-white/5 backdrop-blur-md border-white/10 hover:bg-white/10 transition-all h-full cursor-pointer group">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                          <feature.icon className="w-7 h-7 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-                          <p className="text-purple-200 leading-relaxed">{feature.desc}</p>
-                          <div className="mt-4">
-                            <Button variant="ghost" size="sm" className="text-purple-300 hover:text-white p-0 h-auto font-semibold">
-                              Vyzkoušet teď →
-                            </Button>
+          {/* Features Grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mb-16"
+          >
+            <div className="grid md:grid-cols-2 gap-6">
+              {features.map((feature, i) => (
+                <Link key={i} href={feature.href}>
+                  <motion.div
+                    whileHover={{ scale: 1.03, y: -5 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Card className="bg-white/5 backdrop-blur-md border-white/10 hover:bg-white/10 transition-all h-full cursor-pointer group">
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                            <feature.icon className="w-7 h-7 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
+                            <p className="text-purple-200 leading-relaxed">{feature.desc}</p>
+                            <div className="mt-4">
+                              <Button variant="ghost" size="sm" className="text-purple-300 hover:text-white p-0 h-auto font-semibold">
+                                Vyzkoušet teď →
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Link>
-            ))}
-          </div>
-        </motion.div>
-
-
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   )
