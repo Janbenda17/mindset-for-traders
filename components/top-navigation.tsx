@@ -67,6 +67,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const router = useRouter()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isProductsOpen, setIsProductsOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   const [profileData, setProfileData] = useState({
@@ -218,39 +219,39 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
           {/* Main Navigation */}
           <div className="hidden md:flex items-center gap-1">
             {/* Products dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="relative px-3 h-9 text-sm text-gray-300 hover:text-white hover:bg-slate-800/50"
-                >
-                  <span>Products</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-96 bg-slate-900/95 backdrop-blur-md border-slate-700 p-4" align="start">
-                {/* Hlavní produkty */}
-                <div className="mb-6">
-                  <p className="text-xs text-gray-400 font-semibold mb-3">HLAVNÍ PRODUKTY</p>
-                  <div className="grid grid-cols-2 gap-3">
+            <DropdownMenu open={isProductsOpen} onOpenChange={setIsProductsOpen}>
+              <div
+                onMouseEnter={() => setIsProductsOpen(true)}
+                onMouseLeave={() => setIsProductsOpen(false)}
+                className="relative"
+              >
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="relative px-3 h-9 text-sm text-gray-300 hover:text-white hover:bg-slate-800/50"
+                  >
+                    <span>Products</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6" align="start">
+                {/* Řádek 1: Hlavní produkty */}
+                <div className="mb-6 pb-6 border-b border-slate-700/50">
+                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Hlavní Produkty</p>
+                  <div className="flex gap-3">
                     {mainNavigation.map((item) => {
                       const isActive = pathname === item.href
                       return (
-                        <Link key={item.name} href={item.href}>
-                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
+                          <div className={`flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all min-w-[100px] ${
                             isActive 
                               ? "bg-purple-600/20 border border-purple-500/30" 
                               : "hover:bg-slate-800/50 border border-slate-700/50"
                           }`}>
-                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                            <item.icon className={`w-5 h-5 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                            <span className={`text-xs text-center ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
                               {item.name}
                             </span>
-                            {item.badge && (
-                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-purple-500/20 text-purple-300 border-purple-500/30">
-                                {item.badge}
-                              </Badge>
-                            )}
                           </div>
                         </Link>
                       )
@@ -258,14 +259,14 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   </div>
                 </div>
 
-                {/* Nástroje */}
-                <div className="mb-6">
-                  <p className="text-xs text-gray-400 font-semibold mb-3">NÁSTROJE</p>
-                  <div className="grid grid-cols-2 gap-3">
+                {/* Řádek 2: Nástroje */}
+                <div className="mb-6 pb-6 border-b border-slate-700/50">
+                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Nástroje</p>
+                  <div className="grid grid-cols-3 gap-3">
                     {toolsNavigation.map((item) => {
                       const isActive = pathname === item.href
                       return (
-                        <Link key={item.name} href={item.href}>
+                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
                           <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
                             isActive 
                               ? "bg-purple-600/20 border border-purple-500/30" 
@@ -287,15 +288,15 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   </div>
                 </div>
 
-                {/* Doplňky */}
+                {/* Řádek 3: Doplňky */}
                 <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-3">DOPLŇKY</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Doplňky</p>
+                  <div className="flex gap-3">
                     {addonsNavigation.map((item) => {
                       const isActive = pathname === item.href
                       return (
-                        <Link key={item.name} href={item.href}>
-                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
+                          <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg cursor-pointer transition-colors ${
                             isActive 
                               ? "bg-purple-600/20 border border-purple-500/30" 
                               : "hover:bg-slate-800/50 border border-slate-700/50"
@@ -613,8 +614,9 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                       <span className="text-red-400 font-medium text-sm">Odhlásit se</span>
                     </DropdownMenuItem>
                   </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              </DropdownMenuContent>
+              </div>
+            </DropdownMenu>
             ) : null}
           </div>
         </div>
