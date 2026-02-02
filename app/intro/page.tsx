@@ -1,151 +1,246 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Brain, ChevronRight } from "lucide-react"
+import { motion } from "framer-motion"
+import { TopNavigation } from "@/components/top-navigation"
+import { Footer } from "@/components/footer"
+import { Button } from "@/components/ui/button"
+import { Brain, TrendingUp, Target, Zap, Award, ArrowRight } from "lucide-react"
+import Link from "next/link"
 
 export default function IntroPage() {
-  const router = useRouter()
-  const [progress, setProgress] = useState(0)
-  const [showSkip, setShowSkip] = useState(false)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          router.push("/auth/login")
-          return 100
-        }
-        return prev + 2
-      })
-    }, 100)
-
-    const skipTimer = setTimeout(() => {
-      setShowSkip(true)
-    }, 2000)
-
-    return () => {
-      clearInterval(interval)
-      clearTimeout(skipTimer)
+  const features = [
+    {
+      icon: Brain,
+      title: "Psychologie tradingu",
+      description: "90% ztráty na trzích není o znalosti techniky, ale o kontrole emocí a mindset. Tady to měníme."
+    },
+    {
+      icon: Target,
+      title: "Identifikuj své vzorce",
+      description: "Pomocí AI odhalujeme tvoje opakující se chyby - FOMO, Revenge Trading, Greed a další psychologické pasti."
+    },
+    {
+      icon: Zap,
+      title: "Okamžitá zpětná vazba",
+      description: "Real-time analýzy, která tě zastaví dříve, než bys udělal impulsivní rozhodnutí."
+    },
+    {
+      icon: Award,
+      title: "Strukturovaný progres",
+      description: "Jede z chaotické strategie na disciplínovaný trading plán se měřitelnými výsledky."
     }
-  }, [router])
+  ]
 
-  const handleSkip = () => {
-    router.push("/auth/login")
-  }
+  const stats = [
+    { value: "+600", label: "Traderů", highlight: "kteří zmapovali svůj mindset" },
+    { value: "1900+", label: "Chyb zachráněno", highlight: "emočními rozhodnutími" },
+    { value: "-42%", label: "Snížení chyb", highlight: "v průměru za 3 měsíce" }
+  ]
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black overflow-hidden">
-      {/* Galaxy background with animated stars */}
-      <div className="absolute inset-0">
-        {/* Dark space base */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-purple-950 to-slate-950" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
+      {/* Background effects */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent" />
+      
+      {/* Animated background blobs */}
+      <div className="fixed top-1/4 -left-1/4 w-96 h-96 bg-purple-600/30 rounded-full blur-3xl animate-pulse" />
+      <div className="fixed bottom-1/3 -right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
-        {/* Animated galaxy blobs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-600/20 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/3 right-1/3 w-80 h-80 bg-cyan-600/20 rounded-full blur-3xl animate-pulse delay-500" />
+      <TopNavigation />
 
-        {/* Starfield effect */}
-        <div className="absolute inset-0">
-          {Array.from({ length: 50 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-white animate-pulse"
-              style={{
-                width: Math.random() * 2 + 1 + "px",
-                height: Math.random() * 2 + 1 + "px",
-                left: Math.random() * 100 + "%",
-                top: Math.random() * 100 + "%",
-                opacity: Math.random() * 0.7 + 0.3,
-                animationDuration: Math.random() * 2 + 2 + "s",
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Animated gradient lines */}
-        <div className="absolute inset-0 opacity-10">
-          <svg className="w-full h-full">
-            <defs>
-              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.5" />
-                <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.5" />
-              </linearGradient>
-            </defs>
-            <line x1="0" y1="0" x2="100%" y2="100%" stroke="url(#lineGradient)" strokeWidth="1" />
-            <line x1="100%" y1="0" x2="0" y2="100%" stroke="url(#lineGradient)" strokeWidth="1" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center justify-center gap-8 px-4">
-        {/* Logo with glow animation */}
-        <div className="relative">
-          <div
-            className="absolute -inset-8 bg-gradient-to-r from-purple-600 via-amber-500 to-cyan-500 rounded-full blur-2xl opacity-0 animate-pulse"
-            style={{ animationDuration: "3s" }}
-          />
-          <div
-            className="absolute -inset-4 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full blur-xl opacity-30 animate-pulse"
-            style={{ animationDuration: "2s" }}
-          />
-
-          {/* Logo circle */}
-          <div
-            className="relative w-32 h-32 bg-gradient-to-br from-purple-600 via-amber-500 to-cyan-500 rounded-full flex items-center justify-center shadow-2xl animate-bounce"
-            style={{ animationDuration: "2s" }}
-          >
-            <div className="absolute inset-1 bg-black rounded-full flex items-center justify-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-600 via-amber-500 to-cyan-500 rounded-full flex items-center justify-center p-1">
-                <div className="w-full h-full bg-black rounded-full flex items-center justify-center">
-                  <Brain className="w-12 h-12 text-cyan-400" strokeWidth={1.5} />
-                </div>
-              </div>
-            </div>
+      {/* Main Content */}
+      <div className="relative z-10 pt-40 px-4 md:px-8 lg:px-12 pb-20 max-w-6xl mx-auto">
+        
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mb-24 text-center"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-full mb-6">
+            <Brain className="w-4 h-4 text-purple-300" />
+            <span className="text-sm text-purple-200 font-semibold">Psychologická revoluce v tradingu</span>
           </div>
-        </div>
 
-        {/* Text */}
-        <div className="text-center space-y-3">
-          <h1 className="text-5xl md:text-6xl font-black">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-white">
-              MindTrader
+          <h1 className="text-6xl md:text-7xl font-black mb-6 leading-tight">
+            <span className="bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 bg-clip-text text-transparent">
+              Proč MindTrader vznikl?
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-300 font-light tracking-wide">
-            Advanced Trading Psychology Platform
+
+          <p className="text-xl md:text-2xl text-purple-200/80 max-w-3xl mx-auto mb-12 leading-relaxed">
+            Ztratil jsi v tradingu peníze? Věděl jsi přesně co se stalo, ale stejně ses to zopakoval? 
+            To není tvůj problém v technice - je to v psychologii.
           </p>
-        </div>
 
-        {/* Progress bar */}
-        <div className="w-48 h-1 bg-gray-800 rounded-full overflow-hidden mt-8">
-          <div
-            className="h-full bg-gradient-to-r from-purple-600 via-amber-500 to-cyan-500 rounded-full transition-all duration-100"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        {/* Loading text and skip button */}
-        <div className="flex items-center gap-4 mt-6">
-          <p className="text-sm text-gray-400">Připravuji vaši cestu...</p>
-          {showSkip && (
-            <button
-              onClick={handleSkip}
-              className="group flex items-center gap-2 text-sm font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/30 px-4 py-2 rounded-lg transition-all duration-300 hover:border-white/60"
+          <Link href="/pricing">
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-8 py-6 text-lg rounded-xl shadow-lg shadow-purple-500/50"
             >
-              Přeskočit
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          )}
-        </div>
+              Zjistit více
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          </Link>
+        </motion.div>
+
+        {/* Problem & Solution Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-24"
+        >
+          {/* Problem */}
+          <div className="bg-red-500/5 border border-red-500/20 rounded-3xl p-8 md:p-12">
+            <div className="text-3xl font-black text-red-400 mb-4">❌ Problém</div>
+            <ul className="space-y-4 text-red-100/80">
+              <li className="flex gap-3">
+                <span className="text-red-400">→</span>
+                <span><strong>Emoční obchody:</strong> FOMO, strach, touha se pomstít</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-red-400">→</span>
+                <span><strong>Bez reflexe:</strong> Opakuješ stejné chyby bez analýzy</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-red-400">→</span>
+                <span><strong>Izolace:</strong> Máš pocit, že si tím projdeš sám</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-red-400">→</span>
+                <span><strong>Bez směru:</strong> Strategie bez psychologické přípravy</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Solution */}
+          <div className="bg-green-500/5 border border-green-500/20 rounded-3xl p-8 md:p-12">
+            <div className="text-3xl font-black text-green-400 mb-4">✓ MindTrader Řešení</div>
+            <ul className="space-y-4 text-green-100/80">
+              <li className="flex gap-3">
+                <span className="text-green-400">→</span>
+                <span><strong>Monitoring:</strong> AI tě varuje, než vstoupíš do impulsivního obchodu</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-green-400">→</span>
+                <span><strong>Analýza vzorců:</strong> Vidíš jasně, kde se duplikuješ</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-green-400">→</span>
+                <span><strong>Komunita:</strong> 600+ traderů s stejným cílem</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-green-400">→</span>
+                <span><strong>Plán nápravy:</strong> Konkrétní kroky na cestu disciplíny</span>
+              </li>
+            </ul>
+          </div>
+        </motion.div>
+
+        {/* Features Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="mb-24"
+        >
+          <h2 className="text-4xl font-black text-center mb-4 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+            Jak to funguje
+          </h2>
+          <p className="text-center text-purple-200/60 mb-12 text-lg">
+            Čtyři pilíře k ovládnutí tvého trading mindset
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+                className="bg-white/5 backdrop-blur-md border border-purple-500/20 rounded-2xl p-8 hover:bg-white/10 hover:border-purple-500/40 transition-all group"
+              >
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <feature.icon className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
+                <p className="text-purple-200/70 leading-relaxed">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Stats Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="mb-24"
+        >
+          <h2 className="text-4xl font-black text-center mb-12 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+            Již se stalo
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {stats.map((stat, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="bg-white/5 backdrop-blur-md border border-purple-500/20 rounded-2xl p-8 text-center hover:bg-white/10 transition-all"
+              >
+                <div className="text-5xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-3">
+                  {stat.value}
+                </div>
+                <div className="text-lg font-bold text-white mb-2">{stat.label}</div>
+                <div className="text-purple-200/60 text-sm">{stat.highlight}</div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Final CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-900/50 to-indigo-900/50 border border-purple-500/30 p-12 md:p-16 text-center"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10" />
+          <div className="relative z-10">
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
+              Jsi připraven změnit svůj trading?
+            </h2>
+            <p className="text-xl text-purple-200/80 mb-8 max-w-2xl mx-auto">
+              Začneme s mapováním tvého mindset, analýzou tvých chyb a vytvoříme plán na cestu k disciplínovanému, ziskovému tradingu.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/pricing">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-10 py-6 text-lg rounded-xl shadow-lg shadow-purple-500/50 w-full sm:w-auto"
+                >
+                  Aktivovat Premium
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+              <Link href="/">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-2 border-purple-400 text-purple-300 hover:bg-purple-900/40 font-bold px-10 py-6 text-lg rounded-xl w-full sm:w-auto"
+                >
+                  Zpět domů
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Bottom accent line */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50" />
+      <Footer />
     </div>
   )
 }
