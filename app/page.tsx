@@ -154,33 +154,69 @@ export default function HomePage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-20"
         >
-          {/* Carousel Card */}
-          <div className="relative bg-gradient-to-br from-slate-900/30 to-slate-800/30 backdrop-blur-sm border border-purple-500/10 rounded-3xl p-6 overflow-hidden group">
-            {/* Gradient background effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-            {/* Carousel Container */}
-            <div className="relative w-full flex items-center justify-center">
-              {/* Current Slide */}
+          {/* 3D Perspective Carousel */}
+          <div className="relative px-4 md:px-20 lg:px-32 py-12">
+            {/* Carousel Container with perspective */}
+            <div className="relative h-[400px] md:h-[500px] flex items-center justify-center" style={{ perspective: '2000px' }}>
+              
+              {/* Previous Slide Preview - Left */}
               <motion.div
-                key={`slide-${currentSlide}`}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4 }}
-                className="w-full flex items-center justify-center"
+                key={`prev-${currentSlide}`}
+                initial={{ opacity: 0, x: -100, rotateY: 45, scale: 0.7 }}
+                animate={{ opacity: 0.4, x: 0, rotateY: 35, scale: 0.75 }}
+                transition={{ duration: 0.5 }}
+                className="absolute left-0 md:left-10 z-10 cursor-pointer hidden md:block"
+                onClick={prevSlide}
+                style={{ transformStyle: 'preserve-3d' }}
               >
                 <img 
-                  src={slides[currentSlide].image}
-                  alt={slides[currentSlide].title}
-                  className="w-full h-auto max-h-[450px] object-contain rounded-2xl shadow-2xl"
+                  src={slides[currentSlide === 0 ? slides.length - 1 : currentSlide - 1].image}
+                  alt="Previous"
+                  className="w-64 lg:w-80 h-auto rounded-2xl shadow-2xl border-2 border-purple-500/30 hover:border-purple-400/50 transition-all"
                 />
               </motion.div>
 
-              {/* Navigation Buttons */}
+              {/* Current Slide - Center */}
+              <motion.div
+                key={`current-${currentSlide}`}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
+                className="relative z-20"
+              >
+                <div className="relative bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-xl border-2 border-purple-500/30 rounded-3xl p-3 shadow-2xl">
+                  <img 
+                    src={slides[currentSlide].image}
+                    alt={slides[currentSlide].title}
+                    className="w-full md:w-[500px] lg:w-[600px] h-auto rounded-2xl shadow-2xl"
+                  />
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl -z-10" />
+                </div>
+              </motion.div>
+
+              {/* Next Slide Preview - Right */}
+              <motion.div
+                key={`next-${currentSlide}`}
+                initial={{ opacity: 0, x: 100, rotateY: -45, scale: 0.7 }}
+                animate={{ opacity: 0.4, x: 0, rotateY: -35, scale: 0.75 }}
+                transition={{ duration: 0.5 }}
+                className="absolute right-0 md:right-10 z-10 cursor-pointer hidden md:block"
+                onClick={nextSlide}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <img 
+                  src={slides[(currentSlide + 1) % slides.length].image}
+                  alt="Next"
+                  className="w-64 lg:w-80 h-auto rounded-2xl shadow-2xl border-2 border-purple-500/30 hover:border-purple-400/50 transition-all"
+                />
+              </motion.div>
+
+              {/* Navigation Buttons - Mobile */}
               <Button
                 variant="outline"
                 size="icon"
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg w-12 h-12 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
+                className="absolute left-2 top-1/2 -translate-y-1/2 md:hidden bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700 text-white shadow-xl w-12 h-12 rounded-full z-30"
                 onClick={prevSlide}
               >
                 <ChevronLeft className="w-6 h-6" />
@@ -188,7 +224,7 @@ export default function HomePage() {
               <Button
                 variant="outline"
                 size="icon"
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg w-12 h-12 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
+                className="absolute right-2 top-1/2 -translate-y-1/2 md:hidden bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700 text-white shadow-xl w-12 h-12 rounded-full z-30"
                 onClick={nextSlide}
               >
                 <ChevronRight className="w-6 h-6" />
@@ -196,23 +232,24 @@ export default function HomePage() {
             </div>
 
             {/* Slide Indicators */}
-            <div className="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-purple-500/20">
+            <div className="flex items-center justify-center gap-3 mt-8">
               {slides.map((_, index) => (
                 <motion.button
                   key={index}
-                  whileHover={{ scale: 1.2 }}
+                  whileHover={{ scale: 1.3 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setCurrentSlide(index)}
-                  className={`transition-all rounded-full ${
+                  className={`transition-all duration-300 rounded-full ${
                     index === currentSlide 
-                      ? 'bg-gradient-to-r from-purple-400 to-pink-400 w-8 h-3' 
-                      : 'bg-white/20 hover:bg-white/40 w-2 h-2'
+                      ? 'bg-gradient-to-r from-purple-400 to-pink-400 w-10 h-3 shadow-lg shadow-purple-500/50' 
+                      : 'bg-white/20 hover:bg-white/40 w-3 h-3'
                   }`}
                 />
               ))}
             </div>
 
             {/* Slide Counter */}
-            <div className="absolute top-6 right-6 text-xs font-semibold text-purple-300 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-purple-500/20">
+            <div className="absolute top-4 right-8 md:right-24 text-sm font-bold text-purple-300 bg-gradient-to-r from-purple-900/80 to-pink-900/80 px-4 py-2 rounded-full backdrop-blur-md border border-purple-400/30 shadow-lg">
               {currentSlide + 1} / {slides.length}
             </div>
           </div>
