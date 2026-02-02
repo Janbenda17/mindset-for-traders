@@ -49,7 +49,6 @@ const GalaxyBackground = () => (
 )
 
 const MindTraderAI = () => {
-  const { isLiveMode } = useLiveMode()
   const { t, i18n } = useTranslation()
   const language = i18n.language
 
