@@ -1918,10 +1918,20 @@ Vygenerováno aplikací Trader Mindset
                   <div className="bg-slate-800/50 rounded-xl p-4 text-center">
                     <p className="text-gray-400 text-sm">Nálada</p>
                     <p className="text-2xl font-bold text-purple-400">{Math.round(viewingReview.avgMood)}%</p>
-                  </div>
-                </div>
+          </div>
+        </div>
 
-                {/* Review Content */}
+        {/* Virtual Mode Banner */}
+        {!isLiveMode && (
+          <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-3 px-4 flex items-center gap-3 mb-6">
+            <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
+            <span className="text-xs md:text-sm text-amber-100">
+              <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+            </span>
+          </div>
+        )}
+
+        {/* Review Content */}
                 <div className="grid md:grid-cols-2 gap-6">
                   {viewingReview.whatWorked && (
                     <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
