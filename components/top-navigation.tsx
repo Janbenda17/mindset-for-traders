@@ -46,7 +46,6 @@ const mainNavigation = [
   { name: "Analytics", href: "/analytics", icon: BarChart3, shortName: "Stats" },
   { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Journal" },
   { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
-  { name: "Daily Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Daily" },
 ]
 
 const moreNavigation = [
@@ -211,29 +210,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 MindTrader
               </span>
             </Link>
-
-            {/* Login and Get Started - only show if not authenticated */}
-            {!isAuthenticated && (
-              <div className="hidden md:flex items-center gap-2">
-                <Link href="/login">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-300 hover:text-white h-8 px-3 text-sm"
-                  >
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button
-                    size="sm"
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-8 px-4 text-sm font-semibold"
-                  >
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            )}
           </div>
 
           {/* Main Navigation */}
@@ -442,6 +418,29 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
           {/* Right Side */}
           <div className="flex items-center space-x-1.5 md:space-x-2 flex-shrink-0">
+            {/* Login and Get Started - only show if not authenticated */}
+            {!isAuthenticated && (
+              <div className="hidden md:flex items-center gap-1.5">
+                <Link href="/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-300 hover:text-white h-8 px-3 text-sm"
+                  >
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-8 px-3 text-sm font-semibold"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            )}
+
             {/* Virtual Mode Button */}
             <Button
               size="sm"
