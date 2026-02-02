@@ -221,10 +221,10 @@ export default function HomePage() {
           
           <div className="relative z-10 text-center">
             <h3 className="text-4xl md:text-5xl font-black text-white mb-4">
-              Upgrade na Premium
+              Premium: <span className="text-yellow-300">Ending soon</span>
             </h3>
             <p className="text-xl text-yellow-50 mb-8 font-semibold">
-              Jen <span className="text-yellow-300 text-3xl">1499 Kč</span>/měsíc <span className="text-lg text-yellow-200 line-through">2499 Kč</span>
+              Jen <span className="text-yellow-300 text-3xl">1499 Kč</span> (místo <span className="text-yellow-200 line-through">2499 Kč</span>)
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
