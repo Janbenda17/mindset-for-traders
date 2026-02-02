@@ -89,15 +89,6 @@ export default function Dashboard() {
         transition={{ duration: 12, repeat: Infinity, repeatType: 'reverse' }}
       />
 
-      {/* Top LIVE Banner */}
-      <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-yellow-900/80 to-orange-900/80 backdrop-blur-sm border-b border-yellow-500/30 py-1 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-start gap-2 text-xs md:text-sm">
-          <span className="text-yellow-100">
-            <span className="font-bold text-white">Early Bird:</span> prvních 50 lidí jen <span className="font-bold text-white">1499 Kč</span> (místo 2499 Kč)
-          </span>
-        </div>
-      </div>
-
       <TopNavigation />
       
       {/* Main Content */}
@@ -164,43 +155,7 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Subscription CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-yellow-900/60 via-yellow-800/40 to-orange-900/60 border-2 border-yellow-400/60 p-8 md:p-12 shadow-2xl shadow-yellow-500/30"
-        >
-          {/* Golden glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 to-orange-400/5" />
-          <div className="absolute -top-1/2 -right-1/2 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" />
-          
-          <div className="relative z-10">
-            <h3 className="text-4xl md:text-5xl font-black text-white mb-2">
-              Odemkni plnou sílu MindTraderu
-            </h3>
-            <p className="text-xl text-yellow-50 mb-8 font-semibold">
-              Jen <span className="text-yellow-300 text-2xl">1499 Kč</span>/měsíc <span className="text-sm text-yellow-200">(místo 2499 Kč)</span>
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-slate-900 font-black text-lg px-10 py-7 rounded-xl shadow-lg shadow-yellow-500/50"
-                onClick={handlePricingClick}
-              >
-                Aktivovat LIVE
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-2 border-yellow-400 text-yellow-300 hover:bg-yellow-900/40 font-bold text-lg px-10 py-7 rounded-xl"
-                onClick={handlePricingClick}
-              >
-                Více informací
-              </Button>
-            </div>
-          </div>
-        </motion.div>
+
       </div>
     </div>
   )
