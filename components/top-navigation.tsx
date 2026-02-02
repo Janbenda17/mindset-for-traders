@@ -47,6 +47,7 @@ const mainNavigation = [
   { name: "Analytics", href: "/analytics", icon: BarChart3, shortName: "Stats" },
   { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Journal" },
   { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
+  { name: "Daily Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Daily" },
   { name: "Weekly Review", href: "/weekly-review", icon: Calendar },
   { name: "Team Club", href: "/team-club", icon: Users, badge: "PRO" },
 ]
