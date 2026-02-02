@@ -137,12 +137,12 @@ export default function HomePage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-4 md:mb-6 leading-tight px-4">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-4 md:mb-6 leading-tight px-4">
             <span className="bg-gradient-to-r from-purple-200 via-white to-indigo-200 bg-clip-text text-transparent">
               #1 Tool for Psychology<br />in Trading
             </span>
           </h1>
-          <p className="text-sm sm:text-base md:text-2xl text-purple-100 leading-relaxed max-w-4xl mx-auto px-4">
+          <p className="text-base sm:text-lg md:text-2xl text-purple-100 leading-relaxed max-w-4xl mx-auto px-4 font-medium">
             Analyzes your emotions in real time and stops you before you burn your account
           </p>
         </motion.div>
@@ -249,7 +249,7 @@ export default function HomePage() {
             </div>
 
             {/* Slide Counter */}
-            <div className="absolute top-2 right-4 sm:right-8 md:right-24 text-xs sm:text-sm font-bold text-purple-300 bg-gradient-to-r from-purple-900/80 to-pink-900/80 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full backdrop-blur-md border border-purple-400/30 shadow-lg">
+            <div className="hidden md:block absolute top-2 right-4 sm:right-8 md:right-24 text-xs sm:text-sm font-bold text-purple-300 bg-gradient-to-r from-purple-900/80 to-pink-900/80 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full backdrop-blur-md border border-purple-400/30 shadow-lg">
               {currentSlide + 1} / {slides.length}
             </div>
           </div>
