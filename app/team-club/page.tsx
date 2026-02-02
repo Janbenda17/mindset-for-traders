@@ -749,7 +749,7 @@ function MentorTeamClubView({
           </div>
         )}
 
-          {isLiveMode && students.length > 0 && (
+        {isLiveMode && students.length > 0 && (
             <div className="mt-8 max-w-4xl mx-auto">
               {students.map((student) => (
                 <Card key={student.id} className="psyche-card">
