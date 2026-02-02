@@ -3501,7 +3501,7 @@ const VULGAR_WORDS = [
   "fuk",
   "fck",
   "sht",
-]
+];
 
 const containsVulgarWords = (text: string): boolean => {
   const lowerText = text.toLowerCase()
