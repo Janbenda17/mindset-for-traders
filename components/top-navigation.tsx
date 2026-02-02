@@ -184,7 +184,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     logout()
   }
 
-  const isMoreActive = [...toolsNavigation, ...addonsNavigation].some((item) => pathname === item.href)
+  const isMoreActive = [...toolsNavigation].some((item) => pathname === item.href)
 
   if (isLoading) {
     return (
@@ -384,40 +384,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                               className={`text-xs px-1.5 py-0 h-5 ${
                                 item.badge === "NEW"
                                   ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                  : ""
-                              }`}
-                            >
-                              {item.badge}
-                            </Badge>
-                          )}
-                        </Link>
-                      </DropdownMenuItem>
-                    )
-                  })}
-                </div>
-                <DropdownMenuSeparator className="bg-slate-700" />
-                <div className="p-2">
-                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">DOPLŇKY</p>
-                  {addonsNavigation.map((item) => {
-                    const isActive = pathname === item.href
-                    return (
-                      <DropdownMenuItem key={item.name} asChild>
-                        <Link
-                          href={item.href}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
-                            isActive ? "bg-purple-600/20" : ""
-                          }`}
-                        >
-                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                            {item.name}
-                          </span>
-                          {item.badge && (
-                            <Badge
-                              className={`text-xs px-1.5 py-0 h-5 ${
-                                item.badge === "PRO"
-                                  ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
                                   : ""
                               }`}
                             >
