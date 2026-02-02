@@ -27,46 +27,16 @@ export default function HomePage() {
   // Placeholder slides - uživatel je nahradí skutečnými obrázky
   const slides = [
     {
-      id: 1,
-      title: 'Víš, jak si vedeš. Každý den.',
-      description: 'Dashboard s veškerými údaji a AI Coach chatbtem vedle tebe',
-      image: '/slides-1.jpg'
-    },
-    {
-      id: 2,
-      title: 'Nebojíš se diagnózy. Chceš vyhrát.',
-      description: 'Fail Log s AI analýzou a plánem nápravy pro tvoje obchodní chyby',
-      image: '/slides-2.jpg'
-    },
-    {
-      id: 3,
-      title: 'Najde ti nejlepšího buddyho do páru',
-      description: 'MindTrader najde tě ideálního trading partnera pro rychlejší růst',
-      image: '/slides-3.jpg'
-    },
-    {
-      id: 4,
-      title: 'AI odhalí tvoje slabá místa',
-      description: 'Objev, kde prosakuje tvůj trading mindset - emocí jako FOMO, Revenge, Fear, Greed',
-      image: '/slides-4.jpg'
-    },
-    {
       id: 5,
       title: 'AI čte emoce u každého obchodu',
       description: 'Zjisti, co cítíš před, během a po každém obchodu',
       image: '/slides-5.jpg'
     },
     {
-      id: 6,
-      title: 'Z -$2,000 na +$5,400 za 3 měsíce',
-      description: 'Objev, kde prosakuje tvůj trading mindset - skutečné transformace traderů',
-      image: '/slides-6.jpg'
-    },
-    {
-      id: 7,
-      title: 'Trading není o dnešku. Je o dlouhodobě hře.',
-      description: 'Definuj jasné cíle, měř progres a drž disciplínu v čase',
-      image: '/slides-7.jpg'
+      id: 4,
+      title: 'AI odhalí tvoje slabá místa',
+      description: 'Objev, kde prosakuje tvůj trading mindset - emocí jako FOMO, Revenge, Fear, Greed',
+      image: '/slides-4.jpg'
     },
     {
       id: 8,
@@ -79,6 +49,36 @@ export default function HomePage() {
       title: 'Ukládá tvoje vzorce chování',
       description: 'Analýza tvého sleep, disciplíny a stress levelu pro personalizované doporučení',
       image: '/slides-9.jpg'
+    },
+    {
+      id: 1,
+      title: 'Víš, jak si vedeš. Každý den.',
+      description: 'Dashboard s veškerými údaji a AI Coach chatbtem vedle tebe',
+      image: '/slides-1.jpg'
+    },
+    {
+      id: 2,
+      title: 'Nebojíš se diagnózy. Chceš vyhrát.',
+      description: 'Fail Log s AI analýzou a plánem nápravy pro tvoje obchodní chyby',
+      image: '/slides-2.jpg'
+    },
+    {
+      id: 7,
+      title: 'Trading není o dnešku. Je o dlouhodobě hře.',
+      description: 'Definuj jasné cíle, měř progres a drž disciplínu v čase',
+      image: '/slides-7.jpg'
+    },
+    {
+      id: 3,
+      title: 'Najde ti nejlepšího buddyho do páru',
+      description: 'MindTrader najde tě ideálního trading partnera pro rychlejší růst',
+      image: '/slides-3.jpg'
+    },
+    {
+      id: 6,
+      title: 'Z -$2,000 na +$5,400 za 3 měsíce',
+      description: 'Objev, kde prosakuje tvůj trading mindset - skutečné transformace traderů',
+      image: '/slides-6.jpg'
     }
   ]
 
