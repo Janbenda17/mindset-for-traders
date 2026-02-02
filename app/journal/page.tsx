@@ -112,7 +112,6 @@ const generateDemoEntries = () => {
 }
 
 export default function JournalPage() {
-  const { isLiveMode } = useLiveMode()
   const [selectedTab, setSelectedTab] = useState("calendar")
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [entries, setEntries] = useState<any[]>([])
