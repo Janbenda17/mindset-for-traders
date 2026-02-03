@@ -34,7 +34,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     isLandingPage ||
     pathname === "/login" ||
     pathname === "/sign-up" ||
-    pathname === "/signup"
+    pathname === "/signup" ||
+    pathname === "/terms" ||
+    pathname === "/privacy" ||
+    pathname === "/disclaimer" ||
+    pathname === "/contact"
 
   return (
     <div className="flex flex-col min-h-screen">
