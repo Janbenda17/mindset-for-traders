@@ -108,18 +108,18 @@ export default function Dashboard() {
           <p className="text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
         </motion.div>
 
-        {/* Virtual Mode Banner */}
-        {!isLiveMode && (
+        {/* Live Mode Banner */}
+        {isLiveMode && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="fixed top-24 left-0 right-0 z-40 px-4 md:px-8 lg:px-12"
           >
-            <div className="max-w-6xl mx-auto bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border-b border-amber-500/30 rounded-lg py-2 px-4 flex items-center justify-center gap-3 text-xs md:text-sm">
-              <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
-              <span className="text-amber-100">
-                <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+            <div className="max-w-6xl mx-auto bg-gradient-to-r from-green-900/80 to-emerald-900/80 backdrop-blur-sm border-b border-green-500/30 rounded-lg py-2 px-4 flex items-center justify-center gap-3 text-xs md:text-sm">
+              <Crown className="w-4 h-4 text-green-300 flex-shrink-0" />
+              <span className="text-green-100">
+                <span className="font-bold text-white">Jsi v Live Mode!</span> – Tvoje reálná data jsou nyní aktivní
               </span>
             </div>
           </motion.div>
