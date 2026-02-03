@@ -631,7 +631,7 @@ function generateStudentsFromRealData(trades: any[], journals: any[], moodEntrie
   // In LIVE mode, only show the current user's data
   if (trades.length === 0 && journals.length === 0 && moodEntries.length === 0) {
     // No data yet - return empty array
-    return []
+    return [];
   }
 
   const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || t.profitLoss || 0), 0)
@@ -1209,9 +1209,9 @@ function StudentTeamClubView({
             pnl: user.pnl,
             avatar: "/trader-avatar.png",
           },
-        ]
+        ];
       }
-      return []
+      return [];
     }
 
     // Demo mode with bigger numbers (thousands $)
