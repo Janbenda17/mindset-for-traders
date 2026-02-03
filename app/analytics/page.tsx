@@ -1872,8 +1872,8 @@ export default function PsychologyAnalyticsPage() {
                             >
                               <defs>
                                 <linearGradient id="radarPurpleGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.6} />
-                                  <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.3} />
+                                  <stop offset="5%" stopColor="#e9d5ff" stopOpacity={1} />
+                                  <stop offset="95%" stopColor="#e9d5ff" stopOpacity={1} />
                                 </linearGradient>
                               </defs>
                               <PolarGrid stroke="#334155" />
@@ -1885,10 +1885,10 @@ export default function PsychologyAnalyticsPage() {
                               <Radar
                                 name="Můj Profil"
                                 dataKey="A"
-                                stroke="#8b5cf6"
+                                stroke="#a78bfa"
                                 strokeWidth={3}
                                 fill="url(#radarPurpleGradient)"
-                                fillOpacity={0.7}
+                                fillOpacity={1}
                               />
                               <Tooltip
                                 contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", color: "#f8fafc" }}
