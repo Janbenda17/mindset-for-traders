@@ -1817,7 +1817,8 @@ export default function PsychologyAnalyticsPage() {
                                 />
                                 <Tooltip
                                   contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155" }}
-                                  formatter={(value: any) => [`${Math.round(value)}%`, "Mental Score"]}
+                                  formatter={(value: any) => `${Math.round(value)}%`}
+                                  labelFormatter={() => ""}
                                 />
                                 <Area
                                   type="monotone"
@@ -1859,7 +1860,8 @@ export default function PsychologyAnalyticsPage() {
                                 />
                                 <Tooltip
                                   contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155" }}
-                                  formatter={(value: any) => [`$${value}`, "P&L"]}
+                                  formatter={(value: any) => `$${value}`}
+                                  labelFormatter={() => ""}
                                 />
                                 <Bar dataKey="pnl" radius={[4, 4, 0, 0]} barSize={16}>
                                   {filteredDailyData.map((entry, index) => (
