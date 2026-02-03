@@ -79,16 +79,20 @@ function generateDemoData(tradingStyle: string) {
       { week: "15-21 Led", pnl: 3780, trades: 18, winRate: 67, avgMood: 75, avgReadiness: 80 },
       { week: "22-28 Led", pnl: 1520, trades: 14, winRate: 57, avgMood: 65, avgReadiness: 68 },
     ],
-    dailyMoodData: Array.from({ length: 30 }, (_, i) => ({
-      date: `${i + 1}. Led`,
-      mood: Math.floor(Math.random() * 40) + 50, // 50-90
-      discipline: Math.floor(Math.random() * 40) + 50, // 50-90
-      confidence: Math.floor(Math.random() * 35) + 50, // 50-85
-      stress: Math.floor(Math.random() * 25) + 20, // 20-45
-      energy: Math.floor(Math.random() * 40) + 45, // 45-85
-      sleep: Math.floor(Math.random() * 3) + 6, // 6-9 hours
-      pnl: Math.floor(Math.random() * 2500) - 500, // -500 to +2000
-    })),
+    dailyMoodData: Array.from({ length: 30 }, (_, i) => {
+      const date = new Date()
+      date.setDate(date.getDate() - (30 - i))
+      return {
+        date: date.toISOString().split('T')[0], // Format: YYYY-MM-DD
+        mood: Math.floor(Math.random() * 40) + 50, // 50-90
+        discipline: Math.floor(Math.random() * 40) + 50, // 50-90
+        confidence: Math.floor(Math.random() * 35) + 50, // 50-85
+        stress: Math.floor(Math.random() * 25) + 20, // 20-45
+        energy: Math.floor(Math.random() * 40) + 45, // 45-85
+        sleep: Math.floor(Math.random() * 3) + 6, // 6-9 hours
+        pnl: Math.floor(Math.random() * 2500) - 500, // -500 to +2000
+      }
+    }),
     weekdayChartData: [
       { day: "Pondělí", winRate: 65, avgMood: 72, avgDiscipline: 75, trades: 45 },
       { day: "Úterý", winRate: 58, avgMood: 68, avgDiscipline: 70, trades: 42 },
