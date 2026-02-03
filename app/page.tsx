@@ -1,634 +1,361 @@
-"use client"
+'use client'
 
-import { cn } from "@/lib/utils"
+import { useState } from 'react'
+import Link from 'next/link'
+import { TopNavigation } from '@/components/top-navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { ChevronLeft, ChevronRight, Users, TrendingUp, Target } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
 
-import { TabsTrigger } from "@/components/ui/tabs"
-
-import { TabsList } from "@/components/ui/tabs"
-
-import { Tabs } from "@/components/ui/tabs"
-
-export const dynamic = "force-dynamic"
-
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { AdminPanel } from "@/components/admin-panel"
-import { TradingStyleBadge } from "@/components/trading-style-badge"
-import {
-  Brain,
-  TrendingUp,
-  Target,
-  DollarSign,
-  Calendar,
-  Crown,
-  Shield,
-  Sparkles,
-  RefreshCw,
-  TrendingDown,
-  Users,
-  ArrowRight,
-  Rocket,
-  PlayCircle,
-  PlusCircle,
-  AlertTriangle,
-  Zap,
-  Activity,
-} from "lucide-react"
-import Link from "next/link"
-import { getTimeOfDay } from "@/lib/utils"
-import { useData } from "@/contexts/data-context"
-import { useSubscription } from "@/contexts/subscription-context"
-import { useLossReset } from "@/contexts/loss-reset-context"
-import { useTradingStyle } from "@/contexts/trading-style-context"
-import { useGamification, LEVEL_XP_REQUIREMENTS } from "@/contexts/gamification-context"
-import { useAuth } from "@/contexts/auth-context"
-
-export default function DashboardPage() {
-  const [timeOfDay, setTimeOfDay] = useState("")
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [showAdminPanel, setShowAdminPanel] = useState(false)
-  const [cachedStats, setCachedStats] = useState(null)
-  const [isMounted, setIsMounted] = useState(false)
-  const [mentalReadiness, setMentalReadiness] = useState<number | null>(null)
-  const [aiAnalysisData, setAiAnalysisData] = useState({
-    readiness: { text: "Připravenost: Neznámá", description: "Dokončete Morning Check pro analýzu připravenosti" },
-    trend: { description: "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu." },
-    action: { description: "Začni Morning Check a uzamkni svůj readiness před tradingem." },
-  })
-  const [activeNav, setActiveNav] = useState("dashboard") // Declare activeNav and setActiveNav
-
-  const { getTradingStats, trades, morningChecks, journalEntries, isLiveMode, portfolioValue } = useData()
-  const { plan, isActive, daysRemaining } = useSubscription()
-  const { startReset } = useLossReset()
-  const { tradingStyle, config } = useTradingStyle()
-  const { data: gamificationData } = useGamification()
-  const { user, isLoading } = useAuth()
+export default function HomePage() {
+  const [currentSlide, setCurrentSlide] = useState(0)
   const router = useRouter()
+  const { user } = useAuth()
 
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/auth/login")
+  const handlePricingClick = () => {
+    if (!user) {
+      router.push('/signup')
+    } else {
+      router.push('/account')
     }
-  }, [user, isLoading, router])
-
-  useEffect(() => {
-    if (!isMounted || !user?.id) {
-      console.log("[v0] No authenticated user - showing empty state")
-      return
-    }
-
-    try {
-      const todayDate = new Date().toISOString().split("T")[0]
-      const todayCheck = morningChecks.find((c: any) => c.date === todayDate)
-
-      if (todayCheck && todayCheck.score !== undefined) {
-        setMentalReadiness(todayCheck.score)
-      } else {
-        setMentalReadiness(null)
-      }
-
-      const last7Days = journalEntries.filter((e: any) => {
-        const entryDate = new Date(e.date)
-        const today = new Date()
-        const diffTime = Math.abs(today.getTime() - entryDate.getTime())
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-        return diffDays <= 7
-      })
-
-      let readinessText = "Připravenost: Neznámá"
-      let readinessDesc = "Dokončete Morning Check pro analýzu připravenosti"
-      if (todayCheck) {
-        const score = todayCheck.score
-        if (score >= 75) readinessText = "Připravenost: Výborná ✅"
-        else if (score >= 60) readinessText = "Připravenost: Buď opatrný ⚠️"
-        else readinessText = "Připravenost: Neobchoduj 🛑"
-
-        readinessDesc = `Spánek: ${todayCheck.sleepHours}h (${todayCheck.sleepQuality}/10), Stres: ${todayCheck.stressLevel}/10, Focus: ${todayCheck.focus}/10`
-      }
-
-      let trendDesc = "Zatím nemáme dostatek dat. Začni zapisovat obchody pro analýzu trendu."
-      if (last7Days.length > 0) {
-        const avgMood = (last7Days.reduce((sum: number, e: any) => sum + (e.mood || 5), 0) / last7Days.length).toFixed(
-          1,
-        )
-        trendDesc = `${last7Days.length} záznamů za 7 dní. Průměrná nálada: ${avgMood}/10. Pokračuj v pravidelném journalingu!`
-      }
-
-      let actionDesc = "Začni Morning Check a uzamkni svůj readiness před tradingem."
-      if (todayCheck) {
-        if (todayCheck.score >= 75)
-          actionDesc = "✅ Jsi připraven! Dnes jsou dobré podmínky na obchodování podle tvého plánu."
-        else if (todayCheck.score >= 60)
-          actionDesc = "⚠️ Buď opatrný. Redukuj position sizes o 50% a zvyš disciplínu. Zvaž meditation před tradingem."
-        else actionDesc = "🛑 Dnes neobchoduj. Zaměř se na přípravu: paper trading, studium, nebo relaxaci."
-      }
-
-      setAiAnalysisData({
-        readiness: { text: readinessText, description: readinessDesc },
-        trend: { description: trendDesc },
-        action: { description: actionDesc },
-      })
-    } catch (error) {
-      console.error("[v0] Error loading mental readiness:", error)
-    }
-  }, [isMounted, user, morningChecks, journalEntries])
-
-  useEffect(() => {
-    setTimeOfDay(getTimeOfDay())
-  }, [])
-
-  useEffect(() => {
-    if (!cachedStats && isMounted) {
-      const tradingStats = getTradingStats()
-      const currentPortfolio = portfolioValue + tradingStats.totalPnL
-      const portfolioChange = ((tradingStats.totalPnL / portfolioValue) * 100).toFixed(1)
-
-      const initialStats = [
-        {
-          title: "Portfolio Value",
-          value: `$${currentPortfolio.toLocaleString()}`,
-          change: `${tradingStats.totalPnL >= 0 ? "+" : ""}${portfolioChange}%`,
-          trend: (tradingStats.totalPnL >= 0 ? "up" : "down") as const,
-          icon: DollarSign,
-          color: "from-emerald-500 to-teal-500",
-          description: "Total account value",
-          progress: Math.min((currentPortfolio / portfolioValue - 1) * 100 + 50, 100),
-        },
-        {
-          title: "Total P&L",
-          value: `${tradingStats.totalPnL >= 0 ? "+" : ""}$${tradingStats.totalPnL.toLocaleString()}`,
-          change: tradingStats.totalPnL >= 0 ? "Profit" : "Loss",
-          trend: (tradingStats.totalPnL >= 0 ? "up" : "down") as const,
-          icon: TrendingUp,
-          color: "from-blue-500 to-cyan-500",
-          description: "All time performance",
-          progress: Math.min(Math.abs(tradingStats.totalPnL / 100), 100),
-        },
-        {
-          title: "Win Rate",
-          value: `${tradingStats.winRate.toFixed(1)}%`,
-          change: `${tradingStats.winningTrades}W / ${tradingStats.losingTrades}L`,
-          trend: (tradingStats.winRate >= 50 ? "up" : "down") as const,
-          icon: Target,
-          color: "from-purple-500 to-pink-500",
-          description: "Success rate",
-          progress: tradingStats.winRate,
-        },
-        {
-          title: "Active Days",
-          value: `${Math.min(tradingStats.totalTrades, 30)}/30`,
-          change: `${((Math.min(tradingStats.totalTrades, 30) / 30) * 100).toFixed(0)}%`,
-          trend: "up" as const,
-          icon: Calendar,
-          color: "from-orange-500 to-red-500",
-          description: "Consistency score",
-          progress: (Math.min(tradingStats.totalTrades, 30) / 30) * 100,
-        },
-      ]
-      setCachedStats(initialStats)
-    }
-  }, [portfolioValue, isMounted])
-
-  const getStatsForStyle = () => {
-    if (typeof window === "undefined") {
-      return []
-    }
-
-    const tradingStats = getTradingStats()
-
-    const allTrades = trades
-
-    const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    const monthlyTrades = allTrades.filter((trade: any) => {
-      const tradeDate = new Date(trade.date)
-      return tradeDate >= monthStart
-    })
-    const monthlyPnL = monthlyTrades.reduce((sum: number, trade: any) => sum + (trade.pnl || 0), 0)
-
-    const last7Days = allTrades.filter((trade: any) => {
-      const tradeDate = new Date(trade.date)
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      return tradeDate >= sevenDaysAgo
-    })
-    const disciplineScore =
-      last7Days.length > 0
-        ? (last7Days.filter((trade: any) => trade.followedPlan === true).length / last7Days.length) * 100
-        : 0
-
-    const currentLevel = gamificationData.level
-    const currentXP = gamificationData.xp
-    const currentLevelXP = LEVEL_XP_REQUIREMENTS[currentLevel - 1] || 0
-    const nextLevelXP = LEVEL_XP_REQUIREMENTS[currentLevel] || LEVEL_XP_REQUIREMENTS[LEVEL_XP_REQUIREMENTS.length - 1]
-    const xpToNextLevel = nextLevelXP - currentXP
-    const xpProgress = currentLevel >= 10 ? 100 : ((currentXP - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100
-
-    const totalPnL = allTrades.reduce((sum: number, trade: any) => sum + (trade.pnl || 0), 0)
-
-    const startingCapital =
-      typeof window !== "undefined" ? Number.parseFloat(localStorage.getItem("starting-capital") || "10000") : 10000
-    const totalCapital = startingCapital + totalPnL
-
-    return [
-      {
-        title: "Celkový kapitál",
-        value: `$${totalCapital.toLocaleString()}`,
-        change: `${totalPnL >= 0 ? "+" : ""}$${totalPnL.toFixed(2)}`,
-        trend: (totalPnL >= 0 ? "up" : "down") as const,
-        icon: DollarSign,
-        color: "from-emerald-500 to-teal-500",
-        description: "Počáteční kapitál + P/L",
-        progress: Math.min(((totalCapital - startingCapital) / startingCapital) * 100 + 50, 100),
-      },
-      {
-        title: "Total P/L",
-        value: `${totalPnL >= 0 ? "+" : ""}$${totalPnL.toLocaleString()}`,
-        change: `${allTrades.length} obchodů`,
-        trend: (totalPnL >= 0 ? "up" : "down") as const,
-        icon: TrendingUp,
-        color: "from-blue-500 to-cyan-500",
-        description: "Celkový zisk/ztráta",
-        progress: Math.min(Math.abs((totalPnL / startingCapital) * 100 * 5), 100),
-      },
-      {
-        title: "Mental Readiness",
-        value: mentalReadiness !== null ? `${mentalReadiness}%` : "N/A",
-        trend:
-          mentalReadiness === null
-            ? ("neutral" as const)
-            : ((mentalReadiness >= 75 ? "up" : mentalReadiness >= 60 ? "neutral" : "down") as const),
-        icon: Brain,
-        color: "from-purple-500 to-pink-500",
-        description: mentalReadiness !== null ? "Psychická připravenost" : "Vyplň Morning Check",
-        progress: mentalReadiness !== null ? mentalReadiness : 0,
-      },
-      {
-        title: "Level & XP",
-        value: `Level ${currentLevel}`,
-        change: currentLevel >= 10 ? "Max Level!" : `${xpToNextLevel} XP do upgradu`,
-        trend: (xpProgress >= 75 ? "up" : xpProgress >= 50 ? "neutral" : "down") as const,
-        icon: Shield,
-        color: "from-orange-500 to-red-500",
-        description: currentLevel >= 10 ? "Mind Master" : "Získávej XP",
-        progress: xpProgress,
-      },
-    ]
   }
 
-  const stats = getStatsForStyle()
-
-  const isPremium = plan === "premium" && isActive
-
-  const quickActions = [
+  // Placeholder slides - uživatel je nahradí skutečnými obrázky
+  const slides = [
     {
-      title: "Začít Daily Flow",
-      description: "Zahájit obchodní den",
-      icon: PlayCircle,
-      href: "/daily-tracker",
-      color: "from-blue-500 to-cyan-500",
-      gradient: "from-blue-500/20 to-cyan-500/20",
+      id: 5,
+      title: 'AI čte emoce u každého obchodu',
+      description: 'Zjisti, co cítíš před, během a po každém obchodu',
+      image: '/slides-5.jpg'
     },
     {
-      title: "Zadat obchod",
-      description: "Zaznamenat poslední obchod",
-      icon: PlusCircle,
-      href: "/record-trades",
-      color: "from-green-500 to-emerald-500",
-      gradient: "from-green-500/20 to-emerald-500/20",
+      id: 4,
+      title: 'AI odhalí tvoje slabá místa',
+      description: 'Objev, kde prosakuje tvůj trading mindset - emocí jako FOMO, Revenge, Fear, Greed',
+      image: '/slides-4.jpg'
     },
     {
-      title: "MindTrader AI",
-      description: "Tvůj AI trading mentor",
-      icon: Brain,
-      href: "/mindtrader",
-      gradient: "from-purple-500 to-pink-500",
+      id: 8,
+      title: 'Znáš tě. A radí přímý to být',
+      description: 'Psychologický profil a personalizované doporučení na míru tvému stylu',
+      image: '/slides-8.jpg'
     },
     {
-      title: "Loss Reset",
-      description: "Reset po ztrátě",
-      icon: AlertTriangle,
-      href: "/loss-reset",
-      color: "from-orange-500 to-red-500",
-      gradient: "from-orange-500/20 to-red-500/20",
+      id: 9,
+      title: 'Ukládá tvoje vzorce chování',
+      description: 'Analýza tvého sleep, disciplíny a stress levelu pro personalizované doporučení',
+      image: '/slides-9.jpg'
     },
+    {
+      id: 1,
+      title: 'Víš, jak si vedeš. Každý den.',
+      description: 'Dashboard s veškerými údaji a AI Coach chatbtem vedle tebe',
+      image: '/slides-1.jpg'
+    },
+    {
+      id: 2,
+      title: 'Nebojíš se diagnózy. Chceš vyhrát.',
+      description: 'Fail Log s AI analýzou a plánem nápravy pro tvoje obchodní chyby',
+      image: '/slides-2.jpg'
+    },
+    {
+      id: 7,
+      title: 'Trading není o dnešku. Je o dlouhodobě hře.',
+      description: 'Definuj jasné cíle, měř progres a drž disciplínu v čase',
+      image: '/slides-7.jpg'
+    },
+    {
+      id: 3,
+      title: 'Najde ti nejlepšího buddyho do páru',
+      description: 'MindTrader najde tě ideálního trading partnera pro rychlejší růst',
+      image: '/slides-3.jpg'
+    },
+    {
+      id: 6,
+      title: 'Z -$2,000 na +$5,400 za 3 měsíce',
+      description: 'Objev, kde prosakuje tvůj trading mindset - skutečné transformace traderů',
+      image: '/slides-6.jpg'
+    }
   ]
 
-  if (!isMounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Načítání...</p>
-        </div>
-      </div>
-    )
+  const stats = [
+    { value: '+600', label: 'Aktivních traderů' },
+    { value: '1900+', label: 'Zachráněných impulsivních rozhodnutí' },
+    { value: '-42%', label: 'Průměrné snížení emočních chyb' }
+  ]
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-950 to-gray-950 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/30 via-slate-950 to-slate-950"></div>
-
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `radial-gradient(2px 2px at 20% 30%, white, transparent),
-                         radial-gradient(2px 2px at 60% 70%, white, transparent),
-                         radial-gradient(1px 1px at 50% 50%, white, transparent),
-                         radial-gradient(1px 1px at 80% 10%, white, transparent),
-                         radial-gradient(2px 2px at 90% 60%, white, transparent),
-                         radial-gradient(1px 1px at 33% 80%, white, transparent),
-                         radial-gradient(1px 1px at 15% 90%, white, transparent)`,
-            backgroundSize: "200% 200%",
-            backgroundPosition: "0% 0%",
-            opacity: 0.4,
-          }}
-        ></div>
-
-        <div
-          className="absolute inset-0 animate-pulse"
-          style={{
-            backgroundImage: `radial-gradient(3px 3px at 10% 20%, rgba(147, 51, 234, 0.8), transparent),
-                         radial-gradient(2px 2px at 70% 40%, rgba(59, 130, 246, 0.8), transparent),
-                         radial-gradient(3px 3px at 40% 60%, rgba(236, 72, 153, 0.8), transparent),
-                         radial-gradient(2px 2px at 85% 80%, rgba(34, 211, 238, 0.8), transparent)`,
-            backgroundSize: "300% 300%",
-            backgroundPosition: "50% 50%",
-            opacity: 0.6,
-            animation: "twinkle 3s ease-in-out infinite",
-          }}
-        ></div>
-
-        <div className="max-w-[1800px] mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pt-4 sm:pt-6 relative z-10">
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
-            <Badge
-              variant="outline"
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold shadow-lg ${
-                isLiveMode
-                  ? "bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 shadow-red-500/50"
-                  : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-blue-500/50"
-              }`}
-            >
-              {isLiveMode ? "🔴 LIVE MODE" : "🔵 VIRTUAL MODE"}
-            </Badge>
-            <TradingStyleBadge />
-          </div>
-
-          <div className="flex flex-col gap-3 sm:gap-4">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="p-3 sm:p-4 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-xl sm:rounded-2xl border border-purple-500/30 backdrop-blur-sm shadow-lg shadow-purple-500/20">
-                <Brain className="w-6 h-6 sm:w-10 sm:h-10 text-purple-400" />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                  {timeOfDay === "ráno" ? "Dobré" : timeOfDay === "odpoledne" ? "Dobré" : "Dobrý"} {timeOfDay}! 🚀
-                </h1>
-                <p className="text-sm sm:text-xl text-gray-300 mt-0.5 sm:mt-1">
-                  {isLiveMode ? "Vítej zpět" : "Demo mode"}
-                </p>
-                <div className="flex items-center space-x-2 mt-1 sm:mt-2 flex-wrap gap-1">
-                  <Badge className="bg-green-600/20 text-green-400 border-green-500/30 text-xs">
-                    <Shield className="w-3 h-3 mr-1" />
-                    Online
-                  </Badge>
-                  <Badge
-                    className={`text-xs ${
-                      isPremium
-                        ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 shadow-lg shadow-yellow-500/30"
-                        : "bg-slate-600/20 text-slate-400 border-slate-500/30"
-                    }`}
-                  >
-                    <Crown className="w-3 h-3 mr-1" />
-                    {isPremium ? `Premium (${daysRemaining}d)` : "Free"}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2 sm:space-x-3 justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsRefreshing(true)}
-                disabled={isRefreshing}
-                className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline ml-2">Refresh</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAdminPanel(true)}
-                className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 backdrop-blur-sm text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline ml-2">Admin</span>
-              </Button>
-            </div>
-          </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
+      {/* Galaxy background effects */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent" />
+      
+      {/* Stars */}
+      <div className="fixed inset-0 opacity-60">
+        {[...Array(15)].map((_, i) => (
           <div
-            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 animate-fade-in-up"
-            style={{ animationDelay: "0.1s" }}
-          >
-            {stats.map((stat, index) => (
-              <Card
-                key={index}
-                className="psyche-card group hover:scale-105 transition-all duration-300 overflow-hidden border-2 border-purple-500/50 bg-slate-900/50 backdrop-blur-sm shadow-xl shadow-purple-500/20 hover:shadow-purple-500/40 animate-fade-in-up"
-                style={{ animationDelay: `${0.2 + index * 0.1}s` }}
-              >
-                <div
-                  className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-5 group-hover:opacity-10 transition-opacity`}
-                ></div>
-                <div
-                  className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-20 blur-xl transition-opacity`}
-                ></div>
-                <CardContent className="p-3 sm:p-6 relative">
-                  <div className="flex items-center justify-between mb-2 sm:mb-4">
-                    <div className={`p-2 sm:p-3 bg-gradient-to-r ${stat.color} rounded-lg sm:rounded-xl shadow-lg`}>
-                      <stat.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      {stat.trend === "up" ? (
-                        <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" />
-                      ) : stat.trend === "down" ? (
-                        <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4 text-red-400" />
-                      ) : (
-                        <span className="w-3 h-3 sm:w-4 sm:h-4"></span>
-                      )}
-                      <span
-                        className={`text-xs sm:text-sm font-medium ${stat.trend === "up" ? "text-green-400" : stat.trend === "down" ? "text-red-400" : "text-gray-400"}`}
-                      >
-                        {stat.change}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="space-y-2 sm:space-y-3">
-                    <div>
-                      <p className="text-xs sm:text-sm text-gray-400 mb-0.5 sm:mb-1">{stat.title}</p>
-                      <p className="text-xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">{stat.value}</p>
-                      <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">{stat.description}</p>
-                    </div>
-                    <div className="space-y-1 sm:space-y-2 hidden sm:block">
-                      <Progress value={stat.progress} className="h-1.5 sm:h-2" />
-                      <div className="flex justify-between text-xs text-gray-400">
-                        <span>Pokrok</span>
-                        <span>{Math.round(stat.progress)}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+            key={i}
+            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
 
-          <div className="space-y-3 sm:space-y-4 animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
-            <h2 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
-              <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
-              Rychlé akce
-            </h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {quickActions.map((action, index) => {
-                return (
-                  <Link key={index} href={action.href}>
-                    <Card className="psyche-card group hover:scale-105 transition-all duration-300 cursor-pointer border-slate-700/50 bg-slate-900/50 backdrop-blur-sm shadow-xl overflow-hidden h-full rounded-xl sm:rounded-2xl hover:shadow-2xl hover:border-purple-500/50">
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-50 group-hover:opacity-70 transition-opacity`}
-                      ></div>
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-30 blur-2xl transition-opacity`}
-                      ></div>
-                      <CardContent className="p-3 sm:p-4 relative flex flex-col items-center text-center space-y-1.5 sm:space-y-2">
-                        <div
-                          className={`p-2 sm:p-3 bg-gradient-to-r ${action.color} rounded-xl sm:rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}
-                        >
-                          <action.icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="text-white font-semibold mb-0.5 sm:mb-1 text-xs sm:text-sm">{action.title}</h3>
-                          <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 hidden sm:block">
-                            {action.description}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                )
-              })}
+      <TopNavigation />
+
+      {/* Premium Banner */}
+      <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-yellow-900/80 to-orange-900/80 backdrop-blur-sm border-b border-yellow-500/30 py-1.5 px-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-xs md:text-sm">
+          <span className="text-yellow-100">
+            <span className="font-bold text-white">Premium:</span> Only for <span className="font-bold text-white">1499</span> <span className="line-through text-yellow-200">2499</span> <span className="text-yellow-300 font-semibold">Ending soon</span>
+          </span>
+        </div>
+      </div>
+      
+      {/* Main Content */}
+      <div className="relative z-10 pt-48 px-4 md:px-8 lg:px-12 pb-20 max-w-7xl mx-auto">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12 md:mb-16 px-4"
+        >
+          <h1 className="text-[2.5rem] sm:text-[3.5rem] md:text-7xl font-black text-white mb-5 sm:mb-6 md:mb-8 leading-[1.15] max-w-5xl mx-auto">
+            <span className="bg-gradient-to-r from-purple-200 via-white to-indigo-200 bg-clip-text text-transparent">
+              #1 Tool for Psychology<br />in Trading
+            </span>
+          </h1>
+          <p className="text-base sm:text-xl md:text-2xl text-purple-100 leading-snug sm:leading-relaxed max-w-3xl mx-auto font-semibold">
+            Analyzes your emotions in real time and stops you before you burn your account
+          </p>
+        </motion.div>
+
+        {/* Image Carousel */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-20"
+        >
+          {/* 3D Perspective Carousel */}
+          <div className="relative px-2 sm:px-8 md:px-20 lg:px-32 py-8 md:py-12">
+            {/* Carousel Container with perspective */}
+            <div className="relative h-[300px] sm:h-[350px] md:h-[500px] flex items-center justify-center" style={{ perspective: '2000px' }}>
+              
+              {/* Previous Slide Preview - Left */}
+              <motion.div
+                key={`prev-${currentSlide}`}
+                initial={{ opacity: 0, x: -100, rotateY: 45, scale: 0.7 }}
+                animate={{ opacity: 0.4, x: 0, rotateY: 35, scale: 0.75 }}
+                transition={{ duration: 0.5 }}
+                className="absolute left-0 md:left-10 z-10 cursor-pointer hidden md:block"
+                onClick={prevSlide}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <img 
+                  src={slides[currentSlide === 0 ? slides.length - 1 : currentSlide - 1].image}
+                  alt="Previous"
+                  className="w-64 lg:w-80 h-auto rounded-2xl shadow-2xl border-2 border-purple-500/30 hover:border-purple-400/50 transition-all"
+                />
+              </motion.div>
+
+              {/* Current Slide - Center */}
+              <motion.div
+                key={`current-${currentSlide}`}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
+                className="relative z-20"
+              >
+                <div className="relative bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-xl border-2 border-purple-500/30 rounded-2xl md:rounded-3xl p-2 md:p-3 shadow-2xl max-w-[90vw] sm:max-w-none">
+                  <img 
+                    src={slides[currentSlide].image}
+                    alt={slides[currentSlide].title}
+                    className="w-full sm:w-[400px] md:w-[500px] lg:w-[600px] h-auto rounded-xl md:rounded-2xl shadow-2xl"
+                  />
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-pink-500/20 rounded-3xl blur-2xl -z-10" />
+                </div>
+              </motion.div>
+
+              {/* Next Slide Preview - Right */}
+              <motion.div
+                key={`next-${currentSlide}`}
+                initial={{ opacity: 0, x: 100, rotateY: -45, scale: 0.7 }}
+                animate={{ opacity: 0.4, x: 0, rotateY: -35, scale: 0.75 }}
+                transition={{ duration: 0.5 }}
+                className="absolute right-0 md:right-10 z-10 cursor-pointer hidden md:block"
+                onClick={nextSlide}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <img 
+                  src={slides[(currentSlide + 1) % slides.length].image}
+                  alt="Next"
+                  className="w-64 lg:w-80 h-auto rounded-2xl shadow-2xl border-2 border-purple-500/30 hover:border-purple-400/50 transition-all"
+                />
+              </motion.div>
+
+              {/* Navigation Buttons - Mobile */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-2 top-1/2 -translate-y-1/2 md:hidden bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700 text-white shadow-xl w-12 h-12 rounded-full z-30"
+                onClick={prevSlide}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-2 top-1/2 -translate-y-1/2 md:hidden bg-gradient-to-r from-purple-600 to-pink-600 border-0 hover:from-purple-700 hover:to-pink-700 text-white shadow-xl w-12 h-12 rounded-full z-30"
+                onClick={nextSlide}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </Button>
+            </div>
+
+            {/* Slide Indicators */}
+            <div className="flex items-center justify-center gap-3 mt-8">
+              {slides.map((_, index) => (
+                <motion.button
+                  key={index}
+                  whileHover={{ scale: 1.3 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`transition-all duration-300 rounded-full ${
+                    index === currentSlide 
+                      ? 'bg-gradient-to-r from-purple-400 to-pink-400 w-10 h-3 shadow-lg shadow-purple-500/50' 
+                      : 'bg-white/20 hover:bg-white/40 w-3 h-3'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Slide Counter */}
+            <div className="hidden md:block absolute top-2 right-4 sm:right-8 md:right-24 text-xs sm:text-sm font-bold text-purple-300 bg-gradient-to-r from-purple-900/80 to-pink-900/80 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full backdrop-blur-md border border-purple-400/30 shadow-lg">
+              {currentSlide + 1} / {slides.length}
             </div>
           </div>
+        </motion.div>
 
-          <Card
-            className="psyche-card border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-pink-900/20 backdrop-blur-sm shadow-xl overflow-hidden animate-fade-in-up animate-glow"
-            style={{ animationDelay: "0.8s" }}
+        {/* Stats Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="grid grid-cols-3 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-16 md:mb-20 px-4"
+        >
+          {stats.map((stat, i) => (
+            <motion.div
+              key={i}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-8 hover:bg-white/10 transition-all"
+            >
+              <p className="text-xl sm:text-2xl md:text-4xl font-black text-white text-center mb-1 md:mb-2">{stat.value}</p>
+              <p className="text-[10px] sm:text-xs md:text-base text-purple-200 text-center leading-tight md:leading-relaxed">{stat.label}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Two-Step Premium Journey */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 py-8 md:py-12 px-4"
+        >
+          {/* Step 1 */}
+          <div className="flex flex-col items-center text-center max-w-xs">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-gray-400 flex items-center justify-center mb-4 md:mb-6">
+              <span className="text-3xl md:text-4xl font-bold text-gray-300">1</span>
+            </div>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-white mb-2">
+              Prohlédni si software ve virtuálním modu
+            </h3>
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex flex-col items-center text-center max-w-xs">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-gray-400 flex items-center justify-center mb-4 md:mb-6">
+              <span className="text-3xl md:text-4xl font-bold text-gray-300">2</span>
+            </div>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-white">
+              Zakup premium a přepni na LIVE režim
+            </h3>
+          </div>
+        </motion.div>
+
+        {/* Get Started CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="text-center mb-8 md:mb-12"
+        >
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">Připraven začít?</h2>
+          <Button
+            size="lg"
+            className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-base md:text-lg px-8 md:px-12 py-3 md:py-4 rounded-lg"
+            onClick={handlePricingClick}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5"></div>
-            <CardContent className="p-4 sm:p-6 relative">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 sm:p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-2xl shadow-lg shadow-purple-500/50">
-                    <Zap className="w-5 h-5 text-green-400 mt-1 group-hover:scale-110 transition-transform" />
-                  </div>
-                  <h3 className="text-lg sm:text-2xl font-bold text-white">AI Analýza</h3>
-                </div>
-                <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">
-                  <Sparkles className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
-                  AI
-                </Badge>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 backdrop-blur-sm hover:border-green-500/50 transition-colors group">
-                  <div className="flex items-start space-x-3">
-                    <Activity className="w-5 h-5 text-green-400 mt-1 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <h4 className="text-white font-semibold mb-1 text-sm">{aiAnalysisData.readiness.text}</h4>
-                      <p className="text-gray-300 text-xs">{aiAnalysisData.readiness.description}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 backdrop-blur-sm hover:border-blue-500/50 transition-colors group">
-                  <div className="flex items-start space-x-3">
-                    <TrendingUp className="w-5 h-5 text-blue-400 mt-1 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <h4 className="text-white font-semibold mb-1 text-sm">Trend výkonu</h4>
-                      <p className="text-gray-300 text-xs">{aiAnalysisData.trend.description}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700/50 backdrop-blur-sm hover:border-purple-500/50 transition-colors group">
-                  <div className="flex items-start space-x-3">
-                    <Brain className="w-5 h-5 text-purple-400 mt-1 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <h4 className="text-white font-semibold mb-1 text-sm">Doporučená akce</h4>
-                      <p className="text-gray-300 text-xs">{aiAnalysisData.action.description}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            Get Started
+          </Button>
+        </motion.div>
 
-          {!isPremium && (
-            <Card className="psyche-card border-yellow-500/50 bg-gradient-to-r from-yellow-900/30 via-orange-900/30 to-yellow-900/30 overflow-hidden relative backdrop-blur-sm shadow-xl">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-orange-500/10"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 blur-xl"></div>
-              <CardContent className="p-6 sm:p-8 relative">
-                <div className="text-center">
-                  <div className="flex justify-center mb-4 sm:mb-6">
-                    <div className="p-3 sm:p-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl sm:rounded-2xl border border-yellow-500/30 shadow-lg shadow-yellow-500/20">
-                      <Rocket className="w-8 h-8 sm:w-12 sm:h-12 text-yellow-400" />
-                    </div>
-                  </div>
-                  <div className="mb-4">
-                    <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-xs sm:text-sm mb-3 inline-block">
-                      <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                      LIMITED TIME OFFER
-                    </Badge>
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">Early Bird Special! 🚀</h3>
-                  <p className="text-yellow-300 text-lg sm:text-xl font-bold mb-2">Sleva pro prvních 50 lidí!</p>
-                  <div className="flex justify-center gap-4 mb-4 sm:mb-6">
-                    <div className="text-center">
-                      <p className="text-gray-400 text-sm">Normální cena</p>
-                      <p className="text-2xl font-bold text-gray-500 line-through">2499 Kč</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-gray-400 text-sm">Speciální cena</p>
-                      <p className="text-3xl font-bold text-yellow-400">1499 Kč</p>
-                    </div>
-                  </div>
-                  <p className="text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto text-sm sm:text-base">
-                    Jedinečná příležitost: získej Premium přístup s 40% slevou. Tato nabídka je k dispozici pouze pro prvních 50 registrovaných uživatelů.
-                  </p>
-                  <Button
-                    asChild
-                    size="lg"
-                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0 shadow-lg shadow-yellow-500/30 text-sm sm:text-base w-full sm:w-auto"
-                  >
-                    <Link href="/pricing">
-                      <Crown className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                      Buy Premium Now
-                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {showAdminPanel && <AdminPanel isVisible={showAdminPanel} onClose={() => setShowAdminPanel(false)} />}
+        {/* Premium Upgrade CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-yellow-900/60 via-yellow-800/40 to-orange-900/60 border-2 border-yellow-400/60 p-6 sm:p-8 md:p-12 shadow-2xl shadow-yellow-500/30 mx-4"
+        >
+          {/* Golden glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 to-orange-400/5" />
+          <div className="absolute -top-1/2 -right-1/2 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" />
+          
+          <div className="relative z-10 text-center">
+            <h3 className="text-2xl sm:text-3xl md:text-5xl font-black text-white mb-3 md:mb-4">
+              Premium: <span className="text-yellow-300">Ending soon</span>
+            </h3>
+            <p className="text-base sm:text-lg md:text-xl text-yellow-50 mb-6 md:mb-8 font-semibold">
+              Jen <span className="text-yellow-300 text-2xl sm:text-2xl md:text-3xl">1499 Kč</span> (místo <span className="text-yellow-200 line-through">2499 Kč</span>)
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-slate-900 font-black text-lg px-10 py-7 rounded-xl shadow-lg shadow-yellow-500/50"
+                onClick={handlePricingClick}
+              >
+                Aktivovat LIVE
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-2 border-yellow-400 text-yellow-300 hover:bg-yellow-900/40 font-bold text-lg px-10 py-7 rounded-xl"
+                onClick={handlePricingClick}
+              >
+                Více informací
+              </Button>
+            </div>
+          </div>
+        </motion.div>
       </div>
-    </>
+    </div>
   )
 }

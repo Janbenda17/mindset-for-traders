@@ -27,6 +27,7 @@ import {
   Clock,
   Shield,
   Loader2,
+  Sparkles,
 } from "lucide-react"
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
@@ -168,6 +169,7 @@ export default function DailyTrackerPage() {
   const [entries, setEntries] = useState<DailySummary[]>([])
   const [activeTab, setActiveTab] = useState("today")
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
+  const [expandedStage, setExpandedStage] = useState<number | null>(null)
   const [virtualData, setVirtualData] = useState<any>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0) // State for triggering refresh
   const [entriesLoading, setEntriesLoading] = useState(true)
@@ -192,29 +194,102 @@ export default function DailyTrackerPage() {
   }, [isLiveMode, authReady, modeLoading])
 
   const loadEntries = useCallback(async () => {
-    // Guard: wait for auth and mode to be ready
-    if (!authReady || modeLoading) {
-      console.log("[v0] [DailyTracker] loadEntries skipped - waiting for auth/mode")
+    console.log("[v0] [DailyTracker] loadEntries called - isLiveMode:", isLiveMode, "authReady:", authReady, "modeLoading:", modeLoading)
+
+    // VIRTUAL MODE: Generate demo data regardless of auth status
+    if (!isLiveMode) {
+      console.log("[v0] [DailyTracker] VIRTUAL mode - generating full month demo data")
+      
+      const demoEntries: DailySummary[] = []
+      const currentYear = new Date().getFullYear()
+      const februaryDays = new Date(currentYear, 2, 0).getDate()
+      
+      for (let day = februaryDays; day >= 1; day--) {
+        const date = new Date(currentYear, 1, day)
+        const dateStr = format(date, "yyyy-MM-dd")
+        
+        const randomScore = Math.floor(Math.random() * 40) + 60
+        const randomTrades = Math.floor(Math.random() * 5) + 2
+        
+        const trades: Trade[] = Array.from({ length: randomTrades }, (_, idx) => ({
+          id: `demo-${dateStr}-${idx}`,
+          pair: ["BTC/USD", "ETH/USD", "SOL/USD", "AAPL", "TSLA"][Math.floor(Math.random() * 5)],
+          direction: Math.random() > 0.5 ? "Long" : "Short",
+          entryPrice: Math.random() * 1000 + 100,
+          exitPrice: Math.random() * 1000 + 100,
+          pnl: parseFloat(((Math.random() - 0.4) * 200).toFixed(2)),
+          notes: "Demo trade",
+          date: dateStr,
+        }))
+        
+        demoEntries.push({
+          date: dateStr,
+          morningCheck: {
+            id: `morning-${dateStr}`,
+            date: dateStr,
+            sleepQuality: Math.floor(Math.random() * 4) + 6,
+            sleepHours: Math.floor(Math.random() * 3) + 6,
+            energyLevel: Math.floor(Math.random() * 4) + 6,
+            stressLevel: Math.floor(Math.random() * 5) + 2,
+            focus: Math.floor(Math.random() * 4) + 6,
+            physicalHealth: Math.floor(Math.random() * 4) + 6,
+            emotionalState: Math.floor(Math.random() * 5) + 5,
+            exercised: Math.random() > 0.5,
+            exerciseType: ["Běh", "Cvičení", "Yoga"][Math.floor(Math.random() * 3)],
+            exerciseDuration: Math.floor(Math.random() * 30) + 15,
+            meditationTime: Math.floor(Math.random() * 20) + 5,
+            morningRoutine: true,
+            score: randomScore,
+            recommendation: "Trading je možný",
+          },
+          intention: {
+            date: dateStr,
+            goals: "Držet se trading plánu, max 3 trades",
+            maxRiskPercent: 2,
+            emotionalGoal: "Zůstat klidný",
+            strategy: "Trend following",
+          },
+          plan: {
+            date: dateStr,
+            setups: "Trend + pullback",
+            pairs: "BTC, ETH",
+            timeframes: "15min, 1h",
+            entryRules: "Pullback do SMA",
+            exitRules: "TP 2:1 RR",
+            stopLoss: "Pod poslednímu low",
+            takeProfit: "2x risk",
+            marketAnalysis: "Bullish trend",
+            keyLevels: "9000, 8500",
+            notes: "Demo plan",
+          },
+          trades,
+          overallScore: randomScore,
+          stagesCompleted: 5,
+        })
+      }
+      
+      setEntries(demoEntries)
+      setEntriesLoading(false)
+      console.log(`[v0] [DailyTracker] VIRTUAL: Set ${demoEntries.length} demo entries`)
       return
     }
 
-    if (!isLiveMode) {
-      console.log("[v0] [DailyTracker] VIRTUAL mode - using demo data instead of Supabase")
-      setEntriesLoading(false)
+    // LIVE MODE: Wait for auth to be ready
+    if (!authReady || modeLoading) {
+      console.log("[v0] [DailyTracker] LIVE mode - waiting for auth/mode to be ready")
       return
     }
 
     if (!user?.id) {
-      console.log("[v0] [DailyTracker] LIVE mode but no user - skipping load")
+      console.log("[v0] [DailyTracker] LIVE mode but no user")
       setEntriesLoading(false)
       return
     }
 
-    console.log(`[v0] [DailyTracker] LIVE MODE: Loading entries from Supabase for user ${user.id}`)
+    console.log(`[v0] [DailyTracker] LIVE: Loading from Supabase for user ${user.id}`)
     setEntriesLoading(true)
 
     try {
-      // Construct daily summaries from DataContext data (already loaded from Supabase)
       const combinedData: DailySummary[] = []
       const allDates = new Set<string>()
 
@@ -229,7 +304,6 @@ export default function DailyTrackerPage() {
         const intention = dailyIntentions?.find((i: any) => i.date === date)
         const plan = tradingPlans?.find((p: any) => p.date === date)
 
-        // Only push if at least one stage is present for the date
         if (morningCheck || intention || plan || dayTrades.length > 0) {
           let stagesCompleted = 0
           if (morningCheck) stagesCompleted++
@@ -244,22 +318,23 @@ export default function DailyTrackerPage() {
             plan,
             trades: dayTrades,
             overallScore: morningCheck?.score || 0,
-            stagesCompleted: stagesCompleted,
+            stagesCompleted,
           })
         }
       })
 
       combinedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       setEntries(combinedData)
-      console.log(`[v0] [DailyTracker] LIVE: Loaded ${combinedData.length} daily entries from Supabase data`)
+      console.log(`[v0] [DailyTracker] LIVE: Loaded ${combinedData.length} entries`)
     } catch (error) {
-      console.error("[v0] [DailyTracker] Error loading entries:", error)
+      console.error("[v0] [DailyTracker] Error:", error)
     } finally {
       setEntriesLoading(false)
     }
   }, [isLiveMode, user?.id, authReady, modeLoading, morningChecks, trades, dailyIntentions, tradingPlans])
 
   useEffect(() => {
+    console.log("[v0] [DailyTracker] useEffect triggered for loadEntries")
     loadEntries()
   }, [loadEntries, refreshTrigger])
 
@@ -286,11 +361,9 @@ export default function DailyTrackerPage() {
     )
   }
 
-  const todayEntry = isLiveMode ? entries.find((e) => e.date === format(new Date(), "yyyy-MM-dd")) : virtualData?.[0] // First entry is today in demo data
+  const todayEntry = entries.find((e) => e.date === format(new Date(), "yyyy-MM-dd")) || entries[0]
 
-  const readinessScore = isLiveMode
-    ? (todayEntry?.morningCheck?.score ?? null)
-    : (virtualData?.[0]?.morningCheck?.score ?? null)
+  const readinessScore = todayEntry?.overallScore ?? null
 
   const getReadinessColor = (score: number | null) => {
     if (score === null) return "text-gray-400"
@@ -307,9 +380,9 @@ export default function DailyTrackerPage() {
   }
 
   // Generate AI Trading Insights with detailed analysis
-  const generateAIInsights = (morningCheckData?: MorningCheckData, score?: number | null) => {
-    const currentMorningCheck = morningCheckData || virtualData?.[0]?.morningCheck
-    const currentReadinessScore = score ?? virtualData?.[0]?.score ?? null
+  const generateAIInsights = (morningCheckData?: any, score?: number | null) => {
+    const currentMorningCheck = morningCheckData || todayEntry?.morningCheck
+    const currentReadinessScore = score ?? todayEntry?.overallScore ?? null
 
     if (!currentMorningCheck || currentReadinessScore === undefined || currentReadinessScore === null) {
       return "Vyplň Morning Check pro získání detailní AI analýzy tvého psychologického stavu a trading readiness."
@@ -374,7 +447,7 @@ export default function DailyTrackerPage() {
   }
 
   // Generate trading decision with tips and details
-  const generateTradingDecision = (morningCheckData?: MorningCheckData, score?: number | null) => {
+  const generateTradingDecision = (morningCheckData?: any, score?: number | null) => {
     if (!morningCheckData || score === undefined || score === null) {
       return {
         message: "Vyplň Morning Check pro získání AI analýzy.",
@@ -705,6 +778,16 @@ export default function DailyTrackerPage() {
         </div>
       </div>
 
+      {/* Virtual Mode Banner */}
+      {!isLiveMode && (
+        <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-3 px-4 flex items-center gap-3 mb-6">
+          <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
+          <span className="text-xs sm:text-sm text-amber-100">
+            <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+          </span>
+        </div>
+      )}
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 md:space-y-8">
         <TabsList className="grid w-full grid-cols-2 md:h-16 h-14 bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-2">
           <TabsTrigger
@@ -1005,108 +1088,83 @@ export default function DailyTrackerPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
               {stageData.map((stage, index) => {
-                // Use virtualData for stage status in virtual mode
                 const isCompleted = !isLiveMode ? true : todayEntry && stages.find((s) => s.id === stage.id)?.completed
                 const isUnlocked = !isLiveMode ? true : todayEntry && stages.find((s) => s.id === stage.id)?.unlocked
                 const isActive = !isCompleted && isUnlocked
+                const isExpanded = expandedStage === stage.id
 
                 return (
-                  <Card
+                  <div
                     key={stage.id}
                     className={cn(
-                      "relative overflow-hidden border-2 transition-all duration-300",
-                      isCompleted && `${stage.borderColor} ${stage.bgColor}`,
-                      isActive && "border-yellow-500/50 bg-yellow-500/10 animate-pulse cursor-pointer",
-                      !isUnlocked && "border-slate-700/50 bg-slate-800/30 opacity-40 cursor-not-allowed",
-                      isUnlocked && !isCompleted && "hover:scale-105 cursor-pointer",
+                      "relative p-6 rounded-full cursor-pointer transition-all duration-300 flex flex-col items-center justify-center text-center",
+                      "border-2 backdrop-blur-sm",
+                      isCompleted && `${stage.borderColor} ${stage.bgColor} border-opacity-50`,
+                      isActive && "border-yellow-500 bg-yellow-500/20 animate-pulse shadow-lg shadow-yellow-500/50",
+                      !isUnlocked && "border-slate-700/30 bg-slate-800/20 opacity-50 cursor-not-allowed",
+                      isUnlocked && !isCompleted && "border-slate-600/50 hover:border-slate-400/80 hover:bg-slate-700/30 hover:shadow-md",
+                      "min-w-[140px] h-[140px] group"
                     )}
                     onClick={() => {
                       if (isUnlocked && stage.href) {
-                        router.push(stage.href)
+                        setExpandedStage(stage.id)
+                        setTimeout(() => router.push(stage.href), 200)
                       }
                     }}
+                    onMouseEnter={() => isUnlocked && setExpandedStage(stage.id)}
+                    onMouseLeave={() => setExpandedStage(null)}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity from-white/5 to-transparent" />
-                    <div className="relative p-6">
-                      <div className="flex flex-col items-center text-center space-y-3">
-                        <div
+                    {/* Bubble fill animation */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity from-white to-transparent" />
+                    
+                    {/* Content */}
+                    <div className="relative z-10">
+                      {/* Icon */}
+                      <div
+                        className={cn(
+                          "mb-2 p-3 rounded-full transition-all duration-300",
+                          isCompleted && `bg-gradient-to-br ${stage.color}`,
+                          isActive && "bg-gradient-to-br from-yellow-500 to-orange-500 scale-110",
+                          !isUnlocked && "bg-slate-700/50",
+                        )}
+                      >
+                        <stage.icon
                           className={cn(
-                            "relative p-4 rounded-2xl",
-                            isCompleted && `bg-gradient-to-br ${stage.color}`,
-                            isActive && "bg-gradient-to-br from-yellow-500 to-orange-500",
-                            !isUnlocked && "bg-slate-700/50",
-                          )}
-                        >
-                          <stage.icon
-                            className={cn(
-                              "h-8 w-8",
-                              (isCompleted || isActive) && "text-white",
-                              !isUnlocked && "text-slate-500",
-                            )}
-                          />
-                          {!isUnlocked && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 rounded-2xl">
-                              <Lock className="h-6 w-6 text-slate-400" />
-                            </div>
-                          )}
-                        </div>
-
-                        <div>
-                          <div
-                            className={cn(
-                              "text-sm font-bold mb-1",
-                              isCompleted && "text-white",
-                              isActive && "text-yellow-400",
-                              !isUnlocked && "text-slate-500",
-                            )}
-                          >
-                            Stage {stage.id}
-                          </div>
-                          <div
-                            className={cn(
-                              "text-xs font-medium",
-                              (isCompleted || isActive) && "text-white",
-                              !isUnlocked && "text-slate-600",
-                            )}
-                          >
-                            {stage.name}
-                          </div>
-                        </div>
-
-                        <div>
-                          {isCompleted && (
-                            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Dokončeno
-                            </Badge>
-                          )}
-                          {isActive && (
-                            <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
-                              <Unlock className="h-3 w-3 mr-1" />
-                              Aktivní
-                            </Badge>
-                          )}
-                          {!isUnlocked && (
-                            <Badge className="bg-slate-700/20 text-slate-500 border-slate-700/30 text-xs">
-                              <Lock className="h-3 w-3 mr-1" />
-                              Zamčeno
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-
-                      {index < 4 && (
-                        <div
-                          className={cn(
-                            "absolute top-1/2 -right-2 w-4 h-0.5 transform -translate-y-1/2 z-10",
-                            isCompleted ? "bg-gradient-to-r " + stage.color : "bg-slate-700/50",
+                            "h-6 w-6",
+                            (isCompleted || isActive) && "text-white",
+                            !isUnlocked && "text-slate-500",
                           )}
                         />
+                      </div>
+
+                      {/* Name */}
+                      <div className={cn(
+                        "text-xs font-bold transition-all duration-300",
+                        isCompleted && "text-white",
+                        isActive && "text-yellow-400",
+                        !isUnlocked && "text-slate-500",
+                      )}>
+                        {stage.name.split(" ")[0]}
+                      </div>
+
+                      {/* Status badge - show on hover/expand */}
+                      {isExpanded && (
+                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs whitespace-nowrap">
+                          {isCompleted && (
+                            <span className="text-green-400">✓ Hotovo</span>
+                          )}
+                          {isActive && (
+                            <span className="text-yellow-400">→ Aktivní</span>
+                          )}
+                          {!isUnlocked && (
+                            <span className="text-slate-500">🔒 Zamčeno</span>
+                          )}
+                        </div>
                       )}
                     </div>
-                  </Card>
+                  </div>
                 )
               })}
             </div>
@@ -1328,7 +1386,7 @@ export default function DailyTrackerPage() {
                               )}
 
                               {/* AI Insights from that day */}
-                              {(() => {
+                              {entry.morningCheck && (() => {
                                 const dayDecision = generateTradingDecision(entry.morningCheck, entryReadiness)
                                 return (
                                   dayDecision && (

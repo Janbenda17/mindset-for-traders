@@ -8,17 +8,60 @@ const PUBLIC_PATHS = [
   "/auth/callback",
   "/signup",
   "/login",
-  "/pricing",
   "/terms",
   "/privacy",
-  "/teaser",
   "/intro",
   "/landing",
   "/about",
+  "/product-tour",
+  "/contact",
+  "/disclaimer",
+  "/resources",
+  // App paths - accessible in virtual mode without auth
+  "/",
+  "/dashboard",
+  "/account",
+  "/trades",
+  "/record-trades",
+  "/journal",
+  "/challenges",
+  "/rewards",
+  "/team-club",
+  "/admin",
+  "/morning-check",
+  "/morning-checks",
+  "/daily-tracker",
+  "/daily-intention",
+  "/daily-summary",
+  "/intention",
+  "/trading-plan",
+  "/psyche-analysis",
+  "/trading-psychology",
+  "/analytics",
+  "/mindtrader",
+  "/mindtrader-analytics",
+  "/mindtrader-pro",
+  "/ai-insights",
+  "/action-flows",
+  "/routines",
+  "/settings",
+  "/streaks",
+  "/system-status",
+  "/weekly-review",
+  "/milestones",
+  "/loss-reset",
+  "/fail-log",
+  "/risk-calculator",
+  "/subscription",
+  "/trading-goals",
+  "/trading-identity",
 ]
 
-// Paths that require authentication but don't need onboarding/tour check
-const AUTH_REQUIRED_PATHS = ["/onboarding", "/product-tour"]
+// Protected paths that require authentication
+const PROTECTED_PATHS = [
+  "/onboarding",
+  "/pricing",
+]
 
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -80,16 +123,8 @@ export async function updateSession(request: NextRequest) {
   // Handle "/" path (dashboard)
   if (pathname === "/") {
     if (!user) {
-      // Not authenticated - check for landing cookie
-      const hasSeenLanding = request.cookies.get("mt_seen_landing")
-      if (!hasSeenLanding) {
-        console.log("[v0] First visit - redirecting to /landing")
-        const url = request.nextUrl.clone()
-        url.pathname = "/landing"
-        return NextResponse.redirect(url)
-      }
-      // Has seen landing but not authenticated - stay on "/" or redirect to login later
-      console.log("[v0] Not authenticated on dashboard - allowing for now")
+      // Not authenticated - allow access to dashboard in virtual mode
+      console.log("[v0] Not authenticated - allowing access to dashboard")
     } else {
       // Authenticated user - allow access to dashboard
       console.log("[v0] Authenticated user accessing dashboard - allowed")
@@ -97,18 +132,18 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check if auth-required path (onboarding, product-tour)
-  const isAuthRequiredPath = AUTH_REQUIRED_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
-  if (isAuthRequiredPath) {
+  // Check if protected path (requires authentication)
+  const isProtectedPath = PROTECTED_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
+  
+  if (isProtectedPath) {
     if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = "/auth/login"
       url.searchParams.set("redirectedFrom", pathname)
-      console.log("[v0] Auth required path without user - redirecting to login")
+      console.log("[v0] Protected path without auth - redirecting to login:", pathname)
       return NextResponse.redirect(url)
     }
-    // Authenticated user can access onboarding/product-tour
-    console.log("[v0] Authenticated user accessing", pathname)
+    console.log("[v0] Allowing authenticated user to:", pathname)
     return NextResponse.next()
   }
 
@@ -116,6 +151,9 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))
 
   if (isPublicPath) {
+    // Allow app paths without auth - users can explore in VIRTUAL mode as guests
+    // Auth is only required when they try to switch to Live mode (handled in live-mode-toggle)
+    console.log("[v0] Allowing access to:", pathname, "user:", user ? user.email : "guest (virtual mode)")
     return NextResponse.next()
   }
 

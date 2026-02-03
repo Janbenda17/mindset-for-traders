@@ -29,7 +29,7 @@ const generateTradingData = () => {
   let streak = 0
   let lastWasWin = true
 
-  return Array.from({ length: 30 }, (_, i) => {
+  return Array.from({ length: 4 }, (_, i) => {
     const change = (Math.random() - 0.45) * 500
     balance += change
     const isWin = change > 0
@@ -42,7 +42,7 @@ const generateTradingData = () => {
     }
 
     return {
-      date: format(subDays(new Date(), 29 - i), "d.M."),
+      date: format(subDays(new Date(), 3 - i), "d.M."),
       balance: Math.round(balance),
       dailyPnl: Math.round(change),
       isWin,

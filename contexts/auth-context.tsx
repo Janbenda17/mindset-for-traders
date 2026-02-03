@@ -188,9 +188,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           message: error.message,
           status: error.status,
         })
+
+        let errorMessage = error.message
+        
+        // Speciální handling pro rate limit
+        if (error.message.includes("rate limit") || error.message.includes("too many")) {
+          errorMessage = "Příliš mnoho pokusů o přihlášení. Prosím čekejte 15 minut a zkuste znovu."
+        } else if (error.message.includes("Invalid login credentials") || error.message.includes("Invalid password")) {
+          errorMessage = "Nesprávný email nebo heslo. Prosím zkontrolujte a zkuste znovu."
+        } else if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Prosím potvrďte svůj email. Podívejte se do schránky (včetně spamu)."
+        }
+
         toast({
           title: "Chyba přihlášení",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive",
         })
         return false
@@ -198,35 +210,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!data.user || !data.session) {
         console.error("[v0] ❌ Žádný user nebo session vrácen")
-        console.error("[v0] User:", !!data.user, "Session:", !!data.session)
         toast({
           title: "Chyba přihlášení",
-          description: "Selhalo vytvoření session",
+          description: "Přihlášení se nezdařilo. Zkuste to prosím znovu.",
           variant: "destructive",
         })
         return false
       }
 
-      console.log("[v0] ✅ Login úspěšný - session vytvořena")
-      console.log("[v0] User ID:", data.user.id)
-      console.log("[v0] Token (first 10 chars):", data.session.access_token.slice(0, 10))
-
-      const userData = {
-        id: data.user.id,
-        email: data.user.email!,
-        name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Trader",
-      }
-      lastUserIdRef.current = data.user.id
-      setUser(userData)
-      migrateLegacyKeys(data.user.id)
-
-      toast({
-        title: "Přihlášení úspěšné",
-        description: "Vítejte zpět!",
-      })
-
-      console.log("[v0] Čekám 500ms na synchronizaci cookies...")
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      console.log("[v0] ✅ Přihlášení úspěšné:", data.user.email)
 
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
       console.log("[v0] Ověření session:", {
@@ -271,7 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       toast({
         title: "Chyba přihlášení",
-        description: "Došlo k neočekávané chybě",
+        description: "Došlo k neočekávané chybě. Zkuste to prosím znovu za chvíli.",
         variant: "destructive",
       })
       return false
@@ -391,7 +383,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await new Promise((resolve) => setTimeout(resolve, 500))
 
       console.log("[v0] ✅ Registrace HOTOVA - redirect na /onboarding")
-      window.location.href = "/onboarding"
+      router.push("/onboarding")
       return true
     } catch (error: any) {
       console.error("[v0] ===== REGISTRACE ERROR =====")

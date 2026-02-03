@@ -50,6 +50,8 @@ import {
   Lock,
   Trash2,
   Edit,
+  Zap,
+  Loader2,
 } from "lucide-react"
 import { useData } from "@/contexts/data-context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -664,7 +666,17 @@ function generateStudentsFromRealData(trades: any[], journals: any[], moodEntrie
 }
 
 // MENTOR VIEW
-function MentorTeamClubView() {
+function MentorTeamClubView({
+  communityUsers,
+  setCommunityUsers,
+  loadingCommunity,
+  setLoadingCommunity,
+}: {
+  communityUsers: any[]
+  setCommunityUsers: (users: any[]) => void
+  loadingCommunity: boolean
+  setLoadingCommunity: (loading: boolean) => void
+}) {
   const { getAllTrades, getAllJournalEntries, isLiveMode } = useData()
   const { user } = useAuth() // ADDED: Get user from AuthContext
   const [students, setStudents] = useState<Student[]>([])
@@ -679,12 +691,38 @@ function MentorTeamClubView() {
       const realStudents = generateStudentsFromRealData(trades, journals, moodEntries, user?.id || "unknown")
       setStudents(realStudents)
       console.log("[v0] Team Club: Generated LIVE student data for user:", user?.id)
+      
+      // Load community users
+      loadCommunityUsers()
     } else {
       // In virtual mode, show demo students
       setStudents(DEMO_STUDENTS)
       console.log("[v0] Team Club: Using DEMO students in virtual mode")
     }
   }, [isLiveMode, user?.id]) // Only depend on mode and user ID, not functions
+
+  const loadCommunityUsers = async () => {
+    setLoadingCommunity(true)
+    try {
+      const response = await fetch("/api/team-club/users", {
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log(`[v0] Loaded ${data.users.length} community users`)
+        setCommunityUsers(data.users)
+      } else {
+        console.error("[v0] Failed to load community users:", response.status)
+        setCommunityUsers([])
+      }
+    } catch (error) {
+      console.error("[v0] Error loading community users:", error)
+      setCommunityUsers([])
+    } finally {
+      setLoadingCommunity(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -699,6 +737,18 @@ function MentorTeamClubView() {
                 : "Zatím žádní studenti s daty"
               : "Pro mentory - kompletní dashboard v Live režimu"}
           </p>
+          {isLiveMode && students.length > 0 && (
+
+        {/* Virtual Mode Banner */}
+        {!isLiveMode && (
+          <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-3 px-4 flex items-center gap-3 mb-6">
+            <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
+            <span className="text-xs md:text-sm text-amber-100">
+              <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+            </span>
+          </div>
+        )}
+
           {isLiveMode && students.length > 0 && (
             <div className="mt-8 max-w-4xl mx-auto">
               {students.map((student) => (
@@ -766,7 +816,14 @@ function MentorTeamClubView() {
 }
 
 // STUDENT VIEW
-function StudentTeamClubView() {
+// STUDENT VIEW
+function StudentTeamClubView({
+  communityUsers,
+  loadingCommunity,
+}: {
+  communityUsers: any[]
+  loadingCommunity: boolean
+}) {
   const { getAllTrades, getAllJournalEntries, isLiveMode } = useData()
   const { user } = useAuth() // ADDED: Get user from AuthContext
   const [activeTab, setActiveTab] = useState("overview")
@@ -1573,6 +1630,16 @@ function StudentTeamClubView() {
             </div>
           )}
         </div>
+
+        {/* Virtual Mode Banner */}
+        {!isLiveMode && (
+          <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-3 px-4 flex items-center gap-3 mb-6">
+            <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
+            <span className="text-xs md:text-sm text-amber-100">
+              <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+            </span>
+          </div>
+        )}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -3451,6 +3518,8 @@ function isMentor(): boolean {
 function TeamClubPage() {
   const [userIsMentor, setUserIsMentor] = useState<boolean | null>(null)
   const { user, isLoading } = useAuth() // Added isLoading from auth
+  const [communityUsers, setCommunityUsers] = useState<any[]>([])
+  const [loadingCommunity, setLoadingCommunity] = useState(false)
 
   useEffect(() => {
     // Check if user data is available before determining mentor status
@@ -3474,7 +3543,18 @@ function TeamClubPage() {
   }
 
   // Render based on mentor status, ensuring userIsMentor is not null
-  return userIsMentor !== null ? userIsMentor ? <MentorTeamClubView /> : <StudentTeamClubView /> : null
+  return userIsMentor !== null ? (
+    userIsMentor ? (
+      <MentorTeamClubView 
+        communityUsers={communityUsers} 
+        setCommunityUsers={setCommunityUsers} 
+        loadingCommunity={loadingCommunity} 
+        setLoadingCommunity={setLoadingCommunity} 
+      />
+    ) : (
+      <StudentTeamClubView communityUsers={communityUsers} loadingCommunity={loadingCommunity} />
+    )
+  ) : null
 }
 
 export default TeamClubPage

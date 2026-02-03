@@ -79,16 +79,20 @@ function generateDemoData(tradingStyle: string) {
       { week: "15-21 Led", pnl: 3780, trades: 18, winRate: 67, avgMood: 75, avgReadiness: 80 },
       { week: "22-28 Led", pnl: 1520, trades: 14, winRate: 57, avgMood: 65, avgReadiness: 68 },
     ],
-    dailyMoodData: Array.from({ length: 30 }, (_, i) => ({
-      date: `${i + 1}. Led`,
-      mood: Math.floor(Math.random() * 40) + 50, // 50-90
-      discipline: Math.floor(Math.random() * 40) + 50, // 50-90
-      confidence: Math.floor(Math.random() * 35) + 50, // 50-85
-      stress: Math.floor(Math.random() * 25) + 20, // 20-45
-      energy: Math.floor(Math.random() * 40) + 45, // 45-85
-      sleep: Math.floor(Math.random() * 3) + 6, // 6-9 hours
-      pnl: Math.floor(Math.random() * 2500) - 500, // -500 to +2000
-    })),
+    dailyMoodData: Array.from({ length: 30 }, (_, i) => {
+      const date = new Date()
+      date.setDate(date.getDate() - (30 - i))
+      return {
+        date: date.toISOString().split('T')[0], // Format: YYYY-MM-DD
+        mood: Math.floor(Math.random() * 40) + 50, // 50-90
+        discipline: Math.floor(Math.random() * 40) + 50, // 50-90
+        confidence: Math.floor(Math.random() * 35) + 50, // 50-85
+        stress: Math.floor(Math.random() * 25) + 20, // 20-45
+        energy: Math.floor(Math.random() * 40) + 45, // 45-85
+        sleep: Math.floor(Math.random() * 3) + 6, // 6-9 hours
+        pnl: Math.floor(Math.random() * 2500) - 500, // -500 to +2000
+      }
+    }),
     weekdayChartData: [
       { day: "Pondělí", winRate: 65, avgMood: 72, avgDiscipline: 75, trades: 45 },
       { day: "Úterý", winRate: 58, avgMood: 68, avgDiscipline: 70, trades: 42 },
@@ -1076,11 +1080,6 @@ export default function PsychologyAnalyticsPage() {
     )
   }
 
-  if (!user) {
-    router.push("/auth/login")
-    return null
-  }
-
   // Ve Virtual Mode zobraz demo data i když je méně než 10 dní
   if (isAnalyticsLocked) {
     return (
@@ -1222,6 +1221,7 @@ export default function PsychologyAnalyticsPage() {
     }
 
     const now = new Date()
+
     let filteredData = [...data]
 
     if (timeframe === "week") {
@@ -1248,7 +1248,8 @@ export default function PsychologyAnalyticsPage() {
         return itemDate >= startDate
       })
 
-      if (type === "daily") {
+      // Pouze agreguj data pokud typ je "weekly" - pro "daily" vrať raw data
+      if (type === "weekly") {
         const weeklyGrouped: Record<string, any> = {}
         filteredData.forEach((item) => {
           const itemDate = new Date(item.date)
@@ -1387,30 +1388,14 @@ export default function PsychologyAnalyticsPage() {
           </Button>
         </div>
         
-        {/* Virtual Mode Demo Data Banner */}
+        {/* Virtual Mode Banner */}
         {!isLiveMode && (
-          <Card className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 border-2 border-amber-500/40 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-amber-500/20 rounded-lg">
-                  <Sparkles className="w-6 h-6 text-amber-300" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                    Prohlížíš Demo Analytics
-                    <Badge className="bg-amber-500/20 text-amber-200 border-amber-400/30">Virtual Mode</Badge>
-                  </h3>
-                  <p className="text-amber-100/90 mb-3">
-                    Toto jsou ukázková data, která ti ukazují, jak bude vypadat tvá Analytics po sběru reálných dat. Ve Virtual Mode nemůžeš zaznamenávat obchody ani denní stavy.
-                  </p>
-                  <div className="flex items-center gap-2 text-sm text-amber-200/80">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Pro plný přístup přepni do Live Mode (vyžaduje Premium)</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-3 px-4 flex items-center gap-3 mb-6">
+            <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
+            <span className="text-amber-100 text-xs md:text-sm">
+              <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+            </span>
+          </div>
         )}
         
         {/* AI Banner with Stats */}
@@ -1737,127 +1722,7 @@ export default function PsychologyAnalyticsPage() {
           </TabsList>
           <TabsContent value="overview">
             <div className="space-y-6">
-              <Accordion type="multiple" defaultValue={["readiness", "radar", "insights"]} className="space-y-4">
-                {/* Psychological Readiness Section */}
-                <AccordionItem
-                  value="readiness"
-                  className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 shadow-2xl overflow-hidden rounded-lg border"
-                >
-                  <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
-                    <div className="flex items-center gap-3">
-                      <Brain className="w-5 h-5 text-purple-400" />
-                      Psychological Readiness Score
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 py-4">
-                    {/* Psychological Readiness content - existing code */}
-                    <Card className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 shadow-2xl overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                        <Brain className="w-64 h-64 text-purple-500" />
-                      </div>
-                      <CardHeader className="relative z-10 border-b border-slate-700/50 pb-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="text-white flex items-center gap-3 text-2xl">
-                              <div className="p-2 bg-purple-500/10 rounded-lg">
-                                <Brain className="w-6 h-6 text-purple-400" />
-                              </div>
-                              Psychological Readiness
-                            </CardTitle>
-                            <CardDescription className="text-gray-400 mt-1">
-                              Komplexní analýza vaší připravenosti k obchodování
-                            </CardDescription>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className="border-purple-500/50 text-purple-300 px-3 py-1 bg-purple-500/10"
-                          >
-                            {Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) >= 70
-                              ? "READY"
-                              : "PREPARE"}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="relative z-10 pt-6">
-                        <div className="flex flex-col lg:flex-row items-center gap-8">
-                          <div className="flex-1 w-full space-y-6">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                              {safeData.psychologicalProfile.map((item: any, idx: number) => {
-                                const colors = [
-                                  "bg-blue-500",
-                                  "bg-emerald-500",
-                                  "bg-purple-500",
-                                  "bg-amber-500",
-                                  "bg-cyan-500",
-                                  "bg-pink-500",
-                                  "bg-indigo-500",
-                                  "bg-rose-500",
-                                ]
-                                const value = Number.isNaN(item.A) ? 0 : item.A || 0
-                                return (
-                                  <div key={idx} className="bg-slate-800/50 p-3 rounded-xl border border-slate-700">
-                                    <div className="flex justify-between items-end mb-2">
-                                      <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider truncate">
-                                        {item.subject}
-                                      </span>
-                                      <span className="text-lg font-bold text-white">{Math.round(value)}%</span>
-                                    </div>
-                                    <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                                      <div
-                                        className={`h-full ${colors[idx % colors.length]} shadow-lg`}
-                                        style={{ width: `${value}%` }}
-                                      />
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Right Side: Big Score */}
-                          <div className="flex flex-col items-center justify-center min-w-[180px] border-l border-slate-700/50 pl-8">
-                            <div className="relative">
-                              <svg className="w-28 h-28 transform -rotate-90">
-                                <circle
-                                  cx="56"
-                                  cy="56"
-                                  r="52"
-                                  stroke="currentColor"
-                                  strokeWidth="8"
-                                  fill="transparent"
-                                  className="text-slate-800"
-                                />
-                                <circle
-                                  cx="56"
-                                  cy="56"
-                                  r="52"
-                                  stroke="currentColor"
-                                  strokeWidth="8"
-                                  fill="transparent"
-                                  strokeDasharray={327}
-                                  strokeDashoffset={
-                                    327 -
-                                    (327 *
-                                      Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4)) /
-                                      100
-                                  }
-                                  className="text-purple-500 transition-all duration-1000 ease-out"
-                                />
-                              </svg>
-                              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-3xl font-black text-white">
-                                  {Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4)}
-                                </span>
-                                <span className="text-[9px] uppercase tracking-widest text-gray-400 mt-1">Score</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </AccordionContent>
-                </AccordionItem>
-
+              <Accordion type="multiple" defaultValue={["radar", "insights"]} className="space-y-4">
                 {/* Mental Profile Radar Section */}
                 <AccordionItem
                   value="radar"
@@ -1866,7 +1731,7 @@ export default function PsychologyAnalyticsPage() {
                   <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
                     <div className="flex items-center gap-3">
                       <BarChart3 className="w-5 h-5 text-cyan-400" />
-                      Psychologický Profil & Mental Score
+                      Psychologický Profil
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4 space-y-4">
@@ -1893,8 +1758,8 @@ export default function PsychologyAnalyticsPage() {
                             >
                               <defs>
                                 <linearGradient id="radarPurpleGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.6} />
-                                  <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.3} />
+                                  <stop offset="5%" stopColor="#e9d5ff" stopOpacity={1} />
+                                  <stop offset="95%" stopColor="#e9d5ff" stopOpacity={1} />
                                 </linearGradient>
                               </defs>
                               <PolarGrid stroke="#334155" />
@@ -1906,10 +1771,10 @@ export default function PsychologyAnalyticsPage() {
                               <Radar
                                 name="Můj Profil"
                                 dataKey="A"
-                                stroke="#8b5cf6"
+                                stroke="#a78bfa"
                                 strokeWidth={3}
                                 fill="url(#radarPurpleGradient)"
-                                fillOpacity={0.7}
+                                fillOpacity={1}
                               />
                               <Tooltip
                                 contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", color: "#f8fafc" }}
@@ -1956,7 +1821,8 @@ export default function PsychologyAnalyticsPage() {
                                 />
                                 <Tooltip
                                   contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155" }}
-                                  formatter={(value: any) => [`${Math.round(value)}%`, "Mental Score"]}
+                                  formatter={(value: any) => `${Math.round(value)}%`}
+                                  labelFormatter={() => ""}
                                 />
                                 <Area
                                   type="monotone"
@@ -1998,7 +1864,8 @@ export default function PsychologyAnalyticsPage() {
                                 />
                                 <Tooltip
                                   contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155" }}
-                                  formatter={(value: any) => [`$${value}`, "P&L"]}
+                                  formatter={(value: any) => `$${value}`}
+                                  labelFormatter={() => ""}
                                 />
                                 <Bar dataKey="pnl" radius={[4, 4, 0, 0]} barSize={16}>
                                   {filteredDailyData.map((entry, index) => (

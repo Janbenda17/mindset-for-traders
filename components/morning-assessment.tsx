@@ -335,10 +335,10 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
     const xpAlreadyAwarded = localStorage.getItem(xpKey) === "true"
 
     if (!xpAlreadyAwarded) {
-      addXP(50, "Morning Check dokončen")
+      addXP(10, "Morning Check dokončen")
 
       if (assessment.score >= 80) {
-        addXP(100, "Perfektní Morning Check!")
+        addXP(10, "Perfektní Morning Check!")
       }
 
       if (assessment.exercised) {

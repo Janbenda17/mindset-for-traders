@@ -1,8 +1,6 @@
-"use client"
+'use client'
 
-import { MindTraderAI } from "@/components/mindtrader-ai"
-
-export const dynamic = 'force-dynamic'
+import { MindTraderAI } from '@/components/mindtrader-ai'
 
 export default function MindTraderPage() {
   return <MindTraderAI />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -32,6 +32,7 @@ import {
   Sun,
   Target,
   AlertTriangle,
+  ChevronDown,
 } from "lucide-react"
 import LiveModeToggle from "@/components/live-mode-toggle"
 import { supabase } from "@/lib/supabase/client"
@@ -42,29 +43,30 @@ interface TopNavigationProps {
 }
 
 const mainNavigation = [
-  { name: "Dashboard", href: "/", icon: Home },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Obchod", href: "/journal", icon: TrendingUp },
-  { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI" },
-  { name: "Daily Tracker", href: "/daily-tracker", icon: Calendar },
+  { name: "Dashboard", href: "/dashboard", icon: Home, shortName: "Home" },
+  { name: "Analytics", href: "/analytics", icon: BarChart3, shortName: "Stats" },
+  { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Journal" },
+  { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
+  { name: "Daily Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Daily" },
+  { name: "Weekly Review", href: "/weekly-review", icon: Calendar },
+  { name: "Team Club", href: "/team-club", icon: Users, badge: "PRO" },
 ]
 
-const moreNavigation = [
-  { name: "O MindTrader AI", href: "/about", icon: Brain },
-  { name: "Weekly Review", href: "/weekly-review", icon: Calendar },
+const toolsNavigation = [
   { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NEW" },
   { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NEW" },
   { name: "Trading Cíle", href: "/trading-goals", icon: Target, badge: "NEW" },
   { name: "Fail Log", href: "/fail-log", icon: AlertTriangle, badge: "NEW" },
   { name: "Trading Identity", href: "/trading-identity", icon: User, badge: "NEW" },
-  { name: "Odměny", href: "/rewards", icon: Trophy },
-  { name: "Team Club", href: "/team-club", icon: Users, badge: "PRO" },
+  { name: "Odměny", href: "/rewards", icon: Trophy, badge: "NEW" },
 ]
 
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
   const pathname = usePathname()
+  const router = useRouter()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isProductsOpen, setIsProductsOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   const [profileData, setProfileData] = useState({
@@ -80,6 +82,14 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false) // Track if we loaded profile once
 
   const { logout } = useAuth()
+
+  const handlePricingClick = () => {
+    if (!isAuthenticated) {
+      router.push('/signup')
+    } else {
+      router.push('/account')
+    }
+  }
 
   const loadProfileData = async () => {
     if (typeof window === "undefined") return
@@ -175,7 +185,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     logout()
   }
 
-  const isMoreActive = moreNavigation.some((item) => pathname === item.href)
+  const isMoreActive = [...toolsNavigation].some((item) => pathname === item.href)
 
   if (isLoading) {
     return (
@@ -191,106 +201,123 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4">
-        <div className="flex justify-between items-center h-14 md:h-16 gap-2">
-          {/* Logo */}
-          <div className="flex items-center flex-shrink-0">
-            <Link href="/" className="flex items-center space-x-1.5 md:space-x-2">
-              <div className="p-1.5 md:p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
-                <Brain className="w-5 h-5 md:w-6 md:h-6 text-white" />
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="flex justify-between items-center h-14 md:h-16">
+          {/* Logo and Auth Buttons Left Side */}
+          <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="p-1.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
+                <Brain className="w-5 h-5 text-white" />
               </div>
-              <span className="hidden md:block text-lg lg:text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent whitespace-nowrap">
+              <span className="block text-sm sm:text-base md:text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 MindTrader
               </span>
             </Link>
           </div>
 
           {/* Main Navigation */}
-          <div className="hidden md:flex items-center space-x-0.5 lg:space-x-1">
-            {mainNavigation.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <Link key={item.name} href={item.href}>
+          <div className="hidden md:flex items-center gap-1">
+            {/* Products dropdown */}
+            <DropdownMenu open={isProductsOpen} onOpenChange={setIsProductsOpen}>
+              <div
+                onMouseEnter={() => setIsProductsOpen(true)}
+                onMouseLeave={() => setIsProductsOpen(false)}
+                className="relative"
+              >
+                <DropdownMenuTrigger asChild>
                   <Button
-                    variant={isActive ? "secondary" : "ghost"}
+                    variant="ghost"
                     size="sm"
-                    className={`relative px-2 lg:px-3 py-1 h-8 lg:h-9 ${
-                      isActive
-                        ? "bg-purple-600/20 text-purple-300 hover:bg-purple-600/30"
-                        : "text-gray-300 hover:text-white hover:bg-slate-800/50"
-                    }`}
+                    className="relative px-4 h-10 text-sm font-semibold text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 transition-all duration-300 group flex items-center gap-2 rounded-lg shadow-lg shadow-purple-500/20"
                   >
-                    <item.icon className="w-4 h-4 mr-1 lg:mr-1.5" />
-                    <span className="hidden lg:inline text-sm">{item.name}</span>
-                    {item.badge && (
-                      <Badge
-                        className={`ml-1 lg:ml-1.5 text-[10px] lg:text-xs px-1 py-0 h-4 ${
-                          item.badge === "AI"
-                            ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                            : item.badge === "PRO"
-                              ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
-                              : ""
-                        }`}
-                      >
-                        {item.badge}
-                      </Badge>
-                    )}
+                    <span>Products</span>
+                    <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                   </Button>
-                </Link>
-              )
-            })}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6" align="start">
+                {/* Řádek 1: Hlavní produkty */}
+                <div className="mb-6 pb-6 border-b border-slate-700/50">
+                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Hlavní Produkty</p>
+                  <div className="flex gap-3">
+                    {mainNavigation.map((item) => {
+                      const isActive = pathname === item.href
+                      return (
+                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
+                          <div className={`flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all min-w-[100px] ${
+                            isActive 
+                              ? "bg-purple-600/20 border border-purple-500/30" 
+                              : "hover:bg-slate-800/50 border border-slate-700/50"
+                          }`}>
+                            <item.icon className={`w-5 h-5 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                            <span className={`text-xs text-center ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                              {item.name}
+                            </span>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
 
-            {/* More dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant={isMoreActive ? "secondary" : "ghost"}
-                  size="sm"
-                  className={`relative px-2 lg:px-3 py-1 h-8 lg:h-9 ${
-                    isMoreActive
-                      ? "bg-purple-600/20 text-purple-300 hover:bg-purple-600/30"
-                      : "text-gray-300 hover:text-white hover:bg-slate-800/50"
-                  }`}
-                >
-                  <MoreHorizontal className="w-4 h-4 lg:mr-1.5" />
-                  <span className="hidden lg:inline text-sm">More</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-slate-900/95 backdrop-blur-md border-slate-700" align="end">
-                {moreNavigation.map((item) => {
-                  const isActive = pathname === item.href
-                  return (
-                    <DropdownMenuItem key={item.name} asChild>
-                      <Link
-                        href={item.href}
-                        onClick={() => {}}
-                        className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
-                          isActive ? "bg-purple-600/20" : ""
-                        }`}
-                      >
-                        <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                        <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                          {item.name}
-                        </span>
-                        {item.badge && (
-                          <Badge
-                            className={`text-xs px-1.5 py-0 h-5 ${
-                              item.badge === "PRO"
-                                ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
-                                : item.badge === "NEW"
-                                  ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                  : ""
-                            }`}
-                          >
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </Link>
-                    </DropdownMenuItem>
-                  )
-                })}
+                {/* Řádek 2: Nástroje */}
+                <div className="mb-6 pb-6 border-b border-slate-700/50">
+                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Nástroje</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {toolsNavigation.map((item) => {
+                      const isActive = pathname === item.href
+                      return (
+                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
+                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                            isActive 
+                              ? "bg-purple-600/20 border border-purple-500/30" 
+                              : "hover:bg-slate-800/50 border border-slate-700/50"
+                          }`}>
+                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                              {item.name}
+                            </span>
+                            {item.badge && (
+                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-green-500/20 text-green-300 border-green-500/30">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
               </DropdownMenuContent>
+              </div>
             </DropdownMenu>
+
+            {/* Pricing button */}
+            <Link href="/upgrade">
+              <Button
+                size="sm"
+                className={`relative px-4 h-10 text-sm font-semibold transition-all duration-300 rounded-lg ${
+                  pathname === "/upgrade"
+                    ? "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 shadow-lg shadow-purple-500/20"
+                    : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
+                }`}
+              >
+                Pricing
+              </Button>
+            </Link>
+
+            {/* About button */}
+            <Link href="/intro">
+              <Button
+                size="sm"
+                className={`relative px-4 h-10 text-sm font-semibold transition-all duration-300 rounded-lg ${
+                  pathname === "/intro"
+                    ? "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 shadow-lg shadow-purple-500/20"
+                    : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
+                }`}
+              >
+                About
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu */}
@@ -335,8 +362,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 </div>
                 <DropdownMenuSeparator className="bg-slate-700" />
                 <div className="p-2">
-                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">NÁSTROJE & DALŠÍ</p>
-                  {moreNavigation.map((item) => {
+                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">NÁSTROJE</p>
+                  {toolsNavigation.map((item) => {
                     const isActive = pathname === item.href
                     return (
                       <DropdownMenuItem key={item.name} asChild>
@@ -354,11 +381,9 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                           {item.badge && (
                             <Badge
                               className={`text-xs px-1.5 py-0 h-5 ${
-                                item.badge === "PRO"
-                                  ? "bg-orange-500/20 text-orange-300 border-orange-500/30"
-                                  : item.badge === "NEW"
-                                    ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                    : ""
+                                item.badge === "NEW"
+                                  ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                  : ""
                               }`}
                             >
                               {item.badge}
@@ -375,7 +400,38 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
           {/* Right Side */}
           <div className="flex items-center space-x-1.5 md:space-x-2 flex-shrink-0">
-            <LiveModeToggle />
+            {/* Login and Get Started - only show if not authenticated */}
+            {!isAuthenticated && (
+              <div className="hidden md:flex items-center gap-1.5">
+                <Link href="/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-300 hover:text-white h-8 px-3 text-sm"
+                  >
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-8 px-3 text-sm font-semibold"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            )}
+
+            {/* Get Started Button - Mobile only */}
+            <Link href="/signup" className="md:hidden">
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
+              >
+                Get Started
+              </Button>
+            </Link>
 
             {/* Profile Dropdown - only show if authenticated */}
             {isAuthenticated ? (
@@ -493,8 +549,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                       <span className="text-red-400 font-medium text-sm">Odhlásit se</span>
                     </DropdownMenuItem>
                   </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
             ) : null}
           </div>
         </div>

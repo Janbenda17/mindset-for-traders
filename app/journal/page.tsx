@@ -30,6 +30,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context" // Fixed import path from /context/ (singular) to /contexts/ (plural)
 import { useAuth } from "@/contexts/auth-context" // Import useAuth hook
+import { useLiveMode } from "@/contexts/live-mode-context"
 import { generateVirtualJournalStats } from "@/lib/virtual-data-generator" // Import for virtual stats
 
 const generateDemoEntries = () => {
@@ -384,6 +385,15 @@ export default function JournalPage() {
               Sleduj své obchody, analyzuj výkon a rozvíjej se jako trader 🚀
             </p>
           </div>
+
+        {!isLiveMode && (
+          <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-2 px-3 text-xs md:text-sm flex items-center gap-2 w-full mb-4">
+            <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
+            <span className="text-amber-100">
+              <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+            </span>
+          </div>
+        )}
 
           <div className="flex gap-2 md:gap-3 flex-wrap">
             <Button

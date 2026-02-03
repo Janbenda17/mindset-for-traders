@@ -2,402 +2,350 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { useData } from "@/contexts/data-context"
 import {
   Brain,
-  LayoutDashboard,
-  ClipboardCheck,
+  Calendar,
+  BarChart3,
   MessageSquare,
   BookOpen,
-  RefreshCw,
-  Star,
-  BarChart3,
-  Rocket,
+  Target,
+  Zap,
   ChevronRight,
   ChevronLeft,
-  Sparkles,
   X,
-  Eye,
+  Check,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-const tourSteps = [
+const tourPages = [
   {
-    id: "welcome",
-    icon: Sparkles,
-    title: "Vítej v MindTraderu",
-    subtitle: "Tohle je tvoje mentální základna pro trading.",
-    description: "Projdeme si společně klíčové funkce, které ti pomohou stát se disciplinovanějším traderem.",
-    cta: "Začít tour",
-    route: null,
+    id: "why",
+    title: "Proč MindTrader vznikl?",
+    subtitle: "80% traderů selhává kvůli psychologii, ne strategii",
+    content: {
+      problem: "Většina traderů má solidní strategie, ale stejně ztrácí. Proč? Emoce sabotují každý plán.",
+      solution: "MindTrader ti pomůže držet disciplínu, rozpoznat emoční triggery a obchodovat podle plánu, ne podle pocitů.",
+      stats: [
+        { label: "traderů ztrácí kvůli emocím", value: "80%" },
+        { label: "zlepšení po 30 dnech", value: "40%" },
+        { label: "snížení impulzivních tradů", value: "65%" },
+      ]
+    }
   },
   {
-    id: "dashboard",
-    icon: LayoutDashboard,
-    title: "Dashboard",
-    subtitle: "Tvůj denní přehled",
-    description:
-      "Tady budeš sledovat svůj psychologický stav, XP a denní připravenost. Dashboard ti řekne, jak jsi dnes mentálně na trading.",
-    highlight: "Readiness Score • XP Level • Denní statistiky",
-    route: "/",
+    id: "features",
+    title: "Co MindTrader obsahuje",
+    subtitle: "Nástroje na každý den tvé trading journey",
+    features: [
+      {
+        icon: Calendar,
+        title: "Daily Tracker",
+        description: "Každé ráno nastavíš podmínky (max risk, počet tradů, emoční hranice). Když se jich držíš, emoce tě nepřeválcují.",
+        color: "from-cyan-500 to-blue-500"
+      },
+      {
+        icon: Brain,
+        title: "MindTrader AI",
+        description: "AI sleduje tvůj stav v real-time. Když začneš porušovat plán nebo se necháš unést, upozorní tě.",
+        color: "from-purple-500 to-pink-500"
+      },
+      {
+        icon: BarChart3,
+        title: "Weekly Review",
+        description: "Každý týden shrnutí: kde jsi chyboval, které emoce tě stály peníze, co změnit příště.",
+        color: "from-orange-500 to-red-500"
+      },
+      {
+        icon: BookOpen,
+        title: "Trading Journal",
+        description: "Zaznamenávej trades včetně emocí. AI ti pak ukáže vzorce a co sabotuje tvé výsledky.",
+        color: "from-green-500 to-emerald-500"
+      },
+      {
+        icon: Target,
+        title: "Psychology Analytics",
+        description: "Data o tiltu, FOMO, revenge tradingu. Vidíš korelaci mezi psychikou a výsledky.",
+        color: "from-yellow-500 to-amber-500"
+      },
+      {
+        icon: Zap,
+        title: "Gamifikace",
+        description: "XP body, level, achievementy. Mentální trénink jako hra – motivace držet disciplínu dlouhodobě.",
+        color: "from-indigo-500 to-violet-500"
+      }
+    ]
   },
   {
-    id: "daily-tracker",
-    icon: ClipboardCheck,
-    title: "Daily Tracker",
-    subtitle: "Ranní check-in",
-    description:
-      "Každý den vyplníš pár informací o spánku, stresu, energii a rutinách. AI ti vypočítá Readiness Score a doporučí, zda obchodovat.",
-    highlight: "Spánek • Stres • Energie • Focus",
-    route: "/daily-tracker",
-  },
-  {
-    id: "ai-coach",
-    icon: MessageSquare,
-    title: "AI Coach (MindTrader AI)",
-    subtitle: "Tvůj mentální navigátor",
-    description:
-      "Zde můžeš mluvit s AI koučem. Pomůže ti při frustraci, FOMO, euforii nebo pochybnostech. Je to tvůj mentální navigátor.",
-    highlight: "24/7 podpora • Personalizované rady • Emoční analýza",
-    route: "/mindtrader?tab=ai", // Changed from /mindtrader-ai (non-existent) to /mindtrader?tab=ai
-  },
-  {
-    id: "trading-diary",
-    icon: BookOpen,
-    title: "Trading Deník",
-    subtitle: "Více než jen čísla",
-    description: "Sem si zapisuješ obchody a hlavně emoce. MindTrader sleduje tvé psychologické chyby, ne jen čísla.",
-    highlight: "Emoce • Psychologické vzorce • Sebereflexe",
-    route: "/journal",
-  },
-  {
-    id: "loss-reset",
-    icon: RefreshCw,
-    title: "Loss Reset Protocol",
-    subtitle: "Zastavení spirály",
-    description:
-      "Když přijde ztráta, aktivuje se Reset Mode: krátká rutina, která tě vrátí do klidu a zastaví revenge trading.",
-    highlight: "Dýchání • Meditace • Reset myšlení",
-    route: "/loss-reset",
-  },
-  {
-    id: "xp-system",
-    icon: Star,
-    title: "XP & Level systém",
-    subtitle: "Gamifikace disciplíny",
-    description: "Za disciplínu získáváš XP. Levely odemykají nové funkce a posouvají tě k MindMaster úrovni.",
-    highlight: "XP za akce • 10 levelů • Odměny",
-    route: "/rewards",
-  },
-  {
-    id: "analytics",
-    icon: BarChart3,
-    title: "Analytics",
-    subtitle: "Data-driven insights",
-    description: "Zde uvidíš korelace mezi tvou psychikou a výsledky. Čím víc dat, tím chytřejší MindTrader bude.",
-    highlight: "Psychika vs. P&L • Trendy • AI doporučení",
-    route: "/analytics",
-  },
-  {
-    id: "live-mode",
-    icon: Rocket,
-    title: "Připraven na Live?",
-    subtitle: "Závazek k disciplíně",
-    description: "Až budeš připraven, můžeš přejít do LIVE režimu. Ten už nelze vrátit – je to závazek k disciplíně.",
-    highlight: "Reálná data • Plný tracking • Premium funkce",
-    route: "/settings",
-  },
-  {
-    id: "finish",
-    icon: Brain,
-    title: "Tohle je MindTrader",
-    subtitle: "Teď si vše můžeš vyzkoušet",
-    description: "Virtual Mode ti umožňuje prozkoumat všechny funkce bez rizika. Až budeš připraven, přejdi na Live.",
-    cta: "Dokončit tour",
-    route: null,
-  },
+    id: "cta",
+    title: "Vyzkoušej si MindTrader teď",
+    subtitle: "Žádná registrace, žádné riziko",
+    benefits: [
+      "Bez registrace – rovnou do akce",
+      "Bez kreditní karty",
+      "Virtual Mode – testovací data, nic se neukládá",
+      "Všechny funkce dostupné hned",
+      "Když se ti to líbí, přepneš na LIVE za 30 sekund"
+    ]
+  }
 ]
 
 export function ProductTour() {
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentPage, setCurrentPage] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
+  const [direction, setDirection] = useState<"forward" | "backward">("forward")
   const router = useRouter()
   const pathname = usePathname()
   const { isLiveMode } = useData()
 
   useEffect(() => {
-    console.log("[v0] ProductTour: pathname =", pathname)
-
-    // Don't show tour on teaser, login, signup pages
-    if (pathname === "/teaser" || pathname === "/login" || pathname === "/signup" || pathname === "/onboarding") {
-      console.log("[v0] ProductTour: Skipping tour on auth pages")
+    if (pathname === "/login" || pathname === "/signup" || pathname === "/onboarding") {
       return
     }
 
     const tourCompleted = localStorage.getItem("mindtrader-product-tour-completed")
     const showTour = localStorage.getItem("mindtrader-show-tour")
 
-    console.log("[v0] ProductTour: tourCompleted =", tourCompleted)
-    console.log("[v0] ProductTour: showTour =", showTour)
-    console.log("[v0] ProductTour: isLiveMode =", isLiveMode)
-
-    if (!tourCompleted) {
-      if (showTour === "true" && !isVisible) {
-        console.log("[v0] ProductTour: Starting tour!")
-        setIsVisible(true)
-        localStorage.removeItem("mindtrader-show-tour")
-      } else if (isVisible) {
-        console.log("[v0] ProductTour: Tour already running, keeping visible")
-      }
+    if (!tourCompleted && showTour === "true" && !isVisible) {
+      setIsVisible(true)
+      localStorage.removeItem("mindtrader-show-tour")
     }
-  }, [pathname, isVisible, isLiveMode])
-
-  useEffect(() => {
-    if (isVisible && !isMinimized) {
-      const step = tourSteps[currentStep]
-      // Only navigate if step has a route AND we're not already on that route
-      if (step.route && pathname !== step.route) {
-        console.log("[v0] Tour: Navigating to", step.route)
-        router.push(step.route)
-      }
-    }
-  }, [currentStep, isVisible, isMinimized, router, pathname])
+  }, [pathname, isVisible])
 
   const handleNext = () => {
-    if (currentStep < tourSteps.length - 1) {
-      setCurrentStep(currentStep + 1)
+    if (currentPage < tourPages.length - 1) {
+      setDirection("forward")
+      setCurrentPage(currentPage + 1)
     } else {
       completeTour()
     }
   }
 
   const handlePrev = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+    if (currentPage > 0) {
+      setDirection("backward")
+      setCurrentPage(currentPage - 1)
     }
-  }
-
-  const handleSkip = () => {
-    completeTour()
   }
 
   const completeTour = () => {
     localStorage.setItem("mindtrader-product-tour-completed", "true")
-    console.log("[v0] Tour completed - redirecting to dashboard")
     setIsVisible(false)
     router.push("/")
   }
 
-  // Start tour function that can be called externally
-  const startTour = () => {
-    setCurrentStep(0)
-    setIsVisible(true)
-    setIsMinimized(false)
+  const skipTour = () => {
+    localStorage.setItem("mindtrader-product-tour-completed", "true")
+    setIsVisible(false)
   }
 
-  if (!isVisible) return null
+  if (!isVisible || isLiveMode) return null
 
-  const step = tourSteps[currentStep]
-  const Icon = step.icon
-  const progress = ((currentStep + 1) / tourSteps.length) * 100
-  const isWelcomeOrFinish = step.route === null
+  const page = tourPages[currentPage]
+  const isFirst = currentPage === 0
+  const isLast = currentPage === tourPages.length - 1
+  const progress = ((currentPage + 1) / tourPages.length) * 100
 
-  // Minimized floating button
-  if (isMinimized) {
-    return (
-      <button
-        onClick={() => setIsMinimized(false)}
-        className="fixed bottom-6 right-6 z-[100] bg-cyan-500 hover:bg-cyan-600 text-black font-semibold px-4 py-3 rounded-full shadow-lg shadow-cyan-500/30 flex items-center gap-2 transition-all hover:scale-105"
-      >
-        <Brain className="w-5 h-5" />
-        Pokračovat v tour ({currentStep + 1}/{tourSteps.length})
-      </button>
-    )
-  }
-
-  // Welcome and Finish screens - fullscreen
-  if (isWelcomeOrFinish) {
-    return (
-      <div className="fixed inset-0 z-[100] bg-black overflow-hidden">
-        {/* Animated stars background */}
-        <div className="absolute inset-0">
-          {[...Array(80)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-cyan-400 animate-pulse"
-              style={{
-                width: Math.random() * 3 + 1 + "px",
-                height: Math.random() * 3 + 1 + "px",
-                top: Math.random() * 100 + "%",
-                left: Math.random() * 100 + "%",
-                animationDelay: Math.random() * 3 + "s",
-                animationDuration: Math.random() * 3 + 2 + "s",
-                opacity: Math.random() * 0.7 + 0.3,
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Nebula effects */}
-        <div className="absolute top-1/4 -left-1/4 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
-        <div
-          className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-cyan-400/10 rounded-full blur-[120px] animate-pulse"
-          style={{ animationDelay: "1s" }}
-        />
-
-        <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4">
-          {/* Progress */}
-          <div className="absolute top-6 left-6 right-6">
-            <div className="max-w-md mx-auto">
-              <div className="flex items-center justify-between mb-2 text-xs text-gray-500">
-                <span>
-                  {currentStep + 1} / {tourSteps.length}
-                </span>
-                <button onClick={handleSkip} className="text-gray-500 hover:text-gray-400 transition-colors">
-                  Přeskočit tour
-                </button>
-              </div>
-              <Progress value={progress} className="h-1 bg-gray-800" />
-            </div>
-          </div>
-
-          {/* Icon */}
-          <div className="relative mb-8">
-            <div className="absolute inset-0 bg-cyan-500/30 rounded-full blur-2xl scale-150 animate-pulse" />
-            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border border-cyan-500/30 flex items-center justify-center">
-              <Icon className="w-12 h-12 text-cyan-400" />
-            </div>
-          </div>
-
-          {/* Content */}
-          <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent">
-            {step.title}
-          </h1>
-          <p className="text-cyan-400 text-lg mb-6">{step.subtitle}</p>
-          <p className="text-gray-400 text-center max-w-lg mb-10 leading-relaxed">{step.description}</p>
-
-          {/* CTA Button */}
-          <Button
-            onClick={handleNext}
-            size="lg"
-            className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white px-8 py-6 text-lg rounded-full shadow-lg shadow-cyan-500/30"
-          >
-            {step.cta}
-            <ChevronRight className="w-5 h-5 ml-2" />
-          </Button>
-
-          {/* Back button on finish */}
-          {currentStep > 0 && (
-            <button
-              onClick={handlePrev}
-              className="mt-4 text-gray-500 hover:text-gray-400 transition-colors flex items-center gap-2"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Zpět
-            </button>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  // Page overlay with bottom panel
   return (
-    <>
-      {/* Semi-transparent overlay */}
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90]" onClick={() => setIsMinimized(true)} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Galaxy background for mobile */}
+      <div className="fixed inset-0 pointer-events-none md:hidden">
+        <div className="absolute inset-0" style={{
+          background: `
+            radial-gradient(2px 2px at 20% 30%, white, transparent),
+            radial-gradient(2px 2px at 60% 70%, white, transparent),
+            radial-gradient(1px 1px at 50% 50%, white, transparent),
+            radial-gradient(1px 1px at 80% 10%, white, transparent),
+            radial-gradient(2px 2px at 90% 60%, white, transparent),
+            radial-gradient(1px 1px at 33% 80%, white, transparent),
+            radial-gradient(2px 2px at 15% 90%, white, transparent),
+            radial-gradient(1px 1px at 75% 40%, rgba(255, 255, 255, 0.8), transparent),
+            radial-gradient(1px 1px at 40% 20%, rgba(255, 255, 255, 0.6), transparent),
+            radial-gradient(1px 1px at 65% 85%, rgba(255, 255, 255, 0.7), transparent)
+          `,
+          backgroundSize: '200% 200%',
+          animation: 'twinkle 15s ease-in-out infinite'
+        }} />
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
+      
+      {/* Desktop subtle orbs */}
+      <div className="fixed inset-0 pointer-events-none hidden md:block">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
 
-      <button
-        onClick={() => setIsMinimized(true)}
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[95] bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white font-semibold px-8 py-4 rounded-full shadow-2xl shadow-cyan-500/40 flex items-center gap-3 transition-all hover:scale-105 group"
-      >
-        <Eye className="w-6 h-6 group-hover:scale-110 transition-transform" />
-        <div className="text-left">
-          <div className="text-sm font-bold">Náhled stránky</div>
-          <div className="text-xs opacity-90">Klikni zde pro přiblížení</div>
-        </div>
-      </button>
-
-      {/* Bottom panel */}
-      <div className="fixed bottom-0 left-0 right-0 z-[100] bg-gradient-to-t from-gray-900 via-gray-900 to-gray-900/95 border-t border-cyan-500/20 p-6 pb-8">
-        {/* Close/Minimize button */}
-        <button
-          onClick={() => setIsMinimized(true)}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-300 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Progress */}
-        <div className="max-w-3xl mx-auto mb-4">
-          <div className="flex items-center justify-between mb-2 text-xs text-gray-500">
-            <span>
-              {currentStep + 1} / {tourSteps.length}
-            </span>
-            <button onClick={handleSkip} className="text-gray-500 hover:text-gray-400 transition-colors">
-              Přeskočit tour
-            </button>
-          </div>
-          <Progress value={progress} className="h-1 bg-gray-800" />
-        </div>
-
-        <div className="max-w-3xl mx-auto flex items-center gap-6">
-          {/* Icon */}
-          <div className="hidden sm:flex shrink-0">
-            <div className="relative">
-              <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-xl scale-150" />
-              <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border border-cyan-500/30 flex items-center justify-center">
-                <Icon className="w-8 h-8 text-cyan-400" />
+      <div className="relative w-full max-w-5xl bg-gradient-to-br from-slate-900/95 to-slate-800/95 border border-cyan-500/30 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl my-auto">
+        {/* Header with progress */}
+        <div className="relative p-4 sm:p-6 border-b border-slate-700/50 bg-slate-900/50">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1">
+              <p className="text-xs sm:text-sm text-slate-400 mb-2">Stránka {currentPage + 1} ze {tourPages.length}</p>
+              <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-500 rounded-full"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
             </div>
+            <button
+              onClick={skipTour}
+              className="ml-4 p-2 hover:bg-slate-700/50 rounded-lg transition-colors flex-shrink-0"
+            >
+              <X className="w-5 h-5 text-slate-400 hover:text-white" />
+            </button>
           </div>
+        </div>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold text-white mb-1">{step.title}</h2>
-            <p className="text-cyan-400 text-sm mb-2">{step.subtitle}</p>
-            <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">{step.description}</p>
+        {/* Content */}
+        <div className="p-6 sm:p-8 md:p-10 min-h-[500px] flex flex-col">
+          {/* Page 1: Why */}
+          {page.id === "why" && (
+            <div className="space-y-8 flex-1 flex flex-col justify-center">
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-full text-sm text-purple-300 mb-4">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Problém → Řešení</span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">{page.title}</h2>
+                <p className="text-lg sm:text-xl text-cyan-400 font-semibold">{page.subtitle}</p>
+              </div>
 
-            {/* Highlight tags */}
-            {step.highlight && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {step.highlight.split(" • ").map((tag, i) => (
-                  <span
-                    key={i}
-                    className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs"
-                  >
-                    {tag}
-                  </span>
+              <div className="grid md:grid-cols-2 gap-6 my-8">
+                <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl">
+                  <h3 className="text-xl font-bold text-red-400 mb-3 flex items-center gap-2">
+                    <X className="w-5 h-5" />
+                    Problém
+                  </h3>
+                  <p className="text-slate-300 leading-relaxed">{page.content.problem}</p>
+                </div>
+
+                <div className="p-6 bg-green-500/10 border border-green-500/30 rounded-xl">
+                  <h3 className="text-xl font-bold text-green-400 mb-3 flex items-center gap-2">
+                    <Check className="w-5 h-5" />
+                    Řešení
+                  </h3>
+                  <p className="text-slate-300 leading-relaxed">{page.content.solution}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                {page.content.stats.map((stat, idx) => (
+                  <div key={idx} className="text-center p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl">
+                    <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent mb-2">
+                      {stat.value}
+                    </div>
+                    <div className="text-xs sm:text-sm text-slate-400">{stat.label}</div>
+                  </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Navigation buttons */}
-          <div className="flex items-center gap-2 shrink-0">
-            {currentStep > 0 && (
+          {/* Page 2: Features */}
+          {page.id === "features" && (
+            <div className="space-y-6 flex-1">
+              <div className="text-center space-y-2">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">{page.title}</h2>
+                <p className="text-lg sm:text-xl text-cyan-400">{page.subtitle}</p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+                {page.features.map((feature, idx) => {
+                  const Icon = feature.icon
+                  return (
+                    <div
+                      key={idx}
+                      className="group p-5 bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/50 rounded-xl transition-all hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/10"
+                    >
+                      <div className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${feature.color} bg-opacity-20 mb-3`}>
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
+                      <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Page 3: CTA */}
+          {page.id === "cta" && (
+            <div className="space-y-8 flex-1 flex flex-col justify-center items-center text-center">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-full text-sm text-green-300 mb-4">
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Začni teď</span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">{page.title}</h2>
+                <p className="text-lg sm:text-xl text-cyan-400">{page.subtitle}</p>
+              </div>
+
+              <div className="max-w-md space-y-3">
+                {page.benefits.map((benefit, idx) => (
+                  <div key={idx} className="flex items-start gap-3 text-left p-3 bg-slate-800/30 border border-slate-700/30 rounded-lg">
+                    <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-slate-300">{benefit}</span>
+                  </div>
+                ))}
+              </div>
+
               <Button
-                onClick={handlePrev}
-                variant="outline"
-                size="sm"
-                className="border-gray-700 text-gray-400 hover:text-white hover:border-gray-600 bg-transparent"
+                onClick={completeTour}
+                size="lg"
+                className="bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700 text-white text-lg px-10 py-6 h-auto rounded-xl shadow-lg shadow-cyan-500/30 transition-all hover:scale-105"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <Sparkles className="w-5 h-5 mr-2" />
+                Začít v dashboardu
               </Button>
-            )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer Navigation */}
+        <div className="p-4 sm:p-6 border-t border-slate-700/50 bg-slate-900/50">
+          <div className="flex items-center justify-between gap-4">
+            <Button
+              onClick={handlePrev}
+              disabled={isFirst}
+              variant="outline"
+              className="border-slate-700 text-slate-300 hover:bg-slate-800 disabled:opacity-30 px-4 sm:px-6"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Zpět</span>
+            </Button>
+
+            <div className="flex gap-2">
+              {tourPages.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setDirection(idx > currentPage ? "forward" : "backward")
+                    setCurrentPage(idx)
+                  }}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    idx === currentPage 
+                      ? "bg-gradient-to-r from-cyan-500 to-purple-500 w-8" 
+                      : "bg-slate-600 hover:bg-slate-500"
+                  }`}
+                />
+              ))}
+            </div>
+
             <Button
               onClick={handleNext}
-              size="sm"
-              className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold px-6"
+              className="bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700 text-white px-4 sm:px-6"
             >
-              Další
-              <ChevronRight className="w-4 h-4 ml-1" />
+              <span className="hidden sm:inline">{isLast ? "Začít" : "Další"}</span>
+              <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }

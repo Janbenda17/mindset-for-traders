@@ -67,6 +67,48 @@
     @apply bg-background text-foreground;
     background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
     min-height: 100vh;
+    position: relative;
+  }
+
+  /* Galaxy background for mobile */
+  @media (max-width: 768px) {
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: 
+        radial-gradient(2px 2px at 20% 30%, white, transparent),
+        radial-gradient(2px 2px at 60% 70%, white, transparent),
+        radial-gradient(1px 1px at 50% 50%, white, transparent),
+        radial-gradient(1px 1px at 80% 10%, white, transparent),
+        radial-gradient(2px 2px at 90% 60%, white, transparent),
+        radial-gradient(1px 1px at 33% 80%, white, transparent),
+        radial-gradient(2px 2px at 15% 90%, white, transparent),
+        radial-gradient(1px 1px at 75% 40%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(1px 1px at 40% 20%, rgba(255, 255, 255, 0.6), transparent),
+        radial-gradient(1px 1px at 65% 85%, rgba(255, 255, 255, 0.7), transparent);
+      background-size: 200% 200%, 180% 180%, 220% 220%, 190% 190%, 210% 210%, 200% 200%, 195% 195%, 185% 185%, 205% 205%, 215% 215%;
+      background-position: 0% 0%, 20% 20%, 40% 40%, 60% 60%, 80% 80%, 10% 10%, 30% 30%, 50% 50%, 70% 70%, 90% 90%;
+      animation: galaxyTwinkle 20s ease-in-out infinite;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: radial-gradient(ellipse at top, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                  radial-gradient(ellipse at bottom, rgba(147, 51, 234, 0.15) 0%, transparent 50%),
+                  radial-gradient(ellipse at left, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                  linear-gradient(180deg, #0a0a1a 0%, #0f0f23 50%, #1a1a2e 100%);
+    }
   }
 }
 
@@ -80,6 +122,26 @@
   }
   100% {
     background-position: 0% 50%;
+  }
+}
+
+/* Galaxy twinkling animation for mobile */
+@keyframes galaxyTwinkle {
+  0%, 100% {
+    opacity: 1;
+    background-position: 0% 0%, 20% 20%, 40% 40%, 60% 60%, 80% 80%, 10% 10%, 30% 30%, 50% 50%, 70% 70%, 90% 90%;
+  }
+  25% {
+    opacity: 0.8;
+    background-position: 5% 5%, 25% 15%, 35% 45%, 65% 55%, 75% 85%, 15% 5%, 35% 25%, 45% 55%, 75% 65%, 85% 95%;
+  }
+  50% {
+    opacity: 1;
+    background-position: 10% 10%, 30% 10%, 30% 50%, 70% 50%, 70% 90%, 20% 0%, 40% 20%, 40% 60%, 80% 60%, 80% 100%;
+  }
+  75% {
+    opacity: 0.9;
+    background-position: 5% 15%, 25% 25%, 35% 55%, 65% 65%, 75% 95%, 15% 15%, 35% 35%, 45% 65%, 75% 75%, 85% 85%;
   }
 }
 

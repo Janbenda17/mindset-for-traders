@@ -32,6 +32,19 @@ const LiveModeToggle = () => {
 
   const handleModeSwitch = () => {
     if (!isLiveMode) {
+      // Check if user is authenticated first
+      if (!user) {
+        console.log("[v0] Guest user trying to switch to Live - redirecting to signup")
+        toast({
+          title: "Vyžaduje se registrace",
+          description: "Pro přepnutí do Live módu se musíš nejdřív zaregistrovat. Přesměrovávám...",
+        })
+        setTimeout(() => {
+          router.push("/signup")
+        }, 1500)
+        return
+      }
+
       // Pokud se ještě načítá subscription status, čekáme
       if (isPremiumLoading) {
         toast({
@@ -156,15 +169,12 @@ const LiveModeToggle = () => {
           "
         />
 
-        <div className="relative flex items-center gap-2">
+        <div className="relative flex items-center gap-1">
           <div className="w-2 h-2 bg-amber-400 rounded-full" />
-          <Shield className="w-4 h-4 text-amber-400" />
-          <span className="font-semibold text-amber-300">{isMigrating ? "Migruji..." : "Virtual Mode"}</span>
+          <Shield className="w-3 h-3 text-amber-400" />
+          <span className="font-semibold text-amber-300 text-xs md:text-sm">{isMigrating ? "Migruji..." : "Virtual"}</span>
           {!isMigrating && (
-            <>
-              <span className="text-xs text-amber-400/70 ml-2">→ Přepnout na Live</span>
-              {!isPremium && <Crown className="w-3 h-3 text-yellow-400 ml-1" />}
-            </>
+            <span className="text-xs text-amber-400/70">→ Live</span>
           )}
         </div>
       </Button>

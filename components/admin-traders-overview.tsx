@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useData } from "@/contexts/data-context"
 import {
   Dialog,
@@ -38,6 +38,7 @@ import {
   Target,
   Brain,
   Star,
+  Loader2,
 } from "lucide-react"
 
 // Demo traders for virtual mode with detailed data
@@ -245,14 +246,43 @@ export function AdminTradersOverview({ children }: AdminTradersOverviewProps) {
   const [selectedTrader, setSelectedTrader] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("overview")
   const { isLiveMode } = useData()
+  const [liveUsers, setLiveUsers] = useState<any[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(false)
 
   const handleCodeSubmit = () => {
     if (accessCode === "Master77") {
       setIsAuthenticated(true)
       setAccessCode("")
+      // Load live users when authenticated
+      if (isLiveMode) {
+        loadLiveUsers()
+      }
     } else {
       alert("Nesprávný kód!")
       setAccessCode("")
+    }
+  }
+
+  const loadLiveUsers = async () => {
+    setLoadingUsers(true)
+    try {
+      const response = await fetch("/api/admin/users", {
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log(`[v0] Loaded ${data.users.length} live users`)
+        setLiveUsers(data.users)
+      } else {
+        console.error("[v0] Failed to load users:", response.status)
+        setLiveUsers([])
+      }
+    } catch (error) {
+      console.error("[v0] Error loading users:", error)
+      setLiveUsers([])
+    } finally {
+      setLoadingUsers(false)
     }
   }
 
@@ -266,9 +296,8 @@ export function AdminTradersOverview({ children }: AdminTradersOverviewProps) {
   // Get traders based on mode
   const getTraders = () => {
     if (isLiveMode) {
-      // In live mode, return real users (for now just empty array)
-      // In real app, this would fetch from database
-      return []
+      // In live mode, return real users from API
+      return liveUsers
     } else {
       // In virtual mode, return demo traders
       return DEMO_TRADERS

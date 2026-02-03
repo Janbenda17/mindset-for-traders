@@ -105,7 +105,7 @@ export function NavUser({
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/pricing">
+                <Link href="/upgrade">
                   <CreditCard />
                   Předplatné
                 </Link>
