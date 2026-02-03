@@ -243,8 +243,8 @@ export function PsychologicalMetricsTracker() {
                         name="Current Score" 
                         dataKey="score" 
                         stroke="#a78bfa" 
-                        fill="#d8bfd8" 
-                        fillOpacity={0.7}
+                        fill="#e9d5ff"
+                        fillOpacity={1}
                         isAnimationActive={true}
                       />
                       <Radar 
@@ -252,7 +252,7 @@ export function PsychologicalMetricsTracker() {
                         dataKey="optimal" 
                         stroke="#82ca9d" 
                         fill="#82ca9d" 
-                        fillOpacity={0.3}
+                        fillOpacity={0.2}
                       />
                       <Legend />
                       <Tooltip formatter={(value) => `${value}%`} />
