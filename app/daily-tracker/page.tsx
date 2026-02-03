@@ -4,8 +4,13 @@ import { useState, useEffect, useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog"
 import {
   Sun,
   CheckCircle,
@@ -170,6 +175,7 @@ export default function DailyTrackerPage() {
   const [activeTab, setActiveTab] = useState("today")
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
   const [expandedStage, setExpandedStage] = useState<number | null>(null)
+  const [previewStage, setPreviewStage] = useState<number | null>(null)
   const [virtualData, setVirtualData] = useState<any>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0) // State for triggering refresh
   const [entriesLoading, setEntriesLoading] = useState(true)
@@ -1108,9 +1114,8 @@ export default function DailyTrackerPage() {
                       "min-w-[140px] h-[140px] group"
                     )}
                     onClick={() => {
-                      if (isUnlocked && stage.href) {
-                        setExpandedStage(stage.id)
-                        setTimeout(() => router.push(stage.href), 200)
+                      if (isUnlocked) {
+                        setPreviewStage(stage.id)
                       }
                     }}
                     onMouseEnter={() => isUnlocked && setExpandedStage(stage.id)}
@@ -1557,6 +1562,154 @@ export default function DailyTrackerPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Stage Preview Dialog */}
+      <Dialog open={previewStage !== null} onOpenChange={() => previewStage !== null && setPreviewStage(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-purple-500/30">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              {stageData.find(s => s.id === previewStage)?.name} - Náhled
+            </DialogTitle>
+            <DialogDescription>
+              Přehled obsahu této stage
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 mt-6">
+            {previewStage === 1 && todayEntry?.morningCheck && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                    <div className="text-sm text-gray-400">Spánek (hodin)</div>
+                    <div className="text-2xl font-bold text-white">{todayEntry.morningCheck.sleepHours}h</div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                    <div className="text-sm text-gray-400">Kvalita spánku</div>
+                    <div className="text-2xl font-bold text-white">{todayEntry.morningCheck.sleepQuality}/10</div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                    <div className="text-sm text-gray-400">Energie</div>
+                    <div className="text-2xl font-bold text-white">{todayEntry.morningCheck.energyLevel}/10</div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                    <div className="text-sm text-gray-400">Stres</div>
+                    <div className="text-2xl font-bold text-white">{todayEntry.morningCheck.stressLevel}/10</div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                    <div className="text-sm text-gray-400">Focus</div>
+                    <div className="text-2xl font-bold text-white">{todayEntry.morningCheck.focus}/10</div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                    <div className="text-sm text-gray-400">Emoční stav</div>
+                    <div className="text-2xl font-bold text-white">{todayEntry.morningCheck.emotionalState}/10</div>
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-500/20">
+                  <div className="text-sm text-gray-400 mb-2">Doporučení</div>
+                  <div className="text-white font-medium">{todayEntry.morningCheck.recommendation}</div>
+                </div>
+              </div>
+            )}
+
+            {previewStage === 2 && todayEntry?.intention && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-sm text-gray-400 mb-2">Cíle na dnes</div>
+                  <div className="text-white font-medium">{todayEntry.intention.goals}</div>
+                </div>
+                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-sm text-gray-400 mb-2">Max risk %</div>
+                  <div className="text-white font-medium">{todayEntry.intention.maxRiskPercent}%</div>
+                </div>
+                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-sm text-gray-400 mb-2">Emoční cíl</div>
+                  <div className="text-white font-medium">{todayEntry.intention.emotionalGoal}</div>
+                </div>
+                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-sm text-gray-400 mb-2">Strategie</div>
+                  <div className="text-white font-medium">{todayEntry.intention.strategy}</div>
+                </div>
+              </div>
+            )}
+
+            {previewStage === 3 && todayEntry?.plan && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-sm text-gray-400 mb-2">Setups</div>
+                  <div className="text-white font-medium">{todayEntry.plan.setups}</div>
+                </div>
+                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-sm text-gray-400 mb-2">Páry</div>
+                  <div className="text-white font-medium">{todayEntry.plan.pairs}</div>
+                </div>
+                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-sm text-gray-400 mb-2">Timeframy</div>
+                  <div className="text-white font-medium">{todayEntry.plan.timeframes}</div>
+                </div>
+                <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-sm text-gray-400 mb-2">Entry pravidla</div>
+                  <div className="text-white font-medium">{todayEntry.plan.entryRules}</div>
+                </div>
+              </div>
+            )}
+
+            {previewStage === 4 && todayEntry?.trades && todayEntry.trades.length > 0 && (
+              <div className="space-y-4">
+                <div className="text-lg font-bold text-white mb-4">Celkem obchodů: {todayEntry.trades.length}</div>
+                {todayEntry.trades.map((trade, idx) => (
+                  <div key={idx} className="p-4 rounded-lg bg-white/5 border border-white/10">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm text-gray-400">Pár</div>
+                        <div className="text-white font-bold">{trade.pair}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-400">Směr</div>
+                        <div className="text-white font-bold">{trade.direction}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-400">Entry cena</div>
+                        <div className="text-white font-bold">${trade.entryPrice.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-400">Exit cena</div>
+                        <div className="text-white font-bold">${trade.exitPrice.toFixed(2)}</div>
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <div className={`text-lg font-bold ${trade.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        P&L: ${trade.pnl >= 0 ? '+' : ''}{trade.pnl.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {previewStage === 5 && (
+              <div className="p-6 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 text-center">
+                <div className="text-4xl font-bold text-white mb-2">{todayEntry?.overallScore}%</div>
+                <div className="text-gray-400">Celkové skóre dne</div>
+              </div>
+            )}
+
+            {(!todayEntry || (previewStage === 1 && !todayEntry?.morningCheck) || (previewStage === 2 && !todayEntry?.intention) || (previewStage === 3 && !todayEntry?.plan) || (previewStage === 4 && !todayEntry?.trades)) && (
+              <div className="p-6 rounded-lg bg-white/5 border border-white/10 text-center">
+                <div className="text-gray-400">Tato stage zatím nemá žádný obsah</div>
+                <Button
+                  onClick={() => {
+                    const stage = stageData.find(s => s.id === previewStage)
+                    if (stage) router.push(stage.href)
+                  }}
+                  className="mt-4 bg-purple-600 hover:bg-purple-700"
+                >
+                  Jít na stage →
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
