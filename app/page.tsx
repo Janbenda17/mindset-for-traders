@@ -308,7 +308,7 @@ export default function HomePage() {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="text-center mb-8 md:mb-12"
         >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">Připraveni začít?</h2>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">Připraven začít?</h2>
           <Button
             size="lg"
             className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-base md:text-lg px-8 md:px-12 py-3 md:py-4 rounded-lg"
