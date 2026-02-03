@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { TopNavigation } from '@/components/top-navigation'
-import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ChevronLeft, ChevronRight, Users, TrendingUp, Target } from 'lucide-react'
