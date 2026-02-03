@@ -1718,127 +1718,7 @@ export default function PsychologyAnalyticsPage() {
           </TabsList>
           <TabsContent value="overview">
             <div className="space-y-6">
-              <Accordion type="multiple" defaultValue={["readiness", "radar", "insights"]} className="space-y-4">
-                {/* Psychological Readiness Section */}
-                <AccordionItem
-                  value="readiness"
-                  className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 shadow-2xl overflow-hidden rounded-lg border"
-                >
-                  <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
-                    <div className="flex items-center gap-3">
-                      <Brain className="w-5 h-5 text-purple-400" />
-                      Psychological Readiness Score
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 py-4">
-                    {/* Psychological Readiness content - existing code */}
-                    <Card className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 shadow-2xl overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                        <Brain className="w-64 h-64 text-purple-500" />
-                      </div>
-                      <CardHeader className="relative z-10 border-b border-slate-700/50 pb-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="text-white flex items-center gap-3 text-2xl">
-                              <div className="p-2 bg-purple-500/10 rounded-lg">
-                                <Brain className="w-6 h-6 text-purple-400" />
-                              </div>
-                              Psychological Readiness
-                            </CardTitle>
-                            <CardDescription className="text-gray-400 mt-1">
-                              Komplexní analýza vaší připravenosti k obchodování
-                            </CardDescription>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className="border-purple-500/50 text-purple-300 px-3 py-1 bg-purple-500/10"
-                          >
-                            {Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4) >= 70
-                              ? "READY"
-                              : "PREPARE"}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="relative z-10 pt-6">
-                        <div className="flex flex-col lg:flex-row items-center gap-8">
-                          <div className="flex-1 w-full space-y-6">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                              {safeData.psychologicalProfile.map((item: any, idx: number) => {
-                                const colors = [
-                                  "bg-blue-500",
-                                  "bg-emerald-500",
-                                  "bg-purple-500",
-                                  "bg-amber-500",
-                                  "bg-cyan-500",
-                                  "bg-pink-500",
-                                  "bg-indigo-500",
-                                  "bg-rose-500",
-                                ]
-                                const value = Number.isNaN(item.A) ? 0 : item.A || 0
-                                return (
-                                  <div key={idx} className="bg-slate-800/50 p-3 rounded-xl border border-slate-700">
-                                    <div className="flex justify-between items-end mb-2">
-                                      <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider truncate">
-                                        {item.subject}
-                                      </span>
-                                      <span className="text-lg font-bold text-white">{Math.round(value)}%</span>
-                                    </div>
-                                    <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                                      <div
-                                        className={`h-full ${colors[idx % colors.length]} shadow-lg`}
-                                        style={{ width: `${value}%` }}
-                                      />
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Right Side: Big Score */}
-                          <div className="flex flex-col items-center justify-center min-w-[180px] border-l border-slate-700/50 pl-8">
-                            <div className="relative">
-                              <svg className="w-28 h-28 transform -rotate-90">
-                                <circle
-                                  cx="56"
-                                  cy="56"
-                                  r="52"
-                                  stroke="currentColor"
-                                  strokeWidth="8"
-                                  fill="transparent"
-                                  className="text-slate-800"
-                                />
-                                <circle
-                                  cx="56"
-                                  cy="56"
-                                  r="52"
-                                  stroke="currentColor"
-                                  strokeWidth="8"
-                                  fill="transparent"
-                                  strokeDasharray={327}
-                                  strokeDashoffset={
-                                    327 -
-                                    (327 *
-                                      Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4)) /
-                                      100
-                                  }
-                                  className="text-purple-500 transition-all duration-1000 ease-out"
-                                />
-                              </svg>
-                              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-3xl font-black text-white">
-                                  {Math.round((avgMood + avgDiscipline + avgConfidence + (100 - avgStress)) / 4)}
-                                </span>
-                                <span className="text-[9px] uppercase tracking-widest text-gray-400 mt-1">Score</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </AccordionContent>
-                </AccordionItem>
-
+              <Accordion type="multiple" defaultValue={["radar", "insights"]} className="space-y-4">
                 {/* Mental Profile Radar Section */}
                 <AccordionItem
                   value="radar"
@@ -1847,7 +1727,7 @@ export default function PsychologyAnalyticsPage() {
                   <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
                     <div className="flex items-center gap-3">
                       <BarChart3 className="w-5 h-5 text-cyan-400" />
-                      Psychologický Profil & Mental Score
+                      Psychologický Profil
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4 space-y-4">
