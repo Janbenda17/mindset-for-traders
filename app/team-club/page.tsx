@@ -662,7 +662,7 @@ function generateStudentsFromRealData(trades: any[], journals: any[], moodEntrie
       mentorNotes: [],
       todos: [],
     },
-  ]
+  ];
 }
 
 // MENTOR VIEW
