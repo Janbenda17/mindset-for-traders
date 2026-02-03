@@ -292,11 +292,11 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
             </DropdownMenu>
 
             {/* Pricing button */}
-            <Link href="/pricing">
+            <Link href="/upgrade">
               <Button
                 size="sm"
                 className={`relative px-4 h-10 text-sm font-semibold transition-all duration-300 rounded-lg ${
-                  pathname === "/pricing"
+                  pathname === "/upgrade"
                     ? "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 shadow-lg shadow-purple-500/20"
                     : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
