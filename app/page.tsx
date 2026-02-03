@@ -301,6 +301,23 @@ export default function HomePage() {
           </div>
         </motion.div>
 
+        {/* Get Started CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="text-center mb-8 md:mb-12"
+        >
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">Připraveni začít?</h2>
+          <Button
+            size="lg"
+            className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-base md:text-lg px-8 md:px-12 py-3 md:py-4 rounded-lg"
+            onClick={handlePricingClick}
+          >
+            Get Started
+          </Button>
+        </motion.div>
+
         {/* Premium Upgrade CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
