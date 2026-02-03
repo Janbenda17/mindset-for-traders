@@ -32,7 +32,7 @@ interface Trade {
   tags: string[]
 }
 
-// Demo data - všechny obchody z posledních 30 dní
+// Demo data - všechny obchody z posledních 30 dní + random obchody od 1.2 do 1.4
 const generateDemoTrades = (): Trade[] => {
   const trades: Trade[] = []
   const pairs = ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "NZDUSD", "USDCAD"]
@@ -55,6 +55,83 @@ const generateDemoTrades = (): Trade[] => {
   const baseDate = new Date()
   let tradeCount = 0
 
+  // Generuj obchody od 1.2 do 1.4 (virtual mode)
+  const startDate = new Date(2026, 1, 1) // 1.2.2026
+  const endDate = new Date(2026, 1, 13)  // 1.4.2026 (13. března - 1.4 znamená 13. den čtvrtého měsíce? nebo 1.-4. února?)
+  
+  for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+    const dateStr = date.toISOString().split("T")[0]
+    const dayOfWeek = date.getDay()
+
+    // Přeskočit víkendy
+    if (dayOfWeek === 0 || dayOfWeek === 6) continue
+
+    // 3-6 obchodů za den ve virtual modu
+    const tradesPerDay = Math.floor(Math.random() * 4) + 3
+    for (let i = 0; i < tradesPerDay; i++) {
+      const isWinningTrade = Math.random() > 0.35
+      const pips = isWinningTrade ? Math.floor(Math.random() * 80) + 20 : -Math.floor(Math.random() * 60) - 10
+      const pnl = isWinningTrade ? Math.floor(Math.random() * 400) + 100 : -Math.floor(Math.random() * 300) - 50
+      const pair = pairs[Math.floor(Math.random() * pairs.length)]
+      const direction = Math.random() > 0.5 ? "LONG" : "SHORT"
+
+      tradeCount++
+      trades.push({
+        id: `virtual-trade-${tradeCount}`,
+        date: dateStr,
+        pair,
+        direction,
+        openTime: `${String(Math.floor(Math.random() * 24)).padStart(2, "0")}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}`,
+        closeTime: `${String(Math.floor(Math.random() * 24)).padStart(2, "0")}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}`,
+        session: sessions[Math.floor(Math.random() * sessions.length)],
+        tradeType: tradeTypes[Math.floor(Math.random() * tradeTypes.length)],
+        pips,
+        positionSize: Math.floor(Math.random() * 5) + 1,
+        pnl,
+        confidenceBefore: Math.floor(Math.random() * 50) + 50,
+        stressLevel: Math.floor(Math.random() * 40) + 20,
+        mood: Math.floor(Math.random() * 40) + 50,
+        emotionBefore: emotions[0][Math.floor(Math.random() * emotions[0].length)],
+        emotionDuring: emotions[1][Math.floor(Math.random() * emotions[1].length)],
+        emotionAfter: emotions[2][Math.floor(Math.random() * emotions[2].length)],
+        entryReason: reasons[Math.floor(Math.random() * reasons.length)],
+        exitReason: isWinningTrade ? "Take Profit" : "Stop Loss",
+        followedPlan: Math.random() > 0.2,
+        tags: [...(Math.random() > 0.5 ? ["scalp", "quick"] : ["swing", "patient"]), "virtual"],
+      })
+    }
+  }
+
+  // Přidej jeden obchod do "všech záznamů" (poslední 30 dní)
+  const allRecordsTradeDate = new Date(baseDate)
+  allRecordsTradeDate.setDate(baseDate.getDate() - 15)
+  const allRecordsDateStr = allRecordsTradeDate.toISOString().split("T")[0]
+  
+  trades.push({
+    id: `all-records-trade-${tradeCount + 1}`,
+    date: allRecordsDateStr,
+    pair: "EURUSD",
+    direction: "LONG",
+    openTime: "14:30",
+    closeTime: "15:45",
+    session: "London",
+    tradeType: "Day Trade",
+    pips: 65,
+    positionSize: 2,
+    pnl: 650,
+    confidenceBefore: 85,
+    stressLevel: 15,
+    mood: 80,
+    emotionBefore: "Sebevědomý",
+    emotionDuring: "Soustředěný",
+    emotionAfter: "Spokojený",
+    entryReason: "Breakout ze support/resistance",
+    exitReason: "Take Profit",
+    followedPlan: true,
+    tags: ["all-records", "exemplary"],
+  })
+
+  // Generuj obchody z posledních 30 dní
   for (let day = 0; day < 30; day++) {
     const currentDate = new Date(baseDate)
     currentDate.setDate(baseDate.getDate() - day)
