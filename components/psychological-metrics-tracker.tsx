@@ -236,11 +236,24 @@ export function PsychologicalMetricsTracker() {
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="80%" data={psychologicalProfileData}>
-                      <PolarGrid />
+                      <PolarGrid stroke="#e5e7eb" />
                       <PolarAngleAxis dataKey="metric" />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} />
-                      <Radar name="Current Score" dataKey="score" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-                      <Radar name="Optimal Score" dataKey="optimal" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+                      <Radar 
+                        name="Current Score" 
+                        dataKey="score" 
+                        stroke="#a78bfa" 
+                        fill="#d8bfd8" 
+                        fillOpacity={0.7}
+                        isAnimationActive={true}
+                      />
+                      <Radar 
+                        name="Optimal Score" 
+                        dataKey="optimal" 
+                        stroke="#82ca9d" 
+                        fill="#82ca9d" 
+                        fillOpacity={0.3}
+                      />
                       <Legend />
                       <Tooltip formatter={(value) => `${value}%`} />
                     </RadarChart>
