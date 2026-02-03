@@ -340,7 +340,6 @@ export default function HomePage() {
           </div>
         </motion.div>
       </div>
-
       <Footer />
     </div>
   )
