@@ -83,6 +83,14 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
     tradesByDay[date].push(trade)
   })
 
+  // Psychology metrics - korelace readiness s výsledky
+  // Mapovat morning checks na trades po datech pro zjištění readiness v den obchodu
+  const dailyReadiness: { [key: string]: number } = {}
+  morningChecks.forEach((mc) => {
+    const date = mc.date || new Date().toISOString().split("T")[0]
+    dailyReadiness[date] = mc.score || 0
+  })
+
   const dailyPnL = Object.entries(tradesByDay).map(([date, dayTrades]) => ({
     date,
     pnl: dayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0),
@@ -94,14 +102,6 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
     date: "",
     pnl: 0,
     readiness: 0,
-  })
-
-  // Psychology metrics - korelace readiness s výsledky
-  // Mapovat morning checks na trades po datech pro zjištění readiness v den obchodu
-  const dailyReadiness: { [key: string]: number } = {}
-  morningChecks.forEach((mc) => {
-    const date = mc.date || new Date().toISOString().split("T")[0]
-    dailyReadiness[date] = mc.score || 0
   })
 
   // Zařadit trades podle readiness v den obchodu

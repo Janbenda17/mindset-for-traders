@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       .from("daily_stages")
       .select("*")
       .eq("user_id", user.id)
-      .eq("stage_date", today)
+      .eq("date", today)
       .maybeSingle()
 
     if (fetchError) throw fetchError
