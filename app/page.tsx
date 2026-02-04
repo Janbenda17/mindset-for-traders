@@ -185,7 +185,7 @@ export default function HomePage() {
               >
                 <div className="relative bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-xl border-2 border-purple-500/30 rounded-2xl md:rounded-3xl p-2 md:p-3 shadow-2xl max-w-[90vw] sm:max-w-none">
                   <img 
-                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/22trade-ObwCQuoR7ftP1wmINRfxHbryDzBWb0.png"
+                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/9trad-UCVdmtJtwiKxxz4F9SEnwR0U4quz4p.png"
                     alt={slides[currentSlide].title}
                     className="w-full sm:w-[400px] md:w-[500px] lg:w-[600px] h-auto rounded-xl md:rounded-2xl shadow-2xl"
                   />
