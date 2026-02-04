@@ -32,12 +32,6 @@ export default function HomePage() {
       image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/22trade-wMaPbN2geV7dORJ8pJ5v6w0InDEmOI.png'
     },
     {
-      id: 5,
-      title: 'AI čte emoce u každého obchodu',
-      description: 'Zjisti, co cítíš před, během a po každém obchodu',
-      image: '/slides-5.jpg'
-    },
-    {
       id: 4,
       title: 'AI odhalí tvoje slabá místa',
       description: 'Objev, kde prosakuje tvůj trading mindset - emocí jako FOMO, Revenge, Fear, Greed',
