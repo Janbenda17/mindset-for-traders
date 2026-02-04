@@ -44,9 +44,14 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
     }
 
     if (!user) {
-      console.log("[v0] [LiveMode] No user - setting to VIRTUAL")
-      setIsLiveMode(false)
-      setCanSwitchMode(true)
+      // Demo mode - check localStorage for demo mode preference
+      const demoMode = typeof window !== 'undefined' ? localStorage.getItem("trader-mindset-demo-mode") : null
+      const isDemoLive = demoMode === "live"
+      console.log(`[v0] [LiveMode] No user - loading demo mode: ${isDemoLive ? "LIVE" : "VIRTUAL"}`)
+      setIsLiveMode(isDemoLive)
+      setCanSwitchMode(true) // Can always switch in demo
+      cachedModeRef.current = isDemoLive
+      modeLoadedRef.current = true
       setIsLoading(false)
       return
     }
@@ -104,43 +109,60 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
   }
 
   const switchToLive = async () => {
-    if (!user) {
-      console.error("[v0] [LiveMode] Cannot switch to live mode - no user")
-      return
-    }
-
-    if (!canSwitchMode) {
-      console.error("[v0] [LiveMode] Cannot switch mode - already in LIVE mode (permanent)")
-      return
-    }
-
-    console.log(`[v0] [LiveMode] Switching to LIVE mode for user: ${user.id} (${user.email}) - PERMANENT CHANGE`)
-
-    try {
-      const { error } = await supabase.from("profiles").update({ trading_mode: "live" }).eq("user_id", user.id)
-
-      if (error) {
-        console.error("[v0] [LiveMode] Failed to update mode:", error)
-        throw error
+    if (user) {
+      // Authenticated user - switch in database
+      if (!canSwitchMode) {
+        console.error("[v0] [LiveMode] Cannot switch to live mode - already in LIVE mode (permanent)")
+        return
       }
 
-      console.log(`[v0] [LiveMode] ✓ Database updated to LIVE mode (userId: ${user.id})`)
+      console.log(`[v0] [LiveMode] Switching to LIVE mode for user: ${user.id} (${user.email}) - PERMANENT CHANGE`)
 
-      // Note: We don't clear virtual data here - user might want to keep it for reference
-      // But we log that the mode switched
-      console.log(`[v0] [LiveMode] Mode switched -> LIVE, userId: ${user.id}, virtual data preserved in localStorage`)
+      try {
+        const { error } = await supabase.from("profiles").update({ trading_mode: "live" }).eq("user_id", user.id)
 
+        if (error) {
+          console.error("[v0] [LiveMode] Failed to update mode:", error)
+          throw error
+        }
+
+        console.log(`[v0] [LiveMode] ✓ Database updated to LIVE mode (userId: ${user.id})`)
+        console.log(`[v0] [LiveMode] Mode switched -> LIVE, userId: ${user.id}, virtual data preserved in localStorage`)
+
+        cachedModeRef.current = true
+        setIsLiveMode(true)
+        setCanSwitchMode(false)
+        modeLoadedRef.current = true
+
+        setTimeout(() => {
+          window.location.reload()
+        }, 100)
+      } catch (err) {
+        console.error("[v0] [LiveMode] Error switching to live:", err)
+        throw err
+      }
+    } else {
+      // Demo mode - switch in localStorage
+      console.log("[v0] [LiveMode] Switching to LIVE mode (demo mode)")
+      localStorage.setItem("trader-mindset-demo-mode", "live")
       cachedModeRef.current = true
       setIsLiveMode(true)
-      setCanSwitchMode(false)
+      setCanSwitchMode(true)
       modeLoadedRef.current = true
+      console.log("[v0] [LiveMode] ✓ Demo mode switched to LIVE")
+    }
+  }
 
-      setTimeout(() => {
-        window.location.reload()
-      }, 100)
-    } catch (err) {
-      console.error("[v0] [LiveMode] Error switching to live:", err)
-      throw err
+  const switchToVirtual = async () => {
+    if (!user) {
+      // Demo mode - switch back to virtual
+      console.log("[v0] [LiveMode] Switching to VIRTUAL mode (demo mode)")
+      localStorage.setItem("trader-mindset-demo-mode", "virtual")
+      cachedModeRef.current = false
+      setIsLiveMode(false)
+      setCanSwitchMode(true)
+      modeLoadedRef.current = true
+      console.log("[v0] [LiveMode] ✓ Demo mode switched to VIRTUAL")
     }
   }
 

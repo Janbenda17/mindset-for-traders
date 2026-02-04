@@ -10,12 +10,16 @@ import { BarChart3, Zap, Target, Calendar, MessageSquare, AlertCircle, TrendingU
 import { motion } from 'framer-motion'
 import { useAuth } from '@/contexts/auth-context'
 import { useLiveMode } from '@/contexts/live-mode-context'
+import { useAnalytics } from '@/contexts/analytics-context'
+import { useGamification } from '@/contexts/gamification-context'
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const { user } = useAuth()
   const { isLiveMode } = useLiveMode()
+  const { analytics, isLoading: analyticsLoading } = useAnalytics()
+  const { xpProfile, isLoading: gamificationLoading } = useGamification()
 
   useEffect(() => {
     setMounted(true)
@@ -28,6 +32,12 @@ export default function Dashboard() {
       router.push('/pricing')
     }
   }
+
+  // Calculate dynamic values from analytics
+  const totalCapital = analytics?.summary.totalPnL ? Math.abs(analytics.summary.totalPnL) + 50000 : 50000
+  const monthlyPL = analytics?.summary.totalPnL ?? 3240
+  const readiness = analytics?.summary.avgReadiness ?? 78
+  const xpValue = xpProfile?.xp ?? 2450
 
   const features = [
     {
@@ -134,10 +144,10 @@ export default function Dashboard() {
             className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16"
           >
             {[
-              { label: 'Celkový kapitál', value: '$50,000', icon: '💰', gradient: 'from-green-500 to-emerald-600' },
-              { label: 'Měsíční P/L', value: '+$3,240', icon: '📈', gradient: 'from-blue-500 to-cyan-600' },
-              { label: 'Aktuální Readiness', value: '78%', icon: '🧠', gradient: 'from-purple-500 to-indigo-600' },
-              { label: 'Aktuální XP', value: '2,450', icon: '⭐', gradient: 'from-yellow-500 to-orange-600' }
+              { label: 'Celkový kapitál', value: `$${totalCapital.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, icon: '💰', gradient: 'from-green-500 to-emerald-600' },
+              { label: 'Měsíční P/L', value: `${monthlyPL >= 0 ? '+' : ''}$${monthlyPL.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, icon: '📈', gradient: 'from-blue-500 to-cyan-600' },
+              { label: 'Aktuální Readiness', value: `${Math.round(readiness)}%`, icon: '🧠', gradient: 'from-purple-500 to-indigo-600' },
+              { label: 'Aktuální XP', value: xpValue.toLocaleString('cs-CZ'), icon: '⭐', gradient: 'from-yellow-500 to-orange-600' }
             ].map((stat, i) => (
               <motion.div
                 key={i}
@@ -145,7 +155,7 @@ export default function Dashboard() {
                 className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all"
               >
                 <p className="text-xs md:text-sm font-semibold text-slate-400 mb-2">{stat.label}</p>
-                <p className="text-2xl md:text-3xl font-black text-white">{stat.value}</p>
+                <p className="text-2xl md:text-3xl font-black text-white">{analyticsLoading || gamificationLoading ? '...' : stat.value}</p>
               </motion.div>
             ))}
           </motion.div>
