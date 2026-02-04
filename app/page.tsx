@@ -50,12 +50,6 @@ export default function HomePage() {
       image: '/slides-9.jpg'
     },
     {
-      id: 1,
-      title: 'Víš, jak si vedeš. Každý den.',
-      description: 'Dashboard s veškerými údaji a AI Coach chatbtem vedle tebe',
-      image: '/slides-1.jpg'
-    },
-    {
       id: 2,
       title: 'Nebojíš se diagnózy. Chceš vyhrát.',
       description: 'Fail Log s AI analýzou a plánem nápravy pro tvoje obchodní chyby',
@@ -185,7 +179,7 @@ export default function HomePage() {
               >
                 <div className="relative bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-xl border-2 border-purple-500/30 rounded-2xl md:rounded-3xl p-2 md:p-3 shadow-2xl max-w-[90vw] sm:max-w-none">
                   <img 
-                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/9trad-UCVdmtJtwiKxxz4F9SEnwR0U4quz4p.png"
+                    src={slides[currentSlide].image}
                     alt={slides[currentSlide].title}
                     className="w-full sm:w-[400px] md:w-[500px] lg:w-[600px] h-auto rounded-xl md:rounded-2xl shadow-2xl"
                   />
