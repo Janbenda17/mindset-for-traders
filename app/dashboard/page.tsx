@@ -12,9 +12,11 @@ import { useAuth } from '@/contexts/auth-context'
 import { useLiveMode } from '@/contexts/live-mode-context'
 import { useAnalytics } from '@/contexts/analytics-context'
 import { useGamification } from '@/contexts/gamification-context'
+import { CapitalSettingsDialog } from '@/components/capital-settings-dialog'
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
+  const [userCapital, setUserCapital] = useState(50000)
   const router = useRouter()
   const { user } = useAuth()
   const { isLiveMode } = useLiveMode()
@@ -34,7 +36,7 @@ export default function Dashboard() {
   }
 
   // Calculate dynamic values from analytics
-  const totalCapital = analytics?.summary.totalPnL ? Math.abs(analytics.summary.totalPnL) + 50000 : 50000
+  const totalCapital = analytics?.summary.totalPnL ? Math.abs(analytics.summary.totalPnL) + userCapital : userCapital
   const monthlyPL = analytics?.summary.totalPnL ?? 3240
   const readiness = analytics?.summary.avgReadiness ?? 78
   const xpValue = xpProfile?.xp ?? 2450
@@ -110,12 +112,18 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-12"
+          className="mb-12 flex items-start justify-between"
         >
-          <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
-            Dashboard
-          </h1>
-          <p className="text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
+          <div>
+            <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
+              Dashboard
+            </h1>
+            <p className="text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
+          </div>
+          <CapitalSettingsDialog 
+            currentCapital={userCapital}
+            onCapitalUpdated={setUserCapital}
+          />
         </motion.div>
 
         {/* Live Mode Banner */}
