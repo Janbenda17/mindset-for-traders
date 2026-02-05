@@ -21,11 +21,16 @@ export default function Dashboard() {
   const { user } = useAuth()
   const { isLiveMode } = useLiveMode()
   const { analytics, isLoading: analyticsLoading } = useAnalytics()
-  const { xpProfile, isLoading: gamificationLoading } = useGamification()
+  const gamification = useGamification()
+  const gamificationLoading = !gamification?.data
 
   useEffect(() => {
     setMounted(true)
-  }, [])
+    console.log("[v0] Dashboard - gamification:", gamification)
+    console.log("[v0] Dashboard - xpValue:", xpValue)
+    console.log("[v0] Dashboard - isLiveMode:", isLiveMode)
+    console.log("[v0] Dashboard - gamificationLoading:", gamificationLoading)
+  }, [gamification?.data?.xp, xpValue, isLiveMode, gamificationLoading])
 
   const handlePricingClick = () => {
     if (!user) {
@@ -39,7 +44,7 @@ export default function Dashboard() {
   const totalCapital = analytics?.summary.totalPnL ? Math.abs(analytics.summary.totalPnL) + userCapital : userCapital
   const monthlyPL = analytics?.summary.totalPnL ?? 3240
   const readiness = analytics?.summary.avgReadiness ?? 78
-  const xpValue = xpProfile?.xp ?? 2450
+  const xpValue = Math.max(0, gamification?.data?.xp ?? 0)
 
   const features = [
     {
