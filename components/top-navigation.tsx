@@ -94,7 +94,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const loadProfileData = async () => {
     if (typeof window === "undefined") return
 
-    if (hasLoadedOnce && !isLoading) return
+    if (hasLoadedOnce) return
 
     setIsLoading(true)
 
