@@ -191,9 +191,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         let errorMessage = error.message
         
-        // Speciální handling pro rate limit
+        // Speciální handling pro rate limit - throw error aby se zpracoval v komponentě
         if (error.message.includes("rate limit") || error.message.includes("too many")) {
-          errorMessage = "Příliš mnoho pokusů o přihlášení. Prosím čekejte 15 minut a zkuste znovu."
+          throw new Error("RATE_LIMIT_EXCEEDED")
         } else if (error.message.includes("Invalid login credentials") || error.message.includes("Invalid password")) {
           errorMessage = "Nesprávný email nebo heslo. Prosím zkontrolujte a zkuste znovu."
         } else if (error.message.includes("Email not confirmed")) {

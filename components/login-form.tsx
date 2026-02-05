@@ -93,8 +93,8 @@ export function LoginForm() {
       console.error("[v0] Login error:", error)
       
       // Check if rate limit error
-      if (error?.message?.includes("rate limit") || error?.message?.includes("Too many requests")) {
-        setError("Příliš mnoho pokusů o přihlášení. Počkejte prosím 60 sekund před dalším pokusem.")
+      if (error?.message?.includes("RATE_LIMIT") || error?.message?.includes("rate limit") || error?.message?.includes("Too many")) {
+        setError("Příliš mnoho pokusů o přihlášení. Počkejte prosím 60 sekund a zkuste znovu.")
         setRateLimitRetryAfter(60)
       } else {
         setError("Chyba při přihlášení. Prosím zkuste znovu.")
