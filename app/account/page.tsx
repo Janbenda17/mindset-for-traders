@@ -354,7 +354,10 @@ export default function AccountPage() {
       userData.profile.avatarUrl = result
       saveUserData(userData)
 
+      toast({
+        title: "Úspěch",
         description: "Fotka byla nahrána",
+      })
     }
     reader.readAsDataURL(file)
   }
