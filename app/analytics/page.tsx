@@ -1687,7 +1687,7 @@ export default function PsychologyAnalyticsPage() {
               )}
             >
               <Brain className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="font-semibold hidden sm:inline">Overview</span>
+              <span className="font-semibold hidden sm:inline">Přehled</span>
             </TabsTrigger>
             <TabsTrigger
               value="mindset"
@@ -1707,7 +1707,7 @@ export default function PsychologyAnalyticsPage() {
               )}
             >
               <TrendingUpDown className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="font-semibold hidden md:inline">Patterns</span>
+              <span className="font-semibold hidden md:inline">Vzorce</span>
             </TabsTrigger>
             <TabsTrigger
               value="action"
@@ -1841,7 +1841,7 @@ export default function PsychologyAnalyticsPage() {
                           <CardHeader className="pb-2">
                             <CardTitle className="text-white flex items-center gap-2 text-base">
                               <DollarSign className="w-4 h-4 text-emerald-400" />
-                              Financial Performance (P&L)
+                              Finanční výkon (P&L)
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="h-[150px]">
@@ -2270,7 +2270,7 @@ export default function PsychologyAnalyticsPage() {
                   <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
                     <div className="flex items-center gap-3">
                       <CloudRain className="w-5 h-5 text-sky-400" />
-                      Market Conditions Performance
+                      Výkon v různých trzích
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4">
@@ -2344,7 +2344,7 @@ export default function PsychologyAnalyticsPage() {
 
                                 <div className="space-y-2 mb-3">
                                   <div className="flex items-center justify-between">
-                                    <span className="text-gray-400 text-xs">Win Rate</span>
+                                    <span className="text-gray-400 text-xs">Úspěšnost</span>
                                     <Badge
                                       className={cn(
                                         "text-xs",
