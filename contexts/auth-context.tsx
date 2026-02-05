@@ -229,6 +229,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (sessionData.session) {
         console.log("[v0] ✅ Session ověřena - kontroluji onboarding status...")
         
+        // Explicitly set user state from session
+        const userData = {
+          id: data.user.id,
+          email: data.user.email!,
+          name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Trader",
+        }
+        lastUserIdRef.current = data.user.id
+        setUser(userData)
+        
         // Check if user needs to complete onboarding
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
