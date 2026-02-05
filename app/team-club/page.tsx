@@ -1649,7 +1649,7 @@ function StudentTeamClubView({
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
               <Telescope className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
-              <span className="hidden sm:inline">Overview</span>
+              <span className="hidden sm:inline">Přehled</span>
               <span className="sm:hidden">Over</span>
             </TabsTrigger>
             <TabsTrigger
@@ -1672,7 +1672,7 @@ function StudentTeamClubView({
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
               <Users className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
-              <span className="hidden sm:inline">Buddies</span>
+              <span className="hidden sm:inline">Study Buddies</span>
               <span className="sm:hidden">Bud</span>
             </TabsTrigger>
             <TabsTrigger
@@ -1701,12 +1701,12 @@ function StudentTeamClubView({
 
           {/* OVERVIEW TAB */}
           <TabsContent value="overview" className="space-y-6">
-            {/* Community Health Dashboard */}
+            {/* Přehled zdraví komunity */}
             <Card className="psyche-card">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Gauge className="h-5 w-5 text-purple-400" />
-                  Community Health Dashboard
+                  Přehled zdraví komunity
                 </CardTitle>
                 <CardDescription className="text-slate-400">
                   Real-time přehled jak se daří celé komunitě
@@ -1744,7 +1744,7 @@ function StudentTeamClubView({
                       <div className="p-6 pb-4">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-gray-400 text-xs font-medium mb-2">Avg. Win Rate</p>
+                            <p className="text-gray-400 text-xs font-medium mb-2">Průměr. Úspěšnost</p>
                             <p className="text-4xl font-bold text-white mb-1">{communityStats.avgWinRate}%</p>
                             <p className="text-emerald-400 text-sm font-semibold">Community</p>
                           </div>
@@ -1904,12 +1904,12 @@ function StudentTeamClubView({
               )}
             </div>
 
-            {/* AI Insights */}
+            {/* AI Poznatky */}
             <Card className="bg-gradient-to-br from-blue-600/90 via-blue-700/90 to-blue-600/90 border-blue-400 shadow-2xl">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Brain className="h-5 w-5" />
-                  AI Community Insights
+                  AI Poznatky komunity
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -1922,7 +1922,7 @@ function StudentTeamClubView({
                       <p className="text-white font-semibold text-sm mb-1">💡 AI Recommendation</p>
                       <p className="text-white/90 text-sm">
                         {userStats.winRate >= communityStats.avgWinRate
-                          ? "Tvoje win rate je nad průměrem! Sdílej své postupy v Community Feed."
+                          ? "Tvoje úspěšnost je nad průměrem! Sdílej své postupy v Community Feed."
                           : "Top performers mají journal streak 25+ dní. Zkus se zaměřit na konzistentní journaling!"}
                       </p>
                     </div>
@@ -1935,7 +1935,7 @@ function StudentTeamClubView({
           {/* COMMUNITY FEED TAB */}
           <TabsContent value="community" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Feed */}
+              {/* Hlavní Feed */}
               <div className="lg:col-span-2 space-y-4">
                 {/* Create Post */}
                 <Card className="psyche-card">
@@ -2038,7 +2038,7 @@ function StudentTeamClubView({
                     }`}
                   >
                     <TrendingUp className="h-3 w-3 mr-1.5" />
-                    Wins
+                    Výhry
                   </Button>
                   <Button
                     size="sm"
@@ -2050,7 +2050,7 @@ function StudentTeamClubView({
                     }`}
                   >
                     <TrendingDown className="h-3 w-3 mr-1.5" />
-                    Losses
+                    Ztráty
                   </Button>
                   <Button
                     size="sm"
@@ -2062,7 +2062,7 @@ function StudentTeamClubView({
                     }`}
                   >
                     <Lightbulb className="h-3 w-3 mr-1.5" />
-                    Insights
+                    Poznatky
                   </Button>
                   <Button
                     size="sm"
@@ -2074,7 +2074,7 @@ function StudentTeamClubView({
                     }`}
                   >
                     <MessageSquare className="h-3 w-3 mr-1.5" />
-                    Questions
+                    Otázky
                   </Button>
                 </div>
 
@@ -2151,7 +2151,7 @@ function StudentTeamClubView({
                     <CardHeader>
                       <CardTitle className="text-white text-sm flex items-center gap-2">
                         <Flame className="h-4 w-4 text-orange-400" />
-                        Trending Topics
+                        Trendy témata
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
@@ -2178,7 +2178,7 @@ function StudentTeamClubView({
                     <CardHeader>
                       <CardTitle className="text-white text-sm flex items-center gap-2">
                         <Star className="h-4 w-4 text-amber-400" />
-                        Top Contributors
+                        Nejlepší přispěvatelé
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
@@ -2802,7 +2802,7 @@ function StudentTeamClubView({
 
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Win Rate</span>
+                        <span className="text-slate-400">Úspěšnost</span>
                         <span className="text-white font-bold">{buddy.winRate}%</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
@@ -3130,7 +3130,7 @@ function StudentTeamClubView({
 
                 <Card className="bg-gradient-to-br from-amber-600/20 via-amber-700/20 to-amber-600/20 border-amber-500/30 rounded-2xl overflow-hidden backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle className="text-white text-sm">Top Questions Tento Týden</CardTitle>
+                    <CardTitle className="text-white text-sm">Nejlepší otázky tento týden</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {[
@@ -3152,7 +3152,7 @@ function StudentTeamClubView({
           {/* SUCCESS STORIES TAB */}
           <TabsContent value="success" className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white mb-1">Success Stories</h2>
+              <h2 className="text-2xl font-bold text-white mb-1">Příběhy úspěchu</h2>
               <p className="text-slate-400 text-sm">
                 Inspirace od komunity · Reálné transformace · Dokázali to, dokážeš to taky
               </p>
@@ -3245,7 +3245,7 @@ function StudentTeamClubView({
                           return (
                             <div className="space-y-1 text-sm">
                               <p className="text-slate-300">
-                                Win Rate: <span className="text-white">{stats.winRate}%</span>
+                                Úspěšnost: <span className="text-white">{stats.winRate}%</span>
                               </p>
                               <p className="text-slate-300">
                                 P&L:{" "}
@@ -3275,7 +3275,7 @@ function StudentTeamClubView({
                           return (
                             <div className="space-y-1 text-sm">
                               <p className="text-slate-300">
-                                Win Rate: <span className="text-white">{stats.winRate}%</span>
+                                Úspěšnost: <span className="text-white">{stats.winRate}%</span>
                               </p>
                               <p className="text-slate-300">
                                 P&L:{" "}

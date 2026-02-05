@@ -113,14 +113,14 @@ export default function Mentoring() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center">
             <Star className="w-8 h-8 mr-3 text-yellow-600" />
-            Mentoring Program
+            Program mentoringu
           </h1>
           <p className="text-gray-600 mt-1">Osobní vedení od zkušených traderů • Live sessions • 1:1 konzultace</p>
         </div>
 
-        {/* Upcoming Sessions */}
+        {/* Nadcházející sezení */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Nadcházející sessions</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Nadcházející sezení</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {upcomingSessions.map((session) => (
               <Card key={session.id} className="hover:shadow-lg transition-shadow">
@@ -160,7 +160,7 @@ export default function Mentoring() {
           </div>
         </div>
 
-        {/* Mentors */}
+        {/* Mentoři */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Naši mentoři</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
