@@ -287,10 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[v0] Email:", email)
       console.log("[v0] Name:", name)
       console.log("[v0] Password length:", password.length)
-      console.log("[v0] Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL ? "✓" : "❌")
-      console.log("[v0] Supabase Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "✓" : "❌")
 
-      console.log("[v0] Volání supabase.auth.signUp()...")
       const { data: authData, error } = await supabase.auth.signUp({
         email,
         password,
@@ -300,28 +297,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       })
 
-      console.log("[v0] Response od signUp:", { hasError: !!error, hasUser: !!authData.user })
+      console.log("[v0] Response od signUp:", { hasError: !!error, hasUser: !!authData.user, hasSession: !!authData.session })
 
       if (error) {
         console.error("[v0] ❌ SIGNUP ERROR:", {
           message: error.message,
           status: error.status,
-          code: error.status,
         })
 
         let errorMessage = error.message
-        
-        // Specifické error messages
-        if (error.status === 504) {
-          errorMessage = "Server timeout - zkuste to prosím znovu za chvíli"
-        } else if (error.message.includes("already registered")) {
+        if (error.message.includes("already registered")) {
           errorMessage = "Tento email je již registrován. Zkuste se přihlásit."
         } else if (error.message.includes("Password should contain")) {
-          errorMessage = "Heslo musí obsahovat: malá písmena + velká písmena + čísla (min. 6 znaků). Např: Trader2024"
-        } else if (error.message.includes("password")) {
-          errorMessage = "Heslo nesplňuje požadavky. Zkontrolujte, zda obsahuje malá a velká písmena a čísla."
-        } else if (error.message.includes("email")) {
-          errorMessage = "Neplatný email nebo email již existuje."
+          errorMessage = "Heslo musí obsahovat: malá písmena + velká písmena + čísla (min. 6 znaků)."
         }
 
         toast({
@@ -343,16 +331,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       console.log("[v0] ✅ User vytvořen:", authData.user.id)
-      console.log("[v0] Čekám na profil v databázi...")
+      console.log("[v0] Session status:", authData.session ? "✅ Session je" : "❌ Session chybí")
 
+      // If we have a session, set it properly
+      if (authData.session) {
+        console.log("[v0] Nastavuji session...")
+        await supabase.auth.setSession(authData.session)
+      }
+
+      // Set the user state immediately
+      lastUserIdRef.current = authData.user.id
+      setUser({
+        id: authData.user.id,
+        email: authData.user.email!,
+        name: name || "Trader",
+      })
+
+      // Wait for profile to be created by trigger
+      console.log("[v0] Čekám na profil v databázi...")
       let profile = null
       let attempts = 0
       const maxAttempts = 10
 
       while (!profile && attempts < maxAttempts) {
         attempts++
-        const delay = Math.min(500 * attempts, 3000)
-        console.log(`[v0] Pokus ${attempts}/${maxAttempts} - čekání ${delay}ms`)
+        const delay = Math.min(300 * attempts, 2000)
         await new Promise((resolve) => setTimeout(resolve, delay))
 
         const { data: profileData, error: profileError } = await supabase
@@ -361,45 +364,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq("user_id", authData.user.id)
           .maybeSingle()
 
-        if (profileError) {
-          console.error(`[v0] Profil query error:`, profileError.message)
-        }
-
-        profile = profileData
-        if (profile) {
-          console.log("[v0] ✅ Profil nalezen!")
-          break
+        if (!profileError) {
+          profile = profileData
+          if (profile) {
+            console.log("[v0] ✅ Profil nalezen!")
+            break
+          }
         }
       }
-
-      if (!profile) {
-        console.warn("[v0] ⚠️ Profil se nenašel ani po 10 pokusech")
-      }
-
-      lastUserIdRef.current = authData.user.id
-      setUser({
-        id: authData.user.id,
-        email: authData.user.email!,
-        name,
-      })
 
       toast({
         title: "Registrace úspěšná!",
         description: "Vítejte v MindTrader!",
       })
 
-      console.log("[v0] Čekám na synchronizaci cookies...")
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
       console.log("[v0] ✅ Registrace HOTOVA - redirect na /onboarding")
+      await new Promise((resolve) => setTimeout(resolve, 500))
       router.push("/onboarding")
       return true
     } catch (error: any) {
       console.error("[v0] ===== REGISTRACE ERROR =====")
       console.error("[v0] Error type:", error?.constructor?.name)
       console.error("[v0] Message:", error?.message)
-      console.error("[v0] Stack:", error?.stack)
-      
+
       toast({
         title: "Chyba registrace",
         description: "Došlo k neočekávané chybě. Zkuste to prosím znovu.",

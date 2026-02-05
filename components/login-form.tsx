@@ -85,10 +85,11 @@ export function LoginForm() {
 
       if (!success) {
         console.error("[v0] Login failed")
-        setError("Nesprávný email nebo heslo. Prosím zkuste znovu.")
+        setError("Přihlášení se nezdařilo. Ověřte prosím váš email a heslo.")
         setPassword("")
-        setIsLoading(false)
       }
+      
+      setIsLoading(false)
     } catch (error: any) {
       console.error("[v0] Login error:", error)
       
