@@ -316,7 +316,7 @@ export default function AccountPage() {
       totalTrades: tradeEntries.length,
       winRate: Math.round(winRate),
       totalPnL: Math.round(totalPnL),
-      memberSince: new Date().toLocaleDateString(language === "cs" ? "cs-CZ" : "en-US"),
+        memberSince: new Date().toLocaleDateString("cs-CZ"),
     })
   }
 
@@ -370,7 +370,7 @@ export default function AccountPage() {
 
     toast({
       title: "Úspěch",
-      description: language === "cs" ? "Fotka byla odstraněna" : "Photo removed",
+        description: "Fotka byla odstraněna",
     })
   }
 
@@ -406,7 +406,7 @@ export default function AccountPage() {
 
       toast({
         title: "Úspěch",
-        description: language === "cs" ? "Profil byl uložen" : "Profile saved",
+        description: "Profil byl uložen",
       })
 
       window.dispatchEvent(new Event("settings-updated"))
@@ -414,7 +414,7 @@ export default function AccountPage() {
       console.error("Error saving profile:", error)
       toast({
         title: "Chyba",
-        description: language === "cs" ? "Nepodařilo se uložit změny." : "Failed to save changes.",
+        description: "Nepodařilo se uložit změny.",
         variant: "destructive",
       })
     } finally {
@@ -441,7 +441,7 @@ export default function AccountPage() {
 
       toast({
         title: "Úspěch",
-        description: language === "cs" ? "Notifikace uloženy" : "Notifications saved",
+        description: "Notifikace uloženy",
       })
 
       window.dispatchEvent(new Event("settings-updated"))
@@ -449,7 +449,7 @@ export default function AccountPage() {
       console.error("Error saving notifications:", error)
       toast({
         title: "Chyba",
-        description: language === "cs" ? "Nepodařilo se uložit nastavení." : "Failed to save settings.",
+        description: "Nepodařilo se uložit nastavení.",
         variant: "destructive",
       })
     }
@@ -474,13 +474,13 @@ export default function AccountPage() {
 
       toast({
         title: "Úspěch",
-        description: language === "cs" ? "Zabezpečení uloženo" : "Security saved",
+        description: "Zabezpečení uloženo",
       })
     } catch (error) {
       console.error("Error saving security settings:", error)
       toast({
         title: "Chyba",
-        description: language === "cs" ? "Nepodařilo se uložit nastavení." : "Failed to save settings.",
+        description: "Nepodařilo se uložit nastavení.",
         variant: "destructive",
       })
     }
@@ -490,7 +490,7 @@ export default function AccountPage() {
     if (newPassword !== confirmPassword) {
       toast({
         title: "Chyba",
-        description: language === "cs" ? "Hesla se neshodují" : "Passwords don't match",
+        description: "Hesla se neshodují",
         variant: "destructive",
       })
       return
@@ -499,7 +499,7 @@ export default function AccountPage() {
     if (newPassword.length < 8) {
       toast({
         title: "Chyba",
-        description: language === "cs" ? "Heslo musí mít alespoň 8 znaků" : "Password must be at least 8 characters",
+        description: "Heslo musí mít alespoň 8 znaků",
         variant: "destructive",
       })
       return
@@ -971,28 +971,28 @@ export default function AccountPage() {
               className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
             >
               <User className="w-4 h-4 mr-2" />
-              {language === "cs" ? "Profil" : "Profile"}
+  Profil
             </TabsTrigger>
             <TabsTrigger
               value="notifications"
               className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
             >
               <Bell className="w-4 h-4 mr-2" />
-              {language === "cs" ? "Notifikace" : "Notifications"}
+  Notifikace
             </TabsTrigger>
             <TabsTrigger
               value="security"
               className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
             >
               <Shield className="w-4 h-4 mr-2" />
-              {language === "cs" ? "Zabezpečení" : "Security"}
+  Zabezpečení
             </TabsTrigger>
             <TabsTrigger
               value="subscription"
               className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
             >
               <Crown className="w-4 h-4 mr-2" />
-              {language === "cs" ? "Předplatné" : "Subscription"}
+  Předplatné
             </TabsTrigger>
           </TabsList>
 
@@ -1081,7 +1081,7 @@ export default function AccountPage() {
                         <Activity className="w-4 h-4 text-orange-400 mr-1" />
                         <span className="text-2xl font-bold text-white">{stats.currentStreak}</span>
                       </div>
-                      <p className="text-xs text-gray-400">{language === "cs" ? "Dní v řadě" : "Day Streak"}</p>
+                      <p className="text-xs text-gray-400">Dní v řadě</p>
                     </div>
                   </div>
                 </div>
@@ -1105,13 +1105,13 @@ export default function AccountPage() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <User className="w-5 h-5 text-blue-400" />
-                  {language === "cs" ? "Základní informace" : "Basic Information"}
+      Základní informace
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-gray-300">{language === "cs" ? "Jméno" : "Name"}</Label>
+                    <Label className="text-gray-300">Jméno</Label>
                     <Input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -1119,11 +1119,11 @@ export default function AccountPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-300">{language === "cs" ? "Přezdívka" : "Nickname"}</Label>
+                    <Label className="text-gray-300">Přezdívka</Label>
                     <Input
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
-                      placeholder={language === "cs" ? "Vaše přezdívka" : "Your nickname"}
+                      placeholder="Vaše přezdívka"
                       className="bg-slate-800/50 border-slate-700 text-white"
                     />
                   </div>
@@ -1137,7 +1137,7 @@ export default function AccountPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-300">{language === "cs" ? "Země" : "Country"}</Label>
+                    <Label className="text-gray-300">Země</Label>
                     <Select value={country} onValueChange={setCountry}>
                       <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
                         <SelectValue />
@@ -1162,7 +1162,7 @@ export default function AccountPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-300">{language === "cs" ? "Jazyk" : "Language"}</Label>
+                    <Label className="text-gray-300">Jazyk</Label>
                     <Select value={language} onValueChange={(val: "cs" | "en") => setLanguage(val)}>
                       <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
                         <SelectValue />
@@ -1178,7 +1178,7 @@ export default function AccountPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-300">{language === "cs" ? "Časové pásmo" : "Timezone"}</Label>
+                    <Label className="text-gray-300">Časové pásmo</Label>
                     <Select value={timezone} onValueChange={setTimezone}>
                       <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
                         <SelectValue />
@@ -1231,7 +1231,7 @@ export default function AccountPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-gray-300">{language === "cs" ? "Styl obchodování" : "Trading Style"}</Label>
+                    <Label className="text-gray-300">Styl obchodování</Label>
                     <Select value={tradingStyle} onValueChange={(v: any) => setTradingStyle(v)}>
                       <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
                         <SelectValue />
@@ -1250,7 +1250,7 @@ export default function AccountPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-300">{language === "cs" ? "Úroveň rizika" : "Risk Level"}</Label>
+                    <Label className="text-gray-300">Úroveň rizika</Label>
                     <Select value={riskLevel} onValueChange={(v: any) => setRiskLevel(v)}>
                       <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
                         <SelectValue />
