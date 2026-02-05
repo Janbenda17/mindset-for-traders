@@ -385,7 +385,7 @@ export function generateVirtualJournalStats() {
   const allEntries = [...trades, ...journalEntries]
   const moodEntries = allEntries.filter((e) => e.mood !== undefined && e.mood !== null)
   const avgMood = moodEntries.length > 0 
-    ? Math.round((moodEntries.reduce((sum, e) => sum + e.mood, 0) / moodEntries.length) * 10) / 10 
+    ? Math.min(Math.round((moodEntries.reduce((sum, e) => sum + e.mood, 0) / moodEntries.length) * 10) / 10, 10)
     : 7.5
 
   // Calculate streak (consecutive days with entries)

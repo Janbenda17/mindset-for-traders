@@ -447,7 +447,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
                             {entry.mood !== undefined && (
                               <div className="flex flex-col">
                                 <span className="text-[10px] text-gray-400 uppercase tracking-wide">Nálada</span>
-                                <span className="text-xs font-medium text-emerald-300">{entry.mood}/10</span>
+                                <span className="text-xs font-medium text-emerald-300">{Math.min(entry.mood, 10)}/10</span>
                               </div>
                             )}
                             {entry.confidenceBefore !== undefined && (
