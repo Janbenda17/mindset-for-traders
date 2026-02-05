@@ -33,10 +33,12 @@ import {
   Target,
   AlertTriangle,
   ChevronDown,
+  Lock,
 } from "lucide-react"
 import LiveModeToggle from "@/components/live-mode-toggle"
 import { supabase } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/auth-context"
+import { useLiveMode } from "@/contexts/live-mode-context"
 
 interface TopNavigationProps {
   initialTheme?: string
@@ -64,6 +66,7 @@ const toolsNavigation = [
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
   const pathname = usePathname()
   const router = useRouter()
+  const { isLiveMode } = useLiveMode()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProductsOpen, setIsProductsOpen] = useState(false)
@@ -241,6 +244,24 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <div className="flex gap-3">
                     {mainNavigation.map((item) => {
                       const isActive = pathname === item.href
+                      const isTeamClubInLiveMode = item.href === "/team-club" && isLiveMode
+                      
+                      if (isTeamClubInLiveMode) {
+                        // Team Club locked in live mode
+                        return (
+                          <div
+                            key={item.name}
+                            className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-not-allowed bg-slate-800/50 border border-slate-700/50 opacity-60"
+                            title="Team Club is locked in Live Mode"
+                          >
+                            <Lock className="w-5 h-5 text-gray-400" />
+                            <span className="text-xs text-center text-gray-500">
+                              {item.name}
+                            </span>
+                          </div>
+                        )
+                      }
+                      
                       return (
                         <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
                           <div className={`flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all min-w-[100px] ${
@@ -333,6 +354,23 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <p className="text-xs text-gray-400 px-3 py-2 font-semibold">HLAVNÍ MENU</p>
                   {mainNavigation.map((item) => {
                     const isActive = pathname === item.href
+                    const isTeamClubInLiveMode = item.href === "/team-club" && isLiveMode
+                    
+                    if (isTeamClubInLiveMode) {
+                      return (
+                        <div
+                          key={item.name}
+                          className="flex items-center space-x-3 px-3 py-2.5 opacity-60 cursor-not-allowed rounded-lg bg-slate-800/50"
+                          title="Team Club is locked in Live Mode"
+                        >
+                          <Lock className="w-4 h-4 text-gray-400" />
+                          <span className="flex-1 text-sm text-gray-500">
+                            {item.name}
+                          </span>
+                        </div>
+                      )
+                    }
+                    
                     return (
                       <DropdownMenuItem key={item.name} asChild>
                         <Link

@@ -56,6 +56,7 @@ import {
 import { useData } from "@/contexts/data-context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/contexts/auth-context" // ADDED: Import useAuth
+import { useLiveMode } from "@/contexts/live-mode-context"
 
 // Types
 interface CommunityPost {
@@ -3517,6 +3518,7 @@ function isMentor(): boolean {
 function TeamClubPage() {
   const [userIsMentor, setUserIsMentor] = useState<boolean | null>(null)
   const { user, isLoading } = useAuth() // Added isLoading from auth
+  const { isLiveMode } = useLiveMode()
   const [communityUsers, setCommunityUsers] = useState<any[]>([])
   const [loadingCommunity, setLoadingCommunity] = useState(false)
 
@@ -3536,6 +3538,31 @@ function TeamClubPage() {
         <div className="text-center">
           <Brain className="w-16 h-16 text-purple-400 animate-pulse mx-auto mb-4" />
           <p className="text-slate-400">Načítám Team Club...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // In LIVE mode, Team Club is locked
+  if (isLiveMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <div className="mb-6 flex justify-center">
+            <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-2xl inline-block">
+              <Lock className="w-12 h-12 text-red-400" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-black text-white mb-3">Team Club je zamčený</h1>
+          <p className="text-lg text-purple-300 mb-6">
+            Team Club není dostupný v Live Mode. Vrať se do Virtual Mode, pokud chceš prozkoumat komunitu.
+          </p>
+          <Button 
+            onClick={() => window.history.back()}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-8 py-3 rounded-lg"
+          >
+            Zpět
+          </Button>
         </div>
       </div>
     )
