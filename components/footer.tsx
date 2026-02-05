@@ -6,8 +6,7 @@ export function Footer() {
   return (
     <footer className="border-t mt-auto relative z-50">
       <div className="container mx-auto py-6 px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-sm text-muted-foreground">© 2025 MindTrader. Všechna práva vyhrazena.</div>
+        <div className="flex justify-center items-center gap-4">
           <div className="flex flex-wrap gap-6 text-sm">
             <Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
               Obchodní podmínky
