@@ -789,7 +789,7 @@ export default function WeeklyReviewPage() {
     setSavedReviews(updated)
     localStorage.setItem("weekly-reviews", JSON.stringify(updated))
 
-    alert("Weekly Review uložen!")
+      alert("Týdenní přehled uložen!")
   }
 
   const downloadPDF = async (reviewData: any) => {
@@ -919,7 +919,7 @@ Vygenerováno aplikací Trader Mindset
             <Calendar className="w-12 h-12 text-purple-400" />
           </div>
           <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-            AI Weekly Review
+                AI Týdenní přehled
           </h1>
           <p className="text-gray-400 text-lg">
             {currentWeekData.weekStart} - {currentWeekData.weekEnd}
@@ -1767,7 +1767,7 @@ Vygenerováno aplikací Trader Mindset
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg"
               >
                 <Save className="w-5 h-5 mr-2" />
-                Uložit Weekly Review ({reviewVariant === "ai" ? "AI" : "Manual"})
+                Uložit týdenní přehled ({reviewVariant === "ai" ? "AI" : "Manuální"})
               </Button>
             </div>
           </TabsContent>
@@ -1777,7 +1777,7 @@ Vygenerováno aplikací Trader Mindset
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <History className="w-5 h-5 text-purple-400" />
-                  Historie Weekly Reviews
+                  Historie týdenních přehledů
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1862,7 +1862,7 @@ Vygenerováno aplikací Trader Mindset
               <div className="sticky top-0 bg-slate-900 border-b border-slate-700 p-4 flex items-center justify-between z-10">
                 <div>
                   <h2 className="text-xl font-bold text-white">
-                    Weekly Review: {viewingReview.weekStart} - {viewingReview.weekEnd}
+                    Týdenní přehled: {viewingReview.weekStart} - {viewingReview.weekEnd}
                   </h2>
                   <p className="text-sm text-gray-400">
                     {new Date(viewingReview.createdAt).toLocaleDateString("cs-CZ")} •

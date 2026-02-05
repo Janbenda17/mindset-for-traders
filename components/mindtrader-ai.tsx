@@ -612,8 +612,8 @@ const MindTraderAI = () => {
     URL.revokeObjectURL(url)
 
     toast({
-      title: language === "cs" ? "Report vygenerován" : "Report generated",
-      description: language === "cs" ? "Report byl stažen" : "Report has been downloaded",
+      title: "Report vygenerován",
+      description: "Report byl stažen",
     })
   }
 
@@ -656,7 +656,7 @@ const MindTraderAI = () => {
               <div className="flex items-center gap-2">
                 <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                 <CardTitle className="text-base sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-purple-200 to-cyan-200 bg-clip-text text-transparent">
-                  {language === "cs" ? "Tvoje Připravenost" : "Your Readiness"}
+                  Tvoje Připravenost
                 </CardTitle>
               </div>
             </CardHeader>
@@ -682,7 +682,7 @@ const MindTraderAI = () => {
               <div className="flex-1 space-y-4">
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-purple-300 uppercase tracking-widest">
-                    🤖 {language === "cs" ? "Režimy AI" : "AI Modes"}
+                    🤖 Režimy AI
                   </p>
                   <div className="h-0.5 w-8 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full" />
                 </div>

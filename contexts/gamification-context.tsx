@@ -118,16 +118,16 @@ const LEVEL_XP_REQUIREMENTS = [
 ]
 
 const LEVEL_INFO = [
-  { name: "Beginner", description: "Začínáš svou cestu", phase: "Uvědomění", icon: "🧩" },
-  { name: "Initiate", description: "Učíš se základy", phase: "Plánování", icon: "🎯" },
-  { name: "Consistent", description: "Budujíš konzistenci", phase: "Akce", icon: "⚙️" },
-  { name: "Disciplined", description: "Disciplína roste", phase: "Rovnováha", icon: "🌿" },
-  { name: "Focused", description: "Soustředěný na cíl", phase: "Odolnost", icon: "🧘" },
-  { name: "Self-aware", description: "Znáš sám sebe", phase: "Konzistence", icon: "🔥" },
-  { name: "Growth Phase", description: "Fáze růstu", phase: "Kontrola emocí", icon: "🧱" },
-  { name: "High Performance", description: "Vysoký výkon", phase: "Stabilita", icon: "🪷" },
-  { name: "Elite Mindset", description: "Elitní myšlení", phase: "Integrace", icon: "🧠" },
-  { name: "Mind Master", description: "Mistr mysli", phase: "Mistrovství", icon: "🕊️" },
+  { name: "Začátečník", description: "Začínáš svou cestu", phase: "Uvědomění", icon: "🧩" },
+  { name: "Zasvěcenec", description: "Učíš se základy", phase: "Plánování", icon: "🎯" },
+  { name: "Konzistentní", description: "Budujíš konzistenci", phase: "Akce", icon: "⚙️" },
+  { name: "Disciplinovaný", description: "Disciplína roste", phase: "Rovnováha", icon: "🌿" },
+  { name: "Soustředěný", description: "Soustředěný na cíl", phase: "Odolnost", icon: "🧘" },
+  { name: "Sebeuvědomělý", description: "Znáš sám sebe", phase: "Konzistence", icon: "🔥" },
+  { name: "Fáze růstu", description: "Fáze růstu", phase: "Kontrola emocí", icon: "🧱" },
+  { name: "Vysoký výkon", description: "Vysoký výkon", phase: "Stabilita", icon: "🪷" },
+  { name: "Elitní mindset", description: "Elitní myšlení", phase: "Integrace", icon: "🧠" },
+  { name: "Mistr mysli", description: "Mistr mysli", phase: "Mistrovství", icon: "🕊️" },
 ]
 
 const XP_REWARDS = {

@@ -2359,7 +2359,7 @@ export default function PsychologyAnalyticsPage() {
                                     </Badge>
                                   </div>
                                   <div className="flex items-center justify-between">
-                                    <span className="text-gray-400 text-xs">Avg P&L</span>
+                                    <span className="text-gray-400 text-xs">Průměr P&L</span>
                                     <span
                                       className={cn(
                                         "font-bold text-sm",
