@@ -108,7 +108,7 @@ interface DailySummary {
 const stageData = [
   {
     id: 1,
-    name: "Morning Check",
+    name: "Ranní kontrola",
     icon: Sun,
     href: "/morning-check",
     color: "from-orange-500 to-rose-500",
@@ -117,7 +117,7 @@ const stageData = [
   },
   {
     id: 2,
-    name: "Daily Intention",
+    name: "Denní záměr",
     icon: Target,
     href: "/daily-intention",
     color: "from-yellow-500 to-amber-500",
@@ -126,7 +126,7 @@ const stageData = [
   },
   {
     id: 3,
-    name: "Trading Plan",
+    name: "Trading plán",
     icon: BookOpen,
     href: "/trading-plan",
     color: "from-cyan-500 to-teal-500",
@@ -135,7 +135,7 @@ const stageData = [
   },
   {
     id: 4,
-    name: "Record Trades",
+    name: "Zaznamenat obchody",
     icon: Clock,
     href: "/record-trades",
     color: "from-blue-500 to-indigo-500",
@@ -144,7 +144,7 @@ const stageData = [
   },
   {
     id: 5,
-    name: "Daily Summary",
+    name: "Denní souhrn",
     icon: Shield,
     href: "/daily-summary",
     color: "from-green-500 to-emerald-500",

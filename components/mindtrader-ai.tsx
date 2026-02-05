@@ -242,8 +242,8 @@ const MindTraderAI = () => {
   // AI Personalities
   const personalities = {
     calm: {
-      name: language === "cs" ? "🧘 Klidný Mentor" : "🧘 Calm Mentor",
-      description: language === "cs" ? "Klidný, empatický, pomáhá s emocemi" : "Calm, empathetic, helps with emotions",
+      name: language === "cs" ? "🧘 Klidný Mentor" : "🧘 Klidný Mentor",
+      description: language === "cs" ? "Klidný, empatický, pomáhá s emocemi" : "Klidný, empatický, pomáhá s emocemi",
       icon: Heart,
       color: "from-blue-500 to-indigo-500",
       locked: false,
@@ -313,10 +313,10 @@ const MindTraderAI = () => {
           "Jak se vyhnout revenge trading?",
         ]
       : [
-          "How to recover after a loss?",
-          "How to manage fear?",
-          "Help me with discipline",
-          "I violated my plan, what to do?",
+        "Jak se zotavit po ztrátě?",
+        "Jak zvládat strach?",
+        "Pomoz mi s disciplínou",
+        "Porušil jsem plán, co dělat?",
           "How to overcome FOMO?",
           "How to improve risk management?",
           "How to strengthen mental power?",
@@ -329,7 +329,7 @@ const MindTraderAI = () => {
       const welcomeMessage =
       language === "cs"
         ? `Ahoj! Jsem tvůj MindTrader AI trenér. 🧠\n\nViděl jsem tvá data a jsem tu, abych ti pomohl s trading psychologií.\n\nTvůj aktuální readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Dokonči ranní check"}\n\nCo tě trápí? Jak ti mohu pomoci?`
-        : `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Complete Morning Check"}\n\nWhat's troubling you? How can I help?`
+        : `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nViděl jsem tvoje data a jsem tady abych ti pomohl s trading psychologií.\n\nTvoje aktuální skóre připravenosti: ${currentReadiness !== null ? currentReadiness + "%" : "Vyplň Ranní kontrolu"}\n\nCo tě trápí? Jak ti mohu pomoci?`
 
       setMessages([
         {
