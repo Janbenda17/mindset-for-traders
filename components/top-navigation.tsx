@@ -45,22 +45,22 @@ interface TopNavigationProps {
 }
 
 const mainNavigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home, shortName: "Home" },
-  { name: "Analytics", href: "/analytics", icon: BarChart3, shortName: "Stats" },
-  { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Journal" },
+  { name: "Nástěnka", href: "/dashboard", icon: Home, shortName: "Domů" },
+  { name: "Analytika", href: "/analytics", icon: BarChart3, shortName: "Statistiky" },
+  { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Deník" },
   { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
-  { name: "Daily Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Daily" },
-  { name: "Weekly Review", href: "/weekly-review", icon: Calendar },
-  { name: "Team Club", href: "/team-club", icon: Users, badge: "PRO" },
+  { name: "Denní Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Denní" },
+  { name: "Týdenní Přehled", href: "/weekly-review", icon: Calendar },
+  { name: "Týmový Klub", href: "/team-club", icon: Users, badge: "PRO" },
 ]
 
 const toolsNavigation = [
-  { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NEW" },
-  { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NEW" },
-  { name: "Trading Cíle", href: "/trading-goals", icon: Target, badge: "NEW" },
-  { name: "Fail Log", href: "/fail-log", icon: AlertTriangle, badge: "NEW" },
-  { name: "Trading Identity", href: "/trading-identity", icon: User, badge: "NEW" },
-  { name: "Odměny", href: "/rewards", icon: Trophy, badge: "NEW" },
+  { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NOVÉ" },
+  { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NOVÉ" },
+  { name: "Trading Cíle", href: "/trading-goals", icon: Target, badge: "NOVÉ" },
+  { name: "Záznam Chyb", href: "/fail-log", icon: AlertTriangle, badge: "NOVÉ" },
+  { name: "Identita Tradera", href: "/trading-identity", icon: User, badge: "NOVÉ" },
+  { name: "Odměny", href: "/rewards", icon: Trophy, badge: "NOVÉ" },
 ]
 
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
@@ -195,7 +195,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
       <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4">
           <div className="flex justify-between items-center h-14 md:h-16">
-            <div className="text-gray-400 text-sm">Loading...</div>
+            <div className="text-gray-400 text-sm">Načítání...</div>
           </div>
         </div>
       </nav>
@@ -233,7 +233,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="relative px-4 h-10 text-sm font-semibold text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 transition-all duration-300 group flex items-center gap-2 rounded-lg shadow-lg shadow-purple-500/20"
                   >
-                    <span>Products</span>
+                    <span>Produkty</span>
                     <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -322,7 +322,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
-                Pricing
+                Ceník
               </Button>
             </Link>
 
@@ -336,7 +336,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
-                About
+                O nás
               </Button>
             </Link>
           </div>
@@ -445,9 +445,10 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-gray-300 hover:text-white h-8 px-3 text-sm"
+                    className="relative px-4 h-10 text-sm font-semibold text-white hover:text-gray-200 transition-colors"
                   >
-                    Login
+                    Profil
+                    <ChevronDown className="w-4 h-4 ml-2 transition-transform group-data-[state=open]:rotate-180" />
                   </Button>
                 </Link>
                 <Link href="/signup">
@@ -455,7 +456,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-8 px-3 text-sm font-semibold"
                   >
-                    Get Started
+                    Začít
                   </Button>
                 </Link>
               </div>
@@ -467,7 +468,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 size="sm"
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
               >
-                Get Started
+                Začít
               </Button>
             </Link>
 
@@ -514,10 +515,10 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                               Premium
                             </Badge>
                           ) : (
-                            <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">Free</Badge>
+                            <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">Zdarma</Badge>
                           )}
                           <Badge className="bg-blue-600/20 text-blue-400 border-blue-500/30 text-xs">
-                            Level {profileData.level}
+                            Úroveň {profileData.level}
                           </Badge>
                           <Badge className="bg-orange-600/20 text-orange-400 border-orange-500/30 text-xs">
                             {getExperienceLabel(profileData.experienceLevel)}

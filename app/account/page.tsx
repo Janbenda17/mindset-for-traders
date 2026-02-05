@@ -327,7 +327,7 @@ export default function AccountPage() {
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "Chyba",
-        description: language === "cs" ? "Soubor je příliš velký (max 5MB)" : "File is too large (max 5MB)",
+        description: "Soubor je příliš velký (max 5MB)",
         variant: "destructive",
       })
       return
@@ -336,7 +336,7 @@ export default function AccountPage() {
     if (!file.type.startsWith("image/")) {
       toast({
         title: "Chyba",
-        description: language === "cs" ? "Soubor musí být obrázek" : "File must be an image",
+        description: "Soubor musí být obrázek",
         variant: "destructive",
       })
       return
@@ -354,10 +354,7 @@ export default function AccountPage() {
       userData.profile.avatarUrl = result
       saveUserData(userData)
 
-      toast({
-        title: "Úspěch",
-        description: language === "cs" ? "Fotka byla nahrána" : "Photo uploaded",
-      })
+        description: "Fotka byla nahrána",
     }
     reader.readAsDataURL(file)
   }
@@ -591,7 +588,7 @@ export default function AccountPage() {
       await upgradeToPremium()
     } catch (error) {
       toast({
-        title: language === "cs" ? "Chyba" : "Error",
+        title: "Chyba",
         description: language === "cs" ? "Nepodařilo se otevřít platební bránu" : "Failed to open payment gateway",
         variant: "destructive",
       })
@@ -617,7 +614,7 @@ export default function AccountPage() {
     } catch (error) {
       console.error("Error opening billing portal:", error)
       toast({
-        title: language === "cs" ? "Chyba" : "Error",
+        title: "Chyba",
         description: language === "cs" ? "Nepodařilo se otevřít správu předplatného" : "Failed to open subscription management",
         variant: "destructive",
       })
@@ -646,7 +643,7 @@ export default function AccountPage() {
       }
     } catch (error) {
       toast({
-        title: language === "cs" ? "Chyba" : "Error",
+        title: "Chyba",
         description: language === "cs" ? "Nepodařilo se zrušit předplatné" : "Failed to cancel subscription",
         variant: "destructive",
       })
@@ -758,7 +755,7 @@ export default function AccountPage() {
 
     if (Notification.permission !== "granted") {
       toast({
-        title: language === "cs" ? "Chyba" : "Error",
+        title: "Chyba",
         description:
           language === "cs"
             ? "Notifikace nejsou povoleny. Povolte je v nastavení prohlížeče."
@@ -789,7 +786,7 @@ export default function AccountPage() {
     } catch (error) {
       console.error("Notification error:", error)
       toast({
-        title: language === "cs" ? "Chyba" : "Error",
+        title: "Chyba",
         description: language === "cs" ? "Nepodařilo se odeslat notifikaci" : "Failed to send notification",
         variant: "destructive",
       })
@@ -808,7 +805,7 @@ export default function AccountPage() {
   const send2FACode = async () => {
     if (!twoFactorContact) {
       toast({
-        title: language === "cs" ? "Chyba" : "Error",
+        title: "Chyba",
         description: language === "cs" ? "Zadejte kontakt" : "Enter contact",
         variant: "destructive",
       })
@@ -819,7 +816,7 @@ export default function AccountPage() {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(twoFactorContact)) {
         toast({
-          title: language === "cs" ? "Chyba" : "Error",
+          title: "Chyba",
           description: language === "cs" ? "Zadejte platný email" : "Enter a valid email",
           variant: "destructive",
         })
@@ -829,7 +826,7 @@ export default function AccountPage() {
       const phoneRegex = /^[+]?[\d\s-]{9,}$/
       if (!phoneRegex.test(twoFactorContact)) {
         toast({
-          title: language === "cs" ? "Chyba" : "Error",
+          title: "Chyba",
           description: language === "cs" ? "Zadejte platné telefonní číslo" : "Enter a valid phone number",
           variant: "destructive",
         })
@@ -862,7 +859,7 @@ export default function AccountPage() {
   const verify2FACode = () => {
     if (verificationCode !== pendingCode) {
       toast({
-        title: language === "cs" ? "Chyba" : "Error",
+        title: "Chyba",
         description: language === "cs" ? "Nesprávný kód" : "Invalid code",
         variant: "destructive",
       })

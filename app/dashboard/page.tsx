@@ -121,7 +121,7 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
-              Dashboard
+              Nástěnka
             </h1>
             <p className="text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
           </div>

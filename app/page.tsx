@@ -116,7 +116,7 @@ export default function HomePage() {
       <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-yellow-900/80 to-orange-900/80 backdrop-blur-sm border-b border-yellow-500/30 py-1.5 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-xs md:text-sm">
           <span className="text-yellow-100">
-            <span className="font-bold text-white">Premium:</span> Only for <span className="font-bold text-white">1499</span> <span className="line-through text-yellow-200">2499</span> <span className="text-yellow-300 font-semibold">Ending soon</span>
+            <span className="font-bold text-white">Premium:</span> Pouze za <span className="font-bold text-white">1499</span> <span className="line-through text-yellow-200">2499</span> <span className="text-yellow-300 font-semibold">Končí brzy</span>
           </span>
         </div>
       </div>
@@ -132,11 +132,11 @@ export default function HomePage() {
         >
           <h1 className="text-[2.5rem] sm:text-[3.5rem] md:text-7xl font-black text-white mb-5 sm:mb-6 md:mb-8 leading-[1.15] max-w-5xl mx-auto">
             <span className="bg-gradient-to-r from-purple-200 via-white to-indigo-200 bg-clip-text text-transparent">
-              #1 Tool for Psychology<br />in Trading
+              #1 Nástroj pro Psychologii<br />v Tradingu
             </span>
           </h1>
           <p className="text-base sm:text-xl md:text-2xl text-purple-100 leading-snug sm:leading-relaxed max-w-3xl mx-auto font-semibold">
-            Analyzes your emotions in real time and stops you before you burn your account
+            Analyzuje tvoje emoce v reálném čase a zastaví tě, než spálíš účet
           </p>
         </motion.div>
 
@@ -308,7 +308,7 @@ export default function HomePage() {
             className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-base md:text-lg px-8 md:px-12 py-3 md:py-4 rounded-lg"
             onClick={handlePricingClick}
           >
-            Get Started
+            Začít
           </Button>
         </motion.div>
 
@@ -325,7 +325,7 @@ export default function HomePage() {
           
           <div className="relative z-10 text-center">
             <h3 className="text-2xl sm:text-3xl md:text-5xl font-black text-white mb-3 md:mb-4">
-              Premium: <span className="text-yellow-300">Ending soon</span>
+              Premium: <span className="text-yellow-300">Končí brzy</span>
             </h3>
             <p className="text-base sm:text-lg md:text-xl text-yellow-50 mb-6 md:mb-8 font-semibold">
               Jen <span className="text-yellow-300 text-2xl sm:text-2xl md:text-3xl">1499 Kč</span> (místo <span className="text-yellow-200 line-through">2499 Kč</span>)
