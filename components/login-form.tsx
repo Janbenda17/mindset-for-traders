@@ -20,6 +20,7 @@ export function LoginForm() {
   const [error, setError] = useState("")
   const [showResetForm, setShowResetForm] = useState(false)
   const [resetEmail, setResetEmail] = useState("")
+  const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState<number>(0)
   const { login } = useAuth()
   const router = useRouter()
 
@@ -30,9 +31,31 @@ export function LoginForm() {
     localStorage.removeItem("mindtrader-saved-password")
   }, [])
 
+  // Rate limit countdown
+  useEffect(() => {
+    if (rateLimitRetryAfter > 0) {
+      const timer = setInterval(() => {
+        setRateLimitRetryAfter((prev) => {
+          if (prev <= 1) {
+            setError("")
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+      return () => clearInterval(timer)
+    }
+  }, [rateLimitRetryAfter])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+
+    // Check if rate limited
+    if (rateLimitRetryAfter > 0) {
+      setError(`Příliš mnoho pokusů o přihlášení. Zkuste znovu za ${rateLimitRetryAfter} sekund.`)
+      return
+    }
 
     // Validace emailu
     if (!email.trim()) {
@@ -66,9 +89,17 @@ export function LoginForm() {
         setPassword("")
         setIsLoading(false)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Login error:", error)
-      setError("Chyba při přihlášení. Prosím zkuste znovu.")
+      
+      // Check if rate limit error
+      if (error?.message?.includes("rate limit") || error?.message?.includes("Too many requests")) {
+        setError("Příliš mnoho pokusů o přihlášení. Počkejte prosím 60 sekund před dalším pokusem.")
+        setRateLimitRetryAfter(60)
+      } else {
+        setError("Chyba při přihlášení. Prosím zkuste znovu.")
+      }
+      
       setIsLoading(false)
     }
   }
@@ -185,13 +216,18 @@ export function LoginForm() {
 
                 <Button
                   type="submit"
-                  className="w-full h-13 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 text-base"
-                  disabled={isLoading}
+                  className="w-full h-13 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoading || rateLimitRetryAfter > 0}
                 >
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       <span>Přihlašuji...</span>
+                    </div>
+                  ) : rateLimitRetryAfter > 0 ? (
+                    <div className="flex items-center space-x-2">
+                      <Shield className="w-5 h-5" />
+                      <span>Zkuste znovu za {rateLimitRetryAfter}s</span>
                     </div>
                   ) : (
                     <div className="flex items-center space-x-2">
