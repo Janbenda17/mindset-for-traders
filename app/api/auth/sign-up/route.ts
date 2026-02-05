@@ -53,14 +53,14 @@ export async function POST(request: NextRequest) {
 
     if (!profile) {
       console.error("[v0] Profile not created after", maxAttempts, "attempts")
-      return NextResponse.json({ error: "Profile creation failed" }, { status: 500 })
+      return NextResponse.json({ error: "Vytvoření profilu selhalo" }, { status: 500 })
     }
 
     const response = NextResponse.json(
       {
         user: data.user,
         session: data.session,
-        message: "Account created successfully",
+        message: "Účet byl úspěšně vytvořen",
       },
       { status: 200 },
     )

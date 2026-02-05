@@ -39,19 +39,17 @@ export default function TradingPlanPage() {
       <Card className="mt-8 bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm border border-blue-500/30">
         <CardContent className="p-6">
           <h3 className="text-xl font-bold text-white mb-4">
-            💡 {language === "cs" ? "Proč je trading plán důležitý?" : "Why is a trading plan important?"}
+            💡 Proč je trading plán důležitý?
           </h3>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <span className="text-2xl">📋</span>
               <div>
                 <p className="text-white font-semibold">
-                  {language === "cs" ? "Eliminuje emocionální rozhodování" : "Eliminates emotional decisions"}
+                  Eliminuje emocionální rozhodování
                 </p>
                 <p className="text-sm text-gray-400">
-                  {language === "cs"
-                    ? "Když máš jasný plán PŘEDEM, neděláš impulzivní rozhodnutí během tradingu."
-                    : "When you have a clear plan BEFOREHAND, you don't make impulsive decisions during trading."}
+                  Když máš jasný plán PŘEDEM, neděláš impulzivní rozhodnutí během tradingu.
                 </p>
               </div>
             </div>
@@ -59,12 +57,10 @@ export default function TradingPlanPage() {
               <span className="text-2xl">🎯</span>
               <div>
                 <p className="text-white font-semibold">
-                  {language === "cs" ? "Definuje konkrétní setupy" : "Defines specific setups"}
+                  Definuje konkrétní setupy
                 </p>
                 <p className="text-sm text-gray-400">
-                  {language === "cs"
-                    ? "Místo 'něco najdu' máš jasno - budu hledat ABC setup na EUR/USD v Londýnské session."
-                    : "Instead of 'I'll find something' you know clearly - I'll look for ABC setup on EUR/USD in London session."}
+                  Místo 'něco najdu' máš jasno - budu hledat ABC setup na EUR/USD v Londýnské session.
                 </p>
               </div>
             </div>
@@ -72,12 +68,10 @@ export default function TradingPlanPage() {
               <span className="text-2xl">🛡️</span>
               <div>
                 <p className="text-white font-semibold">
-                  {language === "cs" ? "Chrání tvůj kapitál" : "Protects your capital"}
+                  Chrání tvůj kapitál
                 </p>
                 <p className="text-sm text-gray-400">
-                  {language === "cs"
-                    ? "Jasná pravidla pro entry, exit, SL a max počet tradů = ochrana před ztrátami."
-                    : "Clear rules for entry, exit, SL and max trades = protection against losses."}
+                  Jasná pravidla pro entry, exit, SL a max počet tradů = ochrana před ztrátami.
                 </p>
               </div>
             </div>
@@ -85,12 +79,10 @@ export default function TradingPlanPage() {
               <span className="text-2xl">📊</span>
               <div>
                 <p className="text-white font-semibold">
-                  {language === "cs" ? "Umožňuje review a zlepšování" : "Enables review and improvement"}
+                  Umožňuje review a zlepšování
                 </p>
                 <p className="text-sm text-gray-400">
-                  {language === "cs"
-                    ? "Večer srovnáš, co jsi naplánoval vs. co jsi udělal. Takhle se zlepšuješ!"
-                    : "In the evening you compare what you planned vs. what you did. That's how you improve!"}
+                  Večer srovnáš, co jsi naplánoval vs. co jsi udělal. Takhle se zlepšuješ!
                 </p>
               </div>
             </div>
@@ -98,12 +90,10 @@ export default function TradingPlanPage() {
               <span className="text-2xl">⏰</span>
               <div>
                 <p className="text-white font-semibold">
-                  {language === "cs" ? "Šetří čas a energii" : "Saves time and energy"}
+                  Šetří čas a energii
                 </p>
                 <p className="text-sm text-gray-400">
-                  {language === "cs"
-                    ? "Nemusíš během tradingu 'vymýšlet'. Všechno máš připravené, jen to provedeš."
-                    : "You don't have to 'figure things out' during trading. Everything is ready, just execute."}
+                  Nemusíš během tradingu 'vymýšlet'. Všechno máš připravené, jen to provedeš.
                 </p>
               </div>
             </div>
@@ -112,9 +102,7 @@ export default function TradingPlanPage() {
           <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
             <p className="text-amber-400 font-bold mb-2">⚠️ Zlaté pravidlo:</p>
             <p className="text-sm text-gray-300">
-              {language === "cs"
-                ? "Pokud tvůj setup není v trading plánu, tak ho NE-TRADUJ! Improvizace = ztráty."
-                : "If your setup is not in the trading plan, DON'T TRADE it! Improvisation = losses."}
+              Pokud tvůj setup není v trading plánu, tak ho NE-TRADUJ! Improvizace = ztráty.
             </p>
           </div>
         </CardContent>

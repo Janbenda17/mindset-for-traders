@@ -507,7 +507,7 @@ const MindTraderAI = () => {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "Network error" }))
+        const errorData = await response.json().catch(() => ({ error: "Chyba sítě" }))
         throw new Error(errorData.error || `HTTP ${response.status}`)
       }
 
@@ -516,11 +516,11 @@ const MindTraderAI = () => {
         data = await response.json()
       } catch (parseError) {
         console.error("[v0] JSON parse error:", parseError)
-        throw new Error("Invalid response format from server")
+        throw new Error("Neplatný formát odpovědi ze serveru")
       }
 
       if (!data.response) {
-        throw new Error("Empty response from AI")
+        throw new Error("Prázdná odpověď od AI")
       }
 
       const aiMessage = {
@@ -541,8 +541,8 @@ const MindTraderAI = () => {
       }
 
       toast({
-        title: language === "cs" ? "Odpověď přijata" : "Response received",
-        description: language === "cs" ? "AI ti odpověděl" : "AI has responded",
+        title: "Odpověď přijata",
+        description: "AI ti odpověděl",
       })
     } catch (error) {
       console.error("[v0] AI Chat Error:", error)
@@ -556,8 +556,8 @@ const MindTraderAI = () => {
       setMessages((prev) => [...prev, errorMessage])
 
       toast({
-        title: language === "cs" ? "Chyba" : "Error",
-        description: error instanceof Error ? error.message : "Failed to get AI response",
+        title: "Chyba",
+        description: error instanceof Error ? error.message : "Nepodařilo se získat odpověď od AI",
         variant: "destructive",
       })
     } finally {
@@ -591,11 +591,8 @@ const MindTraderAI = () => {
   const generateReport = async () => {
     if (!isPremium) {
       toast({
-        title: language === "cs" ? "Premium funkce" : "Premium feature",
-        description:
-          language === "cs"
-            ? "Report Builder je dostupný pouze v Premium plánu."
-            : "Report Builder is available only in Premium plan.",
+        title: "Premium funkce",
+        description: "Report Builder je dostupný pouze v Premium plánu.",
         variant: "destructive",
       })
       return
