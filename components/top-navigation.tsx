@@ -191,7 +191,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     logout()
   }
 
-  const isMoreActive = [...produktyNavigation, ...toolsNavigation].some((item) => pathname === item.href)
+  const isMoreActive = [...toolsNavigation].some((item) => pathname === item.href)
 
   if (isLoading) {
     return (
