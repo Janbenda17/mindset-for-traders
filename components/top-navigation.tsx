@@ -54,13 +54,16 @@ const mainNavigation = [
   { name: "Týmový Klub", href: "/team-club", icon: Users, badge: "PRO" },
 ]
 
-const toolsNavigation = [
-  { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NOVÉ" },
+const produktyNavigation = [
   { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NOVÉ" },
   { name: "Trading Cíle", href: "/trading-goals", icon: Target, badge: "NOVÉ" },
   { name: "Záznam Chyb", href: "/fail-log", icon: AlertTriangle, badge: "NOVÉ" },
-  { name: "Identita Tradera", href: "/trading-identity", icon: User, badge: "NOVÉ" },
   { name: "Odměny", href: "/rewards", icon: Trophy, badge: "NOVÉ" },
+]
+
+const toolsNavigation = [
+  { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NOVÉ" },
+  { name: "Identita Tradera", href: "/trading-identity", icon: User, badge: "NOVÉ" },
 ]
 
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
@@ -188,7 +191,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     logout()
   }
 
-  const isMoreActive = [...toolsNavigation].some((item) => pathname === item.href)
+  const isMoreActive = [...produktyNavigation, ...toolsNavigation].some((item) => pathname === item.href)
 
   if (isLoading) {
     return (
@@ -280,10 +283,39 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   </div>
                 </div>
 
-                {/* Řádek 2: Nástroje */}
+                {/* Řádek 2: Produkty */}
+                <div className="mb-6 pb-6 border-b border-slate-700/50">
+                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Produkty</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {produktyNavigation.map((item) => {
+                      const isActive = pathname === item.href
+                      return (
+                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
+                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                            isActive 
+                              ? "bg-purple-600/20 border border-purple-500/30" 
+                              : "hover:bg-slate-800/50 border border-slate-700/50"
+                          }`}>
+                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                              {item.name}
+                            </span>
+                            {item.badge && (
+                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-green-500/20 text-green-300 border-green-500/30">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Řádek 3: Nástroje */}
                 <div className="mb-6 pb-6 border-b border-slate-700/50">
                   <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Nástroje</p>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     {toolsNavigation.map((item) => {
                       const isActive = pathname === item.href
                       return (
