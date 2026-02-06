@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("subscription_status, subscription_tier, stripe_customer_id")
+      .select("subscription_status, subscription_tier, stripe_customer_id, trial_ends_at, is_premium")
       .eq("user_id", user.id)
       .maybeSingle()
 
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     // Check if subscription is ACTIVE (premium or trialing)
     // Zdroj pravdy je subscription_status v databázi!
-    const isActive = profile?.subscription_status === "active" || profile?.subscription_status === "trialing"
+    const isActive = profile?.subscription_status === "active" || profile?.subscription_status === "trial"
     const isPremium = isActive
 
     const tier = profile?.subscription_tier || "free"
@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
         user_id: user.id,
         status: profile?.subscription_status,
         tier: profile?.subscription_tier,
+        trialEndsAt: profile?.trial_ends_at,
         isPremium,
         isActive,
       },
@@ -59,13 +60,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       isPremium,  // TRUE = user has premium
-      tier,       // "premium", "trialing", or "free"
+      tier,       // "premium", "trial", or "free"
       plan: isPremium ? "premium" : "free",
       isActive,
-      trialEndsAt: null,
+      trialEndsAt: profile?.trial_ends_at,
       subscriptionId: null,
       customerId: profile?.stripe_customer_id,
-      status: profile?.subscription_status,  // "active", "trialing", "canceled", etc.
+      status: profile?.subscription_status,  // "active", "trial", "canceled", etc.
       cancelAtPeriodEnd: false,
     })
   } catch (error: any) {

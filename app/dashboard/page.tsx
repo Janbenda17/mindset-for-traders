@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { TopNavigation } from '@/components/top-navigation'
+import { TrialStatusBanner } from '@/components/trial-status-banner'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BarChart3, Zap, Target, Calendar, MessageSquare, AlertCircle, TrendingUp, Crown, Sparkles } from 'lucide-react'
@@ -109,6 +110,11 @@ export default function Dashboard() {
       />
 
       <TopNavigation />
+      
+      {/* Trial Status Banner */}
+      <div className="relative z-10 pt-24 px-4 md:px-8 lg:px-12">
+        <TrialStatusBanner />
+      </div>
       
       {/* Main Content */}
       <div className="relative z-10 pt-32 px-4 md:px-8 lg:px-12 pb-20 max-w-6xl mx-auto">

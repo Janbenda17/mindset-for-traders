@@ -1011,86 +1011,6 @@ Vygenerováno aplikací Trader Mindset
               </div>
             )}
 
-            {/* Hero KPI */}
-            <Card className="bg-gradient-to-br from-slate-800/90 via-purple-900/20 to-slate-800/90 border-purple-500/30 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2 text-2xl">
-                  <Sparkles className="w-6 h-6 text-purple-400" />
-                  Hero KPI - Týden v Číslech
-                </CardTitle>
-                <CardDescription className="text-gray-400">Klíčové metriky tvého výkonu</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  {/* Avg Readiness */}
-                  <div className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-blue-500/30">
-                    <div className="flex items-center justify-between mb-3">
-                      <Brain className="w-8 h-8 text-blue-400" />
-                      {currentWeekData.avgReadiness >= 70 ? (
-                        <ArrowUp className="w-5 h-5 text-green-400" />
-                      ) : (
-                        <ArrowDown className="w-5 h-5 text-red-400" />
-                      )}
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-1">{Math.round(currentWeekData.avgReadiness)}%</p>
-                    <p className="text-gray-400 text-sm">Avg Readiness</p>
-                  </div>
-
-                  {/* MindPoints */}
-                  <div className="p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/30">
-                    <div className="flex items-center justify-between mb-3">
-                      <Zap className="w-8 h-8 text-purple-400" />
-                      <Sparkles className="w-5 h-5 text-purple-400" />
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-1">{currentWeekData.mindPointsGained}</p>
-                    <p className="text-gray-400 text-sm">MindPoints Gained</p>
-                  </div>
-
-                  {/* Streak */}
-                  <div className="p-6 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl border border-orange-500/30">
-                    <div className="flex items-center justify-between mb-3">
-                      <Flame className="w-8 h-8 text-orange-400" />
-                      {currentWeekData.currentStreak >= 7 ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
-                      ) : (
-                        <Clock className="w-5 h-5 text-yellow-400" />
-                      )}
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-1">{currentWeekData.currentStreak}</p>
-                    <p className="text-gray-400 text-sm">Day Streak</p>
-                  </div>
-
-                  {/* Loss Resets */}
-                  <div className="p-6 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-xl border border-yellow-500/30">
-                    <div className="flex items-center justify-between mb-3">
-                      <Shield className="w-8 h-8 text-yellow-400" />
-                      {currentWeekData.lossResets <= 1 ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
-                      ) : (
-                        <AlertTriangle className="w-5 h-5 text-orange-400" />
-                      )}
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-1">{currentWeekData.lossResets}</p>
-                    <p className="text-gray-400 text-sm">Loss Resets</p>
-                  </div>
-
-                  {/* Revenge Incidents */}
-                  <div className="p-6 bg-gradient-to-br from-red-500/10 to-rose-500/10 rounded-xl border border-red-500/30">
-                    <div className="flex items-center justify-between mb-3">
-                      <AlertTriangle className="w-8 h-8 text-red-400" />
-                      {currentWeekData.revengeIncidents === 0 ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
-                      ) : (
-                        <XCircle className="w-5 h-5 text-red-400" />
-                      )}
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-1">{currentWeekData.revengeIncidents}</p>
-                    <p className="text-gray-400 text-sm">Revenge Incidents</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {currentWeekData.aiInsights && currentWeekData.aiInsights.length > 0 && (
               <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-500/50 backdrop-blur-sm">
                 <CardHeader>
@@ -1213,7 +1133,7 @@ Vygenerováno aplikací Trader Mindset
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Brain className="w-5 h-5 text-blue-400" />
-                  Readiness Trend (Po-Pá)
+                  Trend Připravenosti (Po-Pá)
                 </CardTitle>
                 <CardDescription className="text-gray-400">Denní připravenost během pracovních dnů</CardDescription>
               </CardHeader>
@@ -1272,7 +1192,7 @@ Vygenerováno aplikací Trader Mindset
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Target className="w-5 h-5 text-green-400" />
-                  Win Rate & Emotional Patterns
+                  Podíl Výher & Emoční Vzory
                 </CardTitle>
                 <CardDescription className="text-gray-400">Úspěšnost a emoční stav během týdne</CardDescription>
               </CardHeader>

@@ -51,7 +51,7 @@ export default function UpgradePage() {
           <div className="mb-8 p-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-center">
             <Gift className="h-12 w-12 mx-auto mb-3" />
             <h2 className="text-2xl font-bold mb-2">Vítejte, {user.name}! 🎉</h2>
-            <p className="text-lg">Váš účet je připraven. Nyní spusťte 7-denní Premium trial zdarma!</p>
+            <p className="text-lg">Váš účet je připraven. Nyní spusťte 14-denní Premium trial zdarma!</p>
           </div>
         )}
 
@@ -66,7 +66,7 @@ export default function UpgradePage() {
               <Zap className="h-6 w-6" />
               <span className="text-2xl font-bold">Speciální nabídka!</span>
             </div>
-            <p className="text-lg">7 dní zdarma, poté €59/měsíc</p>
+            <p className="text-lg">14 dní zdarma, poté €59/měsíc</p>
             <p className="text-sm opacity-90 mt-1">Zrušte kdykoli během trialu bez poplatků</p>
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function UpgradePage() {
                   disabled={isLoading || isUpgrading}
                   className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-3"
                 >
-                  {isLoading || isUpgrading ? "Zpracovávám..." : "Začít 7-denní trial zdarma"}
+                  {isLoading || isUpgrading ? "Zpracovávám..." : "Začít 14-denní trial zdarma"}
                 </Button>
               ) : (
                 <Button
@@ -178,7 +178,7 @@ export default function UpgradePage() {
                 </Button>
               )}
 
-              <p className="text-xs text-gray-500 text-center mt-3">Po 7 dnech €59/měsíc. Zrušte kdykoli.</p>
+              <p className="text-xs text-gray-500 text-center mt-3">Po 14 dnech €59/měsíc. Zrušte kdykoli.</p>
             </CardContent>
           </Card>
         </div>

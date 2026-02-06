@@ -1586,7 +1586,7 @@ function StudentTeamClubView({
           <div>
             <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
               <Brain className="w-10 h-10 text-purple-400" />
-              <span className="gradient-text">MindTrader Team Club</span>
+              <span className="gradient-text">MindTrader - Tým</span>
               <Badge
                 className={
                   isLiveMode
@@ -1595,7 +1595,7 @@ function StudentTeamClubView({
                 }
               >
                 <Sparkles className="w-3 h-3 mr-1" />
-                {isLiveMode ? "Live Mode" : "Virtual Mode"}
+                {isLiveMode ? "Live Režim" : "Virtuální Režim"}
               </Badge>
             </h1>
             <p className="text-gray-300 text-lg">
@@ -3537,7 +3537,7 @@ function TeamClubPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <Brain className="w-16 h-16 text-purple-400 animate-pulse mx-auto mb-4" />
-          <p className="text-slate-400">Načítám Team Club...</p>
+          <p className="text-slate-400">Načítám Tým...</p>
         </div>
       </div>
     )
@@ -3553,9 +3553,9 @@ function TeamClubPage() {
               <Lock className="w-12 h-12 text-red-400" />
             </div>
           </div>
-          <h1 className="text-3xl font-black text-white mb-3">Team Club je zamčený</h1>
+          <h1 className="text-3xl font-black text-white mb-3">Tým je zamčený</h1>
           <p className="text-lg text-purple-300 mb-6">
-            Team Club není dostupný v Live Mode. Vrať se do Virtual Mode, pokud chceš prozkoumat komunitu.
+            Tým není dostupný v Live Mode. Vrať se do Virtuálního Režimu, pokud chceš prozkoumat komunitu.
           </p>
           <Button 
             onClick={() => window.history.back()}

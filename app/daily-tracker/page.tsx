@@ -754,13 +754,13 @@ export default function DailyTrackerPage() {
               </div>
               <div>
                 <h1 className="md:text-7xl text-4xl font-black bg-gradient-to-r from-orange-400 via-pink-400 to-rose-400 bg-clip-text text-transparent">
-                  Daily Tracker
+                  Denní Sledování
                 </h1>
                 <p className="md:text-lg text-sm text-muted-foreground mt-1 md:block hidden">
-                  {tradingStyle === "scalper" && (isLiveMode ? "Track your sessions 🚀" : "Demo režim 🎮")}
-                  {tradingStyle === "daytrader" && (isLiveMode ? "Tvé shrnutí 📊" : "Demo režim 🎮")}
-                  {tradingStyle === "swingtrader" && (isLiveMode ? "Monitor positions 📈" : "Demo režim 🎮")}
-                  {!tradingStyle && (isLiveMode ? "Tvé shrnutí 📊" : "Demo režim 🎮")}
+                  {tradingStyle === "scalper" && (isLiveMode ? "Sledujte vaše relace 🚀" : "Demo režim 🎮")}
+                  {tradingStyle === "daytrader" && (isLiveMode ? "Vaše shrnutí 📊" : "Demo režim 🎮")}
+                  {tradingStyle === "swingtrader" && (isLiveMode ? "Sledujte pozice 📈" : "Demo režim 🎮")}
+                  {!tradingStyle && (isLiveMode ? "Vaše shrnutí 📊" : "Demo režim 🎮")}
                 </p>
               </div>
             </div>
@@ -1175,7 +1175,7 @@ export default function DailyTrackerPage() {
             <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10">
               <CardContent className="p-8 text-center">
                 <Target className="h-16 w-16 mx-auto mb-4 text-orange-400" />
-                <h3 className="text-2xl font-black mb-2">Pokračuj v Daily Flow!</h3>
+                <h3 className="text-2xl font-black mb-2">Pokračuj v Denním Toku!</h3>
                 <p className="text-muted-foreground mb-6">
                   Dokončil jsi{" "}
                   {!isLiveMode ? virtualData?.[0]?.stagesCompleted : todayStages.filter((s) => s.completed).length} z 5

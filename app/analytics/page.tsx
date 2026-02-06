@@ -1090,7 +1090,7 @@ export default function PsychologyAnalyticsPage() {
               <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-purple-500/10">
                 <Brain className="h-12 w-12 text-purple-400" />
               </div>
-              <CardTitle className="text-3xl font-bold text-white">Analytics Locked 🔒</CardTitle>
+              <CardTitle className="text-3xl font-bold text-white">Analytics Uzamčeny 🔒</CardTitle>
               <CardDescription className="text-lg text-gray-300">
                 Sbírej data prvních 10 dní pro smysluplnou analýzu
               </CardDescription>
@@ -1125,15 +1125,15 @@ export default function PsychologyAnalyticsPage() {
                 <ul className="mt-3 space-y-2 text-sm text-gray-400">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-400 flex-shrink-0" />
-                    <span>Pattery v tvém tradingu (winning/losing days)</span>
+                    <span>Vzory v tvém tradingu (vítězné/prohrávající dny)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-400 flex-shrink-0" />
-                    <span>Korelaci mezi mood, readiness a výsledky</span>
+                    <span>Korelaci mezi nálada, připravenost a výsledky</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-400 flex-shrink-0" />
-                    <span>Emocionální triggery a chyby</span>
+                    <span>Emocionální spouště a chyby</span>
                   </li>
                 </ul>
               </div>
@@ -1717,7 +1717,7 @@ export default function PsychologyAnalyticsPage() {
               )}
             >
               <Target className="w-5 h-5" />
-              <span className="font-semibold">Action Plan</span>
+              <span className="font-semibold">Plán Akcí</span>
             </TabsTrigger>
           </TabsList>
           <TabsContent value="overview">
@@ -2621,7 +2621,7 @@ export default function PsychologyAnalyticsPage() {
                       <p className="text-center text-gray-200 text-xl leading-relaxed mb-8 max-w-3xl mx-auto">
                         Implementací těchto psychologických změn můžeš výrazně zlepšit svou mentální kondici a trading
                         performance.
-                        <span className="text-cyan-300 font-bold"> Focus on mindset = focus on results!</span> 🚀
+                        <span className="text-cyan-300 font-bold">Zaměř se na mindset = zaměř se na výsledky!</span> 🚀
                       </p>
 
                       <div className="grid grid-cols-3 gap-4">
