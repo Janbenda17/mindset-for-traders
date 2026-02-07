@@ -502,7 +502,7 @@ const DEMO_SUCCESS_STORIES: SuccessStory[] = [
 const DEMO_STUDENTS: Student[] = [
   {
     id: "demo-1",
-    name: "Alice Smith",
+    name: "Alena Nováková",
     nickname: "ScalperPro",
     avatar: "/trader-avatar.png",
     traderType: "scalper",
@@ -513,18 +513,18 @@ const DEMO_STUDENTS: Student[] = [
     pnlHistory: [1000, 1100, 1200, 1150, 1300, 1400, 1250],
     journalStreak: 28,
     status: "stable",
-    lastActive: "2h ago",
-    triggers: ["FOMO", "Overtrading"],
-    strengths: ["Risk Management", "Discipline"],
-    weaknesses: ["Patience", "Emotional Control"],
+    lastActive: "před 2h",
+    triggers: ["FOMO", "Nadměrné obchodování"],
+    strengths: ["Řízení rizika", "Disciplína"],
+    weaknesses: ["Trpělivost", "Emoční kontrola"],
     aiDiagnosis:
-      "Alice ukazuje vysokou úroveň disciplíny a silný systém řízení rizik. Její konzistentní journaling ji udržuje na správné cestě.",
-    mentorNotes: ["Continue focusing on setup quality."],
-    todos: ["Review past week's trades.", "Practice 10-minute meditation daily."],
+      "Alena ukazuje vysokou úroveň disciplíny a silný systém řízení rizik. Její konzistentní journaling ji udržuje na správné cestě.",
+    mentorNotes: ["Pokračuj v zaměření na kvalitu setupů."],
+    todos: ["Zkontroluj obchody za minulý týden.", "Cvič 10minutovou meditaci denně."],
   },
   {
     id: "demo-2",
-    name: "Bob Johnson",
+    name: "Martin Svoboda",
     nickname: "SwingMaster",
     avatar: "/trader-avatar.png",
     traderType: "swing-trader",
@@ -535,18 +535,18 @@ const DEMO_STUDENTS: Student[] = [
     pnlHistory: [-500, -400, -350, -300, -250, -320, -300],
     journalStreak: 10,
     status: "warning",
-    lastActive: "1d ago",
-    triggers: ["Revenge Trading", "Impatience"],
-    strengths: ["Strategy Development", "Analysis"],
-    weaknesses: ["Emotional Control", "Trade Execution"],
+    lastActive: "před 1 dnem",
+    triggers: ["Pomstový trading", "Netrpělivost"],
+    strengths: ["Vývoj strategie", "Analýza"],
+    weaknesses: ["Emoční kontrola", "Exekuce obchodů"],
     aiDiagnosis:
-      "Bob má solidní strategie, ale bojuje s emoční kontrolou, což vede k revenge tradingu. Zlepšení journalingu a zavedení pauz po ztrátě pomůže.",
-    mentorNotes: ["Focus on sticking to the plan.", "Review the 'No FOMO' challenge."],
-    todos: ["Journal every trade for the next 7 days.", "Take a 30-minute break after any losing trade."],
+      "Martin má solidní strategie, ale bojuje s emoční kontrolou, což vede k pomstovému tradingu. Zlepšení journalingu a zavedení pauz po ztrátě pomůže.",
+    mentorNotes: ["Zaměř se na dodržování plánu.", "Projdi si výzvu 'Bez FOMO'."],
+    todos: ["Zaznamenej každý obchod příštích 7 dní.", "Po každé ztrátě si udělej 30minutovou pauzu."],
   },
   {
     id: "demo-3",
-    name: "Charlie Davis",
+    name: "Karel Dvořák",
     nickname: "DayTraderJoe",
     avatar: "/trader-avatar.png",
     traderType: "day-trader",
@@ -557,14 +557,14 @@ const DEMO_STUDENTS: Student[] = [
     pnlHistory: [600, 700, 750, 800, 850, 820, 800],
     journalStreak: 5,
     status: "critical",
-    lastActive: "3h ago",
-    triggers: ["Over-leveraging", "Lack of Sleep"],
-    strengths: ["Quick Decision Making"],
-    weaknesses: ["Risk Management", "Emotional Stability"],
+    lastActive: "před 3h",
+    triggers: ["Přílišná páka", "Nedostatek spánku"],
+    strengths: ["Rychlé rozhodování"],
+    weaknesses: ["Řízení rizika", "Emoční stabilita"],
     aiDiagnosis:
-      "Charlieho nízká readiness a občasné vážné chyby naznačují problémy s emoční stabilitou a risk managementem. Doporučuje se zaměřit na wellness a trading plán.",
-    mentorNotes: ["Prioritize sleep and healthy habits.", "Strict adherence to risk per trade."],
-    todos: ["Track sleep schedule.", "Limit max risk to 1% per trade.", "Meditate 5 minutes before market open."],
+      "Karlova nízká připravenost a občasné vážné chyby naznačují problémy s emoční stabilitou a risk managementem. Doporučuje se zaměřit na wellness a obchodní plán.",
+    mentorNotes: ["Prioritizuj spánek a zdravé návyky.", "Striktní dodržování rizika na obchod."],
+    todos: ["Sleduj spánkový režim.", "Omezte max riziko na 1% na obchod.", "Medituj 5 minut před otevřením trhu."],
   },
 ]
 
@@ -1166,13 +1166,13 @@ function StudentTeamClubView({
   const getChallengeTypeLabel = (type: string) => {
     switch (type) {
       case "behavioral":
-        return "Behavioral"
+        return "Chování"
       case "routine":
-        return "Routine"
+        return "Rutina"
       case "mental":
-        return "Mental"
+        return "Mentální"
       case "skill":
-        return "Skill"
+        return "Dovednost"
       default:
         return type
     }
