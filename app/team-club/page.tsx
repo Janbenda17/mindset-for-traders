@@ -1720,7 +1720,7 @@ function StudentTeamClubView({
                       <div className="p-6 pb-4">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-gray-400 text-xs font-medium mb-2">Avg. Community Mood</p>
+                            <p className="text-gray-400 text-xs font-medium mb-2">Průměrná nálada komunity</p>
                             <p className="text-4xl font-bold text-white mb-1">{communityStats.avgCommunityMood}%</p>
                             <p className="text-amber-400 text-sm font-semibold">Pozitivní</p>
                           </div>
@@ -1768,7 +1768,7 @@ function StudentTeamClubView({
                       <div className="p-6 pb-4">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-gray-400 text-xs font-medium mb-2">Showing Improvement</p>
+                            <p className="text-gray-400 text-xs font-medium mb-2">Zlepšování komunity</p>
                             <p className="text-4xl font-bold text-white mb-1">{communityStats.improvementRate}%</p>
                             <p className="text-cyan-400 text-sm font-semibold flex items-center gap-1">
                               <ArrowUp className="h-4 w-4" />
@@ -1795,7 +1795,7 @@ function StudentTeamClubView({
                       <div className="p-6 pb-4">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-gray-400 text-xs font-medium mb-2">Feeling Frustrated</p>
+                            <p className="text-gray-400 text-xs font-medium mb-2">Cítí se frustrací</p>
                             <p className="text-4xl font-bold text-white mb-1">{communityStats.frustrationRate}%</p>
                             <p className="text-red-400 text-sm font-semibold">Z důvodu ztrát</p>
                           </div>
@@ -1919,7 +1919,7 @@ function StudentTeamClubView({
                       <Sparkles className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-white font-semibold text-sm mb-1">💡 AI Recommendation</p>
+                      <p className="text-white font-semibold text-sm mb-1">💡 AI Doporučení</p>
                       <p className="text-white/90 text-sm">
                         {userStats.winRate >= communityStats.avgWinRate
                           ? "Tvoje úspěšnost je nad průměrem! Sdílej své postupy v Community Feed."
@@ -2813,18 +2813,18 @@ function StudentTeamClubView({
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Timezone</span>
+                        <span className="text-slate-400">Časové pásmo</span>
                         <span className="text-white text-xs">{buddy.timezone}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Trading Hours</span>
+                        <span className="text-slate-400">Obchodní hodiny</span>
                         <span className="text-white text-xs">{buddy.tradingHours}</span>
                       </div>
                     </div>
 
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-slate-400 text-xs">AI Compatibility</span>
+                        <span className="text-slate-400 text-xs">AI Kompatibilita</span>
                         <span className="text-purple-400 font-bold text-sm">{buddy.compatibility}%</span>
                       </div>
                       <Progress value={buddy.compatibility} className="h-2 rounded-full" />
@@ -2836,7 +2836,7 @@ function StudentTeamClubView({
                         className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl text-xs h-9"
                       >
                         <UserPlus className="h-3.5 w-3.5 mr-1.5" />
-                        Connect
+                        Připojit
                       </Button>
                       <Button
                         size="sm"

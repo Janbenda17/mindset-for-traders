@@ -100,22 +100,22 @@ export function DailyIntention() {
               <Target className="h-10 w-10 text-blue-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-3xl font-black text-blue-400 mb-2">Set Your Daily Intention</h3>
+              <h3 className="text-3xl font-black text-blue-400 mb-2">Nastavte si denní záměr</h3>
               <p className="text-lg text-muted-foreground mb-4">
-                Define clear goals and limits before you start trading today
+                Definujte jasné cíle a limity před zahájením dnešního obchodování
               </p>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-400" />
-                  <span>Clear Trading Goals</span>
+                  <span>Jasné obchodní cíle</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Shield className="h-4 w-4 text-orange-400" />
-                  <span>Risk Management</span>
+                  <span>Řízení rizik</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Brain className="h-4 w-4 text-purple-400" />
-                  <span>Mental Preparation</span>
+                  <span>Mentální příprava</span>
                 </div>
               </div>
             </div>
@@ -128,18 +128,18 @@ export function DailyIntention() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-green-400" />
-            Today's Trading Goals
+            Dnešní obchodní cíle
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
             value={intention.goals}
             onChange={(e) => setIntention({ ...intention, goals: e.target.value })}
-            placeholder="What do you want to achieve today? (e.g., Take only A+ setups, stick to 2% risk rule, focus on patience...)"
+            placeholder="Čeho chcete dnes dosáhnout? (např. Brát pouze A+ setupy, držet se 2% risk pravidla, zaměřit se na trpělivost...)"
             className="min-h-[120px] bg-white/5 border-white/10 resize-none text-base"
           />
           <p className="text-xs text-muted-foreground mt-2">
-            💡 Tip: Be specific and focus on process goals, not just profit targets
+            💡 Tip: Buďte konkrétní a zaměřte se na procesní cíle, nejen na ziskové cíle
           </p>
         </CardContent>
       </Card>
@@ -150,12 +150,12 @@ export function DailyIntention() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-red-400" />
-              Maximum Risk
+              Maximální riziko
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">Risk Per Trade (%)</label>
+              <label className="text-sm text-muted-foreground">Riziko na obchod (%)</label>
               <div className="flex items-center gap-4">
                 <Input
                   type="number"
@@ -172,10 +172,10 @@ export function DailyIntention() {
               </div>
             </div>
             <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-              <div className="text-sm text-muted-foreground mb-1">Maximum Risk in Dollars</div>
+              <div className="text-sm text-muted-foreground mb-1">Maximální riziko v dolarech</div>
               <div className="text-3xl font-black text-red-400">${maxRiskDollars.toFixed(2)}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Based on portfolio: ${portfolioValue.toLocaleString()}
+                Na základě portfolia: ${portfolioValue.toLocaleString()}
               </div>
             </div>
           </CardContent>
@@ -186,7 +186,7 @@ export function DailyIntention() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-purple-400" />
-              Emotional Goal
+              Emoční cíl
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -207,7 +207,7 @@ export function DailyIntention() {
             </Select>
             {selectedEmotion && (
               <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                <div className="text-sm text-muted-foreground mb-1">Today I will be</div>
+                <div className="text-sm text-muted-foreground mb-1">Dnes budu</div>
                 <div className={cn("text-2xl font-black", selectedEmotion.color)}>{selectedEmotion.label}</div>
               </div>
             )}
@@ -220,18 +220,18 @@ export function DailyIntention() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-blue-400" />
-            Today's Trading Strategy
+            Dnešní obchodní strategie
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
             value={intention.strategy}
             onChange={(e) => setIntention({ ...intention, strategy: e.target.value })}
-            placeholder="What's your strategy for today? (e.g., Trend following on EUR/USD, waiting for breakout confirmations, trading London session only...)"
+            placeholder="Jaká je vaše strategie na dnes? (např. Trend following na EUR/USD, čekání na breakout konfirmace, obchodování pouze Londýnské session...)"
             className="min-h-[120px] bg-white/5 border-white/10 resize-none text-base"
           />
           <p className="text-xs text-muted-foreground mt-2">
-            💡 Tip: Include specific setups you're looking for and market conditions
+            💡 Tip: Zahrňte konkrétní setupy, které hledáte, a tržní podmínky
           </p>
         </CardContent>
       </Card>
@@ -240,10 +240,9 @@ export function DailyIntention() {
       <div className="p-6 rounded-xl bg-blue-500/10 border-2 border-blue-500/30 flex items-start gap-4">
         <CheckCircle className="h-6 w-6 text-blue-400 flex-shrink-0 mt-1" />
         <div>
-          <h4 className="font-bold text-blue-400 mb-2">Your Daily Trading Compass</h4>
+          <h4 className="font-bold text-blue-400 mb-2">Váš denní obchodní kompas</h4>
           <p className="text-sm text-muted-foreground">
-            Setting your daily intention helps you stay focused and disciplined throughout the trading day. You can
-            review your intentions anytime and reflect on them in the Daily Tracker.
+            Nastavení denního záměru vám pomůže zůstat soustředění a disciplinovaní po celý obchodní den. Své záměry můžete kdykoli zkontrolovat a zamyslet se nad nimi v Daily Trackeru.
           </p>
         </div>
       </div>
@@ -255,7 +254,7 @@ export function DailyIntention() {
         className="w-full h-16 text-xl font-black rounded-2xl bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 hover:from-blue-600 hover:via-cyan-600 hover:to-teal-600 shadow-2xl disabled:opacity-50"
       >
         <CheckCircle className="w-6 h-6 mr-2" />
-        {isLiveMode ? "Set Daily Intention" : "Available in Live Mode Only"}
+        {isLiveMode ? "Nastavit denní záměr" : "Dostupné pouze v Live Mode"}
       </Button>
     </div>
   )
