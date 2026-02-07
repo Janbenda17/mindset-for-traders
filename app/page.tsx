@@ -9,9 +9,15 @@ import { ChevronLeft, ChevronRight, Users, TrendingUp, Target } from 'lucide-rea
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
+import dynamic from 'next/dynamic'
+
+const AdminPanel = dynamic(() => import('@/components/admin-panel').then(mod => ({ default: mod.AdminPanel })), {
+  ssr: false,
+})
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [isAdminVisible, setIsAdminVisible] = useState(false)
   const router = useRouter()
   const { user } = useAuth()
 
@@ -91,6 +97,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
+      <AdminPanel isVisible={isAdminVisible} onClose={() => setIsAdminVisible(false)} />
       {/* Galaxy background effects */}
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent" />
@@ -356,7 +363,22 @@ export default function HomePage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Hidden Admin Button - Bottom right corner */}
+        <button
+          onClick={() => setIsAdminVisible(true)}
+          className="fixed bottom-4 right-4 w-1 h-1 bg-transparent cursor-pointer opacity-0 hover:opacity-0 focus:outline-none z-50"
+          aria-label="Admin"
+          title="Admin Panel"
+        />
       </div>
+
+      {/* Secret Admin Hotspot - invisible area at bottom */}
+      <div
+        onClick={() => setIsAdminVisible(true)}
+        className="fixed bottom-0 left-0 right-0 h-1 cursor-pointer opacity-0 hover:opacity-0 z-50"
+        style={{ pointerEvents: 'auto' }}
+      />
     </div>
   )
 }
