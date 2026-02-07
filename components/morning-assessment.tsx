@@ -412,6 +412,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
   const currentScore = calculateScore()
   const recommendation = getRecommendation(currentScore)
   const RecommendationIcon = recommendation.icon
+  const exerciseTypeLabel = EXERCISE_TYPES.find((t) => t.value === assessment.exerciseType)?.label || 'Cvičení'
 
   if (isLocked) {
     return (
@@ -567,10 +568,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
             <CardContent>
               <div className="flex items-center gap-4">
                 <div className="text-4xl">
-                  {(() => {
-                    const type = EXERCISE_TYPES.find((t) => t.value === assessment.exerciseType)
-                    return type?.label || 'Cvičení'
-                  })()}
+                  {exerciseTypeLabel}
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-blue-400">{assessment.exerciseDuration} min</div>
