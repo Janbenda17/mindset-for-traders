@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const { email, password } = await request.json()
 
     if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
+      return NextResponse.json({ error: "Email a heslo jsou povinné" }, { status: 400 })
     }
 
     const supabase = await createClient()
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!data.user) {
-      return NextResponse.json({ error: "User creation failed" }, { status: 400 })
+      return NextResponse.json({ error: "Vytváření uživatele selhalo" }, { status: 400 })
     }
 
     console.log("[v0] User registered successfully:", data.user.id)
@@ -53,14 +53,14 @@ export async function POST(request: NextRequest) {
 
     if (!profile) {
       console.error("[v0] Profile not created after", maxAttempts, "attempts")
-      return NextResponse.json({ error: "Profile creation failed" }, { status: 500 })
+      return NextResponse.json({ error: "Vytvoření profilu selhalo" }, { status: 500 })
     }
 
     const response = NextResponse.json(
       {
         user: data.user,
         session: data.session,
-        message: "Account created successfully",
+        message: "Účet byl úspěšně vytvořen",
       },
       { status: 200 },
     )

@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const { text } = await generateText({
       model: "openai/gpt-4o",
       prompt,
-      temperature: 0.8,
+      temperature: 0.3,
       maxTokens: 3000,
     })
 
@@ -221,72 +221,69 @@ function buildEnhancedAnalysisPrompt(dataSummary: any, psychPatterns: any, advan
     ? ((dataSummary.tradeStats.winningTrades / dataSummary.tradeStats.totalTrades) * 100).toFixed(1)
     : 0
 
-  return `You are an elite trading psychology coach and performance analyst with expertise in behavioral finance and cognitive biases. Analyze this trader's comprehensive performance data.
+  return `Jsi elitní trading psycholog a analytik. Analyzuješ REALNA data tradera. ODPOVIDEJ POUZE V CESTINE.
 
-📊 TRADING PERFORMANCE:
-- Total Trades: ${dataSummary.tradeStats.totalTrades}
-- Win Rate: ${winRate}%
-- Average Confidence: ${dataSummary.tradeStats.avgConfidence.toFixed(1)}/10
-- Average Discipline: ${dataSummary.tradeStats.avgDiscipline.toFixed(1)}/10
-- Performance Score: ${advancedMetrics.performanceScore.toFixed(1)}/100
+KRITICKA PRAVIDLA - NIKDY NEPORUSIT:
+1. NIKDY si nevymyslej cisla, procenta ani fakta ktere NEJSOU v datech nize
+2. Pokud nemas dostatek dat, rekni to primo ("Nemam dostatek dat pro tuto analyzu")
+3. Kazdy insight MUSI odkazovat na konkretni cislo z dat nize
+4. ZADNE vague/genericke fráze jako "zvaz zlepseni" nebo "pracuj na disciplíne"
+5. Kazda doporuceni MUSI byt konkretni akce: CO presne udelat, KDY, JAK mereni uspech
+6. Nepridavej cisla ktera nemas - pokud je win rate 0 protoze neni dost dat, rekni to
 
-🧠 PSYCHOLOGICAL ANALYSIS:
-- Revenge Trading Score: ${psychPatterns.revengeTradingScore} (lower is better)
-- FOMO Score: ${psychPatterns.fomoScore} (lower is better)
-- Fear Score: ${psychPatterns.fearScore} (lower is better)
-- Overconfidence Score: ${psychPatterns.overconfidenceScore} (lower is better)
-- Emotional Control: ${psychPatterns.emotionalControl.toFixed(1)}/10
-- Consistency Score: ${psychPatterns.consistencyScore.toFixed(1)}/10
-- Psychological Health: ${advancedMetrics.psychologicalHealth.toFixed(1)}/100
+REALNA DATA TRADERA:
+Celkem obchodu: ${dataSummary.tradeStats.totalTrades}
+Vitezne: ${dataSummary.tradeStats.winningTrades} | Ztratove: ${dataSummary.tradeStats.losingTrades}
+Win Rate: ${winRate}%
+Prumerna sebeduvera: ${dataSummary.tradeStats.avgConfidence.toFixed(1)}/10
+Prumerna disciplina: ${dataSummary.tradeStats.avgDiscipline.toFixed(1)}/10
 
-💪 WELL-BEING METRICS:
-- Average Sleep: ${dataSummary.wellbeingStats.avgSleep.toFixed(1)} hours
-- Average Stress: ${dataSummary.wellbeingStats.avgStress.toFixed(1)}/10
-- Average Energy: ${dataSummary.wellbeingStats.avgEnergy.toFixed(1)}/10
-- Average Mood: ${dataSummary.wellbeingStats.avgMood.toFixed(1)}/10
-- Average Morning Readiness: ${dataSummary.readinessStats.avgReadiness.toFixed(1)}%
-- Days Ready: ${dataSummary.readinessStats.daysReady}
-- Days Not Ready: ${dataSummary.readinessStats.daysNotReady}
+PSYCHOLOGICKE VZORY (z reálních dat):
+Revenge trading incidenty: ${psychPatterns.revengeTradingScore}
+FOMO obchody: ${psychPatterns.fomoScore}
+Strach (vynechane obchody s vysokou sebedůvěrou): ${psychPatterns.fearScore}
+Nadmerna sebeduvera (vysoká jistota + ztrata): ${psychPatterns.overconfidenceScore}
+Emocni kontrola: ${psychPatterns.emotionalControl.toFixed(1)}/10
+Konzistence: ${psychPatterns.consistencyScore.toFixed(1)}/10
 
-📈 RISK & DISCIPLINE:
-- Risk Management Score: ${advancedMetrics.riskManagementScore.toFixed(1)}/100
-- Discipline Index: ${advancedMetrics.disciplineIndex.toFixed(1)}/100
+WELLBEING:
+Prumerny spanek: ${dataSummary.wellbeingStats.avgSleep.toFixed(1)} hodin
+Prumerny stres: ${dataSummary.wellbeingStats.avgStress.toFixed(1)}/10
+Prumerna energie: ${dataSummary.wellbeingStats.avgEnergy.toFixed(1)}/10
+Prumerna nalada: ${dataSummary.wellbeingStats.avgMood.toFixed(1)}/10
+Prumerna pripravenost: ${dataSummary.readinessStats.avgReadiness.toFixed(1)}%
+Dny pripraveny (70%+): ${dataSummary.readinessStats.daysReady}
+Dny nepripraveny: ${dataSummary.readinessStats.daysNotReady}
 
-🔮 PERFORMANCE PREDICTION:
-- Next Week Outlook: ${advancedMetrics.predictedNextWeekPerformance}
+METRIKY:
+Risk Management: ${advancedMetrics.riskManagementScore.toFixed(1)}/100
+Disciplina Index: ${advancedMetrics.disciplineIndex.toFixed(1)}/100
+Predikcni outlook: ${advancedMetrics.predictedNextWeekPerformance}
 
-📝 RECENT ACTIVITY (Last 5 entries):
+POSLEDNI AKTIVITA:
 ${JSON.stringify(dataSummary.recentJournal.slice(0, 5), null, 2)}
 
-🎯 ANALYSIS TASK:
-Provide a deep ${type} psychological and performance analysis. Be specific, actionable, and insightful.
+UKOL: Vytvor ${type} analyzu. Kazdy bod musi odkazovat na konkretni cislo z dat vyse.
 
-Return ONLY a valid JSON object (no markdown, no code blocks) with these exact keys:
+Vrat POUZE validni JSON objekt (zadny markdown, zadne code blocks):
 
 {
   "keyInsights": [
-    "3-5 specific, data-driven insights about patterns, correlations between psychology and performance, hidden trends"
+    "3-5 postrehů. Kazdy MUSI obsahovat konkretni cislo z dat vyse. Priklad spravneho: 'Tvych ${psychPatterns.revengeTradingScore} revenge tradu naznacuje problem s emocni kontrolou po ztratach.' Priklad SPATNEHO: 'Tvuj trading se zlepsuje.' (= vague, zadne cislo)"
   ],
   "predictions": [
-    "3-4 evidence-based predictions for the next period, including confidence level and reasoning"
+    "3-4 predikce. Kazda musi byt odvozena z konkretniho patternu v datech. Priklad: 'S prumernym stresem ${dataSummary.wellbeingStats.avgStress.toFixed(1)}/10 a ${psychPatterns.revengeTradingScore} revenge incidenty existuje riziko dalsich emocnich obchodu.' NIKDY nepredikuj konkretni $ castky nebo win rate ktere nemas v datech."
   ],
   "recommendations": [
-    "4-6 highly specific, actionable recommendations prioritized by impact. Include what, why, and how"
+    "4-6 konkretni akce. Kazda MUSI obsahovat: CO udelat + KDY + JAK merit uspech. Priklad: 'Po kazde ztrate zavedite povinnou 15min pauzu. Merit: Pocet revenge tradu by mel klesnout z ${psychPatterns.revengeTradingScore} na 0 behem 2 tydnu.' SPATNE: 'Zlepsete disciplinu.' (= nekonkretni)"
   ],
   "riskFactors": [
-    "3-4 specific psychological or behavioral risks to monitor, with early warning signs"
+    "3-4 konkretni rizika s varovnymi signaly. Priklad: 'Revenge trading (aktualne ${psychPatterns.revengeTradingScore} incidentu) - varovny signal: Po ztrate citis nutkani okamzite vstoupit do dalsiho obchodu.' NIKDY nepridavej rizika ktera nejsou podlozena daty."
   ],
   "strengths": [
-    "3-4 specific strengths to leverage and build upon, with examples from data"
+    "3-4 silne stranky z dat. Priklad: 'Disciplina ${dataSummary.tradeStats.avgDiscipline.toFixed(1)}/10 je nadprumerna.' Pokud trader nema dostatek dat, rekni: 'Nedostatek dat pro identifikaci silnych stranek - pokracuj v zaznamenavani.'"
   ]
-}
-
-Focus on:
-- Connecting psychological patterns to trading outcomes
-- Identifying cognitive biases affecting decisions
-- Correlations between well-being and performance
-- Specific behavioral interventions
-- Predictive insights based on historical patterns`
+}`
 }
 
 function parseInsights(text: string) {

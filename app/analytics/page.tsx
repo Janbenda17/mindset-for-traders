@@ -1090,7 +1090,7 @@ export default function PsychologyAnalyticsPage() {
               <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-purple-500/10">
                 <Brain className="h-12 w-12 text-purple-400" />
               </div>
-              <CardTitle className="text-3xl font-bold text-white">Analytics Locked 🔒</CardTitle>
+              <CardTitle className="text-3xl font-bold text-white">Analytics Uzamčeny 🔒</CardTitle>
               <CardDescription className="text-lg text-gray-300">
                 Sbírej data prvních 10 dní pro smysluplnou analýzu
               </CardDescription>
@@ -1125,15 +1125,15 @@ export default function PsychologyAnalyticsPage() {
                 <ul className="mt-3 space-y-2 text-sm text-gray-400">
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-400 flex-shrink-0" />
-                    <span>Pattery v tvém tradingu (winning/losing days)</span>
+                    <span>Vzory v tvém tradingu (vítězné/prohrávající dny)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-400 flex-shrink-0" />
-                    <span>Korelaci mezi mood, readiness a výsledky</span>
+                    <span>Korelaci mezi nálada, připravenost a výsledky</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-400 flex-shrink-0" />
-                    <span>Emocionální triggery a chyby</span>
+                    <span>Emocionální spouště a chyby</span>
                   </li>
                 </ul>
               </div>
@@ -1687,7 +1687,7 @@ export default function PsychologyAnalyticsPage() {
               )}
             >
               <Brain className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="font-semibold hidden sm:inline">Overview</span>
+              <span className="font-semibold hidden sm:inline">Přehled</span>
             </TabsTrigger>
             <TabsTrigger
               value="mindset"
@@ -1707,7 +1707,7 @@ export default function PsychologyAnalyticsPage() {
               )}
             >
               <TrendingUpDown className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="font-semibold hidden md:inline">Patterns</span>
+              <span className="font-semibold hidden md:inline">Vzorce</span>
             </TabsTrigger>
             <TabsTrigger
               value="action"
@@ -1717,7 +1717,7 @@ export default function PsychologyAnalyticsPage() {
               )}
             >
               <Target className="w-5 h-5" />
-              <span className="font-semibold">Action Plan</span>
+              <span className="font-semibold">Plán Akcí</span>
             </TabsTrigger>
           </TabsList>
           <TabsContent value="overview">
@@ -1791,7 +1791,7 @@ export default function PsychologyAnalyticsPage() {
                           <CardHeader className="pb-2">
                             <CardTitle className="text-white flex items-center gap-2 text-base">
                               <Brain className="w-4 h-4 text-purple-400" />
-                              Mental Readiness Score
+                              Skóre mentální připravenosti
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="h-[150px]">
@@ -1841,7 +1841,7 @@ export default function PsychologyAnalyticsPage() {
                           <CardHeader className="pb-2">
                             <CardTitle className="text-white flex items-center gap-2 text-base">
                               <DollarSign className="w-4 h-4 text-emerald-400" />
-                              Financial Performance (P&L)
+                              Finanční výkon (P&L)
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="h-[150px]">
@@ -1889,11 +1889,11 @@ export default function PsychologyAnalyticsPage() {
                   <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
                     <div className="flex items-center gap-3">
                       <Sparkles className="w-5 h-5 text-yellow-400" />
-                      Actionable Insights ({safeData.psychInsights.length})
+                      Akční poznatky ({safeData.psychInsights.length})
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4">
-                    {/* Actionable Insights - existing code */}
+                    {/* Akční poznatky - existující kód */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                       {safeData.psychInsights.map((insight: any, index: number) => (
                         <Card
@@ -2270,7 +2270,7 @@ export default function PsychologyAnalyticsPage() {
                   <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
                     <div className="flex items-center gap-3">
                       <CloudRain className="w-5 h-5 text-sky-400" />
-                      Market Conditions Performance
+                      Výkon v různých trzích
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4">
@@ -2344,7 +2344,7 @@ export default function PsychologyAnalyticsPage() {
 
                                 <div className="space-y-2 mb-3">
                                   <div className="flex items-center justify-between">
-                                    <span className="text-gray-400 text-xs">Win Rate</span>
+                                    <span className="text-gray-400 text-xs">Úspěšnost</span>
                                     <Badge
                                       className={cn(
                                         "text-xs",
@@ -2359,7 +2359,7 @@ export default function PsychologyAnalyticsPage() {
                                     </Badge>
                                   </div>
                                   <div className="flex items-center justify-between">
-                                    <span className="text-gray-400 text-xs">Avg P&L</span>
+                                    <span className="text-gray-400 text-xs">Průměr P&L</span>
                                     <span
                                       className={cn(
                                         "font-bold text-sm",
@@ -2455,7 +2455,7 @@ export default function PsychologyAnalyticsPage() {
                               <p className="text-center text-gray-200 text-xl leading-relaxed mb-8 max-w-3xl mx-auto">
                                 Implementací těchto psychologických změn můžeš výrazně zlepšit svou mentální kondici a
                                 trading performance.
-                                <span className="text-cyan-300 font-bold"> Focus on mindset = focus on results!</span>{" "}
+                                <span className="text-cyan-300 font-bold"> Zaměř se na mindset = zaměř se na výsledky!</span>{" "}
                                 🚀
                               </p>
                             </div>
@@ -2554,12 +2554,12 @@ export default function PsychologyAnalyticsPage() {
                   </AccordionContent>
                 </AccordionItem>
 
-                {/* Quick Wins Section */}
+                {/* Sekce Rychlých výher */}
                 <AccordionItem value="quick-wins" className="border-slate-600 rounded-lg border overflow-hidden">
                   <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
                     <div className="flex items-center gap-3">
                       <Zap className="w-5 h-5 text-yellow-400" />
-                      Quick Wins - Začni hned dnes
+                      Rychlé výhry - Začni hned dnes
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4">
@@ -2568,7 +2568,7 @@ export default function PsychologyAnalyticsPage() {
                       <CardHeader>
                         <CardTitle className="text-white flex items-center gap-2">
                           <Zap className="w-5 h-5 text-yellow-400" />
-                          Quick Wins - Začni hned dnes
+                          Rychlé výhry - Začni hned dnes
                         </CardTitle>
                         <CardDescription className="text-gray-400">
                           Jednoduché kroky s okamžitým dopadem
@@ -2621,7 +2621,7 @@ export default function PsychologyAnalyticsPage() {
                       <p className="text-center text-gray-200 text-xl leading-relaxed mb-8 max-w-3xl mx-auto">
                         Implementací těchto psychologických změn můžeš výrazně zlepšit svou mentální kondici a trading
                         performance.
-                        <span className="text-cyan-300 font-bold"> Focus on mindset = focus on results!</span> 🚀
+                        <span className="text-cyan-300 font-bold">Zaměř se na mindset = zaměř se na výsledky!</span> 🚀
                       </p>
 
                       <div className="grid grid-cols-3 gap-4">

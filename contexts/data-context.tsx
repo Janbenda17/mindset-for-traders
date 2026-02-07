@@ -898,7 +898,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       )
       
       const avgMood = recentMorningChecks.length > 0
-        ? recentMorningChecks.reduce((sum, m) => sum + m.mood, 0) / recentMorningChecks.length
+        ? Math.min(recentMorningChecks.reduce((sum, m) => sum + m.mood, 0) / recentMorningChecks.length, 10)
         : 5
       
       const avgStress = recentMorningChecks.length > 0

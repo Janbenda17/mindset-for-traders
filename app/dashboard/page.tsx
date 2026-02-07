@@ -10,16 +10,33 @@ import { BarChart3, Zap, Target, Calendar, MessageSquare, AlertCircle, TrendingU
 import { motion } from 'framer-motion'
 import { useAuth } from '@/contexts/auth-context'
 import { useLiveMode } from '@/contexts/live-mode-context'
+import { useAnalytics } from '@/contexts/analytics-context'
+import { useGamification } from '@/contexts/gamification-context'
+import { CapitalSettingsDialog } from '@/components/capital-settings-dialog'
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
+  const [userCapital, setUserCapital] = useState(50000)
   const router = useRouter()
   const { user } = useAuth()
   const { isLiveMode } = useLiveMode()
+  const { analytics, isLoading: analyticsLoading } = useAnalytics()
+  const gamification = useGamification()
+  const gamificationLoading = !gamification?.data
+
+  // Calculate dynamic values from analytics
+  const totalCapital = analytics?.summary.totalPnL ? Math.abs(analytics.summary.totalPnL) + userCapital : userCapital
+  const monthlyPL = analytics?.summary.totalPnL ?? 3240
+  const readiness = analytics?.summary.avgReadiness ?? 78
+  const xpValue = Math.max(0, gamification?.data?.xp ?? 0)
 
   useEffect(() => {
     setMounted(true)
-  }, [])
+    console.log("[v0] Dashboard - gamification:", gamification)
+    console.log("[v0] Dashboard - xpValue:", xpValue)
+    console.log("[v0] Dashboard - isLiveMode:", isLiveMode)
+    console.log("[v0] Dashboard - gamificationLoading:", gamificationLoading)
+  }, [gamification?.data?.xp, xpValue, isLiveMode, gamificationLoading])
 
   const handlePricingClick = () => {
     if (!user) {
@@ -100,26 +117,32 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-12"
+          className="mb-12 flex items-start justify-between"
         >
-          <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
-            Dashboard
-          </h1>
-          <p className="text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
+          <div>
+            <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
+              Nástěnka
+            </h1>
+            <p className="text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
+          </div>
+          <CapitalSettingsDialog 
+            currentCapital={userCapital}
+            onCapitalUpdated={setUserCapital}
+          />
         </motion.div>
 
-        {/* Virtual Mode Banner */}
-        {!isLiveMode && (
+        {/* Live Mode Banner */}
+        {isLiveMode && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="fixed top-24 left-0 right-0 z-40 px-4 md:px-8 lg:px-12"
           >
-            <div className="max-w-6xl mx-auto bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border-b border-amber-500/30 rounded-lg py-2 px-4 flex items-center justify-center gap-3 text-xs md:text-sm">
-              <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
-              <span className="text-amber-100">
-                <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+            <div className="max-w-6xl mx-auto bg-gradient-to-r from-green-900/80 to-emerald-900/80 backdrop-blur-sm border-b border-green-500/30 rounded-lg py-2 px-4 flex items-center justify-center gap-3 text-xs md:text-sm">
+              <Crown className="w-4 h-4 text-green-300 flex-shrink-0" />
+              <span className="text-green-100">
+                <span className="font-bold text-white">Jsi v Live Mode!</span> – Tvoje reálná data jsou nyní aktivní
               </span>
             </div>
           </motion.div>
@@ -134,10 +157,10 @@ export default function Dashboard() {
             className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16"
           >
             {[
-              { label: 'Celkový kapitál', value: '$50,000', icon: '💰', gradient: 'from-green-500 to-emerald-600' },
-              { label: 'Měsíční P/L', value: '+$3,240', icon: '📈', gradient: 'from-blue-500 to-cyan-600' },
-              { label: 'Aktuální Readiness', value: '78%', icon: '🧠', gradient: 'from-purple-500 to-indigo-600' },
-              { label: 'Aktuální XP', value: '2,450', icon: '⭐', gradient: 'from-yellow-500 to-orange-600' }
+              { label: 'Celkový kapitál', value: `$${totalCapital.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, icon: '💰', gradient: 'from-green-500 to-emerald-600' },
+              { label: 'Měsíční P/L', value: `${monthlyPL >= 0 ? '+' : ''}$${monthlyPL.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, icon: '📈', gradient: 'from-blue-500 to-cyan-600' },
+              { label: 'Aktuální Readiness', value: `${Math.round(readiness)}%`, icon: '🧠', gradient: 'from-purple-500 to-indigo-600' },
+              { label: 'Aktuální XP', value: xpValue.toLocaleString('cs-CZ'), icon: '⭐', gradient: 'from-yellow-500 to-orange-600' }
             ].map((stat, i) => (
               <motion.div
                 key={i}
@@ -145,7 +168,7 @@ export default function Dashboard() {
                 className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all"
               >
                 <p className="text-xs md:text-sm font-semibold text-slate-400 mb-2">{stat.label}</p>
-                <p className="text-2xl md:text-3xl font-black text-white">{stat.value}</p>
+                <p className="text-2xl md:text-3xl font-black text-white">{analyticsLoading || gamificationLoading ? '...' : stat.value}</p>
               </motion.div>
             ))}
           </motion.div>

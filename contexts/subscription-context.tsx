@@ -160,27 +160,43 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }
 
   const cancelSubscription = async (): Promise<boolean> => {
-    if (!subscriptionId) {
-      await openBillingPortal()
-      return true
-    }
-
     setIsLoading(true)
     try {
-      const response = await fetch("/api/subscription/cancel", {
+      // If user has a Stripe subscription, cancel via Stripe
+      if (subscriptionId) {
+        const response = await fetch("/api/subscription/cancel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscriptionId }),
+        })
+
+        if (response.ok) {
+          toast({
+            title: "Předplatné zrušeno",
+            description: "Vaše předplatné bude zrušeno na konci aktuálního období.",
+          })
+          await checkSubscriptionStatus()
+          return true
+        }
+        return false
+      }
+
+      // If user is on trial (no Stripe subscription), cancel trial via API
+      const response = await fetch("/api/subscription/cancel-trial", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscriptionId }),
+        credentials: "include",
       })
 
       if (response.ok) {
         toast({
-          title: "Předplatné zrušeno",
-          description: "Vaše předplatné bude zrušeno na konci aktuálního období.",
+          title: "Trial zrušen",
+          description: "Váš zkušební přístup byl zrušen.",
         })
         await checkSubscriptionStatus()
         return true
       }
+
       return false
     } catch (error) {
       console.error("Cancel subscription error:", error)

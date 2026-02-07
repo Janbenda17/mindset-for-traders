@@ -61,15 +61,19 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
   const avgLoss = losses.length > 0 ? Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0) / losses.length) : 0
 
   // Readiness & mood calculations
-  const tradesWithReadiness = trades.filter((t) => t.readiness !== undefined)
+  // Readiness se počítá z morning checks (sleep, energy, focus, stress)
+  const morningChecksWithReadiness = morningChecks.filter((mc) => mc.score !== undefined)
   const avgReadiness =
-    tradesWithReadiness.length > 0
-      ? tradesWithReadiness.reduce((sum, t) => sum + (t.readiness || 0), 0) / tradesWithReadiness.length
+    morningChecksWithReadiness.length > 0
+      ? morningChecksWithReadiness.reduce((sum, mc) => sum + (mc.score || 0), 0) / morningChecksWithReadiness.length
       : 0
 
-  const tradesWithMood = trades.filter((t) => t.mood !== undefined)
+  // Mood z morning checks
+  const morningChecksWithMood = morningChecks.filter((mc) => mc.emotionalState !== undefined)
   const avgMood =
-    tradesWithMood.length > 0 ? tradesWithMood.reduce((sum, t) => sum + (t.mood || 0), 0) / tradesWithMood.length : 0
+    morningChecksWithMood.length > 0
+      ? morningChecksWithMood.reduce((sum, mc) => sum + (mc.emotionalState || 0), 0) / morningChecksWithMood.length
+      : 0
 
   // Find best/worst days
   const tradesByDay: { [key: string]: any[] } = {}
@@ -79,11 +83,18 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
     tradesByDay[date].push(trade)
   })
 
+  // Psychology metrics - korelace readiness s výsledky
+  // Mapovat morning checks na trades po datech pro zjištění readiness v den obchodu
+  const dailyReadiness: { [key: string]: number } = {}
+  morningChecks.forEach((mc) => {
+    const date = mc.date || new Date().toISOString().split("T")[0]
+    dailyReadiness[date] = mc.score || 0
+  })
+
   const dailyPnL = Object.entries(tradesByDay).map(([date, dayTrades]) => ({
     date,
     pnl: dayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0),
-    readiness:
-      dayTrades.reduce((sum, t) => sum + (t.readiness || 0), 0) / dayTrades.filter((t) => t.readiness).length || 0,
+    readiness: dailyReadiness[date] || 0, // Brat readiness z morning check pro ten den
   }))
 
   const bestDay = dailyPnL.reduce((best, day) => (day.pnl > best.pnl ? day : best), { date: "", pnl: 0, readiness: 0 })
@@ -93,9 +104,15 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
     readiness: 0,
   })
 
-  // Psychology metrics
-  const highReadinessTrades = trades.filter((t) => (t.readiness || 0) >= 70)
-  const lowReadinessTrades = trades.filter((t) => (t.readiness || 0) < 70)
+  // Zařadit trades podle readiness v den obchodu
+  const highReadinessTrades = trades.filter((t) => {
+    const date = t.date || t.created_at?.split("T")[0] || new Date().toISOString().split("T")[0]
+    return (dailyReadiness[date] || 0) >= 70
+  })
+  const lowReadinessTrades = trades.filter((t) => {
+    const date = t.date || t.created_at?.split("T")[0] || new Date().toISOString().split("T")[0]
+    return (dailyReadiness[date] || 0) < 70
+  })
 
   const highReadinessPnL =
     highReadinessTrades.length > 0

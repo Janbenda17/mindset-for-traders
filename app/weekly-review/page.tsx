@@ -158,18 +158,18 @@ export default function WeeklyReviewPage() {
     const { weeklyInsights } = analytics
 
     setReview({
-      whatWorked: `Best performing day: ${weeklyInsights.bestPerformingDay}`,
-      whatDidntWork: `Worst performing day: ${weeklyInsights.worstPerformingDay}`,
-      biggestWin: `Best day: ${analytics.summary.bestDay.date} (+$${analytics.summary.bestDay.pnl.toFixed(2)})`,
-      biggestLoss: `Worst day: ${analytics.summary.worstDay.date} (-$${Math.abs(analytics.summary.worstDay.pnl).toFixed(2)})`,
+      whatWorked: `Nejlepší den: ${weeklyInsights.bestPerformingDay}`,
+      whatDidntWork: `Nejhorší den: ${weeklyInsights.worstPerformingDay}`,
+      biggestWin: `Nejlepší den: ${analytics.summary.bestDay.date} (+$${analytics.summary.bestDay.pnl.toFixed(2)})`,
+      biggestLoss: `Nejhorší den: ${analytics.summary.worstDay.date} (-$${Math.abs(analytics.summary.worstDay.pnl).toFixed(2)})`,
       emotionalPatterns: weeklyInsights.readinessVsResults,
       mistakesMade: weeklyInsights.commonMistake,
-      lessonsLearned: `${analytics.psychology.revengeIncidents === 0 ? "Good emotional control" : `${analytics.psychology.revengeIncidents} revenge trading incidents - implement pause after losses`}`,
+      lessonsLearned: `${analytics.psychology.revengeIncidents === 0 ? "Dobrá emoční kontrola" : `${analytics.psychology.revengeIncidents} incidentů revenge tradingu - zaveď pauzu po ztrátách`}`,
       weeklyGoals: weeklyInsights.nextWeekFocus.slice(0, 3),
-      focusAreas: ["Maintain high readiness", "Follow trading plan", "Track emotions"],
-      tradingPlanAdjustments: `Current discipline: ${analytics.psychology.disciplineScore.toFixed(0)}%`,
-      riskManagementNotes: `Win rate: ${analytics.summary.winRate.toFixed(1)}%`,
-      mindsetPreparation: `Average readiness: ${analytics.summary.avgReadiness.toFixed(0)}%`,
+      focusAreas: ["Udržet vysokou připravenost", "Dodržovat obchodní plán", "Sledovat emoce"],
+      tradingPlanAdjustments: `Aktuální disciplína: ${analytics.psychology.disciplineScore.toFixed(0)}%`,
+      riskManagementNotes: `Podíl výher: ${analytics.summary.winRate.toFixed(1)}%`,
+      mindsetPreparation: `Průměrná připravenost: ${analytics.summary.avgReadiness.toFixed(0)}%`,
     })
 
     setActionPlan(
@@ -201,7 +201,7 @@ export default function WeeklyReviewPage() {
       data.dailyData
         .filter((d: any) => d.pnl > 0)
         .map((d: any) => {
-          if (d.readiness > 75) return `${d.day}: Vysoká readiness (${d.readiness}%) vedla k zisku +$${d.pnl}`
+          if (d.readiness > 75) return `${d.day}: Vysoká připravenost (${d.readiness}%) vedla k zisku +$${d.pnl}`
           if (d.mood > 70) return `${d.day}: Pozitivní nálada (${d.mood}%) = disciplinované rozhodování`
           return `${d.day}: Ziskový den +$${d.pnl}`
         })
@@ -249,7 +249,7 @@ export default function WeeklyReviewPage() {
 
     const aiMistakes =
       [
-        data.avgReadiness < 70 ? "Obchodování s nízkou readiness" : null,
+        data.avgReadiness < 70 ? "Obchodování s nízkou připraveností" : null,
         data.revengeIncidents > 0 ? `${data.revengeIncidents}x revenge trading` : null,
         data.avgSleep && data.avgSleep < 7 ? `Průměrný spánek pouze ${data.avgSleep?.toFixed(1)}h` : null,
         data.lossResets > 2 ? `${data.lossResets} loss resetů - emoční volatilita` : null,
@@ -258,21 +258,21 @@ export default function WeeklyReviewPage() {
         .join("\n") || "Žádné významné chyby identifikovány."
 
     const aiLessons = [
-      data.avgReadiness > 75 ? "Vysoká readiness = konzistentní výsledky" : "Prioritizuj readiness před obchodováním",
+      data.avgReadiness > 75 ? "Vysoká připravenost = konzistentní výsledky" : "Prioritizuj připravenost před obchodováním",
       data.winRate > 50 ? "Současná strategie funguje - pokračovat" : "Přehodnotit strategii a setupy",
       data.revengeIncidents === 0 ? "Emoční disciplína na dobré úrovni" : "Implementovat stop loss pro psychiku",
     ].join(". ")
 
     // AI-generated goals and focus areas
     const aiGoals = [
-      data.avgReadiness < 75 ? "Dosáhnout průměrné readiness 75%+" : "Udržet vysokou readiness",
+      data.avgReadiness < 75 ? "Dosáhnout průměrné připravenosti 75%+" : "Udržet vysokou připravenost",
       data.winRate < 50 ? "Zlepšit win rate na 50%+" : "Zaměřit se pouze na A+ setupy",
       "Dodržovat trading plán bez výjimek",
     ]
 
     const aiFocusAreas = [
       data.avgSleep && data.avgSleep < 7 ? "Spánek 7+ hodin každou noc" : "Udržet kvalitní spánek",
-      "Morning Check každý obchodní den",
+      "Ranní Kontrola každý obchodní den",
       data.revengeIncidents > 0 ? "Eliminovat revenge trading" : "Pokračovat v emoční disciplíně",
     ]
 
@@ -304,7 +304,7 @@ export default function WeeklyReviewPage() {
       data.winRate > 50
         ? "Strategie funguje - neměnit základní pravidla."
         : "Přehodnotit entry kritéria a snížit frekvenci tradů."
-    } ${data.avgReadiness < 70 ? "Přidat pravidlo: Žádný trading pod 65% readiness." : ""} ${
+    } ${data.avgReadiness < 70 ? "Přidat pravidlo: Žádný trading pod 65% připraveností." : ""} ${
       data.revengeIncidents > 0 ? "Implementovat: Po ztrátě pauza a journaling před dalším tradem." : ""
     }`
 
@@ -419,17 +419,17 @@ export default function WeeklyReviewPage() {
     const aiInsights = [
       {
         type: "success",
-        title: "London Session = Profit Zone",
+        title: "Londýnská Relace = Zisková Zóna",
         description:
           "Trady během London session měly 100% win rate s průměrným ziskem +140 pips. Pondělí a středa byly tvoje nejlepší dny.",
         action:
-          "FOCUS: Prioritizuj London session (8:00-12:00). Tvoje strategie tam funguje perfektně. Vyhni se Asian session.",
+          "ZAMĚŘENÍ: Prioritizuj Londýnskou relaci (8:00-12:00). Tvoje strategie tam funguje perfektně. Vyhni se Asijské relaci.",
       },
       {
         type: "critical",
-        title: "Nedostatek spánku = Revenge Trading",
+        title: "Nedostatek spánku = Pomstový Trading",
         description:
-          "Ve čtvrtek jsi spal pouze 5.8h a následně udělal 5 tradů s -120 pips ztrátou. Readiness byla 55% - pod kritickou hranicí.",
+          "Ve čtvrtek jsi spal pouze 5.8h a následně udělal 5 tradů s -120 pips ztrátou. Připravenost byla 55% - pod kritickou hranicí.",
         action:
           "PRAVIDLO: Neobchoduj pod 65% readiness. Čtvrtek byl jasný příklad proč. Nastav alarm pokud readiness < 65%.",
       },
@@ -450,7 +450,7 @@ export default function WeeklyReviewPage() {
       },
       {
         type: "warning",
-        title: "Asian Session není tvoje",
+        title: "Asijská Relace není tvoje",
         description:
           "Jediný trade během Asian session (čtvrtek) skončil -120 pips ztrátou. Nízká volatilita + únava = špatná kombinace.",
         action: "BLACKLIST: Asian session (22:00-6:00) je pro tebe zakázaná. Drž se London a NY.",
@@ -789,7 +789,7 @@ export default function WeeklyReviewPage() {
     setSavedReviews(updated)
     localStorage.setItem("weekly-reviews", JSON.stringify(updated))
 
-    alert("Weekly Review uložen!")
+      alert("Týdenní přehled uložen!")
   }
 
   const downloadPDF = async (reviewData: any) => {
@@ -919,7 +919,7 @@ Vygenerováno aplikací Trader Mindset
             <Calendar className="w-12 h-12 text-purple-400" />
           </div>
           <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-            AI Weekly Review
+                AI Týdenní přehled
           </h1>
           <p className="text-gray-400 text-lg">
             {currentWeekData.weekStart} - {currentWeekData.weekEnd}
@@ -1010,86 +1010,6 @@ Vygenerováno aplikací Trader Mindset
                 </Card>
               </div>
             )}
-
-            {/* Hero KPI */}
-            <Card className="bg-gradient-to-br from-slate-800/90 via-purple-900/20 to-slate-800/90 border-purple-500/30 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2 text-2xl">
-                  <Sparkles className="w-6 h-6 text-purple-400" />
-                  Hero KPI - Týden v Číslech
-                </CardTitle>
-                <CardDescription className="text-gray-400">Klíčové metriky tvého výkonu</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  {/* Avg Readiness */}
-                  <div className="p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-blue-500/30">
-                    <div className="flex items-center justify-between mb-3">
-                      <Brain className="w-8 h-8 text-blue-400" />
-                      {currentWeekData.avgReadiness >= 70 ? (
-                        <ArrowUp className="w-5 h-5 text-green-400" />
-                      ) : (
-                        <ArrowDown className="w-5 h-5 text-red-400" />
-                      )}
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-1">{Math.round(currentWeekData.avgReadiness)}%</p>
-                    <p className="text-gray-400 text-sm">Avg Readiness</p>
-                  </div>
-
-                  {/* MindPoints */}
-                  <div className="p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/30">
-                    <div className="flex items-center justify-between mb-3">
-                      <Zap className="w-8 h-8 text-purple-400" />
-                      <Sparkles className="w-5 h-5 text-purple-400" />
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-1">{currentWeekData.mindPointsGained}</p>
-                    <p className="text-gray-400 text-sm">MindPoints Gained</p>
-                  </div>
-
-                  {/* Streak */}
-                  <div className="p-6 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl border border-orange-500/30">
-                    <div className="flex items-center justify-between mb-3">
-                      <Flame className="w-8 h-8 text-orange-400" />
-                      {currentWeekData.currentStreak >= 7 ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
-                      ) : (
-                        <Clock className="w-5 h-5 text-yellow-400" />
-                      )}
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-1">{currentWeekData.currentStreak}</p>
-                    <p className="text-gray-400 text-sm">Day Streak</p>
-                  </div>
-
-                  {/* Loss Resets */}
-                  <div className="p-6 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-xl border border-yellow-500/30">
-                    <div className="flex items-center justify-between mb-3">
-                      <Shield className="w-8 h-8 text-yellow-400" />
-                      {currentWeekData.lossResets <= 1 ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
-                      ) : (
-                        <AlertTriangle className="w-5 h-5 text-orange-400" />
-                      )}
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-1">{currentWeekData.lossResets}</p>
-                    <p className="text-gray-400 text-sm">Loss Resets</p>
-                  </div>
-
-                  {/* Revenge Incidents */}
-                  <div className="p-6 bg-gradient-to-br from-red-500/10 to-rose-500/10 rounded-xl border border-red-500/30">
-                    <div className="flex items-center justify-between mb-3">
-                      <AlertTriangle className="w-8 h-8 text-red-400" />
-                      {currentWeekData.revengeIncidents === 0 ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
-                      ) : (
-                        <XCircle className="w-5 h-5 text-red-400" />
-                      )}
-                    </div>
-                    <p className="text-3xl font-bold text-white mb-1">{currentWeekData.revengeIncidents}</p>
-                    <p className="text-gray-400 text-sm">Revenge Incidents</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
             {currentWeekData.aiInsights && currentWeekData.aiInsights.length > 0 && (
               <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-500/50 backdrop-blur-sm">
@@ -1213,7 +1133,7 @@ Vygenerováno aplikací Trader Mindset
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Brain className="w-5 h-5 text-blue-400" />
-                  Readiness Trend (Po-Pá)
+                  Trend Připravenosti (Po-Pá)
                 </CardTitle>
                 <CardDescription className="text-gray-400">Denní připravenost během pracovních dnů</CardDescription>
               </CardHeader>
@@ -1272,7 +1192,7 @@ Vygenerováno aplikací Trader Mindset
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Target className="w-5 h-5 text-green-400" />
-                  Win Rate & Emotional Patterns
+                  Podíl Výher & Emoční Vzory
                 </CardTitle>
                 <CardDescription className="text-gray-400">Úspěšnost a emoční stav během týdne</CardDescription>
               </CardHeader>
@@ -1767,7 +1687,7 @@ Vygenerováno aplikací Trader Mindset
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-6 text-lg"
               >
                 <Save className="w-5 h-5 mr-2" />
-                Uložit Weekly Review ({reviewVariant === "ai" ? "AI" : "Manual"})
+                Uložit týdenní přehled ({reviewVariant === "ai" ? "AI" : "Manuální"})
               </Button>
             </div>
           </TabsContent>
@@ -1777,7 +1697,7 @@ Vygenerováno aplikací Trader Mindset
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <History className="w-5 h-5 text-purple-400" />
-                  Historie Weekly Reviews
+                  Historie týdenních přehledů
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1862,7 +1782,7 @@ Vygenerováno aplikací Trader Mindset
               <div className="sticky top-0 bg-slate-900 border-b border-slate-700 p-4 flex items-center justify-between z-10">
                 <div>
                   <h2 className="text-xl font-bold text-white">
-                    Weekly Review: {viewingReview.weekStart} - {viewingReview.weekEnd}
+                    Týdenní přehled: {viewingReview.weekStart} - {viewingReview.weekEnd}
                   </h2>
                   <p className="text-sm text-gray-400">
                     {new Date(viewingReview.createdAt).toLocaleDateString("cs-CZ")} •

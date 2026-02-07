@@ -103,7 +103,7 @@ export function UserNav() {
               <div className="flex items-center gap-2 px-2 py-1.5 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-md border border-yellow-500/20">
                 <Crown className="h-4 w-4 text-yellow-600" />
                 <span className="text-xs font-medium text-yellow-600">
-                  {language === "cs" ? "Premium člen" : "Premium Member"}
+                  Premium člen
                 </span>
               </div>
             )}

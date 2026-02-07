@@ -245,6 +245,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
       return
     }
 
+    // Refresh trades from storage immediately
+    const today = format(new Date(), "yyyy-MM-dd")
+    const tradesKey = `user-${user?.id}-mindtrader-trades`
+    const allTrades = JSON.parse(localStorage.getItem(tradesKey) || "[]")
+    const todayTrades = allTrades.filter((t: Trade) => t.date === today)
+    setTrades(todayTrades)
+
     // Mark record trade as completed in daily tracker
     try {
       await fetch("/api/daily-tracker/mark-completed", {
@@ -277,6 +284,57 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
       }
     } catch (error) {
       console.error("[v0] Error awarding trade XP:", error)
+    }
+
+    // Reset form and complete stage
+    setCurrentTrade({
+      date: format(new Date(), "yyyy-MM-dd"),
+      openDate: format(new Date(), "yyyy-MM-dd"),
+      closeDate: format(new Date(), "yyyy-MM-dd"),
+      pair: "",
+      direction: "LONG",
+      openTime: "",
+      closeTime: "",
+      session: "",
+      tradeType: "",
+      pips: 0,
+      positionSize: 0.01,
+      pnl: 0,
+      confidenceBefore: 7,
+      stressLevel: 5,
+      mood: 7,
+      emotionBefore: "",
+      emotionDuring: "",
+      emotionAfter: "",
+      entryReason: "",
+      exitReason: "",
+      detailedAnalysis: "",
+      followedPlan: true,
+      exitedEarly: false,
+      missedDueToHesitation: false,
+      revengeTrade: false,
+      behaviorDescription: "",
+      tags: [],
+      notes: "",
+    })
+    
+    setIsLoading(false)
+    
+    toast({
+      title: "Úspěch!",
+      description: "Obchod byl uložen a stage 4 je hotov!",
+    })
+
+    // Attempt to complete stage
+    try {
+      await completeStage()
+    } catch (error) {
+      console.error("[v0] Error completing stage:", error)
+    }
+
+    // Call onComplete callback if provided
+    if (onComplete) {
+      onComplete()
     }
   }
 

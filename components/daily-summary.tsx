@@ -461,7 +461,7 @@ export function DailySummary() {
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-sm text-muted-foreground">Readiness Score</p>
+                <p className="text-sm text-muted-foreground">Skóre Připravenosti</p>
                 <h3 className="text-2xl font-bold mt-1 text-purple-400">{morningCheck?.score || 0}/100</h3>
               </div>
               <div className="p-2 rounded-lg bg-purple-500/10">

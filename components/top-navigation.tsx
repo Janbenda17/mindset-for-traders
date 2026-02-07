@@ -33,37 +33,43 @@ import {
   Target,
   AlertTriangle,
   ChevronDown,
+  Lock,
 } from "lucide-react"
 import LiveModeToggle from "@/components/live-mode-toggle"
 import { supabase } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/auth-context"
+import { useLiveMode } from "@/contexts/live-mode-context"
 
 interface TopNavigationProps {
   initialTheme?: string
 }
 
 const mainNavigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home, shortName: "Home" },
-  { name: "Analytics", href: "/analytics", icon: BarChart3, shortName: "Stats" },
-  { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Journal" },
+  { name: "Nástěnka", href: "/dashboard", icon: Home, shortName: "Domů" },
+  { name: "Analytika", href: "/analytics", icon: BarChart3, shortName: "Statistiky" },
+  { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Deník" },
   { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
-  { name: "Daily Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Daily" },
-  { name: "Weekly Review", href: "/weekly-review", icon: Calendar },
-  { name: "Team Club", href: "/team-club", icon: Users, badge: "PRO" },
+  { name: "Denní Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Denní" },
+  { name: "Týdenní Přehled", href: "/weekly-review", icon: Calendar },
+  { name: "Týmový Klub", href: "/team-club", icon: Users, badge: "PRO" },
+]
+
+const produktyNavigation = [
+  { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NOVÉ" },
+  { name: "Trading Cíle", href: "/trading-goals", icon: Target, badge: "NOVÉ" },
+  { name: "Záznam Chyb", href: "/fail-log", icon: AlertTriangle, badge: "NOVÉ" },
+  { name: "Odměny", href: "/rewards", icon: Trophy, badge: "NOVÉ" },
 ]
 
 const toolsNavigation = [
-  { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NEW" },
-  { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NEW" },
-  { name: "Trading Cíle", href: "/trading-goals", icon: Target, badge: "NEW" },
-  { name: "Fail Log", href: "/fail-log", icon: AlertTriangle, badge: "NEW" },
-  { name: "Trading Identity", href: "/trading-identity", icon: User, badge: "NEW" },
-  { name: "Odměny", href: "/rewards", icon: Trophy, badge: "NEW" },
+  { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NOVÉ" },
+  { name: "Identita Tradera", href: "/trading-identity", icon: User, badge: "NOVÉ" },
 ]
 
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
   const pathname = usePathname()
   const router = useRouter()
+  const { isLiveMode } = useLiveMode()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProductsOpen, setIsProductsOpen] = useState(false)
@@ -94,7 +100,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const loadProfileData = async () => {
     if (typeof window === "undefined") return
 
-    if (hasLoadedOnce && !isLoading) return
+    if (hasLoadedOnce) return
 
     setIsLoading(true)
 
@@ -192,7 +198,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
       <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4">
           <div className="flex justify-between items-center h-14 md:h-16">
-            <div className="text-gray-400 text-sm">Loading...</div>
+            <div className="text-gray-400 text-sm">Načítání...</div>
           </div>
         </div>
       </nav>
@@ -230,7 +236,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="relative px-4 h-10 text-sm font-semibold text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 transition-all duration-300 group flex items-center gap-2 rounded-lg shadow-lg shadow-purple-500/20"
                   >
-                    <span>Products</span>
+                    <span>Produkty</span>
                     <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -241,6 +247,24 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <div className="flex gap-3">
                     {mainNavigation.map((item) => {
                       const isActive = pathname === item.href
+                      const isTeamClubInLiveMode = item.href === "/team-club" && isLiveMode
+                      
+                      if (isTeamClubInLiveMode) {
+                        // Team Club locked in live mode
+                        return (
+                          <div
+                            key={item.name}
+                            className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-not-allowed bg-slate-800/50 border border-slate-700/50 opacity-60"
+                            title="Team Club is locked in Live Mode"
+                          >
+                            <Lock className="w-5 h-5 text-gray-400" />
+                            <span className="text-xs text-center text-gray-500">
+                              {item.name}
+                            </span>
+                          </div>
+                        )
+                      }
+                      
                       return (
                         <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
                           <div className={`flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all min-w-[100px] ${
@@ -259,10 +283,39 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   </div>
                 </div>
 
-                {/* Řádek 2: Nástroje */}
+                {/* Řádek 2: Produkty */}
+                <div className="mb-6 pb-6 border-b border-slate-700/50">
+                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Produkty</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {produktyNavigation.map((item) => {
+                      const isActive = pathname === item.href
+                      return (
+                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
+                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                            isActive 
+                              ? "bg-purple-600/20 border border-purple-500/30" 
+                              : "hover:bg-slate-800/50 border border-slate-700/50"
+                          }`}>
+                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                              {item.name}
+                            </span>
+                            {item.badge && (
+                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-green-500/20 text-green-300 border-green-500/30">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Řádek 3: Nástroje */}
                 <div className="mb-6 pb-6 border-b border-slate-700/50">
                   <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Nástroje</p>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     {toolsNavigation.map((item) => {
                       const isActive = pathname === item.href
                       return (
@@ -301,7 +354,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
-                Pricing
+                Ceník
               </Button>
             </Link>
 
@@ -315,7 +368,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
-                About
+                O nás
               </Button>
             </Link>
           </div>
@@ -333,6 +386,23 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <p className="text-xs text-gray-400 px-3 py-2 font-semibold">HLAVNÍ MENU</p>
                   {mainNavigation.map((item) => {
                     const isActive = pathname === item.href
+                    const isTeamClubInLiveMode = item.href === "/team-club" && isLiveMode
+                    
+                    if (isTeamClubInLiveMode) {
+                      return (
+                        <div
+                          key={item.name}
+                          className="flex items-center space-x-3 px-3 py-2.5 opacity-60 cursor-not-allowed rounded-lg bg-slate-800/50"
+                          title="Team Club is locked in Live Mode"
+                        >
+                          <Lock className="w-4 h-4 text-gray-400" />
+                          <span className="flex-1 text-sm text-gray-500">
+                            {item.name}
+                          </span>
+                        </div>
+                      )
+                    }
+                    
                     return (
                       <DropdownMenuItem key={item.name} asChild>
                         <Link
@@ -407,9 +477,10 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-gray-300 hover:text-white h-8 px-3 text-sm"
+                    className="relative px-4 h-10 text-sm font-semibold text-white hover:text-gray-200 transition-colors"
                   >
-                    Login
+                    Profil
+                    <ChevronDown className="w-4 h-4 ml-2 transition-transform group-data-[state=open]:rotate-180" />
                   </Button>
                 </Link>
                 <Link href="/signup">
@@ -417,7 +488,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-8 px-3 text-sm font-semibold"
                   >
-                    Get Started
+                    Začít
                   </Button>
                 </Link>
               </div>
@@ -429,7 +500,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 size="sm"
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
               >
-                Get Started
+                Začít
               </Button>
             </Link>
 
@@ -476,10 +547,10 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                               Premium
                             </Badge>
                           ) : (
-                            <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">Free</Badge>
+                            <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">Zdarma</Badge>
                           )}
                           <Badge className="bg-blue-600/20 text-blue-400 border-blue-500/30 text-xs">
-                            Level {profileData.level}
+                            Úroveň {profileData.level}
                           </Badge>
                           <Badge className="bg-orange-600/20 text-orange-400 border-orange-500/30 text-xs">
                             {getExperienceLabel(profileData.experienceLevel)}

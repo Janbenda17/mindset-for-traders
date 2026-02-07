@@ -194,7 +194,6 @@ export function PricingPage() {
       "Detailní trading deník s fotkami",
       "Export dat (CSV, PDF)",
       "Hloubkové emocionální analýzy",
-      "Risk management kalkulačka",
       "Prioritní podpora 24/7",
       "Team Club premium funkce",
     ],

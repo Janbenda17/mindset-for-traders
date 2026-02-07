@@ -56,6 +56,7 @@ import {
 import { useData } from "@/contexts/data-context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/contexts/auth-context" // ADDED: Import useAuth
+import { useLiveMode } from "@/contexts/live-mode-context"
 
 // Types
 interface CommunityPost {
@@ -261,7 +262,7 @@ const DEMO_BUDDIES: StudyBuddy[] = [
 const DEMO_CHALLENGES: Challenge[] = [
   {
     id: "1",
-    title: "Zero Revenge Trading - 30 Day Challenge",
+    title: "Nula Pomstových Obchodů - 30 Denní Výzva",
     description: "30 dní bez jediného revenge tradu. Po každé ztrátě povinná 30 min pauza.",
     type: "behavioral",
     category: "intermediate",
@@ -269,14 +270,14 @@ const DEMO_CHALLENGES: Challenge[] = [
     daysLeft: 23,
     duration: 30,
     progress: 23,
-    reward: "🏆 Revenge-Free Warrior badge + 1000 XP",
+    reward: "🏆 Odvážný Warrior bez Pomsty + 1000 XP",
     joined: false,
     difficulty: 7,
     xpReward: 1000,
   },
   {
     id: "2",
-    title: "Morning Routine Mastery",
+    title: "Zvládnutí Ranní Rutiny",
     description: "21 dní konzistentní ranní rutiny před tradingem (meditation, journal, prep).",
     type: "routine",
     category: "beginner",
@@ -284,29 +285,29 @@ const DEMO_CHALLENGES: Challenge[] = [
     daysLeft: 15,
     duration: 21,
     progress: 0,
-    reward: "⭐ Morning Warrior badge + 500 XP",
+    reward: "⭐ Ranní Válečník + 500 XP",
     joined: false,
     difficulty: 4,
     xpReward: 500,
   },
   {
     id: "3",
-    title: "Perfect Journal Streak",
-    description: "30 dní bez přerušení journalingu. Každý trade musí mít zápis.",
+    title: "Dokonalý Streak Journálování",
+    description: "30 dní bez přerušení journálování. Každý trade musí mít zápis.",
     type: "routine",
     category: "intermediate",
     participants: 234,
     daysLeft: 28,
     duration: 30,
     progress: 0,
-    reward: "📔 Journal Master badge + 800 XP",
+    reward: "📔 Mistr Journálů + 800 XP",
     joined: false,
     difficulty: 6,
     xpReward: 800,
   },
   {
     id: "4",
-    title: "Mindfulness Meditation - 14 Days",
+    title: "Mindfulness Meditace - 14 Dní",
     description: "14 dní denní meditace min. 10 minut. Prokázaně snižuje impulzivitu o 40%.",
     type: "mental",
     category: "beginner",
@@ -314,37 +315,37 @@ const DEMO_CHALLENGES: Challenge[] = [
     daysLeft: 10,
     duration: 14,
     progress: 0,
-    reward: "🧘 Zen Trader badge + 400 XP",
+    reward: "🧘 Zenový Obchodník + 400 XP",
     joined: false,
     difficulty: 3,
     xpReward: 400,
   },
   {
     id: "5",
-    title: "Risk Management Elite",
-    description: "30 dní s max 1% risk per trade. Ani jeden trade s větším riskem.",
+    title: "Elita Řízení Rizika",
+    description: "30 dní s max 1% risk per trade. Ani jeden trade s větším rizikem.",
     type: "skill",
     category: "advanced",
     participants: 98,
     daysLeft: 25,
     duration: 30,
     progress: 0,
-    reward: "💎 Risk Master badge + 1200 XP",
+    reward: "💎 Mistr Rizika + 1200 XP",
     joined: false,
     difficulty: 9,
     xpReward: 1200,
   },
   {
     id: "6",
-    title: "No FOMO - 21 Day Challenge",
-    description: "21 dní bez FOMO tradů. Jen plánované setupy podle strategie.",
+    title: "Bez FOMO - 21 Denní Výzva",
+    description: "21 dní bez FOMO obchodů. Jen plánované setupy podle strategie.",
     type: "behavioral",
     category: "intermediate",
     participants: 201,
     daysLeft: 18,
     duration: 21,
     progress: 0,
-    reward: "🎯 Patience Pro badge + 750 XP",
+    reward: "🎯 Profesionál Trpělivosti + 750 XP",
     joined: false,
     difficulty: 7,
     xpReward: 750,
@@ -354,7 +355,7 @@ const DEMO_CHALLENGES: Challenge[] = [
 const DEMO_TRADING_ROOMS: TradingRoom[] = [
   {
     id: "1",
-    name: "Morning Market Analysis",
+    name: "Ranní Tržní Analýza",
     host: "Mentor Jan",
     participants: 47,
     maxParticipants: 100,
@@ -501,7 +502,7 @@ const DEMO_SUCCESS_STORIES: SuccessStory[] = [
 const DEMO_STUDENTS: Student[] = [
   {
     id: "demo-1",
-    name: "Alice Smith",
+    name: "Alena Nováková",
     nickname: "ScalperPro",
     avatar: "/trader-avatar.png",
     traderType: "scalper",
@@ -512,18 +513,18 @@ const DEMO_STUDENTS: Student[] = [
     pnlHistory: [1000, 1100, 1200, 1150, 1300, 1400, 1250],
     journalStreak: 28,
     status: "stable",
-    lastActive: "2h ago",
-    triggers: ["FOMO", "Overtrading"],
-    strengths: ["Risk Management", "Discipline"],
-    weaknesses: ["Patience", "Emotional Control"],
+    lastActive: "před 2h",
+    triggers: ["FOMO", "Nadměrné obchodování"],
+    strengths: ["Řízení rizika", "Disciplína"],
+    weaknesses: ["Trpělivost", "Emoční kontrola"],
     aiDiagnosis:
-      "Alice ukazuje vysokou úroveň disciplíny a silný systém řízení rizik. Její konzistentní journaling ji udržuje na správné cestě.",
-    mentorNotes: ["Continue focusing on setup quality."],
-    todos: ["Review past week's trades.", "Practice 10-minute meditation daily."],
+      "Alena ukazuje vysokou úroveň disciplíny a silný systém řízení rizik. Její konzistentní journaling ji udržuje na správné cestě.",
+    mentorNotes: ["Pokračuj v zaměření na kvalitu setupů."],
+    todos: ["Zkontroluj obchody za minulý týden.", "Cvič 10minutovou meditaci denně."],
   },
   {
     id: "demo-2",
-    name: "Bob Johnson",
+    name: "Martin Svoboda",
     nickname: "SwingMaster",
     avatar: "/trader-avatar.png",
     traderType: "swing-trader",
@@ -534,18 +535,18 @@ const DEMO_STUDENTS: Student[] = [
     pnlHistory: [-500, -400, -350, -300, -250, -320, -300],
     journalStreak: 10,
     status: "warning",
-    lastActive: "1d ago",
-    triggers: ["Revenge Trading", "Impatience"],
-    strengths: ["Strategy Development", "Analysis"],
-    weaknesses: ["Emotional Control", "Trade Execution"],
+    lastActive: "před 1 dnem",
+    triggers: ["Pomstový trading", "Netrpělivost"],
+    strengths: ["Vývoj strategie", "Analýza"],
+    weaknesses: ["Emoční kontrola", "Exekuce obchodů"],
     aiDiagnosis:
-      "Bob má solidní strategie, ale bojuje s emoční kontrolou, což vede k revenge tradingu. Zlepšení journalingu a zavedení pauz po ztrátě pomůže.",
-    mentorNotes: ["Focus on sticking to the plan.", "Review the 'No FOMO' challenge."],
-    todos: ["Journal every trade for the next 7 days.", "Take a 30-minute break after any losing trade."],
+      "Martin má solidní strategie, ale bojuje s emoční kontrolou, což vede k pomstovému tradingu. Zlepšení journalingu a zavedení pauz po ztrátě pomůže.",
+    mentorNotes: ["Zaměř se na dodržování plánu.", "Projdi si výzvu 'Bez FOMO'."],
+    todos: ["Zaznamenej každý obchod příštích 7 dní.", "Po každé ztrátě si udělej 30minutovou pauzu."],
   },
   {
     id: "demo-3",
-    name: "Charlie Davis",
+    name: "Karel Dvořák",
     nickname: "DayTraderJoe",
     avatar: "/trader-avatar.png",
     traderType: "day-trader",
@@ -556,14 +557,14 @@ const DEMO_STUDENTS: Student[] = [
     pnlHistory: [600, 700, 750, 800, 850, 820, 800],
     journalStreak: 5,
     status: "critical",
-    lastActive: "3h ago",
-    triggers: ["Over-leveraging", "Lack of Sleep"],
-    strengths: ["Quick Decision Making"],
-    weaknesses: ["Risk Management", "Emotional Stability"],
+    lastActive: "před 3h",
+    triggers: ["Přílišná páka", "Nedostatek spánku"],
+    strengths: ["Rychlé rozhodování"],
+    weaknesses: ["Řízení rizika", "Emoční stabilita"],
     aiDiagnosis:
-      "Charlieho nízká readiness a občasné vážné chyby naznačují problémy s emoční stabilitou a risk managementem. Doporučuje se zaměřit na wellness a trading plán.",
-    mentorNotes: ["Prioritize sleep and healthy habits.", "Strict adherence to risk per trade."],
-    todos: ["Track sleep schedule.", "Limit max risk to 1% per trade.", "Meditate 5 minutes before market open."],
+      "Karlova nízká připravenost a občasné vážné chyby naznačují problémy s emoční stabilitou a risk managementem. Doporučuje se zaměřit na wellness a obchodní plán.",
+    mentorNotes: ["Prioritizuj spánek a zdravé návyky.", "Striktní dodržování rizika na obchod."],
+    todos: ["Sleduj spánkový režim.", "Omezte max riziko na 1% na obchod.", "Medituj 5 minut před otevřením trhu."],
   },
 ]
 
@@ -737,7 +738,6 @@ function MentorTeamClubView({
                 : "Zatím žádní studenti s daty"
               : "Pro mentory - kompletní dashboard v Live režimu"}
           </p>
-          {isLiveMode && students.length > 0 && (
 
         {/* Virtual Mode Banner */}
         {!isLiveMode && (
@@ -1166,13 +1166,13 @@ function StudentTeamClubView({
   const getChallengeTypeLabel = (type: string) => {
     switch (type) {
       case "behavioral":
-        return "Behavioral"
+        return "Chování"
       case "routine":
-        return "Routine"
+        return "Rutina"
       case "mental":
-        return "Mental"
+        return "Mentální"
       case "skill":
-        return "Skill"
+        return "Dovednost"
       default:
         return type
     }
@@ -1586,7 +1586,7 @@ function StudentTeamClubView({
           <div>
             <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
               <Brain className="w-10 h-10 text-purple-400" />
-              <span className="gradient-text">MindTrader Team Club</span>
+              <span className="gradient-text">MindTrader - Tým</span>
               <Badge
                 className={
                   isLiveMode
@@ -1595,7 +1595,7 @@ function StudentTeamClubView({
                 }
               >
                 <Sparkles className="w-3 h-3 mr-1" />
-                {isLiveMode ? "Live Mode" : "Virtual Mode"}
+                {isLiveMode ? "Live Režim" : "Virtuální Režim"}
               </Badge>
             </h1>
             <p className="text-gray-300 text-lg">
@@ -1649,7 +1649,7 @@ function StudentTeamClubView({
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
               <Telescope className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
-              <span className="hidden sm:inline">Overview</span>
+              <span className="hidden sm:inline">Přehled</span>
               <span className="sm:hidden">Over</span>
             </TabsTrigger>
             <TabsTrigger
@@ -1672,7 +1672,7 @@ function StudentTeamClubView({
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
             >
               <Users className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
-              <span className="hidden sm:inline">Buddies</span>
+              <span className="hidden sm:inline">Study Buddies</span>
               <span className="sm:hidden">Bud</span>
             </TabsTrigger>
             <TabsTrigger
@@ -1701,12 +1701,12 @@ function StudentTeamClubView({
 
           {/* OVERVIEW TAB */}
           <TabsContent value="overview" className="space-y-6">
-            {/* Community Health Dashboard */}
+            {/* Přehled zdraví komunity */}
             <Card className="psyche-card">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Gauge className="h-5 w-5 text-purple-400" />
-                  Community Health Dashboard
+                  Přehled zdraví komunity
                 </CardTitle>
                 <CardDescription className="text-slate-400">
                   Real-time přehled jak se daří celé komunitě
@@ -1744,7 +1744,7 @@ function StudentTeamClubView({
                       <div className="p-6 pb-4">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-gray-400 text-xs font-medium mb-2">Avg. Win Rate</p>
+                            <p className="text-gray-400 text-xs font-medium mb-2">Průměr. Úspěšnost</p>
                             <p className="text-4xl font-bold text-white mb-1">{communityStats.avgWinRate}%</p>
                             <p className="text-emerald-400 text-sm font-semibold">Community</p>
                           </div>
@@ -1904,12 +1904,12 @@ function StudentTeamClubView({
               )}
             </div>
 
-            {/* AI Insights */}
+            {/* AI Poznatky */}
             <Card className="bg-gradient-to-br from-blue-600/90 via-blue-700/90 to-blue-600/90 border-blue-400 shadow-2xl">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Brain className="h-5 w-5" />
-                  AI Community Insights
+                  AI Poznatky komunity
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -1922,7 +1922,7 @@ function StudentTeamClubView({
                       <p className="text-white font-semibold text-sm mb-1">💡 AI Recommendation</p>
                       <p className="text-white/90 text-sm">
                         {userStats.winRate >= communityStats.avgWinRate
-                          ? "Tvoje win rate je nad průměrem! Sdílej své postupy v Community Feed."
+                          ? "Tvoje úspěšnost je nad průměrem! Sdílej své postupy v Community Feed."
                           : "Top performers mají journal streak 25+ dní. Zkus se zaměřit na konzistentní journaling!"}
                       </p>
                     </div>
@@ -1935,7 +1935,7 @@ function StudentTeamClubView({
           {/* COMMUNITY FEED TAB */}
           <TabsContent value="community" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Feed */}
+              {/* Hlavní Feed */}
               <div className="lg:col-span-2 space-y-4">
                 {/* Create Post */}
                 <Card className="psyche-card">
@@ -2038,7 +2038,7 @@ function StudentTeamClubView({
                     }`}
                   >
                     <TrendingUp className="h-3 w-3 mr-1.5" />
-                    Wins
+                    Výhry
                   </Button>
                   <Button
                     size="sm"
@@ -2050,7 +2050,7 @@ function StudentTeamClubView({
                     }`}
                   >
                     <TrendingDown className="h-3 w-3 mr-1.5" />
-                    Losses
+                    Ztráty
                   </Button>
                   <Button
                     size="sm"
@@ -2062,7 +2062,7 @@ function StudentTeamClubView({
                     }`}
                   >
                     <Lightbulb className="h-3 w-3 mr-1.5" />
-                    Insights
+                    Poznatky
                   </Button>
                   <Button
                     size="sm"
@@ -2074,7 +2074,7 @@ function StudentTeamClubView({
                     }`}
                   >
                     <MessageSquare className="h-3 w-3 mr-1.5" />
-                    Questions
+                    Otázky
                   </Button>
                 </div>
 
@@ -2151,7 +2151,7 @@ function StudentTeamClubView({
                     <CardHeader>
                       <CardTitle className="text-white text-sm flex items-center gap-2">
                         <Flame className="h-4 w-4 text-orange-400" />
-                        Trending Topics
+                        Trendy témata
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
@@ -2178,7 +2178,7 @@ function StudentTeamClubView({
                     <CardHeader>
                       <CardTitle className="text-white text-sm flex items-center gap-2">
                         <Star className="h-4 w-4 text-amber-400" />
-                        Top Contributors
+                        Nejlepší přispěvatelé
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
@@ -2321,7 +2321,7 @@ function StudentTeamClubView({
               <Card className="bg-slate-800/50 border-slate-700 mb-6">
                 <CardContent className="p-6">
                   <h3 className="text-white font-bold text-lg mb-4">
-                    {editingChallenge ? "Upravit výzvu" : "Přidat novou výzvu"}
+                      {editingChallenge ? "Upravit Výzvu" : "Přidat Novou Výzvu"}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
@@ -2802,7 +2802,7 @@ function StudentTeamClubView({
 
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Win Rate</span>
+                        <span className="text-slate-400">Úspěšnost</span>
                         <span className="text-white font-bold">{buddy.winRate}%</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
@@ -3130,7 +3130,7 @@ function StudentTeamClubView({
 
                 <Card className="bg-gradient-to-br from-amber-600/20 via-amber-700/20 to-amber-600/20 border-amber-500/30 rounded-2xl overflow-hidden backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle className="text-white text-sm">Top Questions Tento Týden</CardTitle>
+                    <CardTitle className="text-white text-sm">Nejlepší otázky tento týden</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {[
@@ -3152,7 +3152,7 @@ function StudentTeamClubView({
           {/* SUCCESS STORIES TAB */}
           <TabsContent value="success" className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white mb-1">Success Stories</h2>
+              <h2 className="text-2xl font-bold text-white mb-1">Příběhy úspěchu</h2>
               <p className="text-slate-400 text-sm">
                 Inspirace od komunity · Reálné transformace · Dokázali to, dokážeš to taky
               </p>
@@ -3245,7 +3245,7 @@ function StudentTeamClubView({
                           return (
                             <div className="space-y-1 text-sm">
                               <p className="text-slate-300">
-                                Win Rate: <span className="text-white">{stats.winRate}%</span>
+                                Úspěšnost: <span className="text-white">{stats.winRate}%</span>
                               </p>
                               <p className="text-slate-300">
                                 P&L:{" "}
@@ -3275,7 +3275,7 @@ function StudentTeamClubView({
                           return (
                             <div className="space-y-1 text-sm">
                               <p className="text-slate-300">
-                                Win Rate: <span className="text-white">{stats.winRate}%</span>
+                                Úspěšnost: <span className="text-white">{stats.winRate}%</span>
                               </p>
                               <p className="text-slate-300">
                                 P&L:{" "}
@@ -3518,6 +3518,7 @@ function isMentor(): boolean {
 function TeamClubPage() {
   const [userIsMentor, setUserIsMentor] = useState<boolean | null>(null)
   const { user, isLoading } = useAuth() // Added isLoading from auth
+  const { isLiveMode } = useLiveMode()
   const [communityUsers, setCommunityUsers] = useState<any[]>([])
   const [loadingCommunity, setLoadingCommunity] = useState(false)
 
@@ -3536,7 +3537,32 @@ function TeamClubPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <Brain className="w-16 h-16 text-purple-400 animate-pulse mx-auto mb-4" />
-          <p className="text-slate-400">Načítám Team Club...</p>
+          <p className="text-slate-400">Načítám Tým...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // In LIVE mode, Team Club is locked
+  if (isLiveMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <div className="mb-6 flex justify-center">
+            <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-2xl inline-block">
+              <Lock className="w-12 h-12 text-red-400" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-black text-white mb-3">Tým je zamčený</h1>
+          <p className="text-lg text-purple-300 mb-6">
+            Tým není dostupný v Live Mode. Vrať se do Virtuálního Režimu, pokud chceš prozkoumat komunitu.
+          </p>
+          <Button 
+            onClick={() => window.history.back()}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-8 py-3 rounded-lg"
+          >
+            Zpět
+          </Button>
         </div>
       </div>
     )

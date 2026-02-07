@@ -242,8 +242,8 @@ const MindTraderAI = () => {
   // AI Personalities
   const personalities = {
     calm: {
-      name: language === "cs" ? "🧘 Klidný Mentor" : "🧘 Calm Mentor",
-      description: language === "cs" ? "Klidný, empatický, pomáhá s emocemi" : "Calm, empathetic, helps with emotions",
+      name: language === "cs" ? "🧘 Klidný Mentor" : "🧘 Klidný Mentor",
+      description: language === "cs" ? "Klidný, empatický, pomáhá s emocemi" : "Klidný, empatický, pomáhá s emocemi",
       icon: Heart,
       color: "from-blue-500 to-indigo-500",
       locked: false,
@@ -313,10 +313,10 @@ const MindTraderAI = () => {
           "Jak se vyhnout revenge trading?",
         ]
       : [
-          "How to recover after a loss?",
-          "How to manage fear?",
-          "Help me with discipline",
-          "I violated my plan, what to do?",
+        "Jak se zotavit po ztrátě?",
+        "Jak zvládat strach?",
+        "Pomoz mi s disciplínou",
+        "Porušil jsem plán, co dělat?",
           "How to overcome FOMO?",
           "How to improve risk management?",
           "How to strengthen mental power?",
@@ -329,7 +329,7 @@ const MindTraderAI = () => {
       const welcomeMessage =
       language === "cs"
         ? `Ahoj! Jsem tvůj MindTrader AI trenér. 🧠\n\nViděl jsem tvá data a jsem tu, abych ti pomohl s trading psychologií.\n\nTvůj aktuální readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Dokonči ranní check"}\n\nCo tě trápí? Jak ti mohu pomoci?`
-        : `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Complete Morning Check"}\n\nWhat's troubling you? How can I help?`
+        : `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nViděl jsem tvoje data a jsem tady abych ti pomohl s trading psychologií.\n\nTvoje aktuální skóre připravenosti: ${currentReadiness !== null ? currentReadiness + "%" : "Vyplň Ranní kontrolu"}\n\nCo tě trápí? Jak ti mohu pomoci?`
 
       setMessages([
         {
@@ -507,7 +507,7 @@ const MindTraderAI = () => {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: "Network error" }))
+        const errorData = await response.json().catch(() => ({ error: "Chyba sítě" }))
         throw new Error(errorData.error || `HTTP ${response.status}`)
       }
 
@@ -516,11 +516,11 @@ const MindTraderAI = () => {
         data = await response.json()
       } catch (parseError) {
         console.error("[v0] JSON parse error:", parseError)
-        throw new Error("Invalid response format from server")
+        throw new Error("Neplatný formát odpovědi ze serveru")
       }
 
       if (!data.response) {
-        throw new Error("Empty response from AI")
+        throw new Error("Prázdná odpověď od AI")
       }
 
       const aiMessage = {
@@ -541,8 +541,8 @@ const MindTraderAI = () => {
       }
 
       toast({
-        title: language === "cs" ? "Odpověď přijata" : "Response received",
-        description: language === "cs" ? "AI ti odpověděl" : "AI has responded",
+        title: "Odpověď přijata",
+        description: "AI ti odpověděl",
       })
     } catch (error) {
       console.error("[v0] AI Chat Error:", error)
@@ -556,8 +556,8 @@ const MindTraderAI = () => {
       setMessages((prev) => [...prev, errorMessage])
 
       toast({
-        title: language === "cs" ? "Chyba" : "Error",
-        description: error instanceof Error ? error.message : "Failed to get AI response",
+        title: "Chyba",
+        description: error instanceof Error ? error.message : "Nepodařilo se získat odpověď od AI",
         variant: "destructive",
       })
     } finally {
@@ -591,11 +591,8 @@ const MindTraderAI = () => {
   const generateReport = async () => {
     if (!isPremium) {
       toast({
-        title: language === "cs" ? "Premium funkce" : "Premium feature",
-        description:
-          language === "cs"
-            ? "Report Builder je dostupný pouze v Premium plánu."
-            : "Report Builder is available only in Premium plan.",
+        title: "Premium funkce",
+        description: "Report Builder je dostupný pouze v Premium plánu.",
         variant: "destructive",
       })
       return
@@ -615,8 +612,8 @@ const MindTraderAI = () => {
     URL.revokeObjectURL(url)
 
     toast({
-      title: language === "cs" ? "Report vygenerován" : "Report generated",
-      description: language === "cs" ? "Report byl stažen" : "Report has been downloaded",
+      title: "Report vygenerován",
+      description: "Report byl stažen",
     })
   }
 
@@ -659,7 +656,7 @@ const MindTraderAI = () => {
               <div className="flex items-center gap-2">
                 <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                 <CardTitle className="text-base sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-purple-200 to-cyan-200 bg-clip-text text-transparent">
-                  {language === "cs" ? "Tvoje Připravenost" : "Your Readiness"}
+                  Tvoje Připravenost
                 </CardTitle>
               </div>
             </CardHeader>
@@ -685,7 +682,7 @@ const MindTraderAI = () => {
               <div className="flex-1 space-y-4">
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-purple-300 uppercase tracking-widest">
-                    🤖 {language === "cs" ? "Režimy AI" : "AI Modes"}
+                    🤖 Režimy AI
                   </p>
                   <div className="h-0.5 w-8 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full" />
                 </div>

@@ -26,16 +26,12 @@ export default function MorningCheckPage() {
                   </div>
                   <div>
                     <h1 className="text-5xl font-black bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                      {language === "cs" ? "Ranní Check" : "Morning Check"}
+                      Ranní Check
                     </h1>
                     <p className="text-muted-foreground">
                       {isLiveMode
-                        ? language === "cs"
-                          ? "Ranní vyhodnocení tvé připravenosti 🌅"
-                          : "Morning readiness assessment 🌅"
-                        : language === "cs"
-                          ? "Demo - Vyzkoušej ranní rutinu! 🎮"
-                          : "Demo - Try the morning routine! 🎮"}
+                        ? "Ranní vyhodnocení tvé připravenosti 🌅"
+                        : "Demo - Vyzkoušej ranní rutinu! 🎮"}
                     </p>
                   </div>
                 </div>
@@ -63,12 +59,10 @@ export default function MorningCheckPage() {
                 <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
                   <Sun className="h-5 w-5 text-orange-400" />
                 </div>
-                <h3 className="font-bold text-white">{language === "cs" ? "Ranní rutina" : "Morning Routine"}</h3>
+                <h3 className="font-bold text-white">Ranní rutina</h3>
               </div>
               <p className="text-sm text-gray-400">
-                {language === "cs"
-                  ? "Zjisti svou připravenost na trading ještě před otevřením platformy"
-                  : "Check your trading readiness before opening your platform"}
+                Zjisti svou připravenost na trading ještě před otevřením platformy
               </p>
             </CardContent>
           </Card>
@@ -82,9 +76,7 @@ export default function MorningCheckPage() {
                 <h3 className="font-bold text-white">GO/NO-GO</h3>
               </div>
               <p className="text-sm text-gray-400">
-                {language === "cs"
-                  ? "Získej jasné rozhodnutí, jestli dnes obchodovat nebo si dát pauzu"
-                  : "Get a clear decision whether to trade today or take a break"}
+                Získej jasné rozhodnutí, jestli dnes obchodovat nebo si dát pauzu
               </p>
             </CardContent>
           </Card>
@@ -95,12 +87,10 @@ export default function MorningCheckPage() {
                 <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
                   <Calendar className="h-5 w-5 text-purple-400" />
                 </div>
-                <h3 className="font-bold text-white">{language === "cs" ? "Pouze 5 minut" : "Only 5 minutes"}</h3>
+                <h3 className="font-bold text-white">Pouze 5 minut</h3>
               </div>
               <p className="text-sm text-gray-400">
-                {language === "cs"
-                  ? "Rychlé vyhodnocení tvého spánku, energie a mentálního stavu"
-                  : "Quick assessment of your sleep, energy and mental state"}
+                Rychlé vyhodnocení tvého spánku, energie a mentálního stavu
               </p>
             </CardContent>
           </Card>
