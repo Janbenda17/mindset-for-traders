@@ -9,7 +9,11 @@ import { ChevronLeft, ChevronRight, Users, TrendingUp, Target } from 'lucide-rea
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
-import { AdminPanel } from '@/components/admin-panel'
+import dynamic from 'next/dynamic'
+
+const AdminPanel = dynamic(() => import('@/components/admin-panel').then(mod => ({ default: mod.AdminPanel })), {
+  ssr: false,
+})
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
