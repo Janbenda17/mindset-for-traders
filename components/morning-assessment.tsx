@@ -412,7 +412,12 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
   const currentScore = calculateScore()
   const recommendation = getRecommendation(currentScore)
   const RecommendationIcon = recommendation.icon
-  const exerciseTypeLabel = EXERCISE_TYPES.find((t) => t.value === assessment.exerciseType)?.label || 'Cvičení'
+  
+  let exerciseTypeLabel = 'Cvičení'
+  const foundType = EXERCISE_TYPES.find((t) => t.value === assessment.exerciseType)
+  if (foundType) {
+    exerciseTypeLabel = foundType.label
+  }
 
   if (isLocked) {
     return (
