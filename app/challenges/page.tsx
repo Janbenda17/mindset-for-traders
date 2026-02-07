@@ -38,8 +38,8 @@ export default function ChallengesPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-white">Community Challenges</h1>
-          <p className="text-slate-400">Join weekly challenges, compete with other traders, and earn rewards</p>
+          <h1 className="text-4xl font-bold text-white">Komunitní výzvy</h1>
+          <p className="text-slate-400">Připojte se k týdenním výzvám, soutěžte s dalšími tradera a získejte odměny</p>
         </div>
 
         {/* Stats Cards */}
@@ -50,7 +50,7 @@ export default function ChallengesPage() {
                 <Target className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">Challenges Joined</p>
+                <p className="text-sm text-slate-400">Připojené výzvy</p>
                 <p className="text-2xl font-bold text-white">{myStats.joined}</p>
               </div>
             </div>
@@ -62,7 +62,7 @@ export default function ChallengesPage() {
                 <Trophy className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">Completed</p>
+                <p className="text-sm text-slate-400">Dokončeno</p>
                 <p className="text-2xl font-bold text-white">{myStats.completed}</p>
               </div>
             </div>
@@ -74,7 +74,7 @@ export default function ChallengesPage() {
                 <TrendingUp className="w-6 h-6 text-yellow-400" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">Total Points Earned</p>
+                <p className="text-sm text-slate-400">Celkem získaných bodů</p>
                 <p className="text-2xl font-bold text-white">{myStats.totalPoints} XP</p>
               </div>
             </div>
@@ -84,9 +84,9 @@ export default function ChallengesPage() {
         {/* Tabs */}
         <Tabs defaultValue="all" className="space-y-6">
           <TabsList className="bg-slate-900/50 border border-slate-800">
-            <TabsTrigger value="all">All Challenges</TabsTrigger>
-            <TabsTrigger value="my">My Challenges</TabsTrigger>
-            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            <TabsTrigger value="all">Všechny výzvy</TabsTrigger>
+            <TabsTrigger value="my">Moje výzvy</TabsTrigger>
+            <TabsTrigger value="leaderboard">Žebříček</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">
@@ -102,8 +102,8 @@ export default function ChallengesPage() {
               <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
                 <div className="p-12 text-center">
                   <Target className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">No Active Challenges</h3>
-                  <p className="text-slate-400">Join a challenge to get started!</p>
+                  <h3 className="text-lg font-semibold text-white mb-2">Žádné aktivní výzvy</h3>
+                  <p className="text-slate-400">Připojte se k výzvě pro začátek!</p>
                 </div>
               </Card>
             ) : (
@@ -120,7 +120,7 @@ export default function ChallengesPage() {
               <div className="p-6 space-y-4">
                 <div className="flex items-center gap-3 mb-6">
                   <Trophy className="w-6 h-6 text-yellow-400" />
-                  <h2 className="text-xl font-bold text-white">Top Traders</h2>
+                  <h2 className="text-xl font-bold text-white">Top obchodníci</h2>
                 </div>
 
                 <div className="space-y-3">
@@ -147,12 +147,12 @@ export default function ChallengesPage() {
 
                       <div className="flex-1">
                         <p className="font-semibold text-white">{entry.username}</p>
-                        <p className="text-sm text-slate-400">{entry.challengesCompleted} challenges completed</p>
+                        <p className="text-sm text-slate-400">{entry.challengesCompleted} dokončené výzvy</p>
                       </div>
 
                       <div className="text-right">
                         <p className="text-lg font-bold text-yellow-400">{entry.points}</p>
-                        <p className="text-xs text-slate-400">points</p>
+                        <p className="text-xs text-slate-400">bodů</p>
                       </div>
                     </div>
                   ))}

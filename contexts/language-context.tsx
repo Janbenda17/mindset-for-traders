@@ -117,7 +117,7 @@ const translations = {
 
     // Common
     "common.premium": "Premium",
-    "common.free": "Free",
+    "common.free": "Zdarma",
     "common.error": "Chyba",
   },
   en: {
