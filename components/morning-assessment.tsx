@@ -577,7 +577,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
                 value={[assessment.emotionalState]}
                 onValueChange={([val]) => setAssessment({ ...assessment, emotionalState: val })}
                 min={1}
-                max={10
+                max={10}
                 step={1}
                 className="h-3"
               />
