@@ -567,7 +567,10 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
             <CardContent>
               <div className="flex items-center gap-4">
                 <div className="text-4xl">
-                  {EXERCISE_TYPES.find((t) => t.value === assessment.exerciseType)?.label || 'Cvičení'}
+                  {(() => {
+                    const type = EXERCISE_TYPES.find((t) => t.value === assessment.exerciseType)
+                    return type?.label || 'Cvičení'
+                  })()}
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-blue-400">{assessment.exerciseDuration} min</div>
