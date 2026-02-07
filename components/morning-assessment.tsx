@@ -566,7 +566,9 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                <div className="text-4xl">{EXERCISE_TYPES.find((t) => t.value === assessment.exerciseType)?.label || "Cvičení"}</div>
+                <div className="text-4xl">
+                  {EXERCISE_TYPES.find((t) => t.value === assessment.exerciseType)?.label || 'Cvičení'}
+                </div>
                 <div>
                   <div className="text-2xl font-bold text-blue-400">{assessment.exerciseDuration} min</div>
                   <div className="text-sm text-muted-foreground">Trvání</div>
@@ -578,7 +580,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
 
         <div className="flex gap-4">
           <Button
-            onClick={() => router.push("/record-trades")}
+            onClick={() => router.push('/record-trades')}
             className="flex-1 h-14 text-lg font-bold rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-lg"
           >
             <CheckCircle className="w-5 h-5 mr-2" />
