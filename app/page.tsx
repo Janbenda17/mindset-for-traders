@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { TopNavigation } from '@/components/top-navigation'
-import { TrialStatusBanner } from '@/components/trial-status-banner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { ChevronLeft, ChevronRight, Users, TrendingUp, Target } from 'lucide-react'
@@ -113,15 +112,17 @@ export default function HomePage() {
 
       <TopNavigation />
 
-      {/* Trial Banner */}
-      <div className="fixed top-16 left-0 right-0 z-40 px-4">
-        <div className="max-w-7xl mx-auto">
-          <TrialStatusBanner />
+      {/* Premium Banner - Oranžový úzký proužek */}
+      <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-yellow-900/80 to-orange-900/80 backdrop-blur-sm border-b border-yellow-500/30 py-1.5 px-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-xs md:text-sm">
+          <span className="text-yellow-100">
+            <span className="font-bold text-white">Premium:</span> Pouze za <span className="font-bold text-white">1499</span> <span className="line-through text-yellow-200">2499</span> <span className="text-yellow-300 font-semibold">Končí brzy</span>
+          </span>
         </div>
       </div>
       
       {/* Main Content */}
-      <div className="relative z-10 pt-40 px-4 md:px-8 lg:px-12 pb-20 max-w-7xl mx-auto">
+      <div className="relative z-10 pt-48 px-4 md:px-8 lg:px-12 pb-20 max-w-7xl mx-auto">
         {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
