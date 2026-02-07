@@ -116,7 +116,7 @@ export default function HomePage() {
       <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-yellow-900/80 to-orange-900/80 backdrop-blur-sm border-b border-yellow-500/30 py-1 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
           <span className="text-yellow-100 text-xs md:text-sm font-medium">
-            Vyzkousej 14 dní zdarma
+            14 dní zdarma
           </span>
           <Button 
             onClick={handlePricingClick}
