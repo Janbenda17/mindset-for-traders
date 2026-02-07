@@ -87,6 +87,34 @@ const translations = {
     "quickPrompts.mentalStrength": "Jak zlepšit mentální odolnost?",
     "quickPrompts.revengeTrade": "Revenge trading - jak se vyhnout?",
 
+    // Navigation & Pages
+    "nav.overview": "Přehled",
+    "nav.feed": "Feed",
+    "nav.challenges": "Výzvy",
+    "nav.studyBuddies": "Study Buddies",
+    "nav.topQA": "Top Q&A",
+    "nav.leaderboard": "Žebříček",
+    "nav.connect": "Připojit",
+
+    // Dashboard Stats
+    "stats.successNotifications": "Notifikace úspěchu",
+    "stats.avgCommunityMood": "Průměr. Community Mood",
+    "stats.positive": "Pozitivní",
+    "stats.avgSuccessRate": "Průměr. Úspěšnost",
+    "stats.communityShowingImprovement": "Komunita se Zlepšuje",
+    "stats.thisWeek": "Tento týden",
+    "stats.feelingFrustrated": "Cítí se frustrací",
+    "stats.dueToLosses": "Z důvodu ztrát",
+    "stats.aiRecommendation": "AI Doporučení",
+    "stats.aiPoweredStudyBuddyMatching": "AI-Powered Párování Study Buddies",
+
+    // User Profile
+    "profile.streak": "Streak",
+    "profile.days": "dní",
+    "profile.timezone": "Časové pásmo",
+    "profile.tradingHours": "Obchodní hodiny",
+    "profile.aiCompatibility": "AI Kompatibilita",
+
     // Common
     "common.premium": "Premium",
     "common.free": "Free",
@@ -164,6 +192,34 @@ const translations = {
     "quickPrompts.riskManagement": "Risk management issues",
     "quickPrompts.mentalStrength": "How to improve mental strength?",
     "quickPrompts.revengeTrade": "Revenge trading - how to avoid?",
+
+    // Navigation & Pages
+    "nav.overview": "Overview",
+    "nav.feed": "Feed",
+    "nav.challenges": "Challenges",
+    "nav.studyBuddies": "Study Buddies",
+    "nav.topQA": "Top Q&A",
+    "nav.leaderboard": "Leaderboard",
+    "nav.connect": "Connect",
+
+    // Dashboard Stats
+    "stats.successNotifications": "Success Notifications",
+    "stats.avgCommunityMood": "Avg. Community Mood",
+    "stats.positive": "Positive",
+    "stats.avgSuccessRate": "Avg. Success Rate",
+    "stats.communityShowingImprovement": "Community Showing Improvement",
+    "stats.thisWeek": "This Week",
+    "stats.feelingFrustrated": "Feeling Frustrated",
+    "stats.dueToLosses": "Due to Losses",
+    "stats.aiRecommendation": "AI Recommendation",
+    "stats.aiPoweredStudyBuddyMatching": "AI-Powered Study Buddy Matching",
+
+    // User Profile
+    "profile.streak": "Streak",
+    "profile.days": "days",
+    "profile.timezone": "Timezone",
+    "profile.tradingHours": "Trading Hours",
+    "profile.aiCompatibility": "AI Compatibility",
 
     // Common
     "common.premium": "Premium",
