@@ -423,7 +423,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
                 <Lock className="h-8 w-8 text-green-400" />
               </div>
               <div className="text-center">
-                <h3 className="text-3xl font-black text-green-400">Data Zamčena ✅</h3>
+                <h3 className="text-3xl font-black text-green-400">Data Zamčena</h3>
                 <p className="text-lg text-muted-foreground mt-1">
                   Tvůj Morning Check je dokončen a zamčen. Data se resetují o půlnoci.
                 </p>
