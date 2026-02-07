@@ -113,15 +113,15 @@ export default function HomePage() {
       <TopNavigation />
 
       {/* Trial Banner - Úzký proužek */}
-      <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-blue-900/80 to-blue-800/80 backdrop-blur-sm border-b border-blue-500/30 py-2 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
-          <span className="text-blue-100 text-sm md:text-base font-medium">
+      <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-orange-500/90 to-amber-500/90 backdrop-blur-sm border-b border-orange-400/50 py-1 px-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+          <span className="text-white text-xs md:text-sm font-medium">
             Vyzkousej 14 dní zdarma
           </span>
           <Button 
             onClick={handlePricingClick}
             size="sm" 
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3"
+            className="bg-orange-600 hover:bg-orange-700 text-white text-xs h-7 px-2.5"
           >
             Upgrade
           </Button>
