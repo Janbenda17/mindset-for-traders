@@ -112,12 +112,19 @@ export default function HomePage() {
 
       <TopNavigation />
 
-      {/* Premium Banner - Oranžový úzký proužek */}
-      <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-yellow-900/80 to-orange-900/80 backdrop-blur-sm border-b border-yellow-500/30 py-1.5 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-xs md:text-sm">
-          <span className="text-yellow-100">
-            <span className="font-bold text-white">Premium:</span> Pouze za <span className="font-bold text-white">1499</span> <span className="line-through text-yellow-200">2499</span> <span className="text-yellow-300 font-semibold">Končí brzy</span>
+      {/* Trial Banner - Úzký proužek */}
+      <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-blue-900/80 to-blue-800/80 backdrop-blur-sm border-b border-blue-500/30 py-2 px-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
+          <span className="text-blue-100 text-sm md:text-base font-medium">
+            Vyzkousej 14 dní zdarma
           </span>
+          <Button 
+            onClick={handlePricingClick}
+            size="sm" 
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8 px-3"
+          >
+            Upgrade
+          </Button>
         </div>
       </div>
       
