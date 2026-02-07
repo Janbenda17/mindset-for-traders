@@ -385,7 +385,7 @@ export default function DailyTrackerPage() {
     const currentReadinessScore = score ?? todayEntry?.overallScore ?? null
 
     if (!currentMorningCheck || currentReadinessScore === undefined || currentReadinessScore === null) {
-      return "Vyplň Morning Check pro získání detailní AI analýzy tvého psychologického stavu a trading readiness."
+      return "Vyplň Ranní Kontrolu pro získání detailní AI analýzy tvého psychologického stavu a připravenosti k obchodování."
     }
 
     let insight = ""
@@ -400,7 +400,7 @@ export default function DailyTrackerPage() {
     
     // Generate detailed, personalized insight
     if (readiness >= 80) {
-      insight = `🟢 IDEÁLNÍ PODMÍNKY PRO TRADING! Readiness ${readiness}%. `
+      insight = `🟢 IDEÁLNÍ PODMÍNKY PRO TRADING! Připravenost ${readiness}%. `
       if (focus >= 8) {
         insight += `Tvůj focus je EXCELENTNÍ (${focus}/10) - to je rarní kombinace s vysokou připraveností. Tvůj prefrontální kůra (logické centrum) je nyní dominantní. `
       }
@@ -412,7 +412,7 @@ export default function DailyTrackerPage() {
       }
       insight += `DOPORUČENÍ: Toto je okno "flow state" - traduj A+ setupy s plnou sebedůvěrou. Pozor: Vysoká sebedůvěra může vést k overconfidence - drž se plánu ještě důsledněji.`
     } else if (readiness >= 70) {
-      insight = `🟡 DOBRÉ PODMÍNKY, ALE S VÝHRADAMI. Readiness ${readiness}%. `
+      insight = `🟡 DOBRÉ PODMÍNKY, ALE S VÝHRADAMI. Připravenost ${readiness}%. `
       if (stress >= 7) {
         insight += `UPOZORNĚNÍ: Stres ${stress}/10 je zvýšený. Tvůj amygdala je hyperaktivní - snižuje to kvalitu výkonného funčování o ~25%. `
       }
@@ -424,7 +424,7 @@ export default function DailyTrackerPage() {
       }
       insight += `STRATEGIE: Traduj pouze setup s vyšší probability - přeskoč setups na hraně tebou definovaného plánu.`
     } else if (readiness >= 60) {
-      insight = `🟠 OPATRNOST DOPORUČENA. Readiness pouze ${readiness}%. `
+      insight = `🟠 OPATRNOST DOPORUČENA. Připravenost pouze ${readiness}%. `
       if (stress >= 8) {
         insight += `Vysoký stres (${stress}/10) + nízká připravenost = vysoké riziko revenge tradingu. Tvůj risk management bude nejenom teoretický, ale KRITICKÝ. `
       }
@@ -433,7 +433,7 @@ export default function DailyTrackerPage() {
       }
       insight += `DOPORUČENÍ: Zvažte krátkou session nebo paper trading pro procvičení bez rizika. Pokud tradujete: Poloviční pozice, x2 risk management controls.`
     } else {
-      insight = `🛑 NEOBCHODUJ DNES. Readiness ${readiness}% je pod bezpečným prahem. `
+      insight = `🛑 NEOBCHODUJ DNES. Připravenost ${readiness}% je pod bezpečným prahem. `
       if (stress >= 8) {
         insight += `Stres ${stress}/10 + nízká energia = toxická kombinace pro trading. Tvůj mozek je teď zaměřený na survival, ne na logiku. `
       }
@@ -450,9 +450,9 @@ export default function DailyTrackerPage() {
   const generateTradingDecision = (morningCheckData?: any, score?: number | null) => {
     if (!morningCheckData || score === undefined || score === null) {
       return {
-        message: "Vyplň Morning Check pro získání AI analýzy.",
-        tips: ["Začni s Morning Check"],
-        details: ["Morning Check nevyplněn"],
+        message: "Vyplň Ranní Kontrolu pro získání AI analýzy.",
+        tips: ["Začni s Ranní Kontrolou"],
+        details: ["Ranní Kontrola nevyplněna"],
       }
     }
 
@@ -511,24 +511,24 @@ export default function DailyTrackerPage() {
       tips.push("Zvaž vynechání tradingu dnes")
       tips.push("Zapiš si své emoce do journalu")
     } else if (goodConditions) {
-      message = `Výborné podmínky! Readiness ${score}%! Jsi připravený na obchodování.`
+      message = `Výborné podmínky! Připravenost ${score}%! Jsi připravený na obchodování.`
       if (positiveNote) message += ` ${positiveNote}`
       details.push(`Všechny metriky v optimálním rozsahu`)
       tips.push("Drž se svého trading plánu")
       tips.push("Sleduj své emoce během tradingu")
       tips.push("Dělej pravidelné pauzy každou hodinu")
     } else {
-      message = `Readiness ${score}% je pod hranicí 70%. Zvaž snížení risku.`
+      message = `Připravenost ${score}% je pod hranicí 70%. Zvaž snížení risku.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Readiness: ${score}%`)
+      details.push(`Připravenost: ${score}%`)
       tips.push("Prioritou je tvé zdraví a dlouhodobý úspěch")
       tips.push("Dnes je lepší den na odpočinek nebo vzdělávání")
     }
 
     // Add positive detail if available and not already the main focus
-    if (highFocus && !lowFocus) details.push("Focus: Excelentní (Silná stránka)")
+    if (highFocus && !lowFocus) details.push("Soustředění: Excelentní (Silná stránka)")
     else if (lowStressMetric && !highStress) details.push("Stres: Minimální (Výhoda)")
-    else if (highEnergy && !lowEnergy) details.push("Energie: Vysoká (Palivo)")
+    else if (highEnergy && !lowEnergy) details.push("Energie: Vysoká (Síla)")
 
     return { message, tips, details }
   }
@@ -1209,7 +1209,7 @@ export default function DailyTrackerPage() {
                 <Sun className="h-24 w-24 mx-auto mb-6 text-orange-400" />
                 <h3 className="text-3xl font-black mb-4">Začni Dnešní Den!</h3>
                 <p className="text-xl text-muted-foreground mb-8">
-                  Ještě jsi nezačal dnešní Daily Trading Flow. Začni Morning Assessment!
+                  Ještě jsi nezačal dnešní Obchodní Den. Začni Ranním Hodnocením!
                 </p>
                 <Button
                   onClick={() => router.push("/morning-check")}
@@ -1217,7 +1217,7 @@ export default function DailyTrackerPage() {
                   className="h-16 px-12 text-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600"
                 >
                   <Sun className="h-6 w-6 mr-2" />
-                  Začít Morning Check
+                  Začít Ranní Kontrolu
                 </Button>
               </CardContent>
             </Card>
@@ -1268,12 +1268,12 @@ export default function DailyTrackerPage() {
                                 <div className={cn("text-4xl font-black", getReadinessColor(entryReadiness))}>
                                   {entryReadiness !== null ? `${entryReadiness}%` : "---"}
                                 </div>
-                                <div className="text-xs text-muted-foreground">readiness</div>
+                                <div className="text-xs text-muted-foreground">připravenost</div>
                               </div>
                             )}
                             <div className="text-center">
                               <div className="text-2xl font-black mb-1">{entry.stagesCompleted}/5</div>
-                              <div className="text-xs text-muted-foreground">stages</div>
+                              <div className="text-xs text-muted-foreground">fáze</div>
                             </div>
                             <Button variant="ghost" size="sm">
                               {isExpanded ? "Skrýt" : "Zobrazit"}
@@ -1295,7 +1295,7 @@ export default function DailyTrackerPage() {
                                   <h3 className="text-2xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                                     Shrnutí Dne
                                   </h3>
-                                  <p className="text-sm text-muted-foreground">Stage 5 - Kompletní přehled dne</p>
+                                  <p className="text-sm text-muted-foreground">Fáze 5 - Kompletní přehled dne</p>
                                 </div>
                               </div>
 
@@ -1322,7 +1322,7 @@ export default function DailyTrackerPage() {
                                       </div>
                                     </div>
                                     <div className="p-4 rounded-xl bg-black/30 border border-white/10">
-                                      <div className="text-xs text-muted-foreground mb-1">Win Rate</div>
+                                      <div className="text-xs text-muted-foreground mb-1">Podíl výher</div>
                                       <div className="text-2xl font-black text-blue-400">
                                         {Math.round(
                                           (entry.trades.filter((t) => t.pnl > 0).length / entry.trades.length) * 100,
@@ -1393,7 +1393,7 @@ export default function DailyTrackerPage() {
                                     <div>
                                       <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                         <Brain className="h-5 w-5 text-purple-400" />
-                                        AI Insights & Doporučení
+                                        AI Postřehy & Doporučení
                                       </h4>
                                       <div className="space-y-3">
                                         <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
@@ -1402,7 +1402,7 @@ export default function DailyTrackerPage() {
                                           </div>
                                         </div>
                                         {dayDecision.details.length > 0 &&
-                                          dayDecision.details[0] !== "Morning Check nevyplněn" && (
+                                          dayDecision.details[0] !== "Ranní Kontrola nevyplněna" && (
                                             <div className="space-y-2">
                                               <div className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
                                                 Detailní Analýza
@@ -1472,7 +1472,7 @@ export default function DailyTrackerPage() {
                                   <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                                     <div className="flex items-center gap-2 mb-2">
                                       <Brain className="h-4 w-4 text-purple-400" />
-                                      <span className="text-xs text-muted-foreground">Focus</span>
+                                      <span className="text-xs text-muted-foreground">Soustředění</span>
                                     </div>
                                     <div className="text-lg font-black text-white">{entry.morningCheck.focus}/10</div>
                                   </div>
@@ -1513,7 +1513,7 @@ export default function DailyTrackerPage() {
                                     </div>
                                     <div className="flex gap-2">
                                       <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 flex-1">
-                                        <div className="text-xs text-blue-400 mb-1 font-semibold">Max Risk:</div>
+                                        <div className="text-xs text-blue-400 mb-1 font-semibold">Max Riziko:</div>
                                         <div className="text-sm text-white">{entry.intention.maxRiskPercent}%</div>
                                       </div>
                                       <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 flex-1">
@@ -1531,8 +1531,8 @@ export default function DailyTrackerPage() {
                           {entry.stagesCompleted < 5 && (
                             <div className="text-center py-8 text-muted-foreground">
                               <Moon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                              <p className="text-lg font-medium">Stage 5 nebyla dokončena</p>
-                              <p className="text-sm mt-1">Zobrazují se pouze základní metriky z Morning Check</p>
+                              <p className="text-lg font-medium">Fáze 5 nebyla dokončena</p>
+                              <p className="text-sm mt-1">Zobrazují se pouze základní metriky z Ranní Kontroly</p>
                             </div>
                           )}
                         </div>
@@ -1549,7 +1549,7 @@ export default function DailyTrackerPage() {
                 <h3 className="text-3xl font-black mb-4 text-slate-400">Žádná Historie</h3>
                 <p className="text-xl text-muted-foreground">
                   {isLiveMode
-                    ? "Zatím nemáš žádné záznamy. Začni vyplněním Morning Check!"
+                    ? "Zatím nemáš žádné záznamy. Začni vyplněním Ranní Kontroly!"
                     : "V demo režimu se historie nezobrazuje."}
                 </p>
               </CardContent>

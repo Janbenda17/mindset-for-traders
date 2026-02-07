@@ -33,8 +33,8 @@ const initialStages: Stage[] = [
   {
     id: 1,
     name: "morning-assessment",
-    title: "Morning Assessment",
-    description: "Check your physical and mental state",
+    title: "Ranní Hodnocení",
+    description: "Zkontroluj svůj fyzický a psychický stav",
     icon: "🌅",
     href: "/morning-check",
     completed: false,
@@ -43,8 +43,8 @@ const initialStages: Stage[] = [
   {
     id: 2,
     name: "daily-intention",
-    title: "Daily Intention",
-    description: "Set your goals and emotional targets",
+    title: "Denní Záměr",
+    description: "Nastav si cíle a emoční záměry",
     icon: "🎯",
     href: "/daily-intention",
     completed: false,
@@ -53,8 +53,8 @@ const initialStages: Stage[] = [
   {
     id: 3,
     name: "trading-plan",
-    title: "Trading Plan",
-    description: "Define your strategy for today",
+    title: "Obchodní Plán",
+    description: "Definuj svou strategii na dnešek",
     icon: "📋",
     href: "/trading-plan",
     completed: false,
@@ -63,8 +63,8 @@ const initialStages: Stage[] = [
   {
     id: 4,
     name: "record-trades",
-    title: "Record Trades",
-    description: "Log your trades and emotions",
+    title: "Záznam Obchodů",
+    description: "Zaznamenej své obchody a emoce",
     icon: "💼",
     href: "/record-trades",
     completed: false,
@@ -73,8 +73,8 @@ const initialStages: Stage[] = [
   {
     id: 5,
     name: "daily-summary",
-    title: "Daily Summary",
-    description: "Review your day and key learnings",
+    title: "Denní Shrnutí",
+    description: "Zhodnoť svůj den a klíčové poznatky",
     icon: "🌙",
     href: "/daily-summary",
     completed: false,
@@ -233,7 +233,7 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
           const xpData = await xpResponse.json()
           if (xpData.success) {
             console.log(`[v0] Stage ${stageId} XP awarded: ${xpData.xpAwarded}`)
-            showXPNotification(xpData.xpAwarded, `Stage ${stageId} Complete!`)
+            showXPNotification(xpData.xpAwarded, `Fáze ${stageId} dokončena!`)
             if (xpData.leveledUp) {
               showLevelUpNotification(xpData.level)
             }

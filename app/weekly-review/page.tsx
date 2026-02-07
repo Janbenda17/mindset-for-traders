@@ -158,18 +158,18 @@ export default function WeeklyReviewPage() {
     const { weeklyInsights } = analytics
 
     setReview({
-      whatWorked: `Best performing day: ${weeklyInsights.bestPerformingDay}`,
-      whatDidntWork: `Worst performing day: ${weeklyInsights.worstPerformingDay}`,
-      biggestWin: `Best day: ${analytics.summary.bestDay.date} (+$${analytics.summary.bestDay.pnl.toFixed(2)})`,
-      biggestLoss: `Worst day: ${analytics.summary.worstDay.date} (-$${Math.abs(analytics.summary.worstDay.pnl).toFixed(2)})`,
+      whatWorked: `Nejlepší den: ${weeklyInsights.bestPerformingDay}`,
+      whatDidntWork: `Nejhorší den: ${weeklyInsights.worstPerformingDay}`,
+      biggestWin: `Nejlepší den: ${analytics.summary.bestDay.date} (+$${analytics.summary.bestDay.pnl.toFixed(2)})`,
+      biggestLoss: `Nejhorší den: ${analytics.summary.worstDay.date} (-$${Math.abs(analytics.summary.worstDay.pnl).toFixed(2)})`,
       emotionalPatterns: weeklyInsights.readinessVsResults,
       mistakesMade: weeklyInsights.commonMistake,
-      lessonsLearned: `${analytics.psychology.revengeIncidents === 0 ? "Good emotional control" : `${analytics.psychology.revengeIncidents} revenge trading incidents - implement pause after losses`}`,
+      lessonsLearned: `${analytics.psychology.revengeIncidents === 0 ? "Dobrá emoční kontrola" : `${analytics.psychology.revengeIncidents} incidentů revenge tradingu - zaveď pauzu po ztrátách`}`,
       weeklyGoals: weeklyInsights.nextWeekFocus.slice(0, 3),
-      focusAreas: ["Maintain high readiness", "Follow trading plan", "Track emotions"],
-      tradingPlanAdjustments: `Current discipline: ${analytics.psychology.disciplineScore.toFixed(0)}%`,
-      riskManagementNotes: `Win rate: ${analytics.summary.winRate.toFixed(1)}%`,
-      mindsetPreparation: `Average readiness: ${analytics.summary.avgReadiness.toFixed(0)}%`,
+      focusAreas: ["Udržet vysokou připravenost", "Dodržovat obchodní plán", "Sledovat emoce"],
+      tradingPlanAdjustments: `Aktuální disciplína: ${analytics.psychology.disciplineScore.toFixed(0)}%`,
+      riskManagementNotes: `Podíl výher: ${analytics.summary.winRate.toFixed(1)}%`,
+      mindsetPreparation: `Průměrná připravenost: ${analytics.summary.avgReadiness.toFixed(0)}%`,
     })
 
     setActionPlan(
@@ -201,7 +201,7 @@ export default function WeeklyReviewPage() {
       data.dailyData
         .filter((d: any) => d.pnl > 0)
         .map((d: any) => {
-          if (d.readiness > 75) return `${d.day}: Vysoká readiness (${d.readiness}%) vedla k zisku +$${d.pnl}`
+          if (d.readiness > 75) return `${d.day}: Vysoká připravenost (${d.readiness}%) vedla k zisku +$${d.pnl}`
           if (d.mood > 70) return `${d.day}: Pozitivní nálada (${d.mood}%) = disciplinované rozhodování`
           return `${d.day}: Ziskový den +$${d.pnl}`
         })
@@ -249,7 +249,7 @@ export default function WeeklyReviewPage() {
 
     const aiMistakes =
       [
-        data.avgReadiness < 70 ? "Obchodování s nízkou readiness" : null,
+        data.avgReadiness < 70 ? "Obchodování s nízkou připraveností" : null,
         data.revengeIncidents > 0 ? `${data.revengeIncidents}x revenge trading` : null,
         data.avgSleep && data.avgSleep < 7 ? `Průměrný spánek pouze ${data.avgSleep?.toFixed(1)}h` : null,
         data.lossResets > 2 ? `${data.lossResets} loss resetů - emoční volatilita` : null,
@@ -258,21 +258,21 @@ export default function WeeklyReviewPage() {
         .join("\n") || "Žádné významné chyby identifikovány."
 
     const aiLessons = [
-      data.avgReadiness > 75 ? "Vysoká readiness = konzistentní výsledky" : "Prioritizuj readiness před obchodováním",
+      data.avgReadiness > 75 ? "Vysoká připravenost = konzistentní výsledky" : "Prioritizuj připravenost před obchodováním",
       data.winRate > 50 ? "Současná strategie funguje - pokračovat" : "Přehodnotit strategii a setupy",
       data.revengeIncidents === 0 ? "Emoční disciplína na dobré úrovni" : "Implementovat stop loss pro psychiku",
     ].join(". ")
 
     // AI-generated goals and focus areas
     const aiGoals = [
-      data.avgReadiness < 75 ? "Dosáhnout průměrné readiness 75%+" : "Udržet vysokou readiness",
+      data.avgReadiness < 75 ? "Dosáhnout průměrné připravenosti 75%+" : "Udržet vysokou připravenost",
       data.winRate < 50 ? "Zlepšit win rate na 50%+" : "Zaměřit se pouze na A+ setupy",
       "Dodržovat trading plán bez výjimek",
     ]
 
     const aiFocusAreas = [
       data.avgSleep && data.avgSleep < 7 ? "Spánek 7+ hodin každou noc" : "Udržet kvalitní spánek",
-      "Morning Check každý obchodní den",
+      "Ranní Kontrola každý obchodní den",
       data.revengeIncidents > 0 ? "Eliminovat revenge trading" : "Pokračovat v emoční disciplíně",
     ]
 
@@ -304,7 +304,7 @@ export default function WeeklyReviewPage() {
       data.winRate > 50
         ? "Strategie funguje - neměnit základní pravidla."
         : "Přehodnotit entry kritéria a snížit frekvenci tradů."
-    } ${data.avgReadiness < 70 ? "Přidat pravidlo: Žádný trading pod 65% readiness." : ""} ${
+    } ${data.avgReadiness < 70 ? "Přidat pravidlo: Žádný trading pod 65% připraveností." : ""} ${
       data.revengeIncidents > 0 ? "Implementovat: Po ztrátě pauza a journaling před dalším tradem." : ""
     }`
 
@@ -419,17 +419,17 @@ export default function WeeklyReviewPage() {
     const aiInsights = [
       {
         type: "success",
-        title: "London Session = Profit Zone",
+        title: "Londýnská Relace = Zisková Zóna",
         description:
           "Trady během London session měly 100% win rate s průměrným ziskem +140 pips. Pondělí a středa byly tvoje nejlepší dny.",
         action:
-          "FOCUS: Prioritizuj London session (8:00-12:00). Tvoje strategie tam funguje perfektně. Vyhni se Asian session.",
+          "ZAMĚŘENÍ: Prioritizuj Londýnskou relaci (8:00-12:00). Tvoje strategie tam funguje perfektně. Vyhni se Asijské relaci.",
       },
       {
         type: "critical",
-        title: "Nedostatek spánku = Revenge Trading",
+        title: "Nedostatek spánku = Pomstový Trading",
         description:
-          "Ve čtvrtek jsi spal pouze 5.8h a následně udělal 5 tradů s -120 pips ztrátou. Readiness byla 55% - pod kritickou hranicí.",
+          "Ve čtvrtek jsi spal pouze 5.8h a následně udělal 5 tradů s -120 pips ztrátou. Připravenost byla 55% - pod kritickou hranicí.",
         action:
           "PRAVIDLO: Neobchoduj pod 65% readiness. Čtvrtek byl jasný příklad proč. Nastav alarm pokud readiness < 65%.",
       },
@@ -450,7 +450,7 @@ export default function WeeklyReviewPage() {
       },
       {
         type: "warning",
-        title: "Asian Session není tvoje",
+        title: "Asijská Relace není tvoje",
         description:
           "Jediný trade během Asian session (čtvrtek) skončil -120 pips ztrátou. Nízká volatilita + únava = špatná kombinace.",
         action: "BLACKLIST: Asian session (22:00-6:00) je pro tebe zakázaná. Drž se London a NY.",
