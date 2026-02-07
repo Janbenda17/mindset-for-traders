@@ -98,18 +98,18 @@ const translations = {
 
     // Dashboard Stats
     "stats.successNotifications": "Notifikace úspěchu",
-    "stats.avgCommunityMood": "Průměr. Community Mood",
+    "stats.avgCommunityMood": "Průměrná nálada komunity",
     "stats.positive": "Pozitivní",
     "stats.avgSuccessRate": "Průměr. Úspěšnost",
-    "stats.communityShowingImprovement": "Komunita se Zlepšuje",
+    "stats.communityShowingImprovement": "Zlepšování komunity",
     "stats.thisWeek": "Tento týden",
     "stats.feelingFrustrated": "Cítí se frustrací",
     "stats.dueToLosses": "Z důvodu ztrát",
     "stats.aiRecommendation": "AI Doporučení",
-    "stats.aiPoweredStudyBuddyMatching": "AI-Powered Párování Study Buddies",
+    "stats.aiPoweredStudyBuddyMatching": "AI párování Study Buddies",
 
     // User Profile
-    "profile.streak": "Streak",
+    "profile.streak": "Série",
     "profile.days": "dní",
     "profile.timezone": "Časové pásmo",
     "profile.tradingHours": "Obchodní hodiny",
