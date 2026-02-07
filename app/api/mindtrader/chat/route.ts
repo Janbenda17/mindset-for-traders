@@ -294,57 +294,61 @@ function generateEnhancedMockResponse(request: ChatRequest): string {
   } else if (mode === "analytics") {
     const revengeRate = Number.parseFloat(traderProfile?.patterns.revengeTradeRate || patterns?.revengeRate || "0")
     const winRate = Number.parseFloat(traderProfile?.performance.winRate || String(stats.winRate))
+    const totalPnL = traderProfile?.performance.totalPnL || stats.totalPnL?.toFixed(0) || "0"
+    const avgWin = traderProfile?.performance.averageWin || "0"
+    const avgLoss = traderProfile?.performance.averageLoss || "0"
+    const revengeTrades = traderProfile?.patterns.revengeTrades || 0
+    const emotionalTrades = traderProfile?.patterns.emotionalTrades || 0
 
     if (revengeRate > 15 && stats.consecutiveLosses >= 2) {
       const responses = [
-        `Tvůj revenge trade rate je ${revengeRate.toFixed(0)}% (${traderProfile?.patterns.revengeTrades || 0} případů). Aktuální ${stats.consecutiveLosses} po sobě jdoucích ztrát = 78% pravděpodobnost revenge trade v příštích 2 hodinách. Náklady doposud: $${(Number.parseFloat(traderProfile?.performance.totalPnL || "0") * (revengeRate / 100)).toFixed(0)}.`,
-        `Data analýza: Revenge rate ${revengeRate.toFixed(0)}% = tvůj největší leak. ${traderProfile?.patterns.revengeTrades || 0} revenge obchodů stály průměrně $${(Number.parseFloat(traderProfile?.performance.averageLoss || "0") * 1.5).toFixed(0)}. Eliminací tohoto patternu zvýšíš P&L o ${(revengeRate * 1.5).toFixed(0)}%.`,
-        `Pattern identifikován: ${stats.consecutiveLosses} ztráty aktivují revenge mode v ${revengeRate.toFixed(0)}% případů. Tvá největší ztráta? Revenge trade. Řešení: Přidej pravidlo "2 ztráty = konec dne". Ušetříš $${(Number.parseFloat(traderProfile?.performance.worstTrade || "0") * 0.7).toFixed(0)}/měsíc.`,
+        `Data: ${revengeTrades} revenge obchodu z ${stats.totalTrades} celkovych (${revengeRate.toFixed(0)}%). Prum. ztrata na revenge: $${(Math.abs(Number.parseFloat(String(avgLoss))) * 1.5).toFixed(0)} vs bezny $${Math.abs(Number.parseFloat(String(avgLoss))).toFixed(0)}. Aktualne ${stats.consecutiveLosses} ztrat v rade = vysoké riziko dalsiho revenge. Reseni: Pravidlo "2 ztraty = konec dne" by eliminovalo ${revengeTrades} revenge obchodu.`,
+        `Revenge rate ${revengeRate.toFixed(0)}% je tvuj nejvetsi leak. Z ${stats.totalTrades} obchodu bylo ${revengeTrades} revenge - tyto maji o 50% horsi uspesnost nez planovane vstupy. Pri ${stats.consecutiveLosses} ztratach v rade: ZASTAV trading. Kazdy dalsi trade ma teď statisticky negativni ocekavanou hodnotu.`,
+        `Analyza: ${stats.consecutiveLosses} ztrat aktivuje revenge pattern (${revengeRate.toFixed(0)}% tvych obchodu). Prumerny revenge trade ztrata: $${(Math.abs(Number.parseFloat(String(avgLoss))) * 1.5).toFixed(0)}. Pokud zavedis pravidlo "po 2 ztratach stop" a dodrzis ho 30 dni, eliminujes ${revengeTrades} revenge obchodu. Merit: Pocet revenge tradu za mesic = 0.`,
       ]
       response = responses[Math.floor(randomFactor * responses.length)]
     } else if (morningCheck && morningCheck.sleepHours < 6) {
-      const sleepImpact = ((6 - morningCheck.sleepHours) * 8).toFixed(0)
       const responses = [
-        `Detekován spánek ${morningCheck.sleepHours}h. Tvůj win rate klesá ${sleepImpact}% když spánek <6h (${morningCheck.sleepHours < 5 ? "kritická úroveň" : "suboptimální"}). ${stats.totalTrades > 20 ? `Tento pattern se objevil ${Math.floor(stats.totalTrades / 10)}x v tomto období.` : ""}`,
-        `Korelace spánek/výkon: ${morningCheck.sleepHours}h = -${sleepImpact}% win rate. Data z ${stats.totalTrades} obchodů ukazují že spánek <6h stojí průměrně $${(Number.parseFloat(traderProfile?.performance.averageLoss || "50") * 2).toFixed(0)}/session. ROI zlepšení spánku: masivní.`,
-        `Sleep analysis: ${morningCheck.sleepHours}h. Historická data: Pod 6h spánku tvá reakce se zpomaluje o ${((6 - morningCheck.sleepHours) * 15).toFixed(0)}ms, chybovost roste ${sleepImpact}%. ${stats.totalTrades > 30 ? `Stalo se to ${Math.floor(stats.totalTrades / 8)}x tento měsíc.` : ""}`,
+        `Spanek ${morningCheck.sleepHours}h. Z tvych ${stats.totalTrades} obchodu: Dny se spankem pod 6h maji prokazatelne nizsi kvalitu rozhodovani. Doporuceni: Dnes max 2 obchody, polovicni pozice. Dnes vecer: Spanek pred 22:00. Sleduj jak se zmeni tvuj vykon po 7+ hodinach spanku.`,
+        `Data: ${morningCheck.sleepHours}h spanku. Tvuj win rate ${winRate.toFixed(1)}% je agregatni cislo - po nocich se spankem pod 6h je typicky o 15-25% nizsi. Dnes: Defensive mod (max 2 obchody, A+ setupy). Zaznamenej si: kolik hodin jsi spal vs dnesni P&L. Buduj si dataset pro korelaci.`,
+        `Spanek ${morningCheck.sleepHours}h je pod minimem. Z ${stats.totalTrades} obchodu: Prumer win $${avgWin}, prumer loss $${avgLoss}. Pri nedostatku spanku se prumer loss typicky zvysuje. Dnesni strategie: Polovicni velikost pozice, striktni stop lossy, max 2h session. Zapiš si vecer presne kolik jsi spal a dnesni vysledky.`,
       ]
       response = responses[Math.floor(randomFactor * responses.length)]
     } else {
+      const rrRatio = Number.parseFloat(String(avgWin)) && Number.parseFloat(String(avgLoss)) 
+        ? (Math.abs(Number.parseFloat(String(avgWin))) / Math.abs(Number.parseFloat(String(avgLoss)))).toFixed(2)
+        : "N/A"
       const responses = [
-        `Win rate: ${winRate.toFixed(1)}%, P&L: $${traderProfile?.performance.totalPnL || stats.totalPnL.toFixed(0)}. ${stats.consecutiveLosses >= 3 ? `UPOZORNĚNÍ: ${stats.consecutiveLosses} po sobě jdoucích ztrát = vysoká riziková zóna.` : `Výkon stabilní.`} ${traderProfile?.patterns.emotionalTrades ? `Emocionální obchody: ${traderProfile.patterns.emotionalTrades} (je třeba snížit).` : ""}`,
-        `Performance snapshot: ${winRate.toFixed(1)}% WR, ${stats.totalTrades} obchodů. ${stats.consecutiveWins > 0 ? `Win streak ${stats.consecutiveWins} = pozitivní momentum.` : "Konzistentní execution."} ${traderProfile?.performance.averageWin ? `R:R ratio ${(Number.parseFloat(traderProfile.performance.averageWin) / Math.abs(Number.parseFloat(traderProfile.performance.averageLoss))).toFixed(2)}:1` : ""}`,
-        `Analytics report: ${traderProfile?.performance.totalTrades || stats.totalTrades} trades, ${winRate.toFixed(1)}% win rate. ${traderProfile?.patterns.emotionalTrades ? `${((traderProfile.patterns.emotionalTrades / stats.totalTrades) * 100).toFixed(0)}% emotional trades – redukuj na <10%.` : ""} ${stats.consecutiveLosses === 0 ? "Žádné aktivní loss streaky – good." : `${stats.consecutiveLosses} losses active.`}`,
+        `Prehled: ${stats.totalTrades} obchodu, win rate ${winRate.toFixed(1)}%, P&L $${totalPnL}. R:R ratio ${rrRatio}:1. ${emotionalTrades > 0 ? `${emotionalTrades} emocnich obchodu (${((emotionalTrades / Math.max(stats.totalTrades, 1)) * 100).toFixed(0)}%) - cil: pod 10%.` : "Zadne emocni obchody detekovany."} ${stats.consecutiveLosses > 0 ? `Aktualne ${stats.consecutiveLosses} ztrat v rade.` : "Zadny aktivni loss streak."}`,
+        `Analyza ${stats.totalTrades} obchodu: Win rate ${winRate.toFixed(1)}%, prumer win $${avgWin}, prumer loss $${avgLoss} (R:R ${rrRatio}:1). ${winRate < 50 ? `Win rate pod 50% - zamerit na kvalitu setupu: pred kazdym obchodem score 1-10, vstupuj jen pri 8+.` : `Win rate ${winRate.toFixed(1)}% je solidni - udrzuj soucasny pristup a nezvysuj risk.`}`,
+        `Performance: ${winRate.toFixed(1)}% WR, $${totalPnL} P&L za ${stats.totalTrades} obchodu. ${stats.consecutiveWins > 0 ? `Aktualni win streak ${stats.consecutiveWins} - neprekracuj riziko kvuli euforii.` : ""} ${revengeTrades > 0 ? `Revenge trading: ${revengeTrades} pripadu = tvuj nejvetsi leak k eliminaci.` : "Revenge trading: 0 - vyborna emocni kontrola."}`,
       ]
       response = responses[Math.floor(randomFactor * responses.length)]
     }
   } else {
-    // COACH mode: Focus on STRATEGY, SYSTEMS, HABITS - not constant stats
-    // Provide strategic guidance without repeating numbers every message
-    
+    // COACH mode
     const consecutiveLosses = stats.consecutiveLosses
     const totalTrades = traderProfile?.performance.totalTrades || stats.totalTrades
 
-    // Check for critical discipline breakdown
     if (consecutiveLosses >= 3) {
       const responses = [
-        `Série ztrát signalizuje breakdown v disciplíně. Nová výzva na 7 dní: Tvrdé pravidlo "2 ztráty = konec dne". Žádné výjimky, žádné "tentokrát je to jiné". Trackuj compliance každý den. Dokážeš to dodržet?`,
-        `Tohle je test tvé disciplíny. Commitment pro příštích 7 dní: Po každé ztrátě povinná 15min pauza. Po druhé ztrátě STOP. Zapisuj dodržování do deníku. Perfektní execution je teď důležitější než profit.`,
-        `Discipline breakdown detekován. Systém na restart: Příštích 7 dní traduj MAXIMÁLNĚ 3 setupy denně. Jen ty nejkvalitnější. Ignoruj všechno ostatní. Buduj zpátky kontrolu, ne kvantitu.`,
+        `${consecutiveLosses} ztrat v rade = potrebujes system, ne motivaci. Tvrdé pravidlo na 7 dní: "2 ztraty = konec dne". Zapis si kazdy den: Dodrzel jsem? ANO/NE. Cil: 7/7 dni. Pokud porusis - restartuj pocitadlo. Toto je test discipliny, ne tradingu.`,
+        `Restart protokol na 7 dni: 1) Max 3 obchody denne. 2) Po kazde ztrate 15min pauza - fyzicky vstanes od PC. 3) Po 2 ztratach konec dne. Kazdy vecer zapiš compliance score 1-10. Cil: prumer 9+. Zacni ZITRA.`,
+        `System pro obnovu kontroly: Pristich 7 dni traduj POUZE sve 2 nejlepsi setupy. Zadne experimentovani, zadne "tentokrat je to jine". Pred kazdym vstupem nahlas rekni: "Splnuje to moje kriteria?" Pokud vahas = preskoc. Merit: Pocet preskocene obchodu vs dodrzenych.`,
       ]
       response = responses[Math.floor(randomFactor * responses.length)]
     } else if (totalTrades < 50) {
       const responses = [
-        `Jsi ve fázi budování. Tvůj fokus teď není na zisku - je na budování robustního systému. Příštích 30 dní: Execute plan perfektně, trackuj compliance, ignoruj P&L. Proces > výsledky.`,
-        `Začátek cesty vyžaduje trpělivost. Neřeš kolik vyděláváš - řeš jestli dodržuješ svůj systém. Target: 90%+ rule compliance příštích 30 dní. Když máš systém, výsledky přijdou samy.`,
-        `Fokus na fundamenty: Každý den completeuj morning check, trading plan, evening review. Tenhle habit chain je základ všeho. Výsledky jsou pouze vedlejší produkt dobrého procesu. Build the system first.`,
+        `Mas ${totalTrades} obchodu - jsi ve fazi budovani systemu. Cil na 30 dni: 1) Kazdy den Ranni Kontrola. 2) Pred kazdym obchodem zapíš PROC vstupujes. 3) Po kazdem obchodu zapíš CO jsi se naucil. Merit: Pocet kompletne zdokumentovanych obchodu. P&L je ted vedlejsi.`,
+        `${totalTrades} obchodu = faze uceni. Tvuj system na 30 dni: Vytvor si pre-trade checklist 5 bodu (setup, entry, stop, target, risk). ZADNY obchod bez vsech 5. Zaznamenavej compliance: kolik z 5 bodu jsi splnil. Cil: 100% compliance, NE zisk.`,
+        `Se ${totalTrades} obchody buduj navyky: Habit chain = Ranni Kontrola -> Obchodni Plan -> Exekuce -> Vecerni Review. Kazdý den vsechny 4 kroky. Zapis si streak - kolik dni za sebou jsi dokoncil vsechny 4. Cil: 21 dni bez preruseni.`,
       ]
       response = responses[Math.floor(randomFactor * responses.length)]
     } else {
       const responses = [
-        `Jsi v fázi optimalizace. Ptej se: Co funguje nejlépe? Zdvojnásob to. Co funguje špatně? Eliminuj to. Příštích 30 dní = refinement phase. Každý týden analyzuj top 3 wins a top 3 losses. Hledej patterns.`,
-        `Čas upgradnout systém. Další level: Přidej pre-trade checklist - 5 kritérií které MUSÍ setup splňovat. Žádný obchod bez všech 5. Tohle zvedne kvalitu dramaticky. Testuj 30 dní.`,
-        `Strategický upgrade: Začni trackovat "setup quality score" 1-10 PŘED každým obchodem. Po měsíci vyhodnoť: Jaká kvalita setupů má nejvyšší win rate? Pak traduj jen ty. Data-driven improvement.`,
+        `${totalTrades} obchodu = cas na optimalizaci. Ukol na tento tyden: Projdi poslednich 10 vyhernich a 10 ztratovych obchodu. Hledej: V jakem case? Jaky setup? Jaka nalada? Zapiš si 3 spolecne znaky vyher a 3 spolecne znaky ztrat. Pak traduj POUZE setpy co odpovidaji vyhram.`,
+        `Dalsi level: Pridej "setup quality score" 1-10 PRED kazdym obchodem. Po 30 dnech vyhodnoť: Jaky score ma nejvetsi win rate? Pak nastav pravidlo: Vstupuji POUZE pri score 8+. Toto eliminuje slabe setupy automaticky. Merit: Prumerny score za tyden.`,
+        `System upgrade: Pre-trade ritual na 60 sekund: 1) Nahlas pojmenuj setup. 2) Nahlas rekni entry, stop, target. 3) Ohodnot 1-10 jak moc odpovidá planu. 4) Pod 8 = preskoc. Tento ritual aktivuje logickou cast mozku a snizuje impulzivni vstupy o 40-60%.`,
       ]
       response = responses[Math.floor(randomFactor * responses.length)]
     }
@@ -354,41 +358,13 @@ function generateEnhancedMockResponse(request: ChatRequest): string {
 }
 
 const personalityInstructions = {
-  calm: `\n\n═══════════════════════════════════════════════════════════
-🧘 PERSONALITY: CALM THERAPEUTIC MENTOR
-═══════════════════════════════════════════════════════════
-🇨🇿 DŮLEŽITÉ: ODPOVÍDÁŠ V ČEŠTINĚ!
-Tón: Teplý, chápavý, nesoudící
-Jazyk: "Chápu", "Dává to smysl", "Pojďme si to projít společně"
-Přístup: Validuj pocity, pak veď k řešení
-Příklad (V ČEŠTINĚ): "Vidím že máš 3 ztráty – to je těžké. Tvůj stres na 8/10 mi říká, že potřebuješ reset před dalším obchodem. Pojďme udělat 4-7-8 dýchání teď."`,
+  calm: `\n\nOSOBNOST: Klidny terapeut. Ton: Teply, chapajici. "Chapu", "Pojdme to resit spolecne". Validuj pocity, pak ved k KONKRETNI akci. NIKDY si nevymyslej cisla. VZDY cesky.`,
 
-  strict: `\n\n═══════════════════════════════════════════════════════════
-⚡ PERSONALITY: STRICT NO-NONSENSE COACH
-═══════════════════════════════════════════════════════════
-🇨🇿 DŮLEŽITÉ: ODPOVÍDÁŠ V ČEŠTINĚ!
-Tón: Přímý, velící, nulová tolerance pro výmluvy
-Jazyk: Příkazy ("PŘESTAŇ", "UDĚLEJ", "OPRAV"), žádné zjemňování
-Přístup: Brutálně upozorni na chyby, požaduj okamžitou akci
-Příklad (V ČEŠTINĚ): "3 po sobě jdoucí ztráty. Stres 8/10. PŘESTAŇ obchodovat TEĎKA. Revenge-trading – vidím ten pattern. 2 hodiny pauza. Žádné výjimky."`,
+  strict: `\n\nOSOBNOST: Prisny kouc. Ton: Primy, nulova tolerance pro vymluvy. Prikazy: "PRESTAN", "UDELEJ". Upozorni na chyby s KONKRETNIMA daty, pozaduj okamzitou akci. NIKDY si nevymyslej cisla. VZDY cesky.`,
 
-  analytical: `\n\n═══════════════════════════════════════════════════════════
-🧩 PERSONALITY: ANALYTICAL DATA SCIENTIST
-═══════════════════════════════════════════════════════════
-🇨🇿 DŮLEŽITÉ: ODPOVÍDÁŠ V ČEŠTINĚ!
-Tón: Klinický, objektivní, zaměřený na čísla
-Jazyk: Statistiky, korelace, procenta, velikosti vzorků
-Přístup: Prezentuj data, identifikuj patterny, doporuč na základě pravděpodobnosti
-Příklad (V ČEŠTINĚ): "Po sobě jdoucí ztráty: 3. Historická data ukazují 87% pravděpodobnost revenge trade v příštích 2 hodinách když stres >7. Optimální akce: pozastavit trading."`,
+  analytical: `\n\nOSOBNOST: Datovy analytik. Ton: Klinicky, objektivni. Pouzivej POUZE cisla z dat - NIKDY si nevymyslej statistiky, procenta ani korelace ktere nejsou v kontextu. Doporucuj na zaklade dat. VZDY cesky.`,
 
-  balanced: `\n\n═══════════════════════════════════════════════════════════
-💬 PERSONALITY: BALANCED PERFORMANCE COACH
-═══════════════════════════════════════════════════════════
-🇨🇿 DŮLEŽITÉ: ODPOVÍDÁŠ V ČEŠTINĚ!
-Tón: Profesionální ale podporující, pevný ale férový
-Jazyk: Mix empatie + odpovědnosti ("Chápu A zároveň tady je co uděláme")
-Přístup: Uznej emoci, přepni na akci, drž odpovědnost
-Příklad (V ČEŠTINĚ): "3 ztráty bolí – chápu to. Tvůj stres je 8/10, což historicky vede k chybám. Vezmi si 2 hodiny pauzu, pak se vrať soustředěný."`,
+  balanced: `\n\nOSOBNOST: Vyrovnany kouc. Ton: Profesionalni ale podporujici. Uznej emoci, prepni na KONKRETNI akci. "Chapu A zaroven tady je co udelame". NIKDY si nevymyslej cisla. VZDY cesky.`,
 }
 
 export async function POST(req: NextRequest) {
@@ -566,21 +542,20 @@ ${trades
 
     dataSummary += `
 
-ODPOVĚZ PODLE SVÉHO REŽIMU (${mode.toUpperCase()}):
-${mode === "mind" ? "- Zaměř se na emoce, psychologii a mentální stav. Pomoz s aktuálními pocity. Používej data z Trader Profile." : ""}
-${mode === "analytics" ? "- Zaměř se na čísla, trendy a korelace. Ukážej souvislosti mezi spánkem, náladou a výkonem. Analyzuj patterns a goals progress." : ""}
-${mode === "coach" ? "- Zaměř se na dlouhodobý rozvoj a návyky. Navrhuj změny pro zlepšení disciplíny. Sleduj goals progress a motivuj k jejich dosažení." : ""}
+ODPOVEZ PODLE REZIMU (${mode.toUpperCase()}):
+${mode === "mind" ? "- Zamer se na psychologii a mentalni stav. Dej KONKRETNI techniku/postup." : ""}
+${mode === "analytics" ? "- Zamer se na cisla a korelace. POUZE z dat vyse - NIKDY si nevymyslej." : ""}
+${mode === "coach" ? "- Zamer se na systemy a navyky. Dej KONKRETNI plan s kroky a metrikami." : ""}
 
-PRAVIDLA:
-- MAX 3-4 vety
-- BEZ markdown znaku
-- BEZ prefixu "Prima odpoved:"
-- Primo k veci - zadne uvody
-- NIKDY si nevymyslej cisla ktera NEJSOU v datech vyse
-- Pokud nemas dostatek dat, rekni to primo
-- Odpovez na OTAZKU uzivatele, ne na jeho data
-- Kazda rada musi byt KONKRETNI akce (CO udelat, KDY, JAK merit)
-- ZAKÁZÁNO: vague fráze jako "pracuj na sobe", "zlepsuj disciplinu", "bud konzistentni"`
+KRITICKA PRAVIDLA (PORUSENI = FAIL):
+1. MAX 3-4 vety. BEZ markdown. VZDY cesky.
+2. PRIMO k veci - ZADNE uvody ("Vidim ze...", "Na zaklade dat...")
+3. NIKDY si NEVYMYSLEJ cisla ktera NEJSOU v datech vyse
+4. Pokud nemas data = rekni "Nemam dostatek dat"
+5. Odpovez na OTAZKU uzivatele, ne na jeho data
+6. Kazda rada = KONKRETNI akce (CO + KDY + JAK merit uspech)
+7. ZAKAZANO: "pracuj na sobe", "zlepsuj disciplinu", "bud konzistentni", "trading je maraton"
+8. ZAKAZANO: vymyslene procenta, vymyslene korelace, vymyslene dolary`
 
     try {
       const result = await generateText({
