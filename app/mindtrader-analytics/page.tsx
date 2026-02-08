@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
+import { useAuth } from "@/contexts/auth-context"
+import { getScoped } from "@/lib/storage"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -339,28 +341,32 @@ function generateMindTraderAnalytics(timeframe: "week" | "month" | "quarter") {
   }
 }
 
-const getReadinessFromStorage = () => {
-  const entries = JSON.parse(localStorage.getItem("daily-tracker-entries") || "[]")
+const getReadinessFromStorage = (userId: string | null) => {
+  if (!userId) return 0
+  const entries = getScoped("virtual", userId, "daily-tracker-entries", [])
   const today = new Date().toISOString().split("T")[0]
   const todayEntry = entries.find((e: any) => e.date === today)
   return todayEntry?.morningCheck?.score || 0
 }
 
 export default function MindTraderAnalyticsPage() {
+  const { user } = useAuth()
   const [timeframe, setTimeframe] = useState<"week" | "month" | "quarter">("month")
   const [loading, setLoading] = useState(true)
   const [readinessScore, setReadinessScore] = useState(0)
 
   useEffect(() => {
     // Get readiness from daily tracker entries
-    const entries = JSON.parse(localStorage.getItem("daily-tracker-entries") || "[]")
-    const today = new Date().toISOString().split("T")[0]
-    const todayEntry = entries.find((e: any) => e.date === today)
-    if (todayEntry?.morningCheck?.score) {
-      setReadinessScore(todayEntry.morningCheck.score)
+    if (user?.id) {
+      const entries = getScoped("virtual", user.id, "daily-tracker-entries", [])
+      const today = new Date().toISOString().split("T")[0]
+      const todayEntry = entries.find((e: any) => e.date === today)
+      if (todayEntry?.morningCheck?.score) {
+        setReadinessScore(todayEntry.morningCheck.score)
+      }
     }
     setTimeout(() => setLoading(false), 500)
-  }, [])
+  }, [user])
 
   const analytics = useMemo(() => generateMindTraderAnalytics(timeframe), [timeframe])
 
