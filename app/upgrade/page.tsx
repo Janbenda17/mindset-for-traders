@@ -95,6 +95,10 @@ export default function UpgradePage() {
               <ul className="space-y-3">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
+                  Demo mode - virtuální data
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
                   Základní obchodní deník
                 </li>
                 <li className="flex items-center gap-2">
