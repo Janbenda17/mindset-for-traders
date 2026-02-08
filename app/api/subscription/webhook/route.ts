@@ -144,6 +144,12 @@ async function handleCheckoutCompleted(
     updateData.subscription_current_period_end = periodEnd
   }
 
+  // IMPORTANTE: When premium is active, switch to live mode automatically
+  if (isPremium) {
+    updateData.trading_mode = "live"
+    console.log("[WEBHOOK]    🟢 Premium activated - switching trading_mode to LIVE")
+  }
+
   console.log("[WEBHOOK]    Updating profile by email:", email)
   console.log("[WEBHOOK]    Update data:", JSON.stringify(updateData))
 
@@ -158,7 +164,7 @@ async function handleCheckoutCompleted(
     console.error("[WEBHOOK]    Full error:", JSON.stringify(error))
   } else if (data && data.length > 0) {
     console.log("[WEBHOOK]    ✓ Profile updated successfully")
-    console.log("[WEBHOOK]    Updated profile user_id:", data[0].user_id, "is_premium:", data[0].is_premium)
+    console.log("[WEBHOOK]    Updated profile user_id:", data[0].user_id, "is_premium:", data[0].is_premium, "trading_mode:", data[0].trading_mode)
   } else {
     console.error("[WEBHOOK]    ERROR: No profile found with email:", email)
   }
@@ -197,22 +203,30 @@ async function handleSubscription(
 
   console.log("[WEBHOOK]    Updating user_id:", profile.user_id, "isPremium:", isPremium)
 
+  const updateData: Record<string, unknown> = {
+    subscription_status: subscription.status,
+    subscription_tier: isPremium ? "premium" : "free",
+    subscription_current_period_end: periodEnd,
+    stripe_subscription_id: subscription.id,
+    is_premium: isPremium,
+  }
+
+  // Switch to live mode when subscription is active
+  if (isPremium) {
+    updateData.trading_mode = "live"
+    console.log("[WEBHOOK]    🟢 Subscription active - switching trading_mode to LIVE")
+  }
+
   const { data, error } = await supabase
     .from("profiles")
-    .update({
-      subscription_status: subscription.status,
-      subscription_tier: isPremium ? "premium" : "free",
-      subscription_current_period_end: periodEnd,
-      stripe_subscription_id: subscription.id,
-      is_premium: isPremium,
-    })
+    .update(updateData)
     .eq("user_id", profile.user_id)
     .select()
 
   if (error) {
     console.error("[WEBHOOK]    ERROR:", error.message)
   } else if (data && data.length > 0) {
-    console.log("[WEBHOOK]    ✓ Subscription updated, is_premium:", data[0].is_premium)
+    console.log("[WEBHOOK]    ✓ Subscription updated, is_premium:", data[0].is_premium, "trading_mode:", data[0].trading_mode)
   }
 }
 
@@ -288,13 +302,14 @@ async function handleInvoicePaid(
       subscription_status: "active",
       subscription_tier: "premium",
       is_premium: true,
+      trading_mode: "live",  // Switch to live when invoice is paid
     })
     .eq("user_id", profile.user_id)
 
   if (error) {
     console.error("[WEBHOOK]    ERROR:", error.message)
   } else {
-    console.log("[WEBHOOK]    ✓ Premium confirmed")
+    console.log("[WEBHOOK]    ✓ Premium confirmed, trading_mode set to LIVE")
   }
 }
 
