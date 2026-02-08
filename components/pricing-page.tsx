@@ -180,23 +180,22 @@ export function PricingPage() {
 
   const features = {
     free: [
-      "Pouze Virtuální Režim",
-      "Průzkum rozhraní a funkcí",
-      "Základní deník (Virtuální data)",
-      "Základní mood tracking",
-      "Komunitní přístup",
+      "Omezeno na 10 záznamů/měsíc",
+      "Virtuální režim - žádné reálné obchody",
+      "Základní obchodní deník",
+      "Jednoduché analýzy",
+      "Mood tracking",
     ],
     premium: [
       "14 dní zdarma - bez placení",
-      "Přepnutí do Live Režimu",
-      "Reálné statistiky a trading",
-      "Pokročilé analytics & grafy",
-      "AI MindTrader kouč (Neomezeně)",
-      "Detailní trading deník s fotkami",
-      "Export dat (CSV, PDF)",
-      "Hloubkové emocionální analýzy",
-      "Prioritní podpora 24/7",
-      "Team Club premium funkce",
+      "Neomezený obchodní deník",
+      "Všechny pokročilé funkce",
+      "Pokročilé analýzy a reporty",
+      "MindTrader AI Pro",
+      "Export dat a reportů",
+      "Prioritní zákaznická podpora",
+      "Pokročilé psychologické metriky",
+      "Risk management nástroje",
     ],
   }
 
@@ -292,11 +291,9 @@ export function PricingPage() {
             <CardHeader className="pb-8">
               <div className="flex items-center justify-between mb-4">
                 <CardTitle className="text-2xl font-bold">Starter</CardTitle>
-                {plan === "free" && !isActive && (
-                  <Badge variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                    Aktuální plán
-                  </Badge>
-                )}
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                  Virtual verze
+                </Badge>
               </div>
               <CardDescription className="text-base">
                 Virtuální režim pro seznámení s platformou bez rizika.
