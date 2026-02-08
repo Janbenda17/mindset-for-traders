@@ -175,20 +175,20 @@ export function PricingPage() {
 
   const features = {
     free: [
+      "Demo mode - virtuální data",
       "Omezeno na 10 záznamů/měsíc",
-      "Virtuální režim - žádné reálné obchody",
       "Základní obchodní deník",
       "Jednoduché analýzy",
       "Mood tracking",
     ],
     premium: [
       "14 dní zdarma - bez placení",
+      "Všechny funkce na svých datech",
+      "Možnost přepnout na Live Mode",
       "Neomezený obchodní deník",
-      "Všechny pokročilé funkce",
       "Pokročilé analýzy a reporty",
       "MindTrader AI Pro",
       "Export dat a reportů",
-      "Prioritní zákaznická podpora",
       "Pokročilé psychologické metriky",
       "Risk management nástroje",
     ],
@@ -291,7 +291,7 @@ export function PricingPage() {
                 </Badge>
               </div>
               <CardDescription className="text-base">
-                Virtuální režim pro seznámení s platformou bez rizika.
+                Demo mode s virtuálními daty pro seznámení s platformou bez rizika.
               </CardDescription>
               <div className="mt-6 flex items-baseline">
                 <span className="text-5xl font-extrabold tracking-tight">0 Kč</span>
@@ -347,7 +347,7 @@ export function PricingPage() {
                 )}
               </div>
               <CardDescription className="text-base">
-                Odemkněte Live Režim a začněte budovat reálnou kariéru.
+                Všechny funkce na svých datech s možností přepnout na Live Mode.
               </CardDescription>
               <div className="mt-6 flex items-baseline gap-2">
                 <span className="text-sm font-medium text-gray-500 line-through">2499 Kč</span>
