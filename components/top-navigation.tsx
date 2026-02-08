@@ -39,6 +39,8 @@ import {
 import LiveModeToggle from "@/components/live-mode-toggle"
 import { supabase } from "@/lib/supabase/client"
 import { useSubscription } from "@/contexts/subscription-context"
+import { useAuth } from "@/contexts/auth-context"
+import { useLiveMode } from "@/contexts/live-mode-context"
 
 interface TopNavigationProps {
   initialTheme?: string
