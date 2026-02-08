@@ -70,14 +70,14 @@ export default function UpgradePage() {
           </h1>
           <p className="text-xl text-gray-600 mb-8">Odemkněte pokročilé funkce pro profesionální trading</p>
 
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-6 mb-8">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Zap className="h-6 w-6" />
-              <span className="text-2xl font-bold">Speciální nabídka!</span>
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-6 mb-8">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Zap className="h-6 w-6" />
+                <span className="text-2xl font-bold">Speciální nabídka!</span>
+              </div>
+              <p className="text-lg">14 dní zdarma, poté 1499 Kč/měsíc</p>
+              <p className="text-sm opacity-90 mt-1">Zrušte kdykoli během trialu bez poplatků</p>
             </div>
-            <p className="text-lg">14 dní zdarma, poté €59/měsíc</p>
-            <p className="text-sm opacity-90 mt-1">Zrušte kdykoli během trialu bez poplatků</p>
-          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 mb-12">
@@ -88,8 +88,8 @@ export default function UpgradePage() {
                 <FileText className="h-5 w-5" />
                 Free
               </CardTitle>
-              <div className="text-3xl font-bold">€0</div>
-              <p className="text-gray-600">Základní funkce</p>
+              <div className="text-3xl font-bold">0 Kč</div>
+              <p className="text-gray-600">Virtual verze</p>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
@@ -125,10 +125,17 @@ export default function UpgradePage() {
                 <Crown className="h-5 w-5 text-yellow-600" />
                 Premium
               </CardTitle>
-              <div className="text-3xl font-bold">
-                €59<span className="text-lg text-gray-600">/měsíc</span>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="text-sm font-medium text-gray-500 line-through">2499 Kč</span>
+                <span className="text-5xl font-extrabold tracking-tight text-blue-600">
+                  1499 Kč
+                </span>
+                <span className="text-gray-500 text-lg">/měsíc</span>
+                <Badge className="ml-auto bg-red-100 text-red-700">
+                  Ušetříte 1000 Kč
+                </Badge>
               </div>
-              <p className="text-gray-600">Všechny pokročilé funkce</p>
+              <p className="text-sm text-green-600 font-semibold mt-3">Sleva 40% - jen s 14-denní zdarma variantou</p>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3 mb-6">
@@ -187,7 +194,7 @@ export default function UpgradePage() {
                 </Button>
               )}
 
-              <p className="text-xs text-gray-500 text-center mt-3">Po 14 dnech €59/měsíc. Zrušte kdykoli.</p>
+              <p className="text-xs text-gray-500 text-center mt-3">Po 14 dnech 1499 Kč/měsíc. Zrušte kdykoli.</p>
             </CardContent>
           </Card>
         </div>
