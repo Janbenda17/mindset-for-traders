@@ -7,11 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { useSubscription } from "@/contexts/subscription-context"
 
 function CheckoutSuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const sessionId = searchParams.get("session_id")
+  const { checkSubscriptionStatus } = useSubscription()
   
   const [verifying, setVerifying] = useState(true)
   const [success, setSuccess] = useState(false)
@@ -34,8 +36,15 @@ function CheckoutSuccessContent() {
         console.log("[CHECKOUT] Verification response:", data)
 
         if (response.ok && data.success) {
-          setSuccess(true)
           console.log("[CHECKOUT] Payment verified successfully!")
+          
+          // Wait a moment for database update, then check subscription status
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          
+          console.log("[CHECKOUT] Checking subscription status after payment...")
+          await checkSubscriptionStatus()
+          
+          setSuccess(true)
           
           // Redirect to dashboard after 3 seconds
           setTimeout(() => {
@@ -53,7 +62,7 @@ function CheckoutSuccessContent() {
     }
 
     verifyPayment()
-  }, [sessionId, router])
+  }, [sessionId, router, checkSubscriptionStatus])
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 to-slate-800">

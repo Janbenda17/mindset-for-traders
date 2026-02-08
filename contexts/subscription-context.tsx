@@ -46,6 +46,17 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, [authReady, user])
 
+  // Also refresh subscription status periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (user) {
+        checkSubscriptionStatus()
+      }
+    }, 5000) // Check every 5 seconds
+    
+    return () => clearInterval(interval)
+  }, [user])
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedCustomerId = localStorage.getItem("stripe-customer-id")
