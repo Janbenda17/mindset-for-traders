@@ -219,8 +219,10 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
 export function useLiveMode() {
   const context = useContext(LiveModeContext)
   if (context === undefined) {
-    // Return default values during SSR/build instead of throwing
-    return { isLiveMode: false, isLoading: true, switchToLive: async () => {}, canSwitchMode: true }
+    if (typeof window === "undefined") {
+      return { isLiveMode: false, isLoading: true, switchToLive: async () => {}, canSwitchMode: true }
+    }
+    throw new Error("useLiveMode must be used within LiveModeProvider")
   }
   return context
 }
