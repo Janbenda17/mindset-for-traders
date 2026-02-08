@@ -357,14 +357,17 @@ export function PricingPage() {
               <CardDescription className="text-base">
                 Odemkněte Live Režim a začněte budovat reálnou kariéru.
               </CardDescription>
-              <div className="mt-6 flex items-baseline">
-                <span className="text-2xl text-gray-500 line-through mr-3">2499 Kč</span>
-                <span className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="text-sm font-medium text-gray-500 line-through">2499 Kč</span>
+                <span className="text-5xl font-extrabold tracking-tight text-blue-600 dark:text-blue-400">
                   1499 Kč
                 </span>
-                <span className="text-gray-500 ml-2 text-lg">/měsíc</span>
+                <span className="text-gray-500 text-lg">/měsíc</span>
+                <Badge className="ml-auto bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                  Ušetříte 1000 Kč
+                </Badge>
               </div>
-              <p className="text-sm text-green-600 font-medium mt-2">Sleva 40% z běžné ceny</p>
+              <p className="text-sm text-green-600 dark:text-green-400 font-semibold mt-3">Sleva 40% - jen s 14-denní zdarma variantou</p>
             </CardHeader>
             <CardContent className="flex-grow">
               <ul className="space-y-4">
