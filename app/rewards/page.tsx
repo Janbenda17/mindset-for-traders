@@ -1,6 +1,7 @@
 "use client"
 
-import { LevelProgress } from "@/components/level-progress"
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 import { AchievementsGrid } from "@/components/achievements-grid"
 import { ChallengesSection } from "@/components/challenges-section"
 import { useGamification } from "@/contexts/gamification-context"
@@ -39,6 +40,14 @@ export default function RewardsPage() {
 
   return (
     <div className="min-h-screen p-6 space-y-8">
+      {/* Back Button */}
+      <Link href="/bonus" className="inline-flex">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
+          <ArrowLeft className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gray-400">Zpět</span>
+        </div>
+      </Link>
+
       <div>
         <h1 className="text-4xl font-bold mb-2">Odměny & Achievementy</h1>
         <p className="text-muted-foreground">Sleduj svůj progress, odemykej odznaky a dokončuj výzvy</p>

@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 import {
   Brain,
   Target,
@@ -943,6 +945,14 @@ export default function TradingIdentityPage() {
         </div>
 
         <div className="max-w-2xl mx-auto px-4 relative z-10">
+          {/* Back Button */}
+          <Link href="/bonus" className="inline-flex mb-6">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
+              <ArrowLeft className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-400">Zpět</span>
+            </div>
+          </Link>
+
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-400">
@@ -1054,6 +1064,14 @@ export default function TradingIdentityPage() {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 relative z-10">
+          {/* Back Button */}
+          <Link href="/bonus" className="inline-flex mb-6">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
+              <ArrowLeft className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-400">Zpět</span>
+            </div>
+          </Link>
+
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
