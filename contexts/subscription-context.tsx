@@ -140,8 +140,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       console.log("[v0] Upgrade: Got checkout URL:", data.url ? "✓" : "✗")
 
       if (data.url) {
-        // Redirect to checkout
-        window.location.href = data.url
+        // Open checkout in new tab
+        window.open(data.url, "_blank")
         return true
       }
 

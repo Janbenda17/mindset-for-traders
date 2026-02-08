@@ -160,9 +160,9 @@ export function PricingPage() {
       console.log("[v0] URL starts with:", data.url?.substring(0, 50))
 
       if (data.url) {
-        console.log("[v0] Redirecting to Stripe checkout...")
-        // Open in same tab - this is the most reliable way to reach Stripe
-        window.location.href = data.url
+        console.log("[v0] Opening Stripe checkout in new tab...")
+        // Open in new tab
+        window.open(data.url, "_blank")
       } else {
         throw new Error("No checkout URL returned")
       }
