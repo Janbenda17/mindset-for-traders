@@ -91,9 +91,15 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   }
 
   const handleSwitchToLive = async () => {
-    setIsSwitchingToLive(true)
-    await switchToLive()
-    setIsSwitchingToLive(false)
+    try {
+      console.log("[v0] [TopNav] Clicking Switch to Live Mode...")
+      setIsSwitchingToLive(true)
+      await switchToLive()
+      // Note: page will reload after switchToLive, so this won't execute
+    } catch (error) {
+      console.error("[v0] [TopNav] Error switching to live:", error)
+      setIsSwitchingToLive(false)
+    }
   }
 
   const loadProfileData = async () => {

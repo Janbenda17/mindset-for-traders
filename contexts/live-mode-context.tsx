@@ -122,12 +122,49 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
   }
 
   const switchToLive = async () => {
-    if (user) {
-      // Authenticated user - switch in database
-      if (!canSwitchMode) {
-        console.error("[v0] [LiveMode] Cannot switch to live mode - already in LIVE mode (permanent)")
+    try {
+      console.log(`[v0] [LiveMode] 🔄 Starting switch to LIVE mode for user: ${user?.id}`)
+      
+      if (!user) {
+        console.log("[v0] [LiveMode] Switching to LIVE mode (demo mode)")
+        localStorage.setItem("trader-mindset-demo-mode", "live")
+        cachedModeRef.current = true
+        setIsLiveMode(true)
+        setCanSwitchMode(true)
+        modeLoadedRef.current = true
+        console.log("[v0] [LiveMode] ✓ Demo mode switched to LIVE")
         return
       }
+
+      // Update database to live mode
+      console.log(`[v0] [LiveMode] Updating database to LIVE mode for user: ${user.id}`)
+      const { error } = await supabase
+        .from("profiles")
+        .update({ trading_mode: "live" })
+        .eq("user_id", user.id)
+
+      if (error) {
+        console.error("[v0] [LiveMode] Error updating database:", error)
+        throw new Error(`Failed to update trading mode: ${error.message}`)
+      }
+
+      console.log(`[v0] [LiveMode] ✓ Database updated to LIVE mode (userId: ${user.id})`)
+      console.log(`[v0] [LiveMode] Mode switched -> LIVE, userId: ${user.id}, virtual data preserved in localStorage`)
+
+      cachedModeRef.current = true
+      setIsLiveMode(true)
+      setCanSwitchMode(false)
+      modeLoadedRef.current = true
+
+      console.log("[v0] [LiveMode] ✓ State updated, reloading...")
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
+    } catch (err) {
+      console.error("[v0] [LiveMode] Error switching to live:", err)
+      setIsSwitchingToLive(false)
+    }
+  }
 
       console.log(`[v0] [LiveMode] Switching to LIVE mode for user: ${user.id} (${user.email}) - PERMANENT CHANGE`)
 
