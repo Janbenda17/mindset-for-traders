@@ -14,6 +14,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const [isLandingPage, setIsLandingPage] = useState(false)
   const { user, isLoading } = useAuth()
 
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+  }, [pathname])
+
   useEffect(() => {
     // Check if this is the landing page (user not authenticated and path is /)
     if (pathname === "/" && !isLoading) {
