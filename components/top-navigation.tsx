@@ -52,20 +52,7 @@ const mainNavigation = [
   { name: "Denní Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Denní" },
   { name: "Týdenní Přehled", href: "/weekly-review", icon: Calendar },
   { name: "Týmový Klub", href: "/team-club", icon: Users, badge: "PRO" },
-]
-
-const produktyNavigation = []
-
-const bonusNavigation = [
-  { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NOVÉ" },
-  { name: "Trading Cíle", href: "/trading-goals", icon: Target, badge: "NOVÉ" },
-  { name: "Záznam Chyb", href: "/fail-log", icon: AlertTriangle, badge: "NOVÉ" },
-  { name: "Odměny", href: "/rewards", icon: Trophy, badge: "NOVÉ" },
-]
-
-const toolsNavigation = [
-  { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NOVÉ" },
-  { name: "Identita Tradera", href: "/trading-identity", icon: User, badge: "NOVÉ" },
+  { name: "Bonus", href: "/bonus", icon: Trophy, badge: "NOVÉ" },
 ]
 
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
@@ -193,8 +180,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     logout()
   }
 
-  const isMoreActive = [...toolsNavigation].some((item) => pathname === item.href)
-
   if (isLoading) {
     return (
       <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
@@ -243,20 +228,19 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6" align="start">
-                {/* Řádek 1: Hlavní produkty */}
-                <div className="mb-6 pb-6 border-b border-slate-700/50">
+                {/* Hlavní produkty - minimalistický dropdown */}
+                <div className="p-2">
                   <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Hlavní Produkty</p>
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 flex-wrap">
                     {mainNavigation.map((item) => {
                       const isActive = pathname === item.href
                       const isTeamClubInLiveMode = item.href === "/team-club" && isLiveMode
                       
                       if (isTeamClubInLiveMode) {
-                        // Team Club locked in live mode
                         return (
                           <div
                             key={item.name}
-                            className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-not-allowed bg-slate-800/50 border border-slate-700/50 opacity-60"
+                            className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-not-allowed bg-slate-800/50 border border-slate-700/50 opacity-60 min-w-[100px]"
                             title="Team Club is locked in Live Mode"
                           >
                             <Lock className="w-5 h-5 text-gray-400" />
@@ -276,90 +260,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                           }`}>
                             <item.icon className={`w-5 h-5 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
                             <span className={`text-xs text-center ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                              {item.name}
-                            </span>
-                          </div>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Řádek 2: Produkty - skryto pokud je prázdné */}
-                {produktyNavigation.length > 0 && (
-                <div className="mb-6 pb-6 border-b border-slate-700/50">
-                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Produkty</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {produktyNavigation.map((item) => {
-                      const isActive = pathname === item.href
-                      return (
-                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
-                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-                            isActive 
-                              ? "bg-purple-600/20 border border-purple-500/30" 
-                              : "hover:bg-slate-800/50 border border-slate-700/50"
-                          }`}>
-                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                              {item.name}
-                            </span>
-                            {item.badge && (
-                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-green-500/20 text-green-300 border-green-500/30">
-                                {item.badge}
-                              </Badge>
-                            )}
-                          </div>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-                )}
-
-                {/* Řádek 3: Bonus */}
-                <div className="mb-6 pb-6 border-b border-slate-700/50">
-                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Bonus</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {bonusNavigation.map((item) => {
-                      const isActive = pathname === item.href
-                      return (
-                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
-                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-                            isActive 
-                              ? "bg-purple-600/20 border border-purple-500/30" 
-                              : "hover:bg-slate-800/50 border border-slate-700/50"
-                          }`}>
-                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                              {item.name}
-                            </span>
-                            {item.badge && (
-                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-green-500/20 text-green-300 border-green-500/30">
-                                {item.badge}
-                              </Badge>
-                            )}
-                          </div>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Řádek 4: Nástroje */}
-                <div className="mb-6 pb-6 border-b border-slate-700/50">
-                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Nástroje</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {toolsNavigation.map((item) => {
-                      const isActive = pathname === item.href
-                      return (
-                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
-                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-                            isActive 
-                              ? "bg-purple-600/20 border border-purple-500/30" 
-                              : "hover:bg-slate-800/50 border border-slate-700/50"
-                          }`}>
-                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
                               {item.name}
                             </span>
                             {item.badge && (
@@ -453,74 +353,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                             <Badge
                               className={`text-xs px-1.5 py-0 h-5 ${
                                 item.badge === "AI" ? "bg-purple-500/20 text-purple-300 border-purple-500/30" : ""
-                              }`}
-                            >
-                              {item.badge}
-                            </Badge>
-                          )}
-                        </Link>
-                      </DropdownMenuItem>
-                    )
-                  })}
-                </div>
-                <DropdownMenuSeparator className="bg-slate-700" />
-                <div className="p-2">
-                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">BONUS</p>
-                  {bonusNavigation.map((item) => {
-                    const isActive = pathname === item.href
-                    return (
-                      <DropdownMenuItem key={item.name} asChild>
-                        <Link
-                          href={item.href}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
-                            isActive ? "bg-purple-600/20" : ""
-                          }`}
-                        >
-                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                            {item.name}
-                          </span>
-                          {item.badge && (
-                            <Badge
-                              className={`text-xs px-1.5 py-0 h-5 ${
-                                item.badge === "NOVÉ"
-                                  ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                  : ""
-                              }`}
-                            >
-                              {item.badge}
-                            </Badge>
-                          )}
-                        </Link>
-                      </DropdownMenuItem>
-                    )
-                  })}
-                </div>
-                <DropdownMenuSeparator className="bg-slate-700" />
-                <div className="p-2">
-                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">NÁSTROJE</p>
-                  {toolsNavigation.map((item) => {
-                    const isActive = pathname === item.href
-                    return (
-                      <DropdownMenuItem key={item.name} asChild>
-                        <Link
-                          href={item.href}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
-                            isActive ? "bg-purple-600/20" : ""
-                          }`}
-                        >
-                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                            {item.name}
-                          </span>
-                          {item.badge && (
-                            <Badge
-                              className={`text-xs px-1.5 py-0 h-5 ${
-                                item.badge === "NEW"
-                                  ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                  : ""
                               }`}
                             >
                               {item.badge}
