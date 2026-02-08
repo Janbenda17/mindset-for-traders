@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react"
 import { supabase } from "@/lib/supabase/browser"
 import { useAuth } from "./auth-context"
+import { useSubscription } from "./subscription-context"
 
 interface LiveModeContextType {
   isLiveMode: boolean
@@ -15,6 +16,7 @@ const LiveModeContext = createContext<LiveModeContextType | undefined>(undefined
 
 export function LiveModeProvider({ children }: { children: ReactNode }) {
   const { user, authReady } = useAuth()
+  const { isPremium } = useSubscription()
   const [isLiveMode, setIsLiveMode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [canSwitchMode, setCanSwitchMode] = useState(true)
@@ -58,6 +60,17 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
 
     loadModeFromDatabase()
   }, [user, authReady])
+
+  // Auto-revert to virtual mode if premium expires
+  useEffect(() => {
+    if (!user || !isLiveMode) return
+
+    // If user was in live mode but premium expires, switch back to virtual
+    if (!isPremium && isLiveMode) {
+      console.log(`[v0] [LiveMode] ⚠️ Premium expired for user ${user.id} - reverting to VIRTUAL mode`)
+      switchToVirtualForExpiredPremium()
+    }
+  }, [isPremium, user?.id, isLiveMode])
 
   const loadModeFromDatabase = async () => {
     if (!user) {
@@ -163,6 +176,36 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
       setCanSwitchMode(true)
       modeLoadedRef.current = true
       console.log("[v0] [LiveMode] ✓ Demo mode switched to VIRTUAL")
+    }
+  }
+
+  const switchToVirtualForExpiredPremium = async () => {
+    if (!user) return
+
+    try {
+      // Update database back to virtual
+      const { error } = await supabase
+        .from("profiles")
+        .update({ trading_mode: "virtual" })
+        .eq("user_id", user.id)
+
+      if (error) {
+        console.error("[v0] [LiveMode] Error reverting to virtual:", error)
+        return
+      }
+
+      console.log(`[v0] [LiveMode] ✓ Reverted to VIRTUAL mode (premium expired) for user: ${user.id}`)
+      cachedModeRef.current = false
+      setIsLiveMode(false)
+      setCanSwitchMode(true)
+      modeLoadedRef.current = true
+
+      // Reload page to refresh data
+      setTimeout(() => {
+        window.location.reload()
+      }, 100)
+    } catch (err) {
+      console.error("[v0] [LiveMode] Exception reverting to virtual:", err)
     }
   }
 

@@ -38,8 +38,7 @@ import {
 } from "lucide-react"
 import LiveModeToggle from "@/components/live-mode-toggle"
 import { supabase } from "@/lib/supabase/client"
-import { useAuth } from "@/contexts/auth-context"
-import { useLiveMode } from "@/contexts/live-mode-context"
+import { useSubscription } from "@/contexts/subscription-context"
 
 interface TopNavigationProps {
   initialTheme?: string
@@ -60,6 +59,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const pathname = usePathname()
   const router = useRouter()
   const { isLiveMode, switchToLive } = useLiveMode()
+  const { isPremium } = useSubscription()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProductsOpen, setIsProductsOpen] = useState(false)
@@ -410,8 +410,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               </Button>
             </Link>
 
-            {/* Virtual/Live Mode Toggle Button - show if authenticated and not in live mode */}
-            {isAuthenticated && !isLiveMode && (
+            {/* Virtual/Live Mode Toggle Button - show if authenticated, premium, and not in live mode */}
+            {isAuthenticated && isPremium && !isLiveMode && (
               <Button
                 onClick={handleSwitchToLive}
                 disabled={isSwitchingToLive}
