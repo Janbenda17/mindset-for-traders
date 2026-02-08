@@ -161,13 +161,8 @@ export function PricingPage() {
 
       if (data.url) {
         console.log("[v0] Redirecting to Stripe checkout...")
-        // Use window.open first to ensure it works, then fall back to location
-        const checkoutWindow = window.open(data.url, "_blank")
-        if (!checkoutWindow) {
-          // If pop-up blocked, use location href
-          console.log("[v0] Pop-up blocked, using window.location.href")
-          window.location.href = data.url
-        }
+        // Open in same tab - this is the most reliable way to reach Stripe
+        window.location.href = data.url
       } else {
         throw new Error("No checkout URL returned")
       }
