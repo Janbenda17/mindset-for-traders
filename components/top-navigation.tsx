@@ -425,7 +425,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 ) : (
                   <>
                     <Zap className="w-4 h-4" />
-                    Virtual
+                    Switch to Live Mode
                   </>
                 )}
               </Button>
