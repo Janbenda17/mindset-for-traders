@@ -46,10 +46,10 @@ interface TopNavigationProps {
 
 const mainNavigation = [
   { name: "Nástěnka", href: "/dashboard", icon: Home, shortName: "Domů" },
-  { name: "Analytika", href: "/analytics", icon: BarChart3, shortName: "Statistiky" },
-  { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Deník" },
-  { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
   { name: "Denní Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Denní" },
+  { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
+  { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Deník" },
+  { name: "Analytika", href: "/analytics", icon: BarChart3, shortName: "Statistiky" },
   { name: "Týdenní Přehled", href: "/weekly-review", icon: Calendar },
   { name: "Týmový Klub", href: "/team-club", icon: Users, badge: "PRO" },
   { name: "Bonus", href: "/bonus", icon: Trophy, badge: "NOVÉ" },
@@ -227,11 +227,10 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6" align="start">
-                {/* Hlavní produkty - minimalistický dropdown */}
-                <div className="p-2">
-                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Hlavní Produkty</p>
-                  <div className="flex gap-3 flex-wrap">
+                <DropdownMenuContent className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-8" align="start">
+                {/* Hlavní produkty - vycentrovaný dropdown */}
+                <div className="flex justify-center">
+                  <div className="grid grid-cols-4 gap-4 w-fit">
                     {mainNavigation.map((item) => {
                       const isActive = pathname === item.href
                       const isTeamClubInLiveMode = item.href === "/team-club" && isLiveMode
@@ -240,11 +239,11 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                         return (
                           <div
                             key={item.name}
-                            className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-not-allowed bg-slate-800/50 border border-slate-700/50 opacity-60 min-w-[100px]"
+                            className="flex flex-col items-center justify-center gap-2 px-6 py-4 rounded-xl cursor-not-allowed bg-slate-800/50 border border-slate-700/50 opacity-60 w-32 h-36"
                             title="Team Club is locked in Live Mode"
                           >
-                            <Lock className="w-5 h-5 text-gray-400" />
-                            <span className="text-xs text-center text-gray-500">
+                            <Lock className="w-6 h-6 text-gray-400" />
+                            <span className="text-xs text-center text-gray-500 font-medium">
                               {item.name}
                             </span>
                           </div>
@@ -253,17 +252,17 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                       
                       return (
                         <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
-                          <div className={`flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all min-w-[100px] ${
+                          <div className={`flex flex-col items-center justify-center gap-3 px-6 py-4 rounded-xl cursor-pointer transition-all w-32 h-36 ${
                             isActive 
-                              ? "bg-purple-600/20 border border-purple-500/30" 
-                              : "hover:bg-slate-800/50 border border-slate-700/50"
+                              ? "bg-purple-600/30 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20" 
+                              : "hover:bg-slate-800/50 border-2 border-slate-700/50 hover:border-slate-600/50"
                           }`}>
-                            <item.icon className={`w-5 h-5 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                            <span className={`text-xs text-center ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                            <item.icon className={`w-8 h-8 ${isActive ? "text-purple-400" : "text-gray-300"}`} />
+                            <span className={`text-sm text-center font-medium ${isActive ? "text-purple-300" : "text-white"}`}>
                               {item.name}
                             </span>
                             {item.badge && (
-                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-green-500/20 text-green-300 border-green-500/30">
+                              <Badge className="text-xs px-2 py-1 h-6 bg-green-500/30 text-green-300 border border-green-500/50">
                                 {item.badge}
                               </Badge>
                             )}
