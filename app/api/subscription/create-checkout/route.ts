@@ -141,10 +141,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to create checkout session - no URL" }, { status: 500 })
     }
 
-    // Instead of returning the Stripe URL directly, return a redirect to our checkout success page
-    // This avoids Vercel edge function limitations
+    // Return Stripe URL directly - client will redirect to it
     return NextResponse.json({ 
-      url: `/checkout-success?url=${encodeURIComponent(session.url)}`
+      url: session.url
     })
   } catch (error) {
     console.error("[v0] Error creating checkout session:", error)
