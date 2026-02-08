@@ -227,7 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (sessionData.session) {
-        console.log("[v0] ✅ Session ověřena - kontroluji onboarding status...")
+        console.log("[v0] ✅ Session ověřena - přihlášení úspěšné")
         
         // Explicitly set user state from session
         const userData = {
@@ -238,25 +238,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         lastUserIdRef.current = data.user.id
         setUser(userData)
         
-        // Check if user needs to complete onboarding
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("onboarding_completed")
-          .eq("user_id", data.user.id)
-          .maybeSingle()
-
-        const needsOnboarding = !profileData?.onboarding_completed
-
         // Wait a moment more for React state to update
         await new Promise((resolve) => setTimeout(resolve, 300))
         
-        if (needsOnboarding) {
-          console.log("[v0] User potřebuje onboarding - redirect na /onboarding")
-          router.push("/onboarding")
-        } else {
-          console.log("[v0] User má hotový onboarding - redirect na /")
-          router.push("/")
-        }
+        // Login - always redirect to home page /
+        console.log("[v0] Redirect na domovskou stránku /")
+        router.push("/")
       } else {
         console.log("[v0] ⚠️ Session chybí - přesto redirect na /")
         await new Promise((resolve) => setTimeout(resolve, 300))
