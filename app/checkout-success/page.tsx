@@ -1,0 +1,99 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react"
+import Link from "next/link"
+
+export default function CheckoutSuccessPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const sessionId = searchParams.get("session_id")
+  
+  const [verifying, setVerifying] = useState(true)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const verifyPayment = async () => {
+      if (!sessionId) {
+        setError("Chybí ID platby")
+        setVerifying(false)
+        return
+      }
+
+      try {
+        console.log("[CHECKOUT] Verifying session:", sessionId)
+        
+        const response = await fetch(`/api/subscription/verify-session?session_id=${sessionId}`)
+        const data = await response.json()
+
+        console.log("[CHECKOUT] Verification response:", data)
+
+        if (response.ok && data.success) {
+          setSuccess(true)
+          console.log("[CHECKOUT] Payment verified successfully!")
+          
+          // Redirect to dashboard after 3 seconds
+          setTimeout(() => {
+            router.push("/")
+          }, 3000)
+        } else {
+          setError(data.error || "Nepodařilo se ověřit platbu")
+        }
+      } catch (err) {
+        console.error("[CHECKOUT] Verification error:", err)
+        setError("Chyba při ověření platby")
+      } finally {
+        setVerifying(false)
+      }
+    }
+
+    verifyPayment()
+  }, [sessionId, router])
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 to-slate-800">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Ověření platby</CardTitle>
+          <CardDescription>Prosím čekejte...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-4">
+          {verifying && (
+            <>
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <p className="text-sm text-gray-600">Ověřuji vaši platbu...</p>
+            </>
+          )}
+
+          {success && !verifying && (
+            <>
+              <CheckCircle2 className="h-8 w-8 text-green-500" />
+              <div className="text-center">
+                <h3 className="font-semibold text-lg text-green-600 mb-2">Platba úspěšná! ✓</h3>
+                <p className="text-sm text-gray-600 mb-4">Váš účet byl aktivován jako Premium.</p>
+                <p className="text-xs text-gray-500">Budete přesměrováni na domovskou stránku...</p>
+              </div>
+            </>
+          )}
+
+          {error && !verifying && (
+            <>
+              <AlertCircle className="h-8 w-8 text-red-500" />
+              <div className="text-center">
+                <h3 className="font-semibold text-lg text-red-600 mb-2">Chyba</h3>
+                <p className="text-sm text-gray-600 mb-4">{error}</p>
+                <Link href="/upgrade">
+                  <Button className="w-full">Zpět na upgrade</Button>
+                </Link>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
