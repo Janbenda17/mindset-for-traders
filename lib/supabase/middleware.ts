@@ -19,6 +19,7 @@ const PUBLIC_PATHS = [
   "/resources",
   // App paths - accessible in virtual mode without auth
   "/",
+  "/bonus",
   "/dashboard",
   "/account",
   "/trades",
