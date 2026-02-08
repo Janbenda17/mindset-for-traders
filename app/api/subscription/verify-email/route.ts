@@ -1,55 +1,75 @@
 import { NextRequest, NextResponse } from "next/server"
 import { stripe } from "@/lib/stripe"
-import { createServiceClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
+import { cookies } from "next/headers"
 
 export async function GET(request: NextRequest) {
   try {
     const email = request.nextUrl.searchParams.get("email")
     
+    console.log("[v0] [VERIFY-EMAIL] Starting email verification:", email)
+    
     if (!email) {
+      console.log("[v0] [VERIFY-EMAIL] Error: Email is required")
       return NextResponse.json({ error: "Email je povinný" }, { status: 400 })
     }
 
-    console.log(`[v0] Verifying payment for email: ${email}`)
+    // Create Supabase client with cookies
+    const cookieStore = await cookies()
+    const supabase = createServerClient(cookieStore)
 
-    // Create service client for admin operations
-    const supabase = await createServiceClient()
-
-    // Get user from Supabase by email
+    // Get user by email using auth.users query
     const { data: { users }, error: userError } = await supabase.auth.admin.listUsers()
     
+    console.log("[v0] [VERIFY-EMAIL] Listed users, error:", userError ? userError.message : "none")
+    
     if (userError) {
-      console.error("[v0] Error listing users:", userError)
-      return NextResponse.json({ error: "Chyba při ověření uživatele" }, { status: 500 })
+      console.error("[v0] [VERIFY-EMAIL] Error listing users:", userError)
+      return NextResponse.json({ success: false, message: "Chyba při ověření uživatele" }, { status: 500 })
     }
 
-    const user = users.find(u => u.email === email)
+    const user = users?.find(u => u.email === email)
     
     if (!user) {
-      console.error("[v0] User not found with email:", email)
-      return NextResponse.json({ error: "Uživatel nenalezen" }, { status: 404 })
+      console.error("[v0] [VERIFY-EMAIL] User not found with email:", email)
+      return NextResponse.json({ 
+        success: false,
+        message: "Uživatel nenalezen" 
+      }, { status: 404 })
     }
 
-    console.log(`[v0] Found user: ${user.id}`)
+    console.log("[v0] [VERIFY-EMAIL] Found user:", user.id)
 
     // Get user profile with Stripe customer ID
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("stripe_customer_id, subscription_status")
+      .select("stripe_customer_id, subscription_status, is_premium")
       .eq("user_id", user.id)
       .single()
 
     if (profileError) {
-      console.error("[v0] Error fetching profile:", profileError)
-      return NextResponse.json({ error: "Profil nenalezen" }, { status: 404 })
+      console.error("[v0] [VERIFY-EMAIL] Error fetching profile:", profileError)
+      return NextResponse.json({ 
+        success: false,
+        message: "Profil nenalezen" 
+      }, { status: 404 })
     }
+
+    console.log("[v0] [VERIFY-EMAIL] Profile found:", {
+      stripe_customer_id: profile?.stripe_customer_id,
+      subscription_status: profile?.subscription_status,
+      is_premium: profile?.is_premium
+    })
 
     if (!profile?.stripe_customer_id) {
-      console.error("[v0] No Stripe customer ID for user:", user.id)
-      return NextResponse.json({ error: "Žádný Stripe zákazník" }, { status: 400 })
+      console.error("[v0] [VERIFY-EMAIL] No Stripe customer ID for user:", user.id)
+      return NextResponse.json({ 
+        success: false,
+        message: "Žádný Stripe zákazník" 
+      }, { status: 400 })
     }
 
-    console.log(`[v0] Checking Stripe for customer: ${profile.stripe_customer_id}`)
+    console.log("[v0] [VERIFY-EMAIL] Checking Stripe for customer:", profile.stripe_customer_id)
 
     // Check Stripe for active subscriptions
     const subscriptions = await stripe.subscriptions.list({
@@ -58,7 +78,7 @@ export async function GET(request: NextRequest) {
       limit: 100
     })
 
-    console.log(`[v0] Found ${subscriptions.data.length} subscriptions for customer`)
+    console.log("[v0] [VERIFY-EMAIL] Found subscriptions:", subscriptions.data.map(s => ({ id: s.id, status: s.status })))
 
     // Find active or trialing subscription
     const activeSubscription = subscriptions.data.find(
@@ -66,7 +86,7 @@ export async function GET(request: NextRequest) {
     )
 
     if (activeSubscription) {
-      console.log(`[v0] ✓ Found active subscription: ${activeSubscription.id} (status: ${activeSubscription.status})`)
+      console.log("[v0] [VERIFY-EMAIL] Active subscription found:", activeSubscription.id, activeSubscription.status)
 
       // Update profile to premium
       const { error: updateError } = await supabase
@@ -84,11 +104,14 @@ export async function GET(request: NextRequest) {
         .eq("user_id", user.id)
 
       if (updateError) {
-        console.error("[v0] Error updating profile:", updateError)
-        return NextResponse.json({ error: "Chyba při aktualizaci profilu" }, { status: 500 })
+        console.error("[v0] [VERIFY-EMAIL] Error updating profile:", updateError)
+        return NextResponse.json({ 
+          success: false,
+          message: "Chyba při aktualizaci profilu" 
+        }, { status: 500 })
       }
 
-      console.log(`[v0] ✓ Profile updated to premium for user: ${user.id}`)
+      console.log("[v0] [VERIFY-EMAIL] Profile updated to premium for user:", user.id)
       return NextResponse.json({ 
         success: true, 
         message: "Platba ověřena",
@@ -96,18 +119,17 @@ export async function GET(request: NextRequest) {
         subscriptionStatus: activeSubscription.status
       })
     } else {
-      console.log("[v0] No active subscription found in Stripe")
+      console.log("[v0] [VERIFY-EMAIL] No active subscription found")
       return NextResponse.json({ 
         success: false,
         message: "Žádná aktivní platba nenalezena",
-        isPremium: false,
-        subscriptions: subscriptions.data.map(sub => ({ id: sub.id, status: sub.status }))
-      }, { status: 400 })
+        isPremium: false
+      }, { status: 402 })
     }
   } catch (error) {
-    console.error("[v0] Verification error:", error)
+    console.error("[v0] [VERIFY-EMAIL] Verification error:", error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Chyba při ověření" },
+      { success: false, message: error instanceof Error ? error.message : "Chyba při ověření" },
       { status: 500 }
     )
   }
