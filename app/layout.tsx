@@ -68,9 +68,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <LiveModeProvider>
-              <AdminProvider>
-                <SubscriptionProvider>
+            <SubscriptionProvider>
+              <LiveModeProvider>
+                <AdminProvider>
                   <GamificationProvider>
                     <TradingStyleProvider>
                       <DataProvider>
@@ -100,9 +100,9 @@ export default function RootLayout({
                       </DataProvider>
                     </TradingStyleProvider>
                   </GamificationProvider>
-                </SubscriptionProvider>
-              </AdminProvider>
-            </LiveModeProvider>
+                </AdminProvider>
+              </LiveModeProvider>
+            </SubscriptionProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
