@@ -150,8 +150,13 @@ export default function WeeklyReviewPage() {
     } else {
       loadVirtualData()
     }
-    loadSavedReviews()
   }, [isLiveMode])
+
+  useEffect(() => {
+    if (user?.id) {
+      loadSavedReviews()
+    }
+  }, [user?.id])
 
   // /** START: CHANGE */
   // // Auto-generate weekly review from computed analytics
