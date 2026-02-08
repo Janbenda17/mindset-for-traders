@@ -185,6 +185,13 @@ export default function AccountPage() {
     }
   }, [])
 
+  // Automatically enable live mode for premium users
+  useEffect(() => {
+    if (isPremium && !isLiveMode) {
+      toggleLiveMode()
+    }
+  }, [isPremium])
+
   useEffect(() => {
     const userData = getUserData()
     if (userData.settings?.twoFactor) {
@@ -1738,7 +1745,8 @@ export default function AccountPage() {
 
           {/* SUBSCRIPTION TAB */}
           <TabsContent value="subscription" className="space-y-8">
-            {/* Live Mode Toggle */}
+            {/* Live Mode Toggle - Skryto pro premium uživatele */}
+            {!isPremium && (
             <div className="flex items-center justify-center space-x-4 p-6 border border-yellow-500/20 rounded-xl bg-yellow-900/10 backdrop-blur-lg">
               <div className="flex items-center gap-3">
                 <Award className="h-6 w-6 text-yellow-400" />
@@ -1760,6 +1768,7 @@ export default function AccountPage() {
                   : "Switch to Live mode for real trading and statistics."}
               </p>
             </div>
+            )}
 
             {/* Billing Toggle */}
             <div className="flex items-center justify-center space-x-4">
