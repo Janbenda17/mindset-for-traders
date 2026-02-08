@@ -97,22 +97,6 @@ export default function UpgradePage() {
                   <Check className="h-4 w-4 text-green-600" />
                   Demo mode - virtuální data
                 </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Základní obchodní deník
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Jednoduché analýzy
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Mood tracking
-                </li>
-                <li className="flex items-center gap-2 text-gray-400">
-                  <span className="h-4 w-4 rounded-full border-2 border-gray-300"></span>
-                  Omezeno na 10 záznamů/měsíc
-                </li>
               </ul>
             </CardContent>
           </Card>
