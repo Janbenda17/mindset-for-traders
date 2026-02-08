@@ -187,6 +187,7 @@ export function PricingPage() {
       "Komunitní přístup",
     ],
     premium: [
+      "14 dní zdarma - bez placení",
       "Přepnutí do Live Režimu",
       "Reálné statistiky a trading",
       "Pokročilé analytics & grafy",
@@ -393,7 +394,7 @@ export function PricingPage() {
                     "Váš plán je aktivní"
                   ) : (
                     <>
-                      Upgradovat na Live
+                      Zkusit 14 dní zdarma
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </>
                   )}
