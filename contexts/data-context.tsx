@@ -326,121 +326,127 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log(`[v0] ✓ LIVE MODE ACTIVE - Loading ONLY from Supabase for user ${user.id}`)
 
     try {
-      const { data: journalData, error: tradesError } = await supabase
-        .from("journal_entries")
-        .select("*")
-        .eq("user_id", user.id)
-        .not("pair", "is", null)
-        .order("created_at", { ascending: false })
+      try {
+        const { data: journalData, error: tradesError } = await supabase
+          .from("journal_entries")
+          .select("*")
+          .eq("user_id", user.id)
+          .not("pair", "is", null)
+          .order("created_at", { ascending: false })
 
-      if (!tradesError && journalData) {
-        const trades = journalData.map((entry: any) => ({
-          id: entry.id,
-          date: entry.date,
-          pair: entry.pair,
-          direction: entry.direction || "long",
-          entryPrice: entry.entry_price || 0,
-          exitPrice: entry.exit_price || 0,
-          quantity: entry.quantity || 0,
-          pnl: entry.pnl || 0,
-          mood: entry.mood,
-          confidence: entry.confidence,
-          stress: entry.stress,
-          discipline: entry.discipline,
-          emotionBefore: entry.emotion_before,
-          emotionDuring: entry.emotion_during,
-          emotionAfter: entry.emotion_after,
-          notes: entry.notes,
-          entryReason: entry.entry_reason,
-          exitReason: entry.exit_reason,
-          marketConditions: entry.market_conditions,
-          revengeTrade: entry.revenge_trade,
-          exitedEarly: entry.exited_early,
-          missedDueToHesitation: entry.missed_due_to_hesitation,
-          matchedPlan: entry.matched_plan,
-          tags: entry.tags,
-          // NEW FIELDS
-          openTime: entry.open_time,
-          closeTime: entry.close_time,
-          session: entry.session,
-          tradeType: entry.trade_type,
-          pips: entry.pips,
-          positionSize: entry.position_size,
-          confidenceBefore: entry.confidence_before,
-          stressLevel: entry.stress_level,
-          detailedAnalysis: entry.detailed_analysis,
-          behaviorDescription: entry.behavior_description,
-          openDate: entry.open_date,
-          closeDate: entry.close_date,
-          followedPlan: entry.followed_plan,
-        }))
-        console.log(`[v0] Loaded ${trades.length} trades from journal_entries for user ${user.id}`)
-        dispatch({ type: "SET_TRADES", payload: trades })
-      } else if (tradesError) {
-        console.error("[v0] Error loading trades:", tradesError.message)
+        if (!tradesError && journalData) {
+          const trades = journalData.map((entry: any) => ({
+            id: entry.id,
+            date: entry.date,
+            pair: entry.pair,
+            direction: entry.direction || "long",
+            entryPrice: entry.entry_price || 0,
+            exitPrice: entry.exit_price || 0,
+            quantity: entry.quantity || 0,
+            pnl: entry.pnl || 0,
+            mood: entry.mood,
+            confidence: entry.confidence,
+            stress: entry.stress,
+            discipline: entry.discipline,
+            emotionBefore: entry.emotion_before,
+            emotionDuring: entry.emotion_during,
+            emotionAfter: entry.emotion_after,
+            notes: entry.notes,
+            entryReason: entry.entry_reason,
+            exitReason: entry.exit_reason,
+            marketConditions: entry.market_conditions,
+            revengeTrade: entry.revenge_trade,
+            exitedEarly: entry.exited_early,
+            missedDueToHesitation: entry.missed_due_to_hesitation,
+            matchedPlan: entry.matched_plan,
+            tags: entry.tags,
+            // NEW FIELDS
+            openTime: entry.open_time,
+            closeTime: entry.close_time,
+            session: entry.session,
+            tradeType: entry.trade_type,
+            pips: entry.pips,
+            positionSize: entry.position_size,
+            confidenceBefore: entry.confidence_before,
+            stressLevel: entry.stress_level,
+            detailedAnalysis: entry.detailed_analysis,
+            behaviorDescription: entry.behavior_description,
+            openDate: entry.open_date,
+            closeDate: entry.close_date,
+            followedPlan: entry.followed_plan,
+          }))
+          console.log(`[v0] Loaded ${trades.length} trades from journal_entries for user ${user.id}`)
+          dispatch({ type: "SET_TRADES", payload: trades })
+        } else if (tradesError) {
+          console.error("[v0] Error loading trades:", tradesError.message || tradesError)
+          dispatch({ type: "SET_TRADES", payload: [] })
+        }
+      } catch (err) {
+        console.error("[v0] Exception loading trades:", err instanceof Error ? err.message : String(err))
         dispatch({ type: "SET_TRADES", payload: [] })
       }
 
-      const { data: morningChecks, error: morningError } = await supabase
-        .from("morning_checks")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("date", { ascending: false })
+      try {
+        const { data: morningChecks, error: morningError } = await supabase
+          .from("morning_checks")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("date", { ascending: false })
 
-      if (!morningError && morningChecks) {
-        const mappedChecks = morningChecks.map((check: any) => ({
-          id: check.id,
-          date: check.date,
-          score: check.score,
-          emotionalState: check.emotional_state,
-          stressLevel: check.stress_level,
-          sleepHours: check.sleep_hours,
-          sleepQuality: check.sleep_quality,
-          energyLevel: check.energy_level,
-          focus: check.focus,
-          physicalHealth: check.physical_health,
-          hydration: check.hydration,
-          exercised: check.exercised,
-          morningRoutine: check.morning_routine,
-          meditation: check.meditation,
-          locked: check.locked,
-        }))
-        console.log(`[v0] Loaded ${mappedChecks.length} morning checks from Supabase for user ${user.id}`)
-        dispatch({ type: "SET_MORNING_CHECKS", payload: mappedChecks })
-      } else if (morningError) {
-        console.error("[v0] Error loading morning checks:", morningError.message)
+        if (!morningError && morningChecks) {
+          const mappedChecks = morningChecks.map((check: any) => ({
+            id: check.id,
+            date: check.date,
+            score: check.score,
+            emotionalState: check.emotional_state,
+            stressLevel: check.stress_level,
+            sleepHours: check.sleep_hours,
+            sleepQuality: check.sleep_quality,
+            energyLevel: check.energy_level,
+            focus: check.focus,
+            physicalHealth: check.physical_health,
+            hydration: check.hydration,
+            exercised: check.exercised,
+            morningRoutine: check.morning_routine,
+            meditation: check.meditation,
+            locked: check.locked,
+          }))
+          console.log(`[v0] Loaded ${mappedChecks.length} morning checks from Supabase for user ${user.id}`)
+          dispatch({ type: "SET_MORNING_CHECKS", payload: mappedChecks })
+        } else if (morningError) {
+          console.error("[v0] Error loading morning checks:", morningError.message || morningError)
+          dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
+        }
+      } catch (err) {
+        console.error("[v0] Exception loading morning checks:", err instanceof Error ? err.message : String(err))
         dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
       }
 
-      const { data: journalEntries, error: journalError } = await supabase
-        .from("journal_entries")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
+      try {
+        const { data: journalEntries, error: journalError } = await supabase
+          .from("journal_entries")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
 
-      if (!journalError && journalEntries) {
-        const mappedEntries = journalEntries.map((entry: any) => ({
-          ...entry,
-          emotionBefore: entry.emotion_before,
-          emotionDuring: entry.emotion_during,
-          emotionAfter: entry.emotion_after,
-          entryReason: entry.entry_reason,
-          exitReason: entry.exit_reason,
-          marketConditions: entry.market_conditions,
-          confidenceBefore: entry.confidence_before,
-          stressLevel: entry.stress_level,
-          detailedAnalysis: entry.detailed_analysis,
-          behaviorDescription: entry.behavior_description,
-          openTime: entry.open_time,
-          closeTime: entry.close_time,
-          tradeType: entry.trade_type,
-          positionSize: entry.position_size,
-          profitLoss: entry.pnl,
-        }))
-        console.log(`[v0] Loaded ${mappedEntries.length} journal entries from Supabase for user ${user.id}`)
-        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: mappedEntries })
-      } else if (journalError) {
-        console.error("[v0] Error loading journal entries:", journalError)
+        if (!journalError && journalEntries) {
+          const mappedEntries = journalEntries.map((entry: any) => ({
+            ...entry,
+            emotionBefore: entry.emotion_before,
+            emotionDuring: entry.emotion_during,
+            emotionAfter: entry.emotion_after,
+            entryReason: entry.entry_reason,
+            exitReason: entry.exit_reason,
+            marketConditions: entry.market_conditions,
+          }))
+          console.log(`[v0] Loaded ${journalEntries.length} journal entries from Supabase for user ${user.id}`)
+          dispatch({ type: "SET_JOURNAL_ENTRIES", payload: mappedEntries })
+        } else if (journalError) {
+          console.error("[v0] Error loading journal entries:", journalError.message || journalError)
+          dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
+        }
+      } catch (err) {
+        console.error("[v0] Exception loading journal entries:", err instanceof Error ? err.message : String(err))
         dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
       }
 
