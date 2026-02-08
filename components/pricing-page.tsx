@@ -133,7 +133,7 @@ export function PricingPage() {
 
   const handleUpgrade = async () => {
     if (!user) {
-      router.push("/login")
+      router.push("/signup")
       return
     }
 
