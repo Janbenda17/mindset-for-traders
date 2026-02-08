@@ -40,6 +40,8 @@ import {
   Eye,
   X,
 } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
+import { getScoped, setScoped } from "@/lib/storage"
 import { getJournalEntries, getMoodEntries, getUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
 import { useAnalytics } from "@/contexts/analytics-context"
@@ -114,6 +116,7 @@ interface WeeklyReview {
 export default function WeeklyReviewPage() {
   const { isLiveMode } = useData()
   const { analytics } = useAnalytics()
+  const { user } = useAuth()
   const [currentWeekData, setCurrentWeekData] = useState<any>(null)
   const [reviewVariant, setReviewVariant] = useState<"manual" | "ai">("manual") // Changed default from "ai" to "manual"
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
@@ -750,21 +753,20 @@ export default function WeeklyReviewPage() {
   }
 
   const loadSavedReviews = () => {
-    const saved = localStorage.getItem("weekly-reviews")
-    if (saved) {
-      setSavedReviews(JSON.parse(saved))
-    }
+    if (!user?.id) return
+    const saved = getScoped("live", user.id, "weekly-reviews", [])
+    setSavedReviews(saved)
   }
 
   const saveReview = () => {
-    if (!currentWeekData) return
+    if (!currentWeekData || !user?.id) return
 
     const newReview: WeeklyReview = {
       id: Date.now().toString(),
       weekStart: currentWeekData.weekStart,
       weekEnd: currentWeekData.weekEnd,
       createdAt: new Date().toISOString(),
-      variant: reviewVariant, // Save variant
+      variant: reviewVariant,
       totalTrades: currentWeekData.totalTrades,
       winningTrades: currentWeekData.winningTrades,
       losingTrades: currentWeekData.losingTrades,
@@ -781,15 +783,15 @@ export default function WeeklyReviewPage() {
       dailyData: currentWeekData.dailyData,
       sleepData: currentWeekData.sleepData,
       aiInsights: currentWeekData.aiInsights,
-      actionPlan: actionPlan, // Save action plan
+      actionPlan: actionPlan,
       ...(review as any),
     }
 
     const updated = [newReview, ...savedReviews]
     setSavedReviews(updated)
-    localStorage.setItem("weekly-reviews", JSON.stringify(updated))
+    setScoped("live", user.id, "weekly-reviews", updated)
 
-      alert("Týdenní přehled uložen!")
+    alert("Týdenní přehled uložen!")
   }
 
   const downloadPDF = async (reviewData: any) => {

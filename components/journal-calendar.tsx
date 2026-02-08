@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button"
 import { getJournalEntries } from "@/utils/storage-utils"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
+import { useAuth } from "@/contexts/auth-context"
+import { getScoped } from "@/lib/storage"
 import { generateVirtualTrades, generateVirtualJournalEntries } from "@/lib/virtual-data-generator"
 
 interface JournalCalendarProps {
@@ -29,10 +31,11 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [entries, setEntries] = useState<any[]>([])
   const { isLiveMode } = useData()
+  const { user } = useAuth()
 
   useEffect(() => {
     loadEntries()
-  }, [isLiveMode, demoEntries])
+  }, [isLiveMode, demoEntries, user?.id])
 
   const loadEntries = () => {
     if (!isLiveMode && demoEntries && demoEntries.length > 0) {
@@ -43,9 +46,9 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
       const virtualTrades = generateVirtualTrades(25)
       const virtualJournals = generateVirtualJournalEntries(5)
       setEntries([...virtualTrades, ...virtualJournals])
-    } else {
-      // Use real entries in live mode
-      const journalEntries = getJournalEntries()
+    } else if (user?.id) {
+      // Use real entries in live mode with user scoped storage
+      const journalEntries = getScoped("live", user.id, "journal-entries", [])
       setEntries(journalEntries)
     }
   }
