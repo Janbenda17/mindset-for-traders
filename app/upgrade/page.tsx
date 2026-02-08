@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,7 +13,15 @@ import Link from "next/link"
 export default function UpgradePage() {
   const { upgradeToPremium, isLoading, isPremium } = useSubscription()
   const { user } = useAuth()
+  const router = useRouter()
   const [isUpgrading, setIsUpgrading] = useState(false)
+
+  // Redirect to signup if user is not authenticated
+  useEffect(() => {
+    if (user === null) {
+      router.push("/signup")
+    }
+  }, [user, router])
 
   const handleUpgrade = async () => {
     if (!user) {
