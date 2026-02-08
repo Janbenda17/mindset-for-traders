@@ -34,6 +34,7 @@ import {
   AlertTriangle,
   ChevronDown,
   Lock,
+  Zap,
 } from "lucide-react"
 import LiveModeToggle from "@/components/live-mode-toggle"
 import { supabase } from "@/lib/supabase/client"
@@ -58,11 +59,12 @@ const mainNavigation = [
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
   const pathname = usePathname()
   const router = useRouter()
-  const { isLiveMode } = useLiveMode()
+  const { isLiveMode, switchToLive } = useLiveMode()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProductsOpen, setIsProductsOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isSwitchingToLive, setIsSwitchingToLive] = useState(false)
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -84,6 +86,12 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     } else {
       router.push('/account')
     }
+  }
+
+  const handleSwitchToLive = async () => {
+    setIsSwitchingToLive(true)
+    await switchToLive()
+    setIsSwitchingToLive(false)
   }
 
   const loadProfileData = async () => {
@@ -401,6 +409,27 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 Začít
               </Button>
             </Link>
+
+            {/* Virtual/Live Mode Toggle Button - show if authenticated and not in live mode */}
+            {isAuthenticated && !isLiveMode && (
+              <Button
+                onClick={handleSwitchToLive}
+                disabled={isSwitchingToLive}
+                className="mr-2 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+              >
+                {isSwitchingToLive ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Přepínaní...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4" />
+                    Virtual
+                  </>
+                )}
+              </Button>
+            )}
 
             {/* Profile Dropdown - only show if authenticated */}
             {isAuthenticated ? (
