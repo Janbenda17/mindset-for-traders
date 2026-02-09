@@ -10,6 +10,8 @@ import Link from "next/link"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useAuth } from "@/contexts/auth-context"
 
+export const dynamic = "force-dynamic"
+
 function CheckoutSuccessContent() {
   const router = useRouter()
   const { user } = useAuth()
