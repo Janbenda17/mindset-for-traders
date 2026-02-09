@@ -20,7 +20,6 @@ export function LoginForm() {
   const [error, setError] = useState("")
   const [showResetForm, setShowResetForm] = useState(false)
   const [resetEmail, setResetEmail] = useState("")
-  const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState<number>(0)
   const { login } = useAuth()
   const router = useRouter()
 
@@ -31,31 +30,9 @@ export function LoginForm() {
     localStorage.removeItem("mindtrader-saved-password")
   }, [])
 
-  // Rate limit countdown
-  useEffect(() => {
-    if (rateLimitRetryAfter > 0) {
-      const timer = setInterval(() => {
-        setRateLimitRetryAfter((prev) => {
-          if (prev <= 1) {
-            setError("")
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-      return () => clearInterval(timer)
-    }
-  }, [rateLimitRetryAfter])
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-
-    // Check if rate limited
-    if (rateLimitRetryAfter > 0) {
-      setError(`Příliš mnoho pokusů o přihlášení. Zkuste znovu za ${rateLimitRetryAfter} sekund.`)
-      return
-    }
 
     // Validace emailu
     if (!email.trim()) {
@@ -78,10 +55,8 @@ export function LoginForm() {
 
     try {
       console.log("[v0] Attempting login for:", email.trim())
-      console.log("[v0] Password length:", password.length)
 
       // Do NOT save password to localStorage - security risk
-      // Just clear any saved credentials
       localStorage.removeItem("mindtrader-saved-email")
       localStorage.removeItem("mindtrader-saved-password")
 
@@ -92,25 +67,12 @@ export function LoginForm() {
         console.error("[v0] Login failed")
         setError("Přihlášení se nezdařilo. Ověřte prosím váš email a heslo.")
         setPassword("")
-        setIsLoading(false)
       }
-      // If success is true, auth context will handle navigation
+      
+      setIsLoading(false)
     } catch (error: any) {
       console.error("[v0] Login error:", error)
-      
-      // Check if rate limit error
-      if (error?.message?.includes("RATE_LIMIT") || error?.message?.includes("rate limit") || error?.message?.includes("Too many")) {
-        console.log("[v0] Rate limit detected - setting 60 second cooldown")
-        setError("Příliš mnoho pokusů o přihlášení. Počkejte prosím 60 sekund a zkuste znovu.")
-        setRateLimitRetryAfter(60)
-      } else if (error?.message?.includes("Invalid login credentials")) {
-        setError("Nesprávný email nebo heslo. Prosím zkontrolujte a zkuste znovu.")
-      } else if (error?.message?.includes("Email not confirmed")) {
-        setError("Prosím potvrďte svůj email. Podívejte se do schránky (včetně spamu).")
-      } else {
-        setError("Chyba při přihlášení. Prosím zkuste znovu.")
-      }
-      
+      setError("Chyba při přihlášení. Prosím zkuste znovu.")
       setPassword("")
       setIsLoading(false)
     }
