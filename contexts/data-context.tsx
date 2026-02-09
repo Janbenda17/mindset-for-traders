@@ -505,16 +505,27 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         `[v0] Mode changed from ${prevModeRef.current ? "LIVE" : "VIRTUAL"} to ${isLiveMode ? "LIVE" : "VIRTUAL"} - clearing data`,
       )
       dispatch({ type: "CLEAR_ALL_DATA" })
+      
+      // Give UI time to clear old data before loading new data
+      if (isLiveMode) {
+        setTimeout(() => {
+          console.log("[v0] Mode change complete, loading new live mode data...")
+          loadDataFromSupabase()
+        }, 500)
+      } else {
+        loadVirtualData(user.id)
+      }
+    } else {
+      // Normal load (not a mode change)
+      console.log(`[v0] Mode debug: isLiveMode=${isLiveMode}, userId=${user.id}`)
+
+      if (isLiveMode) {
+        loadDataFromSupabase()
+      } else {
+        loadVirtualData(user.id)
+      }
     }
     prevModeRef.current = isLiveMode
-
-    console.log(`[v0] Mode debug: isLiveMode=${isLiveMode}, userId=${user.id}`)
-
-    if (isLiveMode) {
-      loadDataFromSupabase()
-    } else {
-      loadVirtualData(user.id)
-    }
   }, [user?.id, isLiveMode, authReady, modeLoading, loadDataFromSupabase, loadVirtualData])
 
   const currentReadiness = useMemo(() => {
