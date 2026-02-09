@@ -18,71 +18,55 @@ function CheckoutSuccessContent() {
   const [verifying, setVerifying] = useState(true)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [checkCount, setCheckCount] = useState(0)
-  const maxChecks = 30 // Check for up to 60 seconds (30 checks x 2 seconds)
+  const [pollCount, setPollCount] = useState(0)
+  const maxPolls = 15 // Max 30 seconds (15 checks x 2 seconds)
+  const [hasStopped, setHasStopped] = useState(false)
 
   useEffect(() => {
-    const verifyPayment = async () => {
-      if (!user?.email) {
-        console.log("[v0] [CHECKOUT] No user email available")
-        setError("Email uživatele není dostupný")
-        setVerifying(false)
-        return
-      }
+    if (!user?.email || hasStopped) {
+      return
+    }
 
+    if (pollCount > maxPolls) {
+      console.log("[v0] [CHECKOUT] Max polls reached, stopping")
+      setHasStopped(true)
+      setSuccess(true)
+      setVerifying(false)
+      setTimeout(() => router.push("/account"), 1000)
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      console.log(`[v0] [CHECKOUT] Poll #${pollCount + 1}/${maxPolls}`)
+      
       try {
-        console.log(`[v0] [CHECKOUT] Check #${checkCount + 1}/${maxChecks} - Direct Stripe check for:`, user.email)
-        
-        // Call the direct payment check endpoint that queries Stripe
         const response = await fetch(`/api/subscription/check-payment?email=${encodeURIComponent(user.email)}`)
         const data = await response.json()
 
-        console.log("[v0] [CHECKOUT] Direct Stripe check response:", data)
+        console.log("[v0] [CHECKOUT] Check response:", { success: data.success, isPremium: data.isPremium, pollCount: pollCount + 1 })
 
         if (data.success && data.isPremium) {
-          console.log("[v0] [CHECKOUT] ✓ Active subscription confirmed in Stripe!")
-          
-          // Refresh subscription context with the new status
+          console.log("[v0] [CHECKOUT] ✓ Premium confirmed!")
           await checkSubscriptionStatus()
-          
           setSuccess(true)
           setVerifying(false)
-          
-          // Redirect after 2 seconds
-          setTimeout(() => {
-            router.push("/")
-          }, 2000)
+          setHasStopped(true)
+          setTimeout(() => router.push("/"), 1000)
           return
         }
-        
-        // If we haven't hit max checks yet, try again
-        if (checkCount < maxChecks) {
-          console.log(`[v0] [CHECKOUT] No active subscription yet, retrying in 2 seconds...`)
-          setTimeout(() => {
-            setCheckCount(prev => prev + 1)
-          }, 2000)
-        } else {
-          // Max retries reached
-          console.log("[v0] [CHECKOUT] Max retries reached (60 seconds), redirecting to account")
-          setSuccess(true)
-          setVerifying(false)
-          
-          setTimeout(() => {
-            router.push("/account")
-          }, 2000)
-        }
-      } catch (err) {
-        console.error("[v0] [CHECKOUT] Verification error:", err)
-        setError("Chyba při ověření platby. Zkuste načíst stránku znovu.")
-        setVerifying(false)
-      }
-    }
 
-    // Only run when checkCount changes or on initial mount
-    if (checkCount <= maxChecks) {
-      verifyPayment()
-    }
-  }, [user?.email, router, checkSubscriptionStatus, checkCount, maxChecks])
+        // Continue polling
+        setPollCount(prev => prev + 1)
+      } catch (err) {
+        console.error("[v0] [CHECKOUT] Error:", err)
+        setError("Chyba při ověření. Zkuste to prosím znovu.")
+        setVerifying(false)
+        setHasStopped(true)
+      }
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [user?.email, pollCount, maxPolls, hasStopped, router, checkSubscriptionStatus])
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 to-slate-800">

@@ -17,22 +17,28 @@ export default function UpgradePage() {
   const [isUpgrading, setIsUpgrading] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [isChecking, setIsChecking] = useState(false)
+  const [pollCount, setPollCount] = useState(0)
+  const maxPolls = 15 // Max 30 seconds (15 checks x 2 seconds)
 
   // Redirect to signup only if user is explicitly null (not authenticated)
-  // user === undefined means auth is still loading, don't redirect
   useEffect(() => {
     if (user === null) {
-      // Not authenticated - redirect to login
       router.push("/auth/login")
     }
   }, [user, router])
 
-  // If checkout window was opened, periodically check subscription status
+  // If checkout window was opened, periodically check subscription status with MAX LIMIT
   useEffect(() => {
-    if (!checkoutOpen || isPremium) return
+    if (!checkoutOpen || isPremium || pollCount >= maxPolls) {
+      if (pollCount >= maxPolls && checkoutOpen) {
+        console.log("[v0] [UPGRADE] Max polls reached, stopping checks")
+        setCheckoutOpen(false)
+      }
+      return
+    }
 
-    console.log("[v0] [UPGRADE] Starting automatic subscription check...")
-    const interval = setInterval(async () => {
+    console.log(`[v0] [UPGRADE] Poll #${pollCount + 1}/${maxPolls}`)
+    const timer = setTimeout(async () => {
       setIsChecking(true)
       try {
         await checkSubscriptionStatus()
@@ -41,20 +47,19 @@ export default function UpgradePage() {
         console.error("[v0] [UPGRADE] Error checking subscription:", error)
       } finally {
         setIsChecking(false)
+        setPollCount(prev => prev + 1)
       }
-    }, 2000) // Check every 2 seconds
+    }, 2000)
 
-    return () => clearInterval(interval)
-  }, [checkoutOpen, isPremium, checkSubscriptionStatus])
+    return () => clearTimeout(timer)
+  }, [checkoutOpen, isPremium, pollCount, maxPolls, checkSubscriptionStatus])
 
-  // If premium is detected, redirect after 2 seconds
+  // If premium is detected, redirect immediately
   useEffect(() => {
     if (isPremium && checkoutOpen) {
       console.log("[v0] [UPGRADE] Premium detected! Redirecting...")
-      setTimeout(() => {
-        setCheckoutOpen(false)
-        router.push("/")
-      }, 2000)
+      setCheckoutOpen(false)
+      router.push("/")
     }
   }, [isPremium, checkoutOpen, router])
 
