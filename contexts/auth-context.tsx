@@ -171,98 +171,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log("[v0] ===== PŘIHLÁŠENÍ START =====")
       console.log("[v0] Email:", email)
-      console.log("[v0] Password length:", password.length)
-      console.log("[v0] Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL ? "✓" : "❌")
-      console.log("[v0] Supabase Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "✓" : "❌")
 
-      console.log("[v0] Volání supabase.auth.signInWithPassword()...")
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      console.log("[v0] Response od signIn:", { hasError: !!error, hasUser: !!data.user, hasSession: !!data.session })
-
       if (error) {
-        console.error("[v0] ❌ LOGIN ERROR:", {
-          message: error.message,
-          status: error.status,
-        })
-
-        let errorMessage = error.message
-        
-        // Speciální handling pro rate limit - throw error aby se zpracoval v komponentě
-        if (error.message.includes("rate limit") || error.message.includes("too many")) {
-          throw new Error("RATE_LIMIT_EXCEEDED")
-        } else if (error.message.includes("Invalid login credentials") || error.message.includes("Invalid password")) {
-          errorMessage = "Nesprávný email nebo heslo. Prosím zkontrolujte a zkuste znovu."
-        } else if (error.message.includes("Email not confirmed")) {
-          errorMessage = "Prosím potvrďte svůj email. Podívejte se do schránky (včetně spamu)."
-        }
-
-        toast({
-          title: "Chyba přihlášení",
-          description: errorMessage,
-          variant: "destructive",
-        })
-        return false
+        console.error("[v0] ❌ LOGIN ERROR:", error.message)
+        throw error
       }
 
       if (!data.user || !data.session) {
         console.error("[v0] ❌ Žádný user nebo session vrácen")
-        toast({
-          title: "Chyba přihlášení",
-          description: "Přihlášení se nezdařilo. Zkuste to prosím znovu.",
-          variant: "destructive",
-        })
-        return false
+        throw new Error("NO_USER_OR_SESSION")
       }
 
       console.log("[v0] ✅ Přihlášení úspěšné:", data.user.email)
 
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-      console.log("[v0] Ověření session:", {
-        hasSession: !!sessionData.session,
-        sessionError: sessionError?.message,
-      })
-
-      if (sessionData.session) {
-        console.log("[v0] ✅ Session ověřena - přihlášení úspěšné")
-        
-        // Explicitly set user state from session
-        const userData = {
-          id: data.user.id,
-          email: data.user.email!,
-          name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Trader",
-        }
-        lastUserIdRef.current = data.user.id
-        setUser(userData)
-        
-        // Wait a moment more for React state to update
-        await new Promise((resolve) => setTimeout(resolve, 300))
-        
-        // Login - always redirect to home page /
-        console.log("[v0] Redirect na domovskou stránku /")
-        router.push("/")
-      } else {
-        console.log("[v0] ⚠️ Session chybí - přesto redirect na /")
-        await new Promise((resolve) => setTimeout(resolve, 300))
-        router.push("/")
+      const userData = {
+        id: data.user.id,
+        email: data.user.email!,
+        name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Trader",
       }
+      lastUserIdRef.current = data.user.id
+      setUser(userData)
+
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      console.log("[v0] Redirect na domovskou stránku /")
+      router.push("/")
 
       return true
     } catch (error) {
-      console.error("[v0] ===== LOGIN ERROR =====")
-      console.error("[v0] Error type:", error?.constructor?.name)
-      console.error("[v0] Message:", error?.message)
-      console.error("[v0] Stack:", error?.stack)
-      
-      toast({
-        title: "Chyba přihlášení",
-        description: "Došlo k neočekávané chybě. Zkuste to prosím znovu za chvíli.",
-        variant: "destructive",
-      })
-      return false
+      console.error("[v0] LOGIN ERROR:", error instanceof Error ? error.message : String(error))
+      throw error
     }
   }
 

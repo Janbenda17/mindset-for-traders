@@ -71,8 +71,8 @@ export function LoginForm() {
       
       setIsLoading(false)
     } catch (error: any) {
-      console.error("[v0] Login error:", error)
-      setError("Chyba při přihlášení. Prosím zkuste znovu.")
+      console.error("[v0] Login error:", error.message)
+      setError("Chyba při přihlášení. Ověřte prosím váš email a heslo.")
       setPassword("")
       setIsLoading(false)
     }
