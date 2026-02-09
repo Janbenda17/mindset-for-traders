@@ -450,19 +450,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
       }
 
-      const { data: weeklyReviews, error: weeklyError } = await supabase
-        .from("weekly_reviews")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
+      try {
+        const { data: weeklyReviews, error: weeklyError } = await supabase
+          .from("weekly_reviews")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
 
-      if (!weeklyError && weeklyReviews) {
-        console.log(`[v0] Loaded ${weeklyReviews.length} weekly reviews from Supabase for user ${user.id}`)
-        dispatch({ type: "SET_WEEKLY_REVIEWS", payload: weeklyReviews })
-      } else if (weeklyError) {
-        if (weeklyError.message !== "signal is aborted without reason") {
-          console.error("[v0] Error loading weekly reviews:", weeklyError)
+        if (!weeklyError && weeklyReviews) {
+          console.log(`[v0] Loaded ${weeklyReviews.length} weekly reviews from Supabase for user ${user.id}`)
+          dispatch({ type: "SET_WEEKLY_REVIEWS", payload: weeklyReviews })
+        } else if (weeklyError) {
+          if (weeklyError.message !== "signal is aborted without reason") {
+            console.error("[v0] Error loading weekly reviews:", weeklyError)
+          }
+          dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
         }
+      } catch (err) {
+        console.error("[v0] Exception loading weekly reviews:", err instanceof Error ? err.message : String(err))
         dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
       }
 
