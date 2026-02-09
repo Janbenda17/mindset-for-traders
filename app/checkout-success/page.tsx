@@ -82,7 +82,7 @@ function CheckoutSuccessContent() {
             <>
               <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
               <p className="text-sm text-gray-600">Ověřuji vaši platbu...</p>
-              <p className="text-xs text-gray-500">Pokus: {checkCount + 1}/{maxChecks}</p>
+              <p className="text-xs text-gray-500">Pokus: {pollCount + 1}/{maxPolls}</p>
             </>
           )}
 
