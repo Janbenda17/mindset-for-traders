@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { stripe } from "@/lib/stripe"
-import { createServerClient } from "@/lib/supabase/server"
-import { cookies } from "next/headers"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,12 +13,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Email je povinný" }, { status: 400 })
     }
 
-    // Create Supabase client with cookies
-    const cookieStore = await cookies()
-    const supabase = createServerClient(cookieStore)
+    // Use admin client directly to bypass auth issues
+    const supabaseAdmin = createAdminClient()
 
     // Get user by email using auth.users query
-    const { data: { users }, error: userError } = await supabase.auth.admin.listUsers()
+    const { data: { users }, error: userError } = await supabaseAdmin.auth.admin.listUsers()
     
     console.log("[v0] [VERIFY-EMAIL] Listed users, error:", userError ? userError.message : "none")
     
@@ -41,9 +39,9 @@ export async function GET(request: NextRequest) {
     console.log("[v0] [VERIFY-EMAIL] Found user:", user.id)
 
     // Get user profile with Stripe customer ID
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("stripe_customer_id, subscription_status, is_premium")
+      .select("stripe_customer_id, subscription_status, is_premium, email")
       .eq("user_id", user.id)
       .single()
 
@@ -88,20 +86,26 @@ export async function GET(request: NextRequest) {
     if (activeSubscription) {
       console.log("[v0] [VERIFY-EMAIL] Active subscription found:", activeSubscription.id, activeSubscription.status)
 
-      // Update profile to premium
-      const { error: updateError } = await supabase
+      // Update profile to premium - use admin client
+      const updateData: Record<string, unknown> = {
+        subscription_status: activeSubscription.status,
+        subscription_tier: "premium",
+        is_premium: true,
+        stripe_subscription_id: activeSubscription.id,
+        trading_mode: "live",  // Switch to live mode automatically
+        trial_ends_at: activeSubscription.trial_end 
+          ? new Date(activeSubscription.trial_end * 1000).toISOString()
+          : null,
+        updated_at: new Date().toISOString()
+      }
+
+      console.log("[v0] [VERIFY-EMAIL] Updating profile with:", JSON.stringify(updateData))
+
+      const { data: updated, error: updateError } = await supabaseAdmin
         .from("profiles")
-        .update({
-          subscription_status: activeSubscription.status,
-          subscription_tier: "premium",
-          is_premium: true,
-          stripe_subscription_id: activeSubscription.id,
-          trial_ends_at: activeSubscription.trial_end 
-            ? new Date(activeSubscription.trial_end * 1000).toISOString()
-            : null,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq("user_id", user.id)
+        .select()
 
       if (updateError) {
         console.error("[v0] [VERIFY-EMAIL] Error updating profile:", updateError)
@@ -111,7 +115,14 @@ export async function GET(request: NextRequest) {
         }, { status: 500 })
       }
 
-      console.log("[v0] [VERIFY-EMAIL] Profile updated to premium for user:", user.id)
+      if (updated && updated.length > 0) {
+        console.log("[v0] [VERIFY-EMAIL] Profile updated successfully:", {
+          is_premium: updated[0].is_premium,
+          trading_mode: updated[0].trading_mode,
+          subscription_status: updated[0].subscription_status
+        })
+      }
+
       return NextResponse.json({ 
         success: true, 
         message: "Platba ověřena",

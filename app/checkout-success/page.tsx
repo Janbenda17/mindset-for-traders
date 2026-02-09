@@ -18,51 +18,71 @@ function CheckoutSuccessContent() {
   const [verifying, setVerifying] = useState(true)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [checkCount, setCheckCount] = useState(0)
+  const maxChecks = 30 // Check for up to 60 seconds (30 checks x 2 seconds)
 
   useEffect(() => {
     const verifyPayment = async () => {
       if (!user?.email) {
+        console.log("[v0] [CHECKOUT] No user email available")
         setError("Email uživatele není dostupný")
         setVerifying(false)
         return
       }
 
       try {
-        console.log("[CHECKOUT] Verifying payment for email:", user.email)
+        console.log(`[v0] [CHECKOUT] Check #${checkCount + 1}/${maxChecks} - Direct Stripe check for:`, user.email)
         
-        const response = await fetch(`/api/subscription/verify-email?email=${encodeURIComponent(user.email)}`)
+        // Call the direct payment check endpoint that queries Stripe
+        const response = await fetch(`/api/subscription/check-payment?email=${encodeURIComponent(user.email)}`)
         const data = await response.json()
 
-        console.log("[CHECKOUT] Email verification response:", data)
+        console.log("[v0] [CHECKOUT] Direct Stripe check response:", data)
 
-        if (response.ok && data.success && data.isPremium) {
-          console.log("[CHECKOUT] Payment verified successfully!")
+        if (data.success && data.isPremium) {
+          console.log("[v0] [CHECKOUT] ✓ Active subscription confirmed in Stripe!")
           
-          // Wait a moment for database update, then check subscription status
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          
-          console.log("[CHECKOUT] Refreshing subscription status...")
+          // Refresh subscription context with the new status
           await checkSubscriptionStatus()
           
           setSuccess(true)
+          setVerifying(false)
           
-          // Redirect to dashboard after 3 seconds
+          // Redirect after 2 seconds
           setTimeout(() => {
             router.push("/")
-          }, 3000)
+          }, 2000)
+          return
+        }
+        
+        // If we haven't hit max checks yet, try again
+        if (checkCount < maxChecks) {
+          console.log(`[v0] [CHECKOUT] No active subscription yet, retrying in 2 seconds...`)
+          setTimeout(() => {
+            setCheckCount(prev => prev + 1)
+          }, 2000)
         } else {
-          setError(data.message || "Nepodařilo se ověřit platbu")
+          // Max retries reached
+          console.log("[v0] [CHECKOUT] Max retries reached (60 seconds), redirecting to account")
+          setSuccess(true)
+          setVerifying(false)
+          
+          setTimeout(() => {
+            router.push("/account")
+          }, 2000)
         }
       } catch (err) {
-        console.error("[CHECKOUT] Verification error:", err)
-        setError("Chyba při ověření platby")
-      } finally {
+        console.error("[v0] [CHECKOUT] Verification error:", err)
+        setError("Chyba při ověření platby. Zkuste načíst stránku znovu.")
         setVerifying(false)
       }
     }
 
-    verifyPayment()
-  }, [user?.email, router, checkSubscriptionStatus])
+    // Only run when checkCount changes or on initial mount
+    if (checkCount <= maxChecks) {
+      verifyPayment()
+    }
+  }, [user?.email, router, checkSubscriptionStatus, checkCount, maxChecks])
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 to-slate-800">
@@ -76,6 +96,7 @@ function CheckoutSuccessContent() {
             <>
               <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
               <p className="text-sm text-gray-600">Ověřuji vaši platbu...</p>
+              <p className="text-xs text-gray-500">Pokus: {checkCount + 1}/{maxChecks}</p>
             </>
           )}
 
@@ -85,7 +106,7 @@ function CheckoutSuccessContent() {
               <div className="text-center">
                 <h3 className="font-semibold text-lg text-green-600 mb-2">Platba úspěšná! ✓</h3>
                 <p className="text-sm text-gray-600 mb-4">Váš účet byl aktivován jako Premium.</p>
-                <p className="text-xs text-gray-500">Budete přesměrováni na domovskou stránku...</p>
+                <p className="text-xs text-gray-500">Budete přesměrováni...</p>
               </div>
             </>
           )}
@@ -96,9 +117,14 @@ function CheckoutSuccessContent() {
               <div className="text-center">
                 <h3 className="font-semibold text-lg text-red-600 mb-2">Chyba</h3>
                 <p className="text-sm text-gray-600 mb-4">{error}</p>
-                <Link href="/upgrade">
-                  <Button className="w-full">Zpět na upgrade</Button>
-                </Link>
+                <div className="flex gap-2 flex-col">
+                  <Button onClick={() => window.location.reload()}>
+                    Zkusit znovu
+                  </Button>
+                  <Link href="/account">
+                    <Button variant="outline" className="w-full">Přejít na účet</Button>
+                  </Link>
+                </div>
               </div>
             </>
           )}

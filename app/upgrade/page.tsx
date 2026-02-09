@@ -7,21 +7,56 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useAuth } from "@/contexts/auth-context"
-import { Crown, Check, Zap, BarChart3, Brain, FileText, Download, Headphones, ArrowLeft, Gift } from "lucide-react"
+import { Crown, Check, Zap, BarChart3, Brain, FileText, Download, Headphones, ArrowLeft, Gift, RefreshCw } from "lucide-react"
 import Link from "next/link"
 
 export default function UpgradePage() {
-  const { upgradeToPremium, isLoading, isPremium } = useSubscription()
+  const { upgradeToPremium, isLoading, isPremium, checkSubscriptionStatus } = useSubscription()
   const { user } = useAuth()
   const router = useRouter()
   const [isUpgrading, setIsUpgrading] = useState(false)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [isChecking, setIsChecking] = useState(false)
 
-  // Redirect to signup if user is not authenticated
+  // Redirect to signup only if user is explicitly null (not authenticated)
+  // user === undefined means auth is still loading, don't redirect
   useEffect(() => {
     if (user === null) {
-      router.push("/signup")
+      // Not authenticated - redirect to login
+      router.push("/auth/login")
     }
   }, [user, router])
+
+  // If checkout window was opened, periodically check subscription status
+  useEffect(() => {
+    if (!checkoutOpen || isPremium) return
+
+    console.log("[v0] [UPGRADE] Starting automatic subscription check...")
+    const interval = setInterval(async () => {
+      setIsChecking(true)
+      try {
+        await checkSubscriptionStatus()
+        console.log("[v0] [UPGRADE] Subscription checked")
+      } catch (error) {
+        console.error("[v0] [UPGRADE] Error checking subscription:", error)
+      } finally {
+        setIsChecking(false)
+      }
+    }, 2000) // Check every 2 seconds
+
+    return () => clearInterval(interval)
+  }, [checkoutOpen, isPremium, checkSubscriptionStatus])
+
+  // If premium is detected, redirect after 2 seconds
+  useEffect(() => {
+    if (isPremium && checkoutOpen) {
+      console.log("[v0] [UPGRADE] Premium detected! Redirecting...")
+      setTimeout(() => {
+        setCheckoutOpen(false)
+        router.push("/")
+      }, 2000)
+    }
+  }, [isPremium, checkoutOpen, router])
 
   const handleUpgrade = async () => {
     if (!user) {
@@ -30,8 +65,21 @@ export default function UpgradePage() {
     }
 
     setIsUpgrading(true)
+    setCheckoutOpen(true)
     await upgradeToPremium()
     setIsUpgrading(false)
+  }
+
+  const handleManualCheck = async () => {
+    setIsChecking(true)
+    try {
+      await checkSubscriptionStatus()
+      console.log("[v0] [UPGRADE] Manual subscription check completed")
+    } catch (error) {
+      console.error("[v0] [UPGRADE] Error during manual check:", error)
+    } finally {
+      setIsChecking(false)
+    }
   }
 
   if (isPremium) {
@@ -55,6 +103,28 @@ export default function UpgradePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4">
+        {/* Checkout status message */}
+        {checkoutOpen && (
+          <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <RefreshCw className={`h-5 w-5 text-blue-600 ${isChecking ? "animate-spin" : ""}`} />
+              <div>
+                <p className="font-semibold text-blue-900">Čeking na potvrzení platby...</p>
+                <p className="text-sm text-blue-700">Platební okno se otevřelo. Po zaplacení se vaše účet automaticky aktualizuje.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleManualCheck}
+                  disabled={isChecking}
+                  className="mt-2"
+                >
+                  {isChecking ? "Ověřuji..." : "Ověřit platbu ručně"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Welcome message for new users */}
         {user && (
           <div className="mb-8 p-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-center">

@@ -19,7 +19,7 @@ export default function HomePage() {
     if (!user) {
       router.push('/signup')
     } else {
-      router.push('/account')
+      router.push('/upgrade')
     }
   }
 
