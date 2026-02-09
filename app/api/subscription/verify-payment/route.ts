@@ -106,7 +106,6 @@ export async function POST(request: NextRequest) {
         subscription_status: activeSubscription.status,
         subscription_tier: "premium",
         is_premium: true,
-        stripe_subscription_id: activeSubscription.id,
         trading_mode: "live", // Automatically switch to live mode
         trial_ends_at: activeSubscription.trial_end 
           ? new Date(activeSubscription.trial_end * 1000).toISOString()
