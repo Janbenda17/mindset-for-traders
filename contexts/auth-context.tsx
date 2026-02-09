@@ -168,67 +168,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase])
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const MAX_RETRIES = 6
-    let attempt = 0
+    try {
+      console.log("[v0] ===== PŘIHLÁŠENÍ START =====")
 
-    const attemptLogin = async (): Promise<boolean> => {
-      try {
-        console.log(`[v0] ===== PŘIHLÁŠENÍ START (pokus ${attempt + 1}/${MAX_RETRIES}) =====`)
-        console.log("[v0] Email:", email)
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-
-        if (error) {
-          console.error("[v0] ❌ LOGIN ERROR:", error.message)
-          
-          // Check if rate limited - retry automatically with LONGER waits
-          if (error.message.includes("rate limit") || error.message.includes("too many")) {
-            attempt++
-            if (attempt < MAX_RETRIES) {
-              // Exponential backoff: 5s, 10s, 20s, 40s, 60s
-              const waitTime = Math.pow(2, attempt - 1) * 5000
-              console.log(`[v0] Rate limit - čekám ${Math.round(waitTime / 1000)}s před pokusem ${attempt + 1}/${MAX_RETRIES}...`)
-              await new Promise((resolve) => setTimeout(resolve, waitTime))
-              return attemptLogin()
-            } else {
-              console.error("[v0] ❌ Všechny pokusy o přihlášení selhaly kvůli rate limitu")
-            }
-          }
-          
-          throw error
-        }
-
-        if (!data.user || !data.session) {
-          console.error("[v0] ❌ Žádný user nebo session vrácen")
-          throw new Error("NO_USER_OR_SESSION")
-        }
-
-        console.log("[v0] ✅ Přihlášení úspěšné:", data.user.email)
-
-        const userData = {
-          id: data.user.id,
-          email: data.user.email!,
-          name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Trader",
-        }
-        lastUserIdRef.current = data.user.id
-        setUser(userData)
-
-        await new Promise((resolve) => setTimeout(resolve, 300))
-
-        console.log("[v0] Redirect na domovskou stránku /")
-        router.push("/")
-
-        return true
-      } catch (error) {
-        console.error("[v0] LOGIN ERROR:", error instanceof Error ? error.message : String(error))
+      if (error) {
+        console.error("[v0] LOGIN ERROR:", error.message)
         throw error
       }
-    }
 
-    return attemptLogin()
+      if (!data.user || !data.session) {
+        console.error("[v0] Žádný user nebo session")
+        throw new Error("NO_USER_OR_SESSION")
+      }
+
+      console.log("[v0] ✅ Přihlášení úspěšné")
+
+      const userData = {
+        id: data.user.id,
+        email: data.user.email!,
+        name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Trader",
+      }
+      lastUserIdRef.current = data.user.id
+      setUser(userData)
+
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      router.push("/")
+
+      return true
+    } catch (error) {
+      console.error("[v0] LOGIN ERROR:", error instanceof Error ? error.message : String(error))
+      throw error
+    }
   }
 
   const register = async (data: { email: string; password: string; name: string }): Promise<boolean> => {
