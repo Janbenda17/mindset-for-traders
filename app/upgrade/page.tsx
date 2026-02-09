@@ -155,6 +155,19 @@ export default function UpgradePage() {
             </div>
         </div>
 
+        {/* Check subscription button */}
+        <div className="text-center mb-12">
+          <Button
+            onClick={handleManualCheck}
+            disabled={isChecking}
+            variant="outline"
+            className="inline-flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isChecking ? "animate-spin" : ""}`} />
+            {isChecking ? "Kontroluji..." : "Zkontrolovat předplatné"}
+          </Button>
+        </div>
+
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           {/* Free Plan */}
           <Card className="relative">
