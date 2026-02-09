@@ -16,23 +16,26 @@ export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
-  const [error, setError] = useState("")
-  const [showResetForm, setShowResetForm] = useState(false)
-  const [resetEmail, setResetEmail] = useState("")
-  const { login } = useAuth()
-  const router = useRouter()
+  const [countdownSeconds, setCountdownSeconds] = useState(0)
 
   useEffect(() => {
-    // Don't auto-fill credentials from localStorage for security
-    // This used to cause issues with old credentials being loaded
-    localStorage.removeItem("mindtrader-saved-email")
-    localStorage.removeItem("mindtrader-saved-password")
-  }, [])
+    if (countdownSeconds > 0) {
+      const timer = setTimeout(() => {
+        setCountdownSeconds(countdownSeconds - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [countdownSeconds])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+
+    // Check if still in countdown from rate limit
+    if (countdownSeconds > 0) {
+      setError(`Prosím počkejte ${countdownSeconds} sekund než zkusíte znovu`)
+      return
+    }
 
     // Validace emailu
     if (!email.trim()) {
@@ -72,7 +75,15 @@ export function LoginForm() {
       setIsLoading(false)
     } catch (error: any) {
       console.error("[v0] Login error:", error.message)
-      setError("Chyba při přihlášení. Ověřte prosím váš email a heslo.")
+      
+      // If rate limit error, set countdown
+      if (error?.message?.includes("rate limit")) {
+        setCountdownSeconds(30)
+        setError("Příliš mnoho pokusů. Počkejte 30 sekund a zkuste znovu.")
+      } else {
+        setError("Chyba při přihlášení. Ověřte prosím váš email a heslo.")
+      }
+      
       setPassword("")
       setIsLoading(false)
     }
@@ -191,13 +202,15 @@ export function LoginForm() {
                 <Button
                   type="submit"
                   className="w-full h-13 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isLoading}
+                  disabled={isLoading || countdownSeconds > 0}
                 >
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       <span>Přihlašuji...</span>
                     </div>
+                  ) : countdownSeconds > 0 ? (
+                    <span>Zkuste znovu za {countdownSeconds}s</span>
                   ) : (
                     <div className="flex items-center space-x-2">
                       <LogIn className="w-5 h-5" />
