@@ -11,6 +11,9 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get("stripe-signature")
 
   console.log("[WEBHOOK] ========== START ==========")
+  console.log("[WEBHOOK] Raw body length:", rawBody.length)
+  console.log("[WEBHOOK] Signature header:", signature ? `${signature.substring(0, 20)}...` : "MISSING")
+  console.log("[WEBHOOK] STRIPE_WEBHOOK_SECRET env:", process.env.STRIPE_WEBHOOK_SECRET ? "✓ SET" : "✗ MISSING")
 
   if (!signature) {
     console.error("[WEBHOOK] ERROR: Missing stripe-signature header")
@@ -20,21 +23,35 @@ export async function POST(req: NextRequest) {
   const secretKey = process.env.STRIPE_SECRET_KEY
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
-  if (!secretKey || !webhookSecret) {
-    console.error("[WEBHOOK] ERROR: Missing Stripe environment variables")
-    return new Response("Configuration error", { status: 500 })
+  if (!secretKey) {
+    console.error("[WEBHOOK] ERROR: Missing STRIPE_SECRET_KEY")
+    return new Response("Configuration error: missing secret key", { status: 500 })
+  }
+
+  if (!webhookSecret) {
+    console.error("[WEBHOOK] ERROR: Missing STRIPE_WEBHOOK_SECRET - This is required for webhook verification!")
+    console.error("[WEBHOOK] Make sure STRIPE_WEBHOOK_SECRET is set in environment variables")
+    return new Response("Configuration error: missing webhook secret", { status: 500 })
   }
 
   const stripe = new Stripe(secretKey, { apiVersion: "2024-12-18" })
 
   let event: Stripe.Event
   try {
+    console.log("[WEBHOOK] Attempting to verify webhook signature...")
+    console.log("[WEBHOOK] Using webhook secret:", webhookSecret.substring(0, 10) + "...")
+    
     // Verify webhook signature using RAW body
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
     console.log("[WEBHOOK] ✓ Signature verified - event.type:", event.type)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error("[WEBHOOK] ERROR: Signature verification failed -", message)
+    console.error("[WEBHOOK] ERROR: Signature verification failed")
+    console.error("[WEBHOOK] Error details:", message)
+    console.error("[WEBHOOK] This usually means:")
+    console.error("[WEBHOOK] 1. The webhook secret in Stripe doesn't match STRIPE_WEBHOOK_SECRET env var")
+    console.error("[WEBHOOK] 2. The webhook was tampered with in transit")
+    console.error("[WEBHOOK] 3. The signature header format is invalid")
     return new Response(`Webhook signature verification failed: ${message}`, { status: 400 })
   }
 
