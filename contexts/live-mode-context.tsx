@@ -65,10 +65,22 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user || !isLiveMode) return
 
-    // If user was in live mode but premium expires, switch back to virtual
+    // Only revert if we're sure isPremium is loaded and it's definitely false
+    // Don't revert during loading state to avoid false positives
+    // isPremium will be checked via subscription context which loads from DB
     if (!isPremium && isLiveMode) {
-      console.log(`[v0] [LiveMode] ⚠️ Premium expired for user ${user.id} - reverting to VIRTUAL mode`)
-      switchToVirtualForExpiredPremium()
+      console.log(`[v0] [LiveMode] ⚠️ Checking if premium expired for user ${user.id}...`)
+      
+      // Give subscription context time to load from DB (max 3 seconds)
+      // If isPremium is still false after that, then premium actually expired
+      const timeout = setTimeout(() => {
+        if (!isPremium && isLiveMode) {
+          console.log(`[v0] [LiveMode] ⚠️ Premium expired for user ${user.id} - reverting to VIRTUAL mode`)
+          switchToVirtualForExpiredPremium()
+        }
+      }, 3000)
+      
+      return () => clearTimeout(timeout)
     }
   }, [isPremium, user?.id, isLiveMode])
 
