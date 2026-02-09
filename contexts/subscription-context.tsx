@@ -42,7 +42,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const { user, authReady } = useAuth()
 
-  const isPremium = plan === "premium" && isActive
+  // isPremium is true if isActive (which comes from API and checks is_premium flag in DB)
+  const isPremium = isActive
 
   // Check subscription status only on initial mount and when user changes
   useEffect(() => {

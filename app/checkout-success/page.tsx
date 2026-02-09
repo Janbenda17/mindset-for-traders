@@ -30,42 +30,52 @@ function CheckoutSuccessContent() {
     }
 
     if (pollCount > maxPolls) {
-      console.log("[v0] [CHECKOUT] Max polls reached, stopping")
+      console.log("[v0] [CHECKOUT] Max polls reached, redirecting to account")
       setHasStopped(true)
-      setSuccess(true)
       setVerifying(false)
       setTimeout(() => router.push("/account"), 1000)
       return
     }
 
     const timer = setTimeout(async () => {
-      console.log(`[v0] [CHECKOUT] Poll #${pollCount + 1}/${maxPolls}`)
+      console.log(`[v0] [CHECKOUT] Verification attempt ${pollCount + 1}/${maxPolls}`)
       
       try {
-        const response = await fetch(`/api/subscription/check-payment?email=${encodeURIComponent(user.email)}`)
+        // Use unified verify-payment endpoint
+        const response = await fetch("/api/subscription/verify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: user.email })
+        })
+
         const data = await response.json()
 
-        console.log("[v0] [CHECKOUT] Check response:", { success: data.success, isPremium: data.isPremium, pollCount: pollCount + 1 })
+        console.log("[v0] [CHECKOUT] Response:", data)
 
         if (data.success && data.isPremium) {
-          console.log("[v0] [CHECKOUT] ✓ Premium confirmed!")
+          console.log("[v0] [CHECKOUT] ✓ Payment verified and premium activated!")
+          
+          // Refresh subscription context
           await checkSubscriptionStatus()
+          
           setSuccess(true)
           setVerifying(false)
           setHasStopped(true)
-          setTimeout(() => router.push("/"), 1000)
+          
+          // Redirect to home after 2 seconds
+          setTimeout(() => router.push("/"), 2000)
           return
         }
 
-        // Continue polling
+        // Payment not confirmed yet, continue polling
         setPollCount(prev => prev + 1)
       } catch (err) {
-        console.error("[v0] [CHECKOUT] Error:", err)
-        setError("Chyba při ověření. Zkuste to prosím znovu.")
+        console.error("[v0] [CHECKOUT] Verification error:", err)
+        setError("Chyba při ověření platby. Zkontrolujte prosím svůj účet.")
         setVerifying(false)
         setHasStopped(true)
       }
-    }, 2000)
+    }, 3000) // Check every 3 seconds
 
     return () => clearTimeout(timer)
   }, [user?.email, pollCount, maxPolls, hasStopped, router, checkSubscriptionStatus])

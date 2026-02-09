@@ -76,10 +76,34 @@ export default function UpgradePage() {
   }
 
   const handleManualCheck = async () => {
+    if (!user?.email) {
+      console.log("[v0] [UPGRADE] No user email available")
+      return
+    }
+
     setIsChecking(true)
     try {
+      console.log("[v0] [UPGRADE] Manually checking payment status...")
+      
+      // Call unified verify-payment endpoint
+      const response = await fetch("/api/subscription/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email })
+      })
+
+      const data = await response.json()
+      console.log("[v0] [UPGRADE] Verification result:", data)
+
+      // Refresh subscription context to get latest status
       await checkSubscriptionStatus()
-      console.log("[v0] [UPGRADE] Manual subscription check completed")
+
+      if (data.success && data.isPremium) {
+        console.log("[v0] [UPGRADE] ✓ Premium status confirmed!")
+        // Page will automatically re-render and show premium UI
+      } else {
+        console.log("[v0] [UPGRADE] No active subscription found")
+      }
     } catch (error) {
       console.error("[v0] [UPGRADE] Error during manual check:", error)
     } finally {
