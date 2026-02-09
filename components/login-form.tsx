@@ -18,6 +18,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [countdownSeconds, setCountdownSeconds] = useState(0)
   const [error, setError] = useState("")
+  const [rememberMe, setRememberMe] = useState(false)
   const [showResetForm, setShowResetForm] = useState(false)
   const [resetEmail, setResetEmail] = useState("")
   const { login } = useAuth()
