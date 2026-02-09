@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase])
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const MAX_RETRIES = 5
+    const MAX_RETRIES = 6
     let attempt = 0
 
     const attemptLogin = async (): Promise<boolean> => {
@@ -184,14 +184,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) {
           console.error("[v0] ❌ LOGIN ERROR:", error.message)
           
-          // Check if rate limited - retry automatically
+          // Check if rate limited - retry automatically with LONGER waits
           if (error.message.includes("rate limit") || error.message.includes("too many")) {
             attempt++
             if (attempt < MAX_RETRIES) {
-              const waitTime = Math.pow(2, attempt) * 500 // 1s, 2s, 4s, 8s, 16s
-              console.log(`[v0] Rate limit - čekám ${waitTime}ms (pokus ${attempt + 1}/${MAX_RETRIES})...`)
+              // Exponential backoff: 5s, 10s, 20s, 40s, 60s
+              const waitTime = Math.pow(2, attempt - 1) * 5000
+              console.log(`[v0] Rate limit - čekám ${Math.round(waitTime / 1000)}s před pokusem ${attempt + 1}/${MAX_RETRIES}...`)
               await new Promise((resolve) => setTimeout(resolve, waitTime))
               return attemptLogin()
+            } else {
+              console.error("[v0] ❌ Všechny pokusy o přihlášení selhaly kvůli rate limitu")
             }
           }
           
