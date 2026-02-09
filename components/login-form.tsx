@@ -191,17 +191,12 @@ export function LoginForm() {
                 <Button
                   type="submit"
                   className="w-full h-13 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isLoading || rateLimitRetryAfter > 0}
+                  disabled={isLoading}
                 >
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       <span>Přihlašuji...</span>
-                    </div>
-                  ) : rateLimitRetryAfter > 0 ? (
-                    <div className="flex items-center space-x-2">
-                      <Shield className="w-5 h-5" />
-                      <span>Zkuste znovu za {rateLimitRetryAfter}s</span>
                     </div>
                   ) : (
                     <div className="flex items-center space-x-2">
