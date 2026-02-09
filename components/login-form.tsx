@@ -17,6 +17,11 @@ export function LoginForm() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [countdownSeconds, setCountdownSeconds] = useState(0)
+  const [error, setError] = useState("")
+  const [showResetForm, setShowResetForm] = useState(false)
+  const [resetEmail, setResetEmail] = useState("")
+  const { login } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
     if (countdownSeconds > 0) {
