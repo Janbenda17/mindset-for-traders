@@ -35,8 +35,10 @@ export async function POST(request: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser()
 
+    console.log("[v0] [CHECKOUT] Auth check:", { hasUser: !!user, hasError: !!authError, errorMsg: authError?.message })
+
     if (authError || !user) {
-      console.log("[v0] Not authenticated")
+      console.log("[v0] [CHECKOUT] Not authenticated - returning 401")
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
 
@@ -93,8 +95,11 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get("origin")
     const baseUrl = origin || process.env.NEXT_PUBLIC_BASE_URL || "https://mindtrader.vercel.app"
 
-    console.log("[v0] Request origin:", origin)
-    console.log("[v0] Using baseUrl:", baseUrl)
+    console.log("[v0] [CHECKOUT] baseUrl setup:", {
+      origin: origin || "none",
+      env_var: process.env.NEXT_PUBLIC_BASE_URL || "none",
+      final_baseUrl: baseUrl
+    })
 
     // IMPORTANT: Find correct price ID from YOUR account
     // You can find this by running: stripe prices list --product prod_***
