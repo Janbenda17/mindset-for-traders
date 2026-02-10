@@ -171,17 +171,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log("[v0] ===== PŘIHLÁŠENÍ START =====")
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Call our server-side login endpoint instead of Supabase directly
+      // This avoids Supabase rate limiting
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       })
 
-      if (error) {
-        console.error("[v0] LOGIN ERROR:", error.message)
-        throw error
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error("[v0] LOGIN ERROR:", result.error)
+        throw new Error(result.error)
       }
 
-      if (!data.user || !data.session) {
+      if (!result.user || !result.session) {
         console.error("[v0] Žádný user nebo session")
         throw new Error("NO_USER_OR_SESSION")
       }
@@ -189,11 +194,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[v0] ✅ Přihlášení úspěšné")
 
       const userData = {
-        id: data.user.id,
-        email: data.user.email!,
-        name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Trader",
+        id: result.user.id,
+        email: result.user.email!,
+        name: result.user.user_metadata?.name || result.user.email?.split("@")[0] || "Trader",
       }
-      lastUserIdRef.current = data.user.id
+      lastUserIdRef.current = result.user.id
       setUser(userData)
 
       await new Promise((resolve) => setTimeout(resolve, 300))
