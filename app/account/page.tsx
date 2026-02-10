@@ -178,7 +178,6 @@ export default function AccountPage() {
       setEmail(user.email || "")
     }
     loadAllSettings()
-    loadStats()
     loadPropChallenges()
     calculateAverageReadiness()
 
