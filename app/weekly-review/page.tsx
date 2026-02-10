@@ -146,7 +146,9 @@ export default function WeeklyReviewPage() {
 
   useEffect(() => {
     if (isLiveMode) {
-      loadWeekData()
+      // In LIVE MODE, use analytics from data context (which loads from Supabase)
+      // Don't call loadWeekData() which reads from localStorage
+      console.log("[v0] Weekly Review - LIVE MODE detected, using Supabase data")
     } else {
       loadVirtualData()
     }
@@ -158,12 +160,17 @@ export default function WeeklyReviewPage() {
     }
   }, [user?.id])
 
-  // /** START: CHANGE */
-  // // Auto-generate weekly review from computed analytics
+  // Auto-generate weekly review from computed analytics (ONLY in live mode when data is loaded)
   useEffect(() => {
-    if (!analytics) return
+    if (!analytics || !isLiveMode) return
 
     const { weeklyInsights } = analytics
+
+    console.log("[v0] [WeeklyReview] Generating review from analytics:", {
+      totalTrades: analytics.summary.totalTrades,
+      winRate: analytics.summary.winRate,
+      totalPnL: analytics.summary.totalPnL,
+    })
 
     setReview({
       whatWorked: `Nejlepší den: ${weeklyInsights.bestPerformingDay}`,
@@ -186,8 +193,7 @@ export default function WeeklyReviewPage() {
         completed: false,
       })),
     )
-  }, [analytics])
-  // /** END: CHANGE */
+  }, [analytics, isLiveMode])
 
   useEffect(() => {
     // if (reviewVariant === "ai" && currentWeekData) {
