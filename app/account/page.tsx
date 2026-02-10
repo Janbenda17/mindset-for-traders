@@ -1715,7 +1715,7 @@ export default function AccountPage() {
                 <p className={`font-medium transition-colors ${isLiveMode ? "text-white" : "text-gray-400"}`}>
                   {language === "cs" ? "Vypnuto" : "Off"}
                 </p>
-                <Switch checked={isLiveMode} onCheckedChange={toggleLiveMode} />
+                <Switch checked={isLiveMode} onCheckedChange={switchToLive} />
                 <p className={`font-medium transition-colors ${isLiveMode ? "text-white" : "text-gray-400"}`}>
                   {language === "cs" ? "Zapnuto" : "On"}
                 </p>
