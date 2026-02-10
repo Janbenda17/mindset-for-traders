@@ -91,12 +91,10 @@ export async function POST(request: NextRequest) {
     }
 
     const origin = request.headers.get("origin")
-    const baseUrl = "https://www.mindtrader.cz" || origin || process.env.NEXT_PUBLIC_BASE_URL || "https://mindtrader.vercel.app"
+    const baseUrl = origin || process.env.NEXT_PUBLIC_BASE_URL || "https://mindtrader.vercel.app"
 
     console.log("[v0] Request origin:", origin)
     console.log("[v0] Using baseUrl:", baseUrl)
-    console.log("[v0] NEXT_PUBLIC_BASE_URL:", process.env.NEXT_PUBLIC_BASE_URL)
-    console.log("[v0] Final base URL:", baseUrl)
 
     // IMPORTANT: Find correct price ID from YOUR account
     // You can find this by running: stripe prices list --product prod_***
@@ -122,7 +120,6 @@ export async function POST(request: NextRequest) {
           user_id: user.id,
           user_email: user.email || "",
         },
-        trial_period_days: 14,
       },
       success_url: `${baseUrl}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/upgrade`,
