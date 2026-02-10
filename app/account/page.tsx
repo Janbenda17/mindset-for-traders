@@ -281,8 +281,11 @@ export default function AccountPage() {
       totalTrades: tradeEntries.length,
       winRate: Math.round(winRate),
       totalPnL: Math.round(totalPnL),
-        memberSince: new Date().toLocaleDateString("cs-CZ"),
+      memberSince: new Date().toLocaleDateString("cs-CZ"),
     })
+    } catch (error) {
+      console.error("[v0] Error loading settings:", error)
+    }
   }
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
