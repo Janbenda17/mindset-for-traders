@@ -45,6 +45,9 @@ export async function POST(request: Request) {
         email: email || user.email,
         display_name: name || email?.split("@")[0] || "Trader",
         trading_mode: "virtual",
+        subscription_status: "free",
+        subscription_tier: "free",
+        is_premium: false,
         onboarding_completed: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -57,7 +60,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: { code: error.code, message: error.message } }, { status: 500 })
     }
 
-    console.log("[v0] New user defaults to virtual mode (set in database)")
+    console.log("[v0] ✅ Profil vytvořen - nový uživatel má FREE verzi (bez trial)")
     return NextResponse.json({ ok: true, data }, { status: 200 })
   } catch (error: any) {
     console.error("[v0] API error:", error)

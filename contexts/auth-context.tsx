@@ -305,24 +305,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Start 14-day free trial automatically
-      console.log("[v0] Zahajuji 14denní free trial...")
-      try {
-        const trialResponse = await fetch("/api/subscription/start-trial", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: authData.user.id }),
-        })
-
-        if (trialResponse.ok) {
-          const trialData = await trialResponse.json()
-          console.log("[v0] ✅ Trial zahájen:", trialData.trialEndsAt)
-        } else {
-          console.error("[v0] ❌ Chyba při zahájení trialu")
-        }
-      } catch (trialError) {
-        console.error("[v0] ❌ Trial request error:", trialError)
-      }
+      // Nový uživatel má pouze FREE verzi (bez trial)
+      console.log("[v0] Nový uživatel - nastavuji FREE verzi bez trial...")
 
       toast({
         title: "Registrace úspěšná!",
