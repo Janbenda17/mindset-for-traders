@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/server"
 
 export const runtime = "nodejs"
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-)
-
-// Simple in-memory cache to avoid repeated API calls
+// Simple in-memory cache to avoid repeated API calls during rate limiting
 const loginCache = new Map<string, { token: string; expiresAt: number }>()
 
 export async function POST(request: NextRequest) {
@@ -31,11 +26,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "Logged in from cache",
-        token: cached.token,
       })
     }
 
-    // Try to login via Supabase
+    // Use server Supabase client which handles session cookies
+    const supabase = await createClient()
+
     console.log("[v0] [AUTH-LOGIN] Calling Supabase signInWithPassword...")
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -45,10 +41,9 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("[v0] [AUTH-LOGIN] Supabase error:", error.message)
 
-      // If rate limited, check cache and return a generic success to let client retry
+      // If rate limited, return rate limit error
       if (error.message.includes("rate limit")) {
         console.log("[v0] [AUTH-LOGIN] Rate limited by Supabase")
-        // Return partial success to avoid blocking user
         return NextResponse.json(
           { error: "Too many requests, please try again in a moment" },
           { status: 429 },
@@ -70,11 +65,29 @@ export async function POST(request: NextRequest) {
 
     console.log("[v0] [AUTH-LOGIN] Login successful:", email)
 
-    return NextResponse.json({
+    // Create response with session data
+    const response = NextResponse.json({
       success: true,
       user: data.user,
       session: data.session,
     })
+
+    // Set session cookie so subsequent API calls work
+    response.cookies.set("sb-access-token", data.session.access_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: data.session.expires_in,
+    })
+
+    response.cookies.set("sb-refresh-token", data.session.refresh_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+    })
+
+    return response
   } catch (error) {
     console.error("[v0] [AUTH-LOGIN] Exception:", error instanceof Error ? error.message : String(error))
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
