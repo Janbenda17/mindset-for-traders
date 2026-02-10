@@ -109,7 +109,9 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
 
     try {
       setIsLoading(true)
-      const response = await fetch("/api/daily-stages/get")
+      const response = await fetch("/api/daily-stages/get", {
+        credentials: "include",
+      })
 
       if (!response.ok) {
         console.error(`[v0] Failed to load daily stages: ${response.status} ${response.statusText}`)
@@ -205,6 +207,7 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
 
       const response = await fetch("/api/daily-stages/update", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stageId, completed: true }),
       })
