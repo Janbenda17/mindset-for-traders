@@ -76,6 +76,7 @@ import { useLanguage } from "@/contexts/language-context"
 import { useLiveMode } from "@/contexts/live-mode-context"
 
 export default function AccountPage() {
+  console.log("[v0] Account page - rendering...")
   const { user, logout } = useAuth()
   const {
     subscription,
@@ -91,6 +92,8 @@ export default function AccountPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { data: gamificationData } = useGamification()
   const { isLiveMode, switchToLive } = useLiveMode()
+  
+  console.log("[v0] Account page - hooks initialized, user:", user?.email || "none")
 
   const [activeTab, setActiveTab] = useState("profile")
   const [loading, setLoading] = useState(false)
@@ -190,7 +193,7 @@ export default function AccountPage() {
     if (isPremium && !isLiveMode) {
       switchToLive()
     }
-  }, [isPremium])
+  }, [isPremium, isLiveMode, switchToLive])
 
   useEffect(() => {
     const userData = getUserData()
@@ -219,52 +222,8 @@ export default function AccountPage() {
   }
 
   const loadAllSettings = () => {
-    const userData = getUserData()
-
-    if (userData.profile) {
-      setNickname(userData.profile.nickname || "")
-      setBio(userData.profile.bio || "")
-      setExperienceLevel(userData.profile.experienceLevel || "intermediate")
-      setCountry(userData.profile.country || "cz")
-      if (userData.profile.avatarUrl) {
-        setAvatarUrl(userData.profile.avatarUrl)
-      }
-    }
-
-    if (userData.settings?.trading) {
-      setTradingStyle(userData.settings.trading.style || "day-trader")
-      setRiskLevel(userData.settings.trading.riskLevel || "moderate")
-      setTimezone(userData.settings.trading.timezone || "Europe/Prague")
-      setDefaultCurrency(userData.settings.trading.defaultCurrency || "USD")
-    }
-
-    if (userData.settings?.preferences) {
-      setSoundsEnabled(userData.settings.preferences.soundsEnabled ?? true)
-      setAnimationsEnabled(userData.settings.preferences.animationsEnabled ?? true)
-    }
-
-    if (userData.settings?.notifications) {
-      const notif = userData.settings.notifications
-      setEmailNotifications(notif.email ?? true)
-      setPushNotifications(notif.push ?? true)
-      setWeeklyReport(notif.weeklyReport ?? true)
-      setTradingAlerts(notif.tradingAlerts ?? true)
-      setDailyReminder(notif.dailyReminder ?? false)
-      setPsychologyInsights(notif.psychologyInsights ?? true)
-    }
-
-    if (userData.settings?.security) {
-      setTwoFactorEnabled(userData.settings.security.twoFactorEnabled ?? false)
-      setSessionTimeout(userData.settings.security.sessionTimeout?.toString() || "30")
-      setLoginAlerts(userData.settings.security.loginAlerts ?? true)
-      setEmailOnNewDevice(userData.settings.security.emailOnNewDevice ?? true)
-      setEmailOnPasswordChange(userData.settings.security.emailOnPasswordChange ?? true)
-      setEmailOnSecurityChange(userData.settings.security.emailOnSecurityChange ?? true)
-    }
-  }
-
-  const loadStats = () => {
-    const userData = getUserData()
+    try {
+      const userData = getUserData()
     const journalEntries = userData.journalEntries || []
     const moodEntries = userData.moodEntries || []
     const tradeEntries = journalEntries.filter((e) => e.type === "trade")
