@@ -90,7 +90,7 @@ export default function AccountPage() {
   const { language, setLanguage, t } = useLanguage()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { data: gamificationData } = useGamification()
-  const { isLiveMode, toggleLiveMode } = useLiveMode()
+  const { isLiveMode, switchToLive } = useLiveMode()
 
   const [activeTab, setActiveTab] = useState("profile")
   const [loading, setLoading] = useState(false)
@@ -188,7 +188,7 @@ export default function AccountPage() {
   // Automatically enable live mode for premium users
   useEffect(() => {
     if (isPremium && !isLiveMode) {
-      toggleLiveMode()
+      switchToLive()
     }
   }, [isPremium])
 
