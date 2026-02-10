@@ -20,10 +20,10 @@ export default function UpgradePage() {
   const [pollCount, setPollCount] = useState(0)
   const maxPolls = 15 // Max 30 seconds (15 checks x 2 seconds)
 
-  // Redirect to signup only if user is explicitly null (not authenticated)
+  // Redirect to login only if user is explicitly null (not authenticated)
   useEffect(() => {
     if (user === null) {
-      router.push("/auth/login")
+      router.push("/login")
     }
   }, [user, router])
 
@@ -65,7 +65,7 @@ export default function UpgradePage() {
 
   const handleUpgrade = async () => {
     if (!user) {
-      window.location.href = "/signup"
+      window.location.href = "/login"
       return
     }
 

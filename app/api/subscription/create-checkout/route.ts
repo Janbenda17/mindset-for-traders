@@ -91,9 +91,10 @@ export async function POST(request: NextRequest) {
     }
 
     const origin = request.headers.get("origin")
-    const baseUrl = origin || process.env.NEXT_PUBLIC_BASE_URL || "https://mindtrader.vercel.app"
+    const baseUrl = "https://www.mindtrader.cz" || origin || process.env.NEXT_PUBLIC_BASE_URL || "https://mindtrader.vercel.app"
 
     console.log("[v0] Request origin:", origin)
+    console.log("[v0] Using baseUrl:", baseUrl)
     console.log("[v0] NEXT_PUBLIC_BASE_URL:", process.env.NEXT_PUBLIC_BASE_URL)
     console.log("[v0] Final base URL:", baseUrl)
 
