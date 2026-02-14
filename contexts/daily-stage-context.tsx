@@ -99,6 +99,23 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
     }
   }, [user])
 
+  // Check every minute if date has changed and reset stages if needed
+  useEffect(() => {
+    if (!user) return
+
+    let lastCheckedDate = new Date().toISOString().split("T")[0]
+    const dateCheckInterval = setInterval(() => {
+      const currentDate = new Date().toISOString().split("T")[0]
+      if (currentDate !== lastCheckedDate) {
+        console.log(`[v0] [DailyStage] Date changed from ${lastCheckedDate} to ${currentDate} - reloading stages`)
+        lastCheckedDate = currentDate
+        loadStagesFromSupabase()
+      }
+    }, 60000) // Check every minute
+
+    return () => clearInterval(dateCheckInterval)
+  }, [user])
+
   const loadStagesFromSupabase = async () => {
     if (!user) {
       console.log("[v0] [DailyStage] No user - cannot load stages")
