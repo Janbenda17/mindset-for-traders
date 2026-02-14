@@ -1069,8 +1069,8 @@ function StudentTeamClubView({
   }
 
   const communityStats = {
-    onlineMembers: isLiveMode ? 1 : 487,
-    totalMembers: isLiveMode ? 1 : 1243,
+    onlineMembers: isLiveMode ? (buddies ? buddies.filter((b: any) => b.status === "online").length : 1) : 487,
+    totalMembers: isLiveMode ? (buddies ? buddies.length : 1) : 1243,
     activeChallenges: challenges.filter((c) => c.joined).length,
     liveRooms: rooms.filter((r) => r.status === "live").length,
     todayPosts: posts.length,
