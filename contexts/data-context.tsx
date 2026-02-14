@@ -327,12 +327,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       try {
+        console.log("[v0] [LiveMode] Attempting to load trades from Supabase...")
         const { data: journalData, error: tradesError } = await supabase
           .from("journal_entries")
           .select("*")
           .eq("user_id", user.id)
           .not("pair", "is", null)
           .order("created_at", { ascending: false })
+
+        console.log("[v0] [LiveMode] Trades query result:", { hasData: !!journalData, hasError: !!tradesError, errorMsg: tradesError?.message })
 
         if (!tradesError && journalData) {
           const trades = journalData.map((entry: any) => ({
@@ -383,6 +386,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (err) {
         console.error("[v0] Exception loading trades:", err instanceof Error ? err.message : String(err))
+        console.error("[v0] Full error:", err)
         dispatch({ type: "SET_TRADES", payload: [] })
       }
 
