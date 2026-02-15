@@ -175,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // This avoids Supabase rate limiting
       const response = await fetch("/api/auth/login", {
         method: "POST",
+        credentials: "include", // IMPORTANT: Send and receive cookies
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       })
@@ -191,7 +192,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("NO_USER_OR_SESSION")
       }
 
-      console.log("[v0] ✅ Přihlášení úspěšné")
+      console.log("[v0] ✅ Přihlášení úspěšné - nastavuji session do Supabase client")
+      
+      // Set the session in Supabase client so subsequent calls work
+      await supabase.auth.setSession(result.session)
 
       const userData = {
         id: result.user.id,
