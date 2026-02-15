@@ -39,30 +39,34 @@ export async function GET(request: Request) {
     }
 
     if (!existingStages) {
-      // Demo data for VIRTUAL mode - with stage 5 unlocked
-      if (isVirtualMode) {
+      // LIVE MODE: Fresh day - all stages incomplete
+      if (!isVirtualMode) {
+        console.log("[v0] [DailyStages] Fresh day in LIVE MODE - returning empty stages")
         return NextResponse.json({
           current_stage: 1,
-          morning_check_completed: true,
-          morning_check_completed_at: new Date(Date.now() - 3600000).toISOString(),
-          daily_intention_completed: true,
-          daily_intention_completed_at: new Date(Date.now() - 2400000).toISOString(),
-          trading_plan_completed: true,
-          trading_plan_completed_at: new Date(Date.now() - 1800000).toISOString(),
-          record_trades_completed: true,
-          record_trades_completed_at: new Date(Date.now() - 600000).toISOString(),
+          morning_check_completed: false,
+          daily_intention_completed: false,
+          trading_plan_completed: false,
+          record_trades_completed: false,
           daily_summary_completed: false,
-          completedToday: ["morning_check", "daily_intention", "trading_plan", "record_trade"],
+          completedToday: [],
         })
       }
 
+      // VIRTUAL MODE: Demo data with stage 5 unlocked
+      console.log("[v0] [DailyStages] Fresh day in VIRTUAL MODE - returning demo data")
       return NextResponse.json({
         current_stage: 1,
-        morning_check_completed: false,
-        daily_intention_completed: false,
-        trading_plan_completed: false,
-        record_trades_completed: false,
-        completedToday: [],
+        morning_check_completed: true,
+        morning_check_completed_at: new Date(Date.now() - 3600000).toISOString(),
+        daily_intention_completed: true,
+        daily_intention_completed_at: new Date(Date.now() - 2400000).toISOString(),
+        trading_plan_completed: true,
+        trading_plan_completed_at: new Date(Date.now() - 1800000).toISOString(),
+        record_trades_completed: true,
+        record_trades_completed_at: new Date(Date.now() - 600000).toISOString(),
+        daily_summary_completed: false,
+        completedToday: ["morning_check", "daily_intention", "trading_plan", "record_trade"],
       })
     }
 

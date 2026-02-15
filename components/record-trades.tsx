@@ -738,6 +738,33 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
           <Zap className="w-5 h-5" />
           {isLoading ? "Ukládám..." : "Uložit obchod"}
         </Button>
+
+        {/* No trades today button */}
+        <Button
+          type="button"
+          onClick={async () => {
+            setIsLoading(true)
+            try {
+              await completeStage("record-trades")
+              toast({
+                title: "✓ Stage 4 hotov",
+                description: "Dnes bez obchodu - stage 4 uzavřena",
+              })
+            } catch (error) {
+              toast({
+                title: "Chyba",
+                description: "Nepodařilo se uzavřít stage 4",
+                variant: "destructive",
+              })
+            } finally {
+              setIsLoading(false)
+            }
+          }}
+          disabled={isLoading}
+          className="w-full bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white font-semibold py-7 text-lg rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Dnes bez obchodu
+        </Button>
       </form>
 
       {trades.length > 0 && (
