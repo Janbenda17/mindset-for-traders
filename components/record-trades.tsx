@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
 import { useAuth } from "@/contexts/auth-context"
+import { useLiveMode } from "@/contexts/live-mode-context"
 import { showXPNotification, showLevelUpNotification } from "@/lib/xp-notifications"
 import { TrendingUp, DollarSign, BarChart3, Brain, Zap, ChevronDown, Trash2 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -92,6 +93,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
   const { completeStage } = useDailyStage()
   const { addTrade, deleteTrade } = useData()
   const { user } = useAuth()
+  const { isLiveMode } = useLiveMode()
   const [isLoading, setIsLoading] = useState(false)
   const [todayPlan, setTodayPlan] = useState<TradingPlanData | null>(null)
   const [morningCheck, setMorningCheck] = useState<MorningCheckData | null>(null)
@@ -245,12 +247,19 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
       return
     }
 
-    // Refresh trades from storage immediately
+    // Refresh trades
     const today = format(new Date(), "yyyy-MM-dd")
-    const tradesKey = `user-${user?.id}-mindtrader-trades`
-    const allTrades = JSON.parse(localStorage.getItem(tradesKey) || "[]")
-    const todayTrades = allTrades.filter((t: Trade) => t.date === today)
-    setTrades(todayTrades)
+    if (isLiveMode) {
+      // LIVE MODE: Get data from data context which loads from Supabase
+      console.log("[v0] LIVE MODE: Loading trades from Supabase via refreshLiveData")
+      // The data context will automatically refresh after addTrade, no need to manually refresh
+    } else {
+      // VIRTUAL MODE: Get from localStorage
+      const tradesKey = `user-${user?.id}-mindtrader-trades`
+      const allTrades = JSON.parse(localStorage.getItem(tradesKey) || "[]")
+      const todayTrades = allTrades.filter((t: Trade) => t.date === today)
+      setTrades(todayTrades)
+    }
 
     // Mark record trade as completed in daily tracker
     try {
