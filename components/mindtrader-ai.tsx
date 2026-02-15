@@ -139,7 +139,7 @@ const MindTraderAI = () => {
   // Check for losses in recent trades to trigger recovery mode
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0]
-    const todayTrades = trades.filter((t) => t.date === today || t.closeDate === today)
+    const todayTrades = trades.filter((t) => (t.recordedDate || t.date) === today || t.closeDate === today)
 
     const totalLoss = todayTrades.reduce((sum, trade) => {
       const pnl = trade.pnl || trade.profitLoss || 0

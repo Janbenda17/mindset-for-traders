@@ -155,7 +155,7 @@ export function DailySummary() {
     } else {
       // LIVE MODE - Load fresh data from database
       const allTrades = getAllTrades()
-      const trades = allTrades.filter((t: Trade) => t.date === today)
+      const trades = allTrades.filter((t: Trade) => (t.recordedDate || t.date) === today)
       
       console.log(`[v0] DailySummary - Loaded ${trades.length} trades for today (${today})`)
       setTodayTrades(trades)

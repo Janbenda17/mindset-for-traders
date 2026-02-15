@@ -58,8 +58,12 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 
     if (!dataLoaded) {
       console.log("[v0] [Analytics] Data not loaded yet - waiting")
-      setIsLoading(true)
-      return
+      // Only wait if we have no trades yet (initialization phase)
+      if (trades.length === 0 && journalEntries.length === 0 && morningChecks.length === 0) {
+        setIsLoading(true)
+        return
+      }
+      // But if we have data, proceed with computation even if dataLoaded flag hasn't updated
     }
 
     console.log(`[v0] [Analytics] Computing analytics for user ${user.id} (data owner: ${dataOwnerUserId})`)

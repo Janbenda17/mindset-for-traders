@@ -17,6 +17,7 @@ import {
 interface Trade {
   id: string
   date: string
+  recordedDate?: string // Date when trade was recorded (important for today's overview)
   pair: string
   direction: string
   entryPrice: number
@@ -341,6 +342,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const trades = journalData.map((entry: any) => ({
             id: entry.id,
             date: entry.date,
+            recordedDate: entry.recorded_date, // Date when trade was recorded
             pair: entry.pair,
             direction: entry.direction || "long",
             entryPrice: entry.entry_price || 0,
@@ -562,6 +564,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: tradeTitle,
           content: tradeContent,
           date: trade.date,
+          recorded_date: new Date().toISOString().split("T")[0], // Date when trade was RECORDED (today)
           pair: trade.pair,
           direction: trade.direction,
           entry_price: trade.entryPrice,
@@ -618,9 +621,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }, 500)
         return true
       } else if (user?.id) {
+        // VIRTUAL MODE - add to state and localStorage
         const newTrades = [...state.trades, trade]
         dispatch({ type: "ADD_TRADE", payload: trade })
         setScoped("virtual", user.id, "trades", newTrades)
+        
+        // Trigger data refresh so calendar, analytics, and today's overview update
+        console.log("[v0] Virtual mode - trade added, triggering data refresh")
+        setTimeout(() => {
+          // Dispatch refresh to trigger UI updates
+          dispatch({ type: "SET_TRADES", payload: newTrades })
+        }, 100)
         return true
       }
       return false
