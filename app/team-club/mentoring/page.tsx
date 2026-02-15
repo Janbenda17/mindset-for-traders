@@ -1,15 +1,87 @@
 "use client"
 
 import { useAuth } from "@/contexts/auth-context"
+import { useData } from "@/contexts/data-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Users, Calendar, Clock, Star, BookOpen, Video, MessageSquare, TrendingUp, Target } from "lucide-react"
-import Link from "next/link"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Users, Trophy, TrendingUp, Clock, Heart, Zap, AlertCircle, CheckCircle } from "lucide-react"
+import { useState, useEffect } from "react"
 
 export default function Mentoring() {
   const { user } = useAuth()
+  const { getAllTrades } = useData()
+  const [groups, setGroups] = useState<any[]>([])
+  const [selectedGroup, setSelectedGroup] = useState<any>(null)
+  const [groupMembers, setGroupMembers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isMentor, setIsMentor] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      loadGroups()
+    }
+  }, [user])
+
+  const loadGroups = async () => {
+    try {
+      setLoading(true)
+      // Fetch mentor groups
+      const response = await fetch("/api/mentoring/groups", {
+        credentials: "include",
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setGroups(data.groups || [])
+        
+        // Check if user is a mentor
+        if (data.mentorGroup) {
+          setIsMentor(true)
+          setSelectedGroup(data.mentorGroup)
+          await loadGroupMembers(data.mentorGroup.id)
+        } else if (data.groups.length > 0) {
+          setSelectedGroup(data.groups[0])
+          await loadGroupMembers(data.groups[0].id)
+        }
+      }
+    } catch (error) {
+      console.error("[v0] Error loading mentor groups:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadGroupMembers = async (groupId: string) => {
+    try {
+      const response = await fetch(`/api/mentoring/groups/${groupId}/members`, {
+        credentials: "include",
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        // Fetch stats for each member
+        const membersWithStats = await Promise.all(
+          data.members.map(async (member: any) => {
+            const statsResponse = await fetch(
+              `/api/mentoring/groups/${groupId}/members/${member.id}/stats`,
+              { credentials: "include" }
+            )
+            if (statsResponse.ok) {
+              const stats = await statsResponse.json()
+              return { ...member, stats: stats.stats }
+            }
+            return member
+          })
+        )
+        setGroupMembers(membersWithStats)
+      }
+    } catch (error) {
+      console.error("[v0] Error loading group members:", error)
+    }
+  }
 
   if (!user) {
     return (
@@ -18,93 +90,12 @@ export default function Mentoring() {
           <Users className="w-16 h-16 text-blue-600 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Přihlášení vyžadováno</h1>
           <Button asChild>
-            <Link href="/login">Přihlásit se</Link>
+            <a href="/login">Přihlásit se</a>
           </Button>
         </div>
       </div>
     )
   }
-
-  const mentors = [
-    {
-      id: 1,
-      name: "Pavel Novák",
-      avatar: "/placeholder.svg?height=80&width=80",
-      title: "Senior Forex Mentor",
-      experience: "15+ let",
-      specialization: "EUR/USD, GBP/JPY, Scalping",
-      students: 247,
-      rating: 4.9,
-      successRate: "89%",
-      description: "Specializuji se na intradenní trading a scalping strategie. Pomáhám traderům najít svůj styl.",
-      nextSession: "Pondělí 18:00",
-      price: "Zdarma pro Premium",
-    },
-    {
-      id: 2,
-      name: "Marie Svobodová",
-      avatar: "/placeholder.svg?height=80&width=80",
-      title: "Trading Psychology Coach",
-      experience: "12+ let",
-      specialization: "Psychologie, Risk Management",
-      students: 189,
-      rating: 4.8,
-      successRate: "92%",
-      description: "Pomáhám traderům překonat psychologické bariéry a vybudovat správný mindset.",
-      nextSession: "Středa 19:30",
-      price: "Zdarma pro Premium",
-    },
-    {
-      id: 3,
-      name: "Jan Procházka",
-      avatar: "/placeholder.svg?height=80&width=80",
-      title: "Swing Trading Expert",
-      experience: "10+ let",
-      specialization: "Swing Trading, Technická analýza",
-      students: 156,
-      rating: 4.7,
-      successRate: "85%",
-      description: "Učím dlouhodobější strategie a fundamentální analýzu pro swing trading.",
-      nextSession: "Pátek 17:00",
-      price: "Zdarma pro Premium",
-    },
-  ]
-
-  const upcomingSessions = [
-    {
-      id: 1,
-      title: "Týdenní analýza trhů",
-      mentor: "Pavel Novák",
-      date: "Pondělí",
-      time: "18:00",
-      duration: "60 min",
-      participants: 45,
-      type: "Webinář",
-      description: "Analýza hlavních měnových párů a trading příležitostí na nadcházející týden.",
-    },
-    {
-      id: 2,
-      title: "Q&A - Vaše otázky",
-      mentor: "Marie Svobodová",
-      date: "Středa",
-      time: "19:30",
-      duration: "90 min",
-      participants: 28,
-      type: "Live Session",
-      description: "Otevřená diskuze o trading psychologii a řešení vašich problémů.",
-    },
-    {
-      id: 3,
-      title: "Swing Trading Workshop",
-      mentor: "Jan Procházka",
-      date: "Pátek",
-      time: "17:00",
-      duration: "120 min",
-      participants: 67,
-      type: "Workshop",
-      description: "Praktický workshop zaměřený na swing trading strategie a setup identifikaci.",
-    },
-  ]
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -112,119 +103,49 @@ export default function Mentoring() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <Star className="w-8 h-8 mr-3 text-yellow-600" />
-            Program mentoringu
+            <Trophy className="w-8 h-8 mr-3 text-yellow-600" />
+            Mentoring skupiny
           </h1>
-          <p className="text-gray-600 mt-1">Osobní vedení od zkušených traderů • Live sessions • 1:1 konzultace</p>
+          <p className="text-gray-600 mt-1">
+            {isMentor ? "Sledujte výkony svých studentů a poskytujte jim vedení" : "Připojte se k mentoring skupině a rozvíjejte se"}
+          </p>
         </div>
 
-        {/* Nadcházející sezení */}
+        {/* Skupiny */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Nadcházející sezení</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingSessions.map((session) => (
-              <Card key={session.id} className="hover:shadow-lg transition-shadow">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Dostupné skupiny</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {groups.map((group) => (
+              <Card
+                key={group.id}
+                className={`cursor-pointer transition-all ${
+                  selectedGroup?.id === group.id
+                    ? "ring-2 ring-blue-600 shadow-lg"
+                    : "hover:shadow-md"
+                }`}
+                onClick={() => {
+                  setSelectedGroup(group)
+                  loadGroupMembers(group.id)
+                }}
+              >
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <Badge variant="outline">{session.type}</Badge>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Users className="w-4 h-4 mr-1" />
-                      {session.participants}
-                    </div>
-                  </div>
-                  <CardTitle className="text-lg">{session.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Star className="w-4 h-4 mr-2" />
-                      {session.mentor}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {session.date} {session.time}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Clock className="w-4 h-4 mr-2" />
-                      {session.duration}
-                    </div>
-                    <p className="text-sm text-gray-600">{session.description}</p>
-                    <Button className="w-full">
-                      <Video className="w-4 h-4 mr-2" />
-                      Přihlásit se
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Mentoři */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Naši mentoři</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {mentors.map((mentor) => (
-              <Card key={mentor.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="w-16 h-16">
-                      <AvatarImage src={mentor.avatar || "/placeholder.svg"} />
-                      <AvatarFallback>
-                        {mentor.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
                     <div>
-                      <h3 className="font-semibold text-lg">{mentor.name}</h3>
-                      <p className="text-sm text-gray-600">{mentor.title}</p>
-                      <div className="flex items-center mt-1">
-                        <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                        <span className="text-sm font-medium">{mentor.rating}</span>
-                        <span className="text-sm text-gray-500 ml-2">({mentor.students} studentů)</span>
-                      </div>
+                      <CardTitle className="text-lg">{group.name}</CardTitle>
+                      <p className="text-sm text-gray-600 mt-1">Kód: {group.access_code}</p>
                     </div>
+                    <Badge variant="outline">{group.members_count} členů</Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600">{mentor.description}</p>
-
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-500">Zkušenosti</p>
-                        <p className="font-medium">{mentor.experience}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Úspěšnost</p>
-                        <p className="font-medium text-green-600">{mentor.successRate}</p>
-                      </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center text-gray-600">
+                      <Users className="w-4 h-4 mr-2" />
+                      Mentor: {group.mentor_name}
                     </div>
-
-                    <div>
-                      <p className="text-gray-500 text-sm">Specializace</p>
-                      <p className="font-medium text-sm">{mentor.specialization}</p>
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm">
-                      <div>
-                        <p className="text-gray-500">Další session</p>
-                        <p className="font-medium">{mentor.nextSession}</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">{mentor.price}</Badge>
-                    </div>
-
-                    <div className="flex space-x-2">
-                      <Button className="flex-1">
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Kontakt
-                      </Button>
-                      <Button variant="outline" className="flex-1 bg-transparent">
-                        <BookOpen className="w-4 h-4 mr-2" />
-                        Profil
-                      </Button>
+                    <div className="flex items-center text-gray-600">
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      {group.description}
                     </div>
                   </div>
                 </CardContent>
@@ -233,44 +154,247 @@ export default function Mentoring() {
           </div>
         </div>
 
-        {/* Benefits */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Video className="w-5 h-5 text-blue-600" />
-                <span>Live Sessions</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Pravidelné live sessions s možností pokládat otázky v reálném čase.</p>
-            </CardContent>
-          </Card>
+        {/* Členové skupiny - jen pro mentora */}
+        {isMentor && selectedGroup && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Členové skupiny "{selectedGroup.name}"</h2>
+            
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList>
+                <TabsTrigger value="overview">Přehled</TabsTrigger>
+                <TabsTrigger value="detailed">Detaily</TabsTrigger>
+                <TabsTrigger value="analytics">Analýza</TabsTrigger>
+              </TabsList>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Target className="w-5 h-5 text-green-600" />
-                <span>Personalizované vedení</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Individuální přístup podle vašeho stylu tradingu a zkušeností.</p>
-            </CardContent>
-          </Card>
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {groupMembers.map((member) => {
+                    const stats = member.stats || {}
+                    const totalScore = (stats.sleep_hours || 0) * 10 + (stats.trades_count || 0) * 5 + (stats.win_rate || 0)
+                    
+                    return (
+                      <Card key={member.id} className="hover:shadow-lg transition-shadow">
+                        <CardHeader>
+                          <div className="flex items-center space-x-3">
+                            <Avatar>
+                              <AvatarImage src={member.avatar} />
+                              <AvatarFallback>
+                                {member.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <p className="font-semibold">{member.name}</p>
+                              <p className="text-xs text-gray-500">{member.email}</p>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {/* Score */}
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg">
+                              <p className="text-xs text-gray-600 mb-1">Celkové skóre</p>
+                              <p className="text-2xl font-bold text-blue-600">{totalScore.toFixed(0)}</p>
+                            </div>
 
+                            {/* Stats */}
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div className="flex items-center space-x-2 bg-gray-50 p-2 rounded">
+                                <Clock className="w-4 h-4 text-orange-500" />
+                                <div>
+                                  <p className="text-xs text-gray-500">Spánek</p>
+                                  <p className="font-semibold">{stats.sleep_hours || 0}h</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center space-x-2 bg-gray-50 p-2 rounded">
+                                <TrendingUp className="w-4 h-4 text-green-500" />
+                                <div>
+                                  <p className="text-xs text-gray-500">Obchody</p>
+                                  <p className="font-semibold">{stats.trades_count || 0}</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center space-x-2 bg-gray-50 p-2 rounded">
+                                <CheckCircle className="w-4 h-4 text-blue-500" />
+                                <div>
+                                  <p className="text-xs text-gray-500">Win Rate</p>
+                                  <p className="font-semibold">{(stats.win_rate || 0).toFixed(1)}%</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center space-x-2 bg-gray-50 p-2 rounded">
+                                <Heart className="w-4 h-4 text-red-500" />
+                                <div>
+                                  <p className="text-xs text-gray-500">P&L</p>
+                                  <p className={`font-semibold ${(stats.pnl || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                    ${(stats.pnl || 0).toFixed(2)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <Button className="w-full mt-2">Poskytnutí vedení</Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+
+                {groupMembers.length === 0 && (
+                  <Card>
+                    <CardContent className="py-8">
+                      <p className="text-center text-gray-600">V této skupině zatím nejsou žádní členové</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              {/* Detailed Tab */}
+              <TabsContent value="detailed">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Detailní statistiky členů</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-3 px-4">Jméno</th>
+                            <th className="text-right py-3 px-4">Spánek</th>
+                            <th className="text-right py-3 px-4">Obchody</th>
+                            <th className="text-right py-3 px-4">Win Rate</th>
+                            <th className="text-right py-3 px-4">P&L</th>
+                            <th className="text-right py-3 px-4">Skóre</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {groupMembers
+                            .sort((a, b) => {
+                              const scoreA = (a.stats?.sleep_hours || 0) * 10 + (a.stats?.trades_count || 0) * 5 + (a.stats?.win_rate || 0)
+                              const scoreB = (b.stats?.sleep_hours || 0) * 10 + (b.stats?.trades_count || 0) * 5 + (b.stats?.win_rate || 0)
+                              return scoreB - scoreA
+                            })
+                            .map((member, index) => {
+                              const stats = member.stats || {}
+                              const totalScore = (stats.sleep_hours || 0) * 10 + (stats.trades_count || 0) * 5 + (stats.win_rate || 0)
+                              
+                              return (
+                                <tr key={member.id} className="border-b hover:bg-gray-50">
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center space-x-2">
+                                      <Badge variant="outline">#{index + 1}</Badge>
+                                      <span className="font-medium">{member.name}</span>
+                                    </div>
+                                  </td>
+                                  <td className="text-right py-3 px-4">{stats.sleep_hours || 0}h</td>
+                                  <td className="text-right py-3 px-4">{stats.trades_count || 0}</td>
+                                  <td className="text-right py-3 px-4">{(stats.win_rate || 0).toFixed(1)}%</td>
+                                  <td className={`text-right py-3 px-4 font-medium ${(stats.pnl || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                    ${(stats.pnl || 0).toFixed(2)}
+                                  </td>
+                                  <td className="text-right py-3 px-4 font-bold text-blue-600">{totalScore.toFixed(0)}</td>
+                                </tr>
+                              )
+                            })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Analytics Tab */}
+              <TabsContent value="analytics">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Group Stats */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Statistiky skupiny</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex justify-between items-center py-2 border-b">
+                        <span className="text-gray-600">Průměrný spánek</span>
+                        <span className="font-bold">
+                          {(groupMembers.reduce((acc, m) => acc + (m.stats?.sleep_hours || 0), 0) / Math.max(groupMembers.length, 1)).toFixed(1)}h
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b">
+                        <span className="text-gray-600">Průměrný Win Rate</span>
+                        <span className="font-bold">
+                          {(groupMembers.reduce((acc, m) => acc + (m.stats?.win_rate || 0), 0) / Math.max(groupMembers.length, 1)).toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b">
+                        <span className="text-gray-600">Celkem obchodů</span>
+                        <span className="font-bold">
+                          {groupMembers.reduce((acc, m) => acc + (m.stats?.trades_count || 0), 0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-gray-600">Skupinový P&L</span>
+                        <span className={`font-bold ${groupMembers.reduce((acc, m) => acc + (m.stats?.pnl || 0), 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+                          ${groupMembers.reduce((acc, m) => acc + (m.stats?.pnl || 0), 0).toFixed(2)}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Best Performers */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Nejlepší výkony</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {groupMembers
+                          .sort((a, b) => {
+                            const scoreA = (a.stats?.sleep_hours || 0) * 10 + (a.stats?.trades_count || 0) * 5 + (a.stats?.win_rate || 0)
+                            const scoreB = (b.stats?.sleep_hours || 0) * 10 + (b.stats?.trades_count || 0) * 5 + (b.stats?.win_rate || 0)
+                            return scoreB - scoreA
+                          })
+                          .slice(0, 3)
+                          .map((member, index) => {
+                            const stats = member.stats || {}
+                            return (
+                              <div key={member.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <div className="flex items-center space-x-2">
+                                  {index === 0 && <Trophy className="w-5 h-5 text-yellow-500" />}
+                                  {index === 1 && <Trophy className="w-5 h-5 text-gray-400" />}
+                                  {index === 2 && <Trophy className="w-5 h-5 text-orange-600" />}
+                                  <span className="font-medium">{member.name}</span>
+                                </div>
+                                <Zap className="w-4 h-4 text-blue-600" />
+                              </div>
+                            )
+                          })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+
+        {/* Není mentor */}
+        {!isMentor && selectedGroup && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="w-5 h-5 text-purple-600" />
-                <span>Ověřené strategie</span>
-              </CardTitle>
+              <CardTitle>Přidali jste se do skupiny "{selectedGroup.name}"</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Naučte se strategie, které skutečně fungují na reálných trzích.</p>
+              <p className="text-gray-600">
+                Mentor {selectedGroup.mentor_name} bude sledovat vaše pokroky a poskytovat vám vedení. Pokračujte v trénování a zlepšování se!
+              </p>
             </CardContent>
           </Card>
-        </div>
+        )}
       </div>
     </div>
   )
