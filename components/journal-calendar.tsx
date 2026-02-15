@@ -18,6 +18,7 @@ import { getJournalEntries } from "@/utils/storage-utils"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
 import { useAuth } from "@/contexts/auth-context"
+import { useLiveMode } from "@/contexts/live-mode-context"
 import { getScoped } from "@/lib/storage"
 import { generateVirtualTrades, generateVirtualJournalEntries } from "@/lib/virtual-data-generator"
 
@@ -30,8 +31,9 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [entries, setEntries] = useState<any[]>([])
-  const { isLiveMode } = useData()
+  const { getAllTrades } = useData()
   const { user } = useAuth()
+  const { isLiveMode } = useLiveMode()
 
   useEffect(() => {
     loadEntries()
@@ -46,10 +48,11 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
       const virtualTrades = generateVirtualTrades(25)
       const virtualJournals = generateVirtualJournalEntries(5)
       setEntries([...virtualTrades, ...virtualJournals])
-    } else if (user?.id) {
-      // Use real entries in live mode with user scoped storage
-      const journalEntries = getScoped("live", user.id, "journal-entries", [])
-      setEntries(journalEntries)
+    } else {
+      // LIVE MODE: Load from data context (Supabase data, not localStorage)
+      const allTrades = getAllTrades()
+      console.log("[v0] JournalCalendar - Loading trades from Supabase via getAllTrades:", allTrades.length)
+      setEntries(allTrades)
     }
   }
 
@@ -71,7 +74,8 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
 
   const getEntriesForDate = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-    return entries.filter((entry) => entry.date === dateStr)
+    // In LIVE MODE, filter by recordedDate (when trade was recorded), in VIRTUAL MODE use date (when it was opened)
+    return entries.filter((entry) => (isLiveMode ? entry.recordedDate : entry.date) === dateStr)
   }
 
   const getStatsForDate = (day: number) => {
