@@ -174,10 +174,20 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
         }
       })
 
-      const updatedStages = stagesWithCompletion.map((stage, index) => ({
-        ...stage,
-        unlocked: stage.id === 1 || (index > 0 && stagesWithCompletion[index - 1].completed),
-      }))
+      // STRICT SEQUENTIAL UNLOCKING: Each stage unlocks ONLY when the previous one is completed
+      const updatedStages = stagesWithCompletion.map((stage, index) => {
+        // Stage 1 is always unlocked
+        if (stage.id === 1) {
+          return { ...stage, unlocked: true }
+        }
+        
+        // All other stages unlock ONLY if the previous stage is completed
+        const previousStageCompleted = index > 0 && stagesWithCompletion[index - 1].completed
+        return {
+          ...stage,
+          unlocked: previousStageCompleted,
+        }
+      })
 
       setStages(updatedStages)
 
@@ -280,29 +290,8 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
     return Math.round((completed / stages.length) * 100)
   }
 
-  useEffect(() => {
-    if (!analytics || isLoading) return
-
-    const autoProgressStages = async () => {
-      const { stages: stageConditions } = analytics
-
-      // Auto-unlock stages based on data conditions
-      if (stageConditions.shouldUnlockStage2 && !stages[1].unlocked && !stages[1].completed) {
-        console.log("[v0] [Stages] Auto-unlocking Stage 2: Daily Intention (morning check completed)")
-        await completeStage(1)
-      }
-      if (stageConditions.shouldUnlockStage3 && !stages[2].unlocked && !stages[2].completed) {
-        console.log("[v0] [Stages] Auto-unlocking Stage 3: Trading Plan (daily intention set)")
-        await completeStage(2)
-      }
-      if (stageConditions.shouldUnlockStage5 && !stages[4].unlocked && !stages[4].completed) {
-        console.log("[v0] [Stages] Auto-unlocking Stage 5: Daily Summary (trades recorded)")
-        await completeStage(4)
-      }
-    }
-
-    autoProgressStages()
-  }, [analytics])
+  // Removed auto-progression logic - stages MUST be completed in order
+  // No more auto-unlocking or skipping stages
 
   return (
     <DailyStageContext.Provider
