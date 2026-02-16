@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useDailyStage } from "@/contexts/daily-stage-context"
+import { cn } from "@/lib/utils"
 import {
   Target,
   TrendingUp,
