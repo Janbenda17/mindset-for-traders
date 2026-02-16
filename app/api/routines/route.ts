@@ -28,45 +28,22 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get groups where user is mentor
-    const { data: mentorGroups } = await supabase
-      .from("mentoring_groups")
+    const today = new Date().toISOString().split("T")[0]
+
+    const { data: routine, error } = await supabase
+      .from("trading_routines")
       .select("*")
-      .eq("mentor_id", user.user.id)
-
-    // Get groups where user is member
-    const { data: memberGroupIds } = await supabase
-      .from("mentoring_group_members")
-      .select("group_id")
       .eq("user_id", user.user.id)
+      .eq("date", today)
+      .maybeSingle()
 
-    const memberIds = memberGroupIds?.map((m) => m.group_id) || []
+    if (error && error.code !== "PGRST116") throw error
 
-    let memberGroups: any[] = []
-    if (memberIds.length > 0) {
-      const { data: groups } = await supabase
-        .from("mentoring_groups")
-        .select("*")
-        .in("id", memberIds)
-      memberGroups = groups || []
-    }
-
-    // Combine and deduplicate
-    const allGroupIds = new Set([...(mentorGroups?.map((g) => g.id) || []), ...memberIds])
-    const allGroupsMap = new Map()
-
-    mentorGroups?.forEach((g) => allGroupsMap.set(g.id, g))
-    memberGroups.forEach((g) => allGroupsMap.set(g.id, g))
-
-    const userGroups = Array.from(allGroupsMap.values())
-
-    return NextResponse.json({
-      groups: userGroups,
-    })
+    return NextResponse.json({ routine })
   } catch (error) {
-    console.error("[v0] Error fetching mentoring groups:", error)
+    console.error("[v0] Error fetching routines:", error)
     return NextResponse.json(
-      { error: "Failed to fetch mentoring groups" },
+      { error: "Failed to fetch routines" },
       { status: 500 }
     )
   }
@@ -98,28 +75,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { name, description, code, max_members } = await request.json()
+    const body = await request.json()
+    const today = new Date().toISOString().split("T")[0]
 
-    // Create mentoring group
-    const { data: group, error: createError } = await supabase
-      .from("mentoring_groups")
-      .insert({
-        name,
-        description,
-        code: code.toUpperCase(),
-        mentor_id: user.user.id,
-        max_members: max_members || 20,
-      })
+    const { data: routine, error } = await supabase
+      .from("trading_routines")
+      .upsert(
+        {
+          user_id: user.user.id,
+          date: today,
+          pre_market_checklist: body.pre_market_checklist || [],
+          pre_market_completed: body.pre_market_completed || false,
+          pre_market_time: body.pre_market_time || null,
+          post_market_checklist: body.post_market_checklist || [],
+          post_market_completed: body.post_market_completed || false,
+          post_market_time: body.post_market_time || null,
+          trading_rules: body.trading_rules || [],
+          max_trades_per_day: body.max_trades_per_day || null,
+          max_loss_per_day: body.max_loss_per_day || null,
+          daily_reflection: body.daily_reflection || null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,date" }
+      )
       .select()
       .single()
 
-    if (createError) throw createError
+    if (error) throw error
 
-    return NextResponse.json({ group })
+    return NextResponse.json({ routine })
   } catch (error) {
-    console.error("[v0] Error creating mentoring group:", error)
+    console.error("[v0] Error saving routines:", error)
     return NextResponse.json(
-      { error: "Failed to create mentoring group" },
+      { error: "Failed to save routines" },
       { status: 500 }
     )
   }

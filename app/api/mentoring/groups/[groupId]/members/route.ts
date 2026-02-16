@@ -64,7 +64,38 @@ export async function GET(
 
     if (membersError) throw membersError
 
-    return NextResponse.json({ group, members })
+    // Get today's date
+    const today = new Date().toISOString().split("T")[0]
+
+    // Enrich members with user info and today's stats
+    const membersWithStats = await Promise.all(
+      (members || []).map(async (member) => {
+        // Try to get user profile
+        const { data: userProfile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", member.user_id)
+          .single()
+
+        // Get today's stats
+        const { data: todayStats } = await supabase
+          .from("mentoring_group_stats")
+          .select("*")
+          .eq("group_id", params.groupId)
+          .eq("user_id", member.user_id)
+          .eq("date", today)
+          .single()
+
+        return {
+          ...member,
+          user_name: userProfile?.full_name || "Uživatel",
+          user_email: userProfile?.email,
+          today_stats: todayStats || null,
+        }
+      })
+    )
+
+    return NextResponse.json({ group, members: membersWithStats })
   } catch (error) {
     console.error("[v0] Error fetching group members:", error)
     return NextResponse.json(

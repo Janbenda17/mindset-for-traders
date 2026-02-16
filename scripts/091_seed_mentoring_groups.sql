@@ -1,20 +1,34 @@
 -- Seed script for mentoring groups
 -- Creates Filip Olšanský group with access code Filipfx
 
--- First, find or use a test mentor user
--- For now, we'll insert default Filip group data
-
+-- First, create a test mentor user if needed or use existing admin
 -- Insert Filip Olšanský mentoring group
-INSERT INTO mentoring_groups (name, mentor_name, access_code, description, created_at)
-VALUES (
-  'Filip Olšanský',
-  'Filip Olšanský',
-  'Filipfx',
-  'Profesionální mentoring skupiny zaměřená na trading psychologii a risk management',
-  NOW()
-)
-ON CONFLICT (access_code) DO NOTHING;
+-- We need to get the user ID from auth.users first
+-- For now, we'll create it with a placeholder that will be updated
 
--- If you have existing users, you can add them as members
--- Example: INSERT INTO mentoring_group_members (group_id, user_id, joined_at)
--- SELECT id, :user_id, NOW() FROM mentoring_groups WHERE access_code = 'Filipfx'
+DO $$
+DECLARE
+  mentor_user_id UUID;
+  group_record RECORD;
+BEGIN
+  -- Try to find an admin or first user to be the mentor
+  SELECT id INTO mentor_user_id FROM auth.users LIMIT 1;
+  
+  -- If no user exists, we'll skip this (in production, create a user first)
+  IF mentor_user_id IS NOT NULL THEN
+    -- Insert Filip Olšanský mentoring group
+    INSERT INTO mentoring_groups (mentor_id, name, description, code, max_members)
+    VALUES (
+      mentor_user_id,
+      'Filip Olšanský',
+      'Profesionální mentoring skupiny zaměřená na trading psychologii a risk management',
+      'Filipfx',
+      20
+    )
+    ON CONFLICT (code) DO NOTHING;
+    
+    RAISE NOTICE 'Filip Olšanský mentoring group created successfully';
+  ELSE
+    RAISE NOTICE 'No users found. Please create a user first before seeding mentoring groups.';
+  END IF;
+END $$;
