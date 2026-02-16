@@ -24,14 +24,12 @@ export async function POST(request: NextRequest) {
       `${trade.pair || trade.symbol || "Trade"} ${trade.direction || ""} - ${trade.date || new Date().toISOString().split("T")[0]}`
 
     const tradeDate = trade.date || new Date().toISOString().split("T")[0]
-    const recordedDate = trade.recordedDate || new Date().toISOString().split("T")[0]
 
     const supabaseFields = {
       user_id: user.id,
       type: "trade",
       title: tradeTitle,
-      date: tradeDate, // The date when the trade actually happened
-      recorded_date: recordedDate, // The date when the trade was recorded
+      date: tradeDate,
       pair: trade.pair || trade.symbol,
       symbol: trade.pair || trade.symbol,
       direction: trade.direction || "long",
@@ -41,9 +39,9 @@ export async function POST(request: NextRequest) {
       pnl: Number(trade.pnl) || 0,
       pips: Number(trade.pips) || null,
       mood: Number(trade.mood) || null,
+      confidence_before: Number(trade.confidenceBefore || trade.confidence) || null,
       confidence: Number(trade.confidence || trade.confidenceBefore) || null,
       confidence_level: Number(trade.confidenceBefore || trade.confidence) || null,
-      confidence_before: Number(trade.confidenceBefore || trade.confidence) || null,
       stress: Number(trade.stress || trade.stressLevel) || null,
       stress_level: Number(trade.stressLevel || trade.stress) || null,
       discipline: Number(trade.discipline) || null,
@@ -53,9 +51,9 @@ export async function POST(request: NextRequest) {
       notes: trade.notes || trade.detailedAnalysis || null,
       content: trade.detailedAnalysis || trade.notes || null,
       detailed_analysis: trade.detailedAnalysis || null,
-      lessons: trade.lessons || [],
-      mistakes: trade.mistakes || [],
-      improvements: trade.improvements || [],
+      lessons: trade.lessons ? JSON.stringify(trade.lessons) : null,
+      mistakes: trade.mistakes ? JSON.stringify(trade.mistakes) : null,
+      improvements: trade.improvements ? JSON.stringify(trade.improvements) : null,
       what_worked: trade.whatWorked || null,
       what_didnt_work: trade.whatDidntWork || null,
       entry_reason: trade.entryReason || null,
@@ -76,8 +74,6 @@ export async function POST(request: NextRequest) {
       close_date: trade.closeDate || tradeDate,
       session: trade.session || null,
       behavior_description: trade.behaviorDescription || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     }
 
     const { data, error } = await supabase.from("journal_entries").insert(supabaseFields).select().maybeSingle()
