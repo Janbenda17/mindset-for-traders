@@ -393,7 +393,26 @@ export default function DailyTrackerPage() {
     )
   }
 
-  const todayEntry = entries.find((e) => e.date === format(new Date(), "yyyy-MM-dd")) || entries[0]
+  // Compute todayEntry dynamically from fresh data sources
+  const today = format(new Date(), "yyyy-MM-dd")
+  const todayMorningCheck = morningChecks.find((m: any) => m.date === today)
+  const todayTrades = trades.filter((t: any) => t.date === today)
+  const todayIntention = dailyIntentions?.find((i: any) => i.date === today)
+  const todayPlan = tradingPlans?.find((p: any) => p.date === today)
+
+  // Build todayEntry from fresh data
+  const todayEntry = {
+    date: today,
+    morningCheck: todayMorningCheck,
+    intention: todayIntention,
+    plan: todayPlan,
+    trades: todayTrades,
+    overallScore: todayMorningCheck?.score || null,
+    stagesCompleted: todayStages.filter((s) => s.completed).length,
+  }
+
+  // For history entries, use the loaded entries
+  const historyEntries = entries.filter((e) => e.date !== today)
 
   const readinessScore = todayEntry?.overallScore ?? null
 
@@ -1258,9 +1277,9 @@ export default function DailyTrackerPage() {
 
         {/* HISTORY TAB */}
         <TabsContent value="history" className="space-y-8">
-          {entries.length > 0 ? (
+          {historyEntries.length > 0 ? (
             <div className="space-y-4">
-              {entries.map((entry) => {
+              {historyEntries.map((entry) => {
                 const entryReadiness = entry.morningCheck?.score ?? null
                 const isExpanded = expandedEntry === entry.date
 
