@@ -400,15 +400,15 @@ export default function DailyTrackerPage() {
   const todayIntention = dailyIntentions?.find((i: any) => i.date === today)
   const todayPlan = tradingPlans?.find((p: any) => p.date === today)
 
-  // Build todayEntry from fresh data
-  const todayEntry = {
+  // Build todayEntry from fresh data (stagesCompleted will be set after todayStages is computed)
+  let todayEntry: any = {
     date: today,
     morningCheck: todayMorningCheck,
     intention: todayIntention,
     plan: todayPlan,
     trades: todayTrades,
     overallScore: todayMorningCheck?.score || null,
-    stagesCompleted: todayStages.filter((s) => s.completed).length,
+    stagesCompleted: 0, // Will be updated below
   }
 
   // For history entries, use the loaded entries
@@ -667,6 +667,9 @@ export default function DailyTrackerPage() {
     completed: !isLiveMode ? true : stage.completed,
     unlocked: !isLiveMode ? true : stage.unlocked,
   }))
+
+  // Update todayEntry with actual stagesCompleted count
+  todayEntry.stagesCompleted = todayStages.filter((s) => s.completed).length
 
   const isMorningCheckCompleted = todayStages.find((s) => s.id === 1)?.completed || false
 
