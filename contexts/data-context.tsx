@@ -342,6 +342,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const trades = journalData.map((entry: any) => ({
             id: entry.id,
             date: entry.date,
+            recordedDate: entry.recorded_date, // Date when trade was recorded
             pair: entry.pair,
             direction: entry.direction || "long",
             entryPrice: entry.entry_price || 0,
@@ -563,6 +564,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: tradeTitle,
           content: tradeContent,
           date: trade.date,
+          recorded_date: new Date().toISOString().split("T")[0], // Date when trade was RECORDED (today)
           pair: trade.pair,
           direction: trade.direction,
           entry_price: trade.entryPrice,
