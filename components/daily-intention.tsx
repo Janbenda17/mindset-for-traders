@@ -32,7 +32,7 @@ const EMOTIONAL_GOALS = [
 export function DailyIntention() {
   const router = useRouter()
   const { toast } = useToast()
-  const { completeStage } = useDailyStage()
+  const { completeStage, stages } = useDailyStage()
   const { isLiveMode, portfolioValue } = useData()
   const [intention, setIntention] = useState<DailyIntentionData>({
     date: new Date().toISOString().split("T")[0],
@@ -42,9 +42,24 @@ export function DailyIntention() {
     strategy: "",
   })
 
+  // Check if stage 2 is locked
+  const stage2 = stages.find((s) => s.id === 2)
+  const isStage2Locked = stage2?.locked || false
+
   const maxRiskDollars = (portfolioValue * intention.maxRiskPercent) / 100
 
   const saveIntention = () => {
+    // Check if stage is locked
+    if (isStage2Locked) {
+      toast({
+        title: "Fáze Uzamčena",
+        description: "Fáze 2 (Denní záměr) již byla dnes dokončena a je uzamčena. Změny se nemohou provádět.",
+        variant: "destructive",
+        duration: 3000,
+      })
+      return
+    }
+
     if (!isLiveMode) {
       toast({
         title: "Demo Mode",

@@ -73,6 +73,10 @@ export function DailySummary() {
   const { completeStage, stages } = useDailyStage()
   const { getAllTrades, isLiveMode } = useData()
 
+  // Check if stage 5 is locked
+  const stage5 = stages.find((s) => s.id === 5)
+  const isStage5Locked = stage5?.locked || false
+
   const [morningCheck, setMorningCheck] = useState<MorningCheckData | null>(null)
   const [intention, setIntention] = useState<DailyIntentionData | null>(null)
   const [plan, setTradingPlan] = useState<TradingPlanData | null>(null)
@@ -342,6 +346,17 @@ export function DailySummary() {
   }
 
   const handleComplete = () => {
+    // Check if stage is already locked
+    if (isStage5Locked) {
+      toast({
+        title: "Fáze Uzamčena",
+        description: "Fáze 5 (Denní shrnutí) již byla dnes dokončena a je uzamčena.",
+        variant: "destructive",
+        duration: 3000,
+      })
+      return
+    }
+
     completeStage(5)
     toast({
       title: "Den úspěšně uzavřen",

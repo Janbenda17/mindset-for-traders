@@ -44,9 +44,13 @@ interface TradingPlanData {
 export function TradingPlan() {
   const router = useRouter()
   const { toast } = useToast()
-  const { completeStage } = useDailyStage()
+  const { completeStage, stages } = useDailyStage()
   const [isLoading, setIsLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+
+  // Check if stage 3 is locked
+  const stage3 = stages.find((s) => s.id === 3)
+  const isStage3Locked = stage3?.locked || false
 
   const [formData, setFormData] = useState<TradingPlanData>({
     date: format(new Date(), "yyyy-MM-dd"),
@@ -119,6 +123,17 @@ export function TradingPlan() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Check if stage is locked
+    if (isStage3Locked) {
+      toast({
+        title: "Fáze Uzamčena",
+        description: "Fáze 3 (Trading plán) již byla dnes dokončena a je uzamčena. Změny se nemohou provádět.",
+        variant: "destructive",
+        duration: 3000,
+      })
+      return
+    }
 
     if (!validateForm()) return
 

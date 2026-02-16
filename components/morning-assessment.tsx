@@ -59,10 +59,14 @@ const EXERCISE_TYPES = [
 export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
   const router = useRouter()
   const { toast } = useToast()
-  const { completeStage } = useDailyStage()
+  const { completeStage, stages } = useDailyStage()
   const { isLiveMode, addMorningCheck } = useData()
   const { addXP, incrementStreak, incrementStat } = useGamification()
   const { user } = useAuth()
+
+  // Check if stage 1 is locked from context
+  const stage1 = stages.find((s) => s.id === 1)
+  const isStage1Locked = stage1?.locked || false
   const [isLocked, setIsLocked] = useState(false)
   const [assessment, setAssessment] = useState<MorningCheckData>({
     id: "",
@@ -85,10 +89,9 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
 
   useEffect(() => {
     const todayDate = new Date().toISOString().split("T")[0]
-    const lockKey = `user-${user?.id}-morning-check-locked-${todayDate}`
-    const locked = localStorage.getItem(lockKey) === "true"
-
-    if (locked) {
+    
+    // Use locked status from context (more reliable)
+    if (isStage1Locked) {
       setIsLocked(true)
       const storageKey = `user-${user?.id}-mindtrader-morning-checks`
       const saved = localStorage.getItem(storageKey) || "[]"
@@ -97,8 +100,23 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       if (todayCheck) {
         setAssessment(todayCheck)
       }
+    } else {
+      // Fallback to localStorage lock (for backward compatibility)
+      const lockKey = `user-${user?.id}-morning-check-locked-${todayDate}`
+      const locked = localStorage.getItem(lockKey) === "true"
+
+      if (locked) {
+        setIsLocked(true)
+        const storageKey = `user-${user?.id}-mindtrader-morning-checks`
+        const saved = localStorage.getItem(storageKey) || "[]"
+        const checks = JSON.parse(saved)
+        const todayCheck = checks.find((c: MorningCheckData) => c.date === todayDate)
+        if (todayCheck) {
+          setAssessment(todayCheck)
+        }
+      }
     }
-  }, [user?.id])
+  }, [user?.id, isStage1Locked])
 
   const calculateScore = () => {
     const weights = {
