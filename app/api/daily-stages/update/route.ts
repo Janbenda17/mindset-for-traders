@@ -36,21 +36,45 @@ export async function POST(request: Request) {
 
     const nextStage = completed ? Math.min(stageId + 1, 5) : stageId
 
+    // First, get existing record to preserve all other stage completion data
+    const { data: existingRecord } = await supabase
+      .from("daily_stages")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("date", today)
+      .maybeSingle()
+
+    // Build update object preserving all existing stage data
+    const updateData: any = {
+      user_id: user.id,
+      date: today,
+      current_stage: nextStage,
+      updated_at: new Date().toISOString(),
+    }
+
+    // Preserve existing stage completion data
+    if (existingRecord) {
+      updateData.morning_check_completed = existingRecord.morning_check_completed
+      updateData.morning_check_completed_at = existingRecord.morning_check_completed_at
+      updateData.daily_intention_completed = existingRecord.daily_intention_completed
+      updateData.daily_intention_completed_at = existingRecord.daily_intention_completed_at
+      updateData.trading_plan_completed = existingRecord.trading_plan_completed
+      updateData.trading_plan_completed_at = existingRecord.trading_plan_completed_at
+      updateData.record_trades_completed = existingRecord.record_trades_completed
+      updateData.record_trades_completed_at = existingRecord.record_trades_completed_at
+      updateData.daily_summary_completed = existingRecord.daily_summary_completed
+      updateData.daily_summary_completed_at = existingRecord.daily_summary_completed_at
+    }
+
+    // Now update the specific stage being completed
+    updateData[stageColumn.completed] = completed
+    updateData[stageColumn.completedAt] = completedAt
+
     const { data, error } = await supabase
       .from("daily_stages")
-      .upsert(
-        {
-          user_id: user.id,
-          date: today,
-          [stageColumn.completed]: completed,
-          [stageColumn.completedAt]: completedAt,
-          current_stage: nextStage,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "user_id,date",
-        },
-      )
+      .upsert(updateData, {
+        onConflict: "user_id,date",
+      })
       .select()
       .maybeSingle()
 

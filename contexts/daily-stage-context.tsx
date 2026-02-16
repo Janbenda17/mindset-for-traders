@@ -183,9 +183,12 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
         
         // All other stages unlock ONLY if the previous stage is completed
         const previousStageCompleted = index > 0 && stagesWithCompletion[index - 1].completed
+        // Stage should be unlocked either if previous is completed OR if this stage itself is completed
+        const unlocked = previousStageCompleted || stage.completed
+        
         return {
           ...stage,
-          unlocked: previousStageCompleted,
+          unlocked,
         }
       })
 

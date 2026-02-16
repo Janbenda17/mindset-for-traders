@@ -26,12 +26,6 @@ export default function HomePage() {
   // Placeholder slides - uživatel je nahradí skutečnými obrázky
   const slides = [
     {
-      id: 1,
-      title: 'AI ANALYZUJE EMOCE U KAŽDÉHO OBCHODU',
-      description: 'Zjisti, co cítíš před, během a po každém obchodu',
-      image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/22trade-wMaPbN2geV7dORJ8pJ5v6w0InDEmOI.png'
-    },
-    {
       id: 4,
       title: 'AI odhalí tvoje slabá místa',
       description: 'Objev, kde prosakuje tvůj trading mindset - emocí jako FOMO, Revenge, Fear, Greed',
