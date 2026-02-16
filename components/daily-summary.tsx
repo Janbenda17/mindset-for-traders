@@ -20,7 +20,8 @@ import {
   Shield,
   ChevronRight,
   Eye,
-  Zap
+  Zap,
+  Lock
 } from "lucide-react"
 import { format } from "date-fns"
 import { cs } from "date-fns/locale"
