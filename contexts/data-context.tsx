@@ -341,6 +341,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!tradesError && journalData) {
           const trades = journalData.map((entry: any) => ({
             id: entry.id,
+            type: "trade", // Required for calendar filtering
             date: entry.date,
             pair: entry.pair,
             direction: entry.direction || "long",
@@ -348,6 +349,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             exitPrice: entry.exit_price || 0,
             quantity: entry.quantity || 0,
             pnl: entry.pnl || 0,
+            profitLoss: entry.profit_loss || entry.pnl || 0, // Fallback for calendar stats
             mood: entry.mood,
             confidence: entry.confidence,
             stress: entry.stress,
