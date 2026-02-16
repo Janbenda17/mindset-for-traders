@@ -44,15 +44,21 @@ export async function POST(request: Request) {
       .eq("date", today)
       .maybeSingle()
 
-    // Build update object preserving all existing stage data
+    // Build update object - ALWAYS initialize all stage completion flags for the day
     const updateData: any = {
       user_id: user.id,
       date: today,
       current_stage: nextStage,
       updated_at: new Date().toISOString(),
+      // Initialize all stages to false first (for new days)
+      morning_check_completed: false,
+      daily_intention_completed: false,
+      trading_plan_completed: false,
+      record_trades_completed: false,
+      daily_summary_completed: false,
     }
 
-    // Preserve existing stage completion data
+    // Preserve existing stage completion data if record exists
     if (existingRecord) {
       updateData.morning_check_completed = existingRecord.morning_check_completed
       updateData.morning_check_completed_at = existingRecord.morning_check_completed_at

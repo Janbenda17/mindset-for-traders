@@ -39,21 +39,31 @@ export async function GET(request: Request) {
     }
 
     if (!existingStages) {
-      // LIVE MODE: Fresh day - all stages incomplete
+      // No existing record for today - create a fresh one
+      const freshStages = {
+        user_id: user.id,
+        date: today,
+        current_stage: 1,
+        morning_check_completed: false,
+        daily_intention_completed: false,
+        trading_plan_completed: false,
+        record_trades_completed: false,
+        daily_summary_completed: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      // LIVE MODE: Insert fresh record
       if (!isVirtualMode) {
-        console.log("[v0] [DailyStages] Fresh day in LIVE MODE - returning empty stages")
+        console.log("[v0] [DailyStages] Fresh day in LIVE MODE - creating new record")
+        await supabase.from("daily_stages").upsert(freshStages)
         return NextResponse.json({
-          current_stage: 1,
-          morning_check_completed: false,
-          daily_intention_completed: false,
-          trading_plan_completed: false,
-          record_trades_completed: false,
-          daily_summary_completed: false,
+          ...freshStages,
           completedToday: [],
         })
       }
 
-      // VIRTUAL MODE: Demo data with stage 5 unlocked
+      // VIRTUAL MODE: Return demo data (don't insert)
       console.log("[v0] [DailyStages] Fresh day in VIRTUAL MODE - returning demo data")
       return NextResponse.json({
         current_stage: 1,
