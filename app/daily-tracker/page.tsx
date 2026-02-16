@@ -303,18 +303,45 @@ export default function DailyTrackerPage() {
       dailyIntentions?.forEach((i: any) => allDates.add(i.date))
       tradingPlans?.forEach((p: any) => allDates.add(p.date))
 
+      // In LIVE MODE, fetch daily_stages records to get accurate stage completion data
+      let stagesRecords: any[] = []
+      if (isLiveMode && user?.id) {
+        try {
+          const { data } = await supabase
+            .from("daily_stages")
+            .select("*")
+            .eq("user_id", user.id)
+          stagesRecords = data || []
+          console.log("[v0] [DailyTracker] Loaded daily_stages records:", stagesRecords.length)
+        } catch (err) {
+          console.error("[v0] [DailyTracker] Error loading daily_stages:", err)
+        }
+      }
+
       allDates.forEach((date) => {
         const morningCheck = morningChecks.find((m: any) => m.date === date)
         const dayTrades = trades.filter((t: any) => t.date === date)
         const intention = dailyIntentions?.find((i: any) => i.date === date)
         const plan = tradingPlans?.find((p: any) => p.date === date)
+        const stagesRecord = stagesRecords.find((sr: any) => sr.date === date)
 
         if (morningCheck || intention || plan || dayTrades.length > 0) {
           let stagesCompleted = 0
-          if (morningCheck) stagesCompleted++
-          if (intention) stagesCompleted++
-          if (plan) stagesCompleted++
-          if (dayTrades.length > 0) stagesCompleted++
+          
+          // In LIVE MODE, use actual daily_stages record
+          if (isLiveMode && stagesRecord) {
+            if (stagesRecord.morning_check_completed) stagesCompleted++
+            if (stagesRecord.daily_intention_completed) stagesCompleted++
+            if (stagesRecord.trading_plan_completed) stagesCompleted++
+            if (stagesRecord.record_trades_completed) stagesCompleted++
+            if (stagesRecord.daily_summary_completed) stagesCompleted++
+          } else {
+            // Fallback: count based on available data
+            if (morningCheck) stagesCompleted++
+            if (intention) stagesCompleted++
+            if (plan) stagesCompleted++
+            if (dayTrades.length > 0) stagesCompleted++
+          }
 
           combinedData.push({
             date,
