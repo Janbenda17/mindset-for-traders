@@ -16,6 +16,7 @@ interface Stage {
   completed: boolean
   unlocked: boolean
   completedAt?: string
+  locked?: boolean // Stage cannot be edited after completion
 }
 
 interface DailyStageContextType {
@@ -142,27 +143,33 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
       const stagesWithCompletion = initialStages.map((stage) => {
         let completed = false
         let completedAt: string | undefined
+        let locked = false // Stage is locked (locked after being completed)
 
         switch (stage.id) {
           case 1:
             completed = data.morning_check_completed || false
             completedAt = data.morning_check_completed_at
+            locked = completed // Lock when completed
             break
           case 2:
             completed = data.daily_intention_completed || false
             completedAt = data.daily_intention_completed_at
+            locked = completed
             break
           case 3:
             completed = data.trading_plan_completed || false
             completedAt = data.trading_plan_completed_at
+            locked = completed
             break
           case 4:
             completed = data.record_trades_completed || false
             completedAt = data.record_trades_completed_at
+            locked = completed
             break
           case 5:
             completed = data.daily_summary_completed || false
             completedAt = data.daily_summary_completed_at
+            locked = completed
             break
         }
 
@@ -170,7 +177,7 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
           ...stage,
           completed,
           completedAt,
-          unlocked: false, // Will be set in second pass
+          locked,
         }
       })
 

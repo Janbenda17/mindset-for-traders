@@ -90,7 +90,7 @@ const EMOTIONS_AFTER = ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Pou
 export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
   const { toast } = useToast()
   const router = useRouter()
-  const { completeStage } = useDailyStage()
+  const { completeStage, stages } = useDailyStage()
   const { addTrade, deleteTrade } = useData()
   const { user } = useAuth()
   const { isLiveMode } = useLiveMode()
@@ -212,6 +212,17 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
 
   const handleAddTrade = async () => {
     console.log("[v0] handleAddTrade called", currentTrade)
+    
+    // Check if stage 4 is locked (already completed today)
+    const stage4 = stages.find((s) => s.id === 4)
+    if (stage4?.locked) {
+      toast({
+        title: "Stage Uzamčen",
+        description: "Fáze 4 (Záznam obchodů) již byla dnes dokončena a je nyní uzamčena. Záznam obchodů lze provádět pouze během aktivní fáze.",
+        variant: "destructive",
+      })
+      return
+    }
     
     // Minimal validation - just require pair
     if (!currentTrade.pair) {
