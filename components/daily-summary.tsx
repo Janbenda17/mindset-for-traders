@@ -358,6 +358,13 @@ export function DailySummary() {
       return
     }
 
+    // Complete stage 4 (Record Trades) if not already completed
+    const stage4 = stages.find((s) => s.id === 4)
+    if (stage4 && !stage4.completed) {
+      completeStage(4)
+    }
+
+    // Complete stage 5 (Daily Summary)
     completeStage(5)
     toast({
       title: "Den úspěšně uzavřen",

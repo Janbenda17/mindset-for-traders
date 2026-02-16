@@ -345,16 +345,11 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
     
     toast({
       title: "Úspěch!",
-      description: "Obchod byl uložen a stage 4 je hotov!",
+      description: "Obchod byl uložen. Můžete přidat další obchody během dne.",
     })
 
-    // Attempt to complete stage 4
-    try {
-      console.log("[v0] Completing stage 4...")
-      await completeStage(4)
-    } catch (error) {
-      console.error("[v0] Error completing stage:", error)
-    }
+    // DO NOT complete stage 4 here - it should stay open so trader can add more trades
+    // Stage 4 will be auto-completed when Stage 5 (Daily Summary) is completed
 
     // Call onComplete callback if provided
     if (onComplete) {
