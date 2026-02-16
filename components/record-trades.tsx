@@ -98,6 +98,9 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
   const [todayPlan, setTodayPlan] = useState<TradingPlanData | null>(null)
   const [morningCheck, setMorningCheck] = useState<MorningCheckData | null>(null)
 
+  // Check if stage 4 is locked
+  const stage4 = stages.find((s) => s.id === 4)
+
   const [trades, setTrades] = useState<Trade[]>([])
   const [expandedTradeId, setExpandedTradeId] = useState<string | null>(null)
   const [currentTrade, setCurrentTrade] = useState<Partial<Trade>>({
@@ -752,11 +755,21 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
 
         <Button
           type="submit"
-          disabled={isLoading}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold py-7 text-lg rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          disabled={isLoading || stage4?.locked}
+          className={cn(
+            "w-full text-white font-semibold py-7 text-lg rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2",
+            stage4?.locked
+              ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed"
+              : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 hover:shadow-xl hover:shadow-purple-500/20",
+            "disabled:opacity-50 disabled:cursor-not-allowed"
+          )}
         >
           <Zap className="w-5 h-5" />
-          {isLoading ? "Ukládám..." : "Uložit obchod"}
+          {stage4?.locked
+            ? "Uzavřeno - Záznam obchodů byl dnes dokončen"
+            : isLoading
+              ? "Ukládám..."
+              : "Uložit obchod"}
         </Button>
 
         {/* No trades today button */}

@@ -265,11 +265,21 @@ export function DailyIntention() {
       {/* Save Button */}
       <Button
         onClick={saveIntention}
-        disabled={!isLiveMode || !intention.goals.trim() || !intention.strategy.trim()}
-        className="w-full h-16 text-xl font-black rounded-2xl bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 hover:from-blue-600 hover:via-cyan-600 hover:to-teal-600 shadow-2xl disabled:opacity-50"
+        disabled={!isLiveMode || !intention.goals.trim() || !intention.strategy.trim() || isStage2Locked}
+        className={cn(
+          "w-full h-16 text-xl font-black rounded-2xl shadow-2xl",
+          isStage2Locked
+            ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed"
+            : "bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 hover:from-blue-600 hover:via-cyan-600 hover:to-teal-600",
+          "disabled:opacity-50"
+        )}
       >
         <CheckCircle className="w-6 h-6 mr-2" />
-        {isLiveMode ? "Nastavit denní záměr" : "Dostupné pouze v Live Mode"}
+        {isStage2Locked
+          ? "Uzavřeno - Denní záměr byl dnes dokončen"
+          : isLiveMode
+            ? "Nastavit denní záměr"
+            : "Dostupné pouze v Live Mode"}
       </Button>
     </div>
   )

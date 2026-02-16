@@ -411,10 +411,20 @@ export function TradingPlan() {
           </Button>
           <Button
             type="submit"
-            disabled={isLoading}
-            className="h-14 px-8 text-base bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+            disabled={isLoading || isStage3Locked}
+            className={cn(
+              "h-14 px-8 text-base",
+              isStage3Locked
+                ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed"
+                : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+            )}
           >
-            {isLoading ? (
+            {isStage3Locked ? (
+              <>
+                <Lock className="h-5 w-5 mr-2" />
+                Uzavřeno - Plán byl dnes dokončen
+              </>
+            ) : isLoading ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2" />
                 Ukládám...

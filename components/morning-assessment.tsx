@@ -720,11 +720,21 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
 
       <Button
         onClick={saveAssessment}
-        disabled={!isLiveMode}
-        className="w-full h-16 text-xl font-black rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 shadow-2xl disabled:opacity-50"
+        disabled={!isLiveMode || isStage1Locked}
+        className={cn(
+          "w-full h-16 text-xl font-black rounded-2xl shadow-2xl",
+          isStage1Locked
+            ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed"
+            : "bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600",
+          "disabled:opacity-50"
+        )}
       >
         <Lock className="w-6 h-6 mr-2" />
-        {isLiveMode ? `Dokončit Morning Check a Zamknout Data (${currentScore}%)` : "Dostupné pouze v Live Mode"}
+        {isStage1Locked
+          ? "Uzavřeno - Morning Check byl dnes dokončen"
+          : isLiveMode
+            ? `Dokončit Morning Check a Zamknout Data (${currentScore}%)`
+            : "Dostupné pouze v Live Mode"}
       </Button>
     </div>
   )

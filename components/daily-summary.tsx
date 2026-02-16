@@ -404,9 +404,27 @@ export function DailySummary() {
             <Activity className="w-4 h-4 mr-2" />
             Exportovat Report
           </Button>
-          <Button onClick={handleComplete} className="bg-white text-black hover:bg-gray-200 font-medium">
-            <CheckCircle className="w-4 h-4 mr-2" />
-            Uzavřít Den
+          <Button
+            onClick={handleComplete}
+            disabled={isStage5Locked}
+            className={cn(
+              "font-medium flex items-center gap-2",
+              isStage5Locked
+                ? "bg-gray-600 hover:bg-gray-600 text-white cursor-not-allowed"
+                : "bg-white text-black hover:bg-gray-200"
+            )}
+          >
+            {isStage5Locked ? (
+              <>
+                <Lock className="w-4 h-4" />
+                Uzavřeno - Den byl dnes uzavřen
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Uzavřít Den
+              </>
+            )}
           </Button>
         </div>
       </div>
