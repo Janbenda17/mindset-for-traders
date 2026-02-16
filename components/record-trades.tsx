@@ -348,9 +348,10 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
       description: "Obchod byl uložen a stage 4 je hotov!",
     })
 
-    // Attempt to complete stage
+    // Attempt to complete stage 4
     try {
-      await completeStage()
+      console.log("[v0] Completing stage 4...")
+      await completeStage(4)
     } catch (error) {
       console.error("[v0] Error completing stage:", error)
     }

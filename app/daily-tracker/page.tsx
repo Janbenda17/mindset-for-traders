@@ -293,8 +293,13 @@ export default function DailyTrackerPage() {
       const combinedData: DailySummary[] = []
       const allDates = new Set<string>()
 
+      console.log(`[v0] [DailyTracker] LIVE: morningChecks=${morningChecks.length}, trades=${trades.length}, intentions=${dailyIntentions?.length}, plans=${tradingPlans?.length}`)
+
       morningChecks.forEach((m: any) => allDates.add(m.date))
-      trades.forEach((t: any) => allDates.add(t.date))
+      trades.forEach((t: any) => {
+        console.log("[v0] [DailyTracker] Adding trade to dates set:", t.date, t.pair)
+        allDates.add(t.date)
+      })
       dailyIntentions?.forEach((i: any) => allDates.add(i.date))
       tradingPlans?.forEach((p: any) => allDates.add(p.date))
 

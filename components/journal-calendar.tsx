@@ -74,8 +74,16 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
 
   const getEntriesForDate = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-    // In LIVE MODE, filter by recordedDate (when trade was recorded), in VIRTUAL MODE use date (when it was opened)
-    return entries.filter((entry) => (isLiveMode ? entry.recordedDate : entry.date) === dateStr)
+    // Filter by date field (which contains when the trade was recorded/created)
+    return entries.filter((entry) => {
+      // Use date field - it should be the primary date for filtering
+      const entryDate = entry.date || entry.recordedDate
+      // Debug log for trades missing on calendar
+      if (entryDate === dateStr && entry.type === "trade") {
+        console.log("[v0] Trade found for date:", dateStr, entry)
+      }
+      return entryDate === dateStr
+    })
   }
 
   const getStatsForDate = (day: number) => {

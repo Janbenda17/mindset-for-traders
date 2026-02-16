@@ -333,10 +333,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from("journal_entries")
           .select("*")
           .eq("user_id", user.id)
-          .not("pair", "is", null)
+          .eq("type", "trade")
           .order("created_at", { ascending: false })
 
-        console.log("[v0] [LiveMode] Trades query result:", { hasData: !!journalData, hasError: !!tradesError, errorMsg: tradesError?.message })
+        console.log("[v0] [LiveMode] Trades query result:", { hasData: !!journalData, hasError: !!tradesError, errorMsg: tradesError?.message, count: journalData?.length })
 
         if (!tradesError && journalData) {
           const trades = journalData.map((entry: any) => ({
