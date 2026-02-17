@@ -90,6 +90,58 @@ export async function POST(request: Request) {
     }
 
     console.log(`[v0] Stage ${stageId} ${completed ? "completed" : "uncompleted"} - next stage: ${nextStage}`)
+
+    // Check if all 5 stages are now completed for today
+    if (completed && stageId === 5) {
+      const allStagesCompleted =
+        updateData.morning_check_completed &&
+        updateData.daily_intention_completed &&
+        updateData.trading_plan_completed &&
+        updateData.record_trades_completed &&
+        updateData.daily_summary_completed
+
+      if (allStagesCompleted) {
+        console.log("[v0] All stages completed for today! Updating challenge progress...")
+
+        // Update the "Zero Revenge Trading Week" challenge (challenge-1) progress
+        // Count how many unique days this user has completed all stages
+        const { data: completedDays } = await supabase
+          .from("daily_stages")
+          .select("date")
+          .eq("user_id", user.id)
+          .eq("morning_check_completed", true)
+          .eq("daily_intention_completed", true)
+          .eq("trading_plan_completed", true)
+          .eq("record_trades_completed", true)
+          .eq("daily_summary_completed", true)
+
+        const totalDaysCompleted = completedDays?.length || 0
+        console.log("[v0] Total days with all stages completed:", totalDaysCompleted)
+
+        // Update or create challenge progress record
+        const { error: challengeError } = await supabase
+          .from("user_challenge_progress")
+          .upsert(
+            {
+              user_id: user.id,
+              challenge_id: "challenge-1", // Zero Revenge Trading Week challenge
+              progress: Math.min(totalDaysCompleted, 7), // 7 days = 1 week
+              completed: totalDaysCompleted >= 7,
+              updated_at: new Date().toISOString(),
+            },
+            {
+              onConflict: "user_id,challenge_id",
+            }
+          )
+
+        if (challengeError) {
+          console.error("[v0] Error updating challenge progress:", challengeError)
+        } else {
+          console.log("[v0] Challenge progress updated: challenge-1 progress =", Math.min(totalDaysCompleted, 7))
+        }
+      }
+    }
+
     return NextResponse.json(data)
   } catch (error: any) {
     console.error("[v0] Error in daily-stages UPDATE:", error)
