@@ -10,24 +10,29 @@ export async function GET(req: NextRequest) {
   try {
     const userId = req.nextUrl.searchParams.get("userId")
     if (!userId) {
-      console.log("[v0] GET /api/challenges/user-progress: Missing userId")
+      console.log("[v0] GET - Missing userId parameter")
       return NextResponse.json({ error: "Missing userId" }, { status: 400 })
     }
 
-    console.log("[v0] GET /api/challenges/user-progress: Fetching for user:", userId)
+    console.log("[v0] GET - Fetching challenges for user:", userId)
 
-    // Get user's challenge progress from Supabase
+    // Get user's challenge progress from Supabase using admin client
     const { data, error } = await supabaseAdmin
       .from("user_challenge_progress")
       .select("*")
       .eq("user_id", userId)
 
     if (error) {
-      console.error("[v0] Failed to fetch challenge progress:", error)
-      return NextResponse.json({ progress: [] }, { status: 200 })
+      console.error("[v0] GET - Database query error:", error)
+      return NextResponse.json({ error: "Failed to fetch", details: error }, { status: 500 })
     }
 
-    console.log("[v0] GET /api/challenges/user-progress: Found", data?.length || 0, "challenges for user", userId)
+    const count = data?.length || 0
+    console.log("[v0] GET - Found", count, "challenges for user", userId)
+
+    if (count > 0) {
+      console.log("[v0] GET - Raw data:", JSON.stringify(data))
+    }
 
     // Format the data
     const progress = (data || []).map((item: any) => ({
@@ -37,11 +42,11 @@ export async function GET(req: NextRequest) {
       joinedAt: item.joined_at || new Date().toISOString(),
     }))
 
-    console.log("[v0] GET /api/challenges/user-progress: Returning progress:", progress)
+    console.log("[v0] GET - Returning', progress.length, 'formatted challenges')
     return NextResponse.json({ progress })
   } catch (error) {
-    console.error("[v0] Error in user-progress GET:", error)
-    return NextResponse.json({ progress: [] }, { status: 200 })
+    console.error("[v0] GET - Error:", error)
+    return NextResponse.json({ error: "Internal server error", details: String(error) }, { status: 500 })
   }
 }
 
@@ -54,57 +59,63 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    console.log("[v0] Saving challenge progress:", { userId, challengeId, progress, completed })
+    console.log("[v0] POST - Saving challenge progress:", { userId, challengeId, progress, completed })
 
     // Check if this challenge progress already exists
     const { data: existing, error: checkError } = await supabaseAdmin
       .from("user_challenge_progress")
-      .select("id")
+      .select("id, progress, completed")
       .eq("user_id", userId)
       .eq("challenge_id", challengeId)
       .maybeSingle()
 
-    if (checkError) {
-      console.error("[v0] Error checking existing challenge:", checkError)
-    }
+    console.log("[v0] POST - Existing record check:", { exists: !!existing, checkError })
 
     if (existing?.id) {
       // Update existing record
-      const { error } = await supabaseAdmin
+      console.log("[v0] POST - Updating existing record:", existing.id)
+      const { error, data } = await supabaseAdmin
         .from("user_challenge_progress")
         .update({
-          progress: progress ?? existing.progress,
-          completed: completed ?? false,
+          progress: progress !== undefined ? progress : existing.progress,
+          completed: completed !== undefined ? completed : existing.completed,
           updated_at: new Date().toISOString(),
         })
         .eq("user_id", userId)
         .eq("challenge_id", challengeId)
+        .select()
 
       if (error) {
-        console.error("[v0] Failed to update challenge progress:", error)
-        return NextResponse.json({ error: "Failed to update progress" }, { status: 500 })
+        console.error("[v0] POST - Failed to update challenge progress:", error)
+        return NextResponse.json({ error: "Failed to update progress", details: error }, { status: 500 })
       }
+      console.log("[v0] POST - Successfully updated:", data)
     } else {
       // Insert new record
-      const { error } = await supabaseAdmin.from("user_challenge_progress").insert({
-        user_id: userId,
-        challenge_id: challengeId,
-        progress: progress || 0,
-        completed: completed || false,
-        joined_at: new Date().toISOString(),
-      })
+      console.log("[v0] POST - Inserting new record for userId:", userId, "challengeId:", challengeId)
+      const { error, data } = await supabaseAdmin
+        .from("user_challenge_progress")
+        .insert({
+          user_id: userId,
+          challenge_id: challengeId,
+          progress: progress || 0,
+          completed: completed || false,
+          joined_at: new Date().toISOString(),
+        })
+        .select()
 
       if (error) {
-        console.error("[v0] Failed to insert challenge progress:", error)
-        return NextResponse.json({ error: "Failed to save progress" }, { status: 500 })
+        console.error("[v0] POST - Failed to insert challenge progress:", error)
+        return NextResponse.json({ error: "Failed to save progress", details: error }, { status: 500 })
       }
+      console.log("[v0] POST - Successfully inserted:", data)
     }
 
-    console.log("[v0] Successfully saved challenge progress:", { userId, challengeId })
+    console.log("[v0] POST - Challenge progress saved successfully")
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[v0] Error in user-progress POST:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: "Internal server error", details: String(error) }, { status: 500 })
   }
 }
 

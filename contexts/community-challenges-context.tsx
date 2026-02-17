@@ -57,8 +57,7 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
       if (user) {
         console.log("[v0] Challenges: User logged in, loading challenges for user:", user.id)
         setIsLoading(true)
-        setChallenges([])
-        setUserProgress([])
+        // Don't clear challenges immediately - just load them
         loadChallenges()
         loadUserProgress()
       } else {
@@ -99,6 +98,7 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
   const loadUserProgress = async () => {
     if (!user?.id) {
       console.log("[v0] Challenges: No user ID, skipping loadUserProgress")
+      setIsLoading(false)
       return
     }
 
@@ -108,23 +108,22 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
         credentials: "include",
       })
 
-      if (response.ok) {
+      if (!response.ok) {
+        const status = response.status
+        console.error("[v0] Challenges: API returned", status, "- attempting to parse error")
+        const errorData = await response.text()
+        console.error("[v0] Challenges: Error response body:", errorData)
+        setUserProgress([])
+      } else {
         const data = await response.json()
         console.log("[v0] Challenges: Loaded progress from API:", data.progress)
         setUserProgress(data.progress || [])
-      } else {
-        console.log("[v0] Challenges: API returned", response.status, "- setting empty progress")
-        // Fallback to empty array if no progress exists
-        setUserProgress([])
       }
     } catch (error) {
-      console.error("[v0] Challenges: Failed to load user progress:", error)
-      // Still try to load from localStorage as fallback for non-premium users
-      const stored = localStorage.getItem("community-challenges-progress")
-      if (stored) {
-        console.log("[v0] Challenges: Falling back to localStorage")
-        setUserProgress(JSON.parse(stored))
-      }
+      console.error("[v0] Challenges: Failed to load user progress - exception:", error)
+      setUserProgress([])
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -156,8 +155,13 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
   }
 
   const joinChallenge = async (challengeId: string) => {
+    console.log("[v0] Challenges: joinChallenge called for:", challengeId)
+    
     const existing = userProgress.find((p) => p.challengeId === challengeId)
-    if (existing) return
+    if (existing) {
+      console.log("[v0] Challenges: Already joined - skipping")
+      return
+    }
 
     const newProgress: UserChallengeProgress = {
       challengeId,
@@ -169,7 +173,8 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
     // Immediately save the new challenge to database
     if (user?.id) {
       try {
-        await fetch("/api/challenges/user-progress", {
+        console.log("[v0] Challenges: Saving challenge to database...")
+        const response = await fetch("/api/challenges/user-progress", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -180,13 +185,22 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
             completed: false,
           }),
         })
-        console.log("[v0] Challenge joined and saved:", challengeId)
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error("[v0] Challenges: Save failed with status", response.status, ":", errorText)
+        } else {
+          const result = await response.json()
+          console.log("[v0] Challenges: Challenge joined and saved successfully:", challengeId)
+        }
       } catch (error) {
-        console.error("[v0] Failed to join challenge:", error)
+        console.error("[v0] Challenges: Failed to join challenge - exception:", error)
       }
     }
 
+    // Update local state
     setUserProgress([...userProgress, newProgress])
+    console.log("[v0] Challenges: Local state updated with new challenge")
   }
 
   const leaveChallenge = async (challengeId: string) => {
