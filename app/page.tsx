@@ -69,11 +69,7 @@ export default function HomePage() {
     }
   ]
 
-  const stats = [
-    { value: '+600', label: 'Aktivních traderů' },
-    { value: '1900+', label: 'Zachráněných impulsivních rozhodnutí' },
-    { value: '-42%', label: 'Průměrné snížení emočních chyb' }
-  ]
+
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length)
@@ -249,24 +245,7 @@ export default function HomePage() {
           </div>
         </motion.div>
 
-        {/* Stats Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="grid grid-cols-3 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-16 md:mb-20 px-4"
-        >
-          {stats.map((stat, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ scale: 1.05, y: -5 }}
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-8 hover:bg-white/10 transition-all"
-            >
-              <p className="text-xl sm:text-2xl md:text-4xl font-black text-white text-center mb-1 md:mb-2">{stat.value}</p>
-              <p className="text-[10px] sm:text-xs md:text-base text-purple-200 text-center leading-tight md:leading-relaxed">{stat.label}</p>
-            </motion.div>
-          ))}
-        </motion.div>
+
 
         {/* Two-Step Premium Journey */}
         <motion.div
