@@ -147,12 +147,20 @@ export default function WeeklyReviewPage() {
   useEffect(() => {
     if (isLiveMode) {
       // In LIVE MODE, use analytics from data context (which loads from Supabase)
-      // Don't call loadWeekData() which reads from localStorage
-      console.log("[v0] Weekly Review - LIVE MODE detected, using Supabase data")
+      // Data will be populated when analytics becomes available
+      console.log("[v0] Weekly Review - LIVE MODE detected, waiting for analytics data")
     } else {
       loadVirtualData()
     }
   }, [isLiveMode])
+
+  // Initialize currentWeekData if not already set (for loading state)
+  useEffect(() => {
+    if (!currentWeekData) {
+      // Use demo data as fallback or initial state
+      loadVirtualData()
+    }
+  }, [])
 
   useEffect(() => {
     if (user?.id) {
