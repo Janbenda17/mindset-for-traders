@@ -6,12 +6,23 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+import { NextRequest, NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
+
 export async function GET(req: NextRequest) {
   try {
     const userId = req.nextUrl.searchParams.get("userId")
     if (!userId) {
+      console.log("[v0] GET /api/challenges/user-progress: Missing userId")
       return NextResponse.json({ error: "Missing userId" }, { status: 400 })
     }
+
+    console.log("[v0] GET /api/challenges/user-progress: Fetching for user:", userId)
 
     // Get user's challenge progress from Supabase
     const { data, error } = await supabaseAdmin
@@ -24,14 +35,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ progress: [] }, { status: 200 })
     }
 
+    console.log("[v0] GET /api/challenges/user-progress: Found", data?.length || 0, "challenges for user", userId)
+
     // Format the data
-    const progress = data.map((item: any) => ({
+    const progress = (data || []).map((item: any) => ({
       challengeId: item.challenge_id,
       progress: item.progress || 0,
       completed: item.completed || false,
       joinedAt: item.joined_at || new Date().toISOString(),
     }))
 
+    console.log("[v0] GET /api/challenges/user-progress: Returning progress:", progress)
     return NextResponse.json({ progress })
   } catch (error) {
     console.error("[v0] Error in user-progress GET:", error)

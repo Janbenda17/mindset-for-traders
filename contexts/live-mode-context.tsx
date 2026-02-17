@@ -110,11 +110,31 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
           `[v0] [LiveMode] ✓ Loaded from database: ${isLive ? "LIVE" : "VIRTUAL"} (userId: ${user.id}, canSwitch: ${!isLive})`,
         )
       } else {
-        setIsLiveMode(false)
-        setCanSwitchMode(true)
-        cachedModeRef.current = false
+        // New user - check if premium and auto-enable live mode if so
+        console.log(`[v0] [LiveMode] No profile found for user ${user.id} - checking subscription status`)
+        
+        // Wait a bit for subscription to load
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        if (isPremium) {
+          console.log(`[v0] [LiveMode] User ${user.id} is premium - auto-enabling LIVE mode`)
+          setIsLiveMode(true)
+          setCanSwitchMode(false)
+          cachedModeRef.current = true
+          
+          // Also save it to database
+          await supabase
+            .from("profiles")
+            .update({ trading_mode: "live" })
+            .eq("user_id", user.id)
+        } else {
+          console.log(`[v0] [LiveMode] User ${user.id} is not premium - defaulting to VIRTUAL`)
+          setIsLiveMode(false)
+          setCanSwitchMode(true)
+          cachedModeRef.current = false
+        }
+        
         modeLoadedRef.current = true
-        console.log(`[v0] [LiveMode] No profile found - defaulting to VIRTUAL (new user, userId: ${user.id})`)
       }
     } catch (err) {
       console.error("[v0] [LiveMode] Exception loading mode:", err)

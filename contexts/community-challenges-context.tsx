@@ -55,13 +55,20 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
   useEffect(() => {
     if (authReady) {
       if (user) {
+        console.log("[v0] Challenges: User logged in, loading challenges for user:", user.id)
+        setIsLoading(true)
+        setChallenges([])
+        setUserProgress([])
         loadChallenges()
         loadUserProgress()
       } else {
+        console.log("[v0] Challenges: No user, clearing challenges")
+        setChallenges([])
+        setUserProgress([])
         setIsLoading(false)
       }
     }
-  }, [authReady, user])
+  }, [authReady, user?.id])
 
   const loadChallenges = async () => {
     try {
@@ -90,25 +97,32 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
   }
 
   const loadUserProgress = async () => {
-    if (!user?.id) return
+    if (!user?.id) {
+      console.log("[v0] Challenges: No user ID, skipping loadUserProgress")
+      return
+    }
 
     try {
+      console.log("[v0] Challenges: Loading user progress from API for user:", user.id)
       const response = await fetch(`/api/challenges/user-progress?userId=${user.id}`, {
         credentials: "include",
       })
 
       if (response.ok) {
         const data = await response.json()
+        console.log("[v0] Challenges: Loaded progress from API:", data.progress)
         setUserProgress(data.progress || [])
       } else {
+        console.log("[v0] Challenges: API returned", response.status, "- setting empty progress")
         // Fallback to empty array if no progress exists
         setUserProgress([])
       }
     } catch (error) {
-      console.error("[v0] Failed to load user progress:", error)
+      console.error("[v0] Challenges: Failed to load user progress:", error)
       // Still try to load from localStorage as fallback for non-premium users
       const stored = localStorage.getItem("community-challenges-progress")
       if (stored) {
+        console.log("[v0] Challenges: Falling back to localStorage")
         setUserProgress(JSON.parse(stored))
       }
     }
@@ -199,6 +213,8 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
   }
 
   const updateProgress = async (challengeId: string, progress: number) => {
+    console.log("[v0] Challenges: Updating progress for challenge:", challengeId, "progress:", progress)
+    
     const updated = userProgress.map((p) =>
       p.challengeId === challengeId ? { ...p, progress, completed: progress >= 100 } : p,
     )
@@ -206,7 +222,7 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
     // Save immediately to database
     if (user?.id) {
       try {
-        await fetch("/api/challenges/user-progress", {
+        const response = await fetch("/api/challenges/user-progress", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -217,9 +233,14 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
             completed: progress >= 100,
           }),
         })
-        console.log("[v0] Challenge progress updated:", challengeId, progress)
+        
+        if (!response.ok) {
+          console.error("[v0] Challenges: Failed to update progress - status:", response.status)
+        } else {
+          console.log("[v0] Challenges: Challenge progress updated and saved to database:", challengeId, progress)
+        }
       } catch (error) {
-        console.error("[v0] Failed to update challenge progress:", error)
+        console.error("[v0] Challenges: Failed to update challenge progress:", error)
       }
     }
     
