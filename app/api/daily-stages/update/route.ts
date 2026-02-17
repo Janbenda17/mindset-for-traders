@@ -12,11 +12,16 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser()
 
     if (!user) {
+      console.error("[v0] Stage update - No authenticated user")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    console.log("[v0] Stage update - User:", user.id)
+
     const body = await request.json()
     const { stageId, completed } = body
+
+    console.log("[v0] Stage update - Completing stage:', stageId, 'completed:', completed)
 
     const today = new Date().toISOString().split("T")[0]
     const completedAt = completed ? new Date().toISOString() : null
@@ -37,12 +42,14 @@ export async function POST(request: Request) {
     const nextStage = completed ? Math.min(stageId + 1, 5) : stageId
 
     // First, get existing record to preserve all other stage completion data
-    const { data: existingRecord } = await supabase
+    const { data: existingRecord, error: getError } = await supabase
       .from("daily_stages")
       .select("*")
       .eq("user_id", user.id)
       .eq("date", today)
       .maybeSingle()
+
+    console.log("[v0] Stage update - Existing record:', existingRecord ? 'found' : 'not found')
 
     // Build update object - ALWAYS initialize all stage completion flags for the day
     const updateData: any = {
@@ -76,6 +83,8 @@ export async function POST(request: Request) {
     updateData[stageColumn.completed] = completed
     updateData[stageColumn.completedAt] = completedAt
 
+    console.log("[v0] Stage update - Upserting data:', updateData)
+
     const { data, error } = await supabase
       .from("daily_stages")
       .upsert(updateData, {
@@ -85,11 +94,11 @@ export async function POST(request: Request) {
       .maybeSingle()
 
     if (error) {
-      console.error("[v0] Error updating daily stage:", error)
+      console.error("[v0] Stage update - Error upserting daily stage:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log(`[v0] Stage ${stageId} ${completed ? "completed" : "uncompleted"} - next stage: ${nextStage}`)
+    console.log("[v0] Stage update - Stage', stageId, completed ? 'completed' : 'uncompleted', '- next stage:', nextStage)
 
     // Check if all 5 stages are now completed for today
     if (completed && stageId === 5) {
@@ -100,12 +109,13 @@ export async function POST(request: Request) {
         updateData.record_trades_completed &&
         updateData.daily_summary_completed
 
-      if (allStagesCompleted) {
-        console.log("[v0] All stages completed for today! Updating challenge progress...")
+      console.log("[v0] Stage update - All stages check:', allStagesCompleted)
 
-        // Update the "Zero Revenge Trading Week" challenge (challenge-1) progress
+      if (allStagesCompleted) {
+        console.log("[v0] Stage update - All stages completed for today! Updating challenge progress...")
+
         // Count how many unique days this user has completed all stages
-        const { data: completedDays } = await supabase
+        const { data: completedDays, error: countError } = await supabase
           .from("daily_stages")
           .select("date")
           .eq("user_id", user.id)
@@ -116,16 +126,16 @@ export async function POST(request: Request) {
           .eq("daily_summary_completed", true)
 
         const totalDaysCompleted = completedDays?.length || 0
-        console.log("[v0] Total days with all stages completed:", totalDaysCompleted)
+        console.log("[v0] Stage update - Total days with all stages completed:', totalDaysCompleted)
 
         // Update or create challenge progress record
-        const { error: challengeError } = await supabase
+        const { error: challengeError, data: challengeData } = await supabase
           .from("user_challenge_progress")
           .upsert(
             {
               user_id: user.id,
-              challenge_id: "challenge-1", // Zero Revenge Trading Week challenge
-              progress: Math.min(totalDaysCompleted, 7), // 7 days = 1 week
+              challenge_id: "challenge-1",
+              progress: Math.min(totalDaysCompleted, 7),
               completed: totalDaysCompleted >= 7,
               updated_at: new Date().toISOString(),
             },
@@ -133,18 +143,19 @@ export async function POST(request: Request) {
               onConflict: "user_id,challenge_id",
             }
           )
+          .select()
 
         if (challengeError) {
-          console.error("[v0] Error updating challenge progress:", challengeError)
+          console.error("[v0] Stage update - Error updating challenge progress:', challengeError)
         } else {
-          console.log("[v0] Challenge progress updated: challenge-1 progress =", Math.min(totalDaysCompleted, 7))
+          console.log("[v0] Stage update - Challenge progress updated:', Math.min(totalDaysCompleted, 7))
         }
       }
     }
 
     return NextResponse.json(data)
   } catch (error: any) {
-    console.error("[v0] Error in daily-stages UPDATE:", error)
+    console.error("[v0] Stage update - Error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
