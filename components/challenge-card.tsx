@@ -1,7 +1,6 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Users, Trophy, Calendar, Target } from "lucide-react"
@@ -24,10 +23,9 @@ interface ChallengeCardProps {
 }
 
 export function ChallengeCard({ challenge }: ChallengeCardProps) {
-  const { userProgress, joinChallenge, leaveChallenge } = useChallenges()
+  const { userProgress } = useChallenges()
 
   const userChallengeProgress = userProgress.find((p) => p.challengeId === challenge.id)
-  const isJoined = !!userChallengeProgress
   const progress = userChallengeProgress?.progress || 0
   const isCompleted = userChallengeProgress?.completed || false
 
@@ -59,15 +57,14 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
           </div>
         </div>
 
-        {isJoined && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400">Progress</span>
-              <span className="text-white font-medium">{progress}%</span>
-            </div>
-            <Progress value={progress} className="h-2" />
+        {/* Progress bar - always shown since all users are auto-enrolled */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-slate-400">Progress</span>
+            <span className="text-white font-medium">{progress}%</span>
           </div>
-        )}
+          <Progress value={progress} className="h-2" />
+        </div>
 
         <div className="flex items-center gap-6 text-sm text-slate-400">
           <div className="flex items-center gap-2">
@@ -82,26 +79,6 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
             <Calendar className="w-4 h-4" />
             <span>{daysLeft} days left</span>
           </div>
-        </div>
-
-        <div className="pt-2">
-          {isJoined ? (
-            <Button
-              variant="outline"
-              className="w-full border-slate-700 hover:border-red-500/50 hover:bg-red-500/10 bg-transparent"
-              onClick={() => leaveChallenge(challenge.id)}
-              disabled={isCompleted}
-            >
-              {isCompleted ? "Completed" : "Leave Challenge"}
-            </Button>
-          ) : (
-            <Button
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              onClick={() => joinChallenge(challenge.id)}
-            >
-              Join Challenge
-            </Button>
-          )}
         </div>
       </div>
     </Card>
