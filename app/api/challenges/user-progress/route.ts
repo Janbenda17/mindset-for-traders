@@ -6,14 +6,6 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function GET(req: NextRequest) {
   try {
     const userId = req.nextUrl.searchParams.get("userId")
@@ -65,14 +57,18 @@ export async function POST(req: NextRequest) {
     console.log("[v0] Saving challenge progress:", { userId, challengeId, progress, completed })
 
     // Check if this challenge progress already exists
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: checkError } = await supabaseAdmin
       .from("user_challenge_progress")
       .select("id")
       .eq("user_id", userId)
       .eq("challenge_id", challengeId)
-      .single()
+      .maybeSingle()
 
-    if (existing) {
+    if (checkError) {
+      console.error("[v0] Error checking existing challenge:", checkError)
+    }
+
+    if (existing?.id) {
       // Update existing record
       const { error } = await supabaseAdmin
         .from("user_challenge_progress")
@@ -104,6 +100,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    console.log("[v0] Successfully saved challenge progress:", { userId, challengeId })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[v0] Error in user-progress POST:", error)
