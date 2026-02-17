@@ -13,12 +13,6 @@ WHERE date IS NULL;
 ALTER TABLE user_challenge_progress
 ADD COLUMN IF NOT EXISTS completed_at timestamp with time zone;
 
--- Přidání unique constraint pro (user_id, challenge_id, date)
-ALTER TABLE user_challenge_progress
-ADD CONSTRAINT user_challenge_progress_unique 
-UNIQUE (user_id, challenge_id, date) 
-ON CONFLICT DO NOTHING;
-
 -- Oprava tabulky user_badge_progress pro správné sledování odznaků
 
 -- Přidání chybějících sloupců
@@ -46,6 +40,10 @@ CREATE TABLE IF NOT EXISTS daily_stage_completions (
 
 -- Přidání RLS polítek
 ALTER TABLE daily_stage_completions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS daily_stage_completions_select_own ON daily_stage_completions;
+DROP POLICY IF EXISTS daily_stage_completions_insert_own ON daily_stage_completions;
+DROP POLICY IF EXISTS daily_stage_completions_update_own ON daily_stage_completions;
 
 CREATE POLICY daily_stage_completions_select_own ON daily_stage_completions
   FOR SELECT USING (auth.uid() = user_id);
