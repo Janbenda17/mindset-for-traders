@@ -16,7 +16,7 @@ const LiveModeContext = createContext<LiveModeContextType | undefined>(undefined
 
 export function LiveModeProvider({ children }: { children: ReactNode }) {
   const { user, authReady } = useAuth()
-  const { isPremium } = useSubscription()
+  const { isPremium, isLoading: isSubscriptionLoading } = useSubscription()
   const [isLiveMode, setIsLiveMode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [canSwitchMode, setCanSwitchMode] = useState(true)
@@ -65,24 +65,18 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user || !isLiveMode) return
 
-    // Only revert if we're sure isPremium is loaded and it's definitely false
-    // Don't revert during loading state to avoid false positives
-    // isPremium will be checked via subscription context which loads from DB
-    if (!isPremium && isLiveMode) {
-      console.log(`[v0] [LiveMode] ⚠️ Checking if premium expired for user ${user.id}...`)
-      
-      // Give subscription context time to load from DB (max 3 seconds)
-      // If isPremium is still false after that, then premium actually expired
-      const timeout = setTimeout(() => {
-        if (!isPremium && isLiveMode) {
-          console.log(`[v0] [LiveMode] ⚠️ Premium expired for user ${user.id} - reverting to VIRTUAL mode`)
-          switchToVirtualForExpiredPremium()
-        }
-      }, 3000)
-      
-      return () => clearTimeout(timeout)
+    // IMPORTANT: Don't revert during subscription loading - wait for subscription status to be confirmed
+    if (isSubscriptionLoading) {
+      console.log(`[v0] [LiveMode] Subscription status still loading - NOT reverting live mode yet`)
+      return
     }
-  }, [isPremium, user?.id, isLiveMode])
+
+    // Only revert if subscription is definitely not active (not loading AND not premium)
+    if (!isPremium && isLiveMode) {
+      console.log(`[v0] [LiveMode] ⚠️ Premium expired for user ${user.id} - reverting to VIRTUAL mode`)
+      switchToVirtualForExpiredPremium()
+    }
+  }, [isPremium, user?.id, isLiveMode, isSubscriptionLoading])
 
   const loadModeFromDatabase = async () => {
     if (!user) {
