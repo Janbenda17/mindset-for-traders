@@ -57,7 +57,7 @@ export default function Dashboard() {
       title: 'MindTrader AI',
       desc: 'Varuje tě v reálném čase před emočními chybami',
       icon: Zap,
-      href: '/mindtrader-pro'
+      href: '/mindtrader'
     },
     {
       title: 'Weekly Review',
