@@ -6,6 +6,9 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// Challenge IDs matching the mock challenges
+const ALL_CHALLENGE_IDS = ["challenge-1", "challenge-2", "challenge-3", "challenge-4"]
+
 export async function GET(req: NextRequest) {
   try {
     const userId = req.nextUrl.searchParams.get("userId")
@@ -32,6 +35,39 @@ export async function GET(req: NextRequest) {
 
     if (count > 0) {
       console.log("[v0] GET - Raw data:", JSON.stringify(data))
+    } else {
+      // User has no challenges - auto-enroll them in all challenges
+      console.log("[v0] GET - User has no challenges, auto-enrolling in all challenges...")
+      
+      const enrollmentData = ALL_CHALLENGE_IDS.map(challengeId => ({
+        user_id: userId,
+        challenge_id: challengeId,
+        progress: 0,
+        completed: false,
+        joined_at: new Date().toISOString(),
+      }))
+
+      const { error: insertError } = await supabaseAdmin
+        .from("user_challenge_progress")
+        .insert(enrollmentData)
+
+      if (insertError) {
+        console.error("[v0] GET - Error auto-enrolling user:", insertError)
+        // Return empty array if auto-enrollment fails, but don't error
+        return NextResponse.json({ progress: [] })
+      }
+
+      console.log("[v0] GET - Successfully auto-enrolled user in all challenges")
+      
+      // Return the newly created data
+      const formattedData = enrollmentData.map(item => ({
+        challengeId: item.challenge_id,
+        progress: item.progress,
+        completed: item.completed,
+        joinedAt: item.joined_at,
+      }))
+      
+      return NextResponse.json({ progress: formattedData })
     }
 
     // Format the data
@@ -42,7 +78,7 @@ export async function GET(req: NextRequest) {
       joinedAt: item.joined_at || new Date().toISOString(),
     }))
 
-    console.log("[v0] GET - Returning', progress.length, 'formatted challenges')
+    console.log("[v0] GET - Returning", progress.length, "formatted challenges")
     return NextResponse.json({ progress })
   } catch (error) {
     console.error("[v0] GET - Error:", error)
