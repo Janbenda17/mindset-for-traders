@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Users, Trophy, Calendar, Target, Flame } from "lucide-react"
 import { useChallenges } from "@/contexts/community-challenges-context"
+import { useAuth } from "@/contexts/auth-context"
 import { useState } from "react"
 
 interface ChallengeCardProps {
@@ -25,7 +26,8 @@ interface ChallengeCardProps {
 }
 
 export function ChallengeCard({ challenge }: ChallengeCardProps) {
-  const { userProgress } = useChallenges()
+  const { userProgress, reloadProgress } = useChallenges()
+  const { user } = useAuth()
   const [isCompleting, setIsCompleting] = useState(false)
   const [justCompleted, setJustCompleted] = useState(false)
 
@@ -42,26 +44,38 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
   }[challenge.difficulty]
 
   const handleCompleteDaily = async () => {
+    if (!user?.id) {
+      console.error("[v0] No user ID available")
+      return
+    }
+
     setIsCompleting(true)
     try {
+      console.log("[v0] Completing daily challenge:", challenge.id, "for user:", user.id)
       const response = await fetch("/api/challenges/complete-daily", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          userId: (window as any).__user?.id,
+          userId: user.id,
           challengeId: challenge.id,
         }),
       })
 
+      const result = await response.json()
+      
       if (response.ok) {
-        const result = await response.json()
         console.log("[v0] Daily challenge completed:", result)
         setJustCompleted(true)
         setTimeout(() => setJustCompleted(false), 3000)
         
-        // Refresh page to show updated progress
-        window.location.reload()
+        // Reload challenge progress without full page refresh
+        await reloadProgress()
+      } else {
+        console.error("[v0] Failed to complete challenge:", result)
+        if (result.alreadyCompleted) {
+          alert("Už jsi dnes splnil tento úkol!")
+        }
       }
     } catch (error) {
       console.error("[v0] Error completing daily challenge:", error)

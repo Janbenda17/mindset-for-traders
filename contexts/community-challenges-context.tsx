@@ -40,6 +40,7 @@ interface CommunityChallengesContextType {
   joinChallenge: (challengeId: string) => Promise<void>
   leaveChallenge: (challengeId: string) => Promise<void>
   updateProgress: (challengeId: string, progress: number) => Promise<void>
+  reloadProgress: () => Promise<void>
   isLoading: boolean
 }
 
@@ -270,6 +271,7 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
         joinChallenge,
         leaveChallenge,
         updateProgress,
+        reloadProgress: loadUserProgress,
         isLoading,
       }}
     >
