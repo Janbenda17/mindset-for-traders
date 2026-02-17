@@ -1027,7 +1027,7 @@ export default function PsychologyAnalyticsPage() {
   const [showRecordTrades, setShowRecordTrades] = useState(false)
   const [dailyStages, setDailyStages] = useState<any>(null)
 
-  // Load daily stages to check completion status
+  // Load daily stages once on mount - removed polling to prevent performance issues
   useEffect(() => {
     if (!user) return
 
@@ -1037,7 +1037,6 @@ export default function PsychologyAnalyticsPage() {
           credentials: "include",
         })
         const data = await response.json()
-        console.log("[v0] Analytics - Loaded daily stages:", data)
         setDailyStages(data)
       } catch (error) {
         console.error("[v0] Error loading daily stages:", error)
@@ -1045,8 +1044,7 @@ export default function PsychologyAnalyticsPage() {
     }
 
     loadDailyStages()
-    const interval = setInterval(loadDailyStages, 5000) // Refresh every 5 seconds to detect completion
-    return () => clearInterval(interval)
+    // Only load once on mount, removed polling that caused performance issues
   }, [user])
 
   // Calculate daysWithData first, before using it in safeData

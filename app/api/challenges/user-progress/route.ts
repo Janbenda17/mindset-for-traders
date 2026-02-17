@@ -41,29 +41,51 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, progress } = await req.json()
+    const body = await req.json()
+    const { userId, challengeId, progress, completed } = body
 
-    if (!userId || !progress) {
+    if (!userId || !challengeId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Clear existing progress for this user
-    await supabaseAdmin.from("user_challenge_progress").delete().eq("user_id", userId)
+    console.log("[v0] Saving challenge progress:", { userId, challengeId, progress, completed })
 
-    // Insert new progress entries
-    const entries = progress.map((p: any) => ({
-      user_id: userId,
-      challenge_id: p.challengeId,
-      progress: p.progress || 0,
-      completed: p.completed || false,
-      joined_at: p.joinedAt || new Date().toISOString(),
-    }))
+    // Check if this challenge progress already exists
+    const { data: existing } = await supabaseAdmin
+      .from("user_challenge_progress")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("challenge_id", challengeId)
+      .single()
 
-    if (entries.length > 0) {
-      const { error } = await supabaseAdmin.from("user_challenge_progress").insert(entries)
+    if (existing) {
+      // Update existing record
+      const { error } = await supabaseAdmin
+        .from("user_challenge_progress")
+        .update({
+          progress: progress ?? existing.progress,
+          completed: completed ?? false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId)
+        .eq("challenge_id", challengeId)
 
       if (error) {
-        console.error("[v0] Failed to save challenge progress:", error)
+        console.error("[v0] Failed to update challenge progress:", error)
+        return NextResponse.json({ error: "Failed to update progress" }, { status: 500 })
+      }
+    } else {
+      // Insert new record
+      const { error } = await supabaseAdmin.from("user_challenge_progress").insert({
+        user_id: userId,
+        challenge_id: challengeId,
+        progress: progress || 0,
+        completed: completed || false,
+        joined_at: new Date().toISOString(),
+      })
+
+      if (error) {
+        console.error("[v0] Failed to insert challenge progress:", error)
         return NextResponse.json({ error: "Failed to save progress" }, { status: 500 })
       }
     }
@@ -71,6 +93,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[v0] Error in user-progress POST:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const { userId, challengeId } = body
+
+    if (!userId || !challengeId) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
+    console.log("[v0] Deleting challenge progress:", { userId, challengeId })
+
+    const { error } = await supabaseAdmin
+      .from("user_challenge_progress")
+      .delete()
+      .eq("user_id", userId)
+      .eq("challenge_id", challengeId)
+
+    if (error) {
+      console.error("[v0] Failed to delete challenge progress:", error)
+      return NextResponse.json({ error: "Failed to delete progress" }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("[v0] Error in user-progress DELETE:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

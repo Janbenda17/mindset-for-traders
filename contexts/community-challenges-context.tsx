@@ -118,12 +118,20 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
     if (!user?.id) return
 
     try {
-      await fetch("/api/challenges/user-progress", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, progress }),
-      })
+      // Save each challenge individually to prevent data loss
+      for (const p of progress) {
+        await fetch("/api/challenges/user-progress", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            challengeId: p.challengeId,
+            progress: p.progress,
+            completed: p.completed,
+          }),
+        })
+      }
       setUserProgress(progress)
     } catch (error) {
       console.error("[v0] Failed to save user progress:", error)
@@ -144,19 +152,78 @@ export function CommunityChallengesProvider({ children }: { children: React.Reac
       joinedAt: new Date().toISOString(),
     }
 
-    await saveUserProgress([...userProgress, newProgress])
+    // Immediately save the new challenge to database
+    if (user?.id) {
+      try {
+        await fetch("/api/challenges/user-progress", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            challengeId,
+            progress: 0,
+            completed: false,
+          }),
+        })
+        console.log("[v0] Challenge joined and saved:", challengeId)
+      } catch (error) {
+        console.error("[v0] Failed to join challenge:", error)
+      }
+    }
+
+    setUserProgress([...userProgress, newProgress])
   }
 
   const leaveChallenge = async (challengeId: string) => {
     const filtered = userProgress.filter((p) => p.challengeId !== challengeId)
-    await saveUserProgress(filtered)
+    
+    // Remove from database
+    if (user?.id) {
+      try {
+        await fetch("/api/challenges/user-progress", {
+          method: "DELETE",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            challengeId,
+          }),
+        })
+      } catch (error) {
+        console.error("[v0] Failed to leave challenge:", error)
+      }
+    }
+    
+    setUserProgress(filtered)
   }
 
   const updateProgress = async (challengeId: string, progress: number) => {
     const updated = userProgress.map((p) =>
       p.challengeId === challengeId ? { ...p, progress, completed: progress >= 100 } : p,
     )
-    await saveUserProgress(updated)
+    
+    // Save immediately to database
+    if (user?.id) {
+      try {
+        await fetch("/api/challenges/user-progress", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            challengeId,
+            progress,
+            completed: progress >= 100,
+          }),
+        })
+        console.log("[v0] Challenge progress updated:", challengeId, progress)
+      } catch (error) {
+        console.error("[v0] Failed to update challenge progress:", error)
+      }
+    }
+    
+    setUserProgress(updated)
   }
 
   return (
