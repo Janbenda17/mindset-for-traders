@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import ClientLayout from "./ClientLayout"
@@ -29,6 +29,14 @@ export const metadata: Metadata = {
   title: "MindTrader AI - Trading Psychology Platform",
   description: "Advanced trading psychology and performance tracking platform",
     generator: 'v0.app'
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: "#0f172a",
 }
 
 export default function RootLayout({
