@@ -74,6 +74,36 @@ function generateDemoData(tradingStyle: string) {
   const cumulativePnL = 10000
 
   const demoData = {
+    // Generate demo trades for analysis
+    trades: Array.from({ length: 60 }, (_, i) => {
+      const date = new Date()
+      date.setDate(date.getDate() - (60 - i))
+      const pnl = Math.floor(Math.random() * 2000) - 500
+      return {
+        id: `demo-trade-${i}`,
+        date: date.toISOString(),
+        symbol: ["EURUSD", "GBPUSD", "USDJPY"][Math.floor(Math.random() * 3)],
+        type: Math.random() > 0.5 ? "long" : "short",
+        pnl: pnl,
+        followedPlan: pnl > 0,
+        mood: Math.floor(Math.random() * 40) + 50,
+        confidenceBefore: Math.floor(Math.random() * 35) + 50,
+        stressLevel: Math.floor(Math.random() * 25) + 20,
+      }
+    }),
+    moodData: Array.from({ length: 30 }, (_, i) => {
+      const date = new Date()
+      date.setDate(date.getDate() - (30 - i))
+      return {
+        date: date.toISOString().split('T')[0],
+        mood: Math.floor(Math.random() * 40) + 50,
+        confidence: Math.floor(Math.random() * 35) + 50,
+        stress: Math.floor(Math.random() * 25) + 20,
+        energy: Math.floor(Math.random() * 40) + 45,
+        discipline: Math.floor(Math.random() * 40) + 50,
+        sleep: Math.floor(Math.random() * 3) + 6,
+      }
+    }),
     weeklyPerformanceData: [
       { week: "1-7 Led", pnl: 2450, trades: 12, winRate: 58, avgMood: 68, avgReadiness: 72 },
       { week: "8-14 Led", pnl: -890, trades: 15, winRate: 40, avgMood: 52, avgReadiness: 58 },
@@ -1074,13 +1104,33 @@ export default function PsychologyAnalyticsPage() {
     return allDates.size
   }, [trades, morningChecks])
 
-  // Pouze reálná data - žádná demo data!
-  const safeData = useMemo(() => {
-    return analytics // Vrať analytics bez ohledu na daysWithData - pouze reálná data
-  }, [analytics])
+  // Pouze reálná data - žádná demo data v LIVE MODE!
+  // V VIRTUAL MODE vždy zobraz demo data
+  const analyticsData = useMemo(() => {
+    if (!isLiveMode) {
+      // Virtual mode - vždy vrat demo data
+      const demoAnalytics = generateDemoData("balanced")
+      const analysis = generatePsychologicalAnalysis(
+        demoAnalytics.trades || [],
+        [], // journals
+        demoAnalytics.moodData || [],
+        false, // isLiveMode
+        "balanced",
+        "month"
+      )
+      return {
+        ...demoAnalytics,
+        analysis,
+        summary: calculatePsychologicalMetrics(demoAnalytics.trades || [], demoAnalytics.moodData || []),
+      }
+    }
+    // Live mode - vrat reálná data z analytics context
+    return analytics
+  }, [isLiveMode, analytics])
 
-  // Analytics se zobrazí POUZE když jsou dostupná reálná data
-  const isAnalyticsLocked = !safeData || (daysWithData < 10 && isLiveMode && !showForcedAnalytics)
+  // Analytics se zobrazí POUZE když jsou dostupná reálná data v LIVE MODE
+  // V VIRTUAL MODE se vždy zobrazí demo data
+  const isAnalyticsLocked = isLiveMode && (!analyticsData || (daysWithData < 10 && !showForcedAnalytics))
   const daysRemaining = Math.max(0, 10 - daysWithData)
 
   if (!authReady || modeLoading) {
@@ -1210,8 +1260,8 @@ export default function PsychologyAnalyticsPage() {
     )
   }
 
-  // Analytics content - display real data
-  if (!safeData) {
+  // Analytics content - display real data or demo data
+  if (!analyticsData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center p-4">
         <Card className="bg-slate-800/50 border-red-500/30">
@@ -1315,8 +1365,8 @@ export default function PsychologyAnalyticsPage() {
     return Array.isArray(filteredData) ? filteredData : []
   }
 
-  const filteredDailyData = getFilteredData(safeData.dailyMoodData, "daily")
-  const filteredWeeklyData = getFilteredData(safeData.weeklyPerformanceData, "weekly")
+  const filteredDailyData = getFilteredData(analyticsData.dailyMoodData, "daily")
+  const filteredWeeklyData = getFilteredData(analyticsData.weeklyPerformanceData, "weekly")
 
   const avgMood =
     filteredDailyData.length > 0
@@ -1350,7 +1400,7 @@ export default function PsychologyAnalyticsPage() {
       ? filteredWeeklyData.reduce((sum: number, w: any) => sum + w.winRate, 0) / filteredWeeklyData.length
       : 0
 
-  const winRate = safeData?.summary?.winRate || avgWinRate || 0
+  const winRate = analyticsData?.summary?.winRate || avgWinRate || 0
 
   const getWinRateLabel = () => {
     if (winRate > 60) return "Win Rate (Profitable)"
@@ -1437,35 +1487,14 @@ export default function PsychologyAnalyticsPage() {
 
               <div className="flex items-center gap-3 p-4 bg-green-500/10 rounded-lg border border-green-500/30">
                 <TrendingUp className="w-8 h-8 text-green-400" />
-                <div>
-                  <p className="text-gray-300 text-xs mb-0.5">
-                    Nejlepší {timeframe === "week" ? "týden" : timeframe === "month" ? "měsíc" : "období"}
-                  </p>
-                  <p className="text-white font-bold text-lg">
-                    +${Math.abs(safeData?.summary?.bestWeek?.pnl ?? 0).toFixed(0)}
-                  </p>
-                  <p className="text-gray-400 text-xs">{safeData?.summary?.bestWeek?.week ?? "N/A"}</p>
-                  {(safeData?.summary?.bestWeek?.avgReadiness ?? 0) > 0 && (
-                    <p className="text-green-400 text-xs mt-1">
-                      Readiness: {Math.round(safeData.summary.bestWeek.avgReadiness)}%
-                    </p>
-                  )}
+              <div>
+                <div className="text-4xl font-bold text-red-400">
+                  -${Math.abs(analyticsData?.summary?.worstWeek?.pnl ?? 0).toFixed(0)}
                 </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-4 bg-red-500/10 rounded-lg border border-red-500/30">
-                <TrendingDown className="w-8 h-8 text-red-400" />
-                <div>
-                  <p className="text-gray-300 text-xs mb-0.5">
-                    Nejhorší {timeframe === "week" ? "týden" : timeframe === "month" ? "měsíc" : "období"}
-                  </p>
-                  <p className="text-white font-bold text-lg">
-                    -${Math.abs(safeData?.summary?.worstWeek?.pnl ?? 0).toFixed(0)}
-                  </p>
-                  <p className="text-gray-400 text-xs">{safeData?.summary?.worstWeek?.week ?? "N/A"}</p>
-                  {(safeData?.summary?.worstWeek?.avgReadiness ?? 0) > 0 && (
-                    <p className="text-red-400 text-xs mt-1">
-                      Readiness: {Math.round(safeData?.summary?.worstWeek?.avgReadiness ?? 0)}%
+                <p className="text-gray-400 text-xs">{analyticsData?.summary?.worstWeek?.week ?? "N/A"}</p>
+                {(analyticsData?.summary?.worstWeek?.avgReadiness ?? 0) > 0 && (
+                  <p className="text-sm text-gray-400">
+                    Readiness: {Math.round(analyticsData?.summary?.worstWeek?.avgReadiness ?? 0)}%
                     </p>
                   )}
                 </div>
