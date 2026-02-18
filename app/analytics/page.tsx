@@ -647,15 +647,15 @@ function generatePsychologicalAnalysis(
     }
   })
 
-  const uniqueDays = new Set(trades.map((t: any) => t.date?.split("T")[0] || t.date)).size
-  const totalPnL = trades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0)
-  const wins = trades.filter((t: any) => (t.pnl || 0) > 0).length
-  const winRate = trades.length > 0 ? Math.round((wins / trades.length) * 100) : 0
+  const uniqueDays = new Set((trades || []).map((t: any) => t.date?.split("T")[0] || t.date)).size
+  const totalPnL = (trades || []).reduce((sum: number, t: any) => sum + (t.pnl || 0), 0)
+  const wins = (trades || []).filter((t: any) => (t.pnl || 0) > 0).length
+  const winRate = (trades || []).length > 0 ? Math.round((wins / (trades || []).length) * 100) : 0
 
   // Calculate overall averages from trades AND moodEntries for a more complete picture
-  const combinedMoodEntries = trades.map((trade) => {
+  const combinedMoodEntries = (trades || []).map((trade) => {
     const tradeDate = trade.date?.split("T")[0] || trade.date
-    const moodEntry = moodEntries.find((m: any) => m.date === tradeDate)
+    const moodEntry = (moodEntries || []).find((m: any) => m.date === tradeDate)
     return {
       ...trade, // Keep trade data
       mood: trade.mood !== undefined ? trade.mood : moodEntry?.mood || 50,
@@ -730,8 +730,8 @@ function generatePsychologicalAnalysis(
       : 100
   const moodStability = Math.max(0, 100 - Math.sqrt(moodVariance))
 
-  const bestDayPnL = trades.length > 0 ? Math.max(...trades.map((t: any) => t.pnl || 0)) : 0
-  const worstDayPnL = trades.length > 0 ? Math.min(...trades.map((t: any) => t.pnl || 0)) : 0
+  const bestDayPnL = (trades || []).length > 0 ? Math.max(...(trades || []).map((t: any) => t.pnl || 0)) : 0
+  const worstDayPnL = (trades || []).length > 0 ? Math.min(...(trades || []).map((t: any) => t.pnl || 0)) : 0
 
   const bestWeek = weeklyPerformanceData.reduce((best, week) => (week.pnl > best.pnl ? week : best), {
     pnl: Number.NEGATIVE_INFINITY,
