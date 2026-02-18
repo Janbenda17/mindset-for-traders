@@ -232,12 +232,21 @@ export default function WeeklyReviewPage() {
   useEffect(() => {
     if (!analytics || !isLiveMode) return
 
+    // Filtruj data POUZE z posledních 7 dní
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    
+    const tradesLast7Days = (trades || []).filter((t: any) => {
+      const tradeDate = new Date(t.date || t.created_at)
+      return tradeDate >= sevenDaysAgo
+    })
+
     const { weeklyInsights } = analytics
 
-    console.log("[v0] [WeeklyReview] Generating review from analytics:", {
-      totalTrades: analytics.summary.totalTrades,
-      winRate: analytics.summary.winRate,
-      totalPnL: analytics.summary.totalPnL,
+    console.log("[v0] [WeeklyReview] Generating review from last 7 days data:", {
+      totalTrades: tradesLast7Days.length,
+      winRate: tradesLast7Days.length > 0 ? Math.round((tradesLast7Days.filter((t: any) => t.pnl > 0).length / tradesLast7Days.length) * 100) : 0,
+      totalPnL: tradesLast7Days.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0),
     })
 
     setReview({
@@ -261,7 +270,7 @@ export default function WeeklyReviewPage() {
         completed: false,
       })),
     )
-  }, [analytics, isLiveMode])
+  }, [analytics, isLiveMode, trades])
 
   useEffect(() => {
     // if (reviewVariant === "ai" && currentWeekData) {
@@ -290,20 +299,41 @@ export default function WeeklyReviewPage() {
 
       console.log("[v0] generateReview - Generuji insights z reálných dat")
 
-      // Extrahuj reálná data z analytics a trading historii
-      const totalTrades = Math.round(analytics.summary?.totalTrades || 0)
-      const winRate = Math.round(analytics.summary?.winRate || 0)
-      const totalPnL = analytics.summary?.totalPnL || 0
-      const revengeIncidents = Math.round(analytics.psychology?.revengeIncidents || 0)
+      // Filtruj data POUZE z posledních 7 dní
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
       
-      // Vypočítej průměrnou připravenost z morning_checks (score 0-100)
-      const avgReadiness = morningChecks.length > 0 
-        ? Math.round(morningChecks.reduce((sum: number, check: any) => sum + (check.score || 0), 0) / morningChecks.length)
+      const tradesLast7Days = trades.filter((t: any) => {
+        const tradeDate = new Date(t.date || t.created_at)
+        return tradeDate >= sevenDaysAgo
+      })
+      
+      const morningChecksLast7Days = morningChecks.filter((m: any) => {
+        const checkDate = new Date(m.date || m.created_at)
+        return checkDate >= sevenDaysAgo
+      })
+
+      // Extrahuj reálná data z analytics a trading historii - POUZE Z POSLEDNÍCH 7 DNÍ
+      const totalTrades = Math.round(tradesLast7Days.length)
+      
+      // Vypočítej winRate z posledních 7 dní
+      const winnersCount = tradesLast7Days.filter((t: any) => t.pnl > 0).length
+      const winRate = totalTrades > 0 ? Math.round((winnersCount / totalTrades) * 100) : 0
+      
+      // Vypočítej totalPnL z posledních 7 dní
+      const totalPnL = tradesLast7Days.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0)
+      
+      // Počítej revenge incidents z posledních 7 dní
+      const revengeIncidents = Math.round(tradesLast7Days.filter((t: any) => t.revenge_trade).length)
+      
+      // Vypočítej průměrnou připravenost z morning_checks posledních 7 dní (score 0-100)
+      const avgReadiness = morningChecksLast7Days.length > 0 
+        ? Math.round(morningChecksLast7Days.reduce((sum: number, check: any) => sum + (check.score || 0), 0) / morningChecksLast7Days.length)
         : 75
 
-      // Vypočítej průměrnou náladu z trades (mood 1-10)
-      const avgMood = trades.length > 0
-        ? Math.round((trades.reduce((sum: number, trade: any) => sum + (trade.mood || 5), 0) / trades.length) * 10)
+      // Vypočítej průměrnou náladu z trades posledních 7 dní (mood 1-10)
+      const avgMood = tradesLast7Days.length > 0
+        ? Math.round((tradesLast7Days.reduce((sum: number, trade: any) => sum + (trade.mood || 5), 0) / tradesLast7Days.length) * 10)
         : 75
 
       // Zaokrouhluj všechny procenta
@@ -311,13 +341,13 @@ export default function WeeklyReviewPage() {
       const roundedReadiness = Math.round(avgReadiness)
       const roundedMood = Math.round(avgMood)
 
-      // Generuj dailyData z reálných záznamů - seskup trades a morning_checks podle data
+      // Generuj dailyData z reálných záznamů posledních 7 dní
       const daysOfWeek = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"]
       const dailyDataMap = new Map()
 
-      // Přidej morning_checks data
-      morningChecks.forEach((check: any) => {
-        const date = new Date(check.date)
+      // Přidej morning_checks data z posledních 7 dní
+      morningChecksLast7Days.forEach((check: any) => {
+        const date = new Date(check.date || check.created_at)
         const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1
         if (dayIndex >= 0 && dayIndex < 7) {
           if (!dailyDataMap.has(dayIndex)) {
@@ -328,9 +358,9 @@ export default function WeeklyReviewPage() {
         }
       })
 
-      // Přidej trades data
-      trades.forEach((trade: any) => {
-        const date = new Date(trade.date)
+      // Přidej trades data z posledních 7 dní
+      tradesLast7Days.forEach((trade: any) => {
+        const date = new Date(trade.date || trade.created_at)
         const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1
         if (dayIndex >= 0 && dayIndex < 7) {
           if (!dailyDataMap.has(dayIndex)) {
@@ -355,7 +385,7 @@ export default function WeeklyReviewPage() {
         }
       })
 
-      // Generuj kvalitní insights z reálných dat
+      // Generuj kvalitní insights z reálných dat posledních 7 dní
       const bestDay = dailyData.reduce((best: any, d: any) => 
         d.pnl > (best?.pnl || Number.NEGATIVE_INFINITY) ? d : best
       , null)
@@ -364,19 +394,19 @@ export default function WeeklyReviewPage() {
         d.pnl < (worst?.pnl || Number.POSITIVE_INFINITY) ? d : worst
       , null)
 
-      // Najdi best a worst trades z real trades
-      const winningTrades = trades.filter((t: any) => t.pnl > 0)
-      const losingTrades = trades.filter((t: any) => t.pnl < 0)
-      const bestTrade = trades.reduce((best: any, t: any) => 
+      // Najdi best a worst trades z posledních 7 dní
+      const winningTrades = tradesLast7Days.filter((t: any) => t.pnl > 0)
+      const losingTrades = tradesLast7Days.filter((t: any) => t.pnl < 0)
+      const bestTrade = tradesLast7Days.reduce((best: any, t: any) => 
         t.pnl > (best?.pnl || Number.NEGATIVE_INFINITY) ? t : best
-      , trades[0])
-      const worstTrade = trades.reduce((worst: any, t: any) => 
+      , tradesLast7Days[0])
+      const worstTrade = tradesLast7Days.reduce((worst: any, t: any) => 
         t.pnl < (worst?.pnl || Number.POSITIVE_INFINITY) ? t : worst
-      , trades[0])
+      , tradesLast7Days[0])
 
-      // Analyzuj session výkonnost
+      // Analyzuj session výkonnost z posledních 7 dní
       const sessionStats: any = {}
-      trades.forEach((t: any) => {
+      tradesLast7Days.forEach((t: any) => {
         const pair = t.pair || "Unknown"
         if (!sessionStats[pair]) {
           sessionStats[pair] = { count: 0, winCount: 0, totalPnL: 0, avgMood: 0 }
@@ -392,12 +422,12 @@ export default function WeeklyReviewPage() {
         sessionStats[key].winRate = (sessionStats[key].winCount / sessionStats[key].count) * 100
       })
 
-      // Zjisti best pair
+      // Zjisti best pair z posledních 7 dní
       const bestPair = Object.entries(sessionStats).reduce((best: any, [pair, stats]: any) => 
         stats.totalPnL > (best?.totalPnL || 0) ? { pair, ...stats } : best
       , null)
 
-      // Generuj detailní AI insights
+      // Generuj detailní AI insights z dat posledních 7 dní
       const aiInsights = []
 
       // Insight 1: Best performing pattern
@@ -437,9 +467,9 @@ export default function WeeklyReviewPage() {
         })
       }
 
-      // Insight 4: Emotion analysis
-      if (trades.length > 0) {
-        const avgMoodFromTrades = Math.round(trades.reduce((sum: number, t: any) => sum + (t.mood || 0), 0) / trades.length * 10)
+      // Insight 4: Emotion analysis z posledních 7 dní
+      if (tradesLast7Days.length > 0) {
+        const avgMoodFromTrades = Math.round(tradesLast7Days.reduce((sum: number, t: any) => sum + (t.mood || 0), 0) / tradesLast7Days.length * 10)
         if (avgMoodFromTrades > 80) {
           aiInsights.push({
             type: "success",
