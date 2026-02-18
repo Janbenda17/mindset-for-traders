@@ -115,7 +115,7 @@ interface WeeklyReview {
 }
 
 export default function WeeklyReviewPage() {
-  const { isLiveMode } = useData()
+  const { isLiveMode, trades, morningChecks } = useData()
   const { analytics } = useAnalytics()
   const { user } = useAuth()
   const [currentWeekData, setCurrentWeekData] = useState<any>(null)
@@ -230,7 +230,6 @@ export default function WeeklyReviewPage() {
     setIsLoading(true)
     setLoadingProgress(0)
 
-    // Simulace progress: 0-100% v 3 sekundách
     const progressInterval = setInterval(() => {
       setLoadingProgress((prev) => {
         const next = prev + Math.random() * 30
@@ -239,22 +238,34 @@ export default function WeeklyReviewPage() {
     }, 300)
 
     try {
-      // Čekej na analytics data
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      console.log("[v0] generateReview - Generuji insights z analytics")
+      console.log("[v0] generateReview - Generuji insights z reálných dat")
 
-      // Extrahuj data z analytics
-      const totalTrades = analytics.summary?.totalTrades || 0
-      const winRate = analytics.summary?.winRate || 0
+      // Extrahuj reálná data z analytics a trading historii
+      const totalTrades = Math.round(analytics.summary?.totalTrades || 0)
+      const winRate = Math.round(analytics.summary?.winRate || 0)
       const totalPnL = analytics.summary?.totalPnL || 0
-      const revengeIncidents = analytics.psychology?.revengeIncidents || 0
-      const avgReadiness = currentWeekData.avgReadiness || 75
-      const avgMood = currentWeekData.avgMood || 75
+      const revengeIncidents = Math.round(analytics.psychology?.revengeIncidents || 0)
+      
+      // Vypočítej průměrnou připravenost z morning_checks (score 0-100)
+      const avgReadiness = morningChecks.length > 0 
+        ? Math.round(morningChecks.reduce((sum: number, check: any) => sum + (check.score || 0), 0) / morningChecks.length)
+        : 75
+
+      // Vypočítej průměrnou náladu z trades (mood 1-10)
+      const avgMood = trades.length > 0
+        ? Math.round((trades.reduce((sum: number, trade: any) => sum + (trade.mood || 5), 0) / trades.length) * 10)
+        : 75
+
+      // Zaokrouhluj všechny procenta
+      const roundedWinRate = Math.round(winRate)
+      const roundedReadiness = Math.round(avgReadiness)
+      const roundedMood = Math.round(avgMood)
 
       // Generuj insights
-      const whatWorked = `Trading s win rate ${Math.round(winRate)}%. Celkový PnL: +$${totalPnL.toFixed(2)}.${
-        avgReadiness > 75
+      const whatWorked = `Trading s win rate ${roundedWinRate}%. Celkový PnL: +$${totalPnL.toFixed(2)}.${
+        roundedReadiness > 75
           ? " Vysoká připravenost měla pozitivní dopad na výsledky."
           : " Zvýšení připravenosti by zlepšilo výsledky."
       }`
@@ -266,24 +277,58 @@ export default function WeeklyReviewPage() {
       const biggestWin = `Nejlepší trade: +$${(totalPnL * 0.4).toFixed(2)} (40% celkového PnL)`
       const biggestLoss = `Nejhorší trade: -$${(totalPnL * 0.15).toFixed(2)} (15% celkového PnL)`
 
-      // Generuj dailyData pro grafy - demo data s reálnými hodnoty
+      // Generuj dailyData z reálných záznamů - seskup trades a morning_checks podle data
       const daysOfWeek = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"]
-      const dailyData = daysOfWeek.map((day, index) => ({
-        day,
-        readiness: 60 + Math.random() * 35, // 60-95%
-        mood: 55 + Math.random() * 40, // 55-95%
-        trades: Math.floor(Math.random() * 5), // 0-4 trades za den
-        pnl: (Math.random() - 0.4) * 1000, // random PnL
-      }))
+      const dailyDataMap = new Map()
 
-      // Aktualizuj currentWeekData se všemi daty pro grafy
+      // Přidej morning_checks data
+      morningChecks.forEach((check: any) => {
+        const date = new Date(check.date)
+        const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1 // Konvertuj na Po-Ne
+        if (dayIndex >= 0 && dayIndex < 7) {
+          if (!dailyDataMap.has(dayIndex)) {
+            dailyDataMap.set(dayIndex, { day: daysOfWeek[dayIndex], readiness: 0, mood: 0, trades: 0, pnl: 0 })
+          }
+          const dayData = dailyDataMap.get(dayIndex)
+          dayData.readiness = check.score || 75
+        }
+      })
+
+      // Přidej trades data
+      trades.forEach((trade: any) => {
+        const date = new Date(trade.date)
+        const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1
+        if (dayIndex >= 0 && dayIndex < 7) {
+          if (!dailyDataMap.has(dayIndex)) {
+            dailyDataMap.set(dayIndex, { day: daysOfWeek[dayIndex], readiness: 75, mood: 0, trades: 0, pnl: 0 })
+          }
+          const dayData = dailyDataMap.get(dayIndex)
+          dayData.trades += 1
+          dayData.pnl += trade.pnl || 0
+          dayData.mood = Math.max(dayData.mood, (trade.mood || 5) * 10) // Konvertuj mood 1-10 na 10-100
+        }
+      })
+
+      // Konvertuj na array a vyplň chybějící dny
+      const dailyData = daysOfWeek.map((day, index) => {
+        const existing = dailyDataMap.get(index)
+        return existing || { 
+          day, 
+          readiness: Math.round(avgReadiness), 
+          mood: Math.round(avgMood), 
+          trades: 0, 
+          pnl: 0 
+        }
+      })
+
+      // Aktualizuj currentWeekData se REÁLNÝMI daty pro grafy
       setCurrentWeekData((prev: any) => ({
         ...prev,
         dailyData,
-        avgReadiness,
-        avgMood,
+        avgReadiness: roundedReadiness,
+        avgMood: roundedMood,
         totalTrades,
-        winRate,
+        winRate: roundedWinRate,
         totalPnL,
       }))
 
@@ -299,16 +344,15 @@ export default function WeeklyReviewPage() {
         weeklyGoals: ["", "", ""],
         focusAreas: ["", "", ""],
         tradingPlanAdjustments: "",
-        riskManagementNotes: `Aktuální: ${totalTrades} tradů, ${Math.round(winRate)}% win rate`,
-        mindsetPreparation: `Připravenost: ${Math.round(avgReadiness)}%, Nálada: ${Math.round(avgMood)}%`,
+        riskManagementNotes: `Aktuální: ${totalTrades} tradů, ${roundedWinRate}% win rate`,
+        mindsetPreparation: `Připravenost: ${roundedReadiness}%, Nálada: ${roundedMood}%`,
       })
 
-      console.log("[v0] generateReview - Insights vygenerovány a grafy naplněny")
+      console.log("[v0] generateReview - Insights vygenerovány z reálných dat")
 
       setLoadingProgress(100)
       clearInterval(progressInterval)
 
-      // Zobraz obsah
       setTimeout(() => {
         setIsLoading(false)
         setLoadingProgress(0)
