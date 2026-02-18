@@ -1478,9 +1478,9 @@ export default function PsychologyAnalyticsPage() {
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-white mb-1">AI Mindset Analysis</h3>
                   <p className="text-gray-300 text-sm">
-                    {safeData.summary.totalTrades} obchodů • {safeData.summary.weeks}{" "}
+                    {analyticsData.summary.totalTrades} obchodů • {analyticsData.summary.weeks}{" "}
                     {timeframe === "week" ? "týdnů" : timeframe === "month" ? "měsíců" : "období"} •{" "}
-                    {safeData.psychInsights.length} insights
+                    {analyticsData.psychInsights.length} insights
                   </p>
                 </div>
               </div>
@@ -1799,7 +1799,7 @@ export default function PsychologyAnalyticsPage() {
                               cx="50%"
                               cy="50%"
                               outerRadius="80%"
-                              data={safeData.psychologicalProfile.map((item) => ({
+                              data={analyticsData.psychologicalProfile.map((item) => ({
                                 ...item,
                                 A: Number.isNaN(item.A) ? 0 : item.A || 0,
                               }))}
@@ -1937,13 +1937,13 @@ export default function PsychologyAnalyticsPage() {
                   <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
                     <div className="flex items-center gap-3">
                       <Sparkles className="w-5 h-5 text-yellow-400" />
-                      Akční poznatky ({safeData.psychInsights.length})
+                      Akční poznatky ({analyticsData.psychInsights.length})
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4">
                     {/* Akční poznatky - existující kód */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                      {safeData.psychInsights.map((insight: any, index: number) => (
+                      {analyticsData.psychInsights.map((insight: any, index: number) => (
                         <Card
                           key={index}
                           className={cn(
@@ -2016,7 +2016,7 @@ export default function PsychologyAnalyticsPage() {
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-6 bg-slate-900/50">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {safeData.emotionalPatterns.map((pattern: any, idx: number) => (
+                      {analyticsData.emotionalPatterns.map((pattern: any, idx: number) => (
                         <Card
                           key={idx}
                           className={cn(
@@ -2243,7 +2243,7 @@ export default function PsychologyAnalyticsPage() {
                               <p className="text-green-300 font-semibold text-sm">Winning Streaks</p>
                             </div>
                             <p className="text-3xl font-bold text-white mb-1">
-                              {safeData.streakStats.maxWinStreak} <span className="text-lg text-gray-400">tradů</span>
+                              {analyticsData.streakStats.maxWinStreak} <span className="text-lg text-gray-400">tradů</span>
                             </p>
                             <p className="text-green-400 text-xs">Nejdelší série</p>
                           </div>
@@ -2254,7 +2254,7 @@ export default function PsychologyAnalyticsPage() {
                               <p className="text-red-300 font-medium text-sm">Losing Streaks</p>
                             </div>
                             <p className="text-3xl font-bold text-white mb-1">
-                              {safeData.streakStats.maxLossStreak} <span className="text-lg text-gray-400">tradů</span>
+                              {analyticsData.streakStats.maxLossStreak} <span className="text-lg text-gray-400">tradů</span>
                             </p>
                             <p className="text-red-400 text-xs">Nejdelší série</p>
                           </div>
@@ -2483,14 +2483,14 @@ export default function PsychologyAnalyticsPage() {
                                 <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
                                   <p className="text-sm text-gray-400 mb-2">Potenciální zlepšení</p>
                                   <p className="text-4xl font-black text-cyan-300">
-                                    +{15 + safeData.actionPlan.length * 5}%
+                                    +{15 + analyticsData.actionPlan.length * 5}%
                                   </p>
                                 </div>
 
                                 <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
                                   <p className="text-sm text-gray-400 mb-2">Časová investice</p>
                                   <p className="text-4xl font-black text-purple-300">
-                                    {safeData.actionPlan.length * 7} dní
+                                    {analyticsData.actionPlan.length * 7} dní
                                   </p>
                                 </div>
 
@@ -2524,7 +2524,7 @@ export default function PsychologyAnalyticsPage() {
                   <AccordionTrigger className="bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 px-6 py-4 text-white font-semibold">
                     <div className="flex items-center gap-3">
                       <Target className="w-5 h-5 text-purple-400" />
-                      Personalizovaný Akční Plán ({safeData.actionPlan.length} akcí)
+                      Personalizovaný Akční Plán ({analyticsData.actionPlan.length} akcí)
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 py-4">
@@ -2540,9 +2540,9 @@ export default function PsychologyAnalyticsPage() {
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        {safeData.actionPlan.length > 0 ? (
+                        {analyticsData.actionPlan.length > 0 ? (
                           <div className="space-y-4">
-                            {safeData.actionPlan.map((action: any, index: number) => {
+                            {analyticsData.actionPlan.map((action: any, index: number) => {
                               const priorityColors: { [key: string]: string } = {
                                 high: "bg-red-500/20 text-red-300 border-red-500/30",
                                 medium: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
@@ -2648,7 +2648,7 @@ export default function PsychologyAnalyticsPage() {
               </Accordion>
 
               {/* IMPROVED FINAL CARD - CLEANER DESIGN */}
-              {safeData.actionPlan.length > 0 && (
+              {analyticsData.actionPlan.length > 0 && (
                 <Card className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/40 backdrop-blur-sm">
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-cyan-600/10 to-purple-600/10" />
                   <CardContent className="p-8 relative">
@@ -2661,7 +2661,7 @@ export default function PsychologyAnalyticsPage() {
                           <h3 className="text-3xl font-black text-white mb-2">💪 Celkový Potenciál Zlepšení</h3>
                           <Badge className="bg-cyan-500/20 text-cyan-200 border-cyan-400/30 text-base px-4 py-1">
                             <TrendingUp className="w-4 h-4 mr-1" />
-                            {safeData.actionPlan.length} konkrétních akcí
+                            {analyticsData.actionPlan.length} konkrétních akcí
                           </Badge>
                         </div>
                       </div>
@@ -2675,11 +2675,11 @@ export default function PsychologyAnalyticsPage() {
                       <div className="grid grid-cols-3 gap-4">
                         <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
                           <p className="text-sm text-gray-400 mb-2">Potenciální zlepšení</p>
-                          <p className="text-4xl font-black text-cyan-300">+{15 + safeData.actionPlan.length * 5}%</p>
+                          <p className="text-4xl font-black text-cyan-300">+{15 + analyticsData.actionPlan.length * 5}%</p>
                         </div>
                         <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
                           <p className="text-sm text-gray-400 mb-2">Časová investice</p>
-                          <p className="text-4xl font-black text-purple-300">{safeData.actionPlan.length * 7} dní</p>
+                          <p className="text-4xl font-black text-purple-300">{analyticsData.actionPlan.length * 7} dní</p>
                         </div>
                         <div className="p-6 bg-slate-700/50 rounded-xl border border-white/10 text-center">
                           <p className="text-sm text-gray-400 mb-2">Priorita</p>
