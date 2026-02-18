@@ -1467,27 +1467,6 @@ export default function PsychologyAnalyticsPage() {
           </div>
         )}
         
-        {/* AI Banner with Stats */}
-        <Card className="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-slate-600 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="flex items-center justify-between mb-4 md:col-span-2">
-                <div className="flex items-center gap-3">
-                  <Brain className="w-8 h-8 text-purple-300" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white mb-1">AI Mindset Analysis</h3>
-                  <p className="text-gray-300 text-sm">
-                    {analyticsData.summary.totalTrades} obchodů • {analyticsData.summary.weeks}{" "}
-                    {timeframe === "week" ? "týdnů" : timeframe === "month" ? "měsíců" : "období"} •{" "}
-                    {analyticsData.psychInsights.length} insights
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </CardContent>
-        </Card>
         {/* Key Metrics - COMPLETELY REDESIGNED */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Emoční Stabilita */}
