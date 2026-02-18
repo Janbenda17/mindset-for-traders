@@ -80,20 +80,6 @@ export interface ComputedAnalytics {
 }
 
 export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
-    shouldUnlockStage3: boolean // Has daily intention data
-    shouldUnlockStage4: boolean // Has trades recorded
-    shouldUnlockStage5: boolean // Has trades recorded
-  }
-  weeklyInsights: {
-    bestPerformingDay: string
-    worstPerformingDay: string
-    commonMistake: string
-    readinessVsResults: string
-    nextWeekFocus: string[]
-  }
-}
-
-export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
   const { 
     trades = [], 
     morningChecks = [], 
