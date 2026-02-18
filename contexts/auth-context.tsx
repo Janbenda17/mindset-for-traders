@@ -387,20 +387,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-    supabase.auth.signOut()
-
-    console.log("[v0] Logout - clearing user state")
-    lastUserIdRef.current = null
-    setUser(null)
-
-    toast({
-      title: "Odhlášení úspěšné",
-      description: "Nashledanou!",
-    })
-
-    window.location.href = "/auth/login"
-  }
-
   return (
     <AuthContext.Provider value={{ user, login, register, logout, resetPassword, isLoading, authReady, clearAllAccounts }}>
       {children}
