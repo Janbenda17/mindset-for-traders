@@ -42,6 +42,7 @@ import {
   BarChart3,
   Settings,
   Sparkles,
+  GripVertical,
   type LucideIcon,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -276,6 +277,8 @@ export default function RoutinesPage() {
     category: "mindset" as const,
     routine: "morning" as "morning" | "evening",
   })
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null)
+  const [dragOverItemId, setDragOverItemId] = useState<string | null>(null)
 
   const today = new Date().toISOString().split("T")[0]
 
@@ -503,6 +506,49 @@ export default function RoutinesPage() {
   const renderRoutineItems = (items: RoutineItem[], routineType: "morning" | "evening") => {
     const activeItems = isEditMode ? items : items.filter((i) => i.isActive)
 
+    const handleDragStart = (e: React.DragEvent, itemId: string) => {
+      setDraggedItemId(itemId)
+      e.dataTransfer.effectAllowed = "move"
+    }
+
+    const handleDragOver = (e: React.DragEvent, itemId: string) => {
+      e.preventDefault()
+      e.dataTransfer.dropEffect = "move"
+      setDragOverItemId(itemId)
+    }
+
+    const handleDrop = (e: React.DragEvent, targetItemId: string) => {
+      e.preventDefault()
+      if (!draggedItemId || draggedItemId === targetItemId) {
+        setDraggedItemId(null)
+        setDragOverItemId(null)
+        return
+      }
+
+      const draggedIndex = items.findIndex((i) => i.id === draggedItemId)
+      const targetIndex = items.findIndex((i) => i.id === targetItemId)
+
+      if (draggedIndex === -1 || targetIndex === -1) return
+
+      const newItems = [...items]
+      const [removed] = newItems.splice(draggedIndex, 1)
+      newItems.splice(targetIndex, 0, removed)
+
+      if (routineType === "morning") {
+        setMorningRoutine(newItems)
+      } else {
+        setEveningRoutine(newItems)
+      }
+
+      setDraggedItemId(null)
+      setDragOverItemId(null)
+    }
+
+    const handleDragEnd = () => {
+      setDraggedItemId(null)
+      setDragOverItemId(null)
+    }
+
     return (
       <div className="space-y-3">
         {activeItems.map((item) => {
@@ -510,8 +556,16 @@ export default function RoutinesPage() {
           return (
             <div
               key={item.id}
+              draggable={isEditMode}
+              onDragStart={(e) => handleDragStart(e, item.id)}
+              onDragOver={(e) => handleDragOver(e, item.id)}
+              onDrop={(e) => handleDrop(e, item.id)}
+              onDragEnd={handleDragEnd}
               className={cn(
                 "flex items-start gap-3 p-3 rounded-xl border transition-all",
+                isEditMode && "cursor-move",
+                draggedItemId === item.id && "opacity-50 bg-slate-700/50",
+                dragOverItemId === item.id && draggedItemId !== item.id && "border-blue-500/50 bg-blue-500/5",
                 item.completed && !isEditMode
                   ? "bg-green-500/10 border-green-500/30"
                   : "bg-slate-800/50 border-slate-700/50 hover:border-slate-600/50",
@@ -519,11 +573,14 @@ export default function RoutinesPage() {
               )}
             >
               {isEditMode ? (
-                <Checkbox
-                  checked={item.isActive}
-                  onCheckedChange={() => toggleItemActive(routineType, item.id)}
-                  className="mt-1"
-                />
+                <div className="flex items-start gap-2">
+                  <GripVertical className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                  <Checkbox
+                    checked={item.isActive}
+                    onCheckedChange={() => toggleItemActive(routineType, item.id)}
+                    className="mt-1"
+                  />
+                </div>
               ) : (
                 <Checkbox
                   checked={item.completed}
