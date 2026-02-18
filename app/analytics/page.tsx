@@ -1134,6 +1134,7 @@ export default function PsychologyAnalyticsPage() {
       summary: analytics?.summary || { totalTrades: 0, winRate: 0, totalPnL: 0 },
       dailyMoodData: analytics?.dailyMoodData || [],
       weeklyPerformanceData: analytics?.weeklyPerformanceData || [],
+      streakStats: analytics?.streakStats || { maxWinStreak: 0, maxLossStreak: 0, currentWinStreak: 0, currentLossStreak: 0 },
     }
   }, [isLiveMode, analytics])
 
