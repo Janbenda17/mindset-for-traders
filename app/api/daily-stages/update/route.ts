@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { stageId, completed } = body
 
-    console.log("[v0] Stage update - Completing stage:', stageId, 'completed:', completed)
+    console.log("[v0] Stage update - Completing stage:", stageId, "completed:", completed)
 
     const today = new Date().toISOString().split("T")[0]
     const completedAt = completed ? new Date().toISOString() : null
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       .eq("date", today)
       .maybeSingle()
 
-    console.log("[v0] Stage update - Existing record:', existingRecord ? 'found' : 'not found')
+    console.log("[v0] Stage update - Existing record:", existingRecord ? "found" : "not found")
 
     // Build update object - ALWAYS initialize all stage completion flags for the day
     const updateData: any = {
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     updateData[stageColumn.completed] = completed
     updateData[stageColumn.completedAt] = completedAt
 
-    console.log("[v0] Stage update - Upserting data:', updateData)
+    console.log("[v0] Stage update - Upserting data:", updateData)
 
     const { data, error } = await supabase
       .from("daily_stages")
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log("[v0] Stage update - Stage', stageId, completed ? 'completed' : 'uncompleted', '- next stage:', nextStage)
+    console.log("[v0] Stage update - Stage", stageId, completed ? "completed" : "uncompleted", "- next stage:", nextStage)
 
     // Check if all 5 stages are now completed for today
     if (completed && stageId === 5) {
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
         updateData.record_trades_completed &&
         updateData.daily_summary_completed
 
-      console.log("[v0] Stage update - All stages check:', allStagesCompleted)
+      console.log("[v0] Stage update - All stages check:", allStagesCompleted)
 
       if (allStagesCompleted) {
         console.log("[v0] Stage update - All stages completed for today! Updating challenge progress...")
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
           .eq("daily_summary_completed", true)
 
         const totalDaysCompleted = completedDays?.length || 0
-        console.log("[v0] Stage update - Total days with all stages completed:', totalDaysCompleted)
+        console.log("[v0] Stage update - Total days with all stages completed:", totalDaysCompleted)
 
         // Update or create challenge progress record
         const { error: challengeError, data: challengeData } = await supabase
@@ -146,16 +146,16 @@ export async function POST(request: Request) {
           .select()
 
         if (challengeError) {
-          console.error("[v0] Stage update - Error updating challenge progress:', challengeError)
+          console.error("[v0] Stage update - Error updating challenge progress:", challengeError)
         } else {
-          console.log("[v0] Stage update - Challenge progress updated:', Math.min(totalDaysCompleted, 7))
+          console.log("[v0] Stage update - Challenge progress updated:", Math.min(totalDaysCompleted, 7))
         }
       }
     }
 
     return NextResponse.json(data)
   } catch (error: any) {
-    console.error("[v0] Stage update - Error:', error)
+    console.error("[v0] Stage update - Error:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
