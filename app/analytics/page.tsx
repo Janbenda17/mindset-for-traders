@@ -1485,20 +1485,6 @@ export default function PsychologyAnalyticsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-4 bg-green-500/10 rounded-lg border border-green-500/30">
-                <TrendingUp className="w-8 h-8 text-green-400" />
-              <div>
-                <div className="text-4xl font-bold text-red-400">
-                  -${Math.abs(analyticsData?.summary?.worstWeek?.pnl ?? 0).toFixed(0)}
-                </div>
-                <p className="text-gray-400 text-xs">{analyticsData?.summary?.worstWeek?.week ?? "N/A"}</p>
-                {(analyticsData?.summary?.worstWeek?.avgReadiness ?? 0) > 0 && (
-                  <p className="text-sm text-gray-400">
-                    Readiness: {Math.round(analyticsData?.summary?.worstWeek?.avgReadiness ?? 0)}%
-                    </p>
-                  )}
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
