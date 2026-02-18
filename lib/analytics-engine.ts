@@ -17,9 +17,67 @@ export interface ComputedAnalytics {
     averageLoss: number
     avgReadiness: number
     avgMood: number
-    bestDay: { date: string; pnl: number; readiness: number }
-    worstDay: { date: string; pnl: number; readiness: number }
+    bestDay: any
+    worstDay: any
   }
+  psychology: {
+    readinessCorrelation: number
+    moodCorrelation: number
+    disciplineScore: number
+    consistencyScore: number
+    revengeIncidents: number
+  }
+  progression: {
+    currentDay: number
+    daysCompleted: number
+    todayComplete: boolean
+    morningCheckDone: boolean
+    tradesRecorded: number
+    canAdvance: boolean
+    isUnlocked: boolean
+    requirementsText: string[]
+  }
+  stages: {
+    shouldUnlockStage2: boolean
+    shouldUnlockStage3: boolean
+    shouldUnlockStage4: boolean
+    shouldUnlockStage5: boolean
+  }
+  weeklyInsights: {
+    bestPerformingDay: string
+    worstPerformingDay: string
+    commonMistake: string
+    readinessVsResults: string
+    nextWeekFocus: string[]
+  }
+  psychologicalProfile: Array<{ subject: string; A: number }>
+  psychInsights: Array<{
+    type: "success" | "warning" | "critical"
+    icon: string
+    title: string
+    description: string
+    action: string
+    impact: string
+  }>
+  emotionalPatterns: Array<{
+    name: string
+    emoji: string
+    count: number
+    impact: number
+    color: string
+    severity: "low" | "medium" | "high" | "critical"
+    description: string
+    recommendation: string
+  }>
+  actionPlan: Array<{
+    priority: "low" | "medium" | "high" | "critical"
+    emoji: string
+    title: string
+    description: string
+    action: string
+    impact: string
+  }>
+}
   psychology: {
     readinessCorrelation: number
     moodCorrelation: number
@@ -294,5 +352,108 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
       readinessVsResults,
       nextWeekFocus,
     },
+    // Added psychological insights and patterns from real data
+    psychologicalProfile: [
+      { subject: "Disciplína", A: Math.round(disciplineScore) },
+      { subject: "Konsistence", A: Math.round(consistencyScore) },
+      { subject: "Stress", A: Math.max(0, 100 - (revengeIncidents * 10)) }, // Lower is better
+      { subject: "Readiness", A: Math.round(avgReadiness) },
+      { subject: "Mood", A: Math.round(avgMood) },
+      { subject: "Concentration", A: Math.round(Math.max(0, 100 - (trades.length > 0 ? (revengeIncidents / trades.length * 100) : 0))) },
+      { subject: "Risk Management", A: Math.round(100 - Math.abs(winRate - 55) * 0.5) },
+      { subject: "Confidence", A: Math.round(Math.min(100, winRate)) },
+    ],
+    psychInsights: [
+      // Generate insights based on real metrics
+      ...(disciplineScore > 80
+        ? [{
+            type: "success" as const,
+            icon: "🎯",
+            title: "Disciplína na vysoké úrovni",
+            description: `Dodržuješ plán v ${Math.round(disciplineScore)}% obchodů - to je excellent!`,
+            action: "Pokračuj v tomto tempu!",
+            impact: "positive" as const,
+          }]
+        : []),
+      ...(revengeIncidents > 2
+        ? [{
+            type: "critical" as const,
+            icon: "😤",
+            title: "KRITICKÝ: Revenge trading pattern!",
+            description: `Detekovali jsme ${revengeIncidents} incidentů revenge tradingu. Toto tě stojí peníze.`,
+            action: "STOP: Po 2 ztrátách za sebou si vezmi pauzu 30 minut!",
+            impact: "critical" as const,
+          }]
+        : []),
+      ...(avgReadiness < 60
+        ? [{
+            type: "warning" as const,
+            icon: "😴",
+            title: "Nízká readiness = horší výsledky",
+            description: `Tvá průměrná readiness je ${Math.round(avgReadiness)}%. Měla by být min. 70%+`,
+            action: "Zlepši sleep a morning routine - je to kritické!",
+            impact: "high" as const,
+          }]
+        : []),
+    ],
+    emotionalPatterns: [
+      // Generate patterns based on analysis
+      ...(revengeIncidents > 0
+        ? [{
+            name: "Revenge Trading",
+            emoji: "😤",
+            count: revengeIncidents,
+            impact: -(revengeIncidents * 1000),
+            color: "#dc2626",
+            severity: revengeIncidents > 3 ? "critical" : "high",
+            description: "Pokus rychle získat zpět ztráty - nejnebezpečnější pattern",
+            recommendation: "STOP trading po 2 ztrátách. Minimálně 30min pauza.",
+          }]
+        : []),
+      ...(disciplineScore < 50
+        ? [{
+            name: "Nedisciplínovaný obchod",
+            emoji: "📉",
+            count: Math.round((1 - disciplineScore / 100) * trades.length),
+            impact: -(Math.round((1 - disciplineScore / 100) * trades.length * 500)),
+            color: "#f97316",
+            severity: "high",
+            description: "Trading bez dodržení svého plánu",
+            recommendation: "Vytvoř a drž se svého trading plánu!",
+          }]
+        : []),
+    ],
+    actionPlan: [
+      ...(revengeIncidents > 0
+        ? [{
+            priority: "critical" as const,
+            emoji: "⛔",
+            title: "ZASTAVIT REVENGE TRADING",
+            description: `Detekováno ${revengeIncidents} incidentů. Systém pro zastavení:`,
+            action: "Po 2 ztrátách: PAUSE 30min, zavolej si, ujasni si hlavu.",
+            impact: `Potenciální úspora: $${revengeIncidents * 2000}`,
+          }]
+        : []),
+      ...(disciplineScore < 70
+        ? [{
+            priority: "high" as const,
+            emoji: "🎯",
+            title: "Vylepš disciplínu",
+            description: `Plán dodržuješ jen v ${Math.round(disciplineScore)}%. Target: 85%+`,
+            action: "Každý obchod musí splňovat 3 kritéria tvého plánu.",
+            impact: "Potenciální nárůst: +15% P&L",
+          }]
+        : []),
+      ...(avgReadiness < 70
+        ? [{
+            priority: "high" as const,
+            emoji: "😴",
+            title: "Zlepši morning readiness",
+            description: `Tvá readiness: ${Math.round(avgReadiness)}%. Měla by být 75%+`,
+            action: "Spánek 7-8h, ranní rutina 20min (meditace/cvičení)",
+            impact: "Korelace: +readiness = +lepší rozhodování",
+          }]
+        : []),
+    ],
   }
 }
