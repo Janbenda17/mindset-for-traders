@@ -719,7 +719,8 @@ export default function DailyTrackerPage() {
   // Update todayEntry with actual stagesCompleted count
   todayEntry.stagesCompleted = todayStages.filter((s) => s.completed).length
 
-  const isMorningCheckCompleted = todayStages.find((s) => s.id === 1)?.completed || false
+  // Check if morning check is actually completed - use REAL data, not UI state
+  const isMorningCheckCompleted = (isLiveMode && todayMorningCheck) ? true : (todayStages.find((s) => s.id === 1)?.completed || false)
 
   // Update handleStageComplete to save to Supabase in LIVE mode
   const handleStageComplete = async (stageNum: number, data: Record<string, unknown>) => {
