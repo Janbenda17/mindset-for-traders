@@ -32,6 +32,7 @@ import { useRouter } from "next/navigation" // Added for navigation
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 import { useAnalytics } from "@/contexts/analytics-context" // Updated: useAnalytics hook
 import { useLiveMode } from "@/contexts/live-mode-context" // CHANGE: get isLiveMode from useLiveMode hook instead
+import { useData } from "@/contexts/data-context" // Added for accessing trades and morningChecks
 import { MorningAssessment } from "@/components/morning-assessment"
 import { RecordTrades } from "@/components/record-trades"
 
@@ -1015,12 +1016,17 @@ export default function PsychologyAnalyticsPage() {
   const router = useRouter()
   const { user, authReady } = useAuth()
   const { isLiveMode, isLoading: modeLoading } = useLiveMode()
+  const { getAllTrades, getAllMorningChecks } = useData()
   const {
     analytics,
     isLoading: analyticsLoading,
     // Use refresh function from context instead of direct call
     refresh,
   } = useAnalytics()
+  
+  // Získej reálná data z useData
+  const trades = getAllTrades() || []
+  const morningChecks = getAllMorningChecks() || []
   const [selectedMetric, setSelectedMetric] = useState("pnl")
   const [activeTab, setActiveTab] = useState("overview")
   const [showMorningCheck, setShowMorningCheck] = useState(false)
@@ -1048,17 +1054,25 @@ export default function PsychologyAnalyticsPage() {
     // Only load once on mount, removed polling that caused performance issues
   }, [user])
 
-  // Calculate daysWithData first, before using it in safeData
+  // Calculate daysWithData z reálných trades a morningChecks
   const daysWithData = useMemo(() => {
-    if (!analytics) return 0
-
-    // Count unique dates from trades and morning checks
-    const tradeDates = new Set(analytics.trades?.map((t: any) => t.date) || []) // Corrected: analytics.trades instead of analytics.summary?.trades
-    const morningCheckDates = new Set(analytics.summary?.morningChecks?.map((m: any) => m.date) || [])
+    const tradeDates = new Set(
+      trades.map((t: any) => {
+        const date = t.date || t.created_at
+        return date ? new Date(date).toISOString().split("T")[0] : null
+      }).filter(Boolean)
+    )
+    
+    const morningCheckDates = new Set(
+      morningChecks.map((m: any) => {
+        const date = m.date || m.created_at
+        return date ? new Date(date).toISOString().split("T")[0] : null
+      }).filter(Boolean)
+    )
+    
     const allDates = new Set([...tradeDates, ...morningCheckDates])
-
     return allDates.size
-  }, [analytics])
+  }, [trades, morningChecks])
 
   // Ve Virtual Mode s nedostatečnými daty použij demo data
   const safeData = useMemo(() => {
