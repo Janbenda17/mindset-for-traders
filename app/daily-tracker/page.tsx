@@ -325,7 +325,7 @@ export default function DailyTrackerPage() {
         const plan = tradingPlans?.find((p: any) => p.date === date)
         const stagesRecord = stagesRecords.find((sr: any) => sr.date === date)
 
-        if (morningCheck || intention || plan || dayTrades.length > 0) {
+        if (morningCheck || intention || plan || dayTrades.length > 0 || stagesRecord) {
           let stagesCompleted = 0
           
           // In LIVE MODE, use actual daily_stages record
@@ -341,6 +341,8 @@ export default function DailyTrackerPage() {
             if (intention) stagesCompleted++
             if (plan) stagesCompleted++
             if (dayTrades.length > 0) stagesCompleted++
+            // Check if daily summary exists (stage 5) - this is tracked in stagesRecord
+            if (stagesRecord && stagesRecord.daily_summary_completed) stagesCompleted++
           }
 
           combinedData.push({
