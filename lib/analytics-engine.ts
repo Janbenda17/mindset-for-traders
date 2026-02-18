@@ -78,25 +78,8 @@ export interface ComputedAnalytics {
     impact: string
   }>
 }
-  psychology: {
-    readinessCorrelation: number
-    moodCorrelation: number
-    disciplineScore: number
-    consistencyScore: number
-    revengeIncidents: number
-  }
-  progression?: {
-    currentDay: number
-    daysCompleted: number
-    todayComplete: boolean
-    morningCheckDone: boolean
-    tradesRecorded: number
-    canAdvance: boolean
-    isUnlocked: boolean
-    requirementsText: string[]
-  }
-  stages: {
-    shouldUnlockStage2: boolean // Has morning check data
+
+export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
     shouldUnlockStage3: boolean // Has daily intention data
     shouldUnlockStage4: boolean // Has trades recorded
     shouldUnlockStage5: boolean // Has trades recorded
