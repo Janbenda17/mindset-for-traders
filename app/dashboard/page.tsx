@@ -120,10 +120,10 @@ export default function Dashboard() {
           className="mb-12 flex items-start justify-between"
         >
           <div>
-            <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
               Nástěnka
             </h1>
-            <p className="text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
+            <p className="text-sm sm:text-base md:text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
           </div>
           <CapitalSettingsDialog 
             currentCapital={userCapital}
@@ -154,7 +154,7 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-16"
           >
             {[
               { label: 'Celkový kapitál', value: `$${totalCapital.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, icon: '💰', gradient: 'from-green-500 to-emerald-600' },
@@ -180,7 +180,7 @@ export default function Dashboard() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="mb-16"
           >
-            <div className="grid md:grid-cols-2 gap-6">
+            <div             className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {features.map((feature, i) => (
                 <Link key={i} href={feature.href}>
                   <motion.div

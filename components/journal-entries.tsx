@@ -667,15 +667,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                     </div>
 
                     {(detailEntry.positionSize || detailEntry.pips) && (
-                      <div className="grid grid-cols-2 gap-4">
-                        {detailEntry.positionSize && (
-                          <Card className="bg-slate-700/50 border-slate-600">
-                            <CardContent className="p-4">
-                              <p className="text-xs text-gray-300 mb-1">Velikost pozice</p>
-                              <p className="text-xl font-bold text-white">{detailEntry.positionSize}</p>
-                            </CardContent>
-                          </Card>
-                        )}
+                      <div className="grid grid-cols-1 gap-4">
                         {detailEntry.pips && (
                           <Card className="bg-slate-700/50 border-slate-600">
                             <CardContent className="p-4">

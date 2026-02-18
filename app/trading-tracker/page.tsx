@@ -418,10 +418,6 @@ export default function TradingTrackerPage() {
                             <p className="text-white font-medium">{trade.closeTime}</p>
                           </div>
                           <div>
-                            <p className="text-gray-400 text-xs uppercase">Velikost pozice</p>
-                            <p className="text-white font-medium">{trade.positionSize} lot</p>
-                          </div>
-                          <div>
                             <p className="text-gray-400 text-xs uppercase">Emoce - Před</p>
                             <p className="text-white font-medium">{trade.emotionBefore}</p>
                           </div>

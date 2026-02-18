@@ -506,18 +506,6 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Velikost pozice</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
-                  value={currentTrade.positionSize}
-                  onChange={(e) =>
-                    setCurrentTrade({ ...currentTrade, positionSize: Number.parseFloat(e.target.value) })
-                  }
-                />
-              </div>
-              <div>
                 <label className="text-sm text-gray-300 block mb-2">P&L ($)</label>
                 <input
                   type="number"
@@ -814,10 +802,6 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                       <div className="bg-slate-700/30 rounded-lg p-3">
                         <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Měnový pár</p>
                         <p className="text-white font-bold">{trade.pair}</p>
-                      </div>
-                      <div className="bg-slate-700/30 rounded-lg p-3">
-                        <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Velikost pozice</p>
-                        <p className="text-white font-bold">{trade.positionSize} Lot</p>
                       </div>
                       <div className="bg-slate-700/30 rounded-lg p-3">
                         <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Session</p>

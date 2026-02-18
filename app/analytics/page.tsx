@@ -1124,8 +1124,17 @@ export default function PsychologyAnalyticsPage() {
         summary: calculatePsychologicalMetrics(demoAnalytics.trades || [], demoAnalytics.moodData || []),
       }
     }
-    // Live mode - vrat reálná data z analytics context
-    return analytics
+    // Live mode - vrat reálná data z analytics context with safe defaults
+    return {
+      ...analytics,
+      psychInsights: analytics?.psychInsights || [],
+      emotionalPatterns: analytics?.emotionalPatterns || [],
+      actionPlan: analytics?.actionPlan || [],
+      psychologicalProfile: analytics?.psychologicalProfile || [],
+      summary: analytics?.summary || { totalTrades: 0, winRate: 0, totalPnL: 0 },
+      dailyMoodData: analytics?.dailyMoodData || [],
+      weeklyPerformanceData: analytics?.weeklyPerformanceData || [],
+    }
   }, [isLiveMode, analytics])
 
   // Analytics se zobrazí POUZE když jsou dostupná reálná data v LIVE MODE

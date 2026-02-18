@@ -37,10 +37,8 @@ export async function POST(request: NextRequest) {
     const updates: any = {}
     if (type === "morning_check") {
       updates.morning_check_completed = true
-      updates.morning_check_completed_at = new Date().toISOString()
     } else if (type === "record_trade") {
-      updates.record_trades_completed = true
-      updates.record_trades_completed_at = new Date().toISOString()
+      updates.record_trade_completed = true
     }
 
     const { error: updateError } = await supabase

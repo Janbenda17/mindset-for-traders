@@ -934,7 +934,7 @@ export default function DailyTrackerPage() {
                           <Progress value={readinessScore ?? 0} className="h-3" />
                         </div>
 
-                        <div className="grid md:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
                           <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                             <div className="flex items-center gap-2 mb-2">
                               <Moon className="h-4 w-4 text-indigo-400" />
@@ -1520,7 +1520,7 @@ export default function DailyTrackerPage() {
                                   <Sun className="h-5 w-5 text-orange-400" />
                                   Ranní Připravenost
                                 </h4>
-                                <div className="grid md:grid-cols-5 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
                                   <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                                     <div className="flex items-center gap-2 mb-2">
                                       <Moon className="h-4 w-4 text-indigo-400" />
