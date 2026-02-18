@@ -90,6 +90,10 @@ interface DataState {
   morningChecks: MorningCheck[]
   journalEntries: any[]
   weeklyReviews: WeeklyReview[]
+  dailyTrackerEntries: any[] // spánek, energie, meditace, fyzické zdraví
+  tradingPlans: any[] // plány pro dny
+  dailyIntentions: any[] // záměry a max_risk per day
+  tradingRoutines: any[] // pre/post market checklists
   isLiveMode: boolean | undefined
   hasEverSwitchedToLive: boolean
   showLiveWarning: boolean
@@ -111,6 +115,10 @@ type DataAction =
   | { type: "SET_JOURNAL_ENTRIES"; payload: any[] }
   | { type: "ADD_WEEKLY_REVIEW"; payload: WeeklyReview }
   | { type: "SET_WEEKLY_REVIEWS"; payload: WeeklyReview[] }
+  | { type: "SET_DAILY_TRACKER_ENTRIES"; payload: any[] }
+  | { type: "SET_TRADING_PLANS"; payload: any[] }
+  | { type: "SET_DAILY_INTENTIONS"; payload: any[] }
+  | { type: "SET_TRADING_ROUTINES"; payload: any[] }
   | { type: "SET_LIVE_MODE"; payload: boolean | undefined }
   | { type: "SET_EVER_SWITCHED_LIVE"; payload: boolean }
   | { type: "SET_SHOW_WARNING"; payload: boolean }
@@ -144,6 +152,14 @@ function dataReducer(state: DataState, action: DataAction): DataState {
       return { ...state, weeklyReviews: [...state.weeklyReviews, action.payload] }
     case "SET_WEEKLY_REVIEWS":
       return { ...state, weeklyReviews: action.payload }
+    case "SET_DAILY_TRACKER_ENTRIES":
+      return { ...state, dailyTrackerEntries: action.payload }
+    case "SET_TRADING_PLANS":
+      return { ...state, tradingPlans: action.payload }
+    case "SET_DAILY_INTENTIONS":
+      return { ...state, dailyIntentions: action.payload }
+    case "SET_TRADING_ROUTINES":
+      return { ...state, tradingRoutines: action.payload }
     case "SET_LIVE_MODE":
       return { ...state, isLiveMode: action.payload }
     case "SET_EVER_SWITCHED_LIVE":
@@ -165,6 +181,10 @@ function dataReducer(state: DataState, action: DataAction): DataState {
         morningChecks: [],
         journalEntries: [],
         weeklyReviews: [],
+        dailyTrackerEntries: [],
+        tradingPlans: [],
+        dailyIntentions: [],
+        tradingRoutines: [],
         dataLoaded: false,
         dataOwnerUserId: null,
       }
@@ -175,6 +195,10 @@ function dataReducer(state: DataState, action: DataAction): DataState {
         morningChecks: [],
         journalEntries: [],
         weeklyReviews: [],
+        dailyTrackerEntries: [],
+        tradingPlans: [],
+        dailyIntentions: [],
+        tradingRoutines: [],
         dataLoaded: false,
         userId: action.payload,
         dataOwnerUserId: action.payload,
@@ -191,6 +215,10 @@ interface DataContextType {
   morningChecks: MorningCheck[]
   journalEntries: any[]
   weeklyReviews: WeeklyReview[]
+  dailyTrackerEntries: any[]
+  tradingPlans: any[]
+  dailyIntentions: any[]
+  tradingRoutines: any[]
   isLiveMode: boolean | undefined
   hasEverSwitchedToLive: boolean
   showLiveWarning: boolean
@@ -221,6 +249,10 @@ interface DataContextType {
   getAllJournalEntries: () => any[]
   getAllMorningChecks: () => MorningCheck[]
   getAllWeeklyReviews: () => WeeklyReview[]
+  getAllDailyTrackerEntries: () => any[]
+  getAllTradingPlans: () => any[]
+  getAllDailyIntentions: () => any[]
+  getAllTradingRoutines: () => any[]
   getTradingStats: () => any
   resetAllScores: () => void
   isOwner: boolean
@@ -236,6 +268,10 @@ const initialState: DataState = {
   morningChecks: [],
   journalEntries: [],
   weeklyReviews: [],
+  dailyTrackerEntries: [],
+  tradingPlans: [],
+  dailyIntentions: [],
+  tradingRoutines: [],
   isLiveMode: undefined as any,
   hasEverSwitchedToLive: false,
   showLiveWarning: false,
@@ -872,6 +908,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getAllJournalEntries = useCallback(() => state.journalEntries, [state.journalEntries])
   const getAllMorningChecks = useCallback(() => state.morningChecks, [state.morningChecks])
   const getAllWeeklyReviews = useCallback(() => state.weeklyReviews, [state.weeklyReviews])
+  const getAllDailyTrackerEntries = useCallback(() => state.dailyTrackerEntries, [state.dailyTrackerEntries])
+  const getAllTradingPlans = useCallback(() => state.tradingPlans, [state.tradingPlans])
+  const getAllDailyIntentions = useCallback(() => state.dailyIntentions, [state.dailyIntentions])
+  const getAllTradingRoutines = useCallback(() => state.tradingRoutines, [state.tradingRoutines])
 
   const getTradingStats = useCallback(() => {
     const trades = state.trades
@@ -1006,6 +1046,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getAllJournalEntries,
       getAllMorningChecks,
       getAllWeeklyReviews,
+      getAllDailyTrackerEntries,
+      getAllTradingPlans,
+      getAllDailyIntentions,
+      getAllTradingRoutines,
       getTradingStats,
       resetAllScores,
       isOwner,
@@ -1037,6 +1081,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getAllTrades,
       getAllJournalEntries,
       getAllMorningChecks,
+      getAllWeeklyReviews,
+      getAllDailyTrackerEntries,
+      getAllTradingPlans,
+      getAllDailyIntentions,
+      getAllTradingRoutines,
       getAllWeeklyReviews,
       getTradingStats,
       resetAllScores,

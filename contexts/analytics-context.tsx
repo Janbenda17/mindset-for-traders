@@ -19,7 +19,18 @@ const AnalyticsContext = createContext<AnalyticsContextType | undefined>(undefin
 export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const { user, authReady } = useAuth()
   const { isLoading: modeLoading } = useLiveMode()
-  const { getAllTrades, getAllJournalEntries, getAllMorningChecks, userId, dataOwnerUserId, dataLoaded } = useData()
+  const { 
+    getAllTrades, 
+    getAllJournalEntries, 
+    getAllMorningChecks,
+    getAllDailyTrackerEntries,
+    getAllTradingPlans,
+    getAllDailyIntentions,
+    getAllTradingRoutines,
+    userId, 
+    dataOwnerUserId, 
+    dataLoaded 
+  } = useData()
 
   const [analytics, setAnalytics] = useState<ComputedAnalytics | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -27,6 +38,10 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const trades = getAllTrades() || []
   const journalEntries = getAllJournalEntries() || []
   const morningChecks = getAllMorningChecks() || []
+  const dailyTrackerEntries = getAllDailyTrackerEntries() || []
+  const tradingPlans = getAllTradingPlans() || []
+  const dailyIntentions = getAllDailyIntentions() || []
+  const tradingRoutines = getAllTradingRoutines() || []
 
   useEffect(() => {
     if (!authReady) {
@@ -74,6 +89,10 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
         trades,
         morningChecks,
         journalEntries,
+        dailyTrackerEntries,
+        tradingPlans,
+        dailyIntentions,
+        tradingRoutines,
       })
 
       setAnalytics(computed)
@@ -87,7 +106,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [trades, journalEntries, morningChecks, user?.id, authReady, modeLoading, dataOwnerUserId, dataLoaded])
+  }, [trades, journalEntries, morningChecks, dailyTrackerEntries, tradingPlans, dailyIntentions, tradingRoutines, user?.id, authReady, modeLoading, dataOwnerUserId, dataLoaded])
 
   const refresh = () => {
     if (!user?.id || dataOwnerUserId !== user.id) {
@@ -100,6 +119,10 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
       trades,
       morningChecks,
       journalEntries,
+      dailyTrackerEntries,
+      tradingPlans,
+      dailyIntentions,
+      tradingRoutines,
     })
     setAnalytics(computed)
     setIsLoading(false)
