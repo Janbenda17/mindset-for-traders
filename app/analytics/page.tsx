@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle } from "lucide-react"
-import { Brain, Target, CheckCircle2, Zap, Heart, Sparkles, Clock, Smile, Activity, TrendingUpIcon, TrendingUp, DollarSign, ThumbsUp, ThumbsDown, Flame, Wind, TrendingDown, ArrowUp, ArrowDown, BarChart3, Sun, Moon, Sunrise, Sunset, CloudRain, Award, XCircle, RefreshCw, Percent, TrendingDown as TrendingUpDown, Clipboard, CheckCircle } from "lucide-react"
+import { Brain, Target, CheckCircle2, Zap, Heart, Sparkles, Clock, Smile, Activity, TrendingUpIcon, TrendingUp, DollarSign, ThumbsUp, ThumbsDown, Flame, Wind, TrendingDown, ArrowUp, ArrowDown, BarChart3, Sun, Moon, Sunrise, Sunset, CloudRain, Award, XCircle, RefreshCw, Percent, TrendingDown as TrendingUpDown, Clipboard, CheckCircle, Eye } from "lucide-react"
 import {
   XAxis,
   YAxis,
@@ -1026,6 +1026,7 @@ export default function PsychologyAnalyticsPage() {
   const [showMorningCheck, setShowMorningCheck] = useState(false)
   const [showRecordTrades, setShowRecordTrades] = useState(false)
   const [dailyStages, setDailyStages] = useState<any>(null)
+  const [showForcedAnalytics, setShowForcedAnalytics] = useState(false)
 
   // Load daily stages once on mount - removed polling to prevent performance issues
   useEffect(() => {
@@ -1079,7 +1080,7 @@ export default function PsychologyAnalyticsPage() {
   }
 
   // Ve Virtual Mode zobraz demo data i když je méně než 10 dní
-  if (isAnalyticsLocked) {
+  if (isAnalyticsLocked && !showForcedAnalytics) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 p-8">
         <div className="mx-auto max-w-4xl">
@@ -1179,6 +1180,14 @@ export default function PsychologyAnalyticsPage() {
                     ) : (
                       "Zaznamenat Trade"
                     )}
+                  </Button>
+                  <Button
+                    onClick={() => setShowForcedAnalytics(true)}
+                    variant="outline"
+                    className="w-full border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Otevřít Analytics (Náhled)
                   </Button>
                 </div>
               </div>
