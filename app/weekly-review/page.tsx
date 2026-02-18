@@ -400,9 +400,12 @@ export default function WeeklyReviewPage() {
       const bestTrade = tradesLast7Days.reduce((best: any, t: any) => 
         t.pnl > (best?.pnl || Number.NEGATIVE_INFINITY) ? t : best
       , tradesLast7Days[0])
-      const worstTrade = tradesLast7Days.reduce((worst: any, t: any) => 
-        t.pnl < (worst?.pnl || Number.POSITIVE_INFINITY) ? t : worst
-      , tradesLast7Days[0])
+      // Jen hledej worstTrade pokud existují ztrátové trades
+      const worstTrade = losingTrades.length > 0 
+        ? losingTrades.reduce((worst: any, t: any) => 
+            t.pnl < (worst?.pnl || Number.POSITIVE_INFINITY) ? t : worst
+          , losingTrades[0])
+        : null
 
       // Analyzuj session výkonnost z posledních 7 dní
       const sessionStats: any = {}
@@ -497,6 +500,12 @@ export default function WeeklyReviewPage() {
         })
       }
 
+      // Definuj default texty
+      const defaultBiggestWin = `Nejlepší trade: +$${(totalPnL * 0.4).toFixed(2)}`
+      const defaultBiggestLoss = losingTrades.length > 0 
+        ? `Největší ztráta: -$${(Math.abs(tradesLast7Days.reduce((min: any, t: any) => t.pnl < min.pnl ? t : min).pnl)).toFixed(2)}`
+        : "Bez ztrát tento týden! 🎉 Všechny trades byly ziskové."
+
       const whatWorked = aiInsights
         .filter((i: any) => i.type === "success")
         .map((i: any) => i.description)
@@ -524,10 +533,10 @@ export default function WeeklyReviewPage() {
         whatDidntWork,
         biggestWin: bestTrade 
           ? `${bestTrade.pair || "Best"} ${bestTrade.direction?.toUpperCase() || "TRADE"}: +$${bestTrade.pnl.toFixed(2)}`
-          : biggestWin,
+          : defaultBiggestWin,
         biggestLoss: worstTrade
           ? `${worstTrade.pair || "Worst"} ${worstTrade.direction?.toUpperCase() || "TRADE"}: -$${Math.abs(worstTrade.pnl).toFixed(2)}`
-          : biggestLoss,
+          : defaultBiggestLoss,
         emotionalPatterns: `Průměrná nálada: ${roundedMood}%. ${
           trades.length > 0 
             ? `Nálada během tradů: ${Math.round(trades.reduce((s: number, t: any) => s + (t.mood || 0), 0) / trades.length * 10)}%.`
