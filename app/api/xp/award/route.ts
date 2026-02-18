@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         .eq("user_id", user.id)
         .eq("source", "loss_reset")
         .gte("created_at", `${today}T00:00:00`)
-        .single()
+        .maybeSingle()
 
       if (todayReset) {
         return NextResponse.json({ 
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         .eq("user_id", user.id)
         .eq("source", "morning_check")
         .gte("created_at", `${today}T00:00:00`)
-        .single()
+        .maybeSingle()
 
       if (todayCheck) {
         return NextResponse.json({ 
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         .eq("source", "daily_stage")
         .ilike("reason", `%stage_${metadata.stage}%`)
         .gte("created_at", `${today}T00:00:00`)
-        .single()
+        .maybeSingle()
 
       if (stageXP) {
         return NextResponse.json({ 
