@@ -370,7 +370,18 @@ export default function DailyTrackerPage() {
         }
       })
 
+      // Sort entries by date descending
       combinedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      
+      console.log(`[v0] [DailyTracker] Combined entries:`, combinedData.map(e => ({
+        date: e.date,
+        hasM: !!e.morningCheck,
+        hasI: !!e.intention,
+        hasP: !!e.plan,
+        trades: e.trades.length,
+        stagesCompleted: e.stagesCompleted
+      })))
+      
       setEntries(combinedData)
       console.log(`[v0] [DailyTracker] LIVE: Loaded ${combinedData.length} entries`)
     } catch (error) {
@@ -426,8 +437,8 @@ export default function DailyTrackerPage() {
     stagesCompleted: 0, // Will be updated below
   }
 
-  // For history entries, use the loaded entries
-  const historyEntries = entries.filter((e) => e.date !== today)
+  // For history entries - include ALL dates including today, not just past days
+  const historyEntries = entries
 
   const readinessScore = todayEntry?.overallScore ?? null
 
