@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
       joinedAt: item.joined_at,
     }))
 
-    console.log("[v0] GET - Vracím', progress.length, "záznamů")
+    console.log("[v0] GET - Vracím", progress.length, "záznamů")
     return NextResponse.json({ progress })
   } catch (error) {
     console.error("[v0] GET - Chyba:", error)

@@ -146,21 +146,20 @@ export default function WeeklyReviewPage() {
 
   useEffect(() => {
     if (isLiveMode) {
-      // In LIVE MODE, use analytics from data context (which loads from Supabase)
-      // Data will be populated when analytics becomes available
-      console.log("[v0] Weekly Review - LIVE MODE detected, waiting for analytics data")
-    } else {
-      loadVirtualData()
+      // V LIVE MODE - neloaduj demo data! Čekej na analytics
+      console.log("[v0] Weekly Review - LIVE MODE, čekám na data...")
+      return
     }
+    // Pouze v VIRTUAL MODEloaduj demo data
+    loadVirtualData()
   }, [isLiveMode])
 
-  // Initialize currentWeekData if not already set (for loading state)
+  // Initialize currentWeekData pouze pokud není live mode
   useEffect(() => {
-    if (!currentWeekData) {
-      // Use demo data as fallback or initial state
+    if (!isLiveMode && !currentWeekData) {
       loadVirtualData()
     }
-  }, [])
+  }, [isLiveMode, currentWeekData])
 
   useEffect(() => {
     if (user?.id) {
@@ -366,9 +365,15 @@ export default function WeeklyReviewPage() {
   }
 
   const loadVirtualData = () => {
+    // POUZE PRO VIRTUAL MODE - tato funkce se by se NEMĚLA volat v live modu
+    if (isLiveMode) {
+      console.log("[v0] Weekly Review - Ignoruji loadVirtualData v LIVE MODE")
+      return
+    }
+
     const today = new Date()
     const weekStart = new Date(today)
-    weekStart.setDate(today.getDay() === 0 ? today.getDate() - 6 : today.getDate() - today.getDay() + 1) // Adjust for Sunday start
+    weekStart.setDate(today.getDay() === 0 ? today.getDate() - 6 : today.getDate() - today.getDay() + 1)
     const weekEnd = new Date(weekStart)
     weekEnd.setDate(weekStart.getDate() + 6)
 
