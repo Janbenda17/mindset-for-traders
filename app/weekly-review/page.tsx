@@ -161,6 +161,7 @@ export default function WeeklyReviewPage() {
           totalTrades: analytics.summary.totalTrades,
           winRate: analytics.summary.winRate,
           totalPnL: analytics.summary.totalPnL,
+          weekStartDate: new Date(), // Ulož kdy byl review inicijalizován
         }
         setCurrentWeekData(weekData)
       }
@@ -172,6 +173,53 @@ export default function WeeklyReviewPage() {
       loadVirtualData()
     }
   }, [isLiveMode, analytics])
+
+  // Kontroluj zda se začal nový týden a resetuj data
+  useEffect(() => {
+    if (!currentWeekData?.weekStartDate || !isLiveMode) return
+
+    const checkWeekChange = () => {
+      const now = new Date()
+      const weekStart = currentWeekData.weekStartDate
+      
+      // Pokud je dnes pondělí (getDay() === 1) a data pocházejí z minulého týdne
+      if (now.getDay() === 1) {
+        const daysDiff = Math.floor((now.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24))
+        
+        if (daysDiff >= 7) {
+          console.log("[v0] Weekly Review - Nový týden detekován, resetuji data")
+          // Resetuj review data
+          setCurrentWeekData(null)
+          setReview({
+            whatWorked: "",
+            whatDidntWork: "",
+            biggestWin: "",
+            biggestLoss: "",
+            emotionalPatterns: "",
+            mistakesMade: "",
+            lessonsLearned: "",
+            weeklyGoals: ["", "", ""],
+            focusAreas: ["", "", ""],
+            tradingPlanAdjustments: "",
+            riskManagementNotes: "",
+            mindsetPreparation: "",
+          })
+          setActionPlan([
+            { text: "", completed: false },
+            { text: "", completed: false },
+            { text: "", completed: false },
+          ])
+          setReviewVariant("manual")
+        }
+      }
+    }
+
+    // Kontroluj při mount a pak každou hodinu
+    checkWeekChange()
+    const interval = setInterval(checkWeekChange, 60 * 60 * 1000) // Každou hodinu
+    
+    return () => clearInterval(interval)
+  }, [currentWeekData?.weekStartDate, isLiveMode])
 
 
   useEffect(() => {
