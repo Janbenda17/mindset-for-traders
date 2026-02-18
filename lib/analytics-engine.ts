@@ -2,6 +2,10 @@ export interface AnalyticsData {
   trades: any[]
   morningChecks: any[]
   journalEntries: any[]
+  dailyTrackerEntries?: any[]
+  tradingPlans?: any[]
+  dailyIntentions?: any[]
+  tradingRoutines?: any[]
 }
 
 export interface ComputedAnalytics {
@@ -49,7 +53,23 @@ export interface ComputedAnalytics {
 }
 
 export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
-  const { trades, morningChecks, journalEntries } = data
+  const { 
+    trades = [], 
+    morningChecks = [], 
+    journalEntries = [],
+    dailyTrackerEntries = [],
+    tradingPlans = [],
+    dailyIntentions = [],
+    tradingRoutines = []
+  } = data
+
+  console.log("[v0] [Analytics Engine] Computing analytics with:", {
+    trades: trades.length,
+    morningChecks: morningChecks.length,
+    journalEntries: journalEntries.length,
+    tradingPlans: tradingPlans.length,
+    dailyIntentions: dailyIntentions.length,
+  })
 
   // Summary calculations
   const wins = trades.filter((t) => (t.pnl || 0) > 0)

@@ -514,30 +514,28 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
       }
 
-      // Load trading plans
+      // Load trading plans from trading_plans table
       try {
         const { data: plans, error: plansError } = await supabase
-          .from("journal_entries")
+          .from("trading_plans")
           .select("*")
           .eq("user_id", user.id)
-          .eq("type", "plan")
           .order("date", { ascending: false })
 
         if (!plansError && plans) {
           const mappedPlans = plans.map((p: any) => ({
             date: p.date,
-            setups: p.setups || "",
-            pairs: p.pairs || "",
-            timeframes: p.timeframes || "",
-            entryRules: p.entry_rules || "",
-            exitRules: p.exit_rules || "",
-            stopLoss: p.stop_loss || "",
-            takeProfit: p.take_profit || "",
-            marketAnalysis: p.market_analysis || "",
-            keyLevels: p.key_levels || "",
+            market_bias: p.market_bias || "",
+            max_risk_per_trade: p.max_risk_per_trade || 0,
+            max_daily_drawdown: p.max_daily_drawdown || 0,
+            position_sizing_rule: p.position_sizing_rule || "",
+            planned_setups: p.planned_setups || [],
+            instruments: p.instruments || [],
+            key_levels: p.key_levels || [],
+            news_events: p.news_events || [],
             notes: p.notes || "",
           }))
-          console.log(`[v0] Loaded ${mappedPlans.length} trading plans from Supabase for user ${user.id}`)
+          console.log(`[v0] Loaded ${mappedPlans.length} trading plans from trading_plans table for user ${user.id}`)
           dispatch({ type: "SET_TRADING_PLANS", payload: mappedPlans })
         } else if (plansError) {
           console.error("[v0] Error loading trading plans:", plansError)
@@ -548,24 +546,27 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SET_TRADING_PLANS", payload: [] })
       }
 
-      // Load daily intentions
+      // Load daily intentions from daily_intentions table
       try {
         const { data: intentions, error: intentionsError } = await supabase
-          .from("journal_entries")
+          .from("daily_intentions")
           .select("*")
           .eq("user_id", user.id)
-          .eq("type", "intention")
           .order("date", { ascending: false })
 
         if (!intentionsError && intentions) {
           const mappedIntentions = intentions.map((i: any) => ({
             date: i.date,
-            intention: i.intention || "",
-            strategy: i.strategy || "",
-            maxRisk: i.max_risk || 0,
-            notes: i.notes || "",
+            main_intention: i.main_intention || "",
+            secondary_intentions: i.secondary_intentions || [],
+            focus_areas: i.focus_areas || [],
+            max_trades: i.max_trades || 0,
+            max_risk_per_trade: i.max_risk_per_trade || 0,
+            max_daily_loss: i.max_daily_loss || 0,
+            intention_met: i.intention_met || false,
+            reflection: i.reflection || "",
           }))
-          console.log(`[v0] Loaded ${mappedIntentions.length} daily intentions from Supabase for user ${user.id}`)
+          console.log(`[v0] Loaded ${mappedIntentions.length} daily intentions from daily_intentions table for user ${user.id}`)
           dispatch({ type: "SET_DAILY_INTENTIONS", payload: mappedIntentions })
         } else if (intentionsError) {
           console.error("[v0] Error loading daily intentions:", intentionsError)
