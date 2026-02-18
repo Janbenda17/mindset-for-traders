@@ -514,6 +514,68 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
       }
 
+      // Load trading plans
+      try {
+        const { data: plans, error: plansError } = await supabase
+          .from("journal_entries")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("type", "plan")
+          .order("date", { ascending: false })
+
+        if (!plansError && plans) {
+          const mappedPlans = plans.map((p: any) => ({
+            date: p.date,
+            setups: p.setups || "",
+            pairs: p.pairs || "",
+            timeframes: p.timeframes || "",
+            entryRules: p.entry_rules || "",
+            exitRules: p.exit_rules || "",
+            stopLoss: p.stop_loss || "",
+            takeProfit: p.take_profit || "",
+            marketAnalysis: p.market_analysis || "",
+            keyLevels: p.key_levels || "",
+            notes: p.notes || "",
+          }))
+          console.log(`[v0] Loaded ${mappedPlans.length} trading plans from Supabase for user ${user.id}`)
+          dispatch({ type: "SET_TRADING_PLANS", payload: mappedPlans })
+        } else if (plansError) {
+          console.error("[v0] Error loading trading plans:", plansError)
+          dispatch({ type: "SET_TRADING_PLANS", payload: [] })
+        }
+      } catch (err) {
+        console.error("[v0] Exception loading trading plans:", err instanceof Error ? err.message : String(err))
+        dispatch({ type: "SET_TRADING_PLANS", payload: [] })
+      }
+
+      // Load daily intentions
+      try {
+        const { data: intentions, error: intentionsError } = await supabase
+          .from("journal_entries")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("type", "intention")
+          .order("date", { ascending: false })
+
+        if (!intentionsError && intentions) {
+          const mappedIntentions = intentions.map((i: any) => ({
+            date: i.date,
+            intention: i.intention || "",
+            strategy: i.strategy || "",
+            maxRisk: i.max_risk || 0,
+            notes: i.notes || "",
+          }))
+          console.log(`[v0] Loaded ${mappedIntentions.length} daily intentions from Supabase for user ${user.id}`)
+          dispatch({ type: "SET_DAILY_INTENTIONS", payload: mappedIntentions })
+        } else if (intentionsError) {
+          console.error("[v0] Error loading daily intentions:", intentionsError)
+          dispatch({ type: "SET_DAILY_INTENTIONS", payload: [] })
+        }
+      } catch (err) {
+        console.error("[v0] Exception loading daily intentions:", err instanceof Error ? err.message : String(err))
+        dispatch({ type: "SET_DAILY_INTENTIONS", payload: [] })
+      }
+
       dispatch({ type: "SET_DATA_OWNER", payload: user.id })
       dispatch({ type: "SET_DATA_LOADED", payload: true })
     } catch (error: any) {
@@ -525,6 +587,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
       dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
       dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
+      dispatch({ type: "SET_TRADING_PLANS", payload: [] })
+      dispatch({ type: "SET_DAILY_INTENTIONS", payload: [] })
       dispatch({ type: "SET_DATA_LOADED", payload: true })
     } finally {
       loadingRef.current = false
