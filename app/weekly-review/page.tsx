@@ -311,6 +311,50 @@ export default function WeeklyReviewPage() {
       const roundedReadiness = Math.round(avgReadiness)
       const roundedMood = Math.round(avgMood)
 
+      // Generuj dailyData z reálných záznamů - seskup trades a morning_checks podle data
+      const daysOfWeek = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"]
+      const dailyDataMap = new Map()
+
+      // Přidej morning_checks data
+      morningChecks.forEach((check: any) => {
+        const date = new Date(check.date)
+        const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1
+        if (dayIndex >= 0 && dayIndex < 7) {
+          if (!dailyDataMap.has(dayIndex)) {
+            dailyDataMap.set(dayIndex, { day: daysOfWeek[dayIndex], readiness: 0, mood: 0, trades: 0, pnl: 0 })
+          }
+          const dayData = dailyDataMap.get(dayIndex)
+          dayData.readiness = check.score || 75
+        }
+      })
+
+      // Přidej trades data
+      trades.forEach((trade: any) => {
+        const date = new Date(trade.date)
+        const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1
+        if (dayIndex >= 0 && dayIndex < 7) {
+          if (!dailyDataMap.has(dayIndex)) {
+            dailyDataMap.set(dayIndex, { day: daysOfWeek[dayIndex], readiness: 75, mood: 0, trades: 0, pnl: 0 })
+          }
+          const dayData = dailyDataMap.get(dayIndex)
+          dayData.trades += 1
+          dayData.pnl += trade.pnl || 0
+          dayData.mood = Math.max(dayData.mood, (trade.mood || 5) * 10)
+        }
+      })
+
+      // Konvertuj na array a vyplň chybějící dny
+      const dailyData = daysOfWeek.map((day, index) => {
+        const existing = dailyDataMap.get(index)
+        return existing || { 
+          day, 
+          readiness: Math.round(avgReadiness), 
+          mood: Math.round(avgMood), 
+          trades: 0, 
+          pnl: 0 
+        }
+      })
+
       // Generuj kvalitní insights z reálných dat
       const bestDay = dailyData.reduce((best: any, d: any) => 
         d.pnl > (best?.pnl || Number.NEGATIVE_INFINITY) ? d : best
@@ -432,6 +476,17 @@ export default function WeeklyReviewPage() {
         .filter((i: any) => i.type === "critical" || i.type === "warning")
         .map((i: any) => i.description)
         .join("\n") || "Žádné specifické problémy."
+
+      // Aktualizuj currentWeekData se REÁLNÝMI daty pro grafy
+      setCurrentWeekData((prev: any) => ({
+        ...prev,
+        dailyData,
+        avgReadiness: roundedReadiness,
+        avgMood: roundedMood,
+        totalTrades,
+        winRate: roundedWinRate,
+        totalPnL,
+      }))
 
       // Vyplň insights
       setReview({
