@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import {
   Sun,
   CheckCircle,
+  CheckCircle2,
   BookOpen,
   Moon,
   Target,
