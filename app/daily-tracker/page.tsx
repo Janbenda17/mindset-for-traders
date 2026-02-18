@@ -328,21 +328,19 @@ export default function DailyTrackerPage() {
         if (morningCheck || intention || plan || dayTrades.length > 0 || stagesRecord) {
           let stagesCompleted = 0
           
-          // In LIVE MODE, use actual daily_stages record
-          if (isLiveMode && stagesRecord) {
+          // ALWAYS use stagesRecord if available - this is the source of truth from daily_stages table
+          if (stagesRecord) {
             if (stagesRecord.morning_check_completed) stagesCompleted++
             if (stagesRecord.daily_intention_completed) stagesCompleted++
             if (stagesRecord.trading_plan_completed) stagesCompleted++
             if (stagesRecord.record_trades_completed) stagesCompleted++
             if (stagesRecord.daily_summary_completed) stagesCompleted++
           } else {
-            // Fallback: count based on available data
+            // Fallback: count based on available data (when stagesRecord doesn't exist)
             if (morningCheck) stagesCompleted++
             if (intention) stagesCompleted++
             if (plan) stagesCompleted++
             if (dayTrades.length > 0) stagesCompleted++
-            // Check if daily summary exists (stage 5) - this is tracked in stagesRecord
-            if (stagesRecord && stagesRecord.daily_summary_completed) stagesCompleted++
           }
 
           combinedData.push({
