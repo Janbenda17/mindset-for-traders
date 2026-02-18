@@ -323,7 +323,22 @@ export default function DailyTrackerPage() {
         const dayTrades = trades.filter((t: any) => t.date === date)
         const intention = dailyIntentions?.find((i: any) => i.date === date)
         const plan = tradingPlans?.find((p: any) => p.date === date)
-        const stagesRecord = stagesRecords.find((sr: any) => sr.date === date)
+        
+        // Match stages by date - normalize date format to YYYY-MM-DD
+        const stagesRecord = stagesRecords.find((sr: any) => {
+          const stageDate = sr.date ? sr.date.split('T')[0] : sr.date
+          return stageDate === date
+        })
+        
+        if (stagesRecord) {
+          console.log("[v0] [DailyTracker] Found stagesRecord for date:", date, "completed:", {
+            morning: stagesRecord.morning_check_completed,
+            intention: stagesRecord.daily_intention_completed,
+            plan: stagesRecord.trading_plan_completed,
+            trades: stagesRecord.record_trades_completed,
+            summary: stagesRecord.daily_summary_completed
+          })
+        }
 
         if (morningCheck || intention || plan || dayTrades.length > 0 || stagesRecord) {
           let stagesCompleted = 0
