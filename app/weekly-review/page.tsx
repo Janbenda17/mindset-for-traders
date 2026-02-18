@@ -980,28 +980,28 @@ Vygenerováno aplikací Trader Mindset
         // Hlavní obsah weekly review
         <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-4 md:p-6">
           <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="inline-block p-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl border border-purple-500/30 backdrop-blur-sm">
-            <Calendar className="w-12 h-12 text-purple-400" />
-          </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+            {/* Header */}
+            <div className="text-center space-y-4">
+              <div className="inline-block p-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl border border-purple-500/30 backdrop-blur-sm">
+                <Calendar className="w-12 h-12 text-purple-400" />
+              </div>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
                 AI Týdenní přehled
-          </h1>
-          <p className="text-gray-400 text-lg">
-            {currentWeekData.weekStart} - {currentWeekData.weekEnd}
-          </p>
+              </h1>
+              <p className="text-gray-400 text-lg">
+                {currentWeekData.weekStart} - {currentWeekData.weekEnd}
+              </p>
 
-          <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
-            <Button
-              onClick={generateReview}
-              disabled={isLoading || !analytics}
-              className="px-6 py-3 rounded-xl transition-all bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white disabled:opacity-50"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Generuji...
+              <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
+                <Button
+                  onClick={generateReview}
+                  disabled={isLoading || !analytics}
+                  className="px-6 py-3 rounded-xl transition-all bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Generuji...
                 </>
               ) : (
                 <>
@@ -2084,6 +2084,7 @@ Vygenerováno aplikací Trader Mindset
               </div>
             </div>
           </div>
+        </div>
         </div>
       )}
     </>
