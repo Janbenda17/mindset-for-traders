@@ -1617,12 +1617,58 @@ export default function DailyTrackerPage() {
                             </div>
                           )}
 
+                          {/* Show stages progress - ALWAYS show this */}
+                          <div>
+                            <h4 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                              <CheckCircle2 className="h-5 w-5 text-green-400" />
+                              Fáze Dne - Postup ({entry.stagesCompleted}/5)
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                              {[
+                                { stage: 1, name: "Ranní Kontrola", key: "morning_check_completed" },
+                                { stage: 2, name: "Záměr Dne", key: "daily_intention_completed" },
+                                { stage: 3, name: "Obchodní Plán", key: "trading_plan_completed" },
+                                { stage: 4, name: "Obchody", key: "record_trades_completed" },
+                                { stage: 5, name: "Shrnutí", key: "daily_summary_completed" },
+                              ].map(({ stage, name, key }) => {
+                                const isCompleted = entry.stagesCompleted >= stage
+                                return (
+                                  <div
+                                    key={stage}
+                                    className={`p-3 rounded-lg border transition-all ${
+                                      isCompleted
+                                        ? "bg-green-500/10 border-green-500/30"
+                                        : "bg-slate-700/20 border-slate-600/30"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                                        isCompleted ? "bg-green-500/20 border-green-500" : "border-slate-600"
+                                      }`}>
+                                        {isCompleted && <div className="h-2 w-2 bg-green-400 rounded-full" />}
+                                      </div>
+                                      <span className="text-xs text-white font-bold">Fáze {stage}</span>
+                                    </div>
+                                    <div className={`text-sm font-medium ${isCompleted ? "text-green-300" : "text-slate-400"}`}>
+                                      {name}
+                                    </div>
+                                    {isCompleted && (
+                                      <div className="text-xs text-green-400 mt-1 flex items-center gap-1">
+                                        <CheckCircle2 className="h-3 w-3" />
+                                        Hotovo
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+
                           {/* Show simplified view if Stage 5 not completed */}
                           {entry.stagesCompleted < 5 && (
-                            <div className="text-center py-8 text-muted-foreground">
-                              <Moon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                              <p className="text-lg font-medium">Fáze 5 nebyla dokončena</p>
-                              <p className="text-sm mt-1">Zobrazují se pouze základní metriky z Ranní Kontroly</p>
+                            <div className="text-center py-6 text-muted-foreground border-t border-white/10 mt-6 pt-6">
+                              <Moon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm">Zbývající fáze k dokončení: {5 - entry.stagesCompleted}</p>
                             </div>
                           )}
                         </div>
