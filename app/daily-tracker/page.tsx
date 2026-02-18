@@ -41,6 +41,8 @@ import { useToast } from "@/components/ui/use-toast"
 import { useLiveMode } from "@/contexts/live-mode-context"
 import { useData } from "@/contexts/data-context"
 import { supabase } from "@/lib/supabase/browser"
+import { AITradingInsightsEnhanced } from "@/components/ai-trading-insights-enhanced"
+import { useMorningInsights } from "@/hooks/use-morning-insights"
 
 interface MorningCheckData {
   id: string
@@ -173,6 +175,9 @@ export default function DailyTrackerPage() {
   const [virtualData, setVirtualData] = useState<any>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0) // State for triggering refresh
   const [entriesLoading, setEntriesLoading] = useState(true)
+
+  // Use the new morning insights hook
+  const { insights, insightsLoading, generateInsights, handleActionClick } = useMorningInsights()
 
   useEffect(() => {
     // Wait for auth and mode to be ready before deciding
@@ -369,6 +374,17 @@ export default function DailyTrackerPage() {
     console.log("[v0] [DailyTracker] useEffect triggered for loadEntries")
     loadEntries()
   }, [loadEntries, refreshTrigger])
+
+  // Auto-generate insights when morning check is completed
+  useEffect(() => {
+    const today = format(new Date(), "yyyy-MM-dd")
+    const todayMorningCheck = morningChecks.find((m: any) => m.date === today)
+
+    if (todayMorningCheck && insights.length === 0) {
+      console.log('[v0] Morning check completed, generating AI insights...')
+      generateInsights(todayMorningCheck)
+    }
+  }, [morningChecks, insights, generateInsights])
 
   if (!authReady || modeLoading) {
     return (
@@ -968,17 +984,31 @@ export default function DailyTrackerPage() {
                 </div>
               )}
 
-              <div className="mt-6 p-6 bg-slate-800/50 rounded-2xl border border-cyan-500/20">
-                <div className="flex items-start gap-4">
-                  <Lightbulb className="h-6 w-6 text-cyan-400 flex-shrink-0 mt-1" />
-                  <div>
-                    <h3 className="text-lg font-bold text-white mb-2">AI Trading Insights</h3>
-                    <p className="text-gray-300 leading-relaxed">
-                      {generateAIInsights(todayEntry?.morningCheck, readinessScore)}
-                    </p>
+              {/* Enhanced AI Insights - shown after morning check is completed */}
+              {todayEntry?.morningCheck && (
+                <div className="mt-8">
+                  <AITradingInsightsEnhanced
+                    insights={insights}
+                    loading={insightsLoading}
+                    onActionClick={handleActionClick}
+                  />
+                </div>
+              )}
+
+              {/* Fallback for old insights UI if not available yet */}
+              {!todayEntry?.morningCheck && (
+                <div className="mt-6 p-6 bg-slate-800/50 rounded-2xl border border-cyan-500/20">
+                  <div className="flex items-start gap-4">
+                    <Lightbulb className="h-6 w-6 text-cyan-400 flex-shrink-0 mt-1" />
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-2">AI Trading Insights</h3>
+                      <p className="text-gray-300 leading-relaxed">
+                        {generateAIInsights(todayEntry?.morningCheck, readinessScore)}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {tradingDecision && (
                 <div className="relative">
