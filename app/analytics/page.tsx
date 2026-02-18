@@ -1146,14 +1146,14 @@ export default function PsychologyAnalyticsPage() {
                 <div className="space-y-2">
                   <Button 
                     onClick={() => router.push("/morning-check")}
-                    disabled={dailyStages?.completedToday && dailyStages.completedToday.includes("morning_check")}
+                    disabled={(dailyStages?.completedToday?.length ?? 0) > 0 && dailyStages?.completedToday?.includes("morning_check")}
                     className={`w-full ${
-                      dailyStages?.completedToday && dailyStages.completedToday.includes("morning_check")
+                      (dailyStages?.completedToday?.length ?? 0) > 0 && dailyStages?.completedToday?.includes("morning_check")
                         ? "bg-green-600 hover:bg-green-600 cursor-not-allowed"
                         : "bg-purple-600 hover:bg-purple-700"
                     }`}
                   >
-                    {dailyStages?.completedToday && dailyStages.completedToday.includes("morning_check") ? (
+                    {(dailyStages?.completedToday?.length ?? 0) > 0 && dailyStages?.completedToday?.includes("morning_check") ? (
                       <>
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Splneno
@@ -1164,15 +1164,15 @@ export default function PsychologyAnalyticsPage() {
                   </Button>
                   <Button
                     onClick={() => router.push("/record-trades")}
-                    disabled={dailyStages?.completedToday && dailyStages.completedToday.includes("record_trade")}
+                    disabled={(dailyStages?.completedToday?.length ?? 0) > 0 && dailyStages?.completedToday?.includes("record_trade")}
                     variant="outline"
                     className={`w-full ${
-                      dailyStages?.completedToday && dailyStages.completedToday.includes("record_trade")
+                      (dailyStages?.completedToday?.length ?? 0) > 0 && dailyStages?.completedToday?.includes("record_trade")
                         ? "border-green-500/50 text-green-400 hover:bg-green-500/10 cursor-not-allowed"
                         : "border-purple-500/30 text-white hover:bg-purple-500/10"
                     }`}
                   >
-                    {dailyStages?.completedToday && dailyStages.completedToday.includes("record_trade") ? (
+                    {(dailyStages?.completedToday?.length ?? 0) > 0 && dailyStages?.completedToday?.includes("record_trade") ? (
                       <>
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Splneno
