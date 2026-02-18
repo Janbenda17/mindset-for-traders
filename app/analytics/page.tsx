@@ -1057,14 +1057,14 @@ export default function PsychologyAnalyticsPage() {
   // Calculate daysWithData z reálných trades a morningChecks
   const daysWithData = useMemo(() => {
     const tradeDates = new Set(
-      trades.map((t: any) => {
+      (trades || []).map((t: any) => {
         const date = t.date || t.created_at
         return date ? new Date(date).toISOString().split("T")[0] : null
       }).filter(Boolean)
     )
     
     const morningCheckDates = new Set(
-      morningChecks.map((m: any) => {
+      (morningChecks || []).map((m: any) => {
         const date = m.date || m.created_at
         return date ? new Date(date).toISOString().split("T")[0] : null
       }).filter(Boolean)
@@ -1074,15 +1074,13 @@ export default function PsychologyAnalyticsPage() {
     return allDates.size
   }, [trades, morningChecks])
 
-  // Ve Virtual Mode s nedostatečnými daty použij demo data
+  // Pouze reálná data - žádná demo data!
   const safeData = useMemo(() => {
-    if (!isLiveMode && (!analytics || daysWithData < 10)) {
-      return generateDemoData("day") // Použij demo data ve Virtual Mode
-    }
-    return analytics
-  }, [analytics, isLiveMode, daysWithData])
+    return analytics // Vrať analytics bez ohledu na daysWithData - pouze reálná data
+  }, [analytics])
 
-  const isAnalyticsLocked = daysWithData < 10 && isLiveMode // Locked pouze v Live Mode
+  // Analytics se zobrazí POUZE když jsou dostupná reálná data
+  const isAnalyticsLocked = !safeData || (daysWithData < 10 && isLiveMode && !showForcedAnalytics)
   const daysRemaining = Math.max(0, 10 - daysWithData)
 
   if (!authReady || modeLoading) {
