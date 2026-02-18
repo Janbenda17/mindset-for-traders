@@ -67,7 +67,7 @@ export default function Dashboard() {
     },
     {
       title: 'Loss Reset',
-      desc: 'Rychlý reset po ztrátě – zpět do hry bez revanše',
+      desc: 'Rychlý reset po ztrátě – zpět do hry bez revenge',
       icon: Target,
       href: '/loss-reset'
     }
