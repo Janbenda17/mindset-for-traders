@@ -72,7 +72,7 @@ export function DailySummary() {
   const { toast } = useToast()
   const router = useRouter()
   const { completeStage, stages } = useDailyStage()
-  const { getAllTrades, isLiveMode } = useData()
+  const { getAllTrades, isLiveMode, morningChecks, dailyIntentions, tradingPlans } = useData()
 
   // Check if stage 5 is locked
   const stage5 = stages.find((s) => s.id === 5)
@@ -165,24 +165,21 @@ export function DailySummary() {
       console.log(`[v0] DailySummary - Loaded ${trades.length} trades for today (${today})`)
       setTodayTrades(trades)
 
-      // Load morning check
-      const morningChecks = JSON.parse(localStorage.getItem("mindtrader-morning-checks") || "[]")
-      const todayMorningCheck = morningChecks.find((m: MorningCheckData) => m.date === today)
+      // Load morning check from data context
+      const todayMorningCheck = morningChecks?.find((m: MorningCheckData) => m.date === today)
       setMorningCheck(todayMorningCheck || null)
 
-      // Load intention
-      const intentions = JSON.parse(localStorage.getItem("daily-intentions") || "[]")
-      const todayIntention = intentions.find((i: DailyIntentionData) => i.date === today)
+      // Load intention from data context
+      const todayIntention = dailyIntentions?.find((i: DailyIntentionData) => i.date === today)
       setIntention(todayIntention || null)
 
-      // Load trading plan
-      const plans = JSON.parse(localStorage.getItem("trading-plans") || "[]")
-      const todayPlan = plans.find((p: TradingPlanData) => p.date === today)
+      // Load trading plan from data context
+      const todayPlan = tradingPlans?.find((p: TradingPlanData) => p.date === today)
       setTradingPlan(todayPlan || null)
 
       generateAdvancedInsights(todayMorningCheck, trades, todayIntention)
     }
-  }, [getAllTrades, isLiveMode])
+  }, [getAllTrades, isLiveMode, morningChecks, dailyIntentions, tradingPlans])
 
   const generateAdvancedInsights = (
     check: MorningCheckData | null,
