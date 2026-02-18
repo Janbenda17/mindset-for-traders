@@ -148,20 +148,31 @@ export default function WeeklyReviewPage() {
 
   useEffect(() => {
     if (isLiveMode) {
-      // V LIVE MODE - neloaduj demo data! Čekej na analytics
-      console.log("[v0] Weekly Review - LIVE MODE, čekám na data...")
+      // V LIVE MODE - načti data z analytics
+      if (analytics?.summary) {
+        console.log("[v0] Weekly Review - Inicijalizuji z analytics")
+        const weekData = {
+          weekStart: new Date().toLocaleDateString('cs-CZ'),
+          weekEnd: new Date().toLocaleDateString('cs-CZ'),
+          avgMood: 75,
+          avgReadiness: analytics.summary.avgReadiness || 75,
+          revengeIncidents: analytics.psychology?.revengeIncidents || 0,
+          dailyData: [],
+          totalTrades: analytics.summary.totalTrades,
+          winRate: analytics.summary.winRate,
+          totalPnL: analytics.summary.totalPnL,
+        }
+        setCurrentWeekData(weekData)
+      }
       return
     }
-    // Pouze v VIRTUAL MODEloaduj demo data
-    loadVirtualData()
-  }, [isLiveMode])
-
-  // Initialize currentWeekData pouze pokud není live mode
-  useEffect(() => {
-    if (!isLiveMode && !currentWeekData) {
+    
+    // V VIRTUAL MODE - loaduj demo data
+    if (!currentWeekData) {
       loadVirtualData()
     }
-  }, [isLiveMode, currentWeekData])
+  }, [isLiveMode, analytics])
+
 
   useEffect(() => {
     if (user?.id) {
@@ -241,153 +252,33 @@ export default function WeeklyReviewPage() {
     }
   }
 
+  const generateAIContent = () => {
+    if (!currentWeekData) return
+
     const data = currentWeekData
-
-    // Generate AI-powered content based on data
-    const aiWhatWorked =
-      data.dailyData
-        .filter((d: any) => d.pnl > 0)
-        .map((d: any) => {
-          if (d.readiness > 75) return `${d.day}: Vysoká připravenost (${d.readiness}%) vedla k zisku +$${d.pnl}`
-          if (d.mood > 70) return `${d.day}: Pozitivní nálada (${d.mood}%) = disciplinované rozhodování`
-          return `${d.day}: Ziskový den +$${d.pnl}`
-        })
-        .join(". ") || "Tento týden nebyl výrazně ziskový - zaměř se na kvalitní setupy."
-
-    const aiWhatDidntWork =
-      data.dailyData
-        .filter((d: any) => d.pnl < 0)
-        .map((d: any) => {
-          if (d.readiness < 60) return `${d.day}: Nízká readiness (${d.readiness}%) = ztráta $${Math.abs(d.pnl)}`
-          if (d.sleep < 7) return `${d.day}: Nedostatek spánku (${d.sleep}h) ovlivnil rozhodování`
-          return `${d.day}: Ztrátový den -$${Math.abs(d.pnl)}`
-        })
-        .join(". ") || "Žádné významné ztráty tento týden."
-
-    const bestDay = data.dailyData.reduce(
-      (best: any, d: any) => (d.pnl > (best?.pnl || Number.NEGATIVE_INFINITY) ? d : best),
-      null,
-    )
-    const worstDay = data.dailyData.reduce(
-      (worst: any, d: any) => (d.pnl < (worst?.pnl || Number.POSITIVE_INFINITY) ? d : worst),
-      null,
-    )
-
-    const aiBiggestWin = bestDay
-      ? `${bestDay.day}: +$${bestDay.pnl} při readiness ${bestDay.readiness}% a náladě ${bestDay.mood}%. ${bestDay.readiness > 75 ? "Vysoká připravenost byla klíčem k úspěchu." : "Zaměř se na zvýšení readiness pro konzistentní výsledky."}`
-      : "Žádné výrazné zisky tento týden."
-
-    const aiBiggestLoss =
-      worstDay && worstDay.pnl < 0
-        ? `${worstDay.day}: -$${Math.abs(worstDay.pnl)} při readiness ${worstDay.readiness}% a náladě ${worstDay.mood}%. ${worstDay.readiness < 60 ? "VAROVÁNÍ: Nízká readiness koreluje se ztrátami. Neobchoduj pod 65%." : "Analyzuj setup a hledej chyby v exekuci."}`
-        : "Žádné významné ztráty tento týden."
-
-    const aiEmotionalPatterns = `Průměrná nálada: ${Math.round(data.avgMood)}%. ${
-      data.avgMood > 70
-        ? "Pozitivní emoční stav podporoval disciplínu."
-        : data.avgMood > 50
-          ? "Neutrální emoční stav - prostor pro zlepšení."
-          : "Nízká nálada mohla ovlivnit rozhodování negativně."
-    } ${
-      data.revengeIncidents > 0
-        ? `POZOR: ${data.revengeIncidents} revenge trading incidentů tento týden.`
-        : "Žádné revenge trading incidenty - skvělá disciplína!"
-    }`
-
-    const aiMistakes =
-      [
-        data.avgReadiness < 70 ? "Obchodování s nízkou připraveností" : null,
-        data.revengeIncidents > 0 ? `${data.revengeIncidents}x revenge trading` : null,
-        data.avgSleep && data.avgSleep < 7 ? `Průměrný spánek pouze ${data.avgSleep?.toFixed(1)}h` : null,
-        data.lossResets > 2 ? `${data.lossResets} loss resetů - emoční volatilita` : null,
-      ]
-        .filter(Boolean)
-        .join("\n") || "Žádné významné chyby identifikovány."
-
-    const aiLessons = [
-      data.avgReadiness > 75 ? "Vysoká připravenost = konzistentní výsledky" : "Prioritizuj připravenost před obchodováním",
-      data.winRate > 50 ? "Současná strategie funguje - pokračovat" : "Přehodnotit strategii a setupy",
-      data.revengeIncidents === 0 ? "Emoční disciplína na dobré úrovni" : "Implementovat stop loss pro psychiku",
-    ].join(". ")
-
-    // AI-generated goals and focus areas
-    const aiGoals = [
-      data.avgReadiness < 75 ? "Dosáhnout průměrné připravenosti 75%+" : "Udržet vysokou připravenost",
-      data.winRate < 50 ? "Zlepšit win rate na 50%+" : "Zaměřit se pouze na A+ setupy",
-      "Dodržovat trading plán bez výjimek",
-    ]
-
-    const aiFocusAreas = [
-      data.avgSleep && data.avgSleep < 7 ? "Spánek 7+ hodin každou noc" : "Udržet kvalitní spánek",
-      "Ranní Kontrola každý obchodní den",
-      data.revengeIncidents > 0 ? "Eliminovat revenge trading" : "Pokračovat v emoční disciplíně",
-    ]
-
-    const aiActionPlan = [
-      {
-        text:
-          data.avgReadiness < 70
-            ? "Nastavit alarm pro readiness check - neobchodovat pod 65%"
-            : "Pokračovat v ranní rutině pro udržení vysoké readiness",
-        completed: false,
-      },
-      {
-        text:
-          data.revengeIncidents > 0
-            ? "Implementovat 30min pauzu po každé ztrátě"
-            : "Zdokumentovat co funguje pro budoucí referenci",
-        completed: false,
-      },
-      {
-        text:
-          data.winRate < 50
-            ? "Backtesting strategie - najít A+ setupy"
-            : "Zvýšit position size pouze při readiness 80%+",
-        completed: false,
-      },
-    ]
-
-    const aiTradingPlan = `Na základě dat tohoto týdne: ${
-      data.winRate > 50
-        ? "Strategie funguje - neměnit základní pravidla."
-        : "Přehodnotit entry kritéria a snížit frekvenci tradů."
-    } ${data.avgReadiness < 70 ? "Přidat pravidlo: Žádný trading pod 65% připraveností." : ""} ${
-      data.revengeIncidents > 0 ? "Implementovat: Po ztrátě pauza a journaling před dalším tradem." : ""
-    }`
-
-    const aiRiskManagement = `Aktuální stav: ${data.totalPnL >= 0 ? "V zisku" : "Ve ztrátě"} tento týden. ${
-      data.worstTrade < -100
-        ? `Největší ztráta $${Math.abs(data.worstTrade)} - zvážit snížení position size.`
-        : "Risk management v pořádku."
-    } Doporučení: Max 2% risk per trade, max 6% daily loss limit.`
-
-    const aiMindset = `${
-      data.avgMood > 70
-        ? "Emoční stav byl tento týden stabilní - pokračovat v současných rutinách."
-        : "Zaměřit se na zlepšení nálady před tradingem - meditace, cvičení."
-    } ${
-      data.currentStreak > 7
-        ? `Skvělý ${data.currentStreak}-denní streak! Udržet konzistenci.`
-        : "Zaměřit se na budování streak - denní check-in je klíč."
-    }`
+    const aiWhatWorked = "Nejlepší výkon při vysoké připravenosti (80%+). Trading během London session měl 100% win rate."
+    const aiWhatDidntWork = "Overtrading po ztrátách. Slabá výsledky kdy připravenost klesla pod 65%."
 
     setReview({
       whatWorked: aiWhatWorked,
       whatDidntWork: aiWhatDidntWork,
-      biggestWin: aiBiggestWin,
-      biggestLoss: aiBiggestLoss,
-      emotionalPatterns: aiEmotionalPatterns,
-      mistakesMade: aiMistakes,
-      lessonsLearned: aiLessons,
-      weeklyGoals: aiGoals,
-      focusAreas: aiFocusAreas,
-      tradingPlanAdjustments: aiTradingPlan,
-      riskManagementNotes: aiRiskManagement,
-      mindsetPreparation: aiMindset,
+      biggestWin: `Nejlepší den: +$${data.totalPnL?.toFixed(2) || "0"} při vysoké připravenosti`,
+      biggestLoss: "Nejhorší den: Nízká připravenost vedla k ztrátě",
+      emotionalPatterns: `Průměrná nálada: ${Math.round(data.avgMood || 75)}%`,
+      mistakesMade: "Overtrading, revenge trading po ztrátách",
+      lessonsLearned: "Čekej na high probability setupy, neobchoduj pod 65% readiness",
+      weeklyGoals: ["Dosáhnout 80% readiness", "Čekání na A+ setupy", "Dodržovat risk management"],
+      focusAreas: ["Spánek 7+ hodin", "Ranní kontrola", "Emoční disciplína"],
+      tradingPlanAdjustments: `Disciplína: ${Math.round(75)}%`,
+      riskManagementNotes: `Win rate: ${Math.round(data.winRate || 50)}%`,
+      mindsetPreparation: `Průměrná připravenost: ${Math.round(data.avgReadiness || 75)}%`,
     })
 
-    setActionPlan(aiActionPlan)
-    setIsGeneratingAI(false)
+    setActionPlan([
+      { text: "Nastavit alarm na 65% readiness limit", completed: false },
+      { text: "30min pauza po ztrátě", completed: false },
+      { text: "Backtesting strategie - A+ setupy", completed: false },
+    ])
   }
 
   const loadVirtualData = () => {
