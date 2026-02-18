@@ -21,8 +21,18 @@ export function LoginForm() {
   const [rememberMe, setRememberMe] = useState(false)
   const [showResetForm, setShowResetForm] = useState(false)
   const [resetEmail, setResetEmail] = useState("")
-  const { login } = useAuth()
+  const [resetLoading, setResetLoading] = useState(false)
+  const { login, resetPassword } = useAuth()
   const router = useRouter()
+
+  // Load saved email on mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("mindtrader-saved-email")
+    if (savedEmail) {
+      setEmail(savedEmail)
+      setRememberMe(true)
+    }
+  }, [])
 
   useEffect(() => {
     if (countdownSeconds > 0) {
@@ -65,9 +75,13 @@ export function LoginForm() {
     try {
       console.log("[v0] Attempting login for:", email.trim())
 
-      // Do NOT save password to localStorage - security risk
-      localStorage.removeItem("mindtrader-saved-email")
-      localStorage.removeItem("mindtrader-saved-password")
+      // Save email if remember me is checked
+      if (rememberMe) {
+        localStorage.setItem("mindtrader-saved-email", email.trim())
+        console.log("[v0] Email saved for next login")
+      } else {
+        localStorage.removeItem("mindtrader-saved-email")
+      }
 
       // Call login with trimmed email
       const success = await login(email.trim(), password)
@@ -110,10 +124,19 @@ export function LoginForm() {
       return
     }
 
-    setError("")
-    alert(`Email pro reset hesla byl poslán na: ${resetEmail}`)
-    setShowResetForm(false)
-    setResetEmail("")
+    setResetLoading(true)
+    try {
+      const success = await resetPassword(resetEmail.trim())
+      if (success) {
+        setShowResetForm(false)
+        setResetEmail("")
+      }
+    } catch (error) {
+      console.error("[v0] Password reset error:", error)
+      setError("Chyba při odesílání emailu. Zkuste prosím znovu.")
+    } finally {
+      setResetLoading(false)
+    }
   }
 
   return (
@@ -275,9 +298,17 @@ export function LoginForm() {
                 <div className="flex gap-3">
                   <Button
                     type="submit"
-                    className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200"
+                    disabled={resetLoading}
+                    className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Poslat instrukce
+                    {resetLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Odesílám...</span>
+                      </div>
+                    ) : (
+                      "Poslat instrukce"
+                    )}
                   </Button>
                   <Button
                     type="button"

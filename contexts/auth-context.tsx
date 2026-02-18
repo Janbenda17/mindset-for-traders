@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>
   register: (data: { email: string; password: string; name: string }) => Promise<boolean>
   logout: () => void
+  resetPassword: (email: string) => Promise<boolean>
   isLoading: boolean
   authReady: boolean
   clearAllAccounts: () => void
@@ -336,15 +337,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
-    const userId = user?.id
-    const userEmail = user?.email
+    // Clear cookies and session
+    supabase.auth.signOut().catch((err) => console.error("[v0] Logout error:", err))
 
-    if (userId) {
-      console.log(`[v0] Logout: clearing data for userId=${userId}, email=${userEmail}`)
-      clearUserScoped(userId)
-      localStorage.removeItem("gamification-data")
-      localStorage.removeItem(`mindtrader:${userId}:mode`)
+    console.log("[v0] Logout - clearing user state")
+    lastUserIdRef.current = null
+    setUser(null)
+
+    toast({
+      title: "Odhlášení úspěšné",
+      description: "Nashledanou!",
+    })
+
+    window.location.href = "/auth/login"
+  }
+
+  const resetPassword = async (email: string): Promise<boolean> => {
+    try {
+      console.log("[v0] Resetting password for:", email)
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      })
+
+      if (error) {
+        console.error("[v0] Password reset error:", error.message)
+        toast({
+          title: "Chyba",
+          description: error.message,
+          variant: "destructive",
+        })
+        return false
+      }
+
+      console.log("[v0] Password reset email sent successfully")
+      toast({
+        title: "Email poslán",
+        description: "Podívejte se do své emailové schránky pro pokyny k obnovení hesla",
+      })
+      return true
+    } catch (error) {
+      console.error("[v0] Password reset error:", error)
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se poslat email pro obnovení hesla",
+        variant: "destructive",
+      })
+      return false
     }
+  }
 
     supabase.auth.signOut()
 
@@ -361,7 +402,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading, authReady, clearAllAccounts }}>
+    <AuthContext.Provider value={{ user, login, register, logout, resetPassword, isLoading, authReady, clearAllAccounts }}>
       {children}
     </AuthContext.Provider>
   )
@@ -376,6 +417,7 @@ export function useAuth() {
         login: async () => false,
         register: async () => false,
         logout: () => {},
+        resetPassword: async () => false,
         isLoading: true,
         authReady: false,
         clearAllAccounts: () => {},
