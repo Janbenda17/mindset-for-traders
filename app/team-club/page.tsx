@@ -2899,89 +2899,6 @@ const containsVulgarWords = (text: string): boolean => {
   return VULGAR_WORDS.some((word) => lowerText.includes(word))
 }
 
-// StudentTeamClubView component for students (non-mentors)
-function StudentTeamClubView({
-  communityUsers,
-  loadingCommunity,
-}: {
-  communityUsers: any[]
-  loadingCommunity: boolean
-}) {
-  const { isLiveMode } = useLiveMode()
-  const { user } = useAuth()
-
-  return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Týmový Klub</h1>
-          <p className="text-slate-400">Komunikuj s ostatními tradery a učte se společně</p>
-        </div>
-
-        {/* Community Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {loadingCommunity ? (
-              <div className="text-center py-12">
-                <div className="animate-spin mb-4 flex justify-center">
-                  <Brain className="w-8 h-8 text-purple-400" />
-                </div>
-                <p className="text-slate-400">Načítám komunitu...</p>
-              </div>
-            ) : (
-              <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Vítej v Komunity</h2>
-                <p className="text-slate-300">
-                  V Týmovém Klubu se zde budou zobrazovat příspěvky od ostatních traderů. Zatím je komunita prázdná, ale brzy sem budou přicházet nové příspěvky.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Leaderboard */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-4">
-              <h3 className="text-lg font-bold text-white mb-4">🏆 Žebřík</h3>
-              {loadingCommunity ? (
-                <div className="text-center py-8">
-                  <p className="text-slate-400 text-sm">Načítám...</p>
-                </div>
-              ) : communityUsers && communityUsers.length > 0 ? (
-                <div className="space-y-2">
-                  {communityUsers.slice(0, 10).map((user, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 rounded hover:bg-slate-800/50 transition">
-                      <div className="flex items-center gap-2 flex-1">
-                        <div className="text-sm font-bold text-purple-400 w-6">{index + 1}.</div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">{user.name || `Trader ${index + 1}`}</p>
-                        </div>
-                      </div>
-                      <div className="text-xs text-yellow-400 font-semibold">{user.xp || 0} XP</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-slate-400 text-sm">Žádní uživatelé dosud</p>
-              )}
-            </div>
-
-            {/* Info Card */}
-            <div className="bg-purple-900/30 border border-purple-500/30 rounded-lg p-4">
-              <h3 className="text-sm font-bold text-purple-300 mb-2">💡 Tip</h3>
-              <p className="text-xs text-slate-400">
-                Buď aktivní v komunité a získávej XP body za příspěvky a interakci s ostatními tradery!
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  )
-}
-
 // Moved isMentor definition outside of the component to avoid re-declaration
 function isMentor(): boolean {
   if (typeof window === "undefined") return false
@@ -3017,18 +2934,14 @@ function TeamClubPage() {
     )
   }
 
-  // Render based on mentor status, ensuring userIsMentor is not null
+  // Render team club view for all users - show full interface with all folders
   return userIsMentor !== null ? (
-    userIsMentor ? (
-      <MentorTeamClubView 
-        communityUsers={communityUsers} 
-        setCommunityUsers={setCommunityUsers} 
-        loadingCommunity={loadingCommunity} 
-        setLoadingCommunity={setLoadingCommunity} 
-      />
-    ) : (
-      <StudentTeamClubView communityUsers={communityUsers} loadingCommunity={loadingCommunity} />
-    )
+    <MentorTeamClubView 
+      communityUsers={communityUsers} 
+      setCommunityUsers={setCommunityUsers} 
+      loadingCommunity={loadingCommunity} 
+      setLoadingCommunity={setLoadingCommunity} 
+    />
   ) : null
 }
 
