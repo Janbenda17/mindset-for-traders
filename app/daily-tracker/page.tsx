@@ -321,9 +321,9 @@ export default function DailyTrackerPage() {
 
       allDates.forEach((date) => {
         const morningCheck = morningChecks.find((m: any) => m.date === date)
-        const dayTrades = trades.filter((t: any) => t.date === date)
-        const intention = dailyIntentions?.find((i: any) => i.date === date)
-        const plan = tradingPlans?.find((p: any) => p.date === date)
+      const dayTrades = trades.filter((t: any) => t.date === date)
+      const intention = dailyIntentions && dailyIntentions.length > 0 ? dailyIntentions.find((i: any) => i.date === date) : undefined
+      const plan = tradingPlans && tradingPlans.length > 0 ? tradingPlans.find((p: any) => p.date === date) : undefined
         
         // Match stages by date - normalize date format to YYYY-MM-DD
         const stagesRecord = stagesRecords.find((sr: any) => {
@@ -595,11 +595,11 @@ export default function DailyTrackerPage() {
     const meditatedToday = morningCheckData.meditationTime > 0 || false
 
     let positiveNote = ""
-    if (highFocus) positiveNote = "✓ Focus je ale výborný - to je tvá greatest strength!"
+    if (highFocus) positiveNote = "✓ Focus je výborný - to je tvá největší síla!"
     else if (lowStressMetric) positiveNote = "✓ Alespoň máš nízký stres - psychika v pohodě."
     else if (highEnergy) positiveNote = "✓ Energie na vysoké úrovni - fyzicky jsi ready."
     else if (meditatedToday) positiveNote = "✓ Dnes jsi meditoval/a - to ti pomůže s emoční kontrolou."
-    else if (exercised) positiveNote = "✓ Cvičení dnes = lepší neurální funkce a self-control."
+    else if (exercised) positiveNote = "✓ Cvičení dnes = lepší mozková funkce a sebovláda."
 
     if (poorSleep) {
       message = `⚠️ KRITICKÉ: Jen ${morningCheckData.sleepHours}h spánku (kvalita ${morningCheckData.sleepQuality}/10). Nedostatek spánku = -30-40% v schopnosti rozhodování.`
@@ -666,7 +666,7 @@ export default function DailyTrackerPage() {
       tips.push("⏱️ Timing: Trading jen 9-12 (peak hours). Afternoon = odpočinek a logging trades.")
       tips.push("💤 Recovery: Dnes večer klid, méně screentime.")
     } else if (badMood) {
-      message = `😔 EMOCÍ PROBLÉM: Nálada ${morningCheckData.emotionalState}/10. Riziko: Loss aversion distortions, holding losers, revenge trading.`
+      message = `😔 EMOCÍ PROBLÉM: Nálada ${morningCheckData.emotionalState}/10. Riziko: Zkreslen odporu ke ztrátám, držení ztrátných pozic, pomstylné obchodování.`
       if (positiveNote) message += ` ${positiveNote}`
       details.push(`Emoční stav: ${morningCheckData.emotionalState}/10 - NEGATIVNÍ`)
       tips.push("🎭 Psychologie: Zapiš si PROČ jsi smutný/a - externí kontext se oddělí od obchodních rozhodnutí")
