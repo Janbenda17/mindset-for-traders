@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
@@ -824,6 +824,8 @@ function StudentTeamClubView({
   communityUsers: any[]
   loadingCommunity: boolean
 }) {
+  // Initialize Supabase client
+  const supabase = createClient()
   const { getAllTrades, getAllJournalEntries, isLiveMode } = useData()
   const { user } = useAuth() // ADDED: Get user from AuthContext
   const [activeTab, setActiveTab] = useState("overview")
@@ -839,6 +841,8 @@ function StudentTeamClubView({
   const [postFilter, setPostFilter] = useState<"all" | "win" | "loss" | "insight" | "question">("all")
   // Leaderboard state
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<"weekly" | "monthly" | "alltime">("weekly")
+  const [leaderboardData, setLeaderboardData] = useState<any[]>([])
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true)
 
   const [dailyLimits, setDailyLimits] = useState<{
     feed: { date: string; count: number }
@@ -1029,6 +1033,23 @@ function StudentTeamClubView({
     }
   }, [])
 
+  // Load leaderboard data when period changes
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      setLeaderboardLoading(true)
+      try {
+        const data = await getLeaderboardData()
+        setLeaderboardData(data)
+      } catch (error) {
+        console.error("[v0] Error loading leaderboard:", error)
+        setLeaderboardData(getDemoLeaderboardData())
+      } finally {
+        setLeaderboardLoading(false)
+      }
+    }
+    loadLeaderboard()
+  }, [leaderboardPeriod])
+
   const trades = getAllTrades()
   const journals = getAllJournalEntries()
   const moodEntries: any[] = user?.id ? JSON.parse(getScoped(user.id, "mood-entries") || "[]") : []
@@ -1189,26 +1210,56 @@ function StudentTeamClubView({
   }
 
   // Leaderboard helper functions
-  const getLeaderboardData = () => {
-    if (isLiveMode) {
-      // In live mode, show only the user's own data
-      const user = getUserStats()
-      if (user.xp > 0 || user.pnl !== 0 || user.streak > 0) {
-        return [
-          {
-            rank: 1,
-            name: "Ty",
-            discipline: user.discipline,
-            streak: user.streak,
-            xp: user.xp,
-            pnl: user.pnl,
-            avatar: "/trader-avatar.png",
-          },
-        ]
-      }
-      return []
+  const getLeaderboardData = async () => {
+    // Load all users' XP from Supabase
+    const { data: allUsers, error } = await supabase
+      .from("xp_profiles")
+      .select("user_id, xp, level")
+      .order("xp", { ascending: false })
+      .limit(50)
+
+    if (error || !allUsers) {
+      console.error("[v0] Error loading leaderboard:", error)
+      // Fallback to demo data
+      return getDemoLeaderboardData()
     }
 
+    // Get user profiles for names and avatars
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("user_id, display_name, username, avatar_url")
+
+    if (profilesError || !profiles) {
+      console.error("[v0] Error loading profiles:", profilesError)
+      return getDemoLeaderboardData()
+    }
+
+    // Map XP data with profile info
+    const leaderboardData = allUsers.map((user, index) => {
+      const profile = profiles.find((p) => p.user_id === user.user_id)
+      return {
+        rank: index + 1,
+        name: profile?.display_name || profile?.username || `Trader ${index + 1}`,
+        xp: user.xp,
+        level: user.level || 1,
+        avatar: profile?.avatar_url || "/trader-avatar.png",
+        discipline: 0, // Can be expanded later
+        streak: 0, // Can be expanded later
+        pnl: 0, // Can be expanded later
+      }
+    })
+
+    // Apply period filtering
+    if (leaderboardPeriod === "weekly") {
+      return leaderboardData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.15) }))
+    } else if (leaderboardPeriod === "monthly") {
+      return leaderboardData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.4) }))
+    }
+
+    return leaderboardData
+  }
+
+  const getDemoLeaderboardData = () => {
     // Demo mode with bigger numbers (thousands $)
     const demoData = [
       {
@@ -1287,15 +1338,14 @@ function StudentTeamClubView({
   }
 
   const getUserPosition = () => {
-    // Mock function to get user's position
+    // Get user's position in leaderboard from state data
     const user = getUserStats()
-    const leaderboard = getLeaderboardData()
-    const found = leaderboard.find((trader) => trader.name === user.name)
+    const found = leaderboardData.find((trader) => trader.name === user.name)
     if (found) {
       return found.rank
     }
-    // Fallback if user is not in the top 10 (or wherever we query)
-    return 15 // Example fallback
+    // Fallback if user is not in the top 50
+    return leaderboardData.length + 1
   }
 
   // Function to get today's date string for daily limits
@@ -2896,48 +2946,58 @@ function StudentTeamClubView({
 
                 {/* Top 5 Leaderboard */}
                 <div className="space-y-3">
-                  {getLeaderboardData()
-                    .slice(0, 5)
-                    .map((trader) => (
-                      <div
-                        key={trader.rank}
-                        className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-xl hover:bg-slate-700/50 transition-all"
-                      >
+                  {leaderboardLoading ? (
+                    <div className="text-center py-8">
+                      <p className="text-slate-400">Načítám leaderboard...</p>
+                    </div>
+                  ) : leaderboardData.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-slate-400">Žádní tradeři v leaderboardu</p>
+                    </div>
+                  ) : (
+                    leaderboardData
+                      .slice(0, 5)
+                      .map((trader) => (
                         <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
-                            trader.rank === 1
-                              ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-white"
-                              : trader.rank === 2
-                                ? "bg-gradient-to-br from-slate-400 to-slate-500 text-white"
-                                : trader.rank === 3
-                                  ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white"
-                                  : "bg-slate-600 text-white"
-                          }`}
+                          key={trader.rank}
+                          className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-xl hover:bg-slate-700/50 transition-all"
                         >
-                          {trader.rank}
-                        </div>
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage src={trader.avatar || "/placeholder.svg"} />
-                          <AvatarFallback>{trader.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <h4 className="text-white font-bold">{trader.name}</h4>
-                          <div className="flex items-center gap-3 text-xs text-slate-400">
-                            <span className="flex items-center gap-1">
-                              <Target className="h-3 w-3" />
-                              {trader.discipline}% disciplína
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Flame className="h-3 w-3 text-orange-400" />
-                              {trader.streak} dní
-                            </span>
+                          <div
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
+                              trader.rank === 1
+                                ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-white"
+                                : trader.rank === 2
+                                  ? "bg-gradient-to-br from-slate-400 to-slate-500 text-white"
+                                  : trader.rank === 3
+                                    ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white"
+                                    : "bg-slate-600 text-white"
+                            }`}
+                          >
+                            {trader.rank}
+                          </div>
+                          <Avatar className="w-12 h-12">
+                            <AvatarImage src={trader.avatar || "/placeholder.svg"} />
+                            <AvatarFallback>{trader.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <h4 className="text-white font-bold">{trader.name}</h4>
+                            <div className="flex items-center gap-3 text-xs text-slate-400">
+                              <span className="flex items-center gap-1">
+                                <Target className="h-3 w-3" />
+                                {trader.discipline}% disciplína
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Flame className="h-3 w-3 text-orange-400" />
+                                {trader.streak} dní
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-purple-400 font-bold">{trader.xp} XP</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-purple-400 font-bold">{trader.xp} XP</p>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                  )}
                 </div>
 
                 {/* User Position - below Top 5 */}
