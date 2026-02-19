@@ -1238,14 +1238,13 @@ Vygenerováno aplikací Trader Mindset
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                       Generuji...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Generovat přehled
-                </>
-              )}
-            </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Generovat přehled
+                    </>
+                  )}
             <Button
               onClick={() => {
                 setReviewVariant("ai")
