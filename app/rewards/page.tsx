@@ -3,11 +3,10 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { AchievementsGrid } from "@/components/achievements-grid"
-import { ChallengesSection } from "@/components/challenges-section"
 import { LevelProgress } from "@/components/level-progress"
 import { useGamification } from "@/contexts/gamification-context"
 import { Card, CardContent } from "@/components/ui/card"
-import { Trophy, Target, Flame, Star } from "lucide-react"
+import { Trophy, Flame, Star } from "lucide-react"
 
 export default function RewardsPage() {
   const { data } = useGamification()
@@ -24,12 +23,6 @@ export default function RewardsPage() {
       value: `${data.achievements.filter((a) => a.unlocked).length}/${data.achievements.length}`,
       icon: Trophy,
       color: "text-yellow-400",
-    },
-    {
-      label: "Dokončené výzvy",
-      value: data.stats.challengesCompleted,
-      icon: Target,
-      color: "text-blue-400",
     },
     {
       label: "Nejdelší streak",
@@ -50,12 +43,12 @@ export default function RewardsPage() {
       </Link>
 
       <div>
-        <h1 className="text-4xl font-bold mb-2">Odměny & Achievementy</h1>
-        <p className="text-muted-foreground">Sleduj svůj progress, odemykej odznaky a dokončuj výzvy</p>
+        <h1 className="text-4xl font-bold mb-2">Odznaky & Achievementy</h1>
+        <p className="text-muted-foreground">Sleduj svůj progress a odemykej odznaky</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {stats.map((stat) => (
           <Card key={stat.label}>
             <CardContent className="p-6">
@@ -74,10 +67,7 @@ export default function RewardsPage() {
       {/* Level Progress */}
       <LevelProgress />
 
-      {/* Challenges */}
-      <ChallengesSection />
-
-      {/* Achievements */}
+      {/* Achievements/Badges */}
       <AchievementsGrid />
     </div>
   )
