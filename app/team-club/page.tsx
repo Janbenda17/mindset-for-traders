@@ -1190,22 +1190,87 @@ function StudentTeamClubView({
 
   // Leaderboard helper functions
   const getLeaderboardData = () => {
-    if (isLiveMode) {
-      // In live mode, show only the user's own data
-      const user = getUserStats()
-      if (user.xp > 0 || user.pnl !== 0 || user.streak > 0) {
-        return [
-          {
-            rank: 1,
-            name: "Ty",
-            discipline: user.discipline,
-            streak: user.streak,
-            xp: user.xp,
-            pnl: user.pnl,
-            avatar: "/trader-avatar.png",
-          },
-        ]
+    // In live mode, generate leaderboard from all community users (students array)
+    if (isLiveMode && students.length > 0) {
+      // Sort students by XP descending
+      const sortedStudents = [...students].sort((a, b) => (b.xp || 0) - (a.xp || 0))
+      
+      // Add rank to each student
+      const ranked = sortedStudents.map((student, index) => ({
+        ...student,
+        rank: index + 1,
+      }))
+
+      // Apply period filter for variation
+      if (leaderboardPeriod === "weekly") {
+        return ranked.map((d) => ({ ...d, xp: Math.round((d.xp || 0) * 0.15), pnl: Math.round((d.pnl || 0) * 0.25) }))
+      } else if (leaderboardPeriod === "monthly") {
+        return ranked.map((d) => ({ ...d, xp: Math.round((d.xp || 0) * 0.4), pnl: Math.round((d.pnl || 0) * 0.5) }))
       }
+      return ranked
+    }
+
+    // In virtual mode, return current user if available
+    if (user) {
+      return [
+        {
+          rank: 1,
+          name: "Ty",
+          discipline: user.discipline,
+          streak: user.streak,
+          xp: user.xp,
+          pnl: user.pnl,
+          avatar: "/trader-avatar.png",
+        },
+      ]
+    }
+
+    // Demo mode with bigger numbers (thousands $)
+    const demoData = [
+      {
+        rank: 1,
+        name: "Jana Svobodová",
+        discipline: 96,
+        streak: 45,
+        xp: 12850,
+        pnl: 8420,
+        avatar: "/trader-avatar.png",
+      },
+      { rank: 2, name: "Martin Novák", discipline: 94, streak: 38, xp: 11200, pnl: 6890, avatar: "/trader-avatar.png" },
+      { rank: 3, name: "Petra Nová", discipline: 91, streak: 32, xp: 9900, pnl: 5340, avatar: "/trader-avatar.png" },
+      { rank: 4, name: "Tomáš Dvořák", discipline: 89, streak: 28, xp: 8650, pnl: 4120, avatar: "/trader-avatar.png" },
+      { rank: 5, name: "Jan Novotný", discipline: 86, streak: 24, xp: 7400, pnl: 3560, avatar: "/trader-avatar.png" },
+      {
+        rank: 6,
+        name: "Lucie Martínková",
+        discipline: 84,
+        streak: 21,
+        xp: 6100,
+        pnl: 2890,
+        avatar: "/trader-avatar.png",
+      },
+      { rank: 7, name: "Petr Kovář", discipline: 82, streak: 19, xp: 5450, pnl: 2340, avatar: "/trader-avatar.png" },
+      { rank: 8, name: "Eva Dvořáková", discipline: 79, streak: 16, xp: 4800, pnl: 1780, avatar: "/trader-avatar.png" },
+      { rank: 9, name: "David Horváth", discipline: 77, streak: 14, xp: 4200, pnl: 1420, avatar: "/trader-avatar.png" },
+      {
+        rank: 10,
+        name: "Markéta Veselá",
+        discipline: 75,
+        streak: 12,
+        xp: 3600,
+        pnl: 980,
+        avatar: "/trader-avatar.png",
+      },
+    ]
+
+    // Filter based on period for demo variation
+    if (leaderboardPeriod === "weekly") {
+      return demoData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.15), pnl: Math.round(d.pnl * 0.25) }))
+    } else if (leaderboardPeriod === "monthly") {
+      return demoData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.4), pnl: Math.round(d.pnl * 0.5) }))
+    }
+    return demoData
+  }
       return []
     }
 
