@@ -1271,55 +1271,6 @@ function StudentTeamClubView({
     }
     return demoData
   }
-      return []
-    }
-
-    // Demo mode with bigger numbers (thousands $)
-    const demoData = [
-      {
-        rank: 1,
-        name: "Jana Svobodová",
-        discipline: 96,
-        streak: 45,
-        xp: 12850,
-        pnl: 8420,
-        avatar: "/trader-avatar.png",
-      },
-      { rank: 2, name: "Martin Novák", discipline: 94, streak: 38, xp: 11200, pnl: 6890, avatar: "/trader-avatar.png" },
-      { rank: 3, name: "Petra Nová", discipline: 91, streak: 32, xp: 9900, pnl: 5340, avatar: "/trader-avatar.png" },
-      { rank: 4, name: "Tomáš Dvořák", discipline: 89, streak: 28, xp: 8650, pnl: 4120, avatar: "/trader-avatar.png" },
-      { rank: 5, name: "Jan Novotný", discipline: 86, streak: 24, xp: 7400, pnl: 3560, avatar: "/trader-avatar.png" },
-      {
-        rank: 6,
-        name: "Lucie Martínková",
-        discipline: 84,
-        streak: 21,
-        xp: 6100,
-        pnl: 2890,
-        avatar: "/trader-avatar.png",
-      },
-      { rank: 7, name: "Petr Kovář", discipline: 82, streak: 19, xp: 5450, pnl: 2340, avatar: "/trader-avatar.png" },
-      { rank: 8, name: "Eva Dvořáková", discipline: 79, streak: 16, xp: 4800, pnl: 1780, avatar: "/trader-avatar.png" },
-      { rank: 9, name: "David Horváth", discipline: 77, streak: 14, xp: 4200, pnl: 1420, avatar: "/trader-avatar.png" },
-      {
-        rank: 10,
-        name: "Markéta Veselá",
-        discipline: 75,
-        streak: 12,
-        xp: 3600,
-        pnl: 980,
-        avatar: "/trader-avatar.png",
-      },
-    ]
-
-    // Filter based on period for demo variation
-    if (leaderboardPeriod === "weekly") {
-      return demoData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.15), pnl: Math.round(d.pnl * 0.25) }))
-    } else if (leaderboardPeriod === "monthly") {
-      return demoData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.4), pnl: Math.round(d.pnl * 0.5) }))
-    }
-    return demoData
-  }
 
   const getUserStats = () => {
     if (isLiveMode) {
