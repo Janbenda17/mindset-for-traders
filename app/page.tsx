@@ -60,6 +60,12 @@ export default function HomePage() {
       title: 'Najde ti nejlepšího buddyho do páru',
       description: 'MindTrader najde tě ideálního trading partnera pro rychlejší růst',
       image: '/slides-3.jpg'
+    },
+    {
+      id: 6,
+      title: 'Z -$2,000 na +$5,400 za 3 měsíce',
+      description: 'Objev, kde prosakuje tvůj trading mindset - skutečné transformace traderů',
+      image: '/slides-6.jpg'
     }
   ]
 
