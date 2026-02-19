@@ -100,8 +100,126 @@ export async function POST(request: Request) {
 
     console.log("[v0] Stage update - Stage", stageId, completed ? "completed" : "uncompleted", "- next stage:", nextStage)
 
-    // Check if all 5 stages are now completed for today
-    if (completed && stageId === 5) {
+    // Auto-track badges when morning check (stage 1) is completed
+    if (completed && stageId === 1) {
+      console.log("[v0] Stage update - Morning check completed! Incrementing badges...")
+
+      // Increment "Morning Bird" badge (7-day streak)
+      const { data: morningBirdData } = await supabase
+        .from("user_badge_progress")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("badge_id", "morning-bird")
+        .maybeSingle()
+
+      if (!morningBirdData?.completed) {
+        // Count consecutive days with morning check
+        const { data: lastDays } = await supabase
+          .from("daily_stages")
+          .select("date, morning_check_completed")
+          .eq("user_id", user.id)
+          .order("date", { ascending: false })
+          .limit(7)
+
+        let consecutiveDays = 0
+        const sortedDays = (lastDays || []).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        const today_ = new Date().toISOString().split("T")[0]
+
+        for (let i = 0; i < sortedDays.length; i++) {
+          const checkDate = new Date(sortedDays[i].date)
+          const expectedDate = new Date(today_)
+          expectedDate.setDate(expectedDate.getDate() - i)
+
+          if (sortedDays[i].morning_check_completed && checkDate.toISOString().split("T")[0] === expectedDate.toISOString().split("T")[0]) {
+            consecutiveDays++
+          } else {
+            break
+          }
+        }
+
+        console.log("[v0] Stage update - Consecutive morning checks:", consecutiveDays)
+
+        const morningBirdProgress = Math.min(consecutiveDays, 7)
+        const isMorningBirdCompleted = morningBirdProgress >= 7
+
+        const { error: morningBirdError } = await supabase
+          .from("user_badge_progress")
+          .upsert(
+            {
+              user_id: user.id,
+              badge_id: "morning-bird",
+              progress: morningBirdProgress,
+              completed: isMorningBirdCompleted,
+              completed_at: isMorningBirdCompleted ? new Date().toISOString() : null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,badge_id" }
+          )
+
+        if (!morningBirdError && isMorningBirdCompleted) {
+          // Award XP for completing badge
+          await supabase.from("xp_log").insert({
+            user_id: user.id,
+            amount: 100,
+            source: "badge",
+            reason: "Odznak odemknut: Ranní Pták",
+          })
+          console.log("[v0] Stage update - Morning Bird badge completed! XP awarded")
+        }
+      }
+    }
+
+    // Auto-track all badges for milestone completion
+    if (completed) {
+      console.log("[v0] Stage update - Incrementing consistency badges...")
+
+      // Count total days with morning checks to update consistency badges
+      const { data: allMorningChecks } = await supabase
+        .from("daily_stages")
+        .select("date")
+        .eq("user_id", user.id)
+        .eq("morning_check_completed", true)
+
+      const totalMorningChecks = allMorningChecks?.length || 0
+
+      // Update consistency-master badge (14-day streak)
+      if (totalMorningChecks >= 14) {
+        const { data: consistencyData } = await supabase
+          .from("user_badge_progress")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("badge_id", "consistency-master")
+          .maybeSingle()
+
+        if (!consistencyData?.completed) {
+          const { error: consistencyError } = await supabase
+            .from("user_badge_progress")
+            .upsert(
+              {
+                user_id: user.id,
+                badge_id: "consistency-master",
+                progress: Math.min(totalMorningChecks, 14),
+                completed: totalMorningChecks >= 14,
+                completed_at: totalMorningChecks >= 14 ? new Date().toISOString() : null,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "user_id,badge_id" }
+            )
+
+          if (!consistencyError && totalMorningChecks >= 14) {
+            await supabase.from("xp_log").insert({
+              user_id: user.id,
+              amount: 200,
+              source: "badge",
+              reason: "Odznak odemknut: Mistr Konzistence",
+            })
+            console.log("[v0] Stage update - Consistency Master badge completed!")
+          }
+        }
+      }
+    }
+
+    return NextResponse.json(data)
       const allStagesCompleted =
         updateData.morning_check_completed &&
         updateData.daily_intention_completed &&
