@@ -1211,40 +1211,31 @@ function StudentTeamClubView({
   // Leaderboard helper functions
   const getLeaderboardData = async () => {
     try {
-      // Load all user profiles with XP
-      const { data: allProfiles, error } = await supabase
-        .from("profiles")
-        .select("user_id, display_name, username, avatar_url, xp, level")
-        .order("xp", { ascending: false })
-        .limit(50)
+      // Use API endpoint which bypasses RLS by using service role key
+      const response = await fetch("/api/leaderboard", { cache: "no-store" })
 
-      if (error || !allProfiles) {
-        console.error("[v0] Error loading leaderboard profiles:", error)
+      if (!response.ok) {
+        console.error("[v0] Error loading leaderboard from API:", response.statusText)
         return getDemoLeaderboardData()
       }
 
-      // Map profiles to leaderboard format
-      const leaderboardData = allProfiles.map((profile, index) => {
-        return {
-          rank: index + 1,
-          name: profile?.display_name || profile?.username || `Trader ${index + 1}`,
-          xp: profile?.xp || 0,
-          level: profile?.level || 1,
-          avatar: profile?.avatar_url || "/trader-avatar.png",
-          discipline: 0, // Can be expanded later
-          streak: 0, // Can be expanded later
-          pnl: 0, // Can be expanded later
-        }
-      })
+      const { leaderboard } = await response.json()
 
-      // Apply period filtering
-      if (leaderboardPeriod === "weekly") {
-        return leaderboardData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.15) }))
-      } else if (leaderboardPeriod === "monthly") {
-        return leaderboardData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.4) }))
+      if (!leaderboard || leaderboard.length === 0) {
+        console.log("[v0] No leaderboard data from API, using demo data")
+        return getDemoLeaderboardData()
       }
 
-      return leaderboardData
+      console.log(`[v0] Loaded ${leaderboard.length} traders for leaderboard`)
+
+      // Apply period filtering (adjust XP for display purposes)
+      if (leaderboardPeriod === "weekly") {
+        return leaderboard.map((d: any) => ({ ...d, xp: Math.round(d.xp * 0.15) }))
+      } else if (leaderboardPeriod === "monthly") {
+        return leaderboard.map((d: any) => ({ ...d, xp: Math.round(d.xp * 0.4) }))
+      }
+
+      return leaderboard
     } catch (error) {
       console.error("[v0] Error loading leaderboard:", error)
       return getDemoLeaderboardData()
@@ -2936,8 +2927,8 @@ function StudentTeamClubView({
                   ))}
                 </div>
 
-                {/* Top 5 Leaderboard */}
-                <div className="space-y-3">
+                {/* Leaderboard - All Users Sorted by XP */}
+                <div className="space-y-3 max-h-[600px] overflow-y-auto">
                   {leaderboardLoading ? (
                     <div className="text-center py-8">
                       <p className="text-slate-400">Načítám leaderboard...</p>
@@ -2947,9 +2938,7 @@ function StudentTeamClubView({
                       <p className="text-slate-400">Žádní tradeři v leaderboardu</p>
                     </div>
                   ) : (
-                    leaderboardData
-                      .slice(0, 5)
-                      .map((trader) => (
+                    leaderboardData.map((trader) => (
                         <div
                           key={trader.rank}
                           className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-xl hover:bg-slate-700/50 transition-all"
@@ -2975,12 +2964,8 @@ function StudentTeamClubView({
                             <h4 className="text-white font-bold">{trader.name}</h4>
                             <div className="flex items-center gap-3 text-xs text-slate-400">
                               <span className="flex items-center gap-1">
-                                <Target className="h-3 w-3" />
-                                {trader.discipline}% disciplína
-                              </span>
-                              <span className="flex items-center gap-1">
                                 <Flame className="h-3 w-3 text-orange-400" />
-                                {trader.streak} dní
+                                Level {trader.level}
                               </span>
                             </div>
                           </div>
