@@ -1315,7 +1315,7 @@ Vygenerováno aplikací Trader Mindset
           )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="max-w-7xl mx-auto space-y-8">
+        <div className="max-w-7xl space-y-8 px-6">
           <TabsList className="grid grid-cols-2 bg-slate-800/50 border border-slate-700 p-1">
             <TabsTrigger value="current" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               <BookOpen className="w-4 h-4 mr-2" />
