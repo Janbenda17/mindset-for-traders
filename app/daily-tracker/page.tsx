@@ -525,42 +525,6 @@ export default function DailyTrackerPage() {
       }
       insight += `💚 AKCE: Sebeléčba je teď důležitější než obchodování. 30min procházka, zdravý oběd, meditace. Vrať se k obchodování zítra s novou energií.`
     }
-      if (emotionalResilience >= 8) {
-        insight += `Emoční odolnost (${Math.round(emotionalResilience)}/10) znamená, že se nebudeš chovat iracionálně po ztrátě. `
-      }
-      if (physical >= 8) {
-        insight += `Fyzické zdraví (${physical}/10) zvyšuje tvou schopnost udržet pozici déle bez únavy. `
-      }
-      insight += `🎯 TRADING STRATEGIE: Apluj na A+ a B+ setupy s přísným risk managementem. POZOR: Vysoká sebedůvěra vede k overconfidence - pokud máš streak vítězství, ZVÝŠ disciplínu, ne rozměr pozic.`
-    } else if (readiness >= 70) {
-      insight = `🟡 DOBRÝ DEN, ALE NE IDEÁLNÍ. Připravenost ${readiness}%. `
-      if (stress >= 6 && focus <= 6) {
-        insight += `Kombinace zvýšeného stresu (${stress}/10) a slabého focusu (${focus}/10) znamená, že se ti budou mísit signály s šumem. Risk chyby je ~30% vyšší. `
-      } else if (sleep < 6) {
-        insight += `Spánek byl nedostatečný (${sleepHours}h, score ${sleep}/10) - tvé neurotransmittery pro decision-making nejsou plně naplněné. `
-      } else if (energy < 6) {
-        insight += `Nízká energie (${energy}/10) = snížená vytrvalost. Po 1-2 hodinách se tvá kvalita rozhodnutí bude zhoršovat. `
-      }
-      insight += `💡 TAKTIKA: Traduj jen high-probability setupy. Zvažte 50-75% normální pozice. Pokud máš 2 ztráty za sebou, uzavři session.`
-    } else if (readiness >= 60) {
-      insight = `🟠 VÁŽNÉ UPOZORNĚNÍ. Připravenost pouze ${readiness}%. `
-      if (stress >= 7) {
-        insight += `KRITICKÉ: Stres (${stress}/10) je vysoký + nízká připravenost. Tvůj amygdala je přeaktivní - vede to k "fight or flight" chování, která v tradingu znamená REVENGE TRADING. `
-      }
-      if (mood <= 4) {
-        insight += `Negativní nálada (${mood}/10) zvyšuje loss aversion. Budeš držet ztráty, aniž bys se hlásil k obchodnímu plánu. `
-      }
-      insight += `⚠️ DOPORUČENÍ: Paper trading session nebo demo pro skill refreshing. Pokud MUSÍŠ tradovat: Třetinový sizing, zastavte loss na -0.5% z účtu (ne 2%).`
-    } else {
-      insight = `🛑 TRADING DNES NENÍ VHODNÝ. Připravenost ${readiness}% je kriticky nízká. `
-      if (stress >= 8 && energy <= 3) {
-        insight += `Kombinace max stresu (${stress}/10) a minimální energie (${energy}/10) = tvůj mozek je v survival modu. Prefrontální kůra (zodpovědné rozhodování) je vypnuta. `
-      }
-      if (mood <= 2) {
-        insight += `Depresivní stav (${mood}/10) = iracionální riziko tolerance a nechutí k poznávání. Risk managementy nebudou dodržovány. `
-      }
-      insight += `💚 AKCE: Sebeléčba je teď důležitější než trading. 30min procházka, zdravý oběd, meditace. Vrať se k tradingu zítra s novým energií.`
-    }
     
     return insight
   }
