@@ -1191,21 +1191,26 @@ function StudentTeamClubView({
   // Leaderboard helper functions
   const getLeaderboardData = () => {
     // In live mode, generate leaderboard from all community users (students array)
-    if (isLiveMode && students.length > 0) {
+    if (isLiveMode && Array.isArray(students) && students.length > 0) {
       // Sort students by XP descending
       const sortedStudents = [...students].sort((a, b) => (b.xp || 0) - (a.xp || 0))
       
       // Add rank to each student
       const ranked = sortedStudents.map((student, index) => ({
-        ...student,
         rank: index + 1,
+        name: student.name || `Trader ${index + 1}`,
+        discipline: student.discipline || 0,
+        streak: student.journalStreak || 0,
+        xp: student.xp || 0,
+        pnl: student.pnl || 0,
+        avatar: student.avatar || "/trader-avatar.png",
       }))
 
       // Apply period filter for variation
       if (leaderboardPeriod === "weekly") {
-        return ranked.map((d) => ({ ...d, xp: Math.round((d.xp || 0) * 0.15), pnl: Math.round((d.pnl || 0) * 0.25) }))
+        return ranked.map((d) => ({ ...d, xp: Math.round(d.xp * 0.15), pnl: Math.round(d.pnl * 0.25) }))
       } else if (leaderboardPeriod === "monthly") {
-        return ranked.map((d) => ({ ...d, xp: Math.round((d.xp || 0) * 0.4), pnl: Math.round((d.pnl || 0) * 0.5) }))
+        return ranked.map((d) => ({ ...d, xp: Math.round(d.xp * 0.4), pnl: Math.round(d.pnl * 0.5) }))
       }
       return ranked
     }
@@ -1216,10 +1221,10 @@ function StudentTeamClubView({
         {
           rank: 1,
           name: "Ty",
-          discipline: user.discipline,
-          streak: user.streak,
-          xp: user.xp,
-          pnl: user.pnl,
+          discipline: user.discipline || 0,
+          streak: user.streak || 0,
+          xp: user.xp || 0,
+          pnl: user.pnl || 0,
           avatar: "/trader-avatar.png",
         },
       ]
