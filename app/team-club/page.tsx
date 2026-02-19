@@ -1321,14 +1321,20 @@ function StudentTeamClubView({
   }
 
   const getUserPosition = () => {
-    // Get user's position in leaderboard from state data
-    const user = getUserStats()
-    const found = leaderboardData.find((trader) => trader.name === user.name)
-    if (found) {
-      return found.rank
+    // Get user's position in leaderboard by finding by userId
+    if (!user?.id || !leaderboardData || leaderboardData.length === 0) {
+      return "?"
     }
-    // Fallback if user is not in the top 50
-    return leaderboardData.length + 1
+
+    // Find user in leaderboard by userId
+    const userIndex = leaderboardData.findIndex((trader) => trader.userId === user.id)
+
+    if (userIndex !== -1) {
+      return leaderboardData[userIndex].rank
+    }
+
+    // Fallback: user is not in loaded leaderboard (not in profiles table)
+    return "?"
   }
 
   // Function to get today's date string for daily limits
