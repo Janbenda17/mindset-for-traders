@@ -53,7 +53,7 @@ const mainNavigation = [
   { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Deník" },
   { name: "Analytika", href: "/analytics", icon: BarChart3, shortName: "Statistiky" },
   { name: "Týdenní Přehled", href: "/weekly-review", icon: Calendar },
-  { name: "Týmový Klub", href: "/team-club", icon: Users, badge: "PRO" },
+  { name: "Týmový Klub", href: "/team-club", icon: Users },
   { name: "Bonus", href: "/bonus", icon: Trophy, badge: "NOVÉ" },
 ]
 
@@ -249,22 +249,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <div className="grid grid-cols-8 gap-3 w-fit">
                     {mainNavigation.map((item) => {
                       const isActive = pathname === item.href
-                      const isTeamClubInLiveMode = item.href === "/team-club" && isLiveMode
-                      
-                      if (isTeamClubInLiveMode) {
-                        return (
-                          <div
-                            key={item.name}
-                            className="flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-lg cursor-not-allowed bg-slate-800/50 border border-slate-700/50 opacity-60 w-24 h-28"
-                            title="Team Club is locked in Live Mode"
-                          >
-                            <Lock className="w-5 h-5 text-gray-400" />
-                            <span className="text-xs text-center text-gray-500 font-medium line-clamp-2">
-                              {item.name}
-                            </span>
-                          </div>
-                        )
-                      }
                       
                       return (
                         <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
@@ -334,46 +318,29 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <p className="text-xs text-gray-400 px-3 py-2 font-semibold">HLAVNÍ MENU</p>
                   {mainNavigation.map((item) => {
                     const isActive = pathname === item.href
-                    const isTeamClubInLiveMode = item.href === "/team-club" && isLiveMode
-                    
-                    if (isTeamClubInLiveMode) {
-                      return (
-                        <div
-                          key={item.name}
-                          className="flex items-center space-x-3 px-3 py-2.5 opacity-60 cursor-not-allowed rounded-lg bg-slate-800/50"
-                          title="Team Club is locked in Live Mode"
-                        >
-                          <Lock className="w-4 h-4 text-gray-400" />
-                          <span className="flex-1 text-sm text-gray-500">
-                            {item.name}
-                          </span>
-                        </div>
-                      )
-                    }
                     
                     return (
-                      <DropdownMenuItem key={item.name} asChild>
-                        <Link
-                          href={item.href}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
-                            isActive ? "bg-purple-600/20" : ""
+                      <Link key={item.name} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
+                        <div
+                          className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg ${
+                            isActive
+                              ? "bg-purple-600/30 border-l-2 border-purple-500"
+                              : "hover:bg-slate-800/50"
                           }`}
                         >
-                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                          <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-300"}`} />
+                          <span className={`flex-1 text-sm font-medium ${isActive ? "text-purple-300" : "text-white"}`}>
                             {item.name}
                           </span>
                           {item.badge && (
-                            <Badge
-                              className={`text-xs px-1.5 py-0 h-5 ${
-                                item.badge === "AI" ? "bg-purple-500/20 text-purple-300 border-purple-500/30" : ""
-                              }`}
-                            >
+                            <Badge className="text-xs bg-green-500/30 text-green-300 border border-green-500/50 ml-auto">
                               {item.badge}
                             </Badge>
                           )}
-                        </Link>
+                        </div>
+                      </Link>
+                    )
+                  })}
                       </DropdownMenuItem>
                     )
                   })}
