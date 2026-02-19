@@ -1246,36 +1246,36 @@ Vygenerováno aplikací Trader Mindset
                     </>
                   )}
                 </Button>
-            <Button
-              onClick={() => {
-                setReviewVariant("ai")
-              }}
-              disabled={true}
-              className={cn(
-                "px-6 py-3 rounded-xl transition-all",
-                "bg-slate-700 text-gray-500 cursor-not-allowed opacity-50",
-              )}
-              title="AI varianta je brzy dostupná"
-            >
-              <Wand2 className="w-5 h-5 mr-2" />
-              AI Varianta - Brzy
-            </Button>
-            <Button
-              onClick={() => {
-                setReviewVariant("manual")
-                clearForm()
-              }}
-              className={cn(
-                "px-6 py-3 rounded-xl transition-all",
-                reviewVariant === "manual"
-                  ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white"
-                  : "bg-slate-800 text-gray-400 hover:bg-slate-700",
-              )}
-            >
-              <PenLine className="w-5 h-5 mr-2" />
-              Manuální
-            </Button>
-          </div>
+                <Button
+                  onClick={() => {
+                    setReviewVariant("ai")
+                  }}
+                  disabled={true}
+                  className={cn(
+                    "px-6 py-3 rounded-xl transition-all",
+                    "bg-slate-700 text-gray-500 cursor-not-allowed opacity-50",
+                  )}
+                  title="AI varianta je brzy dostupná"
+                >
+                  <Wand2 className="w-5 h-5 mr-2" />
+                  AI Varianta - Brzy
+                </Button>
+                <Button
+                  onClick={() => {
+                    setReviewVariant("manual")
+                    clearForm()
+                  }}
+                  className={cn(
+                    "px-6 py-3 rounded-xl transition-all",
+                    reviewVariant === "manual"
+                      ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white"
+                      : "bg-slate-800 text-gray-400 hover:bg-slate-700",
+                  )}
+                >
+                  <PenLine className="w-5 h-5 mr-2" />
+                  Manuální
+                </Button>
+              </div>
 
           {isLoading && (
             <div className="max-w-sm mx-auto space-y-2 mt-4">
