@@ -1190,8 +1190,8 @@ Vygenerováno aplikací Trader Mindset
   // Main render - všechna logika je nyní uvnitř jedné funkce
   return (
     <>
-      {!currentWeekData && !isLoading ? (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 pt-20 px-4">
+      {!currentWeekData || isLoading ? (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center px-4">
           <div className="max-w-7xl mx-auto">
             <div className="text-center text-white">Načítání dat...</div>
           </div>
@@ -1314,6 +1314,7 @@ Vygenerováno aplikací Trader Mindset
             </Badge>
           )}
 
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="max-w-7xl mx-auto space-y-8">
           <TabsList className="grid grid-cols-2 bg-slate-800/50 border border-slate-700 p-1">
             <TabsTrigger value="current" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
@@ -2097,6 +2098,7 @@ Vygenerováno aplikací Trader Mindset
             </div>
           </div>
         </div>
+        </Tabs>
       )}
     </>
   )
