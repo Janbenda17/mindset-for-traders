@@ -1187,7 +1187,7 @@ Vygenerováno aplikací Trader Mindset
     ])
   }
 
-  // Main render - všechna logika je nyní uvnitř jedné funkce
+  // Main render
   return (
     <>
       {!currentWeekData || isLoading ? (

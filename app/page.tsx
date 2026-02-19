@@ -50,12 +50,6 @@ export default function HomePage() {
       image: '/slides-2.jpg'
     },
     {
-      id: 7,
-      title: 'Trading není o dnešku. Je o dlouhodobě hře.',
-      description: 'Definuj jasné cíle, měř progres a drž disciplínu v čase',
-      image: '/slides-7.jpg'
-    },
-    {
       id: 3,
       title: 'Najde ti nejlepšího buddyho do páru',
       description: 'MindTrader najde tě ideálního trading partnera pro rychlejší růst',
