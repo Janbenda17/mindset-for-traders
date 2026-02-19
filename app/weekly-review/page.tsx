@@ -2097,7 +2097,8 @@ Vygenerováno aplikací Trader Mindset
               </div>
             </div>
           </div>
-        </div>
+        )}
+
         </Tabs>
       )}
     </>
