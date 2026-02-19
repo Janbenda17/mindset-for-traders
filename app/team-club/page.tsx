@@ -3538,31 +3538,6 @@ function TeamClubPage() {
     )
   }
 
-  // In LIVE mode, Team Club is locked
-  if (isLiveMode) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center">
-        <div className="text-center max-w-md px-4">
-          <div className="mb-6 flex justify-center">
-            <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-2xl inline-block">
-              <Lock className="w-12 h-12 text-red-400" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-black text-white mb-3">Tým je zamčený</h1>
-          <p className="text-lg text-purple-300 mb-6">
-            Tým není dostupný v Live Mode. Vrať se do Virtuálního Režimu, pokud chceš prozkoumat komunitu.
-          </p>
-          <Button 
-            onClick={() => window.history.back()}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-8 py-3 rounded-lg"
-          >
-            Zpět
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
   // Render based on mentor status, ensuring userIsMentor is not null
   return userIsMentor !== null ? (
     userIsMentor ? (
