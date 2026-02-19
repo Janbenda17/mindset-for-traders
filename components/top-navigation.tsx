@@ -320,27 +320,28 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     const isActive = pathname === item.href
                     
                     return (
-                      <Link key={item.name} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>
-                        <div
-                          className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg ${
-                            isActive
-                              ? "bg-purple-600/30 border-l-2 border-purple-500"
-                              : "hover:bg-slate-800/50"
+                      <DropdownMenuItem key={item.name} asChild>
+                        <Link
+                          href={item.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
+                            isActive ? "bg-purple-600/20" : ""
                           }`}
                         >
-                          <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-300"}`} />
-                          <span className={`flex-1 text-sm font-medium ${isActive ? "text-purple-300" : "text-white"}`}>
+                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
                             {item.name}
                           </span>
                           {item.badge && (
-                            <Badge className="text-xs bg-green-500/30 text-green-300 border border-green-500/50 ml-auto">
+                            <Badge
+                              className={`text-xs px-1.5 py-0 h-5 ${
+                                item.badge === "AI" ? "bg-purple-500/20 text-purple-300 border-purple-500/30" : ""
+                              }`}
+                            >
                               {item.badge}
                             </Badge>
                           )}
-                        </div>
-                      </Link>
-                    )
-                  })}
+                        </Link>
                       </DropdownMenuItem>
                     )
                   })}
