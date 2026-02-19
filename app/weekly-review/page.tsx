@@ -1245,6 +1245,7 @@ Vygenerováno aplikací Trader Mindset
                       Generovat přehled
                     </>
                   )}
+                </Button>
             <Button
               onClick={() => {
                 setReviewVariant("ai")
@@ -1312,9 +1313,8 @@ Vygenerováno aplikací Trader Mindset
               Live Mode - Tvoje reálná data
             </Badge>
           )}
-        </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="max-w-7xl mx-auto space-y-8">
           <TabsList className="grid grid-cols-2 bg-slate-800/50 border border-slate-700 p-1">
             <TabsTrigger value="current" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
               <BookOpen className="w-4 h-4 mr-2" />
@@ -2096,7 +2096,6 @@ Vygenerováno aplikací Trader Mindset
               </div>
             </div>
           </div>
-        </div>
         </div>
       )}
     </>
