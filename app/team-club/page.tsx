@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
@@ -825,8 +825,6 @@ function StudentTeamClubView({
   communityUsers: any[]
   loadingCommunity: boolean
 }) {
-  // Initialize Supabase client
-  const supabase = createClient()
   const { getAllTrades, getAllJournalEntries, isLiveMode } = useData()
   const { user } = useAuth() // ADDED: Get user from AuthContext
   const [activeTab, setActiveTab] = useState("overview")
@@ -1212,52 +1210,45 @@ function StudentTeamClubView({
 
   // Leaderboard helper functions
   const getLeaderboardData = async () => {
-    // Load all users' XP from Supabase
-    const { data: allUsers, error } = await supabase
-      .from("xp_profiles")
-      .select("user_id, xp, level")
-      .order("xp", { ascending: false })
-      .limit(50)
+    try {
+      // Load all user profiles with XP
+      const { data: allProfiles, error } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, username, avatar_url, xp, level")
+        .order("xp", { ascending: false })
+        .limit(50)
 
-    if (error || !allUsers) {
-      console.error("[v0] Error loading leaderboard:", error)
-      // Fallback to demo data
-      return getDemoLeaderboardData()
-    }
-
-    // Get user profiles for names and avatars
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select("user_id, display_name, username, avatar_url")
-
-    if (profilesError || !profiles) {
-      console.error("[v0] Error loading profiles:", profilesError)
-      return getDemoLeaderboardData()
-    }
-
-    // Map XP data with profile info
-    const leaderboardData = allUsers.map((user, index) => {
-      const profile = profiles.find((p) => p.user_id === user.user_id)
-      return {
-        rank: index + 1,
-        name: profile?.display_name || profile?.username || `Trader ${index + 1}`,
-        xp: user.xp,
-        level: user.level || 1,
-        avatar: profile?.avatar_url || "/trader-avatar.png",
-        discipline: 0, // Can be expanded later
-        streak: 0, // Can be expanded later
-        pnl: 0, // Can be expanded later
+      if (error || !allProfiles) {
+        console.error("[v0] Error loading leaderboard profiles:", error)
+        return getDemoLeaderboardData()
       }
-    })
 
-    // Apply period filtering
-    if (leaderboardPeriod === "weekly") {
-      return leaderboardData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.15) }))
-    } else if (leaderboardPeriod === "monthly") {
-      return leaderboardData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.4) }))
+      // Map profiles to leaderboard format
+      const leaderboardData = allProfiles.map((profile, index) => {
+        return {
+          rank: index + 1,
+          name: profile?.display_name || profile?.username || `Trader ${index + 1}`,
+          xp: profile?.xp || 0,
+          level: profile?.level || 1,
+          avatar: profile?.avatar_url || "/trader-avatar.png",
+          discipline: 0, // Can be expanded later
+          streak: 0, // Can be expanded later
+          pnl: 0, // Can be expanded later
+        }
+      })
+
+      // Apply period filtering
+      if (leaderboardPeriod === "weekly") {
+        return leaderboardData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.15) }))
+      } else if (leaderboardPeriod === "monthly") {
+        return leaderboardData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.4) }))
+      }
+
+      return leaderboardData
+    } catch (error) {
+      console.error("[v0] Error loading leaderboard:", error)
+      return getDemoLeaderboardData()
     }
-
-    return leaderboardData
   }
 
   const getDemoLeaderboardData = () => {
