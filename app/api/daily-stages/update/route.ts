@@ -217,36 +217,214 @@ export async function POST(request: Request) {
           }
         }
       }
+
+      // Auto-track "Trader Ten" badge - count journal entries (trades)
+      const { data: trades } = await supabase
+        .from("journal_entries")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("type", "trade")
+
+      const tradeCount = trades?.length || 0
+      if (tradeCount > 0 && tradeCount <= 10) {
+        await supabase
+          .from("user_badge_progress")
+          .upsert(
+            {
+              user_id: user.id,
+              badge_id: "trader-ten",
+              progress: Math.min(tradeCount, 10),
+              completed: tradeCount >= 10,
+              completed_at: tradeCount >= 10 ? new Date().toISOString() : null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,badge_id" }
+          )
+
+        if (tradeCount >= 10) {
+          await supabase.from("xp_log").insert({
+            user_id: user.id,
+            amount: 150,
+            source: "badge",
+            reason: "Odznak odemknut: Dekáda Obchodů",
+          })
+        }
+      }
+
+      // Auto-track "Perfect Readiness" badge - count days with +80% readiness
+      const { data: highReadinessDays } = await supabase
+        .from("daily_stages")
+        .select("readiness_score")
+        .eq("user_id", user.id)
+        .gte("readiness_score", 80)
+
+      const perfectReadinessDays = highReadinessDays?.length || 0
+      if (perfectReadinessDays >= 1) {
+        await supabase
+          .from("user_badge_progress")
+          .upsert(
+            {
+              user_id: user.id,
+              badge_id: "perfect-readiness",
+              progress: Math.min(perfectReadinessDays, 5),
+              completed: perfectReadinessDays >= 5,
+              completed_at: perfectReadinessDays >= 5 ? new Date().toISOString() : null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,badge_id" }
+          )
+
+        if (perfectReadinessDays >= 5) {
+          await supabase.from("xp_log").insert({
+            user_id: user.id,
+            amount: 150,
+            source: "badge",
+            reason: "Odznak odemknut: Mistr Připravenosti",
+          })
+        }
+      }
+
+      // Auto-track "Loss Reset Master" badge - count loss recovery events
+      const { data: losses } = await supabase
+        .from("journal_entries")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("recovery_after_loss", true)
+
+      const lossResets = losses?.length || 0
+      if (lossResets > 0 && lossResets <= 7) {
+        await supabase
+          .from("user_badge_progress")
+          .upsert(
+            {
+              user_id: user.id,
+              badge_id: "loss-reset-master",
+              progress: Math.min(lossResets, 7),
+              completed: lossResets >= 7,
+              completed_at: lossResets >= 7 ? new Date().toISOString() : null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,badge_id" }
+          )
+
+        if (lossResets >= 7) {
+          await supabase.from("xp_log").insert({
+            user_id: user.id,
+            amount: 175,
+            source: "badge",
+            reason: "Odznak odemknut: Zvládnutí Ztrát",
+          })
+        }
+      }
+
+      // Auto-track "Goals Planner" badge - count trading goals
+      const { data: tradingGoals } = await supabase
+        .from("trading_goals")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("active", true)
+
+      const goalCount = tradingGoals?.length || 0
+      if (goalCount > 0 && goalCount <= 3) {
+        await supabase
+          .from("user_badge_progress")
+          .upsert(
+            {
+              user_id: user.id,
+              badge_id: "goals-planner",
+              progress: Math.min(goalCount, 3),
+              completed: goalCount >= 3,
+              completed_at: goalCount >= 3 ? new Date().toISOString() : null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,badge_id" }
+          )
+
+        if (goalCount >= 3) {
+          await supabase.from("xp_log").insert({
+            user_id: user.id,
+            amount: 120,
+            source: "badge",
+            reason: "Odznak odemknut: Plánovač Cílů",
+          })
+        }
+      }
+
+      // Auto-track "Error Logger" badge - count recorded errors/lessons
+      const { data: errorLogs } = await supabase
+        .from("journal_entries")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("lesson_learned", true)
+
+      const errorCount = errorLogs?.length || 0
+      if (errorCount > 0 && errorCount <= 5) {
+        await supabase
+          .from("user_badge_progress")
+          .upsert(
+            {
+              user_id: user.id,
+              badge_id: "error-logger",
+              progress: Math.min(errorCount, 5),
+              completed: errorCount >= 5,
+              completed_at: errorCount >= 5 ? new Date().toISOString() : null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,badge_id" }
+          )
+
+        if (errorCount >= 5) {
+          await supabase.from("xp_log").insert({
+            user_id: user.id,
+            amount: 140,
+            source: "badge",
+            reason: "Odznak odemknut: Mistr Analýzy Chyb",
+          })
+        }
+      }
+
+      // Auto-track "Trader Identity" badge - check if trader_identity is completed
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("trader_identity_completed")
+        .eq("user_id", user.id)
+        .single()
+
+      if (profile?.trader_identity_completed) {
+        const { data: identityBadge } = await supabase
+          .from("user_badge_progress")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("badge_id", "trader-identity")
+          .maybeSingle()
+
+        if (!identityBadge?.completed) {
+          await supabase
+            .from("user_badge_progress")
+            .upsert(
+              {
+                user_id: user.id,
+                badge_id: "trader-identity",
+                progress: 1,
+                completed: true,
+                completed_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "user_id,badge_id" }
+            )
+
+          await supabase.from("xp_log").insert({
+            user_id: user.id,
+            amount: 200,
+            source: "badge",
+            reason: "Odznak odemknut: Identita Traderu",
+          })
+        }
+      }
     }
 
     return NextResponse.json(data)
-      const allStagesCompleted =
-        updateData.morning_check_completed &&
-        updateData.daily_intention_completed &&
-        updateData.trading_plan_completed &&
-        updateData.record_trades_completed &&
-        updateData.daily_summary_completed
-
-      console.log("[v0] Stage update - All stages check:", allStagesCompleted)
-
-      if (allStagesCompleted) {
-        console.log("[v0] Stage update - All stages completed for today! Updating challenge progress...")
-
-        // Count how many unique days this user has completed all stages
-        const { data: completedDays, error: countError } = await supabase
-          .from("daily_stages")
-          .select("date")
-          .eq("user_id", user.id)
-          .eq("morning_check_completed", true)
-          .eq("daily_intention_completed", true)
-          .eq("trading_plan_completed", true)
-          .eq("record_trades_completed", true)
-          .eq("daily_summary_completed", true)
-
-        const totalDaysCompleted = completedDays?.length || 0
-        console.log("[v0] Stage update - Total days with all stages completed:", totalDaysCompleted)
-
-        // Update or create challenge progress record
+  } catch (error) {
         const { error: challengeError, data: challengeData } = await supabase
           .from("user_challenge_progress")
           .upsert(
