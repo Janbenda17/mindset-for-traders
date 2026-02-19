@@ -120,19 +120,17 @@ export async function POST(request: NextRequest) {
     const totalMorningChecks = allMorningChecks?.length || 0
     console.log("[v0] Badge tracking - Total morning checks:", totalMorningChecks)
 
-    await supabase
-      .from("user_badge_progress")
-      .upsert(
-        {
-          user_id: user.id,
-          badge_id: "morning-bird",
-          progress: Math.min(totalMorningChecks, 7),
-          completed: totalMorningChecks >= 7,
-          completed_at: totalMorningChecks >= 7 ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,badge_id" }
-      )
+    await supabase.from("user_badge_progress").upsert(
+      {
+        user_id: user.id,
+        badge_id: "morning-bird",
+        current_progress: Math.min(totalMorningChecks, 7),
+        awarded: totalMorningChecks >= 7,
+        awarded_date: totalMorningChecks >= 7 ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,badge_id" }
+    )
 
     if (totalMorningChecks >= 7) {
       await awardBadgeXP("morning-bird", "Ranní Pták", 100)
@@ -148,19 +146,17 @@ export async function POST(request: NextRequest) {
     const tradeCount = trades?.length || 0
     console.log("[v0] Badge tracking - Total trades:", tradeCount)
 
-    await supabase
-      .from("user_badge_progress")
-      .upsert(
-        {
-          user_id: user.id,
-          badge_id: "trader-ten",
-          progress: Math.min(tradeCount, 10),
-          completed: tradeCount >= 10,
-          completed_at: tradeCount >= 10 ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,badge_id" }
-      )
+    await supabase.from("user_badge_progress").upsert(
+      {
+        user_id: user.id,
+        badge_id: "trader-ten",
+        current_progress: Math.min(tradeCount, 10),
+        awarded: tradeCount >= 10,
+        awarded_date: tradeCount >= 10 ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,badge_id" }
+    )
 
     if (tradeCount >= 10) {
       await awardBadgeXP("trader-ten", "Dekáda Obchodů", 150)
@@ -182,10 +178,7 @@ export async function POST(request: NextRequest) {
       const expectedDate = new Date(today_)
       expectedDate.setDate(expectedDate.getDate() - i)
 
-      if (
-        last14Days[i].morning_check_completed &&
-        checkDate.toISOString().split("T")[0] === expectedDate.toISOString().split("T")[0]
-      ) {
+      if (last14Days[i].morning_check_completed && checkDate.toISOString().split("T")[0] === expectedDate.toISOString().split("T")[0]) {
         consecutiveStreak++
       } else {
         break
@@ -194,19 +187,17 @@ export async function POST(request: NextRequest) {
 
     console.log("[v0] Badge tracking - Consecutive streak:", consecutiveStreak)
 
-    await supabase
-      .from("user_badge_progress")
-      .upsert(
-        {
-          user_id: user.id,
-          badge_id: "consistency-master",
-          progress: Math.min(consecutiveStreak, 14),
-          completed: consecutiveStreak >= 14,
-          completed_at: consecutiveStreak >= 14 ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,badge_id" }
-      )
+    await supabase.from("user_badge_progress").upsert(
+      {
+        user_id: user.id,
+        badge_id: "consistency-master",
+        current_progress: Math.min(consecutiveStreak, 14),
+        awarded: consecutiveStreak >= 14,
+        awarded_date: consecutiveStreak >= 14 ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,badge_id" }
+    )
 
     if (consecutiveStreak >= 14) {
       await awardBadgeXP("consistency-master", "Mistr Konzistence", 200)
@@ -222,19 +213,17 @@ export async function POST(request: NextRequest) {
     const perfectDays = highReadinessDays?.length || 0
     console.log("[v0] Badge tracking - Days with +80% readiness:", perfectDays)
 
-    await supabase
-      .from("user_badge_progress")
-      .upsert(
-        {
-          user_id: user.id,
-          badge_id: "perfect-readiness",
-          progress: Math.min(perfectDays, 5),
-          completed: perfectDays >= 5,
-          completed_at: perfectDays >= 5 ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,badge_id" }
-      )
+    await supabase.from("user_badge_progress").upsert(
+      {
+        user_id: user.id,
+        badge_id: "perfect-readiness",
+        current_progress: Math.min(perfectDays, 5),
+        awarded: perfectDays >= 5,
+        awarded_date: perfectDays >= 5 ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,badge_id" }
+    )
 
     if (perfectDays >= 5) {
       await awardBadgeXP("perfect-readiness", "Mistr Připravenosti", 150)
@@ -250,19 +239,17 @@ export async function POST(request: NextRequest) {
     const lossResetCount = lossResets?.length || 0
     console.log("[v0] Badge tracking - Loss resets:", lossResetCount)
 
-    await supabase
-      .from("user_badge_progress")
-      .upsert(
-        {
-          user_id: user.id,
-          badge_id: "loss-reset-master",
-          progress: Math.min(lossResetCount, 7),
-          completed: lossResetCount >= 7,
-          completed_at: lossResetCount >= 7 ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,badge_id" }
-      )
+    await supabase.from("user_badge_progress").upsert(
+      {
+        user_id: user.id,
+        badge_id: "loss-reset-master",
+        current_progress: Math.min(lossResetCount, 7),
+        awarded: lossResetCount >= 7,
+        awarded_date: lossResetCount >= 7 ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,badge_id" }
+    )
 
     if (lossResetCount >= 7) {
       await awardBadgeXP("loss-reset-master", "Zvládnutí Ztrát", 175)
@@ -277,19 +264,17 @@ export async function POST(request: NextRequest) {
     const goalCount = goals?.length || 0
     console.log("[v0] Badge tracking - Trading goals:", goalCount)
 
-    await supabase
-      .from("user_badge_progress")
-      .upsert(
-        {
-          user_id: user.id,
-          badge_id: "goals-planner",
-          progress: Math.min(goalCount, 3),
-          completed: goalCount >= 3,
-          completed_at: goalCount >= 3 ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,badge_id" }
-      )
+    await supabase.from("user_badge_progress").upsert(
+      {
+        user_id: user.id,
+        badge_id: "goals-planner",
+        current_progress: Math.min(goalCount, 3),
+        awarded: goalCount >= 3,
+        awarded_date: goalCount >= 3 ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,badge_id" }
+    )
 
     if (goalCount >= 3) {
       await awardBadgeXP("goals-planner", "Plánovač Cílů", 120)
@@ -305,19 +290,17 @@ export async function POST(request: NextRequest) {
     const lessonCount = lessons?.length || 0
     console.log("[v0] Badge tracking - Lessons learned:", lessonCount)
 
-    await supabase
-      .from("user_badge_progress")
-      .upsert(
-        {
-          user_id: user.id,
-          badge_id: "error-logger",
-          progress: Math.min(lessonCount, 5),
-          completed: lessonCount >= 5,
-          completed_at: lessonCount >= 5 ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,badge_id" }
-      )
+    await supabase.from("user_badge_progress").upsert(
+      {
+        user_id: user.id,
+        badge_id: "error-logger",
+        current_progress: Math.min(lessonCount, 5),
+        awarded: lessonCount >= 5,
+        awarded_date: lessonCount >= 5 ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,badge_id" }
+    )
 
     if (lessonCount >= 5) {
       await awardBadgeXP("error-logger", "Mistr Analýzy Chyb", 140)
@@ -333,19 +316,17 @@ export async function POST(request: NextRequest) {
     const identityCompleted = profile?.trader_identity_completed || false
     console.log("[v0] Badge tracking - Trader identity completed:", identityCompleted)
 
-    await supabase
-      .from("user_badge_progress")
-      .upsert(
-        {
-          user_id: user.id,
-          badge_id: "trader-identity",
-          progress: identityCompleted ? 1 : 0,
-          completed: identityCompleted,
-          completed_at: identityCompleted ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,badge_id" }
-      )
+    await supabase.from("user_badge_progress").upsert(
+      {
+        user_id: user.id,
+        badge_id: "trader-identity",
+        current_progress: identityCompleted ? 1 : 0,
+        awarded: identityCompleted,
+        awarded_date: identityCompleted ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,badge_id" }
+    )
 
     if (identityCompleted) {
       await awardBadgeXP("trader-identity", "Identita Traderu", 200)

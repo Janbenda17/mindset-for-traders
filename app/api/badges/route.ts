@@ -108,8 +108,8 @@ export async function GET(request: NextRequest) {
       const badgesToInsert = BADGE_TEMPLATES.map((badge) => ({
         user_id: user.id,
         badge_id: badge.id,
-        progress: 0,
-        completed: false,
+        current_progress: 0,
+        awarded: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }))
@@ -123,8 +123,8 @@ export async function GET(request: NextRequest) {
         badgeProgress = BADGE_TEMPLATES.map((b) => ({
           user_id: user.id,
           badge_id: b.id,
-          progress: 0,
-          completed: false,
+          current_progress: 0,
+          awarded: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }))
@@ -136,9 +136,9 @@ export async function GET(request: NextRequest) {
       const progress = badgeProgress?.find((p) => p.badge_id === template.id)
       return {
         ...template,
-        progress: progress?.progress || 0,
-        completed: progress?.completed || false,
-        completed_at: progress?.completed_at || null,
+        progress: progress?.current_progress || 0,
+        completed: progress?.awarded || false,
+        completed_at: progress?.awarded_date || null,
       }
     })
 
@@ -182,21 +182,21 @@ export async function POST(request: NextRequest) {
         .eq("badge_id", badgeId)
         .single()
 
-      if (existing?.completed) {
+      if (existing?.awarded) {
         return NextResponse.json({ error: "Badge already completed" }, { status: 400 })
       }
 
-      const newProgress = (existing?.progress || 0) + incrementBy
+      const newProgress = (existing?.current_progress || 0) + incrementBy
       const isCompleted = newProgress >= badge.target
 
       const updateData: any = {
-        progress: Math.min(newProgress, badge.target),
+        current_progress: Math.min(newProgress, badge.target),
         updated_at: new Date().toISOString(),
       }
 
       if (isCompleted) {
-        updateData.completed = true
-        updateData.completed_at = new Date().toISOString()
+        updateData.awarded = true
+        updateData.awarded_date = new Date().toISOString()
       }
 
       let result
@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
             user_id: user.id,
             badge_id: badgeId,
             ...updateData,
-            progress: Math.min(newProgress, badge.target),
+            current_progress: Math.min(newProgress, badge.target),
           })
           .select()
 
