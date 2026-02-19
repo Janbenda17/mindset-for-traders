@@ -693,6 +693,9 @@ function MentorTeamClubView({
     liveRooms: 8,
   }
 
+  // Tab state for navigation between different sections
+  const [activeTab, setActiveTab] = useState("posts")
+
   const getUserPosition = () => {
     // Mock function to get user's position
     const user = getUserStats()
