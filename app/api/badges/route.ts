@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's badge progress
-    const { data: badgeProgress, error: progressError } = await supabase
+    let { data: badgeProgress, error: progressError } = await supabase
       .from("user_badge_progress")
       .select("*")
       .eq("user_id", user.id)
@@ -101,6 +101,35 @@ export async function GET(request: NextRequest) {
     }
 
     console.log(`[v0] Loaded badge progress for user ${user.id}:`, badgeProgress?.length || 0)
+
+    // Initialize badges if not exists
+    if (!badgeProgress || badgeProgress.length === 0) {
+      console.log("[v0] Initializing badges for user...")
+      const badgesToInsert = BADGE_TEMPLATES.map((badge) => ({
+        user_id: user.id,
+        badge_id: badge.id,
+        progress: 0,
+        completed: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }))
+
+      const { error: insertError } = await supabase.from("user_badge_progress").insert(badgesToInsert)
+
+      if (insertError) {
+        console.error("[v0] Error initializing badges:", insertError)
+      } else {
+        console.log("[v0] Badges initialized successfully")
+        badgeProgress = BADGE_TEMPLATES.map((b) => ({
+          user_id: user.id,
+          badge_id: b.id,
+          progress: 0,
+          completed: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }))
+      }
+    }
 
     // Format badges with progress
     const badges = BADGE_TEMPLATES.map((template) => {

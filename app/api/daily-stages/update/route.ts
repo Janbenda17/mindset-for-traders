@@ -134,9 +134,26 @@ export async function POST(request: Request) {
 
     console.log("[v0] Stage update - Stage", stageId, completed ? "completed" : "uncompleted", "- next stage:", nextStage)
 
-    // Auto-track ALL badges when ANY stage is completed
+    // Trigger badge tracking when any stage is completed
     if (completed) {
-      console.log("[v0] Stage update - Auto-tracking all badges...")
+      console.log("[v0] Stage update - Triggering badge tracking...")
+      try {
+        // Call badge tracking endpoint
+        await fetch(new URL("/api/badges/track", request.url).toString(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        })
+      } catch (error) {
+        console.error("[v0] Stage update - Error triggering badge tracking:", error)
+      }
+    }
+
+    return NextResponse.json(data)
+  } catch (error: any) {
+    console.error("[v0] Stage update - Error:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
 
       // Helper function to award badge XP
       const awardBadgeXP = async (badgeId: string, title: string, xp: number) => {
