@@ -974,19 +974,13 @@ function StudentTeamClubView({
   // ADD: Load data in live mode from localStorage
   useEffect(() => {
     if (isLiveMode) {
-      // Load saved data from localStorage
-      // Use scoped keys if user is logged in
-      const savedPosts = user?.id ? getScoped(user.id, "team-club-posts") : localStorage.getItem("team-club-posts")
-      const savedQA = user?.id ? getScoped(user.id, "team-club-qa") : localStorage.getItem("team-club-qa")
-      const savedStories = user?.id
-        ? getScoped(user.id, "team-club-stories")
-        : localStorage.getItem("team-club-stories")
-      const savedBuddies = user?.id
-        ? getScoped(user.id, "team-club-buddies")
-        : localStorage.getItem("team-club-buddies")
-      const savedChallenges = user?.id
-        ? getScoped(user.id, "team-club-challenges")
-        : localStorage.getItem("team-club-challenges")
+      // Load SHARED data from localStorage (NOT scoped to user)
+      // This ensures ALL users see the SAME team club data
+      const savedPosts = localStorage.getItem("team-club-posts")
+      const savedQA = localStorage.getItem("team-club-qa")
+      const savedStories = localStorage.getItem("team-club-stories")
+      const savedBuddies = localStorage.getItem("team-club-buddies")
+      const savedChallenges = localStorage.getItem("team-club-challenges")
 
       if (savedPosts && posts.length === 0) setPosts(JSON.parse(savedPosts))
       if (savedQA && mentorQA.length === 0) setMentorQA(JSON.parse(savedQA))
@@ -1010,18 +1004,19 @@ function StudentTeamClubView({
       setMentorQA(DEMO_MENTOR_QA)
       setSuccessStories(DEMO_SUCCESS_STORIES)
     }
-  }, [isLiveMode, user?.id, posts.length, mentorQA.length, successStories.length, buddies.length, challenges.length]) // Add dependencies to prevent stale state
+  }, [isLiveMode, posts.length, mentorQA.length, successStories.length, buddies.length, challenges.length]) // Removed user?.id to ensure shared data
 
   useEffect(() => {
-    if (isLiveMode && user?.id) {
-      if (posts.length > 0) setScoped(user.id, "team-club-posts", JSON.stringify(posts))
-      if (mentorQA.length > 0) setScoped(user.id, "team-club-qa", JSON.stringify(mentorQA))
-      if (successStories.length > 0) setScoped(user.id, "team-club-stories", JSON.stringify(successStories))
-      if (buddies.length > 0) setScoped(user.id, "team-club-buddies", JSON.stringify(buddies))
-      // Challenges are now saved in handleAddChallenge and handleDeleteChallenge
-      // setScoped(user.id, "team-club-challenges", JSON.stringify(challenges))
+    if (isLiveMode) {
+      // Save SHARED data to localStorage (NOT scoped to user)
+      // This ensures ALL users save to the SAME shared data store
+      if (posts.length > 0) localStorage.setItem("team-club-posts", JSON.stringify(posts))
+      if (mentorQA.length > 0) localStorage.setItem("team-club-qa", JSON.stringify(mentorQA))
+      if (successStories.length > 0) localStorage.setItem("team-club-stories", JSON.stringify(successStories))
+      if (buddies.length > 0) localStorage.setItem("team-club-buddies", JSON.stringify(buddies))
+      if (challenges.length > 0) localStorage.setItem("team-club-challenges", JSON.stringify(challenges))
     }
-  }, [posts, mentorQA, successStories, buddies, isLiveMode, user?.id, challenges]) // Challenges are now saved in handleAddChallenge and handleDeleteChallenge
+  }, [posts, mentorQA, successStories, buddies, isLiveMode, challenges]) // Removed user?.id to ensure shared data
 
   useEffect(() => {
     const savedLimits = localStorage.getItem("teamclub-daily-limits")
