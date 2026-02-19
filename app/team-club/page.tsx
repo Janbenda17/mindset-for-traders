@@ -682,6 +682,17 @@ function MentorTeamClubView({
   const { user } = useAuth() // ADDED: Get user from AuthContext
   const [students, setStudents] = useState<Student[]>([])
 
+  // Community statistics with default values
+  const communityStats = {
+    onlineMembers: Math.floor(Math.random() * 150) + 50,
+    totalMembers: 500,
+    avgCommunityMood: 78,
+    avgWinRate: 62,
+    improvementRate: 45,
+    frustrationRate: 15,
+    liveRooms: 8,
+  }
+
   const getUserPosition = () => {
     // Mock function to get user's position
     const user = getUserStats()
