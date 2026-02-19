@@ -46,7 +46,7 @@ const AVAILABLE_CHALLENGES = [
 ]
 
 export async function GET(request: NextRequest) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const {
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   try {
     const {
