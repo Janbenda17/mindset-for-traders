@@ -569,7 +569,7 @@ export default function DailyTrackerPage() {
       message = `⚠️ KRITICKÉ: Jen ${morningCheckData.sleepHours}h spánku (kvalita ${morningCheckData.sleepQuality}/10). Nedostatek spánku = -30-40% v schopnosti rozhodování.`
       if (positiveNote) message += ` ${positiveNote}`
       details.push(`Spánek: ${morningCheckData.sleepHours}h, kvalita ${morningCheckData.sleepQuality}/10 - NEDOSTATEČNÝ`)
-      tips.push("🧘 Terapie: 15-20min dýchání Wim Hof (zlepšuje zaměření pomocí hypoxie)")
+      tips.push("🧘 Terapie: 15-20min meditace či relaxace (zlepšuje zaměření a zklidňuje mysl)")
       tips.push("📊 Riziko: Max 2 obchody s 25% pozicí nebo VYNECHAT obchodování dnes")
       tips.push("🎯 Bonus: Pokud musíš obchodovat, obchoduj jen vzory z obchodního plánu (žádné impulzivní)")
       tips.push("⏰ Priorita: Večer spánek = nejlepší investice pro zítřek")
@@ -601,7 +601,7 @@ export default function DailyTrackerPage() {
       message = `😔 EMOCÍ PROBLÉM: Nálada ${morningCheckData.emotionalState}/10. Riziko: Zkreslení odporu ke ztrátám, držení ztrátných pozic, pomstylné obchodování.`
       if (positiveNote) message += ` ${positiveNote}`
       details.push(`Spánek: ${morningCheckData.sleepHours}h, kvalita ${morningCheckData.sleepQuality}/10 - NEDOSTATEČNÝ`)
-      tips.push("🧘 Terapie: 15-20min Wim Hof breathing (zlepšuje fokus přes hypoxii)")
+      tips.push("🧘 Terapie: 15-20min meditace či deep breathing (zklidňuje nervový systém a zlepšuje focus)")
       tips.push("📊 Risk: Max 2 trades s 25% pozicí nebo SKIP trading dnes")
       tips.push("🎯 Bonus: Pokud musíš tradovat, traduj jen setup z trading plánu (žádné impulzní)")
       tips.push("⏰ Priority: Večer spánek = nejlepší investice pro zítřek")
