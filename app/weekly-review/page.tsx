@@ -1185,7 +1185,7 @@ Vygenerováno aplikací Trader Mindset
       { text: "", completed: false },
       { text: "", completed: false },
     ])
-  }
+  };
 
   return (
     <>
