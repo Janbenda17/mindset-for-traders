@@ -1099,7 +1099,7 @@ export default function WeeklyReviewPage() {
       { text: "", completed: false },
       { text: "", completed: false },
     ])
-  };
+  }
 
   return (
     <>
