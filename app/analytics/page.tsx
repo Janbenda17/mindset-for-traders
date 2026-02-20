@@ -1373,7 +1373,7 @@ export default function PsychologyAnalyticsPage() {
   }
 
   // Ve Virtual Mode zobraz demo data i když je méně než 10 dní
-  if (isAnalyticsLocked && !showForcedAnalytics) {
+  if (isAnalyticsLocked) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 p-8">
         <div className="mx-auto max-w-4xl">
