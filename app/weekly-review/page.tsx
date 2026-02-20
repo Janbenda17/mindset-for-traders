@@ -1187,7 +1187,6 @@ Vygenerováno aplikací Trader Mindset
     ])
   }
 
-  // Main render
   return (
     <>
       {!currentWeekData || isLoading ? (

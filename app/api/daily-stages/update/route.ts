@@ -424,9 +424,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
-            },
-            { onConflict: "user_id,badge_id" }
-          )
+
 
         if (goalCount >= 3) {
           await supabase.from("xp_log").insert({
