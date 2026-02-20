@@ -1197,6 +1197,15 @@ function generatePsychologicalAnalysis(
         avgPnlPerTrade: data.trades > 0 ? Math.round(data.pnl / data.trades) : 0,
       }))
     })(),
+    
+    // Individual Psychology Metrics for direct rendering in live mode
+    moodStability: Math.round(moodStability),
+    avgDiscipline: Math.round(avgDiscipline),
+    avgConfidence: Math.round(avgConfidence),
+    avgStress: Math.round(avgStress),
+    avgEnergy: Math.round(avgEnergy),
+    avgMood: Math.round(avgMood),
+    winRate: trades.length > 0 ? Math.round((trades.filter((t: any) => (t.pnl || 0) > 0).length / trades.length) * 100) : 0,
   }
 }
 
@@ -1328,6 +1337,13 @@ export default function PsychologyAnalyticsPage() {
       streakConsistency: analysis?.streakConsistency || 0, // NEW: Streak Consistency
       revengeTradeRisk: analysis?.revengeTradeRisk || 0, // NEW: Revenge Trading Risk
       criticalFindings: analysis?.criticalFindings || [], // NEW: Kritická zjištění
+      moodStability: analysis?.moodStability || 0, // NEW: Mood Stability score
+      avgDiscipline: analysis?.avgDiscipline || 0, // NEW: Average Discipline
+      avgConfidence: analysis?.avgConfidence || 0, // NEW: Average Confidence
+      avgStress: analysis?.avgStress || 0, // NEW: Average Stress
+      avgEnergy: analysis?.avgEnergy || 0, // NEW: Average Energy
+      avgMood: analysis?.avgMood || 0, // NEW: Average Mood
+      winRateMetric: analysis?.winRate || 0, // NEW: Win Rate Metric
       summary: {
         totalTrades: allTrades.length,
         winRate: allTrades.length > 0 ? Math.round((allTrades.filter((t: any) => (t.pnl || 0) > 0).length / allTrades.length) * 100) : 0,
@@ -1692,12 +1708,12 @@ export default function PsychologyAnalyticsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-gray-400 text-xs font-medium mb-2">Emoční Stabilita</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(moodStability)}%</p>
-                    {moodStability > 85 ? (
+                    <p className="text-4xl font-bold text-white mb-1">{analyticsData?.moodStability || 0}%</p>
+                    {(analyticsData?.moodStability || 0) > 85 ? (
                       <p className="text-green-400 text-sm font-semibold flex items-center gap-1">
                         <ArrowUp className="w-4 h-4" /> Výborná
                       </p>
-                    ) : moodStability > 70 ? (
+                    ) : (analyticsData?.moodStability || 0) > 70 ? (
                       <p className="text-yellow-400 text-sm font-semibold">Dobrá</p>
                     ) : (
                       <p className="text-red-400 text-sm font-semibold flex items-center gap-1">
@@ -1747,12 +1763,12 @@ export default function PsychologyAnalyticsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-gray-400 text-xs font-medium mb-2">Disciplína</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(avgDiscipline)}%</p>
-                    {avgDiscipline > 80 ? (
+                    <p className="text-4xl font-bold text-white mb-1">{analyticsData?.avgDiscipline || 0}%</p>
+                    {(analyticsData?.avgDiscipline || 0) > 80 ? (
                       <p className="text-cyan-400 text-sm font-semibold flex items-center gap-1">
                         <CheckCircle2 className="w-4 h-4" /> Professional
                       </p>
-                    ) : avgDiscipline > 60 ? (
+                    ) : (analyticsData?.avgDiscipline || 0) > 60 ? (
                       <p className="text-blue-400 text-sm font-semibold">Slušná</p>
                     ) : (
                       <p className="text-orange-400 text-sm font-semibold flex items-center gap-1">
@@ -1763,9 +1779,9 @@ export default function PsychologyAnalyticsPage() {
                   <div
                     className={cn(
                       "p-4 rounded-full",
-                      avgDiscipline > 80
+                      (analyticsData?.avgDiscipline || 0) > 80
                         ? "bg-gradient-to-br from-cyan-500/20 to-blue-500/20"
-                        : avgDiscipline > 60
+                        : (analyticsData?.avgDiscipline || 0) > 60
                           ? "bg-gradient-to-br from-blue-500/20 to-indigo-500/20"
                           : "bg-gradient-to-br from-orange-500/20 to-red-500/20",
                     )}
@@ -1802,12 +1818,12 @@ export default function PsychologyAnalyticsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-gray-400 text-xs font-medium mb-2">{getWinRateLabel()}</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(winRate)}%</p>
-                    {winRate > 60 ? (
+                    <p className="text-4xl font-bold text-white mb-1">{analyticsData?.winRateMetric || 0}%</p>
+                    {(analyticsData?.winRateMetric || 0) > 60 ? (
                       <p className="text-emerald-400 text-sm font-semibold flex items-center gap-1">
                         <ThumbsUp className="w-4 h-4" /> Profitable
                       </p>
-                    ) : winRate > 50 ? (
+                    ) : (analyticsData?.winRateMetric || 0) > 50 ? (
                       <p className="text-amber-400 text-sm font-semibold">Break-even</p>
                     ) : (
                       <p className="text-rose-400 text-sm font-semibold flex items-center gap-1">
@@ -1818,9 +1834,9 @@ export default function PsychologyAnalyticsPage() {
                   <div
                     className={cn(
                       "p-4 rounded-full",
-                      winRate > 60
+                      (analyticsData?.winRateMetric || 0) > 60
                         ? "bg-gradient-to-br from-emerald-500/20 to-green-500/20"
-                        : winRate > 50
+                        : (analyticsData?.winRateMetric || 0) > 50
                           ? "bg-gradient-to-br from-amber-500/20 to-yellow-500/20"
                           : "bg-gradient-to-br from-rose-500/20 to-red-500/20",
                     )}
@@ -1857,12 +1873,12 @@ export default function PsychologyAnalyticsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="text-gray-400 text-xs font-medium mb-2">Stress Level</p>
-                    <p className="text-4xl font-bold text-white mb-1">{Math.round(avgStress)}%</p>
-                    {avgStress < 40 ? (
+                    <p className="text-4xl font-bold text-white mb-1">{analyticsData?.avgStress || 0}%</p>
+                    {(analyticsData?.avgStress || 0) < 40 ? (
                       <p className="text-teal-400 text-sm font-semibold flex items-center gap-1">
                         <CheckCircle2 className="w-4 h-4" /> Zdravý
                       </p>
-                    ) : avgStress < 60 ? (
+                    ) : (analyticsData?.avgStress || 0) < 60 ? (
                       <p className="text-orange-400 text-sm font-semibold">Zvýšený</p>
                     ) : (
                       <p className="text-red-400 text-sm font-semibold flex items-center gap-1">
@@ -1873,9 +1889,9 @@ export default function PsychologyAnalyticsPage() {
                   <div
                     className={cn(
                       "p-4 rounded-full",
-                      avgStress < 40
+                      (analyticsData?.avgStress || 0) < 40
                         ? "bg-gradient-to-br from-teal-500/20 to-cyan-500/20"
-                        : avgStress < 60
+                        : (analyticsData?.avgStress || 0) < 60
                           ? "bg-gradient-to-br from-orange-500/20 to-amber-500/20"
                           : "bg-gradient-to-br from-red-500/20 to-rose-500/20",
                     )}
