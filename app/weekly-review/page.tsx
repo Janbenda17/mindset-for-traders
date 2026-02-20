@@ -1163,7 +1163,7 @@ Vygenerováno aplikací Trader Mindset
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-  };
+  }
 
   const clearForm = () => {
     setReview({
@@ -1185,7 +1185,7 @@ Vygenerováno aplikací Trader Mindset
       { text: "", completed: false },
       { text: "", completed: false },
     ])
-  };
+  }
 
   return (
     <>
