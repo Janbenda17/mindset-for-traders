@@ -56,7 +56,35 @@ export async function GET(request: Request) {
       // LIVE MODE: Insert fresh record
       if (!isVirtualMode) {
         console.log("[v0] [DailyStages] Fresh day in LIVE MODE - creating new record")
-        await supabase.from("daily_stages").upsert(freshStages)
+        const { error: upsertError } = await supabase
+          .from("daily_stages")
+          .upsert(freshStages, { onConflict: "user_id,date" })
+        
+        if (upsertError) {
+          console.error("[v0] Error upserting daily stages:", upsertError)
+          // If duplicate already exists, just fetch and return it
+          const { data: existingRecord } = await supabase
+            .from("daily_stages")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("date", today)
+            .maybeSingle()
+          
+          if (existingRecord) {
+            const completedToday = []
+            if (existingRecord.morning_check_completed) completedToday.push("morning_check")
+            if (existingRecord.daily_intention_completed) completedToday.push("daily_intention")
+            if (existingRecord.trading_plan_completed) completedToday.push("trading_plan")
+            if (existingRecord.record_trades_completed) completedToday.push("record_trade")
+            if (existingRecord.daily_summary_completed) completedToday.push("daily_summary")
+            
+            return NextResponse.json({
+              ...existingRecord,
+              completedToday,
+            })
+          }
+        }
+        
         return NextResponse.json({
           ...freshStages,
           completedToday: [],
