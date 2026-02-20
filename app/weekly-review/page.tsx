@@ -26,7 +26,6 @@ import {
   Zap,
   Award,
   BookOpen,
-  Download,
   Flame,
   Shield,
   Sparkles,
@@ -1080,91 +1079,6 @@ export default function WeeklyReviewPage() {
     alert("Týdenní přehled uložen!")
   }
 
-  const downloadPDF = async (reviewData: any) => {
-    const content = `
-WEEKLY REVIEW - ${reviewData.weekStart} až ${reviewData.weekEnd}
-Varianta: ${reviewData.variant === "ai" ? "AI" : "Manual"}
-Vytvořeno: ${new Date(reviewData.createdAt).toLocaleDateString("cs-CZ")}
-
-═══════════════════════════════════════════════════════════════
-
-STATISTIKY TÝDNE
-────────────────────────────────────────────────────────────────
-Win Rate: ${Math.round(reviewData.winRate)}%
-Celkový P&L: ${reviewData.totalPnL >= 0 ? "+" : ""}$${Math.round(reviewData.totalPnL)}
-Počet tradů: ${reviewData.totalTrades}
-Průměrná Readiness: ${Math.round(reviewData.avgReadiness)}%
-Průměrná Nálada: ${Math.round(reviewData.avgMood)}%
-
-═══════════════════════════════════════════════════════════════
-
-CO FUNGOVALO
-────────────────────────────────────────────────────────────────
-${reviewData.whatWorked || "Nevyplněno"}
-
-CO NEFUNGOVALO
-────────────────────────────────────────────────────────────────
-${reviewData.whatDidntWork || "Nevyplněno"}
-
-NEJVĚTŠÍ VÝHRA
-────────────────────────────────────────────────────────────────
-${reviewData.biggestWin || "Nevyplněno"}
-
-NEJVĚTŠÍ ZTRÁTA
-────────────────────────────────────────────────────────────────
-${reviewData.biggestLoss || "Nevyplněno"}
-
-EMOČNÍ VZORCE
-────────────────────────────────────────────────────────────────
-${reviewData.emotionalPatterns || "Nevyplněno"}
-
-CHYBY
-────────────────────────────────────────────────────────────────
-${reviewData.mistakesMade || "Nevyplněno"}
-
-NAUČENÉ LEKCE
-────────────────────────────────────────────────────────────────
-${reviewData.lessonsLearned || "Nevyplněno"}
-
-CÍLE NA PŘÍŠTÍ TÝDEN
-────────────────────────────────────────────────────────────────
-${reviewData.weeklyGoals || "Nevyplněno"}
-
-OBLASTI ZAMĚŘENÍ
-────────────────────────────────────────────────────────────────
-${reviewData.focusAreas || "Nevyplněno"}
-
-ÚPRAVY TRADING PLÁNU
-────────────────────────────────────────────────────────────────
-${reviewData.tradingPlanAdjustments || "Nevyplněno"}
-
-RISK MANAGEMENT
-────────────────────────────────────────────────────────────────
-${reviewData.riskManagementNotes || "Nevyplněno"}
-
-MENTÁLNÍ PŘÍPRAVA
-────────────────────────────────────────────────────────────────
-${reviewData.mindsetPreparation || "Nevyplněno"}
-
-ACTION PLAN
-────────────────────────────────────────────────────────────────
-${reviewData.actionPlan?.map((a: any, i: number) => `${i + 1}. [${a.completed ? "✓" : " "}] ${a.text}`).join("\n") || "Nevyplněno"}
-
-═══════════════════════════════════════════════════════════════
-Vygenerováno aplikací Trader Mindset
-    `.trim();
-
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `weekly-review-${reviewData.weekStart}-${reviewData.weekEnd}.txt`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url);
-  };
-
   const clearForm = () => {
     setReview({
       whatWorked: "",
@@ -1290,15 +1204,6 @@ Vygenerováno aplikací Trader Mindset
             <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 px-4 py-2 text-sm">
               {reviewVariant === "ai" ? "AI generovaný obsah" : "Ruční vyplnění"}
             </Badge>
-            {/* Modified downloadPDF call */}
-            <Button
-              onClick={() => downloadPDF(review)} // Pass the current review object
-              variant="outline"
-              className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10 bg-transparent"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download PDF
-            </Button>
           </div>
 
           {!isLiveMode && (
@@ -1864,14 +1769,6 @@ Vygenerováno aplikací Trader Mindset
                             <Eye className="w-4 h-4 mr-1" />
                             Zobrazit
                           </Button>
-                          <Button
-                            onClick={() => downloadPDF(r)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-gray-400 hover:text-white"
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
                         </div>
                       </div>
                     ))}
@@ -1896,15 +1793,6 @@ Vygenerováno aplikací Trader Mindset
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Modified downloadPDF call */}
-                  <Button
-                    onClick={() => downloadPDF(viewingReview)}
-                    variant="outline"
-                    className="border-slate-600 text-white hover:bg-slate-800"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Stáhnout
-                  </Button>
                   <Button
                     onClick={() => setViewingReview(null)}
                     variant="ghost"
