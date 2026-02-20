@@ -920,6 +920,99 @@ function generatePsychologicalAnalysis(
         trades.filter((t) => t.pnl < 0).reduce((sum, t) => sum + t.pnl, 0) /
         Math.max(trades.filter((t) => t.pnl < 0).length, 1),
     },
+    
+    // NOVÉ METRIKY PRO PSYCHOLOGY INSIGHTS
+    recoveryRate: (() => {
+      let recoveryCount = 0
+      let lossCount = 0
+      for (let i = 0; i < trades.length - 1; i++) {
+        if ((trades[i].pnl || 0) < 0) {
+          lossCount++
+          if ((trades[i + 1]?.pnl || 0) > 0) recoveryCount++
+        }
+      }
+      return lossCount > 0 ? Math.round((recoveryCount / lossCount) * 100) : 0
+    })(),
+    
+    streakConsistency: (() => {
+      let totalStreakLength = 0
+      let streakCount = 0
+      let currentStreak = 0
+      let previousWin = false
+      trades.forEach((trade: any) => {
+        const isWin = (trade.pnl || 0) > 0
+        if (isWin && previousWin) {
+          currentStreak++
+        } else if (isWin && !previousWin) {
+          if (currentStreak > 0) { totalStreakLength += currentStreak; streakCount++ }
+          currentStreak = 1
+        } else if (!isWin && previousWin) {
+          totalStreakLength += currentStreak
+          streakCount++
+          currentStreak = 0
+        }
+        previousWin = isWin
+      })
+      if (currentStreak > 0) { totalStreakLength += currentStreak; streakCount++ }
+      const avgStreakLength = streakCount > 0 ? totalStreakLength / streakCount : 0
+      const maxStreak = streakStats.maxWinStreak || 1
+      return Math.round((avgStreakLength / Math.max(maxStreak, 3)) * 100)
+    })(),
+    
+    revengeTradeRisk: (() => {
+      let revengeTrades = 0
+      let totalTradesAfterLoss = 0
+      for (let i = 0; i < trades.length - 1; i++) {
+        if ((trades[i].pnl || 0) < 0) {
+          totalTradesAfterLoss++
+          const nextTrade = trades[i + 1]
+          if (nextTrade?.revengeTrade || (nextTrade && (nextTrade.pnl || 0) > 0 && nextTrade.duration && nextTrade.duration < 300)) {
+            revengeTrades++
+          }
+        }
+      }
+      return totalTradesAfterLoss > 0 ? Math.round((revengeTrades / totalTradesAfterLoss) * 100) : 0
+    })(),
+    
+    criticalFindings: (() => {
+      const findings: any[] = []
+      let consecutiveLosses = 0
+      let maxConsecutiveLosses = 0
+      trades.forEach((trade: any) => {
+        if ((trade.pnl || 0) < 0) {
+          consecutiveLosses++
+          maxConsecutiveLosses = Math.max(maxConsecutiveLosses, consecutiveLosses)
+        } else {
+          consecutiveLosses = 0
+        }
+      })
+      if (maxConsecutiveLosses >= 2) {
+        let foundDoubleLosse = -1
+        for (let i = 0; i < trades.length - 2; i++) {
+          if ((trades[i].pnl || 0) < 0 && (trades[i + 1].pnl || 0) < 0) {
+            foundDoubleLosse = i
+            break
+          }
+        }
+        if (foundDoubleLosse > 0) {
+          const beforeTrades = trades.slice(0, foundDoubleLosse)
+          const afterTrades = trades.slice(foundDoubleLosse + 2)
+          const beforeLossWinRate = beforeTrades.filter((t: any) => (t.pnl || 0) > 0).length / Math.max(beforeTrades.length, 1)
+          const afterLossWinRate = afterTrades.filter((t: any) => (t.pnl || 0) > 0).length / Math.max(afterTrades.length, 1)
+          const dropPercentage = Math.round((beforeLossWinRate - afterLossWinRate) * 100)
+          if (dropPercentage > 10) {
+            findings.push({
+              severity: "critical",
+              title: "⚠️ Kritické zjištění",
+              message: `Po 2 ztrátách za sebou klesá tvoje win rate o ${dropPercentage}%. STOP trading a uděl 30min break!`,
+              action: "Po 2 consecutive losses = STOP na 30 minut"
+            })
+          }
+        }
+      }
+      return findings
+    })(),
+    
     emotionalPatterns: emotionalPatterns,
     psychInsights: [
       // Reusing some logic from original code for insights
@@ -1231,6 +1324,10 @@ export default function PsychologyAnalyticsPage() {
       psychologicalProfile: analysis?.psychologicalProfile || [],
       tradingSessionPerformance: analysis?.tradingSessionPerformance || [], // NEW: session performance
       marketConditionsPerformance: analysis?.marketConditionsPerformance || [], // NEW: market conditions
+      recoveryRate: analysis?.recoveryRate || 0, // NEW: Recovery Rate po ztrátě
+      streakConsistency: analysis?.streakConsistency || 0, // NEW: Streak Consistency
+      revengeTradeRisk: analysis?.revengeTradeRisk || 0, // NEW: Revenge Trading Risk
+      criticalFindings: analysis?.criticalFindings || [], // NEW: Kritická zjištění
       summary: {
         totalTrades: allTrades.length,
         winRate: allTrades.length > 0 ? Math.round((allTrades.filter((t: any) => (t.pnl || 0) > 0).length / allTrades.length) * 100) : 0,
@@ -2351,7 +2448,7 @@ export default function PsychologyAnalyticsPage() {
                                 <RefreshCw className="w-4 h-4 text-blue-400" />
                                 <p className="text-white font-medium text-sm">Recovery Rate po ztrátě</p>
                               </div>
-                              <span className="text-blue-400 font-bold">{Math.floor(Math.random() * 20) + 65}%</span>
+                              <span className="text-blue-400 font-bold">{analyticsData?.recoveryRate || 0}%</span>
                             </div>
                             <p className="text-gray-400 text-xs">
                               Pravděpodobnost, že další trade po ztrátě bude ziskový
@@ -2364,7 +2461,7 @@ export default function PsychologyAnalyticsPage() {
                                 <Percent className="w-4 h-4 text-purple-400" />
                                 <p className="text-white font-medium text-sm">Streak Consistency</p>
                               </div>
-                              <span className="text-purple-400 font-bold">{Math.floor(Math.random() * 15) + 70}%</span>
+                              <span className="text-purple-400 font-bold">{analyticsData?.streakConsistency || 0}%</span>
                             </div>
                             <p className="text-gray-400 text-xs">Jak dobře udržuješ momentum při winning streaku</p>
                           </div>
@@ -2375,23 +2472,27 @@ export default function PsychologyAnalyticsPage() {
                                 <AlertTriangle className="w-4 h-4 text-orange-400" />
                                 <p className="text-white font-medium text-sm">Revenge Trading Risk</p>
                               </div>
-                              <span className="text-orange-400 font-bold">{Math.floor(Math.random() * 15) + 15}%</span>
+                              <span className="text-orange-400 font-bold">{analyticsData?.revengeTradeRisk || 0}%</span>
                             </div>
                             <p className="text-gray-400 text-xs">Tendence k impulzivním obchodům po ztrátě</p>
                           </div>
                         </div>
 
-                        <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/30">
-                          <div className="flex items-start gap-2">
-                            <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-orange-300 font-semibold text-sm mb-1">⚠️ Kritické zjištění:</p>
-                              <p className="text-white text-sm">
-                                Po 2 ztrátách za sebou klesá tvoje win rate o 23%. STOP trading a uděl 30min break!
-                              </p>
+                        {analyticsData?.criticalFindings && analyticsData.criticalFindings.length > 0 && (
+                          <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/30">
+                            <div className="flex items-start gap-2">
+                              <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
+                              <div className="space-y-2">
+                                {analyticsData.criticalFindings.map((finding: any, idx: number) => (
+                                  <div key={idx}>
+                                    <p className="text-orange-300 font-semibold text-sm mb-1">{finding.title}</p>
+                                    <p className="text-white text-sm">{finding.message}</p>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </CardContent>
                     </Card>
                   </AccordionContent>
