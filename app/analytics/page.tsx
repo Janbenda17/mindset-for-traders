@@ -1124,23 +1124,64 @@ export default function PsychologyAnalyticsPage() {
         summary: calculatePsychologicalMetrics(demoAnalytics.trades || [], demoAnalytics.moodData || []),
       }
     }
-    // Live mode - vrat reálná data z analytics context with safe defaults
+    // Live mode - generate analytics from REAL TRADES  
+    const allTrades = trades && Array.isArray(trades) ? trades : []
+    const allMorningChecks = morningChecks && Array.isArray(morningChecks) ? morningChecks : []
+    
+    // Build mock mood data from morning checks + default mood from trades
+    const moodDataFromTrades = allTrades.map((t: any) => ({
+      date: t.date || t.created_at || new Date().toISOString(),
+      mood: t.mood || 65,
+      confidence: t.confidence || 60,
+      stress: t.stress || 35,
+      energy: 65,
+      discipline: t.followedPlan ? 80 : 40,
+      sleep: 7,
+      pnl: t.pnl || 0
+    }))
+    
+    // Generate analysis from real data
+    const analysis = generatePsychologicalAnalysis(
+      allTrades,
+      [],
+      moodDataFromTrades,
+      true, // isLiveMode
+      "balanced",
+      "month"
+    )
+    
+    const psychMetrics = calculatePsychologicalMetrics(allTrades, moodDataFromTrades)
+    
+    // Build complete analytics response
     return {
-      ...analytics,
-      psychInsights: analytics?.psychInsights || [],
-      emotionalPatterns: analytics?.emotionalPatterns || [],
-      actionPlan: analytics?.actionPlan || [],
-      psychologicalProfile: analytics?.psychologicalProfile || [],
-      summary: analytics?.summary || { totalTrades: 0, winRate: 0, totalPnL: 0 },
-      dailyMoodData: analytics?.dailyMoodData || [],
-      weeklyPerformanceData: analytics?.weeklyPerformanceData || [],
-      streakStats: analytics?.streakStats || { maxWinStreak: 0, maxLossStreak: 0, currentWinStreak: 0, currentLossStreak: 0 },
+      trades: allTrades,
+      moodData: moodDataFromTrades,
+      dailyMoodData: moodDataFromTrades,
+      weeklyPerformanceData: analysis?.weeklyPerformanceData || [],
+      streakStats: analysis?.streakStats || { maxWinStreak: 0, maxLossStreak: 0, currentWinStreak: 0, currentLossStreak: 0 },
+      emotionalPatterns: analysis?.emotionalPatterns || [],
+      psychInsights: analysis?.psychInsights || [],
+      actionPlan: analysis?.actionPlan || [],
+      psychologicalProfile: analysis?.psychologicalProfile || [],
+      summary: {
+        totalTrades: allTrades.length,
+        winRate: allTrades.length > 0 ? Math.round((allTrades.filter((t: any) => (t.pnl || 0) > 0).length / allTrades.length) * 100) : 0,
+        totalPnL: allTrades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0),
+        averageWin: allTrades.filter((t: any) => (t.pnl || 0) > 0).length > 0 
+          ? Math.round(allTrades.filter((t: any) => (t.pnl || 0) > 0).reduce((sum: number, t: any) => sum + t.pnl, 0) / allTrades.filter((t: any) => (t.pnl || 0) > 0).length)
+          : 0,
+        averageLoss: allTrades.filter((t: any) => (t.pnl || 0) <= 0).length > 0
+          ? Math.round(allTrades.filter((t: any) => (t.pnl || 0) <= 0).reduce((sum: number, t: any) => sum + t.pnl, 0) / allTrades.filter((t: any) => (t.pnl || 0) <= 0).length)
+          : 0,
+        avgReadiness: psychMetrics?.avgMood || 65,
+        avgMood: psychMetrics?.avgMood || 65,
+      }
     }
-  }, [isLiveMode, analytics])
+  }, [isLiveMode, trades, morningChecks])
 
-  // Analytics se zobrazí POUZE když jsou dostupná reálná data v LIVE MODE
+  // Analytics se zobrazí VŽDY v LIVE MODE - bez lockingu!
   // V VIRTUAL MODE se vždy zobrazí demo data
-  const isAnalyticsLocked = isLiveMode && (!analyticsData || (daysWithData < 10 && !showForcedAnalytics))
+  const isAnalyticsLocked = false // DISABLE 10-day lock for live mode - show analytics immediately!
   const daysRemaining = Math.max(0, 10 - daysWithData)
 
   if (!authReady || modeLoading) {
