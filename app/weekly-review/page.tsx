@@ -1152,7 +1152,7 @@ ${reviewData.actionPlan?.map((a: any, i: number) => `${i + 1}. [${a.completed ? 
 
 ═══════════════════════════════════════════════════════════════
 Vygenerováno aplikací Trader Mindset
-    `.trim()
+    `.trim();
 
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" })
     const url = URL.createObjectURL(blob)
