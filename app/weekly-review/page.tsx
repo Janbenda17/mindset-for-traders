@@ -1070,7 +1070,7 @@ export default function WeeklyReviewPage() {
       aiInsights: currentWeekData.aiInsights,
       actionPlan: actionPlan,
       ...(review as any),
-    };
+    }
 
     const updated = [newReview, ...savedReviews]
     setSavedReviews(updated)
