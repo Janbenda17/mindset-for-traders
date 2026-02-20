@@ -1189,6 +1189,7 @@ export default function WeeklyReviewPage() {
                   Manuální
                 </Button>
               </div>
+            </div>
 
           {isLoading && (
             <div className="max-w-sm mx-auto space-y-2 mt-4">
