@@ -1107,6 +1107,8 @@ export default function PsychologyAnalyticsPage() {
   // Pouze reálná data - žádná demo data v LIVE MODE!
   // V VIRTUAL MODE vždy zobraz demo data
   const analyticsData = useMemo(() => {
+    console.log("[v0] [Analytics useMemo] Computing analytics - isLiveMode:", isLiveMode, "trades:", trades?.length, "morningChecks:", morningChecks?.length)
+    
     if (!isLiveMode) {
       // Virtual mode - vždy vrat demo data
       const demoAnalytics = generateDemoData("balanced")
@@ -1127,6 +1129,8 @@ export default function PsychologyAnalyticsPage() {
     // Live mode - generate analytics from REAL TRADES  
     const allTrades = trades && Array.isArray(trades) ? trades : []
     const allMorningChecks = morningChecks && Array.isArray(morningChecks) ? morningChecks : []
+    
+    console.log("[v0] [Analytics useMemo] LIVE MODE - using", allTrades.length, "trades and", allMorningChecks.length, "morning checks")
     
     // Build mock mood data from morning checks + default mood from trades
     const moodDataFromTrades = allTrades.map((t: any) => ({
