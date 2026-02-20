@@ -1038,6 +1038,72 @@ function generatePsychologicalAnalysis(
     ],
     streakStats,
     bestPerformingDay: null, // Placeholder, as this logic wasn't explicitly updated
+    tradingSessionPerformance: (() => {
+      const sessionData = {
+        morning: { trades: 0, wins: 0, pnl: 0 }, // 6:00 - 12:00
+        afternoon: { trades: 0, wins: 0, pnl: 0 }, // 12:00 - 18:00
+        evening: { trades: 0, wins: 0, pnl: 0 }, // 18:00 - 23:59
+      }
+
+      trades.forEach((trade: any) => {
+        const date = new Date(trade.date)
+        const hour = date.getHours()
+        let session = "afternoon"
+
+        if (hour >= 6 && hour < 12) session = "morning"
+        else if (hour >= 12 && hour < 18) session = "afternoon"
+        else session = "evening"
+
+        sessionData[session as keyof typeof sessionData].trades++
+        if ((trade.pnl || 0) > 0) sessionData[session as keyof typeof sessionData].wins++
+        sessionData[session as keyof typeof sessionData].pnl += trade.pnl || 0
+      })
+
+      return [
+        {
+          name: "Ráno (6-12)",
+          trades: sessionData.morning.trades,
+          winRate: sessionData.morning.trades > 0 ? Math.round((sessionData.morning.wins / sessionData.morning.trades) * 100) : 0,
+          pnl: Math.round(sessionData.morning.pnl),
+          avgPnlPerTrade: sessionData.morning.trades > 0 ? Math.round(sessionData.morning.pnl / sessionData.morning.trades) : 0,
+        },
+        {
+          name: "Odpoledne (12-18)",
+          trades: sessionData.afternoon.trades,
+          winRate: sessionData.afternoon.trades > 0 ? Math.round((sessionData.afternoon.wins / sessionData.afternoon.trades) * 100) : 0,
+          pnl: Math.round(sessionData.afternoon.pnl),
+          avgPnlPerTrade: sessionData.afternoon.trades > 0 ? Math.round(sessionData.afternoon.pnl / sessionData.afternoon.trades) : 0,
+        },
+        {
+          name: "Večer (18-23)",
+          trades: sessionData.evening.trades,
+          winRate: sessionData.evening.trades > 0 ? Math.round((sessionData.evening.wins / sessionData.evening.trades) * 100) : 0,
+          pnl: Math.round(sessionData.evening.pnl),
+          avgPnlPerTrade: sessionData.evening.trades > 0 ? Math.round(sessionData.evening.pnl / sessionData.evening.trades) : 0,
+        },
+      ]
+    })(),
+    marketConditionsPerformance: (() => {
+      const conditionMap: { [key: string]: { trades: number; wins: number; pnl: number } } = {}
+
+      trades.forEach((trade: any) => {
+        const condition = trade.marketConditions || "Neurčeno"
+        if (!conditionMap[condition]) {
+          conditionMap[condition] = { trades: 0, wins: 0, pnl: 0 }
+        }
+        conditionMap[condition].trades++
+        if ((trade.pnl || 0) > 0) conditionMap[condition].wins++
+        conditionMap[condition].pnl += trade.pnl || 0
+      })
+
+      return Object.entries(conditionMap).map(([condition, data]) => ({
+        name: condition,
+        trades: data.trades,
+        winRate: data.trades > 0 ? Math.round((data.wins / data.trades) * 100) : 0,
+        pnl: Math.round(data.pnl),
+        avgPnlPerTrade: data.trades > 0 ? Math.round(data.pnl / data.trades) : 0,
+      }))
+    })(),
   }
 }
 
@@ -1107,8 +1173,6 @@ export default function PsychologyAnalyticsPage() {
   // Pouze reálná data - žádná demo data v LIVE MODE!
   // V VIRTUAL MODE vždy zobraz demo data
   const analyticsData = useMemo(() => {
-    console.log("[v0] [Analytics useMemo] Computing analytics - isLiveMode:", isLiveMode, "trades:", trades?.length, "morningChecks:", morningChecks?.length)
-    
     if (!isLiveMode) {
       // Virtual mode - vždy vrat demo data
       const demoAnalytics = generateDemoData("balanced")
@@ -1129,8 +1193,6 @@ export default function PsychologyAnalyticsPage() {
     // Live mode - generate analytics from REAL TRADES  
     const allTrades = trades && Array.isArray(trades) ? trades : []
     const allMorningChecks = morningChecks && Array.isArray(morningChecks) ? morningChecks : []
-    
-    console.log("[v0] [Analytics useMemo] LIVE MODE - using", allTrades.length, "trades and", allMorningChecks.length, "morning checks")
     
     // Build mock mood data from morning checks + default mood from trades
     const moodDataFromTrades = allTrades.map((t: any) => ({
@@ -1167,6 +1229,8 @@ export default function PsychologyAnalyticsPage() {
       psychInsights: analysis?.psychInsights || [],
       actionPlan: analysis?.actionPlan || [],
       psychologicalProfile: analysis?.psychologicalProfile || [],
+      tradingSessionPerformance: analysis?.tradingSessionPerformance || [], // NEW: session performance
+      marketConditionsPerformance: analysis?.marketConditionsPerformance || [], // NEW: market conditions
       summary: {
         totalTrades: allTrades.length,
         winRate: allTrades.length > 0 ? Math.round((allTrades.filter((t: any) => (t.pnl || 0) > 0).length / allTrades.length) * 100) : 0,
