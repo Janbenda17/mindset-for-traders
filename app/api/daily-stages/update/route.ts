@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server"
+import { NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
-export const dynamic = "force-dynamic"
+export async function POST(request: NextRequest) {
+  const supabase = await createClient()
 
-export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
     if (!user) {
-      console.error("[v0] Stage update - No authenticated user")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -47,8 +45,8 @@ export async function POST(request: Request) {
       const badgesToInsert = badgeTemplates.map((badge) => ({
         user_id: user.id,
         badge_id: badge.id,
-        progress: 0,
-        completed: false,
+        current_progress: 0,
+        awarded: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }))
@@ -58,78 +56,77 @@ export async function POST(request: Request) {
     }
 
     const today = new Date().toISOString().split("T")[0]
-    const completedAt = completed ? new Date().toISOString() : null
 
-    const stageColumns: { [key: number]: { completed: string; completedAt: string } } = {
-      1: { completed: "morning_check_completed", completedAt: "morning_check_completed_at" },
-      2: { completed: "daily_intention_completed", completedAt: "daily_intention_completed_at" },
-      3: { completed: "trading_plan_completed", completedAt: "trading_plan_completed_at" },
-      4: { completed: "record_trades_completed", completedAt: "record_trades_completed_at" },
-      5: { completed: "daily_summary_completed", completedAt: "daily_summary_completed_at" },
-    }
-
-    const stageColumn = stageColumns[stageId]
-    if (!stageColumn) {
-      return NextResponse.json({ error: "Invalid stage ID" }, { status: 400 })
-    }
-
-    const nextStage = completed ? Math.min(stageId + 1, 5) : stageId
-
-    // First, get existing record to preserve all other stage completion data
-    const { data: existingRecord, error: getError } = await supabase
+    // Get or create today's stage record
+    let { data: stageRecord, error: fetchError } = await supabase
       .from("daily_stages")
       .select("*")
       .eq("user_id", user.id)
       .eq("date", today)
       .maybeSingle()
 
-    console.log("[v0] Stage update - Existing record:", existingRecord ? "found" : "not found")
-
-    // Build update object - ALWAYS initialize all stage completion flags for the day
-    const updateData: any = {
-      user_id: user.id,
-      date: today,
-      current_stage: nextStage,
-      updated_at: new Date().toISOString(),
-      // Initialize all stages to false first (for new days)
-      morning_check_completed: false,
-      daily_intention_completed: false,
-      trading_plan_completed: false,
-      record_trades_completed: false,
-      daily_summary_completed: false,
+    if (fetchError) {
+      console.error("[v0] Stage update - Error fetching stage:", fetchError)
+      return NextResponse.json({ error: fetchError.message }, { status: 500 })
     }
 
-    // Preserve existing stage completion data if record exists
-    if (existingRecord) {
-      updateData.morning_check_completed = existingRecord.morning_check_completed
-      updateData.morning_check_completed_at = existingRecord.morning_check_completed_at
-      updateData.daily_intention_completed = existingRecord.daily_intention_completed
-      updateData.daily_intention_completed_at = existingRecord.daily_intention_completed_at
-      updateData.trading_plan_completed = existingRecord.trading_plan_completed
-      updateData.trading_plan_completed_at = existingRecord.trading_plan_completed_at
-      updateData.record_trades_completed = existingRecord.record_trades_completed
-      updateData.record_trades_completed_at = existingRecord.record_trades_completed_at
-      updateData.daily_summary_completed = existingRecord.daily_summary_completed
-      updateData.daily_summary_completed_at = existingRecord.daily_summary_completed_at
+    if (!stageRecord) {
+      console.log("[v0] Stage update - Creating new stage record for today")
+      const { data: newRecord, error: createError } = await supabase
+        .from("daily_stages")
+        .insert({
+          user_id: user.id,
+          date: today,
+          morning_check_completed: false,
+          daily_intention_completed: false,
+          trading_plan_completed: false,
+          record_trades_completed: false,
+          daily_summary_completed: false,
+          readiness_score: 0,
+        })
+        .select()
+        .single()
+
+      if (createError) {
+        console.error("[v0] Stage update - Error creating stage:", createError)
+        return NextResponse.json({ error: createError.message }, { status: 500 })
+      }
+
+      stageRecord = newRecord
     }
 
-    // Now update the specific stage being completed
-    updateData[stageColumn.completed] = completed
-    updateData[stageColumn.completedAt] = completedAt
+    // Update the specific stage
+    const updateData: any = {}
+    let nextStage = null
 
-    console.log("[v0] Stage update - Upserting data:", updateData)
+    if (stageId === 1) {
+      updateData.morning_check_completed = completed
+      nextStage = 2
+    } else if (stageId === 2) {
+      updateData.daily_intention_completed = completed
+      nextStage = 3
+    } else if (stageId === 3) {
+      updateData.trading_plan_completed = completed
+      nextStage = 4
+    } else if (stageId === 4) {
+      updateData.record_trades_completed = completed
+      nextStage = 5
+    } else if (stageId === 5) {
+      updateData.daily_summary_completed = completed
+      nextStage = null
+    }
 
-    const { data, error } = await supabase
+    const { data: data, error: updateError } = await supabase
       .from("daily_stages")
-      .upsert(updateData, {
-        onConflict: "user_id,date",
-      })
+      .update(updateData)
+      .eq("user_id", user.id)
+      .eq("date", today)
       .select()
-      .maybeSingle()
+      .single()
 
-    if (error) {
-      console.error("[v0] Stage update - Error upserting daily stage:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (updateError) {
+      console.error("[v0] Stage update - Error updating stage:", updateError)
+      return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
     console.log("[v0] Stage update - Stage", stageId, completed ? "completed" : "uncompleted", "- next stage:", nextStage)
@@ -145,393 +142,6 @@ export async function POST(request: Request) {
         })
       } catch (error) {
         console.error("[v0] Stage update - Error triggering badge tracking:", error)
-      }
-    }
-
-    return NextResponse.json(data)
-  } catch (error: any) {
-    console.error("[v0] Stage update - Error:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-}
-
-      // Helper function to award badge XP
-      const awardBadgeXP = async (badgeId: string, title: string, xp: number) => {
-        const { data: existingLog } = await supabase
-          .from("xp_log")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("source", "badge")
-          .eq("reason", `Odznak odemknut: ${title}`)
-          .maybeSingle()
-
-        if (!existingLog) {
-          await supabase.from("xp_log").insert({
-            user_id: user.id,
-            amount: xp,
-            source: "badge",
-            reason: `Odznak odemknut: ${title}`,
-          })
-          console.log(`[v0] Badge completed: ${title} - awarded ${xp} XP`)
-        }
-      }
-
-      // 1. Morning Bird - Count total morning checks completed (7 needed)
-      const { data: allMorningChecks } = await supabase
-        .from("daily_stages")
-        .select("date")
-        .eq("user_id", user.id)
-        .eq("morning_check_completed", true)
-
-      const totalMorningChecks = allMorningChecks?.length || 0
-      console.log("[v0] Badge tracking - Total morning checks:", totalMorningChecks)
-
-      await supabase
-        .from("user_badge_progress")
-        .upsert(
-          {
-            user_id: user.id,
-            badge_id: "morning-bird",
-            progress: Math.min(totalMorningChecks, 7),
-            completed: totalMorningChecks >= 7,
-            completed_at: totalMorningChecks >= 7 ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,badge_id" }
-        )
-
-      if (totalMorningChecks >= 7) {
-        await awardBadgeXP("morning-bird", "Ranní Pták", 100)
-      }
-
-      // 2. Trader Ten - Count trades (10 needed)
-      const { data: trades } = await supabase
-        .from("journal_entries")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("type", "trade")
-
-      const tradeCount = trades?.length || 0
-      console.log("[v0] Badge tracking - Total trades:", tradeCount)
-
-      await supabase
-        .from("user_badge_progress")
-        .upsert(
-          {
-            user_id: user.id,
-            badge_id: "trader-ten",
-            progress: Math.min(tradeCount, 10),
-            completed: tradeCount >= 10,
-            completed_at: tradeCount >= 10 ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,badge_id" }
-        )
-
-      if (tradeCount >= 10) {
-        await awardBadgeXP("trader-ten", "Dekáda Obchodů", 150)
-      }
-
-      // 3. Consistency Master - 14-day streak
-      const { data: last14Days } = await supabase
-        .from("daily_stages")
-        .select("date, morning_check_completed")
-        .eq("user_id", user.id)
-        .order("date", { ascending: false })
-        .limit(14)
-
-      let consecutiveStreak = 0
-      const today_ = new Date().toISOString().split("T")[0]
-
-      for (let i = 0; i < (last14Days || []).length; i++) {
-        const checkDate = new Date(last14Days[i].date)
-        const expectedDate = new Date(today_)
-        expectedDate.setDate(expectedDate.getDate() - i)
-
-        if (last14Days[i].morning_check_completed && checkDate.toISOString().split("T")[0] === expectedDate.toISOString().split("T")[0]) {
-          consecutiveStreak++
-        } else {
-          break
-        }
-      }
-
-      console.log("[v0] Badge tracking - Consecutive streak:", consecutiveStreak)
-
-      await supabase
-        .from("user_badge_progress")
-        .upsert(
-          {
-            user_id: user.id,
-            badge_id: "consistency-master",
-            progress: Math.min(consecutiveStreak, 14),
-            completed: consecutiveStreak >= 14,
-            completed_at: consecutiveStreak >= 14 ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,badge_id" }
-        )
-
-      if (consecutiveStreak >= 14) {
-        await awardBadgeXP("consistency-master", "Mistr Konzistence", 200)
-      }
-
-      // 4. Perfect Readiness - 5 days with +80% readiness
-      const { data: highReadinessDays } = await supabase
-        .from("daily_stages")
-        .select("readiness_score")
-        .eq("user_id", user.id)
-        .gte("readiness_score", 80)
-
-      const perfectDays = highReadinessDays?.length || 0
-      console.log("[v0] Badge tracking - Days with +80% readiness:", perfectDays)
-
-      await supabase
-        .from("user_badge_progress")
-        .upsert(
-          {
-            user_id: user.id,
-            badge_id: "perfect-readiness",
-            progress: Math.min(perfectDays, 5),
-            completed: perfectDays >= 5,
-            completed_at: perfectDays >= 5 ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,badge_id" }
-        )
-
-      if (perfectDays >= 5) {
-        await awardBadgeXP("perfect-readiness", "Mistr Připravenosti", 150)
-      }
-
-      // 5. Loss Reset Master - Count loss resets (7 needed)
-      // This will be tracked when user marks recovery_after_loss in journal
-      const { data: lossResets } = await supabase
-        .from("journal_entries")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("recovery_after_loss", true)
-
-      const lossResetCount = lossResets?.length || 0
-      console.log("[v0] Badge tracking - Loss resets:", lossResetCount)
-
-      await supabase
-        .from("user_badge_progress")
-        .upsert(
-          {
-            user_id: user.id,
-            badge_id: "loss-reset-master",
-            progress: Math.min(lossResetCount, 7),
-            completed: lossResetCount >= 7,
-            completed_at: lossResetCount >= 7 ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,badge_id" }
-        )
-
-      if (lossResetCount >= 7) {
-        await awardBadgeXP("loss-reset-master", "Zvládnutí Ztrát", 175)
-      }
-
-      // 6. Goals Planner - Count trading goals (3 needed)
-      const { data: goals } = await supabase
-        .from("trading_goals")
-        .select("id")
-        .eq("user_id", user.id)
-
-      const goalCount = goals?.length || 0
-      console.log("[v0] Badge tracking - Trading goals:", goalCount)
-
-      await supabase
-        .from("user_badge_progress")
-        .upsert(
-          {
-            user_id: user.id,
-            badge_id: "goals-planner",
-            progress: Math.min(goalCount, 3),
-            completed: goalCount >= 3,
-            completed_at: goalCount >= 3 ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,badge_id" }
-        )
-
-      if (goalCount >= 3) {
-        await awardBadgeXP("goals-planner", "Plánovač Cílů", 120)
-      }
-
-      // 7. Error Logger - Count lessons learned (5 needed)
-      const { data: lessons } = await supabase
-        .from("journal_entries")
-        .select("id")
-        .eq("user_id", user.id)
-        .or("lesson_learned.eq.true,error_logged.eq.true")
-
-      const lessonCount = lessons?.length || 0
-      console.log("[v0] Badge tracking - Lessons learned:", lessonCount)
-
-      await supabase
-        .from("user_badge_progress")
-        .upsert(
-          {
-            user_id: user.id,
-            badge_id: "error-logger",
-            progress: Math.min(lessonCount, 5),
-            completed: lessonCount >= 5,
-            completed_at: lessonCount >= 5 ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,badge_id" }
-        )
-
-      if (lessonCount >= 5) {
-        await awardBadgeXP("error-logger", "Mistr Analýzy Chyb", 140)
-      }
-
-      // 8. Trader Identity - Check if profile is completed
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("trader_identity_completed")
-        .eq("user_id", user.id)
-        .single()
-
-      const identityCompleted = profile?.trader_identity_completed || false
-      console.log("[v0] Badge tracking - Trader identity completed:", identityCompleted)
-
-      await supabase
-        .from("user_badge_progress")
-        .upsert(
-          {
-            user_id: user.id,
-            badge_id: "trader-identity",
-            progress: identityCompleted ? 1 : 0,
-            completed: identityCompleted,
-            completed_at: identityCompleted ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,badge_id" }
-        )
-
-      if (identityCompleted) {
-        await awardBadgeXP("trader-identity", "Identita Traderu", 200)
-      }
-
-      console.log("[v0] Badge tracking complete!")
-    }
-
-    return NextResponse.json(data)
-  } catch (error: any) {
-    console.error("[v0] Stage update - Error:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-}
-
-
-        if (goalCount >= 3) {
-          await supabase.from("xp_log").insert({
-            user_id: user.id,
-            amount: 120,
-            source: "badge",
-            reason: "Odznak odemknut: Plánovač Cílů",
-          })
-        }
-      }
-
-      // Auto-track "Error Logger" badge - count recorded errors/lessons
-      const { data: errorLogs } = await supabase
-        .from("journal_entries")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("lesson_learned", true)
-
-      const errorCount = errorLogs?.length || 0
-      if (errorCount > 0 && errorCount <= 5) {
-        await supabase
-          .from("user_badge_progress")
-          .upsert(
-            {
-              user_id: user.id,
-              badge_id: "error-logger",
-              progress: Math.min(errorCount, 5),
-              completed: errorCount >= 5,
-              completed_at: errorCount >= 5 ? new Date().toISOString() : null,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "user_id,badge_id" }
-          )
-
-        if (errorCount >= 5) {
-          await supabase.from("xp_log").insert({
-            user_id: user.id,
-            amount: 140,
-            source: "badge",
-            reason: "Odznak odemknut: Mistr Analýzy Chyb",
-          })
-        }
-      }
-
-      // Auto-track "Trader Identity" badge - check if trader_identity is completed
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("trader_identity_completed")
-        .eq("user_id", user.id)
-        .single()
-
-      if (profile?.trader_identity_completed) {
-        const { data: identityBadge } = await supabase
-          .from("user_badge_progress")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("badge_id", "trader-identity")
-          .maybeSingle()
-
-        if (!identityBadge?.completed) {
-          await supabase
-            .from("user_badge_progress")
-            .upsert(
-              {
-                user_id: user.id,
-                badge_id: "trader-identity",
-                progress: 1,
-                completed: true,
-                completed_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "user_id,badge_id" }
-            )
-
-          await supabase.from("xp_log").insert({
-            user_id: user.id,
-            amount: 200,
-            source: "badge",
-            reason: "Odznak odemknut: Identita Traderu",
-          })
-        }
-      }
-    }
-
-    return NextResponse.json(data)
-  } catch (error) {
-        const { error: challengeError, data: challengeData } = await supabase
-          .from("user_challenge_progress")
-          .upsert(
-            {
-              user_id: user.id,
-              challenge_id: "challenge-1",
-              progress: Math.min(totalDaysCompleted, 7),
-              completed: totalDaysCompleted >= 7,
-              updated_at: new Date().toISOString(),
-            },
-            {
-              onConflict: "user_id,challenge_id",
-            }
-          )
-          .select()
-
-        if (challengeError) {
-          console.error("[v0] Stage update - Error updating challenge progress:", challengeError)
-        } else {
-          console.log("[v0] Stage update - Challenge progress updated:", Math.min(totalDaysCompleted, 7))
-        }
       }
     }
 
