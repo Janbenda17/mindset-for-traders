@@ -145,6 +145,29 @@ export default function WeeklyReviewPage() {
   const [activeTab, setActiveTab] = useState("current")
   const [viewingReview, setViewingReview] = useState<any | null>(null)
 
+  // Helper functions defined early so they can be used in JSX
+  const clearForm = () => {
+    setReview({
+      whatWorked: "",
+      whatDidntWork: "",
+      biggestWin: "",
+      biggestLoss: "",
+      emotionalPatterns: "",
+      mistakesMade: "",
+      lessonsLearned: "",
+      weeklyGoals: ["", "", ""],
+      focusAreas: ["", "", ""],
+      tradingPlanAdjustments: "",
+      riskManagementNotes: "",
+      mindsetPreparation: "",
+    });
+    setActionPlan([
+      { text: "", completed: false },
+      { text: "", completed: false },
+      { text: "", completed: false },
+    ]);
+  }
+
   useEffect(() => {
     if (isLiveMode) {
       // V LIVE MODE - načti data z analytics
@@ -1076,28 +1099,6 @@ export default function WeeklyReviewPage() {
     setSavedReviews(updated);
     setScoped("live", user.id, "weekly-reviews", updated);
     alert("Týdenní přehled uložen!");
-  }
-
-  const clearForm = () => {
-    setReview({
-      whatWorked: "",
-      whatDidntWork: "",
-      biggestWin: "",
-      biggestLoss: "",
-      emotionalPatterns: "",
-      mistakesMade: "",
-      lessonsLearned: "",
-      weeklyGoals: ["", "", ""],
-      focusAreas: ["", "", ""],
-      tradingPlanAdjustments: "",
-      riskManagementNotes: "",
-      mindsetPreparation: "",
-    });
-    setActionPlan([
-      { text: "", completed: false },
-      { text: "", completed: false },
-      { text: "", completed: false },
-    ]);
   }
 
   return (
