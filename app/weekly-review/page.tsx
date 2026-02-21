@@ -116,6 +116,7 @@ export default function WeeklyReviewPage() {
   ])
   const [activeTab, setActiveTab] = useState("current")
   const [viewingReview, setViewingReview] = useState<any | null>(null)
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
 
   const clearForm = () => {
     setReview({
@@ -335,28 +336,184 @@ export default function WeeklyReviewPage() {
             {/* Review Form */}
             <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
               <CardHeader>
-                <CardTitle className="text-white">Tvůj Přehled</CardTitle>
+                <CardTitle className="text-white flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <PenLine className="w-5 h-5 text-blue-400" />
+                    Tvůj Přehled
+                  </span>
+                  <div className="flex gap-2">
+                    <Badge variant={reviewVariant === "manual" ? "default" : "outline"} className="text-xs">
+                      {reviewVariant === "manual" ? "Manuální" : "AI Generováno"}
+                    </Badge>
+                  </div>
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-gray-300">Co se povedlo?</Label>
-                  <Textarea
-                    value={review.whatWorked || ""}
-                    onChange={(e) => setReview({ ...review, whatWorked: e.target.value })}
-                    className="bg-slate-700 border-slate-600 text-white mt-2"
-                    rows={3}
-                  />
+              <CardContent className="space-y-6">
+                {/* Trading Results */}
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setExpandedSections({ ...expandedSections, trading: !expandedSections.trading })}
+                    className="w-full flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition"
+                  >
+                    <span className="flex items-center gap-2 text-white font-semibold">
+                      <TrendingUp className="w-4 h-4 text-green-400" />
+                      Výsledky Obchodování
+                    </span>
+                    <span className="text-gray-400">{expandedSections.trading ? "▼" : "▶"}</span>
+                  </button>
+                  {expandedSections.trading && (
+                    <div className="space-y-3 pl-4 border-l border-slate-600">
+                      <div>
+                        <Label className="text-gray-300">Největší Výhra</Label>
+                        <Input
+                          type="number"
+                          value={review.biggestWin || ""}
+                          onChange={(e) => setReview({ ...review, biggestWin: parseFloat(e.target.value) })}
+                          className="bg-slate-700 border-slate-600 text-white mt-1"
+                          placeholder="$"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-gray-300">Největší Ztráta</Label>
+                        <Input
+                          type="number"
+                          value={review.biggestLoss || ""}
+                          onChange={(e) => setReview({ ...review, biggestLoss: parseFloat(e.target.value) })}
+                          className="bg-slate-700 border-slate-600 text-white mt-1"
+                          placeholder="$"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <Label className="text-gray-300">Co se nepovedlo?</Label>
-                  <Textarea
-                    value={review.whatDidntWork || ""}
-                    onChange={(e) => setReview({ ...review, whatDidntWork: e.target.value })}
-                    className="bg-slate-700 border-slate-600 text-white mt-2"
-                    rows={3}
-                  />
+
+                {/* Performance Review */}
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setExpandedSections({ ...expandedSections, performance: !expandedSections.performance })}
+                    className="w-full flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition"
+                  >
+                    <span className="flex items-center gap-2 text-white font-semibold">
+                      <Brain className="w-4 h-4 text-purple-400" />
+                      Analýza Výkonu
+                    </span>
+                    <span className="text-gray-400">{expandedSections.performance ? "▼" : "▶"}</span>
+                  </button>
+                  {expandedSections.performance && (
+                    <div className="space-y-3 pl-4 border-l border-slate-600">
+                      <div>
+                        <Label className="text-gray-300">Co se povedlo?</Label>
+                        <Textarea
+                          value={review.whatWorked || ""}
+                          onChange={(e) => setReview({ ...review, whatWorked: e.target.value })}
+                          className="bg-slate-700 border-slate-600 text-white mt-1"
+                          rows={2}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-gray-300">Co se nepovedlo?</Label>
+                        <Textarea
+                          value={review.whatDidntWork || ""}
+                          onChange={(e) => setReview({ ...review, whatDidntWork: e.target.value })}
+                          className="bg-slate-700 border-slate-600 text-white mt-1"
+                          rows={2}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-gray-300">Chyby a Poučení</Label>
+                        <Textarea
+                          value={review.mistakesMade || ""}
+                          onChange={(e) => setReview({ ...review, mistakesMade: e.target.value })}
+                          className="bg-slate-700 border-slate-600 text-white mt-1"
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <Button onClick={saveReview} className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white">
+
+                {/* Mental Patterns */}
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setExpandedSections({ ...expandedSections, mental: !expandedSections.mental })}
+                    className="w-full flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition"
+                  >
+                    <span className="flex items-center gap-2 text-white font-semibold">
+                      <Heart className="w-4 h-4 text-pink-400" />
+                      Psychologické Vzory
+                    </span>
+                    <span className="text-gray-400">{expandedSections.mental ? "▼" : "▶"}</span>
+                  </button>
+                  {expandedSections.mental && (
+                    <div className="space-y-3 pl-4 border-l border-slate-600">
+                      <div>
+                        <Label className="text-gray-300">Emoční Vzory</Label>
+                        <Textarea
+                          value={review.emotionalPatterns || ""}
+                          onChange={(e) => setReview({ ...review, emotionalPatterns: e.target.value })}
+                          className="bg-slate-700 border-slate-600 text-white mt-1"
+                          rows={2}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-gray-300">Příprava Mysli</Label>
+                        <Textarea
+                          value={review.mindsetPreparation || ""}
+                          onChange={(e) => setReview({ ...review, mindsetPreparation: e.target.value })}
+                          className="bg-slate-700 border-slate-600 text-white mt-1"
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Plan */}
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setExpandedSections({ ...expandedSections, action: !expandedSections.action })}
+                    className="w-full flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition"
+                  >
+                    <span className="flex items-center gap-2 text-white font-semibold">
+                      <Target className="w-4 h-4 text-orange-400" />
+                      Akční Plán
+                    </span>
+                    <span className="text-gray-400">{expandedSections.action ? "▼" : "▶"}</span>
+                  </button>
+                  {expandedSections.action && (
+                    <div className="space-y-2 pl-4 border-l border-slate-600">
+                      {actionPlan.map((item, index) => (
+                        <div key={index} className="flex gap-2">
+                          <Checkbox
+                            checked={item.completed}
+                            onChange={(checked) => {
+                              const updated = [...actionPlan];
+                              updated[index].completed = checked;
+                              setActionPlan(updated);
+                            }}
+                            className="mt-2"
+                          />
+                          <Input
+                            value={item.text}
+                            onChange={(e) => {
+                              const updated = [...actionPlan];
+                              updated[index].text = e.target.value;
+                              setActionPlan(updated);
+                            }}
+                            className="bg-slate-700 border-slate-600 text-white text-sm"
+                            placeholder={`Akce ${index + 1}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <Button 
+                  onClick={saveReview} 
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3"
+                >
+                  <Save className="w-4 h-4 mr-2" />
                   Uložit Přehled
                 </Button>
               </CardContent>
