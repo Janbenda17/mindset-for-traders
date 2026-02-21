@@ -1,13 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -19,32 +18,25 @@ import {
   Heart,
   AlertTriangle,
   CheckCircle2,
-  XCircle,
   Lightbulb,
   Save,
-  Activity,
   Zap,
   Award,
   BookOpen,
-  Flame,
-  Shield,
   Sparkles,
   ArrowUp,
   ArrowDown,
-  Clock,
   BarChart3,
-  Wand2,
   PenLine,
   History,
-  Loader2,
+  Trophy,
+  Flame,
+  Shield,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { getScoped, setScoped } from "@/lib/storage"
-import { getJournalEntries, getMoodEntries, getUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
 import { useAnalytics } from "@/contexts/analytics-context"
-import { useLiveMode } from "@/contexts/live-mode-context"
-import { cn } from "@/lib/utils"
 
 interface WeeklyReview {
   id: string
@@ -81,7 +73,6 @@ interface WeeklyReview {
   dailyData: any[]
   sleepData: any[]
   aiInsights: any[]
-  avgSleep?: number
 }
 
 export default function WeeklyReviewPage() {
@@ -91,22 +82,12 @@ export default function WeeklyReviewPage() {
   
   const [currentWeekData, setCurrentWeekData] = useState<any>(null)
   const [reviewVariant, setReviewVariant] = useState<"manual" | "ai">("manual")
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [loadingProgress, setLoadingProgress] = useState(0)
   const [review, setReview] = useState<Partial<WeeklyReview>>({
     whatWorked: "",
     whatDidntWork: "",
-    biggestWin: "",
-    biggestLoss: "",
     emotionalPatterns: "",
     mistakesMade: "",
     lessonsLearned: "",
-    weeklyGoals: ["", "", ""],
-    focusAreas: ["", "", ""],
-    tradingPlanAdjustments: "",
-    riskManagementNotes: "",
-    mindsetPreparation: "",
   })
   const [savedReviews, setSavedReviews] = useState<any[]>([])
   const [actionPlan, setActionPlan] = useState<{ text: string; completed: boolean }[]>([
@@ -115,30 +96,6 @@ export default function WeeklyReviewPage() {
     { text: "", completed: false },
   ])
   const [activeTab, setActiveTab] = useState("current")
-  const [viewingReview, setViewingReview] = useState<any | null>(null)
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
-
-  const clearForm = () => {
-    setReview({
-      whatWorked: "",
-      whatDidntWork: "",
-      biggestWin: "",
-      biggestLoss: "",
-      emotionalPatterns: "",
-      mistakesMade: "",
-      lessonsLearned: "",
-      weeklyGoals: ["", "", ""],
-      focusAreas: ["", "", ""],
-      tradingPlanAdjustments: "",
-      riskManagementNotes: "",
-      mindsetPreparation: "",
-    })
-    setActionPlan([
-      { text: "", completed: false },
-      { text: "", completed: false },
-      { text: "", completed: false },
-    ])
-  }
 
   const loadVirtualData = () => {
     if (currentWeekData) return;
@@ -165,19 +122,25 @@ export default function WeeklyReviewPage() {
         {
           type: "success",
           title: "Vysoká Disciplína",
-          description: "Tvoje disciplína je na úrovni 82%. Dodržuješ obchodní plán.",
-          action: "Pokračuj v tomto tempu.",
+          description: "Tvoje disciplína je na úrovni 82%. Dodržuješ obchodní plán a kontroluješ riziko.",
+          action: "Pokračuj v tomto tempu. Dělej každý den ranní check.",
+        },
+        {
+          type: "warning",
+          title: "Pozor na Revenge Trading",
+          description: "Po ztrátě -$250 jsi měl tendenci rychle otevřít další pozici.",
+          action: "Po velké ztrátě si udělej pauzu 30 minut. Zhluboka dýchej.",
+        },
+        {
+          type: "tip",
+          title: "Optimalizuj Čas Obchodování",
+          description: "Tvoje nejlepší výsledky jsou mezi 10:00-14:00. Venku z té doby máš nižší win rate.",
+          action: "Zkus se zaměřit na obchodování v tomto časovém okně.",
         },
       ],
     };
     
     setCurrentWeekData(demoWeekData);
-  }
-
-  const loadSavedReviews = () => {
-    if (!user?.id) return;
-    const saved = getScoped("live", user.id, "weekly-reviews", []);
-    setSavedReviews(saved);
   }
 
   const saveReview = () => {
@@ -194,17 +157,8 @@ export default function WeeklyReviewPage() {
       losingTrades: currentWeekData.losingTrades,
       winRate: currentWeekData.winRate,
       totalPnL: currentWeekData.totalPnL,
-      bestTrade: currentWeekData.bestTrade,
-      worstTrade: currentWeekData.worstTrade,
-      avgMood: currentWeekData.avgMood,
       avgReadiness: currentWeekData.avgReadiness,
       mindPointsGained: currentWeekData.mindPointsGained,
-      currentStreak: currentWeekData.currentStreak,
-      lossResets: currentWeekData.lossResets,
-      revengeIncidents: currentWeekData.revengeIncidents,
-      dailyData: currentWeekData.dailyData,
-      sleepData: currentWeekData.sleepData,
-      aiInsights: currentWeekData.aiInsights,
       actionPlan: actionPlan,
       ...review,
     };
@@ -224,11 +178,10 @@ export default function WeeklyReviewPage() {
           avgMood: 75,
           avgReadiness: analytics.summary.avgReadiness || 75,
           revengeIncidents: analytics.psychology?.revengeIncidents || 0,
-          dailyData: [],
           totalTrades: analytics.summary.totalTrades,
           winRate: analytics.summary.winRate,
           totalPnL: analytics.summary.totalPnL,
-          weekStartDate: new Date(),
+          aiInsights: [],
         };
         setCurrentWeekData(weekData);
       }
@@ -242,342 +195,295 @@ export default function WeeklyReviewPage() {
 
   useEffect(() => {
     if (user?.id) {
-      loadSavedReviews();
+      const saved = getScoped("live", user.id, "weekly-reviews", []);
+      setSavedReviews(saved);
     }
   }, [user?.id]);
 
   if (!currentWeekData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center text-white">Načítání dat...</div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
+        <div className="text-white text-lg">Načítání dat...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="inline-block p-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl border border-purple-500/30 backdrop-blur-sm">
-            <Calendar className="w-12 h-12 text-purple-400" />
+        <div className="text-center space-y-3 mb-8">
+          <div className="inline-flex p-4 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-2xl border border-purple-500/30 backdrop-blur-sm">
+            <Calendar className="w-10 h-10 text-purple-400" />
           </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
             Týdenní Přehled
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-gray-400">
             {currentWeekData.weekStart} - {currentWeekData.weekEnd}
           </p>
-
-          <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
-            <Button
-              onClick={saveReview}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-            >
-              <Save className="w-5 h-5 mr-2" />
-              Uložit Přehled
-            </Button>
-            <Button
-              onClick={() => {
-                setReviewVariant("manual");
-                clearForm();
-              }}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white"
-            >
-              <PenLine className="w-5 h-5 mr-2" />
-              Nový Přehled
-            </Button>
-          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-2 bg-slate-800/50 border border-slate-700 p-1">
-            <TabsTrigger value="current" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+          <TabsList className="grid grid-cols-2 bg-slate-800/50 border border-slate-700 p-1 mb-6">
+            <TabsTrigger value="current" className="data-[state=active]:bg-purple-600">
               <BookOpen className="w-4 h-4 mr-2" />
-              Aktuální Přehled
+              Aktuální
             </TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+            <TabsTrigger value="history" className="data-[state=active]:bg-purple-600">
               <History className="w-4 h-4 mr-2" />
               Historie ({savedReviews.length})
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="current" className="space-y-6 mt-6">
-            {/* Performance Summary */}
-            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-green-400" />
-                  Výkon Týdne
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-1">
-                  <p className="text-gray-400 text-sm">Celkem Tradů</p>
-                  <p className="text-2xl font-bold text-white">{currentWeekData.totalTrades}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-gray-400 text-sm">Win Rate</p>
-                  <p className="text-2xl font-bold text-green-400">{currentWeekData.winRate}%</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-gray-400 text-sm">Total PnL</p>
-                  <p className="text-2xl font-bold text-green-400">${currentWeekData.totalPnL}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-gray-400 text-sm">Avg Readiness</p>
-                  <p className="text-2xl font-bold text-purple-400">{currentWeekData.avgReadiness}%</p>
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="current" className="space-y-6">
+            {/* Performance Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-green-700/50 backdrop-blur">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <Trophy className="w-8 h-8 text-green-400" />
+                    <Badge className="bg-green-500/20 text-green-300 border-green-500/30">+{currentWeekData.winRate}%</Badge>
+                  </div>
+                  <p className="text-3xl font-bold text-white mb-1">{currentWeekData.totalTrades}</p>
+                  <p className="text-sm text-gray-400">Celkem Tradů</p>
+                  <div className="mt-3 flex gap-2 text-xs">
+                    <span className="text-green-400">{currentWeekData.winningTrades} W</span>
+                    <span className="text-red-400">{currentWeekData.losingTrades} L</span>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Review Form */}
-            <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <PenLine className="w-5 h-5 text-blue-400" />
-                    Tvůj Přehled
-                  </span>
-                  <div className="flex gap-2">
-                    <Badge variant={reviewVariant === "manual" ? "default" : "outline"} className="text-xs">
-                      {reviewVariant === "manual" ? "Manuální" : "AI Generováno"}
+              <Card className="bg-gradient-to-br from-blue-900/40 to-cyan-900/40 border-blue-700/50 backdrop-blur">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <Target className="w-8 h-8 text-blue-400" />
+                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">Win Rate</Badge>
+                  </div>
+                  <p className="text-3xl font-bold text-white mb-1">{currentWeekData.winRate}%</p>
+                  <p className="text-sm text-gray-400">Úspěšnost</p>
+                  <Progress value={currentWeekData.winRate} className="mt-3 h-2" />
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-purple-700/50 backdrop-blur">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <Zap className="w-8 h-8 text-purple-400" />
+                    <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">Mental</Badge>
+                  </div>
+                  <p className="text-3xl font-bold text-white mb-1">{currentWeekData.avgReadiness}%</p>
+                  <p className="text-sm text-gray-400">Avg Readiness</p>
+                  <Progress value={currentWeekData.avgReadiness} className="mt-3 h-2" />
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 border-yellow-700/50 backdrop-blur">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <BarChart3 className="w-8 h-8 text-yellow-400" />
+                    <Badge className={`${currentWeekData.totalPnL >= 0 ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'}`}>
+                      {currentWeekData.totalPnL >= 0 ? 'Profit' : 'Loss'}
                     </Badge>
                   </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Trading Results */}
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setExpandedSections({ ...expandedSections, trading: !expandedSections.trading })}
-                    className="w-full flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition"
-                  >
-                    <span className="flex items-center gap-2 text-white font-semibold">
-                      <TrendingUp className="w-4 h-4 text-green-400" />
-                      Výsledky Obchodování
-                    </span>
-                    <span className="text-gray-400">{expandedSections.trading ? "▼" : "▶"}</span>
-                  </button>
-                  {expandedSections.trading && (
-                    <div className="space-y-3 pl-4 border-l border-slate-600">
-                      <div>
-                        <Label className="text-gray-300">Největší Výhra</Label>
-                        <Input
-                          type="number"
-                          value={review.biggestWin || ""}
-                          onChange={(e) => setReview({ ...review, biggestWin: parseFloat(e.target.value) })}
-                          className="bg-slate-700 border-slate-600 text-white mt-1"
-                          placeholder="$"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-gray-300">Největší Ztráta</Label>
-                        <Input
-                          type="number"
-                          value={review.biggestLoss || ""}
-                          onChange={(e) => setReview({ ...review, biggestLoss: parseFloat(e.target.value) })}
-                          className="bg-slate-700 border-slate-600 text-white mt-1"
-                          placeholder="$"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Performance Review */}
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setExpandedSections({ ...expandedSections, performance: !expandedSections.performance })}
-                    className="w-full flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition"
-                  >
-                    <span className="flex items-center gap-2 text-white font-semibold">
-                      <Brain className="w-4 h-4 text-purple-400" />
-                      Analýza Výkonu
-                    </span>
-                    <span className="text-gray-400">{expandedSections.performance ? "▼" : "▶"}</span>
-                  </button>
-                  {expandedSections.performance && (
-                    <div className="space-y-3 pl-4 border-l border-slate-600">
-                      <div>
-                        <Label className="text-gray-300">Co se povedlo?</Label>
-                        <Textarea
-                          value={review.whatWorked || ""}
-                          onChange={(e) => setReview({ ...review, whatWorked: e.target.value })}
-                          className="bg-slate-700 border-slate-600 text-white mt-1"
-                          rows={2}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-gray-300">Co se nepovedlo?</Label>
-                        <Textarea
-                          value={review.whatDidntWork || ""}
-                          onChange={(e) => setReview({ ...review, whatDidntWork: e.target.value })}
-                          className="bg-slate-700 border-slate-600 text-white mt-1"
-                          rows={2}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-gray-300">Chyby a Poučení</Label>
-                        <Textarea
-                          value={review.mistakesMade || ""}
-                          onChange={(e) => setReview({ ...review, mistakesMade: e.target.value })}
-                          className="bg-slate-700 border-slate-600 text-white mt-1"
-                          rows={2}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Mental Patterns */}
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setExpandedSections({ ...expandedSections, mental: !expandedSections.mental })}
-                    className="w-full flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition"
-                  >
-                    <span className="flex items-center gap-2 text-white font-semibold">
-                      <Heart className="w-4 h-4 text-pink-400" />
-                      Psychologické Vzory
-                    </span>
-                    <span className="text-gray-400">{expandedSections.mental ? "▼" : "▶"}</span>
-                  </button>
-                  {expandedSections.mental && (
-                    <div className="space-y-3 pl-4 border-l border-slate-600">
-                      <div>
-                        <Label className="text-gray-300">Emoční Vzory</Label>
-                        <Textarea
-                          value={review.emotionalPatterns || ""}
-                          onChange={(e) => setReview({ ...review, emotionalPatterns: e.target.value })}
-                          className="bg-slate-700 border-slate-600 text-white mt-1"
-                          rows={2}
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-gray-300">Příprava Mysli</Label>
-                        <Textarea
-                          value={review.mindsetPreparation || ""}
-                          onChange={(e) => setReview({ ...review, mindsetPreparation: e.target.value })}
-                          className="bg-slate-700 border-slate-600 text-white mt-1"
-                          rows={2}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Action Plan */}
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setExpandedSections({ ...expandedSections, action: !expandedSections.action })}
-                    className="w-full flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700/70 transition"
-                  >
-                    <span className="flex items-center gap-2 text-white font-semibold">
-                      <Target className="w-4 h-4 text-orange-400" />
-                      Akční Plán
-                    </span>
-                    <span className="text-gray-400">{expandedSections.action ? "▼" : "▶"}</span>
-                  </button>
-                  {expandedSections.action && (
-                    <div className="space-y-2 pl-4 border-l border-slate-600">
-                      {actionPlan.map((item, index) => (
-                        <div key={index} className="flex gap-2">
-                          <Checkbox
-                            checked={item.completed}
-                            onChange={(checked) => {
-                              const updated = [...actionPlan];
-                              updated[index].completed = checked;
-                              setActionPlan(updated);
-                            }}
-                            className="mt-2"
-                          />
-                          <Input
-                            value={item.text}
-                            onChange={(e) => {
-                              const updated = [...actionPlan];
-                              updated[index].text = e.target.value;
-                              setActionPlan(updated);
-                            }}
-                            className="bg-slate-700 border-slate-600 text-white text-sm"
-                            placeholder={`Akce ${index + 1}`}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* AI Insights */}
-                {currentWeekData.aiInsights && currentWeekData.aiInsights.length > 0 && (
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => setExpandedSections({ ...expandedSections, insights: !expandedSections.insights })}
-                      className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-purple-600/30 to-blue-600/30 rounded-lg hover:from-purple-600/40 hover:to-blue-600/40 transition border border-purple-500/30"
-                    >
-                      <span className="flex items-center gap-2 text-white font-semibold">
-                        <Sparkles className="w-4 h-4 text-yellow-400" />
-                        AI Poznatky
-                      </span>
-                      <span className="text-gray-400">{expandedSections.insights ? "▼" : "▶"}</span>
-                    </button>
-                    {expandedSections.insights && (
-                      <div className="space-y-3 pl-4 border-l-2 border-purple-500">
-                        {currentWeekData.aiInsights.map((insight: any, index: number) => (
-                          <div key={index} className="p-3 rounded-lg bg-slate-700/50 border border-slate-600">
-                            <div className="flex gap-3">
-                              {insight.type === "success" ? (
-                                <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                              ) : insight.type === "warning" ? (
-                                <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                              ) : (
-                                <Lightbulb className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                              )}
-                              <div className="flex-1">
-                                <p className="font-semibold text-white text-sm">{insight.title}</p>
-                                <p className="text-gray-300 text-sm mt-1">{insight.description}</p>
-                                {insight.action && (
-                                  <p className="text-purple-300 text-sm mt-2 font-medium">→ {insight.action}</p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <p className="text-3xl font-bold text-white mb-1">${currentWeekData.totalPnL}</p>
+                  <p className="text-sm text-gray-400">Total PnL</p>
+                  <div className="mt-3 flex justify-between text-xs">
+                    <span className="text-green-400">Best: ${currentWeekData.bestTrade}</span>
+                    <span className="text-red-400">Worst: ${currentWeekData.worstTrade}</span>
                   </div>
-                )}
+                </CardContent>
+              </Card>
+            </div>
 
-                <Button 
-                  onClick={saveReview} 
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Uložit Přehled
-                </Button>
-              </CardContent>
-            </Card>
+            {/* AI Insights - Always Visible */}
+            {currentWeekData.aiInsights && currentWeekData.aiInsights.length > 0 && (
+              <Card className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 border-purple-500/30 backdrop-blur">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-yellow-400" />
+                    AI Poznatky
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {currentWeekData.aiInsights.map((insight: any, index: number) => (
+                      <div key={index} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition">
+                        <div className="flex items-start gap-3">
+                          {insight.type === "success" ? (
+                            <div className="p-2 rounded-lg bg-green-500/20">
+                              <CheckCircle2 className="w-5 h-5 text-green-400" />
+                            </div>
+                          ) : insight.type === "warning" ? (
+                            <div className="p-2 rounded-lg bg-yellow-500/20">
+                              <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                            </div>
+                          ) : (
+                            <div className="p-2 rounded-lg bg-blue-500/20">
+                              <Lightbulb className="w-5 h-5 text-blue-400" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-white text-sm mb-1">{insight.title}</p>
+                            <p className="text-gray-400 text-xs mb-2 leading-relaxed">{insight.description}</p>
+                            {insight.action && (
+                              <p className="text-purple-300 text-xs font-medium flex items-center gap-1">
+                                <ArrowUp className="w-3 h-3" />
+                                {insight.action}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Review Form - Two Column Layout */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-purple-400" />
+                    Analýza Výkonu
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-gray-300 text-sm">Co se povedlo?</Label>
+                    <Textarea
+                      value={review.whatWorked || ""}
+                      onChange={(e) => setReview({ ...review, whatWorked: e.target.value })}
+                      className="bg-slate-700/50 border-slate-600 text-white mt-2 min-h-[100px]"
+                      placeholder="Popište úspěšné strategie a chování..."
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-gray-300 text-sm">Co se nepovedlo?</Label>
+                    <Textarea
+                      value={review.whatDidntWork || ""}
+                      onChange={(e) => setReview({ ...review, whatDidntWork: e.target.value })}
+                      className="bg-slate-700/50 border-slate-600 text-white mt-2 min-h-[100px]"
+                      placeholder="Identifikujte chyby a slabá místa..."
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-gray-300 text-sm">Chyby a Poučení</Label>
+                    <Textarea
+                      value={review.mistakesMade || ""}
+                      onChange={(e) => setReview({ ...review, mistakesMade: e.target.value })}
+                      className="bg-slate-700/50 border-slate-600 text-white mt-2 min-h-[100px]"
+                      placeholder="Co jsi se naučil z chyb..."
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Heart className="w-5 h-5 text-pink-400" />
+                      Psychologické Vzory
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div>
+                      <Label className="text-gray-300 text-sm">Emoční Vzory</Label>
+                      <Textarea
+                        value={review.emotionalPatterns || ""}
+                        onChange={(e) => setReview({ ...review, emotionalPatterns: e.target.value })}
+                        className="bg-slate-700/50 border-slate-600 text-white mt-2 min-h-[120px]"
+                        placeholder="Jak ses cítil během obchodování..."
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-slate-800/50 border-slate-700 backdrop-blur">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Target className="w-5 h-5 text-orange-400" />
+                      Akční Plán na Příští Týden
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {actionPlan.map((item, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          value={item.text}
+                          onChange={(e) => {
+                            const updated = [...actionPlan];
+                            updated[index].text = e.target.value;
+                            setActionPlan(updated);
+                          }}
+                          className="bg-slate-700/50 border-slate-600 text-white"
+                          placeholder={`Cíl ${index + 1}`}
+                        />
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <Button 
+              onClick={saveReview} 
+              className="w-full py-6 text-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+            >
+              <Save className="w-5 h-5 mr-2" />
+              Uložit Týdenní Přehled
+            </Button>
           </TabsContent>
 
-          <TabsContent value="history" className="space-y-6 mt-6">
+          <TabsContent value="history" className="space-y-4">
             {savedReviews.length === 0 ? (
-              <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
-                <CardContent className="text-center py-8">
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardContent className="text-center py-12">
+                  <History className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                   <p className="text-gray-400">Zatím žádné uložené přehledy</p>
                 </CardContent>
               </Card>
             ) : (
-              savedReviews.map((review) => (
-                <Card key={review.id} className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
-                  <CardHeader>
-                    <CardTitle className="text-white">{review.weekStart} - {review.weekEnd}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-400 text-sm">{review.whatWorked}</p>
-                  </CardContent>
-                </Card>
-              ))
+              <div className="grid md:grid-cols-2 gap-4">
+                {savedReviews.map((review) => (
+                  <Card key={review.id} className="bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition cursor-pointer">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-white text-lg">{review.weekStart} - {review.weekEnd}</CardTitle>
+                          <p className="text-sm text-gray-500 mt-1">{new Date(review.createdAt).toLocaleDateString('cs-CZ')}</p>
+                        </div>
+                        <Badge variant={review.variant === "ai" ? "default" : "outline"} className="text-xs">
+                          {review.variant === "ai" ? "AI" : "Manuální"}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        <div className="text-center p-2 bg-slate-700/50 rounded">
+                          <p className="text-xs text-gray-400">Trades</p>
+                          <p className="text-lg font-bold text-white">{review.totalTrades}</p>
+                        </div>
+                        <div className="text-center p-2 bg-slate-700/50 rounded">
+                          <p className="text-xs text-gray-400">Win%</p>
+                          <p className="text-lg font-bold text-green-400">{review.winRate}%</p>
+                        </div>
+                        <div className="text-center p-2 bg-slate-700/50 rounded">
+                          <p className="text-xs text-gray-400">PnL</p>
+                          <p className="text-lg font-bold text-white">${review.totalPnL}</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-400 text-sm line-clamp-2">{review.whatWorked || "Bez poznámek"}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
           </TabsContent>
         </Tabs>
