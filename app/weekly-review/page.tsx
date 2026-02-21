@@ -1061,9 +1061,9 @@ export default function WeeklyReviewPage() {
   }
 
   const loadSavedReviews = () => {
-    if (!user?.id) return
-    const saved = getScoped("live", user.id, "weekly-reviews", [])
-    setSavedReviews(saved)
+    if (!user?.id) return;
+    const saved = getScoped("live", user.id, "weekly-reviews", []);
+    setSavedReviews(saved);
   }
 
   const saveReview = () => {
