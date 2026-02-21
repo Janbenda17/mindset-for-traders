@@ -1069,14 +1069,13 @@ export default function WeeklyReviewPage() {
       sleepData: currentWeekData.sleepData,
       aiInsights: currentWeekData.aiInsights,
       actionPlan: actionPlan,
-      ...(review as any),
-    }
+      review: review,
+    };
 
-    const updated = [newReview, ...savedReviews]
-    setSavedReviews(updated)
-    setScoped("live", user.id, "weekly-reviews", updated)
-
-    alert("Týdenní přehled uložen!")
+    const updated = [newReview, ...savedReviews];
+    setSavedReviews(updated);
+    setScoped("live", user.id, "weekly-reviews", updated);
+    alert("Týdenní přehled uložen!");
   }
 
   const clearForm = () => {
