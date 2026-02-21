@@ -401,16 +401,23 @@ export default function WeeklyReviewPage() {
                     key={review.id}
                     className="bg-slate-800/50 border-slate-700 cursor-pointer hover:border-blue-500/50 hover:bg-slate-800/70 transition"
                     onClick={() => {
-                      // Načti starý review
+                      // Načti všechna data ze starého review
                       setReview({
                         whatWorked: review.whatWorked || "",
                         whatDidntWork: review.whatDidntWork || "",
+                        biggestWin: review.biggestWin || "",
+                        biggestLoss: review.biggestLoss || "",
                         emotionalPatterns: review.emotionalPatterns || "",
                         mistakesMade: review.mistakesMade || "",
                         lessonsLearned: review.lessonsLearned || "",
+                        weeklyGoals: review.weeklyGoals || ["", "", ""],
+                        focusAreas: review.focusAreas || ["", "", ""],
+                        tradingPlanAdjustments: review.tradingPlanAdjustments || "",
+                        riskManagementNotes: review.riskManagementNotes || "",
+                        mindsetPreparation: review.mindsetPreparation || "",
                       });
                       setActionPlan(review.actionPlan || []);
-                      alert("Review načten! Nyní můžeš upravit.");
+                      alert("Review načten! Všechna data jsou obnovena.");
                       setActiveTab("current");
                     }}
                   >
@@ -441,7 +448,21 @@ export default function WeeklyReviewPage() {
                         <p className="text-xs text-gray-400">Readiness: <span className="text-blue-400 font-semibold">{roundPercent(review.avgReadiness)}%</span></p>
                         <p className="text-xs text-gray-400">Revenge Trades: <span className={review.revengeIncidents > 0 ? "text-red-400 font-semibold" : "text-green-400 font-semibold"}>{review.revengeIncidents}</span></p>
                       </div>
-                      <p className="text-gray-400 text-xs line-clamp-2">{review.whatWorked || "Bez poznámek"}</p>
+                      <div className="mb-2 space-y-2">
+                        <p className="text-xs text-gray-300 font-semibold">Poznámka:</p>
+                        <p className="text-gray-300 text-xs line-clamp-2">{review.whatWorked || "Bez poznámek"}</p>
+                      </div>
+                      {review.aiInsights && review.aiInsights.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-slate-600 space-y-2">
+                          <p className="text-xs text-purple-400 font-semibold">AI Insights:</p>
+                          {review.aiInsights.slice(0, 2).map((insight: any, idx: number) => (
+                            <div key={idx} className="text-xs text-gray-300 bg-slate-700/30 p-2 rounded">
+                              <p className="font-semibold text-purple-300">{insight.title}</p>
+                              <p className="text-gray-400 text-xs">{insight.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
