@@ -415,11 +415,15 @@ export default function WeeklyReviewPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {currentWeekData.aiInsights.map((insight: string, idx: number) => (
-                      <div key={idx} className="p-3 rounded-lg bg-slate-700/50 border border-slate-600">
-                        <p className="text-gray-200 text-sm leading-relaxed">{insight}</p>
-                      </div>
-                    ))}
+                    {currentWeekData.aiInsights.map((insight: any, idx: number) => {
+                      // Handle both old format (objects) and new format (strings)
+                      const insightText = typeof insight === 'string' ? insight : insight.description || '';
+                      return (
+                        <div key={idx} className="p-3 rounded-lg bg-slate-700/50 border border-slate-600">
+                          <p className="text-gray-200 text-sm leading-relaxed">{insightText}</p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -502,11 +506,15 @@ export default function WeeklyReviewPage() {
                       {review.aiInsights && review.aiInsights.length > 0 && (
                         <div className="mt-3 pt-3 border-t border-slate-600 space-y-2">
                           <p className="text-xs text-purple-400 font-semibold">AI Insights:</p>
-                          {review.aiInsights.slice(0, 2).map((insight: string, idx: number) => (
-                            <div key={idx} className="text-xs text-gray-300 bg-slate-700/30 p-2 rounded">
-                              <p className="text-gray-300 text-xs">{insight}</p>
-                            </div>
-                          ))}
+                          {review.aiInsights.slice(0, 2).map((insight: any, idx: number) => {
+                            // Handle both old format (objects) and new format (strings)
+                            const insightText = typeof insight === 'string' ? insight : insight.description || '';
+                            return (
+                              <div key={idx} className="text-xs text-gray-300 bg-slate-700/30 p-2 rounded">
+                                <p className="text-gray-300 text-xs">{insightText}</p>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </CardContent>
