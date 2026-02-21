@@ -100,9 +100,9 @@ export default function WeeklyReviewPage() {
   // Helper function to round percentages
   const roundPercent = (value: number) => Math.round(value)
 
-  // Generate AI insights based on trading data
-  const generateAIInsights = (data: any) => {
-    const insights: any[] = []
+  // Generate AI insights as simple text
+  const generateAIInsights = (data: any): string[] => {
+    const insights: string[] = []
     const winRate = roundPercent(data.winRate)
     const totalTrades = data.totalTrades || 0
     const pnl = data.totalPnL || 0
@@ -112,176 +112,60 @@ export default function WeeklyReviewPage() {
     
     // Performance Analysis - Win Rate
     if (winRate >= 70) {
-      insights.push({
-        type: "success",
-        title: "Výborná Výkonnost",
-        description: `S úspěšností ${winRate}% (${data.winningTrades}W/${data.losingTrades}L) patříš mezi top obchodníky. Z ${totalTrades} tradů jsi byl konzistentní.`,
-        action: "Udržuj disciplínu. Nesnižuj risk management kvůli sebevědomí.",
-      })
+      insights.push(`Výborná výkonnost: S úspěšností ${winRate}% (${data.winningTrades}W/${data.losingTrades}L) patříš mezi top obchodníky. Udržuj disciplínu a nesnižuj risk management kvůli sebevědomí.`)
     } else if (winRate >= 50 && winRate < 70) {
-      insights.push({
-        type: "tip",
-        title: "Solidní Základ",
-        description: `Tvá úspěšnost ${winRate}% je dobrá, ale můžeš lépe. ${data.losingTrades} proher z ${totalTrades} tradů ukazuje prostor pro zlepšení.`,
-        action: "Analyzuj své prohrané trady - kde děláš chyby ve vstupech?",
-      })
+      insights.push(`Solidní základ: Úspěšnost ${winRate}% je dobrá, ale můžeš lépe. ${data.losingTrades} proher z ${totalTrades} tradů znamená prostor pro zlepšení. Analyzuj své prohrané trady - kde děláš chyby ve vstupech?`)
     } else if (winRate < 50 && totalTrades >= 3) {
-      insights.push({
-        type: "warning",
-        title: "Potřeba Zlepšení",
-        description: `Úspěšnost ${winRate}% je pod 50%. ${data.losingTrades} proher z ${totalTrades} znamená, že tvoje strategie nefunguje.`,
-        action: "STOP trading. Vrať se k backtesting a najdi co děláš špatně.",
-      })
+      insights.push(`Potřeba zlepšení: Úspěšnost ${winRate}% je pod 50%. STOP trading. Vrať se k backtestingu a najdi co děláš špatně.`)
     }
     
     // PnL Analysis
     if (pnl > 0 && totalTrades >= 3) {
       const avgPerTrade = (pnl / totalTrades).toFixed(0)
-      insights.push({
-        type: "success",
-        title: "Pozitivní Profit",
-        description: `Celkový zisk $${pnl} z ${totalTrades} tradů je skvělý! Průměr $${avgPerTrade} na trade.`,
-        action: "Skaluješ dobře. Teď zvyš pozice postupně s rostoucí konzistencí.",
-      })
+      insights.push(`Pozitivní profit: Celkový zisk $${pnl} z ${totalTrades} tradů je skvělý! Průměr $${avgPerTrade} na trade. Skaluješ dobře.`)
     } else if (pnl < 0 && totalTrades >= 3) {
-      insights.push({
-        type: "warning",
-        title: "Ztráta Kapitálu",
-        description: `Ztratil jsi $${Math.abs(pnl)} tento týden. To není udržitelné dlouhodobě.`,
-        action: "Sniž risk na polovinu. Zaměř se na 1-2 high probability setups.",
-      })
+      insights.push(`Ztráta kapitálu: Ztratil jsi $${Math.abs(pnl)} tento týden. To není udržitelné. Sniž risk na polovinu a zaměř se na high probability setups.`)
     }
     
     // Psychology - Revenge Trading
     if (data.revengeIncidents > 0) {
-      insights.push({
-        type: "warning",
-        title: "Revenge Trading - Červený Poplach",
-        description: `Detekovali jsme ${data.revengeIncidents} případ(ů) revenge tradingu. Toto je smrtící návyk.`,
-        action: "Pravidlo: Po větší ztrátě VŽDY pauza 15 min. Žádné výjimky.",
-      })
-    } else if (totalTrades >= 5) {
-      insights.push({
-        type: "success",
-        title: "Disciplinované Obchodování",
-        description: `Žádný revenge trading z ${totalTrades} tradů! Udržuješ chladnou hlavu i po ztrátách.`,
-        action: "Tato disciplína je tvoje superschopnost. Chraň ji.",
-      })
+      insights.push(`Revenge trading - červený poplach: Detekovali jsme ${data.revengeIncidents} případ(ů) revenge tradingu. Po větší ztrátě si VŽDY dej pauzu 15 minut. Žádné výjimky.`)
+    } else if (totalTrades >= 3) {
+      insights.push(`Disciplinované obchodování: Žádný revenge trading z ${totalTrades} tradů! Udržuješ chladnou hlavu i po ztrátách - toto je tvoje superschopnost.`)
     }
     
     // Mental State - Readiness
     if (avgReadiness >= 80) {
-      insights.push({
-        type: "success",
-        title: "Peak Mental State",
-        description: `Tvá připravenost ${avgReadiness}% je vrcholná. Mozek je v nejvyšší formě.`,
-        action: "Využij tuto energii - obchoduj své A+ setups s plnou koncentrací.",
-      })
+      insights.push(`Peak mental state: Tvá připravenost ${avgReadiness}% je vrcholná. Mozek je v nejvyšší formě - využij tuto energii na A+ setups.`)
     } else if (avgReadiness < 60 && avgReadiness > 0) {
-      insights.push({
-        type: "warning",
-        title: "Nízká Energie",
-        description: `Připravenost ${avgReadiness}% je pod ideálem. Trpí tím tvé rozhodování.`,
-        action: "Spi více, medituj ráno, zkontroluj výživu. Trading vyžaduje peak state.",
-      })
+      insights.push(`Nízká energie: Připravenost ${avgReadiness}% je pod ideálem. Spi více, medituj ráno, zkontroluj výživu. Trading vyžaduje peak state.`)
     }
     
-    // Risk Management - Best vs Worst
-    if (data.bestTrade && data.worstTrade && data.bestTrade > 0 && data.worstTrade < 0) {
-      const ratio = Math.abs(data.bestTrade / data.worstTrade)
-      if (ratio >= 2) {
-        insights.push({
-          type: "success",
-          title: "Vynikající Risk/Reward",
-          description: `Nejvyšší výhra $${data.bestTrade} vs nejhorší ztráta $${Math.abs(data.worstTrade)} = ratio ${ratio.toFixed(1)}:1.`,
-          action: "Udržuj tento vysoký R:R. Nejlepší obchodníci mají 2:1+.",
-        })
-      } else if (ratio < 1.5) {
-        insights.push({
-          type: "tip",
-          title: "Zlepši Risk/Reward",
-          description: `Ratio ${ratio.toFixed(1)}:1 je nízké. Výhry by měly být větší než ztráty.`,
-          action: "Drž výhry déle, řež ztráty rychleji. Cíluj na min 2:1 ratio.",
-        })
-      }
+    // Sleep Analysis - CRITICAL
+    if (avgSleep < 6.5) {
+      insights.push(`KRITICKÝ NEDOSTATEK SPÁNKU: Spíš jen ${avgSleep.toFixed(1)} hodin. Méně než 6,5h drasticky zhoršuje tvou soustředění a rozhodování. PRIORITA: Spí alespoň 7-8 hodin. Bez spánku žádné trading.`)
+    } else if (avgSleep >= 7 && avgSleep <= 8.5) {
+      insights.push(`Optimální spánek: Průměr ${avgSleep.toFixed(1)} hodin je ideální. Tvůj mozek je v peak condition. Udržuj tento rytmus.`)
+    }
+    
+    // Stress Management - CRITICAL
+    if (avgStress > 75) {
+      insights.push(`KRITICKY VYSOKÝ STRES: ${roundPercent(avgStress)}% stres je deštruktivní. Před KAŽDÝM obchodem si dej 5 minut meditaci. Po ztrátě 15 min pauza. Cvič dechování.`)
+    } else if (avgStress > 60) {
+      insights.push(`Vysoký stres: ${roundPercent(avgStress)}% ovlivňuje tvoje rozhodování. Začni meditaci. Po ztrátě si dej aspoň 10 minut pauzu. Neobchoduj pod stresem.`)
     }
     
     // Activity Level
-    if (totalTrades < 3) {
-      insights.push({
-        type: "tip",
-        title: "Málo Dat",
-        description: `Jen ${totalTrades} trade(ů) tento týden. Data jsou nedostatečná pro analýzu.`,
-        action: "Hledej více quality setups nebo prodluž timeframe na měsíční review.",
-      })
-    } else if (totalTrades > 20) {
-      insights.push({
-        type: "warning",
-        title: "Overtrading",
-        description: `${totalTrades} tradů je moc! Kvalita > kvantita. Ředíš svou edge.`,
-        action: "Buď selektivnější. Obchoduj jen A+ setups s vysokou pravděpodobností.",
-      })
-    }
-
-    // Sleep Analysis - CRITICAL for trading performance
-    if (avgSleep < 6.5) {
-      insights.push({
-        type: "warning",
-        title: "Kritický Nedostatek Spánku",
-        description: `Spíš v průměru ${avgSleep.toFixed(1)} hodin. Méně než 6,5h drasticky zhoršuje tvou soustředění, impulse control a rozhodování.`,
-        action: "PRIORITA: Spí alespoň 7-8 hodin. Bez spánku žádné trading. Dej si pravidlo - before 7am nic.",
-      })
-    } else if (avgSleep >= 7 && avgSleep <= 8.5) {
-      insights.push({
-        type: "success",
-        title: "Optimální Spánek",
-        description: `Průměr ${avgSleep.toFixed(1)} hodin je ideální. Tvůj mozek je v peak condition.`,
-        action: "Udržuj tento rytmus. To je základ všeho - bez spánku jsi handicapped trader.",
-      })
-    } else if (avgSleep > 8.5) {
-      insights.push({
-        type: "tip",
-        title: "Příliš Mnoho Spánku",
-        description: `${avgSleep.toFixed(1)} hodin může znamenat únavu nebo depresivní náladu. Zkontroluj stres.`,
-        action: "Ideál je 7-8 hodin. Více spánku nezvyšuje výkon - zjisti proč spíš tolik.",
-      })
-    }
-
-    // Stress Management - CRITICAL for psychology
-    if (avgStress > 75) {
-      insights.push({
-        type: "critical",
-        title: "KRITICKY VYSOKÝ STRES",
-        description: `Průměrný stres ${roundPercent(avgStress)}%. To je deštruktivní pro tvoje trading psychiku.`,
-        action: "IHNED: Před KAŽDÝM obchodem si dej 5min meditaci. Po každé ztrátě 15min pauza. Cvič dechování.",
-      })
-    } else if (avgStress > 60) {
-      insights.push({
-        type: "warning",
-        title: "Vysoký Stres",
-        description: `Stres na ${roundPercent(avgStress)}%. To ovlivňuje tvoje rozhodování a impulse control.`,
-        action: "Začni meditaci/yoga. Po ztrátě si dej aspoň 10min pauzu. Neobchoduj pod stresem.",
-      })
-    } else if (avgStress <= 50) {
-      insights.push({
-        type: "success",
-        title: "Kontrolovaný Stres",
-        description: `Stres ${roundPercent(avgStress)}% je v normě. Udržuješ si klid.`,
-        action: "Pokračuj v tom. Stress management je tvoje superschopnost.",
-      })
-    }
-
-    // Sleep + Stress + Performance Correlation
-    if (avgSleep < 6.5 && avgStress > 70 && winRate < 55) {
-      insights.push({
-        type: "critical",
-        title: "PERFEKTNÍ BOUŘE: Spánek + Stres + Výkon Padá",
-        description: `Máš zároveň malý spánek (${avgSleep.toFixed(1)}h), vysoký stres (${roundPercent(avgStress)}%) a nízkou úspěšnost (${winRate}%).`,
-        action: "STOP TRADING. Vrať se k basics: Spí 8h, medituješ ráno 10min, obchoduješ jen morning setups.",
-      })
+    if (totalTrades > 20) {
+      insights.push(`Overtrading: ${totalTrades} tradů je moc! Kvalita > kvantita. Buď selektivnější a obchoduj jen A+ setups.`)
     }
     
-    return insights.slice(0, 4) // Return top 4 most relevant insights
+    // Sleep + Stress + Performance Warning
+    if (avgSleep < 6.5 && avgStress > 70 && winRate < 55) {
+      insights.push(`⚠️ PERFEKTNÍ BOUŘE: Malý spánek (${avgSleep.toFixed(1)}h) + vysoký stres (${roundPercent(avgStress)}%) + nízká úspěšnost (${winRate}%). STOP TRADING. Vrať se k basics: 8h spánku, meditace, jen morning setups.`)
+    }
+    
+    return insights.slice(0, 3) // Return top 3 insights
   }
 
   const loadVirtualData = () => {
@@ -545,9 +429,26 @@ export default function WeeklyReviewPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {savedReviews.map((review: any) => (
-                  <Card
+                  <div className="space-y-3">
+                    {currentWeekData.aiInsights.map((insight: string, idx: number) => (
+                      <div key={idx} className="p-3 rounded-lg bg-slate-700/50 border border-slate-600">
+                        <p className="text-gray-200 text-sm leading-relaxed">{insight}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Past Reviews History */}
+            {activeTab === "history" && savedReviews.length > 0 && (
+              <div>
+                <h2 className="text-white text-xl font-bold mb-4 flex items-center gap-2">
+                  <History className="w-5 h-5 text-blue-400" />
+                  Minulé Přehledy
+                </h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {savedReviews.map((review: any) => (
                     key={review.id}
                     className="bg-slate-800/50 border-slate-700 cursor-pointer hover:border-blue-500/50 hover:bg-slate-800/70 transition"
                     onClick={() => {
@@ -615,10 +516,9 @@ export default function WeeklyReviewPage() {
                       {review.aiInsights && review.aiInsights.length > 0 && (
                         <div className="mt-3 pt-3 border-t border-slate-600 space-y-2">
                           <p className="text-xs text-purple-400 font-semibold">AI Insights:</p>
-                          {review.aiInsights.slice(0, 2).map((insight: any, idx: number) => (
+                          {review.aiInsights.slice(0, 2).map((insight: string, idx: number) => (
                             <div key={idx} className="text-xs text-gray-300 bg-slate-700/30 p-2 rounded">
-                              <p className="font-semibold text-purple-300">{insight.title}</p>
-                              <p className="text-gray-400 text-xs">{insight.description}</p>
+                              <p className="text-gray-300 text-xs">{insight}</p>
                             </div>
                           ))}
                         </div>
@@ -626,9 +526,8 @@ export default function WeeklyReviewPage() {
                     </CardContent>
                   </Card>
                 ))}
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
 
             {/* Review Form - Two Column Layout */}
