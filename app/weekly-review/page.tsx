@@ -103,75 +103,125 @@ export default function WeeklyReviewPage() {
   // Generate AI insights based on trading data
   const generateAIInsights = (data: any) => {
     const insights: any[] = []
+    const winRate = roundPercent(data.winRate)
+    const totalTrades = data.totalTrades || 0
+    const pnl = data.totalPnL || 0
+    const avgReadiness = roundPercent(data.avgReadiness || 0)
     
-    // Win rate insights
-    if (data.winRate >= 70) {
+    // Performance Analysis - Win Rate
+    if (winRate >= 70) {
       insights.push({
         type: "success",
-        title: "Výborná Úspěšnost",
-        description: `Tvá úspěšnost ${roundPercent(data.winRate)}% je silná. Jsi v top 20% obchodníků.`,
-        action: "Udržuj konzistenci a nebeř zbytečná rizika.",
+        title: "Výborná Výkonnost",
+        description: `S úspěšností ${winRate}% (${data.winningTrades}W/${data.losingTrades}L) patříš mezi top obchodníky. Z ${totalTrades} tradů jsi byl konzistentní.`,
+        action: "Udržuj disciplínu. Nesnižuj risk management kvůli sebevědomí.",
       })
-    } else if (data.winRate >= 50) {
+    } else if (winRate >= 50 && winRate < 70) {
+      insights.push({
+        type: "tip",
+        title: "Solidní Základ",
+        description: `Tvá úspěšnost ${winRate}% je dobrá, ale můžeš lépe. ${data.losingTrades} proher z ${totalTrades} tradů ukazuje prostor pro zlepšení.`,
+        action: "Analyzuj své prohrané trady - kde děláš chyby ve vstupech?",
+      })
+    } else if (winRate < 50 && totalTrades >= 3) {
       insights.push({
         type: "warning",
-        title: "Průměrná Úspěšnost",
-        description: `Úspěšnost ${roundPercent(data.winRate)}% je na hranici. Potřebuješ se zlepšit.`,
-        action: "Zaměř se na risk management a vstupy do obchodů.",
+        title: "Potřeba Zlepšení",
+        description: `Úspěšnost ${winRate}% je pod 50%. ${data.losingTrades} proher z ${totalTrades} znamená, že tvoje strategie nefunguje.`,
+        action: "STOP trading. Vrať se k backtesting a najdi co děláš špatně.",
       })
     }
     
-    // Revenge trading detection
+    // PnL Analysis
+    if (pnl > 0 && totalTrades >= 3) {
+      const avgPerTrade = (pnl / totalTrades).toFixed(0)
+      insights.push({
+        type: "success",
+        title: "Pozitivní Profit",
+        description: `Celkový zisk $${pnl} z ${totalTrades} tradů je skvělý! Průměr $${avgPerTrade} na trade.`,
+        action: "Skaluješ dobře. Teď zvyš pozice postupně s rostoucí konzistencí.",
+      })
+    } else if (pnl < 0 && totalTrades >= 3) {
+      insights.push({
+        type: "warning",
+        title: "Ztráta Kapitálu",
+        description: `Ztratil jsi $${Math.abs(pnl)} tento týden. To není udržitelné dlouhodobě.`,
+        action: "Sniž risk na polovinu. Zaměř se na 1-2 high probability setups.",
+      })
+    }
+    
+    // Psychology - Revenge Trading
     if (data.revengeIncidents > 0) {
       insights.push({
         type: "warning",
-        title: "Revenge Trading Detekován",
-        description: `Zjistili jsme ${data.revengeIncidents} případ(y) revenge tradingu. To zvyšuje riziko.`,
-        action: "Po větší ztrátě si dej pauzu. Dýchej a zklidni se.",
+        title: "Revenge Trading - Červený Poplach",
+        description: `Detekovali jsme ${data.revengeIncidents} případ(ů) revenge tradingu. Toto je smrtící návyk.`,
+        action: "Pravidlo: Po větší ztrátě VŽDY pauza 15 min. Žádné výjimky.",
       })
-    } else {
+    } else if (totalTrades >= 5) {
       insights.push({
         type: "success",
-        title: "Bez Revenge Tradingu",
-        description: "Skvělé! Neobchoduješ reaktivně po ztrátách.",
-        action: "Pokračuj v tomto zdravém přístupu.",
+        title: "Disciplinované Obchodování",
+        description: `Žádný revenge trading z ${totalTrades} tradů! Udržuješ chladnou hlavu i po ztrátách.`,
+        action: "Tato disciplína je tvoje superschopnost. Chraň ji.",
       })
     }
     
-    // Readiness insights
-    if (data.avgReadiness >= 80) {
+    // Mental State - Readiness
+    if (avgReadiness >= 80) {
       insights.push({
         type: "success",
-        title: "Vysoká Mentální Připravenost",
-        description: `Tvá připravenost ${roundPercent(data.avgReadiness)}% je výborná. Máš energii pro obchodování.`,
-        action: "Maximalizuj tuto dobu. Obchoduj své nejlepší strategie.",
+        title: "Peak Mental State",
+        description: `Tvá připravenost ${avgReadiness}% je vrcholná. Mozek je v nejvyšší formě.`,
+        action: "Využij tuto energii - obchoduj své A+ setups s plnou koncentrací.",
       })
-    }
-    
-    // Momentum tip
-    if (data.currentStreak >= 3) {
+    } else if (avgReadiness < 60 && avgReadiness > 0) {
       insights.push({
-        type: "tip",
-        title: "Jsi ve Streak Modu",
-        description: `Máš ${data.currentStreak} výhru za sebou. Sranda tě může oslepit.`,
-        action: "Zůstaň skromný. Nezačínej brát příliš rizika.",
+        type: "warning",
+        title: "Nízká Energie",
+        description: `Připravenost ${avgReadiness}% je pod ideálem. Trpí tím tvé rozhodování.`,
+        action: "Spi více, medituj ráno, zkontroluj výživu. Trading vyžaduje peak state.",
       })
     }
     
-    // Best trades analysis
-    if (data.bestTrade > 0 && data.worstTrade < 0) {
+    // Risk Management - Best vs Worst
+    if (data.bestTrade && data.worstTrade && data.bestTrade > 0 && data.worstTrade < 0) {
       const ratio = Math.abs(data.bestTrade / data.worstTrade)
-      if (ratio > 2) {
+      if (ratio >= 2) {
         insights.push({
           type: "success",
-          title: "Dobrý Risk/Reward Ratio",
-          description: `Tvůj ratio nejlepšího ku nejhoršímu obchodu je ${ratio.toFixed(1)}:1. Výborný!`,
-          action: "Udržuj vysoký risk/reward v každém obchodě.",
+          title: "Vynikající Risk/Reward",
+          description: `Nejvyšší výhra $${data.bestTrade} vs nejhorší ztráta $${Math.abs(data.worstTrade)} = ratio ${ratio.toFixed(1)}:1.`,
+          action: "Udržuj tento vysoký R:R. Nejlepší obchodníci mají 2:1+.",
+        })
+      } else if (ratio < 1.5) {
+        insights.push({
+          type: "tip",
+          title: "Zlepši Risk/Reward",
+          description: `Ratio ${ratio.toFixed(1)}:1 je nízké. Výhry by měly být větší než ztráty.`,
+          action: "Drž výhry déle, řež ztráty rychleji. Cíluj na min 2:1 ratio.",
         })
       }
     }
     
-    return insights.slice(0, 3) // Limit to 3 insights
+    // Activity Level
+    if (totalTrades < 3) {
+      insights.push({
+        type: "tip",
+        title: "Málo Dat",
+        description: `Jen ${totalTrades} trade(ů) tento týden. Data jsou nedostatečná pro analýzu.`,
+        action: "Hledej více quality setups nebo prodluž timeframe na měsíční review.",
+      })
+    } else if (totalTrades > 20) {
+      insights.push({
+        type: "warning",
+        title: "Overtrading",
+        description: `${totalTrades} tradů je moc! Kvalita > kvantita. Ředíš svou edge.`,
+        action: "Buď selektivnější. Obchoduj jen A+ setups s vysokou pravděpodobností.",
+      })
+    }
+    
+    return insights.slice(0, 3) // Return top 3 most relevant insights
   }
 
   const loadVirtualData = () => {
