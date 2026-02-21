@@ -1092,12 +1092,12 @@ export default function WeeklyReviewPage() {
       tradingPlanAdjustments: "",
       riskManagementNotes: "",
       mindsetPreparation: "",
-    })
+    });
     setActionPlan([
       { text: "", completed: false },
       { text: "", completed: false },
       { text: "", completed: false },
-    ])
+    ]);
   }
 
   return (
