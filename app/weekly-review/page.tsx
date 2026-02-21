@@ -1046,7 +1046,7 @@ export default function WeeklyReviewPage() {
   const saveReview = () => {
     if (!currentWeekData || !user?.id) return
 
-    const newReview: WeeklyReview = {
+    const newReview = {
       id: Date.now().toString(),
       weekStart: currentWeekData.weekStart,
       weekEnd: currentWeekData.weekEnd,
