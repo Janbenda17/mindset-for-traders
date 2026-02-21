@@ -172,7 +172,7 @@ export default function WeeklyReviewPage() {
     if (isLiveMode) {
       // V LIVE MODE - načti data z analytics
       if (analytics?.summary) {
-        console.log("[v0] Weekly Review - Inicijalizuji z analytics")
+        console.log("[v0] Weekly Review - Inicijalizuji z analytics");
         const weekData = {
           weekStart: new Date().toLocaleDateString('cs-CZ'),
           weekEnd: new Date().toLocaleDateString('cs-CZ'),
@@ -183,11 +183,11 @@ export default function WeeklyReviewPage() {
           totalTrades: analytics.summary.totalTrades,
           winRate: analytics.summary.winRate,
           totalPnL: analytics.summary.totalPnL,
-          weekStartDate: new Date(), // Ulož kdy byl review inicijalizován
-        }
-        setCurrentWeekData(weekData)
+          weekStartDate: new Date(),
+        };
+        setCurrentWeekData(weekData);
       }
-      return
+      return;
     }
     
     // V VIRTUAL MODE - loaduj demo data
