@@ -190,24 +190,9 @@ export default function WeeklyReviewPage() {
       dailyData: [],
       sleepData: [],
       aiInsights: [
-        {
-          type: "success",
-          title: "Vysoká Disciplína",
-          description: "Tvoje disciplína je na úrovni 82%. Dodržuješ obchodní plán a kontroluješ riziko.",
-          action: "Pokračuj v tomto tempu. Dělej každý den ranní check.",
-        },
-        {
-          type: "warning",
-          title: "Pozor na Revenge Trading",
-          description: "Po ztrátě -$250 jsi měl tendenci rychle otevřít další pozici.",
-          action: "Po velké ztrátě si udělej pauzu 30 minut. Zhluboka dýchej.",
-        },
-        {
-          type: "tip",
-          title: "Optimalizuj Čas Obchodování",
-          description: "Tvoje nejlepší výsledky jsou mezi 10:00-14:00. Venku z té doby máš nižší win rate.",
-          action: "Zkus se zaměřit na obchodování v tomto časovém okně.",
-        },
+        "Vysoká disciplína: Tvoje disciplína je na úrovni 82%. Dodržuješ obchodní plán a kontroluješ riziko. Pokračuj v tomto tempu.",
+        "Pozor na revenge trading: Po ztrátě máš tendenci rychle otevřít další pozici. Po velké ztrátě si udělej pauzu 30 minut a zhluboka dýchej.",
+        "Optimalizuj čas obchodování: Tvoje nejlepší výsledky jsou mezi 10:00-14:00. Zkus se zaměřit na obchodování v tomto časovém okně.",
       ],
     };
     
