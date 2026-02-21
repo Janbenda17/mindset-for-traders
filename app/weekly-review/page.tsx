@@ -229,13 +229,24 @@ export default function WeeklyReviewPage() {
       weekEnd: currentWeekData.weekEnd,
       createdAt: new Date().toISOString(),
       variant: reviewVariant,
+      // Trading Performance
       totalTrades: currentWeekData.totalTrades,
       winningTrades: currentWeekData.winningTrades,
       losingTrades: currentWeekData.losingTrades,
       winRate: currentWeekData.winRate,
       totalPnL: currentWeekData.totalPnL,
+      bestTrade: currentWeekData.bestTrade,
+      worstTrade: currentWeekData.worstTrade,
+      // Psychology & Readiness
       avgReadiness: currentWeekData.avgReadiness,
+      avgMood: currentWeekData.avgMood,
+      currentStreak: currentWeekData.currentStreak,
+      lossResets: currentWeekData.lossResets,
+      revengeIncidents: currentWeekData.revengeIncidents,
       mindPointsGained: currentWeekData.mindPointsGained,
+      // AI Insights & Recommendations
+      aiInsights: currentWeekData.aiInsights || [],
+      // User Input
       actionPlan: actionPlan,
       ...review,
     };
@@ -243,7 +254,7 @@ export default function WeeklyReviewPage() {
     const updated = [newReview, ...savedReviews];
     setSavedReviews(updated);
     setScoped("live", user.id, "weekly-reviews", updated);
-    alert("Týdenní přehled uložen!");
+    alert("Týdenní přehled s veškerými daty uložen! ✓");
   }
 
   useEffect(() => {
@@ -384,36 +395,56 @@ export default function WeeklyReviewPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {currentWeekData.aiInsights.map((insight: any, index: number) => (
-                      <div key={index} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition">
-                        <div className="flex items-start gap-3">
-                          {insight.type === "success" ? (
-                            <div className="p-2 rounded-lg bg-green-500/20">
-                              <CheckCircle2 className="w-5 h-5 text-green-400" />
-                            </div>
-                          ) : insight.type === "warning" ? (
-                            <div className="p-2 rounded-lg bg-yellow-500/20">
-                              <AlertTriangle className="w-5 h-5 text-yellow-400" />
-                            </div>
-                          ) : (
-                            <div className="p-2 rounded-lg bg-blue-500/20">
-                              <Lightbulb className="w-5 h-5 text-blue-400" />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-white text-sm mb-1">{insight.title}</p>
-                            <p className="text-gray-400 text-xs mb-2 leading-relaxed">{insight.description}</p>
-                            {insight.action && (
-                              <p className="text-purple-300 text-xs font-medium flex items-center gap-1">
-                                <ArrowUp className="w-3 h-3" />
-                                {insight.action}
-                              </p>
-                            )}
-                          </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {savedReviews.map((review: any) => (
+                  <Card
+                    key={review.id}
+                    className="bg-slate-800/50 border-slate-700 cursor-pointer hover:border-blue-500/50 hover:bg-slate-800/70 transition"
+                    onClick={() => {
+                      // Načti starý review
+                      setReview({
+                        whatWorked: review.whatWorked || "",
+                        whatDidntWork: review.whatDidntWork || "",
+                        emotionalPatterns: review.emotionalPatterns || "",
+                        mistakesMade: review.mistakesMade || "",
+                        lessonsLearned: review.lessonsLearned || "",
+                      });
+                      setActionPlan(review.actionPlan || []);
+                      alert("Review načten! Nyní můžeš upravit.");
+                      setActiveTab("current");
+                    }}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm text-white">{review.weekStart}</CardTitle>
+                        <Badge variant={review.variant === "ai" ? "default" : "outline"} className="text-xs">
+                          {review.variant === "ai" ? "AI" : "Manuální"}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        <div className="text-center p-2 bg-slate-700/50 rounded">
+                          <p className="text-xs text-gray-400">Trades</p>
+                          <p className="text-lg font-bold text-white">{review.totalTrades}</p>
+                        </div>
+                        <div className="text-center p-2 bg-slate-700/50 rounded">
+                          <p className="text-xs text-gray-400">Win%</p>
+                          <p className="text-lg font-bold text-green-400">{roundPercent(review.winRate)}%</p>
+                        </div>
+                        <div className="text-center p-2 bg-slate-700/50 rounded">
+                          <p className="text-xs text-gray-400">PnL</p>
+                          <p className="text-lg font-bold text-white">${review.totalPnL}</p>
                         </div>
                       </div>
-                    ))}
+                      <div className="mb-3 space-y-1">
+                        <p className="text-xs text-gray-400">Readiness: <span className="text-blue-400 font-semibold">{roundPercent(review.avgReadiness)}%</span></p>
+                        <p className="text-xs text-gray-400">Revenge Trades: <span className={review.revengeIncidents > 0 ? "text-red-400 font-semibold" : "text-green-400 font-semibold"}>{review.revengeIncidents}</span></p>
+                      </div>
+                      <p className="text-gray-400 text-xs line-clamp-2">{review.whatWorked || "Bez poznámek"}</p>
+                    </CardContent>
+                  </Card>
+                ))}
                   </div>
                 </CardContent>
               </Card>
