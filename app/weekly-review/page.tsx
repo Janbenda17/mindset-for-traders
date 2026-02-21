@@ -97,6 +97,83 @@ export default function WeeklyReviewPage() {
   ])
   const [activeTab, setActiveTab] = useState("current")
 
+  // Helper function to round percentages
+  const roundPercent = (value: number) => Math.round(value)
+
+  // Generate AI insights based on trading data
+  const generateAIInsights = (data: any) => {
+    const insights: any[] = []
+    
+    // Win rate insights
+    if (data.winRate >= 70) {
+      insights.push({
+        type: "success",
+        title: "Výborná Úspěšnost",
+        description: `Tvá úspěšnost ${roundPercent(data.winRate)}% je silná. Jsi v top 20% obchodníků.`,
+        action: "Udržuj konzistenci a nebeř zbytečná rizika.",
+      })
+    } else if (data.winRate >= 50) {
+      insights.push({
+        type: "warning",
+        title: "Průměrná Úspěšnost",
+        description: `Úspěšnost ${roundPercent(data.winRate)}% je na hranici. Potřebuješ se zlepšit.`,
+        action: "Zaměř se na risk management a vstupy do obchodů.",
+      })
+    }
+    
+    // Revenge trading detection
+    if (data.revengeIncidents > 0) {
+      insights.push({
+        type: "warning",
+        title: "Revenge Trading Detekován",
+        description: `Zjistili jsme ${data.revengeIncidents} případ(y) revenge tradingu. To zvyšuje riziko.`,
+        action: "Po větší ztrátě si dej pauzu. Dýchej a zklidni se.",
+      })
+    } else {
+      insights.push({
+        type: "success",
+        title: "Bez Revenge Tradingu",
+        description: "Skvělé! Neobchoduješ reaktivně po ztrátách.",
+        action: "Pokračuj v tomto zdravém přístupu.",
+      })
+    }
+    
+    // Readiness insights
+    if (data.avgReadiness >= 80) {
+      insights.push({
+        type: "success",
+        title: "Vysoká Mentální Připravenost",
+        description: `Tvá připravenost ${roundPercent(data.avgReadiness)}% je výborná. Máš energii pro obchodování.`,
+        action: "Maximalizuj tuto dobu. Obchoduj své nejlepší strategie.",
+      })
+    }
+    
+    // Momentum tip
+    if (data.currentStreak >= 3) {
+      insights.push({
+        type: "tip",
+        title: "Jsi ve Streak Modu",
+        description: `Máš ${data.currentStreak} výhru za sebou. Sranda tě může oslepit.`,
+        action: "Zůstaň skromný. Nezačínej brát příliš rizika.",
+      })
+    }
+    
+    // Best trades analysis
+    if (data.bestTrade > 0 && data.worstTrade < 0) {
+      const ratio = Math.abs(data.bestTrade / data.worstTrade)
+      if (ratio > 2) {
+        insights.push({
+          type: "success",
+          title: "Dobrý Risk/Reward Ratio",
+          description: `Tvůj ratio nejlepšího ku nejhoršímu obchodu je ${ratio.toFixed(1)}:1. Výborný!`,
+          action: "Udržuj vysoký risk/reward v každém obchodě.",
+        })
+      }
+    }
+    
+    return insights.slice(0, 3) // Limit to 3 insights
+  }
+
   const loadVirtualData = () => {
     if (currentWeekData) return;
     
@@ -181,8 +258,9 @@ export default function WeeklyReviewPage() {
           totalTrades: analytics.summary.totalTrades,
           winRate: analytics.summary.winRate,
           totalPnL: analytics.summary.totalPnL,
-          aiInsights: [],
         };
+        // Generate AI insights for live mode data
+        weekData.aiInsights = generateAIInsights(weekData);
         setCurrentWeekData(weekData);
       }
       return;
@@ -243,7 +321,7 @@ export default function WeeklyReviewPage() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between mb-2">
                     <Trophy className="w-8 h-8 text-green-400" />
-                    <Badge className="bg-green-500/20 text-green-300 border-green-500/30">+{currentWeekData.winRate}%</Badge>
+                    <Badge className="bg-green-500/20 text-green-300 border-green-500/30">+{roundPercent(currentWeekData.winRate)}%</Badge>
                   </div>
                   <p className="text-3xl font-bold text-white mb-1">{currentWeekData.totalTrades}</p>
                   <p className="text-sm text-gray-400">Celkem Tradů</p>
@@ -260,7 +338,7 @@ export default function WeeklyReviewPage() {
                     <Target className="w-8 h-8 text-blue-400" />
                     <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">Win Rate</Badge>
                   </div>
-                  <p className="text-3xl font-bold text-white mb-1">{currentWeekData.winRate}%</p>
+                  <p className="text-3xl font-bold text-white mb-1">{roundPercent(currentWeekData.winRate)}%</p>
                   <p className="text-sm text-gray-400">Úspěšnost</p>
                   <Progress value={currentWeekData.winRate} className="mt-3 h-2" />
                 </CardContent>
@@ -272,7 +350,7 @@ export default function WeeklyReviewPage() {
                     <Zap className="w-8 h-8 text-purple-400" />
                     <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">Mental</Badge>
                   </div>
-                  <p className="text-3xl font-bold text-white mb-1">{currentWeekData.avgReadiness}%</p>
+                  <p className="text-3xl font-bold text-white mb-1">{roundPercent(currentWeekData.avgReadiness)}%</p>
                   <p className="text-sm text-gray-400">Avg Readiness</p>
                   <Progress value={currentWeekData.avgReadiness} className="mt-3 h-2" />
                 </CardContent>
