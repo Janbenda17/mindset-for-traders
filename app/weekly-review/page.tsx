@@ -169,6 +169,7 @@ export default function WeeklyReviewPage() {
   }
 
   useEffect(() => {
+    console.log("[v0] Weekly Review useEffect - isLiveMode:", isLiveMode, "currentWeekData:", currentWeekData?.weekStart);
     if (isLiveMode) {
       // V LIVE MODE - načti data z analytics
       if (analytics?.summary) {
@@ -192,9 +193,10 @@ export default function WeeklyReviewPage() {
     
     // V VIRTUAL MODE - loaduj demo data
     if (!currentWeekData) {
+      console.log("[v0] Weekly Review - Spouštím loadVirtualData()");
       loadVirtualData()
     }
-  }, [isLiveMode, analytics])
+  }, [isLiveMode, analytics, currentWeekData])
 
   // Kontroluj zda se začal nový týden a resetuj data
   useEffect(() => {
