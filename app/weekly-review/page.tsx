@@ -107,6 +107,8 @@ export default function WeeklyReviewPage() {
     const totalTrades = data.totalTrades || 0
     const pnl = data.totalPnL || 0
     const avgReadiness = roundPercent(data.avgReadiness || 0)
+    const avgSleep = data.avgSleep || 7
+    const avgStress = data.avgStress || 50
     
     // Performance Analysis - Win Rate
     if (winRate >= 70) {
@@ -220,8 +222,66 @@ export default function WeeklyReviewPage() {
         action: "Buď selektivnější. Obchoduj jen A+ setups s vysokou pravděpodobností.",
       })
     }
+
+    // Sleep Analysis - CRITICAL for trading performance
+    if (avgSleep < 6.5) {
+      insights.push({
+        type: "warning",
+        title: "Kritický Nedostatek Spánku",
+        description: `Spíš v průměru ${avgSleep.toFixed(1)} hodin. Méně než 6,5h drasticky zhoršuje tvou soustředění, impulse control a rozhodování.`,
+        action: "PRIORITA: Spí alespoň 7-8 hodin. Bez spánku žádné trading. Dej si pravidlo - before 7am nic.",
+      })
+    } else if (avgSleep >= 7 && avgSleep <= 8.5) {
+      insights.push({
+        type: "success",
+        title: "Optimální Spánek",
+        description: `Průměr ${avgSleep.toFixed(1)} hodin je ideální. Tvůj mozek je v peak condition.`,
+        action: "Udržuj tento rytmus. To je základ všeho - bez spánku jsi handicapped trader.",
+      })
+    } else if (avgSleep > 8.5) {
+      insights.push({
+        type: "tip",
+        title: "Příliš Mnoho Spánku",
+        description: `${avgSleep.toFixed(1)} hodin může znamenat únavu nebo depresivní náladu. Zkontroluj stres.`,
+        action: "Ideál je 7-8 hodin. Více spánku nezvyšuje výkon - zjisti proč spíš tolik.",
+      })
+    }
+
+    // Stress Management - CRITICAL for psychology
+    if (avgStress > 75) {
+      insights.push({
+        type: "critical",
+        title: "KRITICKY VYSOKÝ STRES",
+        description: `Průměrný stres ${roundPercent(avgStress)}%. To je deštruktivní pro tvoje trading psychiku.`,
+        action: "IHNED: Před KAŽDÝM obchodem si dej 5min meditaci. Po každé ztrátě 15min pauza. Cvič dechování.",
+      })
+    } else if (avgStress > 60) {
+      insights.push({
+        type: "warning",
+        title: "Vysoký Stres",
+        description: `Stres na ${roundPercent(avgStress)}%. To ovlivňuje tvoje rozhodování a impulse control.`,
+        action: "Začni meditaci/yoga. Po ztrátě si dej aspoň 10min pauzu. Neobchoduj pod stresem.",
+      })
+    } else if (avgStress <= 50) {
+      insights.push({
+        type: "success",
+        title: "Kontrolovaný Stres",
+        description: `Stres ${roundPercent(avgStress)}% je v normě. Udržuješ si klid.`,
+        action: "Pokračuj v tom. Stress management je tvoje superschopnost.",
+      })
+    }
+
+    // Sleep + Stress + Performance Correlation
+    if (avgSleep < 6.5 && avgStress > 70 && winRate < 55) {
+      insights.push({
+        type: "critical",
+        title: "PERFEKTNÍ BOUŘE: Spánek + Stres + Výkon Padá",
+        description: `Máš zároveň malý spánek (${avgSleep.toFixed(1)}h), vysoký stres (${roundPercent(avgStress)}%) a nízkou úspěšnost (${winRate}%).`,
+        action: "STOP TRADING. Vrať se k basics: Spí 8h, medituješ ráno 10min, obchoduješ jen morning setups.",
+      })
+    }
     
-    return insights.slice(0, 3) // Return top 3 most relevant insights
+    return insights.slice(0, 4) // Return top 4 most relevant insights
   }
 
   const loadVirtualData = () => {
@@ -290,6 +350,8 @@ export default function WeeklyReviewPage() {
       // Psychology & Readiness
       avgReadiness: currentWeekData.avgReadiness,
       avgMood: currentWeekData.avgMood,
+      avgSleep: currentWeekData.avgSleep,
+      avgStress: currentWeekData.avgStress,
       currentStreak: currentWeekData.currentStreak,
       lossResets: currentWeekData.lossResets,
       revengeIncidents: currentWeekData.revengeIncidents,
@@ -310,16 +372,54 @@ export default function WeeklyReviewPage() {
   useEffect(() => {
     if (isLiveMode) {
       if (analytics?.summary) {
+        // Počítej sleep a stress z morning checks
+        const morningChecks = analytics.data?.morningChecks || [];
+        let totalSleep = 0;
+        let totalStress = 0;
+        let sleepCount = 0;
+        let stressCount = 0;
+
+        morningChecks.forEach((mc: any) => {
+          if (mc.sleep !== undefined && mc.sleep !== null) {
+            totalSleep += mc.sleep;
+            sleepCount++;
+          }
+          if (mc.stress !== undefined && mc.stress !== null) {
+            totalStress += mc.stress;
+            stressCount++;
+          }
+        });
+
+        const avgSleep = sleepCount > 0 ? totalSleep / sleepCount : 7;
+        const avgStress = stressCount > 0 ? totalStress / stressCount : 50;
+
         const weekData = {
           weekStart: new Date().toLocaleDateString('cs-CZ'),
           weekEnd: new Date().toLocaleDateString('cs-CZ'),
-          avgMood: 75,
+          avgMood: analytics.summary.avgMood || 75,
           avgReadiness: analytics.summary.avgReadiness || 75,
+          avgSleep: avgSleep,
+          avgStress: avgStress,
           revengeIncidents: analytics.psychology?.revengeIncidents || 0,
           totalTrades: analytics.summary.totalTrades,
           winRate: analytics.summary.winRate,
           totalPnL: analytics.summary.totalPnL,
+          bestTrade: analytics.summary.bestDay?.pnl || 0,
+          worstTrade: analytics.summary.worstDay?.pnl || 0,
+          winningTrades: 0,
+          losingTrades: 0,
+          currentStreak: 0,
+          lossResets: 0,
+          mindPointsGained: 0,
+          aiInsights: [],
         };
+        
+        // Calculate winning/losing trades
+        if (analytics.data?.trades) {
+          weekData.winningTrades = analytics.data.trades.filter((t: any) => (t.pnl || 0) > 0).length;
+          weekData.losingTrades = analytics.data.trades.filter((t: any) => (t.pnl || 0) < 0).length;
+        }
+
         // Generate AI insights for live mode data
         weekData.aiInsights = generateAIInsights(weekData);
         setCurrentWeekData(weekData);
@@ -494,9 +594,19 @@ export default function WeeklyReviewPage() {
                           <p className="text-lg font-bold text-white">${review.totalPnL}</p>
                         </div>
                       </div>
-                      <div className="mb-3 space-y-1">
-                        <p className="text-xs text-gray-400">Readiness: <span className="text-blue-400 font-semibold">{roundPercent(review.avgReadiness)}%</span></p>
-                        <p className="text-xs text-gray-400">Revenge Trades: <span className={review.revengeIncidents > 0 ? "text-red-400 font-semibold" : "text-green-400 font-semibold"}>{review.revengeIncidents}</span></p>
+                      <div className="mb-3 space-y-1 text-xs">
+                        <p className="text-gray-400">
+                          Readiness: <span className="text-blue-400 font-semibold">{roundPercent(review.avgReadiness)}%</span>
+                        </p>
+                        <p className="text-gray-400">
+                          Sleep: <span className={review.avgSleep >= 7 ? "text-green-400 font-semibold" : "text-orange-400 font-semibold"}>{review.avgSleep?.toFixed(1)}h</span>
+                        </p>
+                        <p className="text-gray-400">
+                          Stress: <span className={review.avgStress <= 50 ? "text-green-400 font-semibold" : "text-red-400 font-semibold"}>{roundPercent(review.avgStress)}%</span>
+                        </p>
+                        <p className="text-gray-400">
+                          Revenge Trades: <span className={review.revengeIncidents > 0 ? "text-red-400 font-semibold" : "text-green-400 font-semibold"}>{review.revengeIncidents}</span>
+                        </p>
                       </div>
                       <div className="mb-2 space-y-2">
                         <p className="text-xs text-gray-300 font-semibold">Poznámka:</p>
