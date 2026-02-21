@@ -194,9 +194,9 @@ export default function WeeklyReviewPage() {
     // V VIRTUAL MODE - loaduj demo data
     if (!currentWeekData) {
       console.log("[v0] Weekly Review - Spouštím loadVirtualData()");
-      loadVirtualData()
+      loadVirtualData();
     }
-  }, [isLiveMode, analytics, currentWeekData])
+  }, [isLiveMode, analytics, currentWeekData]);
 
   // Kontroluj zda se začal nový týden a resetuj data
   useEffect(() => {
