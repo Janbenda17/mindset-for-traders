@@ -509,6 +509,46 @@ export default function WeeklyReviewPage() {
                   )}
                 </div>
 
+                {/* AI Insights */}
+                {currentWeekData.aiInsights && currentWeekData.aiInsights.length > 0 && (
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setExpandedSections({ ...expandedSections, insights: !expandedSections.insights })}
+                      className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-purple-600/30 to-blue-600/30 rounded-lg hover:from-purple-600/40 hover:to-blue-600/40 transition border border-purple-500/30"
+                    >
+                      <span className="flex items-center gap-2 text-white font-semibold">
+                        <Sparkles className="w-4 h-4 text-yellow-400" />
+                        AI Poznatky
+                      </span>
+                      <span className="text-gray-400">{expandedSections.insights ? "▼" : "▶"}</span>
+                    </button>
+                    {expandedSections.insights && (
+                      <div className="space-y-3 pl-4 border-l-2 border-purple-500">
+                        {currentWeekData.aiInsights.map((insight: any, index: number) => (
+                          <div key={index} className="p-3 rounded-lg bg-slate-700/50 border border-slate-600">
+                            <div className="flex gap-3">
+                              {insight.type === "success" ? (
+                                <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                              ) : insight.type === "warning" ? (
+                                <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                              ) : (
+                                <Lightbulb className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                              )}
+                              <div className="flex-1">
+                                <p className="font-semibold text-white text-sm">{insight.title}</p>
+                                <p className="text-gray-300 text-sm mt-1">{insight.description}</p>
+                                {insight.action && (
+                                  <p className="text-purple-300 text-sm mt-2 font-medium">→ {insight.action}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <Button 
                   onClick={saveReview} 
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3"
