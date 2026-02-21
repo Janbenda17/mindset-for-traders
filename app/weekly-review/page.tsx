@@ -449,29 +449,30 @@ export default function WeeklyReviewPage() {
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {savedReviews.map((review: any) => (
-                    key={review.id}
-                    className="bg-slate-800/50 border-slate-700 cursor-pointer hover:border-blue-500/50 hover:bg-slate-800/70 transition"
-                    onClick={() => {
-                      // Načti všechna data ze starého review
-                      setReview({
-                        whatWorked: review.whatWorked || "",
-                        whatDidntWork: review.whatDidntWork || "",
-                        biggestWin: review.biggestWin || "",
-                        biggestLoss: review.biggestLoss || "",
-                        emotionalPatterns: review.emotionalPatterns || "",
-                        mistakesMade: review.mistakesMade || "",
-                        lessonsLearned: review.lessonsLearned || "",
-                        weeklyGoals: review.weeklyGoals || ["", "", ""],
-                        focusAreas: review.focusAreas || ["", "", ""],
-                        tradingPlanAdjustments: review.tradingPlanAdjustments || "",
-                        riskManagementNotes: review.riskManagementNotes || "",
-                        mindsetPreparation: review.mindsetPreparation || "",
-                      });
-                      setActionPlan(review.actionPlan || []);
-                      alert("Review načten! Všechna data jsou obnovena.");
-                      setActiveTab("current");
-                    }}
-                  >
+                    <Card
+                      key={review.id}
+                      className="bg-slate-800/50 border-slate-700 cursor-pointer hover:border-blue-500/50 hover:bg-slate-800/70 transition"
+                      onClick={() => {
+                        // Načti všechna data ze starého review
+                        setReview({
+                          whatWorked: review.whatWorked || "",
+                          whatDidntWork: review.whatDidntWork || "",
+                          biggestWin: review.biggestWin || "",
+                          biggestLoss: review.biggestLoss || "",
+                          emotionalPatterns: review.emotionalPatterns || "",
+                          mistakesMade: review.mistakesMade || "",
+                          lessonsLearned: review.lessonsLearned || "",
+                          weeklyGoals: review.weeklyGoals || ["", "", ""],
+                          focusAreas: review.focusAreas || ["", "", ""],
+                          tradingPlanAdjustments: review.tradingPlanAdjustments || "",
+                          riskManagementNotes: review.riskManagementNotes || "",
+                          mindsetPreparation: review.mindsetPreparation || "",
+                        });
+                        setActionPlan(review.actionPlan || []);
+                        alert("Review načten! Všechna data jsou obnovena.");
+                        setActiveTab("current");
+                      }}
+                    >
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm text-white">{review.weekStart}</CardTitle>
