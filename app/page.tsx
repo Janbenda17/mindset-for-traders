@@ -25,42 +25,47 @@ export default function HomePage() {
     {
       id: 1,
       title: 'Daily Tracker',
-      description: 'Sleduj svůj psychologický stav každý den. Měří tvou náladu, energii, stres a spánek - vše co ovlivňuje tvoje trading rozhodnutí.',
+      description: 'Každé ráno 30 sekund zaznamenáš svůj psychologický stav. AI pak detekuje kdy jsi na top nebo kdy bys měl sedět. Slibuj si: méně ztracených dní.',
       image: '/feature-daily-tracker.jpg',
       icon: Calendar,
-      href: '/daily-tracker'
+      href: '/daily-tracker',
+      highlight: '5x přesnější rozhodnutí'
     },
     {
       id: 2,
       title: 'Weekly Review',
-      description: 'Komplexní analýza tvého týdne. AI generuje poznatky o tvém win rate, psychologických vzorcích a konkrétní doporučení pro zlepšení.',
+      description: 'Každý pátek se podíváš zpět. AI ti ukáže tvá slabá místa, win rate, psychologické vzorce a co přesně měníš příští týden. Bez BS.',
       image: '/feature-weekly-review.jpg',
       icon: TrendingUp,
-      href: '/weekly-review'
+      href: '/weekly-review',
+      highlight: 'AI poznatky + akční plán'
     },
     {
       id: 3,
       title: 'Fail Log',
-      description: 'Zaznamenávej svoje obchodní chyby s detailní analýzou. AI ti ukáže co jsi udělal špatně a jak se z toho poučit.',
+      description: 'Jakmile prohraješ obchod, zaznamenáš ho. AI analyzuje jestli to byla strategie, psychika, nebo prostě hloupá chyba. Sem patří všechny tvoje prohry.',
       image: '/feature-fail-log.jpg',
       icon: AlertCircle,
-      href: '/fail-log'
+      href: '/fail-log',
+      highlight: 'Nechraň si egem - nauč se!'
     },
     {
       id: 4,
       title: 'Trading Plans',
-      description: 'Plánuj den dopředu se SEP pravidly a risk managementem. Zapiš si své setups a pravidla aby sis je nemusel pamatovat pod stresem.',
+      description: 'Napíšeš si plán den dopředu - setups, pravidla, risk, co dělat když prohraje. Pak ho během dne jen mengeneš. Eliminuješ emotivní rozhodnutí.',
       image: '/feature-trading-plans.jpg',
       icon: Target,
-      href: '/trading-plan'
+      href: '/trading-plan',
+      highlight: 'Disciplína je tvůj edge'
     },
     {
       id: 5,
       title: 'AI Partner Matching',
-      description: 'Najdi si ideálního trading partnera s podobným stylem. Společný growth a accountability partner pro dlouhodobý úspěch.',
+      description: 'Jsi sám? Najdeme ti nejlepšího trading partnera. Stejný skill, mindset, schedule. Spolu rostete 10x rychleji. Accountability = výnosy.',
       image: '/feature-ai-partner.jpg',
       icon: Users,
-      href: '/find-partner'
+      href: '/find-partner',
+      highlight: 'Solo ti padá. S partnerem vítězíš'
     }
   ]
 
@@ -105,21 +110,55 @@ export default function HomePage() {
       
       {/* Main Content */}
       <div className="relative z-10 pt-48 px-4 md:px-8 lg:px-12 pb-20 max-w-6xl mx-auto">
-        {/* Hero Section */}
+        {/* Hero Section - More Compelling */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16 px-4"
+          className="text-center mb-20 px-4"
         >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-6 leading-tight">
-            <span className="bg-gradient-to-r from-purple-200 via-white to-indigo-200 bg-clip-text text-transparent">
-              #1 Nástroj pro Psychologii v Tradingu
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, type: "spring" }}
+            className="inline-block mb-6 px-4 py-2 rounded-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-400/50 backdrop-blur-sm"
+          >
+            <span className="text-purple-300 font-semibold text-sm">⭐ #1 Trading Psychology Platform</span>
+          </motion.div>
+
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-8 leading-tight">
+            <span className="bg-gradient-to-r from-purple-200 via-pink-200 to-indigo-200 bg-clip-text text-transparent">
+              Tvůj mozek se stane<br />tvojí největší výhodou
             </span>
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-purple-100 leading-relaxed max-w-3xl mx-auto font-semibold">
-            Analyzuje tvoje emoce v reálném čase a zastaví tě, než spálíš účet
+          
+          <p className="text-lg sm:text-xl md:text-2xl text-purple-100 leading-relaxed max-w-3xl mx-auto font-semibold mb-6">
+            <span className="text-red-400 font-black">93% obchodníků</span> padne kvůli psychice, ne kvůli strategii.
           </p>
+          <p className="text-base sm:text-lg text-purple-200/80 max-w-2xl mx-auto leading-relaxed">
+            MindTrader analyzuje tvoje emoce v reálném čase, detekuje tvá slabá místa a zastaví tě, než uděláš katastrofální chybu.
+          </p>
+        </motion.div>
+
+        {/* Stats Row */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20"
+        >
+          {[
+            { number: '9/10', label: 'Obchodníků má psychické problémy' },
+            { number: '67%', label: 'Větší výnosy s trackerem' },
+            { number: '↓82%', label: 'Méně revenge tradingu' },
+            { number: '24/7', label: 'AI analýza tvého mindetu' }
+          ].map((stat, i) => (
+            <div key={i} className="p-4 rounded-lg bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 text-center">
+              <p className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">{stat.number}</p>
+              <p className="text-xs sm:text-sm text-purple-200 mt-2">{stat.label}</p>
+            </div>
+          ))}
         </motion.div>
 
         {/* Features Stack */}
@@ -151,8 +190,8 @@ export default function HomePage() {
                     {/* Content Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 md:p-10">
                       <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <div className="flex items-center gap-3 mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-lg backdrop-blur-sm border border-purple-400/50">
                               <Icon className="w-6 h-6 text-purple-300" />
                             </div>
@@ -160,6 +199,19 @@ export default function HomePage() {
                               {feature.title}
                             </h2>
                           </div>
+                          
+                          {/* Highlight Badge */}
+                          {feature.highlight && (
+                            <motion.div
+                              initial={{ opacity: 0, x: -10 }}
+                              whileInView={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.2 }}
+                              className="mb-3 inline-block px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/50"
+                            >
+                              <span className="text-xs sm:text-sm font-bold text-yellow-300">✨ {feature.highlight}</span>
+                            </motion.div>
+                          )}
+                          
                           <p className="text-sm sm:text-base md:text-lg text-purple-100/90 leading-relaxed max-w-2xl">
                             {feature.description}
                           </p>
@@ -177,24 +229,32 @@ export default function HomePage() {
           })}
         </div>
 
-        {/* CTA Section */}
+        {/* CTA Section - More Compelling */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="text-center py-16"
+          className="text-center py-16 mb-8"
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
-            Připraven začít?
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3 leading-tight">
+            Připraven se stát <span className="text-gradient bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">top 7%?</span>
           </h2>
-          <Button
-            size="lg"
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-lg px-12 py-6 rounded-xl shadow-lg shadow-purple-500/50"
-            onClick={handlePricingClick}
+          <p className="text-lg text-purple-200/80 max-w-2xl mx-auto mb-8">
+            Zbývá ti jen psychika. Strategie máš. Počítej s tím že prvních 30 dní bude tvrdé. Pak už to poplují na automatiku.
+          </p>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            Zkusit Zdarma
-          </Button>
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-black text-lg px-12 py-7 rounded-xl shadow-lg shadow-purple-500/50"
+              onClick={handlePricingClick}
+            >
+              Spustit Zdarma (14 dní) →
+            </Button>
+          </motion.div>
         </motion.div>
 
         {/* Premium Upgrade Banner */}
