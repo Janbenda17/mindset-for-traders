@@ -1,53 +1,71 @@
-import { Badge, TrendingUp, Target, Zap } from 'lucide-react'
+import { TrendingUp, DollarSign, Zap, AlertCircle, Sparkles } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 
 export function WeeklyReviewPreview() {
   return (
-    <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-950 p-6 rounded-xl">
-      <h3 className="text-white font-bold text-lg mb-6">Tvůj Týden</h3>
+    <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 flex flex-col overflow-hidden">
+      {/* Header */}
+      <h3 className="text-white font-bold text-base mb-3 pb-2 border-b border-slate-600/50">
+        Týdenní Přehled
+      </h3>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-gradient-to-br from-green-900/30 to-green-950/30 rounded-lg p-3 border border-green-500/30">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-4 h-4 text-green-400" />
-            <span className="text-xs text-gray-400">Win Rate</span>
+      {/* Stats 2x2 Grid */}
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        {/* Win Rate */}
+        <div className="bg-gradient-to-br from-green-900/40 to-green-950/40 rounded-lg p-3 border border-green-500/30">
+          <div className="flex items-center gap-1.5 mb-1">
+            <TrendingUp className="w-4 h-4 text-green-400 flex-shrink-0" />
+            <span className="text-xs text-slate-300 font-semibold truncate">Win Rate</span>
           </div>
           <p className="text-2xl font-black text-green-400">67%</p>
-          <p className="text-xs text-gray-400">2 výhry, 1 ztráta</p>
+          <p className="text-xs text-slate-400 mt-1">2W / 1L</p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-900/30 to-blue-950/30 rounded-lg p-3 border border-blue-500/30">
-          <div className="flex items-center gap-2 mb-1">
-            <Target className="w-4 h-4 text-blue-400" />
-            <span className="text-xs text-gray-400">Profit</span>
+        {/* Profit */}
+        <div className="bg-gradient-to-br from-blue-900/40 to-blue-950/40 rounded-lg p-3 border border-blue-500/30">
+          <div className="flex items-center gap-1.5 mb-1">
+            <DollarSign className="w-4 h-4 text-blue-400 flex-shrink-0" />
+            <span className="text-xs text-slate-300 font-semibold truncate">Profit</span>
           </div>
           <p className="text-2xl font-black text-blue-400">+$712</p>
-          <p className="text-xs text-gray-400">Průměr: $237</p>
+          <p className="text-xs text-slate-400 mt-1">avg: $237</p>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-900/30 to-purple-950/30 rounded-lg p-3 border border-purple-500/30">
-          <div className="flex items-center gap-2 mb-1">
-            <Zap className="w-4 h-4 text-purple-400" />
-            <span className="text-xs text-gray-400">Readiness</span>
+        {/* Readiness */}
+        <div className="bg-gradient-to-br from-purple-900/40 to-purple-950/40 rounded-lg p-3 border border-purple-500/30">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Zap className="w-4 h-4 text-purple-400 flex-shrink-0" />
+            <span className="text-xs text-slate-300 font-semibold">Readiness</span>
           </div>
-          <p className="text-2xl font-black text-purple-400">75%</p>
-          <Progress value={75} className="h-1 mt-1" />
+          <Progress value={75} className="h-1.5 mb-1" />
+          <p className="text-xs text-slate-400 font-semibold">75%</p>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-900/30 to-orange-950/30 rounded-lg p-3 border border-orange-500/30">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs text-gray-400">Trades</span>
+        {/* Trades */}
+        <div className="bg-gradient-to-br from-orange-900/40 to-orange-950/40 rounded-lg p-3 border border-orange-500/30">
+          <div className="flex items-center gap-1.5 mb-1">
+            <AlertCircle className="w-4 h-4 text-orange-400 flex-shrink-0" />
+            <span className="text-xs text-slate-300 font-semibold">Trades</span>
           </div>
           <p className="text-2xl font-black text-orange-400">3</p>
-          <p className="text-xs text-gray-400">Kvalitní setups</p>
+          <p className="text-xs text-slate-400 mt-1">kvalitní</p>
         </div>
       </div>
 
-      <div className="space-y-3">
-        <p className="text-xs font-semibold text-purple-300">AI Poznatky:</p>
-        <div className="bg-slate-800/50 rounded p-3 border border-purple-500/30">
-          <p className="text-xs text-purple-100 leading-relaxed">
-            "Výborná disciplína! Žádný revenge trading. Spánek 7.5h je optimální. Pokračuj v ranních ochodech."
+      {/* AI Insights */}
+      <div className="flex-1 flex flex-col">
+        <div className="flex items-center gap-1.5 mb-2">
+          <Sparkles className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+          <span className="text-xs font-bold text-slate-300">AI Insights</span>
+        </div>
+        
+        <div className="bg-slate-700/30 rounded-lg p-3 border border-purple-400/30 flex-1 overflow-y-auto">
+          <p className="text-xs text-slate-200 leading-relaxed">
+            <span className="text-purple-300 font-semibold block mb-1">✓ Výborná disciplína!</span>
+            Žádný revenge trading z 3 tradů. Spánek 7.5h je optimální pro trading.
+          </p>
+          <p className="text-xs text-slate-300 leading-relaxed mt-2">
+            Pokračuj v ranních ochodech - tam máš best edge. Věnuj pozornost stress managementu.
           </p>
         </div>
       </div>
