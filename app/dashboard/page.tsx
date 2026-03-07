@@ -155,58 +155,110 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-10"
           >
             {[
               { 
                 label: 'Celkový kapitál', 
                 value: `$${totalCapital.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, 
                 icon: '💰', 
-                gradient: 'from-green-600 to-emerald-500',
-                change: '+2.4%'
+                color: 'text-green-400',
+                borderColor: 'border-green-500/20',
+                bgColor: 'bg-green-500/5'
               },
               { 
                 label: 'Měsíční P/L', 
                 value: `${monthlyPL >= 0 ? '+' : ''}$${monthlyPL.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, 
                 icon: '📈', 
-                gradient: 'from-blue-600 to-cyan-500',
-                change: monthlyPL >= 0 ? '↑ Positivo' : '↓ Negativní'
+                color: 'text-blue-400',
+                borderColor: 'border-blue-500/20',
+                bgColor: 'bg-blue-500/5'
               },
               { 
                 label: 'Aktuální Readiness', 
                 value: `${Math.round(readiness)}%`, 
                 icon: '🧠', 
-                gradient: 'from-purple-600 to-indigo-500',
-                subtext: 'Trading Ready'
+                color: 'text-purple-400',
+                borderColor: 'border-purple-500/20',
+                bgColor: 'bg-purple-500/5'
               },
               { 
-                label: 'Tvůj XP Skóre', 
+                label: 'Tvůj XP', 
                 value: xpValue.toLocaleString('cs-CZ'), 
                 icon: '⭐', 
-                gradient: 'from-yellow-600 to-orange-500',
-                subtext: 'Level 2'
+                color: 'text-yellow-400',
+                borderColor: 'border-yellow-500/20',
+                bgColor: 'bg-yellow-500/5'
               }
             ].map((stat, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: i * 0.05 }}
-                whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
-                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl p-5 hover:border-white/20 transition-all cursor-pointer"
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                whileHover={{ y: -4 }}
+                className={`${stat.bgColor} ${stat.borderColor} border rounded-xl p-5 transition-all hover:border-opacity-40`}
               >
-                {/* Background gradient */}
-                <div className={`absolute -top-1/2 -right-1/2 w-96 h-96 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 blur-3xl transition-opacity duration-700 pointer-events-none`} />
-                
-                <div className="relative z-10">
-                  <div className="flex items-start justify-between mb-4">
-                    <span className="text-3xl">{stat.icon}</span>
-                    {stat.change && (
-                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${stat.change.includes('+') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
-                        {stat.change}
-                      </span>
-                    )}
-                  </div>
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-2xl">{stat.icon}</span>
+                </div>
+                <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">{stat.label}</p>
+                <p className={`text-3xl font-black ${stat.color} mb-1`}>
+                  {analyticsLoading || gamificationLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    stat.value
+                  )}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Features Grid - 2x2 */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mb-12"
+          >
+            <h2 className="text-2xl font-bold text-white mb-6">Nástroje</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {features.map((feature, i) => {
+                const colorScheme = [
+                  { bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: 'bg-purple-600 text-purple-100' },
+                  { bg: 'bg-blue-500/10', border: 'border-blue-500/20', icon: 'bg-blue-600 text-blue-100' },
+                  { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: 'bg-emerald-600 text-emerald-100' },
+                  { bg: 'bg-orange-500/10', border: 'border-orange-500/20', icon: 'bg-orange-600 text-orange-100' }
+                ]
+                const scheme = colorScheme[i]
+                return (
+                  <Link key={i} href={feature.href}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }}
+                      whileHover={{ y: -4 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`${scheme.bg} ${scheme.border} border rounded-2xl p-6 transition-all cursor-pointer hover:border-opacity-40 h-full flex flex-col`}
+                    >
+                      <div className={`w-12 h-12 rounded-lg ${scheme.icon} flex items-center justify-center mb-4`}>
+                        <feature.icon className="w-6 h-6" />
+                      </div>
+
+                      <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
+                      <p className="text-slate-300 text-sm mb-6 flex-grow leading-relaxed">{feature.desc}</p>
+
+                      <div className="flex items-center gap-2 text-slate-400 text-sm font-semibold hover:text-white transition-colors">
+                        <span>Otevřít</span>
+                        <span className="text-lg">→</span>
+                      </div>
+                    </motion.div>
+                  </Link>
+                )
+              })}
+            </div>
+          </motion.div>
+        </div>
                   <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">{stat.label}</p>
                   <p className="text-3xl font-black text-white mb-1">
                     {analyticsLoading || gamificationLoading ? (
