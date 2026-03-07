@@ -155,8 +155,7 @@ export default function HomePage() {
         >
           {[
             { number: '9/10', label: 'Obchodníků má psychické problémy' },
-            { number: '67%', label: 'Větší výnosy s trackerem' },
-            { number: '↓82%', label: 'Méně revenge tradingu' },
+            { number: '↓42%', label: 'Méně revenge tradingu' },
             { number: '24/7', label: 'AI analýza tvého mindetu' }
           ].map((stat, i) => (
             <div key={i} className="p-4 rounded-lg bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 text-center">
