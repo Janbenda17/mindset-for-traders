@@ -166,10 +166,11 @@ export default function HomePage() {
           ))}
         </motion.div>
 
-        {/* Features Stack */}
-        <div className="space-y-8 md:space-y-12 mb-16">
+        {/* Features Stack - Text Left, Image Right */}
+        <div className="space-y-12 md:space-y-16 mb-16">
           {features.map((feature, index) => {
             const Icon = feature.icon
+            const isEven = index % 2 === 0
             return (
               <motion.div
                 key={feature.id}
@@ -177,52 +178,57 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="group"
               >
                 <Link href={feature.href}>
-                  <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/50">
-                    {/* Preview Container */}
-                    <div className="relative w-full h-64 sm:h-80 md:h-96 lg:h-96 overflow-hidden bg-gradient-to-br from-slate-900 to-slate-950">
-                      {feature.preview && <feature.preview />}
-                      {/* Gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
-                    </div>
-
-                    {/* Content Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 md:p-10">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-lg backdrop-blur-sm border border-purple-400/50">
-                              <Icon className="w-6 h-6 text-purple-300" />
-                            </div>
-                            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
-                              {feature.title}
-                            </h2>
-                          </div>
-                          
-                          {/* Highlight Badge */}
-                          {feature.highlight && (
-                            <motion.div
-                              initial={{ opacity: 0, x: -10 }}
-                              whileInView={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.2 }}
-                              className="mb-3 inline-block px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/50"
-                            >
-                              <span className="text-xs sm:text-sm font-bold text-yellow-300">✨ {feature.highlight}</span>
-                            </motion.div>
-                          )}
-                          
-                          <p className="text-sm sm:text-base md:text-lg text-purple-100/90 leading-relaxed max-w-2xl">
-                            {feature.description}
-                          </p>
+                  <div className="group grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-center">
+                    {/* Text Content - Left or Right based on index */}
+                    <div className={isEven ? 'md:col-start-1' : 'md:col-start-2 md:order-2'}>
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="p-3 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-lg backdrop-blur-sm border border-purple-400/50 flex-shrink-0">
+                          <Icon className="w-6 h-6 text-purple-300" />
                         </div>
-                        <ArrowRight className="w-6 h-6 sm:w-8 sm:h-8 text-purple-300 flex-shrink-0 mt-1 group-hover:translate-x-2 transition-transform" />
+                        <div>
+                          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2">
+                            {feature.title}
+                          </h2>
+                        </div>
+                      </div>
+                      
+                      {/* Highlight Badge */}
+                      {feature.highlight && (
+                        <motion.div
+                          initial={{ opacity: 0, x: -10 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="mb-4 inline-block px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/50"
+                        >
+                          <span className="text-sm font-bold text-yellow-300">✨ {feature.highlight}</span>
+                        </motion.div>
+                      )}
+                      
+                      <p className="text-base md:text-lg text-purple-100/90 leading-relaxed mb-6">
+                        {feature.description}
+                      </p>
+                      
+                      <div className="flex items-center gap-2 text-purple-300 font-semibold group-hover:gap-3 transition-all">
+                        <span>Vyzkoušej</span>
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
 
-                    {/* Shine effect on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -skew-x-12 group-hover:translate-x-full" />
+                    {/* Preview Container - Right or Left based on index */}
+                    <div className={isEven ? 'md:col-start-2 md:order-2' : 'md:col-start-1 md:order-1'}>
+                      <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-purple-500/50 h-64 sm:h-80 md:h-96">
+                        <div className="relative w-full h-full bg-gradient-to-br from-slate-900 to-slate-950">
+                          {feature.preview && <feature.preview />}
+                          {/* Gradient overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-40" />
+                        </div>
+
+                        {/* Shine effect on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -skew-x-12 group-hover:translate-x-full" />
+                      </div>
+                    </div>
                   </div>
                 </Link>
               </motion.div>
