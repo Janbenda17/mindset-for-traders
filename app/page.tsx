@@ -151,14 +151,14 @@ export default function HomePage() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20"
+          className="flex justify-center items-center gap-4 mb-20 flex-wrap"
         >
           {[
             { number: '9/10', label: 'Obchodníků má psychické problémy' },
             { number: '↓42%', label: 'Méně revenge tradingu' },
             { number: '24/7', label: 'AI analýza tvého mindetu' }
           ].map((stat, i) => (
-            <div key={i} className="p-4 rounded-lg bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 text-center">
+            <div key={i} className="p-6 rounded-lg bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 text-center w-full sm:w-auto sm:min-w-[200px]">
               <p className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">{stat.number}</p>
               <p className="text-xs sm:text-sm text-purple-200 mt-2">{stat.label}</p>
             </div>
