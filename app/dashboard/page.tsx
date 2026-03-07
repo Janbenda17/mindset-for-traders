@@ -150,65 +150,168 @@ export default function Dashboard() {
 
         {/* Adjust top padding when banner is visible */}
         <div className={isLiveMode ? "" : "pt-16"}>
+          {/* Key Metrics Row - 4 columns */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-16"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8"
           >
             {[
-              { label: 'Celkový kapitál', value: `$${totalCapital.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, icon: '💰', gradient: 'from-green-500 to-emerald-600' },
-              { label: 'Měsíční P/L', value: `${monthlyPL >= 0 ? '+' : ''}$${monthlyPL.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, icon: '📈', gradient: 'from-blue-500 to-cyan-600' },
-              { label: 'Aktuální Readiness', value: `${Math.round(readiness)}%`, icon: '🧠', gradient: 'from-purple-500 to-indigo-600' },
-              { label: 'Aktuální XP', value: xpValue.toLocaleString('cs-CZ'), icon: '⭐', gradient: 'from-yellow-500 to-orange-600' }
+              { 
+                label: 'Celkový kapitál', 
+                value: `$${totalCapital.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, 
+                icon: '💰', 
+                gradient: 'from-green-600 to-emerald-500',
+                change: '+2.4%'
+              },
+              { 
+                label: 'Měsíční P/L', 
+                value: `${monthlyPL >= 0 ? '+' : ''}$${monthlyPL.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, 
+                icon: '📈', 
+                gradient: 'from-blue-600 to-cyan-500',
+                change: monthlyPL >= 0 ? '↑ Positivo' : '↓ Negativní'
+              },
+              { 
+                label: 'Aktuální Readiness', 
+                value: `${Math.round(readiness)}%`, 
+                icon: '🧠', 
+                gradient: 'from-purple-600 to-indigo-500',
+                subtext: 'Trading Ready'
+              },
+              { 
+                label: 'Tvůj XP Skóre', 
+                value: xpValue.toLocaleString('cs-CZ'), 
+                icon: '⭐', 
+                gradient: 'from-yellow-600 to-orange-500',
+                subtext: 'Level 2'
+              }
             ].map((stat, i) => (
               <motion.div
                 key={i}
-                whileHover={{ scale: 1.05, y: -3 }}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.05 }}
+                whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
+                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl p-5 hover:border-white/20 transition-all cursor-pointer"
               >
-                <p className="text-xs md:text-sm font-semibold text-slate-400 mb-2">{stat.label}</p>
-                <p className="text-2xl md:text-3xl font-black text-white">{analyticsLoading || gamificationLoading ? '...' : stat.value}</p>
+                {/* Background gradient */}
+                <div className={`absolute -top-1/2 -right-1/2 w-96 h-96 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 blur-3xl transition-opacity duration-700 pointer-events-none`} />
+                
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <span className="text-3xl">{stat.icon}</span>
+                    {stat.change && (
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${stat.change.includes('+') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+                        {stat.change}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-3xl font-black text-white mb-1">
+                    {analyticsLoading || gamificationLoading ? (
+                      <span className="animate-pulse">...</span>
+                    ) : (
+                      stat.value
+                    )}
+                  </p>
+                  {stat.subtext && (
+                    <p className="text-xs text-slate-400">{stat.subtext}</p>
+                  )}
+                </div>
               </motion.div>
             ))}
           </motion.div>
 
-          {/* Features Grid */}
+          {/* Features Grid - 2x2 */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mb-16"
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mb-12"
           >
-            <div             className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-              {features.map((feature, i) => (
-                <Link key={i} href={feature.href}>
-                  <motion.div
-                    whileHover={{ scale: 1.03, y: -5 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Card className="bg-white/5 backdrop-blur-md border-white/10 hover:bg-white/10 transition-all h-full cursor-pointer group">
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                            <feature.icon className="w-7 h-7 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-                            <p className="text-purple-200 leading-relaxed">{feature.desc}</p>
-                            <div className="mt-4">
-                              <Button variant="ghost" size="sm" className="text-purple-300 hover:text-white p-0 h-auto font-semibold">
-                                Vyzkoušet teď →
-                              </Button>
-                            </div>
-                          </div>
+            <h2 className="text-xl font-black text-white mb-6">Tvoje nástroje</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {features.map((feature, i) => {
+                const colors = [
+                  'from-purple-600 to-pink-600',
+                  'from-blue-600 to-cyan-600',
+                  'from-emerald-600 to-teal-600',
+                  'from-orange-600 to-red-600'
+                ]
+                return (
+                  <Link key={i} href={feature.href}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }}
+                      whileHover={{ y: -8 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl p-8 hover:border-white/20 transition-all cursor-pointer h-full"
+                    >
+                      {/* Animated gradient background */}
+                      <motion.div
+                        className={`absolute -top-1/2 -right-1/2 w-96 h-96 bg-gradient-to-br ${colors[i]} opacity-0 group-hover:opacity-20 blur-3xl transition-opacity duration-700`}
+                      />
+
+                      <div className="relative z-10">
+                        {/* Icon box */}
+                        <motion.div
+                          whileHover={{ scale: 1.15, rotate: 5 }}
+                          className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${colors[i]} flex items-center justify-center mb-6 shadow-lg`}
+                        >
+                          <feature.icon className="w-8 h-8 text-white" />
+                        </motion.div>
+
+                        {/* Content */}
+                        <h3 className="text-2xl font-black text-white mb-3">{feature.title}</h3>
+                        <p className="text-slate-300 leading-relaxed mb-6">{feature.desc}</p>
+
+                        {/* CTA */}
+                        <div className="flex items-center gap-2 text-purple-300 font-semibold group-hover:gap-3 transition-all">
+                          <span>Vyzkoušet teď</span>
+                          <span className="text-lg">→</span>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                </Link>
-              ))}
+                      </div>
+
+                      {/* Border glow on hover */}
+                      <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" 
+                        style={{
+                          background: `linear-gradient(135deg, transparent, rgba(168, 85, 247, 0.1), transparent)`,
+                          animation: 'shine 3s infinite'
+                        }}
+                      />
+                    </motion.div>
+                  </Link>
+                )
+              })}
             </div>
+          </motion.div>
+
+          {/* Quick Stats - Secondary Info */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12"
+          >
+            {[
+              { label: 'Tvůj Level', value: '2', color: 'from-indigo-600 to-purple-600' },
+              { label: 'Achievements', value: '3/12', color: 'from-emerald-600 to-teal-600' },
+              { label: 'Streak', value: '7 dní', color: 'from-orange-600 to-red-600' }
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ y: -4 }}
+                className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${stat.color} p-6 backdrop-blur-sm`}
+              >
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-all" />
+                <div className="relative z-10">
+                  <p className="text-sm font-semibold text-white/70 mb-2">{stat.label}</p>
+                  <p className="text-4xl font-black text-white">{stat.value}</p>
+                </div>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </div>
