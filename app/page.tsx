@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { motion } from 'framer-motion'
-import { Calendar, TrendingUp, AlertCircle, Target, Users, ArrowRight } from 'lucide-react'
+import { Calendar, Brain, TrendingUp, AlertCircle, Users, ArrowRight, Sparkles } from 'lucide-react'
 
 export default function HomePage() {
   const router = useRouter()
@@ -33,6 +33,15 @@ export default function HomePage() {
     },
     {
       id: 2,
+      title: 'MindTrader AI',
+      description: 'Tvůj osobní AI mentor která ti je k dispozici 24/7. Postup svůj obchodní problém a dostaneš konkrétní radu. Jak se zbavit FOMO? Jak se zvládat ztrátu? AI ví.',
+      image: '/feature-daily-tracker.jpg',
+      icon: Brain,
+      href: '/mindtrader',
+      highlight: 'Realtime psychologické rady'
+    },
+    {
+      id: 3,
       title: 'Weekly Review',
       description: 'Každý pátek se podíváš zpět. AI ti ukáže tvá slabá místa, win rate, psychologické vzorce a co přesně měníš příští týden. Bez BS.',
       image: '/feature-weekly-review.jpg',
@@ -41,7 +50,7 @@ export default function HomePage() {
       highlight: 'AI poznatky + akční plán'
     },
     {
-      id: 3,
+      id: 4,
       title: 'Fail Log',
       description: 'Jakmile prohraješ obchod, zaznamenáš ho. AI analyzuje jestli to byla strategie, psychika, nebo prostě hloupá chyba. Sem patří všechny tvoje prohry.',
       image: '/feature-fail-log.jpg',
@@ -50,22 +59,13 @@ export default function HomePage() {
       highlight: 'Nechraň si egem - nauč se!'
     },
     {
-      id: 4,
-      title: 'Trading Plans',
-      description: 'Napíšeš si plán den dopředu - setups, pravidla, risk, co dělat když prohraje. Pak ho během dne jen mengeneš. Eliminuješ emotivní rozhodnutí.',
-      image: '/feature-trading-plans.jpg',
-      icon: Target,
-      href: '/trading-plan',
-      highlight: 'Disciplína je tvůj edge'
-    },
-    {
       id: 5,
-      title: 'AI Partner Matching',
-      description: 'Jsi sám? Najdeme ti nejlepšího trading partnera. Stejný skill, mindset, schedule. Spolu rostete 10x rychleji. Accountability = výnosy.',
+      title: 'Team Club',
+      description: 'Připoj se k elitní komunitě tradingů. Sdílej obchody, diskutuj strategie a learn z ostatních. Accountability + kolektivní moudrost = exponenciální růst.',
       image: '/feature-ai-partner.jpg',
       icon: Users,
       href: '/find-partner',
-      highlight: 'Solo ti padá. S partnerem vítězíš'
+      highlight: 'Komunita > Solo trading'
     }
   ]
 
