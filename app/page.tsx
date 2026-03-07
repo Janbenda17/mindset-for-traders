@@ -7,7 +7,12 @@ import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { motion } from 'framer-motion'
-import { Calendar, Brain, TrendingUp, AlertCircle, Users, ArrowRight, Sparkles } from 'lucide-react'
+import { Calendar, Brain, TrendingUp, AlertCircle, Users, ArrowRight } from 'lucide-react'
+import { DailyTrackerPreview } from '@/components/feature-previews/daily-tracker-preview'
+import { MindTraderAIPreview } from '@/components/feature-previews/mindtrader-ai-preview'
+import { WeeklyReviewPreview } from '@/components/feature-previews/weekly-review-preview'
+import { FailLogPreview } from '@/components/feature-previews/fail-log-preview'
+import { TeamClubPreview } from '@/components/feature-previews/team-club-preview'
 
 export default function HomePage() {
   const router = useRouter()
@@ -26,7 +31,7 @@ export default function HomePage() {
       id: 1,
       title: 'Daily Tracker',
       description: 'Každé ráno 30 sekund zaznamenáš svůj psychologický stav. AI pak detekuje kdy jsi na top nebo kdy bys měl sedět. Slibuj si: méně ztracených dní.',
-      image: '/feature-daily-tracker.jpg',
+      preview: DailyTrackerPreview,
       icon: Calendar,
       href: '/daily-tracker',
       highlight: '5x přesnější rozhodnutí'
@@ -35,7 +40,7 @@ export default function HomePage() {
       id: 2,
       title: 'MindTrader AI',
       description: 'Tvůj osobní AI mentor která ti je k dispozici 24/7. Postup svůj obchodní problém a dostaneš konkrétní radu. Jak se zbavit FOMO? Jak se zvládat ztrátu? AI ví.',
-      image: '/feature-daily-tracker.jpg',
+      preview: MindTraderAIPreview,
       icon: Brain,
       href: '/mindtrader',
       highlight: 'Realtime psychologické rady'
@@ -44,7 +49,7 @@ export default function HomePage() {
       id: 3,
       title: 'Weekly Review',
       description: 'Každý pátek se podíváš zpět. AI ti ukáže tvá slabá místa, win rate, psychologické vzorce a co přesně měníš příští týden. Bez BS.',
-      image: '/feature-weekly-review.jpg',
+      preview: WeeklyReviewPreview,
       icon: TrendingUp,
       href: '/weekly-review',
       highlight: 'AI poznatky + akční plán'
@@ -53,7 +58,7 @@ export default function HomePage() {
       id: 4,
       title: 'Fail Log',
       description: 'Jakmile prohraješ obchod, zaznamenáš ho. AI analyzuje jestli to byla strategie, psychika, nebo prostě hloupá chyba. Sem patří všechny tvoje prohry.',
-      image: '/feature-fail-log.jpg',
+      preview: FailLogPreview,
       icon: AlertCircle,
       href: '/fail-log',
       highlight: 'Nechraň si egem - nauč se!'
@@ -62,7 +67,7 @@ export default function HomePage() {
       id: 5,
       title: 'Team Club',
       description: 'Připoj se k elitní komunitě tradingů. Sdílej obchody, diskutuj strategie a learn z ostatních. Accountability + kolektivní moudrost = exponenciální růst.',
-      image: '/feature-ai-partner.jpg',
+      preview: TeamClubPreview,
       icon: Users,
       href: '/find-partner',
       highlight: 'Komunita > Solo trading'
@@ -176,13 +181,9 @@ export default function HomePage() {
               >
                 <Link href={feature.href}>
                   <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/50">
-                    {/* Image Container */}
-                    <div className="relative w-full h-64 sm:h-80 md:h-96 lg:h-96 overflow-hidden">
-                      <img 
-                        src={feature.image}
-                        alt={feature.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
+                    {/* Preview Container */}
+                    <div className="relative w-full h-64 sm:h-80 md:h-96 lg:h-96 overflow-hidden bg-gradient-to-br from-slate-900 to-slate-950">
+                      {feature.preview && <feature.preview />}
                       {/* Gradient overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
                     </div>
