@@ -263,7 +263,8 @@ export default function HomePage() {
           </motion.div>
         </motion.div>
 
-        {/* Premium Upgrade Banner */}
+        {/* Premium Upgrade Banner - Only show for authenticated users */}
+        {user && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -301,6 +302,7 @@ export default function HomePage() {
             </div>
           </div>
         </motion.div>
+        )}
       </div>
     </div>
   )
