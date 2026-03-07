@@ -1298,11 +1298,11 @@ function StudentTeamClubView({
 
     // Filter based on period for demo variation
     if (leaderboardPeriod === "weekly") {
-      return demoData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.15), pnl: Math.round(d.pnl * 0.25) }))
+      return demoData.slice(0, 5).map((d) => ({ ...d, xp: Math.round(d.xp * 0.15), pnl: Math.round(d.pnl * 0.25) }))
     } else if (leaderboardPeriod === "monthly") {
-      return demoData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.4), pnl: Math.round(d.pnl * 0.5) }))
+      return demoData.slice(0, 5).map((d) => ({ ...d, xp: Math.round(d.xp * 0.4), pnl: Math.round(d.pnl * 0.5) }))
     }
-    return demoData
+    return demoData.slice(0, 5)
   }
 
   const getUserStats = () => {
