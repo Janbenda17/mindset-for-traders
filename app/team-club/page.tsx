@@ -1279,6 +1279,21 @@ function StudentTeamClubView({
         pnl: 980,
         avatar: "/trader-avatar.png",
       },
+      { rank: 11, name: "Ondřej Krčál", discipline: 73, streak: 11, xp: 3200, pnl: 750, avatar: "/trader-avatar.png" },
+      { rank: 12, name: "Zuzana Kučerová", discipline: 71, streak: 9, xp: 2850, pnl: 620, avatar: "/trader-avatar.png" },
+      { rank: 13, name: "Pavel Sedláček", discipline: 69, streak: 8, xp: 2500, pnl: 480, avatar: "/trader-avatar.png" },
+      { rank: 14, name: "Michaela Pokorná", discipline: 67, streak: 7, xp: 2200, pnl: 350, avatar: "/trader-avatar.png" },
+      { rank: 15, name: "Dominik Vlášek", discipline: 65, streak: 6, xp: 1900, pnl: 220, avatar: "/trader-avatar.png" },
+      { rank: 16, name: "Alena Čermáková", discipline: 63, streak: 5, xp: 1600, pnl: 150, avatar: "/trader-avatar.png" },
+      { rank: 17, name: "Rostislav Junek", discipline: 61, streak: 4, xp: 1400, pnl: 100, avatar: "/trader-avatar.png" },
+      { rank: 18, name: "Lenka Beranová", discipline: 59, streak: 3, xp: 1100, pnl: 80, avatar: "/trader-avatar.png" },
+      { rank: 19, name: "Stanislav Bláha", discipline: 57, streak: 2, xp: 900, pnl: 60, avatar: "/trader-avatar.png" },
+      { rank: 20, name: "Věra Filipová", discipline: 55, streak: 1, xp: 700, pnl: 40, avatar: "/trader-avatar.png" },
+      { rank: 21, name: "Jiří Pilný", discipline: 53, streak: 0, xp: 550, pnl: 30, avatar: "/trader-avatar.png" },
+      { rank: 22, name: "Miriam Hladká", discipline: 51, streak: 0, xp: 450, pnl: 20, avatar: "/trader-avatar.png" },
+      { rank: 23, name: "František Varga", discipline: 49, streak: 0, xp: 350, pnl: 10, avatar: "/trader-avatar.png" },
+      { rank: 24, name: "Helena Svobodová", discipline: 47, streak: 0, xp: 280, pnl: 5, avatar: "/trader-avatar.png" },
+      { rank: 25, name: "Václav Horák", discipline: 45, streak: 0, xp: 200, pnl: 0, avatar: "/trader-avatar.png" },
     ]
 
     // Filter based on period for demo variation
