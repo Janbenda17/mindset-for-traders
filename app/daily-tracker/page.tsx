@@ -1053,9 +1053,12 @@ export default function DailyTrackerPage() {
                 <div className="flex items-start gap-4">
                   <Lightbulb className="h-6 w-6 text-cyan-400 flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-2">AI Trading Insights</h3>
+                    <h3 className="text-lg font-bold text-white mb-2">Tvůj Trading Status Dnes</h3>
                     <p className="text-gray-300 leading-relaxed">
                       {generateAIInsights(todayEntry?.morningCheck, readinessScore)}
+                    </p>
+                    <p className="text-gray-400 text-sm mt-3 leading-relaxed">
+                      Tvá příprava určuje kvalitu rozhodnutí. AI analyzuje tvůj psychologický stav a doporučuje optimální trading okna nebo kdy si odpočinout.
                     </p>
                   </div>
                 </div>
@@ -1074,11 +1077,11 @@ export default function DailyTrackerPage() {
                       <CardTitle className="flex items-center gap-2 text-3xl">
                         <Brain className="h-8 w-8 text-purple-400" />
                         <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                          AI Trading Insights
+                          Detailní Trading Analýza
                         </span>
                       </CardTitle>
                       <CardDescription className="text-lg mt-2">
-                        Detailní analýza a personalizovaný feedback
+                        Personalizované doporučení založené na tvém psychologickém stavu a historii obchodů
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
