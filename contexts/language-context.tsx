@@ -232,19 +232,23 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>("cs")
 
   useEffect(() => {
-    const saved = localStorage.getItem("trader-mindset-language") as Language
-    if (saved && (saved === "cs" || saved === "en")) {
-      setLanguage(saved)
-    } else {
-      // Pokud není uložený jazyk, nastavíme češtinu jako výchozí
-      setLanguage("cs")
-      localStorage.setItem("trader-mindset-language", "cs")
+    // Detekuj jazyk z domény
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname
+      let detectedLanguage: Language = "cs"
+      
+      if (hostname.endsWith(".ai")) {
+        detectedLanguage = "en"
+      } else if (hostname.endsWith(".cz") || hostname === "localhost" || hostname === "127.0.0.1") {
+        detectedLanguage = "cs"
+      }
+      
+      setLanguage(detectedLanguage)
     }
   }, [])
 
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang)
-    localStorage.setItem("trader-mindset-language", lang)
     window.dispatchEvent(new Event("language-changed"))
   }
 
