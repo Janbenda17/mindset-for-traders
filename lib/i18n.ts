@@ -639,7 +639,3 @@ export const en = {
     detailedAnalysis: 'Detailed Trading Analysis',
   },
 }
-
-export function getTranslations(language: Language) {
-  return language === 'cs' ? cs : en
-}
