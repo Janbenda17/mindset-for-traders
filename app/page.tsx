@@ -312,7 +312,6 @@ export default function HomePage() {
           >
             {t('cta_button')} <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
-          </motion.div>
         </motion.div>
 
         {/* Premium Upgrade Banner - Only show for authenticated users */}
