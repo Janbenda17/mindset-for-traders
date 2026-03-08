@@ -30,7 +30,7 @@ export default function HomePage() {
     {
       id: 1,
       title: 'Daily Tracker',
-      description: 'Každé ráno zaznamenáš svůj psychologický stav v 30 sekund. AI detekuje tvoje optimální trading okna. Vidíš patterns kdy máš best edge a kdy bys měl sedět. Výsledek? Méně ztracených dní a 5x přesnější rozhodnutí. Jsme oba věděli že psychika rozhoduje. Teď ji máš pod kontrolou.',
+      description: 'Každé ráno zaznamenáš svůj psychologický stav v 30 sekund. AI detekuje tvoje podmínky na obchodování. Vidíš patterny kdy máš edge a kdy bys měl sedět. Výsledek? Méně ztracených dní a 5x přesnější rozhodnutí. Jsme oba věděli že psychika rozhoduje. Teď ji máš pod kontrolou.',
       preview: DailyTrackerPreview,
       icon: Calendar,
       href: '/daily-tracker',
@@ -39,7 +39,7 @@ export default function HomePage() {
     {
       id: 2,
       title: 'MindTrader AI',
-      description: 'Tvůj 24/7 personal trading coach. Máš FOMO po losu v profitu? Post to. Revenge trading tě taká? Ptej se. AI analyzuje tvůj psychologický stav v reálném čase a dáva ti konkrétní, science-based rady. Nejde o motivační hovnášky - jde o to zastavit tě než uděláš katastrofální chybu z emocí.',
+      description: 'Tvůj 24/7 personal trading coach. Máš FOMO ? Revenge trading tě láká? Ptej se. AI analyzuje tvůj psychologický stav v reálném čase a dáva ti konkrétní, science-based rady. Nejde o motivační hlášky - jde o to zastavit tě než uděláš katastrofální chybu z emocí.',
       preview: MindTraderAIPreview,
       icon: Brain,
       href: '/mindtrader',
@@ -48,7 +48,7 @@ export default function HomePage() {
     {
       id: 3,
       title: 'Weekly Review',
-      description: 'Každý pátek se podíváš zpět. AI ti ukáže tvá slabá místa, win rate, psychologické vzorce. Vidíš kde konkrétně padáš - zda je to strategické selhání, psychologické, nebo prostě pořádné kořalství. Pak dostaneš konkrétní, akční plán co měnit příští týden. Progress bez BS.',
+      description: 'Každý pátek se podíváš zpět. AI ti ukáže tvá slabá místa, win rate, psychologické vzorce. Vidíš kde konkrétně padáš - zda je to strategické nebo psychologické selhání. Pak dostaneš konkrétní, akční plán co změnit příští týden.',
       preview: WeeklyReviewPreview,
       icon: TrendingUp,
       href: '/weekly-review',
@@ -57,16 +57,16 @@ export default function HomePage() {
     {
       id: 4,
       title: 'Fail Log',
-      description: 'Zaznamenáš všechny své prohry s kontextem. AI analyzuje jestli to byla strategie, psychika, nebo hloupá chyba. Učíš se z každé ztráty. Fail Log tě učí být lepší trader - bez zástupy stejných chyb znovu. Sem patří všechny prohry. Nechraň si ego.',
+      description: 'Zaznamenáš všechny své prohry. AI analyzuje jestli to byla strategie, psychika, nebo hloupá chyba. Učíš se z každé ztráty. Fail Log tě učí být lepším traderem - bez stejných chyb znovu. Sem patří všechny prohry. Nechraň si ego.',
       preview: FailLogPreview,
       icon: AlertCircle,
       href: '/fail-log',
-      highlight: 'Nechraň si egem - nauč se!'
+      highlight: 'Nechraň si ego - nauč se ze ztrát!'
     },
     {
       id: 5,
       title: 'Team Club',
-      description: 'Připoj se k elitní komunitě top 1% tradingů. Sdílej obchody, diskutuj strategie a learn z ostatních. Accountability + kolektivní moudrost = exponenciální růst. Solo trading je pro lenivce. V klubu se vyvíjíš a vyměňuješ si nápady s nejlepšími.',
+      description: 'Elitní komunita top traderů. Sdílení obchodů, diskuse, accountability. Když selžeš – někdo tě vytáhne. Když vyhraješ – slavíme spolu. Tady se nestydíš za fail. Tady se z něj stáváš lepší.',
       preview: TeamClubPreview,
       icon: Users,
       href: '/find-partner',
@@ -247,7 +247,7 @@ export default function HomePage() {
             Připraven se stát <span className="text-gradient bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">top 7%?</span>
           </h2>
           <p className="text-lg text-purple-200/80 max-w-2xl mx-auto mb-8">
-            Zbývá ti jen psychika. Strategie máš. Počítej s tím že prvních 30 dní bude tvrdé. Pak už to poplují na automatiku.
+            Zbývá ti jen psychika. Strategii už máš. Počítej s tím že prvních 30 dní bude tvrdých. Pak už to popluje na autopilota.
           </p>
           <motion.div
             whileHover={{ scale: 1.05 }}
