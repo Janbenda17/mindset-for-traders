@@ -246,6 +246,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         detectedLanguage = "cs"
       }
       
+      console.log("[v0] Language detection - hostname:", hostname, "detected language:", detectedLanguage)
       setLanguage(detectedLanguage)
     }
   }, [])

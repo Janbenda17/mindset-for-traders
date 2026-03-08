@@ -6,6 +6,7 @@ import { TopNavigation } from '@/components/top-navigation'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
+import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
 import { Calendar, Brain, TrendingUp, AlertCircle, Users, ArrowRight } from 'lucide-react'
 import { DailyTrackerPreview } from '@/components/feature-previews/daily-tracker-preview'
@@ -17,6 +18,7 @@ import { TeamClubPreview } from '@/components/feature-previews/team-club-preview
 export default function HomePage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { language } = useLanguage()
 
   const handlePricingClick = () => {
     if (!user) {
@@ -26,51 +28,105 @@ export default function HomePage() {
     }
   }
 
+  // Translations
+  const translations = {
+    cs: {
+      daily_tracker_title: 'Daily Tracker',
+      daily_tracker_desc: 'Každé ráno zaznamenáš svůj psychologický stav v 30 sekund. AI detekuje tvoje podmínky na obchodování. Vidíš patterny kdy máš edge a kdy bys měl sedět. Výsledek? Méně ztracených dní a 5x přesnější rozhodnutí. Jsme oba věděli že psychika rozhoduje. Teď ji máš pod kontrolou.',
+      daily_tracker_highlight: '5x přesnější rozhodnutí',
+      
+      mindtrader_title: 'MindTrader AI',
+      mindtrader_desc: 'Tvůj 24/7 personal trading coach. Máš FOMO ? Revenge trading tě láká? Ptej se. AI analyzuje tvůj psychologický stav v reálném čase a dáva ti konkrétní, science-based rady. Nejde o motivační hlášky - jde o to zastavit tě než uděláš katastrofální chybu z emocí.',
+      mindtrader_highlight: 'Realtime psychologické rady',
+      
+      weekly_review_title: 'Weekly Review',
+      weekly_review_desc: 'Každý pátek se podíváš zpět. AI ti ukáže tvá slabá místa, win rate, psychologické vzorce. Vidíš kde konkrétně padáš - zda je to strategické nebo psychologické selhání. Pak dostaneš konkrétní, akční plán co změnit příští týden.',
+      weekly_review_highlight: 'AI poznatky + akční plán',
+      
+      fail_log_title: 'Fail Log',
+      fail_log_desc: 'Zaznamenáš všechny své prohry. AI analyzuje jestli to byla strategie, psychika, nebo hloupá chyba. Učíš se z každé ztráty. Fail Log tě učí být lepším traderem - bez stejných chyb znovu. Sem patří všechny prohry. Nechraň si ego.',
+      fail_log_highlight: 'Nechraň si ego - nauč se ze ztrát!',
+      
+      team_club_title: 'Team Club',
+      team_club_desc: 'Elitní komunita top traderů. Sdílení obchodů, diskuse, accountability. Když selžeš – někdo tě vytáhne. Když vyhraješ – slavíme spolu. Tady se nestydíš za fail. Tady se z něj stáváš lepší.',
+      team_club_highlight: 'Komunita > Solo trading',
+      
+      cta_text: 'Zbývá ti jen psychika. Strategii už máš. Počítej s tím že prvních 30 dní bude tvrdých. Pak už to popluje na autopilota.',
+      cta_button: 'Začít zdarma - 14 dní',
+    },
+    en: {
+      daily_tracker_title: 'Daily Tracker',
+      daily_tracker_desc: 'Every morning record your psychological state in 30 seconds. AI detects your trading conditions. See patterns when you have edge and when you should sit. Result? Fewer losing days and 5x more precise decisions. We both knew psychology decides. Now you have it under control.',
+      daily_tracker_highlight: '5x more precise decisions',
+      
+      mindtrader_title: 'MindTrader AI',
+      mindtrader_desc: 'Your 24/7 personal trading coach. Got FOMO? Tempted by revenge trading? Ask. AI analyzes your psychological state in real-time and gives you concrete, science-based advice. Not about motivational talk - it\'s about stopping you before you make a catastrophic emotional mistake.',
+      mindtrader_highlight: 'Real-time psychological guidance',
+      
+      weekly_review_title: 'Weekly Review',
+      weekly_review_desc: 'Every Friday you look back. AI shows you your weak spots, win rate, psychological patterns. You see exactly where you fail - whether it\'s strategic or psychological. Then you get a concrete, actionable plan for what to change next week.',
+      weekly_review_highlight: 'AI insights + action plan',
+      
+      fail_log_title: 'Fail Log',
+      fail_log_desc: 'Record all your losses. AI analyzes whether it was strategy, psychology, or just a stupid mistake. You learn from every loss. Fail Log teaches you to be a better trader - no repeating the same mistakes. All losses go here. Don\'t protect your ego.',
+      fail_log_highlight: 'Don\'t protect your ego - learn from losses!',
+      
+      team_club_title: 'Team Club',
+      team_club_desc: 'Elite community of top traders. Share trades, discuss strategies, accountability. When you fail – someone pulls you up. When you win – we celebrate together. Here you\'re not ashamed of failure. Here you become better because of it.',
+      team_club_highlight: 'Community > Solo trading',
+      
+      cta_text: 'All that\'s left is psychology. You have the strategy. Expect the first 30 days to be tough. After that it runs on autopilot.',
+      cta_button: 'Start Free - 14 Days',
+    }
+  }
+
+  const t = (key: string) => translations[language][key as keyof typeof translations['cs']] || key
+
   const features = [
     {
       id: 1,
-      title: 'Daily Tracker',
-      description: 'Každé ráno zaznamenáš svůj psychologický stav v 30 sekund. AI detekuje tvoje podmínky na obchodování. Vidíš patterny kdy máš edge a kdy bys měl sedět. Výsledek? Méně ztracených dní a 5x přesnější rozhodnutí. Jsme oba věděli že psychika rozhoduje. Teď ji máš pod kontrolou.',
+      title: t('daily_tracker_title'),
+      description: t('daily_tracker_desc'),
       preview: DailyTrackerPreview,
       icon: Calendar,
       href: '/daily-tracker',
-      highlight: '5x přesnější rozhodnutí'
+      highlight: t('daily_tracker_highlight')
     },
     {
       id: 2,
-      title: 'MindTrader AI',
-      description: 'Tvůj 24/7 personal trading coach. Máš FOMO ? Revenge trading tě láká? Ptej se. AI analyzuje tvůj psychologický stav v reálném čase a dáva ti konkrétní, science-based rady. Nejde o motivační hlášky - jde o to zastavit tě než uděláš katastrofální chybu z emocí.',
+      title: t('mindtrader_title'),
+      description: t('mindtrader_desc'),
       preview: MindTraderAIPreview,
       icon: Brain,
       href: '/mindtrader',
-      highlight: 'Realtime psychologické rady'
+      highlight: t('mindtrader_highlight')
     },
     {
       id: 3,
-      title: 'Weekly Review',
-      description: 'Každý pátek se podíváš zpět. AI ti ukáže tvá slabá místa, win rate, psychologické vzorce. Vidíš kde konkrétně padáš - zda je to strategické nebo psychologické selhání. Pak dostaneš konkrétní, akční plán co změnit příští týden.',
+      title: t('weekly_review_title'),
+      description: t('weekly_review_desc'),
       preview: WeeklyReviewPreview,
       icon: TrendingUp,
       href: '/weekly-review',
-      highlight: 'AI poznatky + akční plán'
+      highlight: t('weekly_review_highlight')
     },
     {
       id: 4,
-      title: 'Fail Log',
-      description: 'Zaznamenáš všechny své prohry. AI analyzuje jestli to byla strategie, psychika, nebo hloupá chyba. Učíš se z každé ztráty. Fail Log tě učí být lepším traderem - bez stejných chyb znovu. Sem patří všechny prohry. Nechraň si ego.',
+      title: t('fail_log_title'),
+      description: t('fail_log_desc'),
       preview: FailLogPreview,
       icon: AlertCircle,
       href: '/fail-log',
-      highlight: 'Nechraň si ego - nauč se ze ztrát!'
+      highlight: t('fail_log_highlight')
     },
     {
       id: 5,
-      title: 'Team Club',
-      description: 'Elitní komunita top traderů. Sdílení obchodů, diskuse, accountability. Když selžeš – někdo tě vytáhne. Když vyhraješ – slavíme spolu. Tady se nestydíš za fail. Tady se z něj stáváš lepší.',
+      title: t('team_club_title'),
+      description: t('team_club_desc'),
       preview: TeamClubPreview,
       icon: Users,
       href: '/find-partner',
-      highlight: 'Komunita > Solo trading'
+      highlight: t('team_club_highlight')
     }
   ]
 
@@ -247,19 +303,15 @@ export default function HomePage() {
             Připraven se stát <span className="text-gradient bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">top 7%?</span>
           </h2>
           <p className="text-lg text-purple-200/80 max-w-2xl mx-auto mb-8">
-            Zbývá ti jen psychika. Strategii už máš. Počítej s tím že prvních 30 dní bude tvrdých. Pak už to popluje na autopilota.
+            {t('cta_text')}
           </p>
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <Button
+            size="lg"
+            onClick={handlePricingClick}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-lg px-12 py-6 rounded-xl"
           >
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-black text-lg px-12 py-7 rounded-xl shadow-lg shadow-purple-500/50"
-              onClick={handlePricingClick}
-            >
-              Spustit Zdarma (14 dní) →
-            </Button>
+            {t('cta_button')} <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
           </motion.div>
         </motion.div>
 
