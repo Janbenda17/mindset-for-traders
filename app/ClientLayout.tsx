@@ -7,12 +7,15 @@ import { TopNavigation } from "@/components/top-navigation"
 import { Footer } from "@/components/footer"
 import { ProductTour } from "@/components/product-tour"
 import { XPNotification } from "@/components/xp-notification"
-import { useAuth } from "@/contexts/auth-context"
+import { useGlobalTranslation } from "@/hooks/use-global-translation"
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [isLandingPage, setIsLandingPage] = useState(false)
   const { user, isLoading } = useAuth()
+
+  // Initialize global translation
+  useGlobalTranslation()
 
   // Scroll to top on route change
   useEffect(() => {

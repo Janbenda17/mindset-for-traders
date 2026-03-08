@@ -41,32 +41,34 @@ import { supabase } from "@/lib/supabase/client"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useAuth } from "@/contexts/auth-context"
 import { useLiveMode } from "@/contexts/live-mode-context"
+import { useT } from "@/contexts/language-context"
 
 interface TopNavigationProps {
   initialTheme?: string
 }
-
-const mainNavigation = [
-  { name: "Nástěnka", href: "/dashboard", icon: Home, shortName: "Domů" },
-  { name: "Denní Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Denní" },
-  { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
-  { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Deník" },
-  { name: "Analytika", href: "/analytics", icon: BarChart3, shortName: "Statistiky" },
-  { name: "Týdenní Přehled", href: "/weekly-review", icon: Calendar },
-  { name: "Týmový Klub", href: "/team-club", icon: Users },
-  { name: "Bonus", href: "/bonus", icon: Trophy, badge: "NOVÉ" },
-]
 
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
   const pathname = usePathname()
   const router = useRouter()
   const { isLiveMode, switchToLive } = useLiveMode()
   const { isPremium } = useSubscription()
+  const t = useT()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProductsOpen, setIsProductsOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSwitchingToLive, setIsSwitchingToLive] = useState(false)
+
+  const mainNavigation = [
+    { name: t('nav_home'), href: "/dashboard", icon: Home, shortName: t('nav_home') },
+    { name: t('nav_daily_tracker'), href: "/daily-tracker", icon: Calendar, shortName: t('nav_daily_tracker') },
+    { name: t('nav_mindtrader'), href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
+    { name: t('nav_journal'), href: "/journal", icon: TrendingUp, shortName: t('nav_journal') },
+    { name: t('nav_analytics'), href: "/analytics", icon: BarChart3, shortName: t('nav_analytics') },
+    { name: t('nav_weekly_review'), href: "/weekly-review", icon: Calendar },
+    { name: t('nav_team_club'), href: "/team-club", icon: Users },
+    { name: t('nav_bonus'), href: "/bonus", icon: Trophy, badge: t('nav_new') },
+  ]
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -179,16 +181,11 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
   const getExperienceLabel = (level: string) => {
     switch (level) {
-      case "beginner":
-        return "Začátečník"
-      case "intermediate":
-        return "Pokročilý"
-      case "advanced":
-        return "Expert"
-      case "expert":
-        return "Expert Trader"
-      default:
-        return "Trader"
+      case "beginner": return t('nav_home') === 'Dashboard' ? "Beginner" : "Začátečník"
+      case "intermediate": return t('nav_home') === 'Dashboard' ? "Intermediate" : "Pokročilý"
+      case "advanced": return t('nav_home') === 'Dashboard' ? "Advanced" : "Pokročilý"
+      case "expert": return t('nav_home') === 'Dashboard' ? "Expert Trader" : "Expert Trader"
+      default: return "Trader"
     }
   }
 
@@ -201,7 +198,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
       <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4">
           <div className="flex justify-between items-center h-14 md:h-16">
-            <div className="text-gray-400 text-sm">Načítání...</div>
+            <div className="text-gray-400 text-sm">{t('loading')}</div>
           </div>
         </div>
       </nav>
@@ -239,7 +236,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="relative px-4 h-10 text-sm font-semibold text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 transition-all duration-300 group flex items-center gap-2 rounded-lg shadow-lg shadow-purple-500/20"
                   >
-                    <span>Produkty</span>
+                    <span>{t('nav_home') === 'Dashboard' ? 'Products' : 'Produkty'}</span>
                     <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -286,7 +283,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
-                Ceník
+                {t('nav_home') === 'Dashboard' ? 'Pricing' : 'Ceník'}
               </Button>
             </Link>
 
@@ -300,7 +297,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
-                O nás
+                {t('nav_home') === 'Dashboard' ? 'About' : 'O nás'}
               </Button>
             </Link>
           </div>
@@ -315,7 +312,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-64 bg-slate-900/95 backdrop-blur-md border-slate-700" align="end">
                 <div className="p-2">
-                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">HLAVNÍ MENU</p>
+                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">{t('nav_home') === 'Dashboard' ? 'MAIN MENU' : 'HLAVNÍ MENU'}</p>
                   {mainNavigation.map((item) => {
                     const isActive = pathname === item.href
                     
@@ -361,7 +358,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="relative px-4 h-10 text-sm font-semibold text-white hover:text-gray-200 transition-colors"
                   >
-                    Profil
+                    {t('nav_home') === 'Dashboard' ? 'Profile' : 'Profil'}
                     <ChevronDown className="w-4 h-4 ml-2 transition-transform group-data-[state=open]:rotate-180" />
                   </Button>
                 </Link>
@@ -370,7 +367,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-8 px-3 text-sm font-semibold"
                   >
-                    Začít
+                    {t('free_trial')}
                   </Button>
                 </Link>
               </div>
@@ -382,7 +379,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 size="sm"
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
               >
-                Začít
+                {t('free_trial')}
               </Button>
             </Link>
 
@@ -396,7 +393,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 {isSwitchingToLive ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Přepínaní...
+                    {t('nav_home') === 'Dashboard' ? 'Switching...' : 'Přepínaní...'}
                   </>
                 ) : (
                   <>

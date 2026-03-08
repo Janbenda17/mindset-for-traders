@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
+import { translations as i18nTranslations, type TranslationKey } from "@/lib/i18n"
 
 type Language = "cs" | "en"
 
@@ -246,7 +247,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         detectedLanguage = "cs"
       }
       
-      console.log("[v0] Language detection - hostname:", hostname, "detected language:", detectedLanguage)
       setLanguage(detectedLanguage)
     }
   }, [])
@@ -257,7 +257,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }
 
   const t = (key: string): string => {
-    return translations[language][key as keyof (typeof translations)["cs"]] || key
+    // First check old inline translations
+    const oldVal = translations[language][key as keyof (typeof translations)["cs"]]
+    if (oldVal) return oldVal
+    // Then check new i18n translations
+    const newVal = i18nTranslations[language][key as TranslationKey]
+    if (newVal) return newVal
+    return key
   }
 
   return (
@@ -280,4 +286,12 @@ export function useLanguage() {
     throw new Error("useLanguage must be used within LanguageProvider")
   }
   return context
+}
+
+// Convenience hook that returns translation function for the current language
+export function useT() {
+  const { language } = useLanguage()
+  return (key: TranslationKey): string => {
+    return i18nTranslations[language][key] ?? i18nTranslations['cs'][key] ?? key
+  }
 }

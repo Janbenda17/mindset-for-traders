@@ -14,7 +14,7 @@ import { DailyStageProvider } from "@/contexts/daily-stage-context"
 import { LanguageProvider } from "@/contexts/language-context"
 import { AIInsightsProvider } from "@/contexts/ai-insights-context"
 import { CommunityChallengesProvider } from "@/contexts/community-challenges-context"
-import { MilestoneCelebrationsProvider } from "@/contexts/milestone-celebrations-context"
+import { AutoTranslator } from '@/components/auto-translator'
 import { StreakProvider } from "@/contexts/streak-context"
 import { NotificationsProvider } from "@/contexts/notifications-context"
 import { CloudSyncProvider } from "@/contexts/cloud-sync-context"
@@ -68,6 +68,7 @@ export default function RootLayout({
         )}
       </head>
       <body className={inter.className}>
+        <AutoTranslator />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
