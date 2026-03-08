@@ -30,12 +30,10 @@ export function SignupForm() {
     name: "",
     email: "",
     password: "",
-    confirmPassword: "",
     acceptTerms: false,
     acceptMarketing: false,
   })
   const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
 
@@ -80,10 +78,6 @@ export function SignupForm() {
       if (passwordErrors.length > 0) {
         newErrors.password = "Heslo musí obsahovat: malá + velká písmena + čísla (min. 6 znaků)"
       }
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Hesla se neshodují"
     }
 
     if (!formData.acceptTerms) {
@@ -278,35 +272,6 @@ export function SignupForm() {
                     )}
                     
                     {errors.password && <p className="text-sm text-red-400">{errors.password}</p>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-300">
-                      Potvrdit heslo
-                    </Label>
-                    <div className="relative group">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-purple-400 transition-colors z-10" />
-                      <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Zopakujte heslo"
-                        value={formData.confirmPassword}
-                        onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                        className={`pl-12 pr-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20 transition-all ${
-                          errors.confirmPassword ? "border-red-500/50" : ""
-                        }`}
-                        disabled={isLoading}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors z-10"
-                        disabled={isLoading}
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
-                    </div>
-                    {errors.confirmPassword && <p className="text-sm text-red-400">{errors.confirmPassword}</p>}
                   </div>
 
                   <div className="space-y-3 pt-2">
