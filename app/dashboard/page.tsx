@@ -161,7 +161,6 @@ export default function Dashboard() {
               { 
                 label: 'Celkový kapitál', 
                 value: `$${totalCapital.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, 
-                icon: '💰', 
                 color: 'text-green-400',
                 borderColor: 'border-green-500/20',
                 bgColor: 'bg-green-500/5'
@@ -169,7 +168,6 @@ export default function Dashboard() {
               { 
                 label: 'Měsíční P/L', 
                 value: `${monthlyPL >= 0 ? '+' : ''}$${monthlyPL.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, 
-                icon: '📈', 
                 color: 'text-blue-400',
                 borderColor: 'border-blue-500/20',
                 bgColor: 'bg-blue-500/5'
@@ -177,7 +175,6 @@ export default function Dashboard() {
               { 
                 label: 'Aktuální Readiness', 
                 value: `${Math.round(readiness)}%`, 
-                icon: '🧠', 
                 color: 'text-purple-400',
                 borderColor: 'border-purple-500/20',
                 bgColor: 'bg-purple-500/5'
@@ -185,7 +182,6 @@ export default function Dashboard() {
               { 
                 label: 'Tvůj XP', 
                 value: xpValue.toLocaleString('cs-CZ'), 
-                icon: '⭐', 
                 color: 'text-yellow-400',
                 borderColor: 'border-yellow-500/20',
                 bgColor: 'bg-yellow-500/5'
@@ -199,9 +195,6 @@ export default function Dashboard() {
                 whileHover={{ y: -4 }}
                 className={`${stat.bgColor} ${stat.borderColor} border rounded-xl p-5 transition-all hover:border-opacity-40`}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <span className="text-2xl">{stat.icon}</span>
-                </div>
                 <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">{stat.label}</p>
                 <p className={`text-3xl font-black ${stat.color} mb-1`}>
                   {analyticsLoading || gamificationLoading ? (

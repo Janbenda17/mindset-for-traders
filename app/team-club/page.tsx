@@ -2959,7 +2959,7 @@ function StudentTeamClubView({
                       <p className="text-slate-400">Žádní tradeři v leaderboardu</p>
                     </div>
                   ) : (
-                    leaderboardData.map((trader) => (
+                    leaderboardData.slice(0, 5).map((trader) => (
                         <div
                           key={trader.rank}
                           className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-xl hover:bg-slate-700/50 transition-all"
