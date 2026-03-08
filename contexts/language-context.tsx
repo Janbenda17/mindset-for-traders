@@ -237,9 +237,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       const hostname = window.location.hostname
       let detectedLanguage: Language = "cs"
       
-      if (hostname.endsWith(".ai")) {
+      // Anglické domény
+      if (hostname.endsWith(".ai") || hostname.endsWith(".au") || hostname.endsWith(".com")) {
         detectedLanguage = "en"
-      } else if (hostname.endsWith(".cz") || hostname === "localhost" || hostname === "127.0.0.1") {
+      }
+      // České domény
+      else if (hostname.endsWith(".cz") || hostname === "localhost" || hostname === "127.0.0.1") {
         detectedLanguage = "cs"
       }
       
