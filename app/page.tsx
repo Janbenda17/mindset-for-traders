@@ -189,15 +189,15 @@ export default function HomePage() {
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-8 leading-tight">
             <span className="bg-gradient-to-r from-purple-200 via-pink-200 to-indigo-200 bg-clip-text text-transparent">
-              Tvůj mozek se stane<br />tvojí největší výhodou
+              {language === 'en' ? 'Your mind will become your greatest advantage' : 'Tvůj mozek se stane tvojí největší výhodou'}
             </span>
           </h1>
           
           <p className="text-lg sm:text-xl md:text-2xl text-purple-100 leading-relaxed max-w-3xl mx-auto font-semibold mb-6">
-            <span className="text-red-400 font-black">93% obchodníků</span> padne kvůli psychice, ne kvůli strategii.
+            <span className="text-red-400 font-black">{language === 'en' ? '93% of traders' : '93% obchodníků'}</span> {language === 'en' ? 'fail because of psychology, not strategy.' : 'padne kvůli psychice, ne kvůli strategii.'}
           </p>
           <p className="text-base sm:text-lg text-purple-200/80 max-w-2xl mx-auto leading-relaxed">
-            MindTrader analyzuje tvoje emoce v reálném čase, detekuje tvá slabá místa a zastaví tě, než uděláš katastrofální chybu.
+            {language === 'en' ? 'MindTrader analyzes your emotions in real-time, detects your weaknesses and stops you before you make a catastrophic mistake.' : 'MindTrader analyzuje tvoje emoce v reálném čase, detekuje tvá slabá místa a zastaví tě, než uděláš katastrofální chybu.'}
           </p>
         </motion.div>
 
@@ -210,9 +210,9 @@ export default function HomePage() {
           className="flex justify-center items-center gap-4 mb-20 flex-wrap"
         >
           {[
-            { number: '9/10', label: 'Obchodníků má psychické problémy' },
-            { number: '↓42%', label: 'Méně revenge tradingu' },
-            { number: '24/7', label: 'AI analýza tvého mindetu' }
+            { number: '9/10', label: language === 'en' ? 'of traders have psychological issues' : 'Obchodníků má psychické problémy' },
+            { number: '↓42%', label: language === 'en' ? 'Less revenge trading' : 'Méně revenge tradingu' },
+            { number: '24/7', label: language === 'en' ? 'AI analysis of your mindset' : 'AI analýza tvého mindetu' }
           ].map((stat, i) => (
             <div key={i} className="p-6 rounded-lg bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 text-center w-full sm:w-auto sm:min-w-[200px]">
               <p className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">{stat.number}</p>
@@ -266,7 +266,7 @@ export default function HomePage() {
                       </p>
                       
                       <div className="flex items-center gap-2 text-purple-300 font-semibold group-hover:gap-3 transition-all">
-                        <span>Vyzkoušej</span>
+                        <span>{language === 'en' ? 'Try it now' : 'Vyzkoušej'}</span>
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
@@ -300,7 +300,7 @@ export default function HomePage() {
           className="text-center py-16 mb-8"
         >
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3 leading-tight">
-            Připraven se stát <span className="text-gradient bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">top 7%?</span>
+            {language === 'en' ? 'Ready to become' : 'Připraven se stát'} <span className="text-gradient bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">{language === 'en' ? 'top 7%?' : 'top 7%?'}</span>
           </h2>
           <p className="text-lg text-purple-200/80 max-w-2xl mx-auto mb-8">
             {t('cta_text')}
@@ -329,10 +329,10 @@ export default function HomePage() {
           
           <div className="relative z-10 text-center">
             <h3 className="text-3xl md:text-5xl font-black text-white mb-4">
-              Premium: <span className="text-yellow-300">Končí brzy</span>
+              {language === 'en' ? 'Premium:' : 'Premium:'} <span className="text-yellow-300">{language === 'en' ? 'Ending soon' : 'Končí brzy'}</span>
             </h3>
             <p className="text-lg md:text-2xl text-yellow-50 mb-8 font-semibold">
-              Jen <span className="text-yellow-300 text-3xl">1499 Kč</span> (místo <span className="text-yellow-200 line-through">2499 Kč</span>)
+              {language === 'en' ? 'Only' : 'Jen'} <span className="text-yellow-300 text-3xl">1499 Kč</span> ({language === 'en' ? 'instead of' : 'místo'} <span className="text-yellow-200 line-through">2499 Kč</span>)
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -340,7 +340,7 @@ export default function HomePage() {
                 className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-slate-900 font-black text-lg px-10 py-7 rounded-xl shadow-lg shadow-yellow-500/50"
                 onClick={handlePricingClick}
               >
-                Aktivovat LIVE
+                {language === 'en' ? 'Activate LIVE' : 'Aktivovat LIVE'}
               </Button>
               <Button
                 variant="outline"
@@ -348,7 +348,7 @@ export default function HomePage() {
                 className="border-2 border-yellow-400 text-yellow-300 hover:bg-yellow-900/40 font-bold text-lg px-10 py-7 rounded-xl"
                 onClick={handlePricingClick}
               >
-                Více informací
+                {language === 'en' ? 'More info' : 'Více informací'}
               </Button>
             </div>
           </div>
