@@ -41,6 +41,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
 import { useLiveMode } from "@/contexts/live-mode-context"
 import { useData } from "@/contexts/data-context"
+import { useLanguage } from "@/contexts/language-context"
 import { supabase } from "@/lib/supabase/browser"
 
 interface MorningCheckData {
@@ -156,16 +157,94 @@ const stageData = [
 
 export default function DailyTrackerPage() {
   const { isLiveMode, isLoading: modeLoading } = useLiveMode()
-  // FIX: Moved supabase initialization here to resolve "use before declaration" error.
   const localSupabase = supabase
   const router = useRouter()
-  const { toast } = useToast() // Initialize useToast
-  const { morningChecks, trades, dailyIntentions, tradingPlans } = useData() // Get from DataContext
-
+  const { toast } = useToast()
+  const { morningChecks, trades, dailyIntentions, tradingPlans } = useData()
   const { stages } = useDailyStage()
-
   const { tradingStyle, config } = useTradingStyle()
   const { user, authReady } = useAuth()
+  const { language } = useLanguage()
+  const isEn = language === "en"
+
+  const dt = {
+    pageTitle: isEn ? "Daily Tracking" : "Denní Sledování",
+    loading: isEn ? "Loading..." : "Načítání...",
+    loginRequired: isEn ? "Please log in for LIVE mode" : "Pro LIVE mód se prosím přihlaste",
+    login: isEn ? "Log in" : "Přihlásit se",
+    virtualModeNotice: isEn ? "You are currently viewing data in Virtual mode" : "Momentálně si prohlížíš data ve Virtual modu",
+    virtualModeDesc: isEn ? " – how it may look during software use" : " – jak mohou vypadat během používání softwaru",
+    todaySummary: isEn ? "Today's Summary" : "Dnešní Shrnutí",
+    today: isEn ? "Today" : "Dnes",
+    history: isEn ? "History" : "Historie",
+    readiness: isEn ? "Readiness" : "Readiness",
+    readinessReady: isEn ? "Your readiness for today" : "Tvá připravenost na dnešní den",
+    notFilled: isEn ? "Not filled" : "Nevyplněno",
+    overallReadiness: isEn ? "Overall readiness" : "Celková připravenost",
+    sleep: isEn ? "Sleep" : "Spánek",
+    energy: isEn ? "Energy" : "Energie",
+    focus: isEn ? "Focus" : "Focus",
+    stress: isEn ? "Stress" : "Stres",
+    mood: isEn ? "Mood" : "Nálada",
+    concentration: isEn ? "Concentration" : "Soustředění",
+    tradingStatus: isEn ? "Your Trading Status Today" : "Tvůj Trading Status Dnes",
+    detailedAnalysis: isEn ? "Detailed Analysis:" : "Detailní Analýza:",
+    actionSteps: isEn ? "Action Steps:" : "Akční Kroky:",
+    loadingHistory: isEn ? "Loading history..." : "Načítání historie...",
+    continueFlow: isEn ? "Continue Your Daily Flow!" : "Pokračuj v Denním Toku!",
+    startDay: isEn ? "Start Your Day!" : "Začni Dnešní Den!",
+    phase5: isEn ? "Phase 5 - Complete day overview" : "Fáze 5 - Kompletní přehled dne",
+    totalPnL: isEn ? "Total P&L" : "Celkové P&L",
+    winRate: isEn ? "Win Rate" : "Podíl výher",
+    tradeCount: isEn ? "Trade Count" : "Počet Obchodů",
+    dailyGoals: isEn ? "Daily Goals:" : "Cíle dne:",
+    maxRisk: isEn ? "Max Risk:" : "Max Riziko:",
+    emotionalGoal: isEn ? "Emotional Goal:" : "Emoční Cíl:",
+    phase: isEn ? "Phase" : "Fáze",
+    remainingPhases: (n: number) => isEn ? `Remaining phases to complete: ${n}` : `Zbývající fáze k dokončení: ${n}`,
+    noHistory: isEn ? "No History" : "Žádná Historie",
+    scalperLive: isEn ? "Track your sessions" : "Sledujte vaše relace",
+    daytraderLive: isEn ? "Your summary" : "Vaše shrnutí",
+    swingtraderLive: isEn ? "Track your positions" : "Sledujte pozice",
+    demoMode: isEn ? "Demo mode" : "Demo režim",
+    // Readiness status
+    rsGood: isEn ? "Good conditions" : "Dobré podmínky",
+    rsCaution: isEn ? "Be careful" : "Buď opatrný",
+    rsNoTrade: isEn ? "Don't trade" : "Neobchoduj",
+    // AI tips
+    tipSleepCat: isEn ? "Sleep" : "Spánek",
+    tipSleepMsg: isEn ? "Insufficient sleep can negatively affect your decision-making" : "Nedostatečný spánek může negativně ovlivnit tvé rozhodování",
+    tipSleepAction: isEn ? "Try to go to bed earlier today. Ideally 7-9 hours of sleep." : "Zkus dnes dřív jít spát. Ideálně 7-9 hodin spánku.",
+    tipStressCat: isEn ? "Stress" : "Stres",
+    tipStressMsg: isEn ? "High stress level increases the risk of emotional trading" : "Vysoká úroveň stresu zvyšuje riziko emočního tradingu",
+    tipStressAction: isEn ? "Consider reducing position size or skipping trading today." : "Zvaž redukci pozice nebo vynechání obchodování dnes.",
+    tipFocusCat: isEn ? "Focus" : "Focus",
+    tipFocusMsg: isEn ? "Low focus can lead to missing important signals" : "Nízký focus může vést k přehlédnutí důležitých signálů",
+    tipEnergyCat: isEn ? "Energy" : "Energie",
+    tipEnergyMsg: isEn ? "Low energy reduces your ability to stick to the plan" : "Nízká energie snižuje tvou schopnost držet se plánu",
+    tipEnergyAction: isEn ? "Try light exercise or a healthy breakfast for an energy boost." : "Tkus lehké cvičení nebo zdravou snídani pro boost energie.",
+    tipActivityCat: isEn ? "Activity" : "Aktivita",
+    tipActivityMsg: isEn ? "Physical activity can improve your trading mindset" : "Fyzická aktivita může zlepšit tvůj trading mindset",
+    tipEmotionCat: isEn ? "Emotions" : "Emoce",
+    tipEmotionMsg: isEn ? "Negative emotional state can lead to impulsive decisions" : "Negativní emoční stav může vést k impulzivním rozhodnutím",
+    tipEmotionAction: isEn ? "Take a break before trading. Do something to calm yourself." : "Vezmi si pauzu před tradingem. Udělej něco, co tě uklidní.",
+    fillMorningCheck: isEn ? "Fill in Morning Check to get detailed AI analysis of your psychological state and trading readiness." : "Vyplň Ranní Kontrolu pro získání detailní AI analýzy tvého psychologického stavu a připravenosti k obchodování.",
+    fillMorningCheckShort: isEn ? "Fill in Morning Check to get AI analysis." : "Vyplň Ranní Kontrolu pro získání AI analýzy.",
+    startWithMorningCheck: isEn ? "Start with Morning Check" : "Začni s Ranní Kontrolou",
+    morningCheckNotFilled: isEn ? "Morning Check not filled" : "Ranní Kontrola nevyplněna",
+    tradingPossible: isEn ? "Trading possible" : "Trading je možný",
+    // Demo data
+    demoExerciseTypes: isEn ? ["Running", "Exercise", "Yoga"] : ["Běh", "Cvičení", "Yoga"],
+    demoRecommendation: isEn ? "Trading is possible" : "Trading je možný",
+    demoGoals: isEn ? "Stick to trading plan, max 3 trades" : "Držet se trading plánu, max 3 trades",
+    demoStrategy: isEn ? "Trend following" : "Trend following",
+    demoSetups: isEn ? "Trend + pullback" : "Trend + pullback",
+    demoEntryRules: isEn ? "Pullback to SMA" : "Pullback do SMA",
+    demoStopLoss: isEn ? "Below last low" : "Pod poslednímu low",
+    demoMarketAnalysis: isEn ? "Bullish trend" : "Bullish trend",
+    demoNotes: isEn ? "Demo plan" : "Demo plan",
+    demoTradeNotes: isEn ? "Demo trade" : "Demo trade",
+  }
 
   const [entries, setEntries] = useState<DailySummary[]>([])
   const [activeTab, setActiveTab] = useState("today")
@@ -402,7 +481,7 @@ export default function DailyTrackerPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Načítání...</p>
+          <p className="text-muted-foreground">{dt.loading}</p>
         </div>
       </div>
     )
@@ -413,8 +492,8 @@ export default function DailyTrackerPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
           <AlertTriangle className="h-8 w-8 text-yellow-500" />
-          <p className="text-muted-foreground">Pro LIVE mód se prosím přihlaste</p>
-          <Button onClick={() => router.push("/auth/login")}>Přihlásit se</Button>
+          <p className="text-muted-foreground">{dt.loginRequired}</p>
+                  <Button onClick={() => router.push("/auth/login")}>{dt.login}</Button>
         </div>
       </div>
     )
@@ -889,13 +968,13 @@ export default function DailyTrackerPage() {
               </div>
               <div>
                 <h1 className="md:text-7xl text-4xl font-black bg-gradient-to-r from-orange-400 via-pink-400 to-rose-400 bg-clip-text text-transparent">
-                  Denní Sledování
+                  {dt.pageTitle}
                 </h1>
                 <p className="md:text-lg text-sm text-muted-foreground mt-1 md:block hidden">
-                  {tradingStyle === "scalper" && (isLiveMode ? "Sledujte vaše relace 🚀" : "Demo režim 🎮")}
-                  {tradingStyle === "daytrader" && (isLiveMode ? "Vaše shrnutí 📊" : "Demo režim 🎮")}
-                  {tradingStyle === "swingtrader" && (isLiveMode ? "Sledujte pozice 📈" : "Demo režim 🎮")}
-                  {!tradingStyle && (isLiveMode ? "Vaše shrnutí 📊" : "Demo režim 🎮")}
+                  {tradingStyle === "scalper" && (isLiveMode ? `${dt.scalperLive} 🚀` : `${dt.demoMode} 🎮`)}
+                  {tradingStyle === "daytrader" && (isLiveMode ? `${dt.daytraderLive} 📊` : `${dt.demoMode} 🎮`)}
+                  {tradingStyle === "swingtrader" && (isLiveMode ? `${dt.swingtraderLive} 📈` : `${dt.demoMode} 🎮`)}
+                  {!tradingStyle && (isLiveMode ? `${dt.daytraderLive} 📊` : `${dt.demoMode} 🎮`)}
                 </p>
               </div>
             </div>
@@ -918,7 +997,7 @@ export default function DailyTrackerPage() {
         <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-3 px-4 flex items-center gap-3 mb-6">
           <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
           <span className="text-xs sm:text-sm text-amber-100">
-            <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+                  <span className="font-bold text-white">{dt.virtualModeNotice}</span>{dt.virtualModeDesc}
           </span>
         </div>
       )}
@@ -930,16 +1009,15 @@ export default function DailyTrackerPage() {
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-pink-500 rounded-xl md:text-base text-sm font-bold"
           >
             <Target className="md:h-5 md:w-5 h-4 w-4 mr-2" />
-            <span className="md:inline hidden">Dnešní Shrnutí</span>
-            <span className="md:hidden inline">Dnes</span>
+            <span className="md:inline hidden">{dt.todaySummary}</span>
+            <span className="md:hidden inline">{dt.today}</span>
           </TabsTrigger>
           <TabsTrigger
             value="history"
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-500 rounded-xl md:text-base text-sm font-bold"
           >
             <CalendarIcon className="md:h-5 md:w-5 h-4 w-4 mr-2" />
-            Historie
-          </TabsTrigger>
+            Historie          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="today" className="space-y-6 md:space-y-8">

@@ -13,6 +13,7 @@ import { useLiveMode } from '@/contexts/live-mode-context'
 import { useAnalytics } from '@/contexts/analytics-context'
 import { useGamification } from '@/contexts/gamification-context'
 import { CapitalSettingsDialog } from '@/components/capital-settings-dialog'
+import { useT } from '@/contexts/language-context'
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const { analytics, isLoading: analyticsLoading } = useAnalytics()
   const gamification = useGamification()
   const gamificationLoading = !gamification?.data
+  const t = useT()
 
   // Calculate dynamic values from analytics
   const totalCapital = analytics?.summary.totalPnL ? Math.abs(analytics.summary.totalPnL) + userCapital : userCapital
@@ -48,26 +50,26 @@ export default function Dashboard() {
 
   const features = [
     {
-      title: 'Daily Tracker',
-      desc: 'Nastavíš si pravidla dne – AI tě hlídá, abys je dodržel',
+      title: t('daily_tracker_title'),
+      desc: t('feat_daily_desc'),
       icon: Calendar,
       href: '/daily-tracker'
     },
     {
-      title: 'MindTrader AI',
-      desc: 'Varuje tě v reálném čase před emočními chybami',
+      title: t('mindtrader_title'),
+      desc: t('feat_mindtrader_desc'),
       icon: Zap,
       href: '/mindtrader'
     },
     {
-      title: 'Weekly Review',
-      desc: 'Shrne týden a řekne, co změnit příště',
+      title: t('weekly_review_title'),
+      desc: t('feat_weekly_desc'),
       icon: TrendingUp,
       href: '/weekly-review'
     },
     {
       title: 'Loss Reset',
-      desc: 'Rychlý reset po ztrátě – zpět do hry bez revenge',
+      desc: t('nav_home') === 'Dashboard' ? 'Quick reset after loss – back in the game without revenge' : 'Rychlý reset po ztrátě – zpět do hry bez revenge',
       icon: Target,
       href: '/loss-reset'
     }
@@ -121,9 +123,9 @@ export default function Dashboard() {
         >
           <div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
-              Nástěnka
+              {t('dashboard_title')}
             </h1>
-            <p className="text-sm sm:text-base md:text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
+            <p className="text-sm sm:text-base md:text-lg text-purple-200">{t('nav_home') === 'Dashboard' ? 'Track your trading progress and optimize your mindset' : 'Sleduj svůj trading progres a optimalizuj svůj mindset'}</p>
           </div>
           <CapitalSettingsDialog 
             currentCapital={userCapital}
@@ -142,7 +144,7 @@ export default function Dashboard() {
             <div className="max-w-6xl mx-auto bg-gradient-to-r from-green-900/80 to-emerald-900/80 backdrop-blur-sm border-b border-green-500/30 rounded-lg py-2 px-4 flex items-center justify-center gap-3 text-xs md:text-sm">
               <Crown className="w-4 h-4 text-green-300 flex-shrink-0" />
               <span className="text-green-100">
-                <span className="font-bold text-white">Jsi v Live Mode!</span> – Tvoje reálná data jsou nyní aktivní
+              <span className="font-bold text-white">{t('nav_home') === 'Dashboard' ? 'You are in Live Mode!' : 'Jsi v Live Mode!'}</span> – {t('nav_home') === 'Dashboard' ? 'Your real data is now active' : 'Tvoje reálná data jsou nyní aktivní'}
               </span>
             </div>
           </motion.div>
@@ -159,28 +161,28 @@ export default function Dashboard() {
           >
             {[
               { 
-                label: 'Celkový kapitál', 
+                label: t('dashboard_total_capital'), 
                 value: `$${totalCapital.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, 
                 color: 'text-green-400',
                 borderColor: 'border-green-500/20',
                 bgColor: 'bg-green-500/5'
               },
               { 
-                label: 'Měsíční P/L', 
+                label: t('dashboard_monthly_pl'), 
                 value: `${monthlyPL >= 0 ? '+' : ''}$${monthlyPL.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, 
                 color: 'text-blue-400',
                 borderColor: 'border-blue-500/20',
                 bgColor: 'bg-blue-500/5'
               },
               { 
-                label: 'Aktuální Readiness', 
+                label: t('dashboard_readiness'), 
                 value: `${Math.round(readiness)}%`, 
                 color: 'text-purple-400',
                 borderColor: 'border-purple-500/20',
                 bgColor: 'bg-purple-500/5'
               },
               { 
-                label: 'Tvůj XP', 
+                label: t('dashboard_xp'), 
                 value: xpValue.toLocaleString('cs-CZ'), 
                 color: 'text-yellow-400',
                 borderColor: 'border-yellow-500/20',
@@ -214,7 +216,7 @@ export default function Dashboard() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mb-12"
           >
-            <h2 className="text-2xl font-bold text-white mb-6">Nástroje</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">{t('dashboard_tools')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {features.map((feature, i) => {
                 const colorScheme = [
@@ -242,7 +244,7 @@ export default function Dashboard() {
                       <p className="text-slate-300 text-sm mb-6 flex-grow leading-relaxed">{feature.desc}</p>
 
                       <div className="flex items-center gap-2 text-slate-400 text-sm font-semibold hover:text-white transition-colors">
-                        <span>Otevřít</span>
+                        <span>{t('open')}</span>
                         <span className="text-lg">→</span>
                       </div>
                     </motion.div>

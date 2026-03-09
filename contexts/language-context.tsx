@@ -233,20 +233,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>("cs")
 
   useEffect(() => {
-    // Detekuj jazyk z domény
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname
-      let detectedLanguage: Language = "cs"
-      
-      // Anglické domény
-      if (hostname.endsWith(".ai") || hostname.endsWith(".au") || hostname.endsWith(".com")) {
-        detectedLanguage = "en"
-      }
-      // České domény
-      else if (hostname.endsWith(".cz") || hostname === "localhost" || hostname === "127.0.0.1") {
-        detectedLanguage = "cs"
-      }
-      
+      // English: .ai, .au, .com domains OR Vercel preview
+      const isEnglish = hostname.endsWith(".ai") || hostname.endsWith(".au") || hostname.endsWith(".com") || hostname.includes("vusercontent.net")
+      const detectedLanguage: Language = isEnglish ? "en" : "cs"
+      console.log("[v0] Language set to:", detectedLanguage, "for hostname:", hostname)
       setLanguage(detectedLanguage)
     }
   }, [])
