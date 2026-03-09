@@ -22,6 +22,7 @@ import { TradingIntegrationProvider } from "@/contexts/trading-integration-conte
 import { AdminProvider } from "@/contexts/admin-context"
 import { LiveModeProvider } from "@/contexts/live-mode-context"
 import { AnalyticsProvider } from "@/contexts/analytics-context"
+import { MilestoneCelebrationsProvider } from "@/contexts/milestone-celebrations-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
