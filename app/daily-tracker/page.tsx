@@ -413,8 +413,8 @@ export default function DailyTrackerPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
           <AlertTriangle className="h-8 w-8 text-yellow-500" />
-          <p className="text-muted-foreground">{dt.loginRequired}</p>
-                  <Button onClick={() => router.push("/auth/login")}>{dt.login}</Button>
+          <p className="text-muted-foreground">Pro LIVE mód se prosím přihlaste</p>
+                  <Button onClick={() => router.push("/auth/login")}>Přihlásit se</Button>
         </div>
       </div>
     )
@@ -889,13 +889,13 @@ export default function DailyTrackerPage() {
               </div>
               <div>
                 <h1 className="md:text-7xl text-4xl font-black bg-gradient-to-r from-orange-400 via-pink-400 to-rose-400 bg-clip-text text-transparent">
-                  {dt.pageTitle}
+                  Denní Sledování
                 </h1>
                 <p className="md:text-lg text-sm text-muted-foreground mt-1 md:block hidden">
-                  {tradingStyle === "scalper" && (isLiveMode ? `${dt.scalperLive} 🚀` : `${dt.demoMode} 🎮`)}
-                  {tradingStyle === "daytrader" && (isLiveMode ? `${dt.daytraderLive} 📊` : `${dt.demoMode} 🎮`)}
-                  {tradingStyle === "swingtrader" && (isLiveMode ? `${dt.swingtraderLive} 📈` : `${dt.demoMode} 🎮`)}
-                  {!tradingStyle && (isLiveMode ? `${dt.daytraderLive} 📊` : `${dt.demoMode} 🎮`)}
+                  {tradingStyle === "scalper" && (isLiveMode ? "Sledujte vaše relace 🚀" : "Demo režim 🎮")}
+                  {tradingStyle === "daytrader" && (isLiveMode ? "Vaše shrnutí 📊" : "Demo režim 🎮")}
+                  {tradingStyle === "swingtrader" && (isLiveMode ? "Sledujte pozice 📈" : "Demo režim 🎮")}
+                  {!tradingStyle && (isLiveMode ? "Vaše shrnutí 📊" : "Demo režim 🎮")}
                 </p>
               </div>
             </div>
@@ -918,7 +918,7 @@ export default function DailyTrackerPage() {
         <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-3 px-4 flex items-center gap-3 mb-6">
           <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
           <span className="text-xs sm:text-sm text-amber-100">
-                  <span className="font-bold text-white">{dt.virtualModeNotice}</span>{dt.virtualModeDesc}
+                  <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
           </span>
         </div>
       )}
@@ -930,8 +930,8 @@ export default function DailyTrackerPage() {
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-pink-500 rounded-xl md:text-base text-sm font-bold"
           >
             <Target className="md:h-5 md:w-5 h-4 w-4 mr-2" />
-            <span className="md:inline hidden">{dt.todaySummary}</span>
-            <span className="md:hidden inline">{dt.today}</span>
+            <span className="md:inline hidden">Dnešní Shrnutí</span>
+            <span className="md:hidden inline">Dnes</span>
           </TabsTrigger>
           <TabsTrigger
             value="history"

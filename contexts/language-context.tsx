@@ -241,7 +241,7 @@ function detectLanguage(): Language {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(detectLanguage)
+  const [language, setLanguage] = useState<Language>(detectLanguage())
 
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang)
