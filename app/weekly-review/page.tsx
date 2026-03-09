@@ -37,6 +37,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { getScoped, setScoped } from "@/lib/storage"
 import { useData } from "@/contexts/data-context"
 import { useAnalytics } from "@/contexts/analytics-context"
+import { useT } from "@/contexts/language-context"
 
 interface WeeklyReview {
   id: string
@@ -79,6 +80,7 @@ export default function WeeklyReviewPage() {
   const { isLiveMode, trades, morningChecks } = useData()
   const { analytics } = useAnalytics()
   const { user } = useAuth()
+  const t = useT()
   
   const [currentWeekData, setCurrentWeekData] = useState<any>(null)
   const [reviewVariant, setReviewVariant] = useState<"manual" | "ai">("manual")
@@ -311,7 +313,7 @@ export default function WeeklyReviewPage() {
   if (!currentWeekData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-lg">Načítání dat...</div>
+        <div className="text-white text-lg">{t('loading')}</div>
       </div>
     );
   }
@@ -325,7 +327,7 @@ export default function WeeklyReviewPage() {
             <Calendar className="w-10 h-10 text-purple-400" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-            Týdenní Přehled
+            {t('weekly_review_title')}
           </h1>
           <p className="text-gray-400">
             {currentWeekData.weekStart} - {currentWeekData.weekEnd}
@@ -336,8 +338,7 @@ export default function WeeklyReviewPage() {
           <TabsList className="grid grid-cols-2 bg-slate-800/50 border border-slate-700 p-1 mb-6">
             <TabsTrigger value="current" className="data-[state=active]:bg-purple-600">
               <BookOpen className="w-4 h-4 mr-2" />
-              Aktuální
-            </TabsTrigger>
+              Aktuální            </TabsTrigger>
             <TabsTrigger value="history" className="data-[state=active]:bg-purple-600">
               <History className="w-4 h-4 mr-2" />
               Historie ({savedReviews.length})
@@ -354,7 +355,7 @@ export default function WeeklyReviewPage() {
                     <Badge className="bg-green-500/20 text-green-300 border-green-500/30">+{roundPercent(currentWeekData.winRate)}%</Badge>
                   </div>
                   <p className="text-3xl font-bold text-white mb-1">{currentWeekData.totalTrades}</p>
-                  <p className="text-sm text-gray-400">Celkem Tradů</p>
+                  <p className="text-sm text-gray-400">{t('weekly_review_total_trades')}</p>
                   <div className="mt-3 flex gap-2 text-xs">
                     <span className="text-green-400">{currentWeekData.winningTrades} W</span>
                     <span className="text-red-400">{currentWeekData.losingTrades} L</span>
@@ -369,7 +370,7 @@ export default function WeeklyReviewPage() {
                     <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">Win Rate</Badge>
                   </div>
                   <p className="text-3xl font-bold text-white mb-1">{roundPercent(currentWeekData.winRate)}%</p>
-                  <p className="text-sm text-gray-400">Úspěšnost</p>
+                  <p className="text-sm text-gray-400">{t('weekly_review_win_rate')}</p>
                   <Progress value={currentWeekData.winRate} className="mt-3 h-2" />
                 </CardContent>
               </Card>
@@ -381,7 +382,7 @@ export default function WeeklyReviewPage() {
                     <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">Mental</Badge>
                   </div>
                   <p className="text-3xl font-bold text-white mb-1">{roundPercent(currentWeekData.avgReadiness)}%</p>
-                  <p className="text-sm text-gray-400">Avg Readiness</p>
+                  <p className="text-sm text-gray-400">{t('dashboard_readiness')}</p>
                   <Progress value={currentWeekData.avgReadiness} className="mt-3 h-2" />
                 </CardContent>
               </Card>
@@ -410,7 +411,7 @@ export default function WeeklyReviewPage() {
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-yellow-400" />
-                    AI Poznatky
+                    AI Insights
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -434,7 +435,7 @@ export default function WeeklyReviewPage() {
               <div>
                 <h2 className="text-white text-xl font-bold mb-4 flex items-center gap-2">
                   <History className="w-5 h-5 text-blue-400" />
-                  Minulé Přehledy
+                  Past Reviews
                 </h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {savedReviews.map((review: any) => (

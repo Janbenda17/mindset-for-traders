@@ -229,19 +229,19 @@ const translations = {
   },
 }
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>("cs")
+function detectLanguage(): Language {
+  if (typeof window === "undefined") return "cs"
+  const hostname = window.location.hostname
+  const isEnglish =
+    hostname.endsWith(".ai") ||
+    hostname.endsWith(".au") ||
+    hostname.endsWith(".com") ||
+    hostname.includes("vusercontent.net")
+  return isEnglish ? "en" : "cs"
+}
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const hostname = window.location.hostname
-      // English: .ai, .au, .com domains OR Vercel preview
-      const isEnglish = hostname.endsWith(".ai") || hostname.endsWith(".au") || hostname.endsWith(".com") || hostname.includes("vusercontent.net")
-      const detectedLanguage: Language = isEnglish ? "en" : "cs"
-      console.log("[v0] Language set to:", detectedLanguage, "for hostname:", hostname)
-      setLanguage(detectedLanguage)
-    }
-  }, [])
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [language, setLanguage] = useState<Language>(detectLanguage)
 
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang)
@@ -249,10 +249,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }
 
   const t = (key: string): string => {
-    // First check old inline translations
     const oldVal = translations[language][key as keyof (typeof translations)["cs"]]
     if (oldVal) return oldVal
-    // Then check new i18n translations
     const newVal = i18nTranslations[language][key as TranslationKey]
     if (newVal) return newVal
     return key

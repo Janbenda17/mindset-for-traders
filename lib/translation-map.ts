@@ -129,6 +129,22 @@ export const czechToEnglishMap: Record<string, string> = {
   'Vitej!': 'Welcome!',
   'Vítejte zpět!': 'Welcome back!',
   'Načítáme vaše data...': 'Loading your data...',
+
+  // HOME PAGE - Hero section
+  'Tvůj mozek se stane tvojí největší výhodou': 'Your mind will become your greatest advantage',
+  '93% obchodníků padne kvůli psychice, ne kvůli strategii.': '93% of traders fail because of psychology, not strategy.',
+  'MindTrader analyzes your emotions in real-time, detects your weaknesses and stops you before you make a catastrophic mistake.': 'MindTrader analyzes your emotions in real-time, detects your weaknesses and stops you before you make a catastrophic mistake.',
+  'Obchodníků má psychické problémy': 'of traders have psychological issues',
+  'Méně revenge tradingu': 'Less revenge trading',
+  'AI analýza tvého mindetu': 'AI analysis of your mindset',
+  'Připraven se stát top 7%?': 'Ready to become top 7%?',
+  
+  // Footer
+  '© 2025 MindTrader. Všechna práva vyhrazena.': '© 2025 MindTrader. All rights reserved.',
+  'Obchodní podmínky': 'Terms of Service',
+  'Ochrana údajů': 'Privacy Policy',
+  'Právní upozornění': 'Legal Notice',
+  'Kontakt': 'Contact',
 }
 
 export function getEnglishText(czechText: string, isEnglishDomain: boolean): string {
