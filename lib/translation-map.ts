@@ -85,7 +85,8 @@ export function getEnglishText(czechText: string, isEnglishDomain: boolean): str
 export function isEnglishDomain(): boolean {
   if (typeof window === 'undefined') return false
   const hostname = window.location.hostname
-  const isEnglish = hostname.endsWith('.ai') || hostname.endsWith('.au') || hostname.endsWith('.com') || hostname.includes('mindtrader') || hostname.includes('localhost')
+  // Check for .ai, .au, .com domains, Vercel preview, or localhost
+  const isEnglish = hostname.endsWith('.ai') || hostname.endsWith('.au') || hostname.endsWith('.com') || hostname.includes('vusercontent.net') || hostname === 'localhost' || hostname === '127.0.0.1'
   console.log('[v0] Domain detection - hostname:', hostname, 'isEnglish:', isEnglish)
   return isEnglish
 }
