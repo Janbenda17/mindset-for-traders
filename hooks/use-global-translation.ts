@@ -16,6 +16,11 @@ export function useGlobalTranslation() {
 
     console.log('[v0] English domain detected, starting text translation')
 
+    // Helper function to escape special regex characters
+    const escapeRegex = (str: string) => {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    }
+
     // Function to translate all text nodes in the DOM
     const translateDOM = () => {
       const walker = document.createTreeWalker(
@@ -35,7 +40,8 @@ export function useGlobalTranslation() {
         // Replace each Czech phrase with English equivalent
         Object.entries(czechToEnglishMap).forEach(([czech, english]) => {
           if (translatedText.includes(czech)) {
-            translatedText = translatedText.replace(new RegExp(czech, 'g'), english)
+            const escapedCzech = escapeRegex(czech)
+            translatedText = translatedText.replace(new RegExp(escapedCzech, 'g'), english)
             translatedCount++
           }
         })
@@ -66,7 +72,8 @@ export function useGlobalTranslation() {
 
               Object.entries(czechToEnglishMap).forEach(([czech, english]) => {
                 if (translatedText.includes(czech)) {
-                  translatedText = translatedText.replace(czech, english)
+                  const escapedCzech = escapeRegex(czech)
+                  translatedText = translatedText.replace(new RegExp(escapedCzech, 'g'), english)
                 }
               })
 
