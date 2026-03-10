@@ -7,6 +7,10 @@ export function AutoTranslator() {
   useEffect(() => {
     if (!isEnglishDomain()) return
 
+    const escapeRegex = (str: string) => {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    }
+
     const translate = () => {
       const walker = document.createTreeWalker(
         document.body,
@@ -22,7 +26,8 @@ export function AutoTranslator() {
         // Check each czech phrase and replace
         Object.entries(czechToEnglishMap).forEach(([czech, english]) => {
           if (text.includes(czech)) {
-            node.nodeValue = text.replace(new RegExp(czech, 'g'), english)
+            const escapedCzech = escapeRegex(czech)
+            node.nodeValue = text.replace(new RegExp(escapedCzech, 'g'), english)
           }
         })
       }

@@ -129,6 +129,87 @@ export const czechToEnglishMap: Record<string, string> = {
   'Vitej!': 'Welcome!',
   'Vítejte zpět!': 'Welcome back!',
   'Načítáme vaše data...': 'Loading your data...',
+
+  // HOME PAGE - Hero section
+  'Tvůj mozek se stane tvojí největší výhodou': 'Your mind will become your greatest advantage',
+  '93% obchodníků padne kvůli psychice, ne kvůli strategii.': '93% of traders fail because of psychology, not strategy.',
+  'MindTrader analyzes your emotions in real-time, detects your weaknesses and stops you before you make a catastrophic mistake.': 'MindTrader analyzes your emotions in real-time, detects your weaknesses and stops you before you make a catastrophic mistake.',
+  'Obchodníků má psychické problémy': 'of traders have psychological issues',
+  'Méně revenge tradingu': 'Less revenge trading',
+  'AI analýza tvého mindetu': 'AI analysis of your mindset',
+  'Připraven se stát top 7%?': 'Ready to become top 7%?',
+  
+  // Footer
+  '© 2025 MindTrader. Všechna práva vyhrazena.': '© 2025 MindTrader. All rights reserved.',
+  'Obchodní podmínky': 'Terms of Service',
+  'Ochrana údajů': 'Privacy Policy',
+  'Právní upozornění': 'Legal Notice',
+  'Kontakt': 'Contact',
+
+  // DAILY TRACKER - AI INSIGHTS
+  'Pro LIVE mód se prosím přihlaste': 'Please log in for LIVE mode',
+  'ŠPIČKOVÝ VÝKON! Připravenost': 'PEAK PERFORMANCE! Readiness',
+  'Vzácná kombinace: vysoký focus': 'Rare combination: high focus',
+  'nízký stres': 'low stress',
+  'IDEÁLNÍ podmínky pro složité rozhodování': 'IDEAL conditions for complex decision-making',
+  'Tvá pracovní paměť je na maximu': 'Your working memory is at maximum',
+  'OBCHODNÍ STRATEGIE: Jdi na A+ a B+ vzory s přísným řízením rizika': 'TRADING STRATEGY: Go for A+ and B+ patterns with strict risk management',
+  'POZOR: Vysoká sebedůvěra vede k přílišné sebedůvěře': 'CAUTION: High confidence can lead to overconfidence',
+  'pokud máš sérii výher, ZVÝŠ disciplínu, ne velikost pozic': 'if you have a winning streak, INCREASE discipline, not position size',
+  'DOBRÝ DEN, ALE NE IDEÁLNÍ. Připravenost': 'GOOD DAY, BUT NOT IDEAL. Readiness',
+  'TAKTIKA: Obchoduj jen vysokopravděpodobné vzory': 'TACTIC: Trade only high-probability patterns',
+  'Zvažte 50-75% normální velikosti pozice': 'Consider 50-75% of normal position size',
+  'Pokud máš 2 ztráty za sebou, ukonči relaci': 'If you have 2 losses in a row, end the session',
+  'VÁŽNÉ UPOZORNĚNÍ. Připravenost pouze': 'SERIOUS WARNING. Readiness only',
+  'KRITICKÉ: Stres': 'CRITICAL: Stress',
+  'je vysoký + nízká připravenost': 'is high + low readiness',
+  'Tvůj amygdala je přeaktivní': 'Your amygdala is overactive',
+  'vede to k "útočit nebo utíkat" chování': 'it leads to "fight or flight" behavior',
+  'které v obchodování znamená POMSTYLNÉ OBCHODOVÁNÍ': 'which in trading means REVENGE TRADING',
+  'DOPORUČENÍ: Papírový obchodní sezení nebo demo': 'RECOMMENDATION: Paper trading session or demo',
+  'Pokud MUSÍŠ obchodovat': 'If you MUST trade',
+  'Třetinová velikost pozice': 'One-third position size',
+  'zastavovací ztráta': 'stop loss',
+  'OBCHODOVÁNÍ DNES NENÍ VHODNÉ': 'TRADING TODAY IS NOT SUITABLE',
+  'Připravenost': 'Readiness',
+  'je kriticky nízká': 'is critically low',
+  'AKCE: Sebeléčba je teď důležitější než obchodování': 'ACTION: Self-care is now more important than trading',
+  '30min procházka, zdravý oběd, meditace': '30min walk, healthy lunch, meditation',
+  'Vrať se k obchodování zítra s novou energií': 'Come back to trading tomorrow with fresh energy',
+
+  // DAILY TRACKER - Sleep insights
+  'KRITICKÉ: Jen': 'CRITICAL: Only',
+  'h spánku (kvalita': 'hours of sleep (quality',
+  'Nedostatek spánku = -30-40% v schopnosti rozhodování': 'Lack of sleep = -30-40% in decision-making ability',
+  'Spánek:': 'Sleep:',
+  'h, kvalita': 'h, quality',
+  '- NEDOSTATEČNÝ': '- INSUFFICIENT',
+  'Riziko: Max 2 obchody s 25% pozicí nebo VYNECHAT obchodování dnes': 'Risk: Max 2 trades with 25% position or SKIP trading today',
+
+  // DAILY TRACKER - Stress insights
+  'UPOZORNĚNÍ: Stres': 'WARNING: Stress',
+  'je vysoký': 'is high',
+  'Aktivní amygdala = impulzivní rozhodnutí, riziko pomstylného obchodování': 'Active amygdala = impulsive decisions, revenge trading risk',
+  '- ZVÝŠENÝ': '- INCREASED',
+
+  // DAILY TRACKER - Focus insights
+  'PROBLÉM: Zaměření jen': 'PROBLEM: Focus only',
+  'znamená vysoké riziko podvědomého signálu a falešných vstupů': 'means high risk of missed signals and false entries',
+  'Zaměření:': 'Focus:',
+  '- NÍZKÉ': '- LOW',
+
+  // DAILY TRACKER - Energy insights
+  'NÍZKÁ ENERGIE:': 'LOW ENERGY:',
+  'energie': 'energy',
+  'Zmáhnutí v odpoledni = horší rozhodnutí': 'Fatigue in afternoon = worse decisions',
+  'uzavření ztrát = těžké': 'cutting losses = difficult',
+  'Energia:': 'Energy:',
+
+  // DAILY TRACKER - Mood insights
+  'EMOCÍ PROBLÉM: Nálada': 'MOOD PROBLEM: Mood',
+  'Riziko: Zkreslení odporu ke ztrátám': 'Risk: Loss aversion bias',
+  'držení ztrátných pozic': 'holding losing positions',
+  'pomstylné obchodování': 'revenge trading',
 }
 
 export function getEnglishText(czechText: string, isEnglishDomain: boolean): string {
