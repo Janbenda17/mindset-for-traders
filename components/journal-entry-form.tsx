@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
+import { useLanguage } from "@/contexts/language-context"
 import { format } from "date-fns"
 import { CalendarIcon, Plus, Clock, TrendingUp, DollarSign, Brain, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -28,28 +29,28 @@ interface JournalEntryFormProps {
 }
 
 const EMOTIONS_BEFORE = [
-  "Klidný",
-  "Sebevědomý",
-  "Nervózní",
-  "Nejistý",
-  "Nadšený",
-  "Unavený",
-  "Soustředěný",
-  "Rozrušený",
+  "Calm",
+  "Confident",
+  "Nervous",
+  "Uncertain",
+  "Excited",
+  "Tired",
+  "Focused",
+  "Upset",
 ]
 
 const EMOTIONS_DURING = [
-  "Klidný",
-  "Stresovaný",
-  "Sebevědomý",
-  "Panický",
-  "Soustředěný",
-  "Rozptýlený",
-  "Trpělivý",
-  "Netrpělivý",
+  "Calm",
+  "Stressed",
+  "Confident",
+  "Panicked",
+  "Focused",
+  "Distracted",
+  "Patient",
+  "Impatient",
 ]
 
-const EMOTIONS_AFTER = ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Poučený", "Naštvaný", "Klidný", "Euforický"]
+const EMOTIONS_AFTER = ["Satisfied", "Frustrated", "Proud", "Disappointed", "Learned", "Angry", "Calm", "Euphoric"]
 
 export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact = false }: JournalEntryFormProps) {
   const [date, setDate] = useState<Date>(selectedDate || new Date())

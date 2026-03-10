@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
+import { useLanguage } from "@/contexts/language-context"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -71,8 +72,8 @@ const generateDemoEntries = () => {
       date: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       title: `${direction.toUpperCase()} ${pair}`,
       content: isWin 
-        ? `Perfektní setup, dodržel jsem plán na ${session} session`
-        : `${Math.random() > 0.5 ? "Měl jsem počkat na lepší setup" : "Příliš brzy vstup, špatný timing"}`,
+        ? `Perfect setup, I followed my plan on ${session} session`
+        : `${Math.random() > 0.5 ? "I should have waited for a better setup" : "Too early entry, bad timing"}`,
       pair,
       direction,
       entryPrice: Math.random() * 100 + 1,
@@ -100,10 +101,10 @@ const generateDemoEntries = () => {
       id: `demo-journal-${i + 1}`,
       type: "journal",
       date: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      title: `Deník - ${i % 2 === 0 ? "Dobrý" : "Náročný"} den`,
-      content: `${i % 2 === 0 ? "Dobrý" : "Náročný"} den, ${i % 3 === 0 ? "hodně jsem se naučil" : "pracuji na disciplíně"}`,
+      title: `Journal - ${i % 2 === 0 ? "Good" : "Challenging"} day`,
+      content: `${i % 2 === 0 ? "Good" : "Challenging"} day, ${i % 3 === 0 ? "I learned a lot" : "working on discipline"}`,
       mood: Math.floor(Math.random() * 40) + 50,
-      notes: `${i % 2 === 0 ? "Dobrý" : "Náročný"} den, ${i % 3 === 0 ? "hodně jsem se naučil" : "pracuji na disciplíně"}`,
+      notes: `${i % 2 === 0 ? "Good" : "Challenging"} day, ${i % 3 === 0 ? "I learned a lot" : "working on discipline"}`,
       emotion: emotions[Math.floor(Math.random() * emotions.length)],
     })
   }
@@ -120,7 +121,88 @@ export default function JournalPage() {
   const [sortedJournalEntries, setSortedJournalEntries] = useState<any[]>([])
   const { getAllJournalEntries, isLiveMode } = useData()
   const { user } = useAuth()
+  const { language } = useLanguage()
   const [virtualStats, setVirtualStats] = useState<any>(null) // State for virtual stats
+  const isEn = language === "en"
+
+  const txt = {
+    // Page title and subtitle
+    journalTitle: isEn ? "Trading Journal" : "Trading Journal",
+    journalSubtitle: isEn ? "Record your thoughts, emotions, and lessons from trading." : "Record your thoughts, emotions, and lessons from trading.",
+    
+    // Virtual mode notice
+    virtualNotice: isEn ? "You are currently viewing data in Virtual mode" : "You are currently viewing data in Virtual mode",
+    virtualNotice2: isEn ? " – how it may look during software use" : " – how it may look during software use",
+    
+    // Tab labels
+    aiInsights: isEn ? "AI Insights" : "AI Insights",
+    aiShort: isEn ? "AI" : "AI",
+    quickEntry: isEn ? "Quick Entry" : "Quick Entry",
+    newEntry: isEn ? "New Entry" : "New Entry",
+    cal: isEn ? "Cal" : "Cal",
+    calendar: isEn ? "Calendar" : "Calendar",
+    allRecords: isEn ? "All Records" : "All Records",
+    list: isEn ? "List" : "List",
+    stats: isEn ? "Stats" : "Stats",
+    
+    // Stats labels
+    total: isEn ? "Total" : "Total",
+    records: isEn ? "Records" : "Records",
+    thisWeek: isEn ? "This Week" : "This Week",
+    avgPerDay: isEn ? "Avg/Day" : "Avg/Day",
+    streak: isEn ? "Streak" : "Streak",
+    totalPnL: isEn ? "Total P&L" : "Total P&L",
+    winRate: isEn ? "Win Rate" : "Win Rate",
+    bestDay: isEn ? "Best Day" : "Best Day",
+    mood: isEn ? "Mood" : "Mood",
+    
+    // Insights
+    aiInsightsAvailable: isEn ? "AI Insights available!" : "AI Insights available!",
+    greatConsistency: isEn ? "Great Consistency!" : "Great Consistency!",
+    consistencyMsg: (streak: number) => isEn ? `You've journaled for ${streak} days in a row. Keep it up!` : `You've journaled for ${streak} days in a row. Keep it up!`,
+    improveConsistency: isEn ? "Improve Consistency" : "Improve Consistency",
+    consistencyWarning: isEn ? "Regular journaling is key to success. Try writing every day!" : "Regular journaling is key to success. Try writing every day!",
+    excellentWinRate: isEn ? "Excellent Win Rate!" : "Excellent Win Rate!",
+    winRateSuccess: (wr: number) => isEn ? `${wr}% win rate is professional level. Great work!` : `${wr}% win rate is professional level. Great work!`,
+    winRateNeeds: isEn ? "Win Rate Needs Improvement" : "Win Rate Needs Improvement",
+    winRateWarning: (wr: number) => isEn ? `${wr}% win rate is below break-even. Check your strategy!` : `${wr}% win rate is below break-even. Check your strategy!`,
+    greatPnL: isEn ? "Great P&L!" : "Great P&L!",
+    pnLSuccess: (pnl: number) => isEn ? `+$${pnl} is excellent performance. Keep it up!` : `+$${pnl} is excellent performance. Keep it up!`,
+    negativePnL: isEn ? "Negative P&L" : "Negative P&L",
+    pnLWarning: (pnl: number) => isEn ? `${pnl} requires immediate action. Review your risk management!` : `${pnl} requires immediate action. Review your risk management!`,
+    greatMood: isEn ? "Great Mood!" : "Great Mood!",
+    moodSuccess: (mood: number) => isEn ? `Average mood ${mood}/10 is excellent. Positive mindset = better results!` : `Average mood ${mood}/10 is excellent. Positive mindset = better results!`,
+    lowMood: isEn ? "Low Mood" : "Low Mood",
+    moodWarning: (mood: number) => isEn ? `Average mood ${mood}/10. Focus on mental health!` : `Average mood ${mood}/10. Focus on mental health!`,
+    excellentProfitFactor: isEn ? "Excellent Profit Factor!" : "Excellent Profit Factor!",
+    profitFactorMsg: (pf: number) => isEn ? `Profit factor ${pf.toFixed(2)} is excellent. Your wins are bigger than losses!` : `Profit factor ${pf.toFixed(2)} is excellent. Your wins are bigger than losses!`,
+    
+    // Trade stats
+    profitingTrades: isEn ? "Profitable Trades" : "Profitable Trades",
+    avgProfit: isEn ? "Average Profit" : "Average Profit",
+    losingTrades: isEn ? "Losing Trades" : "Losing Trades",
+    avgLoss: isEn ? "Average Loss" : "Average Loss",
+    profitFactor: isEn ? "Profit Factor" : "Profit Factor",
+    rating: isEn ? "Rating" : "Rating",
+    bestDayVal: isEn ? "Best Day" : "Best Day",
+    worstDay: isEn ? "Worst Day" : "Worst Day",
+    thisMonth: isEn ? "This Month" : "This Month",
+    
+    // Empty state
+    noRecords: isEn ? "No records yet" : "No records yet",
+    startRecording: isEn ? "Start recording your trades and insights" : "Start recording your trades and insights",
+    
+    // Entry details
+    emotionBefore: isEn ? "Emotion Before" : "Emotion Before",
+    emotionDuring: isEn ? "Emotion During" : "Emotion During",
+    emotionAfter: isEn ? "Emotion After" : "Emotion After",
+    confidence: isEn ? "Confidence" : "Confidence",
+    stressLevel: isEn ? "Stress Level" : "Stress Level",
+    
+    // Final message
+    excellentJob: isEn ? "Excellent Job!" : "Excellent Job!",
+    tradingGreat: isEn ? "Your trading is in great shape. Keep going! 🚀" : "Your trading is in great shape. Keep going! 🚀",
+  }
 
   useEffect(() => {
     loadEntries()
