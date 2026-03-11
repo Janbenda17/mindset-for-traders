@@ -53,9 +53,6 @@ const EMOTIONS_DURING = [
 const EMOTIONS_AFTER = ["Satisfied", "Frustrated", "Proud", "Disappointed", "Learned", "Angry", "Calm", "Euphoric"]
 
 export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact = false }: JournalEntryFormProps) {
-  const { language } = useLanguage()
-  const isEn = language === "en"
-  
   const [date, setDate] = useState<Date>(selectedDate || new Date())
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
@@ -255,7 +252,7 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <Plus className="h-5 w-5 text-purple-400" />
-          {isEn ? "New Entry" : "Nový záznam"}
+          Nový záznam
         </CardTitle>
       </CardHeader>
       <CardContent>

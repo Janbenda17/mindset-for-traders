@@ -13,11 +13,11 @@ export default function JournalPageClient() {
   const isEn = language === "en"
 
   const txt = {
-    title: isEn ? "Trading Journal" : "Obchodní deník",
-    subtitle: isEn ? "Record your thoughts, emotions, and lessons from trading." : "Zaznamenejte své myšlenky, emoce a lekce z obchodování.",
-    allRecords: isEn ? "All Journal Records" : "Všechny deníkové záznamy",
-    recordsFor: (date: string) => isEn ? `Records for ${date}` : `Záznamy pro ${date}`,
-    allRecords2: isEn ? "All your journal records." : "Všechny vaše deníkové záznamy.",
+    title: isEn ? "Trading Journal" : "Trading Journal",
+    subtitle: isEn ? "Record your thoughts, emotions, and lessons from trading." : "Record your thoughts, emotions, and lessons from trading.",
+    allRecords: isEn ? "All Journal Records" : "All Journal Records",
+    recordsFor: (date: string) => isEn ? `Records for ${date}` : `Records for ${date}`,
+    allRecords2: isEn ? "All your journal records." : "All your journal records.",
   }
 
   return (
