@@ -179,8 +179,8 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
       {
         type: "critical",
         icon: "🚨",
-        title: "CRITICAL: High stress",
-        description: `High stress (${35}%) destroys your decisions and long-term health.`,
+        title: "CRITICAL: High pressure",
+        description: `High mental pressure (${35}%) destroys your decisions and long-term health.`,
         action: "URGENT: Take a day off or switch to demo mode for the rest of the week.",
         impact: "critical",
       },
@@ -195,8 +195,8 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
       {
         type: "warning",
         icon: "😩",
-        title: "Elevated stress level",
-        description: `Your stress (${35}%) is slightly elevated. Error potential is growing.`,
+        title: "Elevated mental load",
+        description: `Your tension (${35}%) is slightly elevated. Error potential is growing.`,
         action: "Implement 5min meditation or short walk after each loss.",
         impact: "high",
       },
@@ -809,7 +809,7 @@ function generatePsychologicalAnalysis(
       priority: "high" as const,
       emoji: "😰",
         title: "REDUCE STRESS - Critical level!",
-        description: `High stress (${avgStress}%) destroys your decisions and long-term health.`,
+        description: `High mental pressure (${avgStress}%) destroys your decisions and long-term health.`,
         action: "Immediately start with 10min breathing exercises BEFORE each trade and after 2 consecutive losses. Consider reducing positions by 50%.",
         impact: "Your performance and health are at risk!",
     })
@@ -817,8 +817,8 @@ function generatePsychologicalAnalysis(
     actionPlan.push({
       priority: "medium" as const,
       emoji: "😩",
-        title: "Elevated stress level",
-        description: `Your stress (${avgStress}%) is slightly elevated. Error potential is growing.`,
+              title: "Elevated mental load",
+              description: `Your tension (${avgStress}%) is slightly elevated. Error potential is growing.`,
         action: "Implement 5min meditation or short walk after each loss.",
         impact: "Reduce error risk and improve concentration.",
     })
@@ -1077,25 +1077,25 @@ function generatePsychologicalAnalysis(
         ? {
             type: "critical",
             icon: "😰",
-            title: "CRITICALLY high stress",
-            description: `Stress ${avgStress.toFixed(0)}% is dangerous!`,
-            action: "Reduce position sizes by 50%. Stress management is priority.",
+            title: "CRITICALLY high pressure",
+            description: `Pressure ${avgStress.toFixed(0)}% is dangerous!`,
+            action: "Reduce position sizes by 50%. Mental load management is priority.",
             impact: "critical",
           }
         : avgStress > 50
           ? {
               type: "warning",
               icon: "😤",
-              title: "Elevated stress level",
-              description: `Stress ${avgStress.toFixed(0)}% is above optimal level.`,
+              title: "Elevated mental load",
+              description: `Pressure ${avgStress.toFixed(0)}% is above optimal level.`,
               action: "5min breathing exercises before every session.",
               impact: "high",
             }
           : {
               type: "success",
               icon: "😌",
-              title: "Perfect stress management",
-              description: `Stress ${avgStress.toFixed(0)}% is in optimal range!`,
+              title: "Perfect mental balance",
+              description: `Pressure ${avgStress.toFixed(0)}% is in optimal range!`,
               action: "Keep it up - this balance is key.",
               impact: "positive",
             },
