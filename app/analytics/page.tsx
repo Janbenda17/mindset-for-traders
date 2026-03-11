@@ -2906,4 +2906,3 @@ export default function PsychologyAnalyticsPage() {
     </div>
   )
 }
-}
