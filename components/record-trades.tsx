@@ -601,7 +601,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Stres ({currentTrade.stressLevel})</label>
+                <label className="text-sm text-gray-300 block mb-2">Stress ({currentTrade.stressLevel})</label>
                 <input
                   type="range"
                   min="1"
@@ -887,7 +887,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                           </div>
                         </div>
                         <div className="bg-red-500/10 rounded-lg p-3 border border-red-500/20">
-                          <p className="text-xs text-gray-400 mb-1">Stres</p>
+                          <p className="text-xs text-gray-400 mb-1">Stress</p>
                           <div className="flex items-center gap-2">
                             <div className="w-full bg-slate-700/50 rounded-full h-2">
                               <div
