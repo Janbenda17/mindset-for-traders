@@ -179,9 +179,9 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
       {
         type: "critical",
         icon: "🚨",
-        title: isEn ? "CRITICAL: High stress" : "KRITICKÉ: Stres",
-        description: isEn ? `High stress (${35}%) destroys your decisions and long-term health.` : `Vysoký stress (${35}%) ničí tvá rozhodnutí a dlouhodobé zdraví.`,
-        action: isEn ? "URGENT: Take a day off or switch to demo mode for the rest of the week." : "NALÉHAVÉ: Vezmi si den volna nebo přejdi na demo mode na zbytek týdne.",
+        title: "CRITICAL: High stress",
+        description: `High stress (${35}%) destroys your decisions and long-term health.`,
+        action: "URGENT: Take a day off or switch to demo mode for the rest of the week.",
         impact: "critical",
       },
       {
@@ -195,9 +195,9 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
       {
         type: "warning",
         icon: "😩",
-        title: isEn ? "Elevated stress level" : "Zvýšený stress level",
-        description: isEn ? `Your stress (${35}%) is slightly elevated. Error potential is growing.` : `Tvůj stress (${35}%) je mírně zvýšený. Potenciál pro chyby roste.`,
-        action: isEn ? "Implement 5min meditation or short walk after each loss." : "Implementuj 5min meditaci nebo krátkou procházku po každé ztrátě.",
+        title: "Elevated stress level",
+        description: `Your stress (${35}%) is slightly elevated. Error potential is growing.`,
+        action: "Implement 5min meditation or short walk after each loss.",
         impact: "high",
       },
     ],
@@ -209,8 +209,8 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
         impact: -2100,
         color: "#ef4444",
         severity: "high",
-        description: isEn ? "Impulsive trades from fear of missing opportunity" : "Impulzivní obchody z obavy, že promeškáš příležitost",
-        recommendation: isEn ? "Wait 10 minutes before entry. FOMO usually means you're late." : "Vyčkej 10 minut před vstupem. FOMO většinou znamená, že jsi pozdě.",
+        description: "Impulsive trades from fear of missing opportunity",
+        recommendation: "Wait 10 minutes before entry. FOMO usually means you're late.",
       },
       {
         name: "Revenge Trading",
@@ -219,8 +219,8 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
         impact: -3200,
         color: "#dc2626",
         severity: "critical",
-        description: isEn ? "Attempt to quickly recover losses - most dangerous pattern" : "Snaha rychle získat zpět ztráty - nejnebezpečnější pattern",
-        recommendation: isEn ? "STOP trading after 2 losses in a row. Take break minimum 30 minutes." : "STOP trading po 2 ztrátách za sebou. Udělej pauzu minimálně 30 minut.",
+        description: "Attempt to quickly recover losses - most dangerous pattern",
+        recommendation: "STOP trading after 2 losses in a row. Take break minimum 30 minutes.",
       },
       {
         name: "Fear of Losing",
@@ -229,8 +229,8 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
         impact: -1800,
         color: "#f59e0b",
         severity: "high",
-        description: isEn ? "Premature closing of profitable positions due to fear of loss" : "Předčasné uzavírání ziskových pozic kvůli strachu ze ztráty",
-        recommendation: isEn ? "Stick to the plan - close positions on TP or trailing stop, not emotionally." : "Dodržuj plán - uzavírej pozice na TP nebo trailing stop, ne emocionálně.",
+        description: "Premature closing of profitable positions due to fear of loss",
+        recommendation: "Stick to the plan - close positions on TP or trailing stop, not emotionally.",
       },
       {
         name: "Overconfidence",
@@ -239,8 +239,8 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
         impact: -1500,
         color: "#f97316",
         severity: "medium",
-        description: isEn ? "Trading with too large risk after series of wins" : "Po sérii výher trading s příliš velkým rizikem",
-        recommendation: isEn ? "Risk management is constant - always max 1-2% per trade, regardless of winning streak." : "Risk management je konstantní - vždy max 1-2% na trade, bez ohledu na winning streak.",
+        description: "Trading with too large risk after series of wins",
+        recommendation: "Risk management is constant - always max 1-2% per trade, regardless of winning streak.",
       },
       {
         name: "Analysis Paralysis",
@@ -918,7 +918,7 @@ function generatePsychologicalAnalysis(
         Math.max(trades.filter((t) => t.pnl < 0).length, 1),
     },
     
-    // NOVÉ METRIKY PRO PSYCHOLOGY INSIGHTS
+    // NEW METRICS FOR PSYCHOLOGY INSIGHTS
     recoveryRate: (() => {
       let recoveryCount = 0
       let lossCount = 0
@@ -1000,9 +1000,9 @@ function generatePsychologicalAnalysis(
           if (dropPercentage > 10) {
             findings.push({
               severity: "critical",
-              title: isEn ? "⚠️ Critical finding" : "⚠️ Kritické zjištění",
-              message: isEn ? `After 2 losses in a row, your win rate drops by ${dropPercentage}%. STOP trading and take a 30min break!` : `Po 2 ztrátách za sebou klesá tvoje win rate o ${dropPercentage}%. STOP trading a uděl 30min break!`,
-              action: isEn ? "After 2 consecutive losses = STOP for 30 minutes" : "Po 2 consecutive losses = STOP na 30 minut"
+              title: "⚠️ Critical finding",
+              message: `After 2 losses in a row, your win rate drops by ${dropPercentage}%. STOP trading and take a 30min break!`,
+              action: "After 2 consecutive losses = STOP for 30 minutes"
             })
           }
         }
@@ -1017,18 +1017,18 @@ function generatePsychologicalAnalysis(
         ? {
             type: "success",
             icon: "😴",
-            title: isEn ? "Sleep is your superpower!" : "Spánek je tvůj superpower!",
-            description: isEn ? `You average ${avgSleep.toFixed(1)}h of sleep, which is EXCELLENT! Studies show 7+ hours improves decision-making by 40%.` : `Průměrně spíš ${avgSleep.toFixed(1)}h, což je SKVÉLÉ! Studie ukazují, že 7+ hodin spánku zlepšuje rozhodování o 40%.`,
-            action: isEn ? "Keep up the regular sleep schedule - it's working!" : "Pokračuj v pravidelném spánkovém režimu - funguje to!",
+            title: "Sleep is your superpower!",
+            description: `You average ${avgSleep.toFixed(1)}h of sleep, which is EXCELLENT! Studies show 7+ hours improves decision-making by 40%.`,
+            action: "Keep up the regular sleep schedule - it's working!",
             impact: "high",
           }
         : avgSleep < 6.5
           ? {
               type: "critical",
               icon: "😴",
-              title: isEn ? "CRITICAL sleep deprivation!" : "KRITICKÝ nedostatek spánku!",
-              description: isEn ? `You average only ${avgSleep.toFixed(1)}h daily. Your decision-making is 35% worse than with 7+ hours.` : `Spíš průměrně jen ${avgSleep.toFixed(1)}h denně. Tvoje rozhodovací schopnost je o 35% horší než po 7+ hodinách.`,
-              action: isEn ? "PRIORITY #1: Set alarm for 22:00 and go to bed. Seriously." : "PRIORITA #1: Nastav alarm na 22:00 a jdi spát. Seriously.",
+              title: "CRITICAL sleep deprivation!",
+              description: `You average only ${avgSleep.toFixed(1)}h daily. Your decision-making is 35% worse than with 7+ hours.`,
+              action: "PRIORITY #1: Set alarm for 22:00 and go to bed. Seriously.",
               impact: "critical",
             }
           : null,
@@ -1037,18 +1037,18 @@ function generatePsychologicalAnalysis(
         ? {
             type: "success",
             icon: "🧘",
-            title: isEn ? "Mental resilience of a monk" : "Mentální pevnost úrovně monk",
-            description: isEn ? `Emotional stability ${moodStability.toFixed(0)}% is in top 10% of traders!` : `Emoční stabilita ${moodStability.toFixed(0)}% je v top 10% traderů!`,
-            action: isEn ? "What do you do for mental health? Share it with others!" : "Co děláš pro mental health? Sdílej to s dalšími!",
+            title: "Mental resilience of a monk",
+            description: `Emotional stability ${moodStability.toFixed(0)}% is in top 10% of traders!`,
+            action: "What do you do for mental health? Share it with others!",
             impact: "positive",
           }
         : moodStability < 70
           ? {
               type: "warning",
               icon: "🎢",
-              title: isEn ? "Emotional rollercoaster" : "Emoční kolotoč",
-              description: isEn ? `Stability ${moodStability.toFixed(0)}% means high emotional volatility.` : `Stabilita ${moodStability.toFixed(0)}% znamená vysokou emoční volatilitu.`,
-              action: isEn ? "Daily journaling + 10min meditation. Change it in 2 weeks!" : "Denní journaling + 10min meditation. Změň to během 2 týdnů!",
+              title: "Emotional rollercoaster",
+              description: `Stability ${moodStability.toFixed(0)}% means high emotional volatility.`,
+              action: "Daily journaling + 10min meditation. Change it in 2 weeks!",
               impact: "high",
             }
           : null,
@@ -1057,18 +1057,18 @@ function generatePsychologicalAnalysis(
         ? {
             type: "success",
             icon: "🎯",
-            title: isEn ? "Discipline level: Navy SEAL" : "Disciplína level: Navy SEAL",
-            description: isEn ? `Discipline ${avgDiscipline.toFixed(0)}% is brutal!` : `Disciplína ${avgDiscipline.toFixed(0)}% je brutální!`,
-            action: isEn ? "Mentor others - share your techniques!" : "Mentoruj ostatní - sdílej své techniky!",
+            title: "Discipline level: Navy SEAL",
+            description: `Discipline ${avgDiscipline.toFixed(0)}% is brutal!`,
+            action: "Mentor others - share your techniques!",
             impact: "positive",
           }
         : avgDiscipline < 60
           ? {
               type: "critical",
               icon: "📋",
-              title: isEn ? "Discipline = biggest problem" : "Disciplína = největší problém",
-              description: isEn ? `Discipline ${avgDiscipline.toFixed(0)}% is low. No discipline = gambling!` : `Disciplína ${avgDiscipline.toFixed(0)}% je nízká. Bez disciplíny = gambling!`,
-              action: isEn ? "Create pre-trade checklist. Non-negotiable." : "Vytvoř pre-trade checklist. Non-negotiable.",
+              title: "Discipline = biggest problem",
+              description: `Discipline ${avgDiscipline.toFixed(0)}% is low. No discipline = gambling!`,
+              action: "Create pre-trade checklist. Non-negotiable.",
               impact: "critical",
             }
           : null,
@@ -1077,26 +1077,26 @@ function generatePsychologicalAnalysis(
         ? {
             type: "critical",
             icon: "😰",
-            title: isEn ? "CRITICALLY high stress" : "KRITICKY vysoký stress",
-            description: isEn ? `Stress ${avgStress.toFixed(0)}% is dangerous!` : `Stress ${avgStress.toFixed(0)}% je nebezpečný!`,
-            action: isEn ? "Reduce position sizes by 50%. Stress management is priority." : "Zmenši position sizes o 50%. Stress management je priorita.",
+            title: "CRITICALLY high stress",
+            description: `Stress ${avgStress.toFixed(0)}% is dangerous!`,
+            action: "Reduce position sizes by 50%. Stress management is priority.",
             impact: "critical",
           }
         : avgStress > 50
           ? {
               type: "warning",
               icon: "😤",
-              title: isEn ? "Elevated stress level" : "Zvýšený stress level",
-              description: isEn ? `Stress ${avgStress.toFixed(0)}% is above optimal level.` : `Stress ${avgStress.toFixed(0)}% je nad optimální úrovní.`,
-              action: isEn ? "5min breathing exercises before every session." : "5min breathing exercises před každým session.",
+              title: "Elevated stress level",
+              description: `Stress ${avgStress.toFixed(0)}% is above optimal level.`,
+              action: "5min breathing exercises before every session.",
               impact: "high",
             }
           : {
               type: "success",
               icon: "😌",
-              title: isEn ? "Perfect stress management" : "Perfektní stress management",
-              description: isEn ? `Stress ${avgStress.toFixed(0)}% is in optimal range!` : `Stress ${avgStress.toFixed(0)}% je v optimálním rozmezí!`,
-              action: isEn ? "Keep it up - this balance is key." : "Pokračuj - tato rovnováha je klíčová.",
+              title: "Perfect stress management",
+              description: `Stress ${avgStress.toFixed(0)}% is in optimal range!`,
+              action: "Keep it up - this balance is key.",
               impact: "positive",
             },
     ].filter((insight) => insight !== null) as any[], // Filter out null values
@@ -1112,7 +1112,7 @@ function generatePsychologicalAnalysis(
     })),
     psychologicalProfile: [
       // Recreating psychologicalProfile based on recalculated metrics
-      { subject: "Disciplína", A: Math.round(avgDiscipline) },
+      { subject: "Discipline", A: Math.round(avgDiscipline) },
       { subject: "Emoce", A: Math.round(moodStability) },
       { subject: "Sebevědomí", A: Math.round(avgConfidence) },
       { subject: "Stress", A: Math.round(Math.max(0, 100 - avgStress)) }, // Stress inverted for radar chart (lower is better)
