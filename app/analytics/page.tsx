@@ -1757,13 +1757,13 @@ export default function PsychologyAnalyticsPage() {
                 <div
                   className={cn(
                     "h-full transition-all",
-                    avgDiscipline > 80
+                    (analyticsData?.avgDiscipline || 0) > 80
                       ? "bg-gradient-to-r from-cyan-500 to-blue-500"
-                      : avgDiscipline > 60
+                      : (analyticsData?.avgDiscipline || 0) > 60
                         ? "bg-gradient-to-r from-blue-500 to-indigo-500"
                         : "bg-gradient-to-r from-orange-500 to-red-500",
                   )}
-                  style={{ width: `${avgDiscipline}%` }}
+                  style={{ width: `${analyticsData?.avgDiscipline || 0}%` }}
                 />
               </div>
             </CardContent>
@@ -1775,7 +1775,7 @@ export default function PsychologyAnalyticsPage() {
               <div className="p-6 pb-4">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-gray-400 text-xs font-medium mb-2">{getWinRateLabel()}</p>
+                    <p className="text-gray-400 text-xs font-medium mb-2">Win Rate</p>
                     <p className="text-4xl font-bold text-white mb-1">{analyticsData?.winRateMetric || 0}%</p>
                     {(analyticsData?.winRateMetric || 0) > 60 ? (
                       <p className="text-emerald-400 text-sm font-semibold flex items-center gap-1">
