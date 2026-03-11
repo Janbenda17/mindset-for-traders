@@ -1025,7 +1025,7 @@ export default function DailyTrackerPage() {
                           <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                             <div className="flex items-center gap-2 mb-2">
                               <AlertTriangle className="h-4 w-4 text-red-400" />
-                              <span className="text-xs text-muted-foreground">Stres</span>
+                              <span className="text-xs text-muted-foreground">Stress</span>
                             </div>
                             <div className="text-xl font-black text-white">
                               {todayEntry.morningCheck?.stressLevel}/10
