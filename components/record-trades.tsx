@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import type React from "react"
 
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/contexts/language-context"
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
@@ -64,28 +65,28 @@ interface MorningCheckData {
 }
 
 const EMOTIONS_BEFORE = [
-  "Klidný",
-  "Sebevědomý",
-  "Nervózní",
-  "Nejistý",
-  "Nadšený",
-  "Unavený",
-  "Soustředěný",
-  "Rozrušený",
+  "Calm",
+  "Confident",
+  "Nervous",
+  "Uncertain",
+  "Excited",
+  "Tired",
+  "Focused",
+  "Upset",
 ]
 
 const EMOTIONS_DURING = [
-  "Klidný",
-  "Stresovaný",
-  "Sebevědomý",
-  "Panický",
-  "Soustředěný",
-  "Rozptýlený",
-  "Trpělivý",
-  "Netrpělivý",
+  "Calm",
+  "Stressed",
+  "Confident",
+  "Panicked",
+  "Focused",
+  "Distracted",
+  "Patient",
+  "Impatient",
 ]
 
-const EMOTIONS_AFTER = ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Poučený", "Naštvaný", "Klidný", "Euforický"]
+const EMOTIONS_AFTER = ["Satisfied", "Frustrated", "Proud", "Disappointed", "Learned", "Angry", "Calm", "Euphoric"]
 
 export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
   const { toast } = useToast()
@@ -94,6 +95,62 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
   const { addTrade, deleteTrade } = useData()
   const { user } = useAuth()
   const { isLiveMode } = useLiveMode()
+  const { language } = useLanguage()
+  const isEn = language === "en"
+  
+  const txt = {
+    recordTrade: isEn ? "Record Trade" : "Record Trade",
+    recordDesc: isEn ? "Record your trades and get deeper insights into your trading" : "Record your trades and get deeper insights into your trading",
+    todayOverview: isEn ? "Today's Overview" : "Today's Overview",
+    totalTrades: isEn ? "Total Trades" : "Total Trades",
+    currencyPair: isEn ? "Currency Pair" : "Currency Pair",
+    direction: isEn ? "Direction" : "Direction",
+    openingDate: isEn ? "Opening Date" : "Opening Date",
+    openingTime: isEn ? "Opening Time" : "Opening Time",
+    closingDate: isEn ? "Closing Date" : "Closing Date",
+    closingTime: isEn ? "Closing Time" : "Closing Time",
+    session: isEn ? "Session" : "Session",
+    tradeType: isEn ? "Trade Type" : "Trade Type",
+    pips: isEn ? "Pips" : "Pips",
+    pnlDollar: isEn ? "P&L ($)" : "P&L ($)",
+    psychAnalysis: isEn ? "Psychological Analysis" : "Psychological Analysis",
+    confidenceBefore: isEn ? "Confidence Before" : "Confidence Before",
+    stress: isEn ? "Stress" : "Stress",
+    choose: isEn ? "Choose..." : "Choose...",
+    entryReason: isEn ? "Entry Reason" : "Entry Reason",
+    whyEntered: isEn ? "Why did you enter this trade?" : "Why did you enter this trade?",
+    exitReason: isEn ? "Exit Reason" : "Exit Reason",
+    whyExited: isEn ? "Why did you exit this trade?" : "Why did you exit this trade?",
+    detailedAnalysis: isEn ? "Detailed Analysis" : "Detailed Analysis",
+    whatHappened: isEn ? "What happened? What worked? What didn't?" : "What happened? What worked? What didn't?",
+    followedPlan: isEn ? "I followed the plan" : "I followed the plan",
+    exitedEarly: isEn ? "I exited too early" : "I exited too early",
+    missedOpportunity: isEn ? "I missed the opportunity due to hesitation" : "I missed the opportunity due to hesitation",
+    revengeTrade: isEn ? "Revenge trade" : "Revenge trade",
+    behaviorDesc: isEn ? "Behavior Description" : "Behavior Description",
+    howBehaved: isEn ? "How did you behave during the trade?" : "How did you behave during the trade?",
+    tags: isEn ? "Tags (comma-separated)" : "Tags (comma-separated)",
+    notes: isEn ? "Notes" : "Notes",
+    additionalNotes: isEn ? "Additional notes..." : "Additional notes...",
+    saveTrade: isEn ? "Save Trade" : "Save Trade",
+    noTradesYet: isEn ? "No trades today" : "No trades today",
+    noTradesDesc: isEn ? "No trades today - stage 4 closed" : "No trades today - stage 4 closed",
+    currencyPairLabel: isEn ? "Currency Pair" : "Currency Pair",
+    sessionLabel: isEn ? "Session" : "Session",
+    tradeTypeLabel: isEn ? "Trade Type" : "Trade Type",
+    notAvailable: isEn ? "Not available" : "Not available",
+    confidence: isEn ? "Confidence (before)" : "Confidence (before)",
+    entryReasonLabel: isEn ? "Entry Reason" : "Entry Reason",
+    exitReasonLabel: isEn ? "Exit Reason" : "Exit Reason",
+    detailedAnalysisLabel: isEn ? "Detailed Analysis" : "Detailed Analysis",
+    earlyExit: isEn ? "⚠ Early exit" : "⚠ Early exit",
+    plannedExit: isEn ? "✓ Planned exit" : "✓ Planned exit",
+    revengeTradeIndicator: isEn ? "✗ Revenge trade" : "✗ Revenge trade",
+    noRevenge: isEn ? "✓ No revenge" : "✓ No revenge",
+    behaviorDescLabel: isEn ? "Behavior Description" : "Behavior Description",
+    tagsLabel: isEn ? "Tags" : "Tags",
+    notesLabel: isEn ? "Notes" : "Notes",
+  }
   const [isLoading, setIsLoading] = useState(false)
   const [todayPlan, setTodayPlan] = useState<TradingPlanData | null>(null)
   const [morningCheck, setMorningCheck] = useState<MorningCheckData | null>(null)
@@ -359,9 +416,9 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
             <TrendingUp className="w-7 h-7 text-blue-300" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white mb-1">Zaznamenat obchod</h1>
+            <h1 className="text-3xl font-bold text-white mb-1">{txt.recordTrade}</h1>
             <p className="text-blue-200/80 text-sm">
-              Zaznamenejte své obchody a získejte hlubší náhled na svůj trading
+              {txt.recordDesc}
             </p>
           </div>
         </div>
@@ -371,13 +428,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
         <CardHeader className="pb-4">
           <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-emerald-400" />
-            Dnešní přehled
+            {txt.todayOverview}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-xl border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
-              <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">Celkem obchodů</p>
+              <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">{txt.totalTrades}</p>
               <p className="text-3xl font-bold text-white">{trades.length}</p>
             </div>
             <div className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-600/5 rounded-xl border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
@@ -401,13 +458,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
           <CardHeader className="pb-4 border-b border-slate-700/50">
             <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-blue-400" />
-              Základní informace
+              {isEn ? "Basic Information" : "Basic Information"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 pt-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Měnový pár *</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.currencyPair} *</label>
                 <input
                   type="text"
                   placeholder="EUR/USD"
@@ -417,7 +474,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Směr *</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.direction} *</label>
                 <select
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   value={currentTrade.direction}
@@ -431,7 +488,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Datum otevření *</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.openingDate} *</label>
                 <input
                   type="date"
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"

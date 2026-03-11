@@ -173,8 +173,8 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
 
     if (!title.trim() || !content.trim()) {
       toast({
-        title: "Chyba",
-        description: "Název a obsah jsou povinné.",
+        title: "Error",
+        description: "Title and content are required.",
         variant: "destructive",
       })
       return
@@ -238,8 +238,8 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
     onEntryAdded?.()
 
     toast({
-      title: "Záznam uložen",
-      description: "Váš záznam byl úspěšně přidán do deníku.",
+      title: "Entry saved",
+      description: "Your entry has been successfully added to the journal.",
     })
 
     if (onClose) {

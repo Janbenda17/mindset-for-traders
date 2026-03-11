@@ -82,8 +82,8 @@ const generateDemoEntries = () => {
       pnl: profitLoss,
       mood,
       notes: isWin 
-        ? `Perfektní setup, dodržel jsem plán na ${session} session`
-        : `${Math.random() > 0.5 ? "Měl jsem počkat na lepší setup" : "Příliš brzy vstup, špatný timing"}`,
+        ? `Perfect setup, I followed my plan on ${session} session`
+        : `${Math.random() > 0.5 ? "I should have waited for a better setup" : "Too early entry, bad timing"}`,
       emotion: emotions[Math.floor(Math.random() * emotions.length)],
       tags: isWin ? ["A+ setup", "disciplined"] : ["learning", "improvement needed"],
       emotionBefore: emotions[Math.floor(Math.random() * emotions.length)],
@@ -350,16 +350,16 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "🔥",
-        title: "Skvělá konzistence!",
-        message: `${stats.streak} dní v řadě jsi zapisoval do deníku. Udržuj to!`,
+        title: "Great Consistency!",
+        message: `You've journaled for ${stats.streak} days in a row. Keep it up!`,
       })
     } else if (stats.streak < 3 && stats.totalEntries > 0) {
       // Only show if there are entries
       insights.push({
         type: "warning",
         icon: "⚠️",
-        title: "Zlepši konzistenci",
-        message: "Pravidelné journaling je klíč k úspěchu. Zkus psát každý den!",
+        title: "Improve Consistency",
+        message: "Regular journaling is key to success. Try writing every day!",
       })
     }
 
@@ -369,15 +369,15 @@ export default function JournalPage() {
         insights.push({
           type: "success",
           icon: "🎯",
-          title: "Výborný Win Rate!",
-          message: `${stats.winRate}% win rate je profesionální úroveň. Skvělá práce!`,
+          title: "Excellent Win Rate!",
+          message: `${stats.winRate}% win rate is professional level. Great work!`,
         })
       } else if (stats.winRate < 50) {
         insights.push({
           type: "critical",
           icon: "🚨",
-          title: "Win Rate potřebuje zlepšení",
-          message: `${stats.winRate}% win rate je pod break-even. Zkontroluj svou strategii!`,
+          title: "Win Rate Needs Improvement",
+          message: `${stats.winRate}% win rate is below break-even. Check your strategy!`,
         })
       }
     }
@@ -386,15 +386,15 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "💰",
-        title: "Skvělé P&L!",
-        message: `+$${stats.totalPnL} je excellent performance. Pokračuj v tom!`,
+        title: "Great P&L!",
+        message: `+$${stats.totalPnL} is excellent performance. Keep it up!`,
       })
     } else if (stats.totalPnL < -500) {
       insights.push({
         type: "critical",
         icon: "📉",
-        title: "Negativní P&L",
-        message: `${stats.totalPnL} vyžaduje okamžitou akci. Zreviduj risk management!`,
+        title: "Negative P&L",
+        message: `${stats.totalPnL} requires immediate action. Review your risk management!`,
       })
     }
 
@@ -402,16 +402,16 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "😊",
-        title: "Skvělá nálada!",
-        message: `Průměrná nálada ${stats.avgMood}/10 je výborná. Pozitivní mindset = lepší výsledky!`,
+        title: "Great Mood!",
+        message: `Average mood ${stats.avgMood}/10 is excellent. Positive mindset = better results!`,
       })
     } else if (stats.avgMood < 5 && stats.totalEntries > 0) {
       // Only show if there are entries
       insights.push({
         type: "warning",
         icon: "😔",
-        title: "Nízká nálada",
-        message: `Průměrná nálada ${stats.avgMood}/10. Focus na mental health!`,
+        title: "Low Mood",
+        message: `Average mood ${stats.avgMood}/10. Focus on mental health!`,
       })
     }
 
@@ -420,8 +420,8 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "⚡",
-        title: "Výborný Profit Factor!",
-        message: `Profit factor ${profitFactor.toFixed(2)} je skvělý. Tvoje výhry jsou větší než ztráty!`,
+        title: "Excellent Profit Factor!",
+        message: `Profit factor ${profitFactor.toFixed(2)} is excellent. Your wins are bigger than losses!`,
       })
     }
 
@@ -457,14 +457,14 @@ export default function JournalPage() {
           <div>
             <h1 className="text-2xl md:text-4xl font-bold text-white mb-1 md:mb-2 flex items-center gap-2 md:gap-3">
               <BookOpen className="w-6 h-6 md:w-10 md:h-10 text-purple-400" />
-              Trading Deník
+              {txt.journalTitle}
               <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs md:text-sm">
                 <Sparkles className="w-2 h-2 md:w-3 md:h-3 mr-1" />
                 PRO
               </Badge>
             </h1>
             <p className="text-gray-300 text-sm md:text-lg hidden md:block">
-              Sleduj své obchody, analyzuj výkon a rozvíjej se jako trader 🚀
+              {txt.journalSubtitle}
             </p>
           </div>
 
@@ -472,7 +472,7 @@ export default function JournalPage() {
           <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-2 px-3 text-xs md:text-sm flex items-center gap-2 w-full mb-4">
             <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
             <span className="text-amber-100">
-              <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+              <span className="font-bold text-white">{txt.virtualNotice}</span>{txt.virtualNotice2}
             </span>
           </div>
         )}
@@ -502,7 +502,7 @@ export default function JournalPage() {
               className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-lg text-xs md:text-sm px-3 md:px-4"
             >
               <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              <span className="hidden md:inline">Rychlý záznam</span>
+              <span className="hidden md:inline">{txt.quickEntry}</span>
               <span className="md:hidden">+</span>
             </Button>
           </div>
@@ -514,11 +514,11 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Celkem</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.total}</p>
                     <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">
                       {displayStats.totalEntries || displayStats.celkem}
                     </p>
-                    <p className="text-blue-400 text-[10px] md:text-xs font-semibold">Záznamů</p>
+                    <p className="text-blue-400 text-[10px] md:text-xs font-semibold">{txt.records}</p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20">
                     <BookOpen className="w-4 h-4 md:w-6 md:h-6 text-blue-400" />
@@ -539,10 +539,10 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Tento týden</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.thisWeek}</p>
                     <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.thisWeek}</p>
                     <p className="text-green-400 text-[10px] md:text-xs font-semibold flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3 md:w-4 md:h-4" /> Nových
+                      <TrendingUp className="w-3 h-3 md:w-4 md:h-4" /> {txt.newEntry}
                     </p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20">
@@ -564,11 +564,11 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Průměr/den</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.avgPerDay}</p>
                     <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">
                       {displayStats.avgPerDay || displayStats.avgPerTrade}
                     </p>
-                    <p className="text-purple-400 text-[10px] md:text-xs font-semibold">Záznamů</p>
+                    <p className="text-purple-400 text-[10px] md:text-xs font-semibold">{txt.records}</p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20">
                     <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-400" />
@@ -591,10 +591,10 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Série</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.streak}</p>
                     <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.streak}</p>
                     <p className="text-orange-400 text-[10px] md:text-xs font-semibold flex items-center gap-1">
-                      <Flame className="w-3 h-3 md:w-4 md:h-4" /> Dní
+                      <Flame className="w-3 h-3 md:w-4 md:h-4" /> {txt.bestDay}
                     </p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-orange-500/20 to-amber-500/20">
@@ -685,7 +685,7 @@ export default function JournalPage() {
                       ) : (
                         <TrendingDown className="w-3 h-3 md:w-4 md:h-4" />
                       )}
-                      {displayStats.winRate >= 60 ? "Výborný" : displayStats.winRate >= 50 ? "Dobrý" : "Slabý"}
+                      {displayStats.winRate >= 60 ? "Excellent" : displayStats.winRate >= 50 ? "Good" : "Weak"}
                     </p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
@@ -707,11 +707,11 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Nejlepší</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.bestDayVal}</p>
                     <p className="text-xl md:text-3xl font-bold text-emerald-400 mb-0.5 md:mb-1">
                       +${displayStats.bestDay}
                     </p>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-semibold">Den</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-semibold">{txt.day}</p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20">
                     <Award className="w-4 h-4 md:w-6 md:h-6 text-emerald-400" />
@@ -732,7 +732,7 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Nálada</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.mood}</p>
                     <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.avgMood}</p>
                     <p className="text-pink-400 text-[10px] md:text-xs font-semibold">/10 avg</p>
                   </div>
@@ -761,9 +761,9 @@ export default function JournalPage() {
                     <Sparkles className="w-6 h-6 text-purple-400" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-lg">AI Insights dostupné!</h3>
+                    <h3 className="text-white font-bold text-lg">{txt.aiInsightsAvailable}</h3>
                     <p className="text-gray-300 text-sm">
-                      {insights.length} personalizovaných doporučení pro zlepšení výkonu
+                      {insights.length} personalized recommendations for improving performance
                     </p>
                   </div>
                 </div>
