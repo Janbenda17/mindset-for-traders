@@ -1659,9 +1659,13 @@ export default function PsychologyAnalyticsPage() {
         
         {/* Key Metrics - COMPLETELY REDESIGNED */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Emotional Stability */}
-                {/* ... */}
-                <p className="text-gray-400 text-xs font-medium mb-2">Emotional Stability</p>
+          {/* Emotional Stability */}
+          <Card className="bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border-slate-700/50 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-0">
+              <div className="p-6 pb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-gray-400 text-xs font-medium mb-2">Emotional Stability</p>
                     <p className="text-4xl font-bold text-white mb-1">{analyticsData?.moodStability || 0}%</p>
                     {(analyticsData?.moodStability || 0) > 85 ? (
                       <p className="text-green-400 text-sm font-semibold flex items-center gap-1">
@@ -1678,9 +1682,9 @@ export default function PsychologyAnalyticsPage() {
                   <div
                     className={cn(
                       "p-4 rounded-full",
-                      moodStability > 85
+                      (analyticsData?.moodStability || 0) > 85
                         ? "bg-gradient-to-br from-green-500/20 to-emerald-500/20"
-                        : moodStability > 70
+                        : (analyticsData?.moodStability || 0) > 70
                           ? "bg-gradient-to-br from-yellow-500/20 to-amber-500/20"
                           : "bg-gradient-to-br from-red-500/20 to-rose-500/20",
                     )}
@@ -1688,7 +1692,7 @@ export default function PsychologyAnalyticsPage() {
                     <Heart
                       className={cn(
                         "w-8 h-8",
-                        moodStability > 85 ? "text-green-400" : moodStability > 70 ? "text-yellow-400" : "text-red-400",
+                        (analyticsData?.moodStability || 0) > 85 ? "text-green-400" : (analyticsData?.moodStability || 0) > 70 ? "text-yellow-400" : "text-red-400",
                       )}
                     />
                   </div>
@@ -1698,19 +1702,19 @@ export default function PsychologyAnalyticsPage() {
                 <div
                   className={cn(
                     "h-full transition-all",
-                    moodStability > 85
+                    (analyticsData?.moodStability || 0) > 85
                       ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                      : moodStability > 70
+                      : (analyticsData?.moodStability || 0) > 70
                         ? "bg-gradient-to-r from-yellow-500 to-amber-500"
                         : "bg-gradient-to-r from-red-500 to-rose-500",
                   )}
-                  style={{ width: `${moodStability}%` }}
+                  style={{ width: `${analyticsData?.moodStability || 0}%` }}
                 />
               </div>
             </CardContent>
           </Card>
 
-                {/* Discipline */}
+          {/* Discipline */}
           <Card className="bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border-slate-700/50 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-0">
               <div className="p-6 pb-4">
@@ -1743,7 +1747,7 @@ export default function PsychologyAnalyticsPage() {
                     <Target
                       className={cn(
                         "w-8 h-8",
-                        avgDiscipline > 80 ? "text-cyan-400" : avgDiscipline > 60 ? "text-blue-400" : "text-orange-400",
+                        (analyticsData?.avgDiscipline || 0) > 80 ? "text-cyan-400" : (analyticsData?.avgDiscipline || 0) > 60 ? "text-blue-400" : "text-orange-400",
                       )}
                     />
                   </div>
