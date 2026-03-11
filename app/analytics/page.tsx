@@ -346,7 +346,7 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
 }
 
 // Dummy functions for the sake of the example, replace with actual implementations
-function calculateEmotionalPatternsFromTrades(trades: any[]): any[] {
+function calculateEmotionalPatternsFromTrades(trades: any[], isEn: boolean): any[] {
   // Placeholder: Replace with actual logic to analyze trades for emotional patterns
   const patterns = [
     {
@@ -493,6 +493,7 @@ function generatePsychologicalAnalysis(
   isLiveMode: boolean,
   tradingStyle: string,
   timeframe: "week" | "month" | "all",
+  isEn: boolean,
 ) {
   let weeklyPerformanceData = []
   let dailyMoodData = []
@@ -867,7 +868,7 @@ function generatePsychologicalAnalysis(
 
   // Add other action items based on your analysis logic
   // Example: If revenge trading is detected as high severity, add specific action
-  const emotionalPatterns = calculateEmotionalPatternsFromTrades(trades)
+  const emotionalPatterns = calculateEmotionalPatternsFromTrades(trades, isEn)
   if (emotionalPatterns.some((p) => p.severity === "high" || p.severity === "critical")) {
     const criticalPattern = emotionalPatterns.find((p) => p.severity === "high" || p.severity === "critical")
     if (!actionPlan.some((a) => a.title.includes(criticalPattern?.name || ""))) {
@@ -1279,7 +1280,8 @@ export default function PsychologyAnalyticsPage() {
         demoAnalytics.moodData || [],
         false, // isLiveMode
         "balanced",
-        "month"
+        "month",
+        true // isEn - always English for demo
       )
       return {
         ...demoAnalytics,
@@ -1310,7 +1312,8 @@ export default function PsychologyAnalyticsPage() {
       moodDataFromTrades,
       true, // isLiveMode
       "balanced",
-      "month"
+      "month",
+      true // isEn - always English
     )
     
     const psychMetrics = calculatePsychologicalMetrics(allTrades, moodDataFromTrades)
