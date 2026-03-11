@@ -1802,7 +1802,7 @@ export default function PsychologyAnalyticsPage() {
                     <TrendingUpIcon
                       className={cn(
                         "w-8 h-8",
-                        winRate > 60 ? "text-emerald-400" : winRate > 50 ? "text-amber-400" : "text-rose-400",
+                        (analyticsData?.winRateMetric || 0) > 60 ? "text-emerald-400" : (analyticsData?.winRateMetric || 0) > 50 ? "text-amber-400" : "text-rose-400",
                       )}
                     />
                   </div>
@@ -1818,7 +1818,7 @@ export default function PsychologyAnalyticsPage() {
                         ? "bg-gradient-to-r from-amber-500 to-yellow-500"
                         : "bg-gradient-to-r from-rose-500 to-red-500",
                   )}
-                  style={{ width: `${winRate}%` }}
+                  style={{ width: `${analyticsData?.winRateMetric || 0}%` }}
                 />
               </div>
             </CardContent>
@@ -1857,7 +1857,7 @@ export default function PsychologyAnalyticsPage() {
                     <Activity
                       className={cn(
                         "w-8 h-8",
-                        avgStress < 40 ? "text-teal-400" : avgStress < 60 ? "text-orange-400" : "text-red-400",
+                        (analyticsData?.avgStress || 0) < 40 ? "text-teal-400" : (analyticsData?.avgStress || 0) < 60 ? "text-orange-400" : "text-red-400",
                       )}
                     />
                   </div>
@@ -1866,14 +1866,7 @@ export default function PsychologyAnalyticsPage() {
               <div className="h-2 bg-slate-700">
                 <div
                   className={cn(
-                    "h-full transition-all",
-                    avgStress < 40
-                      ? "bg-gradient-to-r from-teal-500 to-cyan-500"
-                      : avgStress < 60
-                        ? "bg-gradient-to-r from-orange-500 to-amber-500"
-                        : "bg-gradient-to-r from-red-500 to-rose-500",
-                  )}
-                  style={{ width: `${avgStress}%` }}
+                  style={{ width: `${analyticsData?.avgStress || 0}%` }}
                 />
               </div>
             </CardContent>
