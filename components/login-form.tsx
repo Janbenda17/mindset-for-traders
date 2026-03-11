@@ -275,38 +275,6 @@ export function LoginForm() {
   )
 }
 
-export function LoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [countdownSeconds, setCountdownSeconds] = useState(0)
-  const [error, setError] = useState("")
-  const [rememberMe, setRememberMe] = useState(false)
-  const [showResetForm, setShowResetForm] = useState(false)
-  const [resetEmail, setResetEmail] = useState("")
-  const [resetLoading, setResetLoading] = useState(false)
-  const { login, resetPassword } = useAuth()
-  const router = useRouter()
-
-  // Load saved email on mount
-  useEffect(() => {
-    const savedEmail = localStorage.getItem("mindtrader-saved-email")
-    if (savedEmail) {
-      setEmail(savedEmail)
-      setRememberMe(true)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (countdownSeconds > 0) {
-      const timer = setTimeout(() => {
-        setCountdownSeconds(countdownSeconds - 1)
-      }, 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [countdownSeconds])
-
-  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
