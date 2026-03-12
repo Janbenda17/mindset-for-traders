@@ -192,9 +192,9 @@ export default function WeeklyReviewPage() {
       dailyData: [],
       sleepData: [],
       aiInsights: [
-        "Vysoká disciplína: Tvoje disciplína je na úrovni 82%. Dodržuješ obchodní plán a kontroluješ riziko. Pokračuj v tomto tempu.",
-        "Pozor na revenge trading: Po ztrátě máš tendenci rychle otevřít další pozici. Po velké ztrátě si udělej pauzu 30 minut a zhluboka dýchej.",
-        "Optimalizuj čas obchodování: Tvoje nejlepší výsledky jsou mezi 10:00-14:00. Zkus se zaměřit na obchodování v tomto časovém okně.",
+        "High discipline: Your discipline is at 82%. You follow your trading plan and control risk. Keep up this pace.",
+        "Watch out for revenge trading: After a loss you tend to quickly open the next position. After a big loss take a 30-minute break and breathe deeply.",
+        "Optimize trading hours: Your best results are between 10:00-14:00. Try to focus your trading in this time window.",
       ],
     };
     
@@ -237,7 +237,7 @@ export default function WeeklyReviewPage() {
     const updated = [newReview, ...savedReviews];
     setSavedReviews(updated);
     setScoped("live", user.id, "weekly-reviews", updated);
-    alert("Týdenní přehled s veškerými daty uložen! ✓");
+    alert("Weekly overview with all data saved! ✓");
   }
 
   useEffect(() => {
@@ -338,10 +338,10 @@ export default function WeeklyReviewPage() {
           <TabsList className="grid grid-cols-2 bg-slate-800/50 border border-slate-700 p-1 mb-6">
             <TabsTrigger value="current" className="data-[state=active]:bg-purple-600">
               <BookOpen className="w-4 h-4 mr-2" />
-              Aktuální            </TabsTrigger>
+              Current            </TabsTrigger>
             <TabsTrigger value="history" className="data-[state=active]:bg-purple-600">
               <History className="w-4 h-4 mr-2" />
-              Historie ({savedReviews.length})
+              History ({savedReviews.length})
             </TabsTrigger>
           </TabsList>
 
@@ -532,35 +532,35 @@ export default function WeeklyReviewPage() {
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
                     <Brain className="w-5 h-5 text-purple-400" />
-                    Analýza Výkonu
+                    Performance Analysis
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label className="text-gray-300 text-sm">Co se povedlo?</Label>
+                    <Label className="text-gray-300 text-sm">What worked?</Label>
                     <Textarea
                       value={review.whatWorked || ""}
                       onChange={(e) => setReview({ ...review, whatWorked: e.target.value })}
                       className="bg-slate-700/50 border-slate-600 text-white mt-2 min-h-[100px]"
-                      placeholder="Popište úspěšné strategie a chování..."
+                      placeholder="Describe successful strategies and behavior..."
                     />
                   </div>
                   <div>
-                    <Label className="text-gray-300 text-sm">Co se nepovedlo?</Label>
+                    <Label className="text-gray-300 text-sm">What didn't work?</Label>
                     <Textarea
                       value={review.whatDidntWork || ""}
                       onChange={(e) => setReview({ ...review, whatDidntWork: e.target.value })}
                       className="bg-slate-700/50 border-slate-600 text-white mt-2 min-h-[100px]"
-                      placeholder="Identifikujte chyby a slabá místa..."
+                      placeholder="Identify mistakes and weak spots..."
                     />
                   </div>
                   <div>
-                    <Label className="text-gray-300 text-sm">Chyby a Poučení</Label>
+                    <Label className="text-gray-300 text-sm">Mistakes & Lessons</Label>
                     <Textarea
                       value={review.mistakesMade || ""}
                       onChange={(e) => setReview({ ...review, mistakesMade: e.target.value })}
                       className="bg-slate-700/50 border-slate-600 text-white mt-2 min-h-[100px]"
-                      placeholder="Co jsi se naučil z chyb..."
+                      placeholder="What did you learn from your mistakes..."
                     />
                   </div>
                 </CardContent>
@@ -572,17 +572,17 @@ export default function WeeklyReviewPage() {
                   <CardHeader>
                     <CardTitle className="text-white flex items-center gap-2">
                       <Heart className="w-5 h-5 text-pink-400" />
-                      Psychologické Vzory
+                      Psychological Patterns
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div>
-                      <Label className="text-gray-300 text-sm">Emoční Vzory</Label>
+                      <Label className="text-gray-300 text-sm">Emotional Patterns</Label>
                       <Textarea
                         value={review.emotionalPatterns || ""}
                         onChange={(e) => setReview({ ...review, emotionalPatterns: e.target.value })}
                         className="bg-slate-700/50 border-slate-600 text-white mt-2 min-h-[120px]"
-                        placeholder="Jak ses cítil během obchodování..."
+                        placeholder="How did you feel during trading..."
                       />
                     </div>
                   </CardContent>
@@ -592,7 +592,7 @@ export default function WeeklyReviewPage() {
                   <CardHeader>
                     <CardTitle className="text-white flex items-center gap-2">
                       <Target className="w-5 h-5 text-orange-400" />
-                      Akční Plán na Příští Týden
+                      Action Plan for Next Week
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -606,7 +606,7 @@ export default function WeeklyReviewPage() {
                             setActionPlan(updated);
                           }}
                           className="bg-slate-700/50 border-slate-600 text-white"
-                          placeholder={`Cíl ${index + 1}`}
+                          placeholder={`Goal ${index + 1}`}
                         />
                       </div>
                     ))}
@@ -621,7 +621,7 @@ export default function WeeklyReviewPage() {
               className="w-full py-6 text-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
             >
               <Save className="w-5 h-5 mr-2" />
-              Uložit Týdenní Přehled
+              Save Weekly Overview
             </Button>
           </TabsContent>
 
@@ -630,7 +630,7 @@ export default function WeeklyReviewPage() {
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardContent className="text-center py-12">
                   <History className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400">Zatím žádné uložené přehledy</p>
+                  <p className="text-gray-400">No saved overviews yet</p>
                 </CardContent>
               </Card>
             ) : (
