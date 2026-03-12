@@ -122,9 +122,9 @@ export function ChallengesSection() {
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Trophy className="h-6 w-6 text-yellow-500" />
-            Výzvy
+            Challenges
           </h2>
-          <p className="text-muted-foreground">Dokončeno: {completed.length} výzev</p>
+          <p className="text-muted-foreground">Completed: {completed.length} challenges</p>
         </div>
       </div>
 
@@ -138,7 +138,7 @@ export function ChallengesSection() {
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          Spuštěné ({active.length})
+          Active ({active.length})
         </button>
         <button
           onClick={() => setSelectedTab("available")}
@@ -148,7 +148,7 @@ export function ChallengesSection() {
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          Dostupné ({available.length})
+          Available ({available.length})
         </button>
         <button
           onClick={() => setSelectedTab("completed")}
@@ -158,18 +158,18 @@ export function ChallengesSection() {
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          Dokončené ({completed.length})
+          Completed ({completed.length})
         </button>
       </div>
 
-      {/* Active Challenges - Spuštěné výzvy */}
+      {/* Active Challenges */}
       {selectedTab === "active" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {active.length === 0 ? (
             <Card className="col-span-full">
               <CardContent className="p-12 text-center">
                 <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Nemáš žádné spuštěné výzvy. Začni novou!</p>
+                <p className="text-muted-foreground">You have no active challenges. Start a new one!</p>
               </CardContent>
             </Card>
           ) : (
@@ -204,7 +204,7 @@ export function ChallengesSection() {
                       variant="outline"
                       onClick={() => updateProgress(challenge.id, (challenge.progress || 0) + 1)}
                     >
-                      +1 Progres
+                      +1 Progress
                     </Button>
                   </div>
                 </CardContent>
@@ -214,14 +214,14 @@ export function ChallengesSection() {
         </div>
       )}
 
-      {/* Available Challenges - Dostupné výzvy */}
+      {/* Available Challenges */}
       {selectedTab === "available" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {available.length === 0 ? (
             <Card className="col-span-full">
               <CardContent className="p-12 text-center">
                 <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Všechny dostupné výzvy jsi už začal!</p>
+                <p className="text-muted-foreground">You have already started all available challenges!</p>
               </CardContent>
             </Card>
           ) : (
@@ -240,13 +240,13 @@ export function ChallengesSection() {
 
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">
-                      Cíl: <span className="font-semibold text-foreground">{challenge.target}</span>
+                      Target: <span className="font-semibold text-foreground">{challenge.target}</span>
                     </span>
                     <span className="text-purple-400 font-semibold">+{challenge.xpReward} XP</span>
                   </div>
 
                   <Button onClick={() => startChallenge(challenge.id)} className="w-full">
-                    Začít výzvu
+                    Start Challenge
                   </Button>
                 </CardContent>
               </Card>
@@ -255,14 +255,14 @@ export function ChallengesSection() {
         </div>
       )}
 
-      {/* Completed Challenges - Dokončené výzvy */}
+      {/* Completed Challenges */}
       {selectedTab === "completed" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {completed.length === 0 ? (
             <Card className="col-span-full">
               <CardContent className="p-12 text-center">
                 <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Zatím jsi nedokončil žádnou výzvu.</p>
+                <p className="text-muted-foreground">You have not completed any challenges yet.</p>
               </CardContent>
             </Card>
           ) : (
@@ -282,9 +282,9 @@ export function ChallengesSection() {
 
                   <div className="flex items-center justify-between text-sm border-t border-slate-700/50 pt-3">
                     <div className="text-muted-foreground">
-                      Dokončeno:{" "}
+                      Completed:{" "}
                       {challenge.completed_at &&
-                        new Date(challenge.completed_at).toLocaleDateString("cs-CZ")}
+                        new Date(challenge.completed_at).toLocaleDateString("en-US")}
                     </div>
                     <span className="text-green-400 font-semibold">+{challenge.xpReward} XP</span>
                   </div>

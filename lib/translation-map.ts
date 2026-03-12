@@ -582,6 +582,26 @@ export const czechToEnglishMap: Record<string, string> = {
   'Trades/month': 'Trades/month',
   'Máš svůj success story?': 'Do you have your success story?',
   'Sdílej svou cestu s komunitou! Inspiruj ostatní a ukaž jim, že je to možné. Success stories jsou nejsilnější motivace pro začátečníky.': 'Share your journey with the community! Inspire others and show them it\'s possible. Success stories are the strongest motivation for beginners.',
+
+  // Team Club - Challenges Section (additional)
+  'Dokončeno: ': 'Completed: ',
+  ' výzev': ' challenges',
+  'Spuštěné': 'Active',
+  'Dostupné': 'Available',
+  'Dokončené': 'Completed',
+  'Nemáš žádné spuštěné výzvy. Začni novou!': 'You have no active challenges. Start a new one!',
+  'Všechny dostupné výzvy jsi už začal!': 'You have already started all available challenges!',
+  'Zatím jsi nedokončil žádnou výzvu.': 'You have not completed any challenges yet.',
+  '+1 Progres': '+1 Progress',
+  'Cíl:': 'Target:',
+  'Začít výzvu': 'Start Challenge',
+  'Dokončeno:': 'Completed:',
+  
+  // Team Club - Mentor Q&A Section
+  'Polož otázku komunitě nebo mentorům...': 'Ask a question to the community or mentors...',
+  
+  // Team Club - Study Buddy Section
+  'Hledat podle jména, stylu, země a tradeys hodiny...': 'Search by name, style, country and trading hours...',
 }
 
 export function getEnglishText(czechText: string, isEnglishDomain: boolean): string {
