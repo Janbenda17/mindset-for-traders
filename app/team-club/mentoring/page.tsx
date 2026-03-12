@@ -94,7 +94,7 @@ export default function Mentoring() {
   const handleJoinGroup = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!joinCode.trim()) {
-      setJoinMessage({ type: "error", text: "Prosím zadejte kód skupiny" })
+      setJoinMessage({ type: "error", text: "Please enter a group code" })
       return
     }
 
@@ -108,16 +108,16 @@ export default function Mentoring() {
       })
 
       if (res.ok) {
-        setJoinMessage({ type: "success", text: "Úspěšně jste se připojili do skupiny!" })
+        setJoinMessage({ type: "success", text: "Successfully joined the group!" })
         setJoinCode("")
         // Reload groups
         setTimeout(() => loadGroups(), 1000)
       } else {
         const error = await res.json()
-        setJoinMessage({ type: "error", text: error.error || "Chyba při připojování" })
+        setJoinMessage({ type: "error", text: error.error || "Error joining group" })
       }
     } catch (error) {
-      setJoinMessage({ type: "error", text: "Chyba při připojování do skupiny" })
+      setJoinMessage({ type: "error", text: "Error joining group" })
     } finally {
       setJoiningGroup(false)
     }
@@ -128,14 +128,14 @@ export default function Mentoring() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Mentoring</h1>
-          <p className="text-muted-foreground mt-2">Přihlaste se pro přístup k mentorským skupinám</p>
+          <p className="text-muted-foreground mt-2">Sign in to access mentoring groups</p>
         </div>
       </div>
     )
   }
 
   if (loading) {
-    return <div className="text-center py-8">Načítám skupiny...</div>
+    return <div className="text-center py-8">Loading groups...</div>
   }
 
   return (
@@ -144,7 +144,7 @@ export default function Mentoring() {
       <div>
         <h1 className="text-4xl font-bold">Mentoring</h1>
         <p className="text-muted-foreground mt-2">
-          {isMentor ? "Sledujte výkony svých studentů" : "Připojte se k mentoring skupině"}
+          {isMentor ? "Monitor your students' progress" : "Join a mentoring group"}
         </p>
       </div>
 
@@ -154,21 +154,21 @@ export default function Mentoring() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Lock className="w-5 h-5" />
-              <CardTitle>Připojit se do skupiny</CardTitle>
+              <CardTitle>Join a Group</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <form onSubmit={handleJoinGroup} className="space-y-4">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Zadejte kód skupiny (např. Filipfx)"
+                  placeholder="Enter group code (e.g. Filipfx)"
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                   className="flex-1"
                   disabled={joiningGroup}
                 />
                 <Button type="submit" disabled={joiningGroup}>
-                  {joiningGroup ? "Připojování..." : "Připojit se"}
+                  {joiningGroup ? "Joining..." : "Join"}
                 </Button>
               </div>
 
@@ -234,7 +234,7 @@ export default function Mentoring() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <Card>
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Členů</CardTitle>
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Members</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center gap-2">
@@ -247,7 +247,7 @@ export default function Mentoring() {
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
-                          Průměrná Win Rate
+                          Average Win Rate
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -271,7 +271,7 @@ export default function Mentoring() {
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
-                          Obchodů dnes
+                          Trades Today
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -287,7 +287,7 @@ export default function Mentoring() {
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
-                          Průměrná nálada
+                          Average Mood
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -311,12 +311,12 @@ export default function Mentoring() {
                 <Card>
                   <CardHeader>
                     <CardTitle>
-                      {isMentor ? "Členy skupiny - Detaily pro mentoring" : "Vaše postavení v skupině"}
+                      {isMentor ? "Group Members - Mentoring Details" : "Your Standing in the Group"}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground mt-2">
                       {isMentor
-                        ? "Sledujte pokrok každého člena a identifikujte oblasti pro zlepšení"
-                        : "Porovnějte se s ostatními členy skupiny"}
+                        ? "Track each member's progress and identify areas for improvement"
+                        : "Compare yourself with other group members"}
                     </p>
                   </CardHeader>
                   <CardContent>
@@ -349,12 +349,12 @@ export default function Mentoring() {
                                 <div className="flex items-center gap-3">
                                   <Badge variant="outline">#{index + 1}</Badge>
                                   <div>
-                                    <p className="font-medium">{member.user_name || "Uživatel"}</p>
+                                    <p className="font-medium">{member.user_name || "User"}</p>
                                     <p className="text-xs text-muted-foreground">{member.user_email}</p>
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <p className="text-sm text-muted-foreground">Skóre</p>
+                                  <p className="text-sm text-muted-foreground">Score</p>
                                   <p className="text-2xl font-bold text-blue-600">{score.toFixed(0)}</p>
                                 </div>
                               </div>
@@ -362,11 +362,11 @@ export default function Mentoring() {
                               {Object.keys(stats).length > 0 ? (
                                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
                                   <div className="bg-muted p-2 rounded">
-                                    <p className="text-muted-foreground text-xs">Spánek</p>
+                                    <p className="text-muted-foreground text-xs">Sleep</p>
                                     <p className="font-bold">{stats.sleep_hours || 0}h</p>
                                   </div>
                                   <div className="bg-muted p-2 rounded">
-                                    <p className="text-muted-foreground text-xs">Obchody</p>
+                                    <p className="text-muted-foreground text-xs">Trades</p>
                                     <p className="font-bold">{stats.trades_count || 0}</p>
                                   </div>
                                   <div className="bg-muted p-2 rounded">
@@ -384,12 +384,12 @@ export default function Mentoring() {
                                     </p>
                                   </div>
                                   <div className="bg-muted p-2 rounded">
-                                    <p className="text-muted-foreground text-xs">Nálada</p>
+                                    <p className="text-muted-foreground text-xs">Mood</p>
                                     <p className="font-bold">{stats.mood_score || 0}/10</p>
                                   </div>
                                 </div>
                               ) : (
-                                <p className="text-sm text-muted-foreground italic">Dnes zatím žádné údaje</p>
+                                <p className="text-sm text-muted-foreground italic">No data yet today</p>
                               )}
                             </div>
                           )
@@ -397,7 +397,7 @@ export default function Mentoring() {
 
                       {groupMembers.length === 0 && (
                         <p className="text-center text-muted-foreground py-8">
-                          V této skupině zatím nejsou žádní členové
+                          No members in this group yet
                         </p>
                       )}
                     </div>
