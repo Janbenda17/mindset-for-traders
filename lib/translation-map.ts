@@ -432,7 +432,7 @@ export const czechToEnglishMap: Record<string, string> = {
   'Polož otázku komunitě nebo mentorům...': 'Ask a question to the community or mentors...',
   'Hledat podle jména, stylu, země a tradeys hodiny...': 'Search by name, style, country and trading hours...',
   
-  // Team Club - Success Stories
+  // Team Club - Success Stories (updated)
   'Příběhy úspěchu': 'Success Stories',
   'Inspirace od komunity · Reálné transformace · Dokázali to, dokážeš to taky': 'Inspiration from community · Real transformations · They did it, you can too',
   'Dnes jsi již sdílel příběh. Další můžeš sdílet zítra.': 'You\'ve already shared a story today. You can share another tomorrow.',
@@ -448,6 +448,24 @@ export const czechToEnglishMap: Record<string, string> = {
   'Komentáře': 'Comments',
   'Máš svůj success story?': 'Do you have your success story?',
   'Sdílej svou cestu s komunitou! Inspiruj ostatní a ukaž jim, že je to možné. Success stories jsou nejsilnější motivace pro začátečníky.': 'Share your journey with the community! Inspire others and show them it\'s possible. Success stories are the strongest motivation for beginners.',
+  
+  // Record Trades - Trading form translations
+  'obchodů tento měsíc': 'trades this month',
+  'Dnes': 'Today',
+  'Psychologická analýza': 'Psychological Analysis',
+  'Důvěra před': 'Confidence Before',
+  'Nálada': 'Mood',
+  'Emoce před': 'Emotion Before',
+  'Emoce během': 'Emotion During',
+  'Emoce po': 'Emotion After',
+  'Vyber...': 'Select...',
+  '✓ Stage 4 hotov': '✓ Stage 4 Complete',
+  'Dnes bez obchodu - stage 4 uzavřena': 'Today without trade - stage 4 closed',
+  'Chyba': 'Error',
+  'Nepodařilo se uzavřít stage 4': 'Failed to close stage 4',
+  'Dnes bez obchodu': 'Today Without Trade',
+  'Dnešní obchody': 'Today\'s Trades',
+}
   'Scalper': 'Scalper',
   'Success Rate': 'Success Rate',
   'Streak': 'Streak',

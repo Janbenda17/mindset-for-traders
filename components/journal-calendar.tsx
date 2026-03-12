@@ -267,7 +267,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
                   <CalendarIcon className="w-6 h-6 text-purple-400" />
                   {monthNames[month]} {year}
                 </h2>
-                <p className="text-sm text-gray-400 mt-1">{stats.trades} obchodů tento měsíc</p>
+                <p className="text-sm text-gray-400 mt-1">{stats.trades} trades this month</p>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -284,7 +284,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
                   onClick={() => setCurrentDate(new Date())}
                   className="bg-slate-700/50 border-slate-600 text-white hover:bg-slate-700 hover:border-purple-500"
                 >
-                  Dnes
+                  Today
                 </Button>
                 <Button
                   variant="outline"

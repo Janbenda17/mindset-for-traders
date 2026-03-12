@@ -580,14 +580,14 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
           <CardHeader className="pb-4 border-b border-slate-700/50">
             <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
               <Brain className="w-5 h-5 text-purple-400" />
-              Psychologická analýza
+              Psychological Analysis
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 pt-6">
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-sm text-gray-300 block mb-2">
-                  Důvěra před ({currentTrade.confidenceBefore})
+                  Confidence Before ({currentTrade.confidenceBefore})
                 </label>
                 <input
                   type="range"
@@ -612,7 +612,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Nálada ({currentTrade.mood})</label>
+                <label className="text-sm text-gray-300 block mb-2">Mood ({currentTrade.mood})</label>
                 <input
                   type="range"
                   min="1"
@@ -626,7 +626,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Emoce před</label>
+                <label className="text-sm text-gray-300 block mb-2">Emotion Before</label>
                 <select
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   value={currentTrade.emotionBefore}
@@ -641,13 +641,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Emoce během</label>
+                <label className="text-sm text-gray-300 block mb-2">Emotion During</label>
                 <select
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   value={currentTrade.emotionDuring}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, emotionDuring: e.target.value })}
                 >
-                  <option value="">Vyber...</option>
+                  <option value="">Select...</option>
                   {EMOTIONS_DURING.map((emotion) => (
                     <option key={emotion} value={emotion}>
                       {emotion}
@@ -656,13 +656,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Emoce po</label>
+                <label className="text-sm text-gray-300 block mb-2">Emotion After</label>
                 <select
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   value={currentTrade.emotionAfter}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, emotionAfter: e.target.value })}
                 >
-                  <option value="">Vyber...</option>
+                  <option value="">Select...</option>
                   {EMOTIONS_AFTER.map((emotion) => (
                     <option key={emotion} value={emotion}>
                       {emotion}
@@ -797,13 +797,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
             try {
               await completeStage("record-trades")
               toast({
-                title: "✓ Stage 4 hotov",
-                description: "Dnes bez obchodu - stage 4 uzavřena",
+                title: "✓ Stage 4 Complete",
+                description: "Today without trade - stage 4 closed",
               })
             } catch (error) {
               toast({
-                title: "Chyba",
-                description: "Nepodařilo se uzavřít stage 4",
+                title: "Error",
+                description: "Failed to close stage 4",
                 variant: "destructive",
               })
             } finally {
@@ -813,14 +813,14 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
           disabled={isLoading}
           className="w-full bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white font-semibold py-7 text-lg rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Dnes bez obchodu
+          Today Without Trade
         </Button>
       </form>
 
       {trades.length > 0 && (
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-700/50 backdrop-blur-lg shadow-lg">
           <CardHeader className="pb-4 border-b border-slate-700/50">
-            <CardTitle className="text-lg font-semibold text-white">Dnešní obchody ({trades.length})</CardTitle>
+            <CardTitle className="text-lg font-semibold text-white">Today's Trades ({trades.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 pt-6">
             {trades.map((trade) => (
