@@ -520,6 +520,23 @@ export const czechToEnglishMap: Record<string, string> = {
   'Polož otázku komunitě nebo mentorům...': 'Ask a question to the community or mentors...',
   'Tradení hodiny': 'Trading Hours',
   'Připojit': 'Connect',
+
+  // Record Trades - Trading form translations
+  'obchodů tento měsíc': 'trades this month',
+  'Dnes': 'Today',
+  'Psychologická analýza': 'Psychological Analysis',
+  'Důvěra před': 'Confidence Before',
+  'Nálada': 'Mood',
+  'Emoce před': 'Emotion Before',
+  'Emoce během': 'Emotion During',
+  'Emoce po': 'Emotion After',
+  'Vyber...': 'Select...',
+  '✓ Stage 4 hotov': '✓ Stage 4 Complete',
+  'Dnes bez obchodu - stage 4 uzavřena': 'Today without trade - stage 4 closed',
+  'Chyba': 'Error',
+  'Nepodařilo se uzavřít stage 4': 'Failed to close stage 4',
+  'Dnes bez obchodu': 'Today Without Trade',
+  'Dnešní obchody': 'Today\'s Trades',
 }
 
 export function getEnglishText(czechText: string, isEnglishDomain: boolean): string {
