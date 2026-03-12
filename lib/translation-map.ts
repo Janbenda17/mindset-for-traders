@@ -465,7 +465,6 @@ export const czechToEnglishMap: Record<string, string> = {
   'Nepodařilo se uzavřít stage 4': 'Failed to close stage 4',
   'Dnes bez obchodu': 'Today Without Trade',
   'Dnešní obchody': 'Today\'s Trades',
-}
   'Scalper': 'Scalper',
   'Success Rate': 'Success Rate',
   'Streak': 'Streak',
