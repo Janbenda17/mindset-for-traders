@@ -7,88 +7,80 @@ export default function TermsPage() {
     <div className="container mx-auto py-8 px-4 max-w-4xl">
       <Card>
         <CardHeader>
-          <CardTitle className="text-3xl">Obchodní podmínky (Terms of Service)</CardTitle>
-          <p className="text-sm text-muted-foreground">Poslední aktualizace: 11. listopadu 2025</p>
+          <CardTitle className="text-3xl">Terms of Service</CardTitle>
+          <p className="text-sm text-muted-foreground">Last updated: November 11, 2025</p>
         </CardHeader>
         <CardContent className="space-y-6">
           <section>
-            <h2 className="text-xl font-semibold mb-2">1. Provozovatel</h2>
-            <p>Aplikaci MindTrader (dále jen „Služba") provozuje:</p>
+            <h2 className="text-xl font-semibold mb-2">1. Service Operator</h2>
+            <p>The MindTrader application (hereinafter "Service") is operated by:</p>
             <ul className="list-none mt-2 space-y-1">
-              <li>Jméno: Jan Benda</li>
-              <li>IČO: 23112158</li>
-              <li>Sídlo: U Švehlova altánu 1588/5, 102 00 Praha 10 – Hostivař</li>
-              <li>E-mail: honza.newage@gmail.com</li>
+              <li>Name: Jan Benda</li>
+              <li>ID: 23112158</li>
+              <li>Address: U Švehlova altánu 1588/5, 102 00 Prague 10 – Hostivař</li>
+              <li>Email: honza.newage@gmail.com</li>
             </ul>
-            <p className="mt-2">(dále jen „Provozovatel")</p>
+            <p className="mt-2">(hereinafter "Operator")</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-2">2. Předmět služby</h2>
+            <h2 className="text-xl font-semibold mb-2">2. Service Description</h2>
             <p>
-              MindTrader je online software (SaaS) určený k podpoře osobního rozvoje a psychologické přípravy obchodníků
-              (traderů). Nástroj pomáhá uživateli sledovat a analyzovat faktory ovlivňující jeho rozhodování, disciplínu
-              a psychický stav při obchodování.
+              MindTrader is an online software (SaaS) designed to support personal development and psychological preparation of traders. The tool helps the user track and analyze factors affecting their decision-making, discipline, and mental state while trading.
             </p>
             <p className="mt-2">
-              Služba neposkytuje investiční, finanční ani právní poradenství. Veškeré informace a doporučení mají
-              vzdělávací charakter a slouží výhradně pro seberozvoj.
+              The Service does not provide investment, financial, or legal advice. All information and recommendations are educational in nature and are intended solely for personal development.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-2">3. Uživatelský účet</h2>
+            <h2 className="text-xl font-semibold mb-2">3. User Account</h2>
             <ul className="list-disc list-inside space-y-1">
-              <li>Registrací uživatel potvrzuje, že údaje uvedené při registraci jsou pravdivé.</li>
-              <li>Přístupové údaje jsou osobní a nesmí být sdíleny s třetí osobou.</li>
-              <li>Provozovatel může účet pozastavit nebo zrušit při zneužití služby či porušení podmínek.</li>
+              <li>By registering, the user confirms that the information provided during registration is true.</li>
+              <li>Access credentials are personal and must not be shared with third parties.</li>
+              <li>The Operator may suspend or terminate the account for service abuse or violation of terms.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-2">4. Předplatné a platby</h2>
-            <ul className="list-disc list-inside space-y-1">
-              <li>
-                Přístup ke Službě je poskytován na základě měsíčního nebo ročního předplatného prostřednictvím platební
-                brány Stripe.
-              </li>
-              <li>Po úhradě má uživatel aktivní přístup po dobu zaplaceného období.</li>
-              <li>Předplatné se automaticky obnovuje, pokud není zrušeno.</li>
-              <li>Uživatel může zrušit předplatné kdykoli; přístup zůstává aktivní do konce zaplaceného období.</li>
-              <li>V případě částečného využití služby nevzniká nárok na plnou refundaci.</li>
-              <li>Ceny jsou uvedeny v CZK a mohou se měnit; uživatelé budou o změně informováni předem.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold mb-2">5. Odpovědnost</h2>
+            <h2 className="text-xl font-semibold mb-2">4. Subscription and Payments</h2>
             <ul className="list-disc list-inside space-y-1">
               <li>
-                Provozovatel neodpovídá za rozhodnutí, která uživatel činí na základě dat, doporučení nebo výstupů
-                aplikace.
+                Access to the Service is provided through monthly or annual subscription via the Stripe payment gateway.
               </li>
-              <li>Služba není investičním nástrojem a nezaručuje žádné obchodní výsledky.</li>
-              <li>Uživatel bere na vědomí, že používá aplikaci výhradně na vlastní riziko.</li>
+              <li>After payment, the user has active access for the duration of the paid period.</li>
+              <li>Subscription automatically renews unless cancelled.</li>
+              <li>The user may cancel the subscription at any time; access remains active until the end of the paid period.</li>
+              <li>In case of partial use of the Service, there is no right to a full refund.</li>
+              <li>Prices are shown in CZK and may change; users will be notified of changes in advance.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-2">6. Duševní vlastnictví</h2>
+            <h2 className="text-xl font-semibold mb-2">5. Responsibility</h2>
+            <ul className="list-disc list-inside space-y-1">
+              <li>
+                The Operator is not responsible for decisions made by the user based on data, recommendations, or outputs from the application.
+              </li>
+              <li>The Service is not an investment tool and does not guarantee any trading results.</li>
+              <li>The user acknowledges that they use the application entirely at their own risk.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-2">6. Intellectual Property</h2>
             <p>
-              Veškerý obsah, texty, algoritmy, databáze, kód, design a grafické prvky Služby jsou chráněny autorským
-              právem.
+              All content, texts, algorithms, databases, code, design, and graphical elements of the Service are protected by copyright.
             </p>
             <p className="mt-2">
-              Je zakázáno kopírovat, upravovat nebo distribuovat jakoukoli část aplikace bez písemného souhlasu
-              Provozovatele.
+              It is forbidden to copy, modify, or distribute any part of the application without the written consent of the Operator.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-2">7. Ochrana osobních údajů</h2>
+            <h2 className="text-xl font-semibold mb-2">7. Data Protection</h2>
             <p>
-              Zpracování osobních údajů se řídí dokumentem Zásady ochrany osobních údajů (Privacy Policy), dostupným na
-              adrese{" "}
+              Personal data processing is governed by the Privacy Policy document, available at{" "}
               <a href="/privacy" className="text-primary hover:underline">
                 https://mindtrader.cz/privacy
               </a>
@@ -97,20 +89,20 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-2">8. Změny a ukončení služby</h2>
+            <h2 className="text-xl font-semibold mb-2">8. Changes and Service Termination</h2>
             <ul className="list-disc list-inside space-y-1">
-              <li>Provozovatel si vyhrazuje právo měnit nebo ukončit poskytování služby s předchozím upozorněním.</li>
-              <li>Aktualizace nebo změny podmínek budou oznámeny e-mailem nebo formou oznámení v aplikaci.</li>
+              <li>The Operator reserves the right to change or terminate the provision of the Service with prior notice.</li>
+              <li>Updates or changes to terms will be announced via email or notification in the application.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold mb-2">9. Kontaktní údaje</h2>
+            <h2 className="text-xl font-semibold mb-2">9. Contact Information</h2>
             <ul className="list-none space-y-1">
               <li>Jan Benda</li>
-              <li>IČO: 23112158</li>
-              <li>Sídlo: U Švehlova altánu 1588/5, 102 00 Praha 10 – Hostivař</li>
-              <li>E-mail: honza.newage@gmail.com</li>
+              <li>ID: 23112158</li>
+              <li>Address: U Švehlova altánu 1588/5, 102 00 Prague 10 – Hostivař</li>
+              <li>Email: honza.newage@gmail.com</li>
               <li>
                 Web:{" "}
                 <a href="https://mindtrader.cz" className="text-primary hover:underline">
