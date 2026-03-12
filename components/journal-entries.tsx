@@ -686,7 +686,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                     <CardHeader>
                       <CardTitle className="text-lg text-white flex items-center gap-2">
                         <BookOpen className="w-5 h-5 text-purple-400" />
-                        Poznámky
+                        Notes
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -700,7 +700,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                     {detailEntry.entryReason && (
                       <Card className="bg-slate-700/50 border-slate-600">
                         <CardHeader>
-                          <CardTitle className="text-sm text-gray-300">Důvod vstupu</CardTitle>
+                          <CardTitle className="text-sm text-gray-300">Entry Reason</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <p className="text-gray-200">{detailEntry.entryReason}</p>
@@ -710,7 +710,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                     {detailEntry.exitReason && (
                       <Card className="bg-slate-700/50 border-slate-600">
                         <CardHeader>
-                          <CardTitle className="text-sm text-gray-300">Důvod výstupu</CardTitle>
+                          <CardTitle className="text-sm text-gray-300">Exit Reason</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <p className="text-gray-200">{detailEntry.exitReason}</p>
@@ -727,7 +727,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                         <CardHeader>
                           <CardTitle className="text-sm text-emerald-300 flex items-center gap-2">
                             <Zap className="w-4 h-4" />
-                            Co fungovalo
+                            What Worked
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -739,7 +739,7 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                       <Card className="bg-rose-500/10 border-rose-500/30">
                         <CardHeader>
                           <CardTitle className="text-sm text-rose-300 flex items-center gap-2">
-                            ❌ Co nefungovalo
+                            ❌ What Didn't Work
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
