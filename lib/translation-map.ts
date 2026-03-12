@@ -598,6 +598,14 @@ export const czechToEnglishMap: Record<string, string> = {
   'Safety: SKIP trading today, or only demo/paper trading': 'Safety: SKIP trading today, or only demo/paper trading',
   'Self-care: 20min something you enjoy - music, movie, friends, hobbies': 'Self-care: 20min something you enjoy - music, movie, friends, hobbies',
   'Reflection: What event today affected your mood? What can you change tomorrow?': 'Reflection: What event today affected your mood? What can you change tomorrow?',
+
+  // Daily Tracker - Additional messages  
+  'Action Steps:': 'Action Steps:',
+  'Action Steps': 'Action Steps',
+  '🎯 Action Items for Tomorrow': '🎯 Action Items for Tomorrow',
+  'Continue with Daily Flow!': 'Continue with Daily Flow!',
+  'You completed': 'You completed',
+  'stages. Keep going!': 'stages. Keep going!',
 }
 
 export function getEnglishText(czechText: string, isEnglishDomain: boolean): string {

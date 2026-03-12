@@ -1082,7 +1082,7 @@ export default function DailyTrackerPage() {
                         <div className="space-y-3">
                           <div className="flex items-center gap-2 mb-4">
                             <Lightbulb className="h-5 w-5 text-yellow-400" />
-                            <h3 className="text-lg font-bold text-white">Akční Kroky:</h3>
+                            <h3 className="text-lg font-bold text-white">Action Steps:</h3>
                           </div>
                           <div className="space-y-2">
                             {tradingDecision.tips.map((tip, i) => (
@@ -1280,11 +1280,11 @@ export default function DailyTrackerPage() {
             <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10">
               <CardContent className="p-8 text-center">
                 <Target className="h-16 w-16 mx-auto mb-4 text-orange-400" />
-                <h3 className="text-2xl font-black mb-2">Pokračuj v Denním Toku!</h3>
-                <p className="text-muted-foreground mb-6">
-                  Dokončil jsi{" "}
+              <h3 className="text-2xl font-black mb-2">Continue with Daily Flow!</h3>
+              <p className="text-gray-300">
+                You completed{" "}
                   {!isLiveMode ? virtualData?.[0]?.stagesCompleted : todayStages.filter((s) => s.completed).length} z 5
-                  stages. Pokračuj dál!
+                  stages. Keep going!
                 </p>
                 <Button
                   onClick={() => {
@@ -1525,7 +1525,7 @@ export default function DailyTrackerPage() {
                                         {dayDecision.tips.length > 0 && (
                                           <div className="space-y-2">
                                             <div className="text-xs font-semibold text-yellow-400 uppercase tracking-wider">
-                                              Akční Kroky
+                                              Action Steps
                                             </div>
                                             {dayDecision.tips.map((tip, i) => (
                                               <div
