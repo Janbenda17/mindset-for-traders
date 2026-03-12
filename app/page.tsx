@@ -157,14 +157,14 @@ export default function HomePage() {
       <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-yellow-900/80 to-orange-900/80 backdrop-blur-sm border-b border-yellow-500/30 py-1 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
           <span className="text-yellow-100 text-xs md:text-sm font-medium">
-            14 dní zdarma
+            {language === 'en' ? '14 days free' : '14 dní zdarma'}
           </span>
           <Button 
             onClick={handlePricingClick}
             size="sm" 
             className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs h-7 px-2.5"
           >
-            Upgrade
+            {language === 'en' ? 'Upgrade' : 'Upgrade'}
           </Button>
         </div>
       </div>
