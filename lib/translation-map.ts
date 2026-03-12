@@ -420,9 +420,14 @@ export const czechToEnglishMap: Record<string, string> = {
 
   // Team Club - Community Posts
   'Sdílej svůj win, loss lesson, insight nebo se zeptej komunity... 💬': 'Share your win, loss lesson, insight or ask the community... 💬',
+  'Výzvy': 'Challenges',
+  '0 aktivních výzev': '0 active challenges',
+  'Connect se': 'Connect',
+  'Connect': 'Connect',
   'Win': 'Win',
   'Loss': 'Loss',
   'Insight': 'Insight',
+  'WinLoss': 'Win/Loss',
   'Sdílet': 'Share',
   'Všechny': 'All',
   'Výhry': 'Wins',
