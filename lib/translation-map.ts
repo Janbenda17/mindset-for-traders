@@ -597,11 +597,13 @@ export const czechToEnglishMap: Record<string, string> = {
   'Začít výzvu': 'Start Challenge',
   'Dokončeno:': 'Completed:',
   
-  // Team Club - Mentor Q&A Section
+  // Team Club - Specific strings from components (HIGH PRIORITY)
+  'Průměrná nálada komunity': 'Community Average Mood',
+  'Průměr. Úspěšnost': 'Avg. Success Rate',
+  'Tvoje Stats vs Komunita': 'Your Stats vs Community',
   'Polož otázku komunitě nebo mentorům...': 'Ask a question to the community or mentors...',
-  
-  // Team Club - Study Buddy Section
-  'Hledat podle jména, stylu, země a tradeys hodiny...': 'Search by name, style, country and trading hours...',
+  'Tradení hodiny': 'Trading Hours',
+  'Připojit': 'Connect',
 }
 
 export function getEnglishText(czechText: string, isEnglishDomain: boolean): string {
