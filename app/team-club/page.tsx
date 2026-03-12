@@ -944,18 +944,18 @@ function StudentTeamClubView({
 
   // ADD: Month names for success story selector
   const MONTH_NAMES = [
-    "Leden",
-    "Únor",
-    "Březen",
-    "Duben",
-    "Květen",
-    "Červen",
-    "Červenec",
-    "Srpen",
-    "Září",
-    "Říjen",
-    "Listopad",
-    "Prosinec",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ]
 
   // ADD: Get available months (last 12 months)
@@ -3205,9 +3205,9 @@ function StudentTeamClubView({
           {/* SUCCESS STORIES TAB */}
           <TabsContent value="success" className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white mb-1">Příběhy úspěchu</h2>
+              <h2 className="text-2xl font-bold text-white mb-1">Success Stories</h2>
               <p className="text-slate-400 text-sm">
-                Inspirace od komunity · Reálné transformace · Dokázali to, dokážeš to taky
+                Inspiration from community · Real transformations · They did it, you can too
               </p>
             </div>
 
@@ -3224,21 +3224,21 @@ function StudentTeamClubView({
                   <Alert className="mb-4 bg-amber-500/10 border-amber-500/30">
                     <Clock className="h-4 w-4 text-amber-400" />
                     <AlertDescription className="text-amber-400">
-                      Dnes jsi již sdílel příběh. Další můžeš sdílet zítra.
+                      You've already shared a story today. You can share another tomorrow.
                     </AlertDescription>
                   </Alert>
                 )}
 
                 <div className="space-y-3">
                   <Input
-                    placeholder="Název tvého příběhu..."
+                    placeholder="Your story title..."
                     value={newStoryTitle}
                     onChange={(e) => setNewStoryTitle(e.target.value)}
                     disabled={!canPostToday("success")}
                     className="bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-500 rounded-xl disabled:opacity-50"
                   />
                   <Textarea
-                    placeholder="Popiš svou cestu, co ti pomohlo, jaké překážky jsi překonal..."
+                    placeholder="Describe your journey, what helped you, what obstacles you overcame..."
                     value={newStoryContent}
                     onChange={(e) => setNewStoryContent(e.target.value)}
                     disabled={!canPostToday("success")}
@@ -3248,14 +3248,14 @@ function StudentTeamClubView({
                   {/* ADD: Month selection for before/after comparison */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400 mb-1 block">Měsíc "Před"</label>
+                      <label className="text-xs text-slate-400 mb-1 block">Month "Before"</label>
                       <Select
                         value={selectedMonth1}
                         onValueChange={setSelectedMonth1}
                         disabled={!canPostToday("success")}
                       >
                         <SelectTrigger className="bg-slate-900/50 border-slate-700/50 text-white rounded-xl">
-                          <SelectValue placeholder="Vyber měsíc..." />
+                          <SelectValue placeholder="Select month..." />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-900 border-slate-700">
                           {getAvailableMonths().map((month) => (
@@ -3267,14 +3267,14 @@ function StudentTeamClubView({
                       </Select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400 mb-1 block">Měsíc "Po"</label>
+                      <label className="text-xs text-slate-400 mb-1 block">Month "After"</label>
                       <Select
                         value={selectedMonth2}
                         onValueChange={setSelectedMonth2}
                         disabled={!canPostToday("success")}
                       >
                         <SelectTrigger className="bg-slate-900/50 border-slate-700/50 text-white rounded-xl">
-                          <SelectValue placeholder="Vyber měsíc..." />
+                          <SelectValue placeholder="Select month..." />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-900 border-slate-700">
                           {getAvailableMonths().map((month) => (
@@ -3291,14 +3291,14 @@ function StudentTeamClubView({
                   {selectedMonth1 && selectedMonth2 && (
                     <div className="grid grid-cols-2 gap-3 p-3 bg-slate-800/50 rounded-xl">
                       <div>
-                        <p className="text-xs text-slate-400 mb-2">Měsíc "Před"</p>
+                        <p className="text-xs text-slate-400 mb-2">Month "Before"</p>
                         {(() => {
                           const [y, m] = selectedMonth1.split("-").map(Number)
                           const stats = getMonthlyStats(y, m)
                           return (
                             <div className="space-y-1 text-sm">
                               <p className="text-slate-300">
-                                Úspěšnost: <span className="text-white">{stats.winRate}%</span>
+                                Success Rate: <span className="text-white">{stats.winRate}%</span>
                               </p>
                               <p className="text-slate-300">
                                 P&L:{" "}
@@ -3321,14 +3321,14 @@ function StudentTeamClubView({
                         })()}
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400 mb-2">Měsíc "Po"</p>
+                        <p className="text-xs text-slate-400 mb-2">Month "After"</p>
                         {(() => {
                           const [y, m] = selectedMonth2.split("-").map(Number)
                           const stats = getMonthlyStats(y, m)
                           return (
                             <div className="space-y-1 text-sm">
                               <p className="text-slate-300">
-                                Úspěšnost: <span className="text-white">{stats.winRate}%</span>
+                                Success Rate: <span className="text-white">{stats.winRate}%</span>
                               </p>
                               <p className="text-slate-300">
                                 P&L:{" "}
@@ -3365,7 +3365,7 @@ function StudentTeamClubView({
                     className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl w-full disabled:opacity-50"
                   >
                     <Star className="h-4 w-4 mr-2" />
-                    Sdílet můj příběh
+                    Share My Story
                   </Button>
                 </div>
               </CardContent>
@@ -3400,7 +3400,7 @@ function StudentTeamClubView({
                       <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-5">
                         <h4 className="text-red-400 font-bold text-sm mb-4 flex items-center gap-2">
                           <XCircle className="h-4 w-4" />
-                          Před (3 měsíce)
+                          Before (3 months ago)
                         </h4>
                         <div className="space-y-3">
                           {story.beforeAfter.before.map((stat, index) => (
@@ -3415,7 +3415,7 @@ function StudentTeamClubView({
                       <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-5">
                         <h4 className="text-emerald-400 font-bold text-sm mb-4 flex items-center gap-2">
                           <CheckCircle className="h-4 w-4" />
-                          Po (Teď)
+                          After (Now)
                         </h4>
                         <div className="space-y-3">
                           {story.beforeAfter.after.map((stat, index) => (
@@ -3440,11 +3440,11 @@ function StudentTeamClubView({
                       </Button>
                       <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-8">
                         <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-                        Komentáře
+                        Comments
                       </Button>
                       <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-8">
                         <Share2 className="h-3.5 w-3.5 mr-1.5" />
-                        Sdílet
+                        Share
                       </Button>
                       <Button
                         size="sm"
