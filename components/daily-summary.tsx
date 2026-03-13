@@ -121,16 +121,16 @@ export function DailySummary() {
 
       const demoIntention: DailyIntentionData = {
         date: selectedDate,
-        goals: ["Najít A+ setup na EUR/USD", "Dodržet 2% risk per trade", "Bez revenge tradingu"][Math.floor(Math.random() * 3)],
+        goals: ["Find A+ setup on EUR/USD", "Stick to 2% risk per trade", "No revenge trading"][Math.floor(Math.random() * 3)],
         maxRiskPercent: 2,
-        emotionalGoal: ["Zůstat klidný a disciplinovaný", "Převzít odpovědnost za chyby", "Cítit se sebevědomě"][Math.floor(Math.random() * 3)],
+        emotionalGoal: ["Stay calm and disciplined", "Take responsibility for mistakes", "Feel confident"][Math.floor(Math.random() * 3)],
       }
 
       const demoPlan: TradingPlanData = {
         date: selectedDate,
-        setups: "Breakout z resistance levelu + konfirmace z Fibs",
+        setups: "Breakout from resistance level + confirmation from Fibs",
         pairs: "EUR/USD, GBP/USD, XAU/USD",
-        strategy: "Trend following s 3:1 risk reward",
+        strategy: "Trend following with 3:1 risk reward",
       }
 
       const demoDates2 = [selectedDate, format(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), "yyyy-MM-dd")]
@@ -147,7 +147,7 @@ export function DailySummary() {
           entry: Math.random() * 100,
           exit: Math.random() * 100,
           size: Math.floor(Math.random() * 2) + 0.5,
-          notes: isWin ? "Dobré setup, dodržel jsem plán" : "Příliš brzy vstup, měl jsem čekat",
+          notes: isWin ? "Good setup, I followed the plan" : "Too early entry, I should have waited",
           date: demoDates2[Math.floor(Math.random() * demoDates2.length)],
         })
       }
@@ -196,61 +196,61 @@ export function DailySummary() {
 
     // Analyze Morning Routine & Mental State
     if (check) {
-      psychologicalAnalysis = `Tvůj psychologický profil dnes: Nálada ${check.emotionalState}/10, Stres ${check.stressLevel}/10, Focus ${check.focus}/10. `
+      psychologicalAnalysis = `Your psychological profile today: Mood ${check.emotionalState}/10, Stress ${check.stressLevel}/10, Focus ${check.focus}/10. `
 
       if (check.stressLevel >= 8) {
-        psychologicalAnalysis += `Vysoký stres je tvou největší překážkou. Tvůj amygdala (emoční mozek) je nyní dominantní, což snižuje logické rozhodování. Doporučuji: Učiň pauzu, projdi 4-7-8 dechování 5x. Bez snížení stresu riskuješ revenge trading a horší exekuci.`
+        psychologicalAnalysis += `High stress is your biggest obstacle. Your amygdala (emotional brain) is now dominant, reducing logical decision-making. I recommend: Take a break, do 4-7-8 breathing 5 times. Without reducing stress, you risk revenge trading and poor execution.`
       } else if (check.stressLevel <= 3) {
-        psychologicalAnalysis += `Nízký stres je tvou silnou stránkou. Tvůj prefrontální kůra (logika) dominuje, což vede k lepším rozhodnutím. Udržuj tenhle stav - to je ideální podmínka pro obchodování.`
+        psychologicalAnalysis += `Low stress is your strong point. Your prefrontal cortex (logic) dominates, leading to better decisions. Keep this state - it's the ideal condition for trading.`
       } else {
-        psychologicalAnalysis += `Stres na normální úrovni. Dej si pozor na eskalaci - mnoho traderů neznamená kdy jejich stres překročil bezpečný práh, dokud není pozdě.`
+        psychologicalAnalysis += `Stress at normal levels. Be careful about escalation - many traders don't realize their stress has crossed the safe threshold until it's too late.`
       }
 
       if (check.focus < 5) {
-        psychologicalAnalysis += ` Tvůj focus je slabý - to znamená vynechávání signálů a nízká kvalita exekuce. Zkus Pomodoro techniku: 25min intenzivního soustředění, pak 5min pauza.`
+        psychologicalAnalysis += ` Your focus is weak - this means missing signals and low execution quality. Try the Pomodoro technique: 25 min intense focus, then 5 min break.`
       } else if (check.focus >= 8) {
-        psychologicalAnalysis += ` Tvůj focus je excelentní - to je super-schopnost pro trading. Využij tohoto okna zvaného "flow state" - je to měsíce, kdy nejlepší tradery tráví.`
+        psychologicalAnalysis += ` Your focus is excellent - it's a super-power for trading. Use this "flow state" window - it's when the best traders spend their months.`
       }
 
       if (check.emotionalState >= 8) {
-        psychologicalAnalysis += ` Pozitivní emoční stav podporuje sebedůvěru, ale pozor na overconfidence. Právě teď je největší riziko brát větší pozice než je racionální.`
+        psychologicalAnalysis += ` Positive emotional state supports confidence, but be careful of overconfidence. Right now the biggest risk is taking bigger positions than is rational.`
       } else if (check.emotionalState <= 4) {
-        psychologicalAnalysis += ` Negativní emoce jsou signál k opatrnosti. Když je nálada nízká, zvyšuje se pravděpodobnost ztrát o 40%. Zvažte kratší session nebo menší pozice.`
+        psychologicalAnalysis += ` Negative emotions are a signal to be cautious. When mood is low, the probability of losses increases by 40%. Consider a shorter session or smaller positions.`
       }
     } else {
-      psychologicalAnalysis = "Chybí Morning Check data. Bez toho nemůžu posoudit tvůj psychologický stav. Vyplň Morning Check pro detailní analýzu."
+      psychologicalAnalysis = "Missing Morning Check data. Without it, I can't assess your psychological state. Complete Morning Check for detailed analysis."
     }
 
     // Specific metric analysis
     if (check && (check.sleepQuality < 6 || check.sleepHours < 6.5)) {
-      weaknesses.push("😴 Nedostatečný spánek snížil kognitivní funkce o 30-40%")
-      tomorrowPlan.push("Jít spát o 1-2 hodiny dříve, cíl: 7-8 hodin kvalitního spánku")
-      patternRecognition.push("Pattern: Špatný spánek → Snížená trpělivost → Předčasné vstupy")
+      weaknesses.push("😴 Insufficient sleep reduced cognitive function by 30-40%")
+      tomorrowPlan.push("Go to bed 1-2 hours earlier, target: 7-8 hours of quality sleep")
+      patternRecognition.push("Pattern: Poor sleep → Reduced patience → Premature entries")
     } else if (check && check.sleepQuality >= 8) {
-      strengths.push("💤 Výborný spánek poskytl mentální ostrost a jasnost")
+      strengths.push("💤 Excellent sleep provided mental sharpness and clarity")
     }
 
     if (check && check.stressLevel > 7) {
-      weaknesses.push("😰 Vysoký stres zvýšil riziko emočního tradingu o 60%")
-      tomorrowPlan.push("Zařadit 15-20min meditaci nebo dechová cvičení před tradingem")
-      patternRecognition.push("Pattern: Vysoký stres → Revenge trading → Zvýšené ztráty")
+      weaknesses.push("😰 High stress increased risk of emotional trading by 60%")
+      tomorrowPlan.push("Add 15-20 min meditation or breathing exercises before trading")
+      patternRecognition.push("Pattern: High stress → Revenge trading → Increased losses")
     } else if (check && check.stressLevel <= 3) {
-      strengths.push("😌 Nízký stres umožnil klidné a racionální rozhodování")
+      strengths.push("😌 Low stress enabled calm and rational decision-making")
     }
 
     if (check && check.focus < 6) {
-      weaknesses.push("🎯 Nízký focus vedl k přehlédnutí důležitých signálů")
-      tomorrowPlan.push("Zkusit Pomodoro techniku: 25min focus + 5min pauza")
-      patternRecognition.push("Pattern: Nízký focus → Missed opportunities → Frustrace")
+      weaknesses.push("🎯 Low focus led to missing important signals")
+      tomorrowPlan.push("Try Pomodoro technique: 25 min focus + 5 min break")
+      patternRecognition.push("Pattern: Low focus → Missed opportunities → Frustration")
     } else if (check && check.focus >= 8) {
-      strengths.push("🔍 Vysoký focus umožnil zachytit všechny klíčové signály")
+      strengths.push("🔍 High focus enabled capturing all key signals")
     }
 
     if (check && check.emotionalState < 6) {
-      weaknesses.push("😔 Negativní emoční stav ovlivnil objektivitu")
-      tomorrowPlan.push("Journaling: Zapsat emoce před tradingem pro lepší sebeuvědomění")
+      weaknesses.push("😔 Negative emotional state affected objectivity")
+      tomorrowPlan.push("Journaling: Write down emotions before trading for better self-awareness")
     } else if (check && check.emotionalState >= 8) {
-      strengths.push("😊 Pozitivní nálada podpořila důvěru a disciplínu")
+      strengths.push("😊 Positive mood supported confidence and discipline")
     }
 
     // Analyze Trading Performance
@@ -259,23 +259,23 @@ export function DailySummary() {
     const avgMood = trades.length > 0 ? trades.reduce((sum, t) => sum + (t.mood || 0), 0) / trades.length : 0
 
     if (totalPnL > 0) {
-      strengths.push(`💰 Ziskový den: +${totalPnL.toFixed(2)}$ s Win Rate ${Math.round(winRate)}%`)
-      performancePrediction = `Na základě dnešního výkonu (Win Rate ${Math.round(winRate)}%, P&L +${totalPnL.toFixed(2)}$) a mentálního stavu (${check?.score || 0}/100), predikuji 75% šanci na ziskový zítřek pokud dodržíš stejnou rutinu a disciplínu.`
+      strengths.push(`💰 Profitable day: +${totalPnL.toFixed(2)}$ with Win Rate ${Math.round(winRate)}%`)
+      performancePrediction = `Based on today's performance (Win Rate ${Math.round(winRate)}%, P&L +${totalPnL.toFixed(2)}$) and mental state (${check?.score || 0}/100), I predict a 75% chance of a profitable tomorrow if you maintain the same routine and discipline.`
     } else if (totalPnL < 0) {
-      weaknesses.push(`📉 Ztrátový den: ${totalPnL.toFixed(2)}$ - analýza příčin nutná`)
-      performancePrediction = `Dnešní ztráta (${totalPnL.toFixed(2)}$) vyžaduje reset. Doporučuji zítřek začít s polovičním rizikem a zaměřit se na kvalitu, ne kvantitu. Šance na recovery: 60% pokud dodržíš plán.`
-      patternRecognition.push("Pattern: Ztráta → Frustrace → Revenge trading (POZOR!)")
+      weaknesses.push(`📉 Loss day: ${totalPnL.toFixed(2)}$ - analysis of causes needed`)
+      performancePrediction = `Today's loss (${totalPnL.toFixed(2)}$) requires a reset. I recommend starting tomorrow with half the risk and focus on quality, not quantity. Recovery chance: 60% if you stick to the plan.`
+      patternRecognition.push("Pattern: Loss → Frustration → Revenge trading (CAUTION!)")
     }
 
     if (trades.length > 0) {
-      weaknesses.push("⚡ Overtrading: Příliš vysoká aktivita snižuje kvalitu rozhodování")
-      tomorrowPlan.push("Limit: Zaměř se pouze na A+ setupy, kvalita > kvantita")
-      patternRecognition.push("Pattern: Overtrading → Únava → Chyby v exekuci")
+      weaknesses.push("⚡ Overtrading: Too much activity reduces decision quality")
+      tomorrowPlan.push("Limit: Focus only on A+ setups, quality > quantity")
+      patternRecognition.push("Pattern: Overtrading → Fatigue → Execution errors")
     } else if (trades.length === 0) {
       if (check && check.score < 70) {
-        strengths.push("🛡️ Disciplína: Správně jsi se vyhnul tradingu při nízké připravenosti")
+        strengths.push("🛡️ Discipline: You correctly avoided trading with low readiness")
       } else {
-        weaknesses.push("👀 Žádné trades: Možná jsi přehlédl příležitosti nebo byl příliš opatrný")
+        weaknesses.push("👀 No trades: Maybe you missed opportunities or were too cautious")
       }
     }
 
@@ -286,44 +286,44 @@ export function DailySummary() {
       const riskReward = maxLoss !== 0 ? Math.abs(maxWin / maxLoss) : 0
 
       if (riskReward >= 2) {
-        riskAssessment = `✅ Výborný Risk/Reward ratio: ${riskReward.toFixed(2)}:1. Tvé risk management je na vysoké úrovni. Největší win: +${maxWin}$, největší loss: ${maxLoss}$.`
+        riskAssessment = `✅ Excellent Risk/Reward ratio: ${riskReward.toFixed(2)}:1. Your risk management is on a high level. Biggest win: +${maxWin}$, biggest loss: ${maxLoss}$.`
       } else if (riskReward >= 1) {
-        riskAssessment = `⚠️ Průměrný Risk/Reward ratio: ${riskReward.toFixed(2)}:1. Můžeš zlepšit tím, že necháš winnery běžet déle. Největší win: +${maxWin}$, největší loss: ${maxLoss}$.`
+        riskAssessment = `⚠️ Average Risk/Reward ratio: ${riskReward.toFixed(2)}:1. You can improve by letting winners run longer. Biggest win: +${maxWin}$, biggest loss: ${maxLoss}$.`
       } else {
-        riskAssessment = `🚨 Slabý Risk/Reward ratio: ${riskReward.toFixed(2)}:1. KRITICKÉ: Tvé ztráty jsou větší než zisky. Přehodnoť stop loss a take profit strategie. Největší win: +${maxWin}$, největší loss: ${maxLoss}$.`
-        weaknesses.push("🚨 Nedostatečný risk management - ztráty převyšují zisky")
-        tomorrowPlan.push("PRIORITA: Přehodnotit stop loss umístění a cílové zisky")
+        riskAssessment = `🚨 Weak Risk/Reward ratio: ${riskReward.toFixed(2)}:1. CRITICAL: Your losses are bigger than wins. Reconsider stop loss and take profit strategy. Biggest win: +${maxWin}$, biggest loss: ${maxLoss}$.`
+        weaknesses.push("🚨 Insufficient risk management - losses exceed wins")
+        tomorrowPlan.push("PRIORITY: Reconsider stop loss placement and profit targets")
       }
     } else {
-      riskAssessment = "Žádné trades dnes - risk management nelze vyhodnotit."
+      riskAssessment = "No trades today - risk management cannot be assessed."
     }
 
     // Mood-Performance Correlation
     if (trades.length > 0 && avgMood < 6) {
-      patternRecognition.push("Pattern: Nízká nálada během tradingu → Horší výsledky")
-      tomorrowPlan.push("Před tradingem: 5min mindfulness pro zlepšení nálady")
+      patternRecognition.push("Pattern: Low mood during trading → Worse results")
+      tomorrowPlan.push("Before trading: 5 min mindfulness to improve mood")
     } else if (avgMood >= 8) {
-      strengths.push("😊 Vysoká nálada během tradingu koreluje s lepšími výsledky")
+      strengths.push("😊 High mood during trading correlates with better results")
     }
 
     // Generate Tomorrow Plan based on today
     if (totalPnL > 0 && check && check.score >= 75) {
-      tomorrowPlan.push("✅ Pokračovat ve stejné rutině - funguje to!")
-      tomorrowPlan.push("Udržet stejnou velikost pozic a risk management")
+      tomorrowPlan.push("✅ Continue with the same routine - it's working!")
+      tomorrowPlan.push("Maintain the same position size and risk management")
     } else if (totalPnL < 0) {
-      tomorrowPlan.push("🔄 Reset: Začít s polovičním rizikem pro obnovení důvěry")
-      tomorrowPlan.push("Zaměřit se na 1-2 kvalitní setupy místo kvantity")
+      tomorrowPlan.push("🔄 Reset: Start with half the risk to restore confidence")
+      tomorrowPlan.push("Focus on 1-2 quality setups instead of quantity")
     }
 
     if (!tomorrowPlan.length) {
-      tomorrowPlan.push("Pokračovat v disciplinovaném přístupu")
-      tomorrowPlan.push("Sledovat emoce a zapisovat do journalu")
+      tomorrowPlan.push("Continue with disciplined approach")
+      tomorrowPlan.push("Monitor emotions and write in journal")
     }
 
     // Default messages if no data
     if (!psychologicalAnalysis) {
       psychologicalAnalysis =
-        "Nedostatek dat pro psychologickou analýzu. Dokončete Morning Check pro detailní insights."
+        "Insufficient data for psychological analysis. Complete Morning Check for detailed insights."
     }
     if (!performancePrediction) {
       performancePrediction = "Nedostatek dat pro predikci. Zaznamenejte trades pro AI predikce budoucího výkonu."
@@ -402,12 +402,12 @@ export function DailySummary() {
               {isLiveMode ? "🔴 Live" : "🎮 Virtual"}
             </Badge>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Shrnutí Obchodního Dne</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Daily Trading Summary</h1>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white">
             <Activity className="w-4 h-4 mr-2" />
-            Exportovat Report
+            Export Report
           </Button>
           <Button
             onClick={handleComplete}
@@ -422,12 +422,12 @@ export function DailySummary() {
             {isStage5Locked ? (
               <>
                 <Lock className="w-4 h-4" />
-                Uzavřeno - Den byl dnes uzavřen
+                Closed - Day was completed today
               </>
             ) : (
               <>
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Uzavřít Den
+                Close Day
               </>
             )}
           </Button>
@@ -440,7 +440,7 @@ export function DailySummary() {
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-sm text-muted-foreground">Celkové P&L</p>
+                <p className="text-sm text-muted-foreground">Total P&L</p>
                 <h3 className={cn("text-2xl font-bold mt-1", totalPnL >= 0 ? "text-emerald-400" : "text-rose-400")}>
                   {totalPnL > 0 ? "+" : ""}
                   {totalPnL.toFixed(2)} $
@@ -480,7 +480,7 @@ export function DailySummary() {
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-sm text-muted-foreground">Počet Obchodů</p>
+                <p className="text-sm text-muted-foreground">Number of Trades</p>
                 <h3 className="text-2xl font-bold mt-1 text-white">{todayTrades.length}</h3>
               </div>
               <div className="p-2 rounded-lg bg-white/10">
@@ -488,9 +488,9 @@ export function DailySummary() {
               </div>
             </div>
             <div className="flex gap-2 text-xs mt-2">
-              <span className="text-emerald-400">{winningTrades} Ziskových</span>
+              <span className="text-emerald-400">{winningTrades} Winning</span>
               <span className="text-zinc-600">•</span>
-              <span className="text-rose-400">{losingTrades} Ztrátových</span>
+              <span className="text-rose-400">{losingTrades} Losing</span>
             </div>
           </CardContent>
         </Card>
@@ -499,7 +499,7 @@ export function DailySummary() {
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <p className="text-sm text-muted-foreground">Skóre Připravenosti</p>
+                <p className="text-sm text-muted-foreground">Readiness Score</p>
                 <h3 className="text-2xl font-bold mt-1 text-purple-400">{morningCheck?.score || 0}/100</h3>
               </div>
               <div className="p-2 rounded-lg bg-purple-500/10">
@@ -534,7 +534,7 @@ export function DailySummary() {
                       <div className={cn("w-2 h-2 rounded-full", trade.pnl > 0 ? "bg-emerald-500" : "bg-rose-500")} />
                       <div>
                         <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                          <Eye className="w-3 h-3" /> Rozpoznané Psychologické Patterny
+                          <Eye className="w-3 h-3" /> Recognized Psychological Patterns
                         </h4>
                         <div className="space-y-2">
                           {aiInsights.patternRecognition.length > 0 ? (
@@ -599,13 +599,13 @@ export function DailySummary() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Sparkles className="w-5 h-5 text-purple-400" />
-                AI Analýza Dne
+                AI Daily Analysis
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
                 <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <CheckCircle className="w-3 h-3" /> Co se povedlo
+                  <CheckCircle className="w-3 h-3" /> What Went Well
                 </h4>
                 <ul className="space-y-2">
                   {aiInsights.strengths.length > 0 ? (
@@ -623,7 +623,7 @@ export function DailySummary() {
 
               <div>
                 <h4 className="text-xs font-semibold text-rose-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <AlertTriangle className="w-3 h-3" /> Kde se zlepšit
+                  <AlertTriangle className="w-3 h-3" /> Areas for Improvement
                 </h4>
                 <ul className="space-y-2">
                   {aiInsights.weaknesses.length > 0 ? (
@@ -646,7 +646,7 @@ export function DailySummary() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Brain className="w-5 h-5 text-indigo-400" />
-                Psychologická Analýza & Mentální Stav
+                Psychological Analysis & Mental State
               </CardTitle>
               <p className="text-xs text-gray-400 mt-2 font-normal">Hlubší pohled na tvůj mindset a psychologické vzorce</p>
             </CardHeader>
@@ -684,7 +684,7 @@ export function DailySummary() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Shield className="w-5 h-5 text-amber-400" />
-                Risk Assessment & Správa Rizika
+                Risk Assessment & Risk Management
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -698,7 +698,7 @@ export function DailySummary() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <TrendingUp className="w-5 h-5 text-green-400" />
-                Predikce Výkonu & Šance na Úspěch
+                Performance Prediction & Success Rate
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -714,7 +714,7 @@ export function DailySummary() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Zap className="w-5 h-5 text-blue-400" />
-                🎯 Action Items for Tomorrow
+                Action Items for Tomorrow
               </CardTitle>
             </CardHeader>
             <CardContent>
