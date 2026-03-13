@@ -521,6 +521,41 @@ export const czechToEnglishMap: Record<string, string> = {
   'Saving...': 'Saving...',
   'Update Plan': 'Update Plan',
   'Save Plan & Continue': 'Save Plan & Continue',
+
+  // Record Trades - English translations
+  'Error': 'Error',
+  'Please enter at least a currency pair': 'Please enter at least a currency pair',
+  'Entry Reason': 'Entry Reason',
+  'Exit Reason': 'Exit Reason',
+  'Detailed Analysis': 'Detailed Analysis',
+  'I followed the plan': 'I followed the plan',
+  'I missed the opportunity due to hesitation': 'I missed the opportunity due to hesitation',
+  'Behavior Description': 'Behavior Description',
+  'Tags (comma-separated)': 'Tags (comma-separated)',
+  'Notes': 'Notes',
+  'No revenge': 'No revenge',
+
+  // Trading Tracker Demo Data - Emotions and Reasons
+  'Calm': 'Calm',
+  'Confident': 'Confident',
+  'Nervous': 'Nervous',
+  'Uncertain': 'Uncertain',
+  'Excited': 'Excited',
+  'Tired': 'Tired',
+  'Stressed': 'Stressed',
+  'Panicked': 'Panicked',
+  'Focused': 'Focused',
+  'Satisfied': 'Satisfied',
+  'Frustrated': 'Frustrated',
+  'Proud': 'Proud',
+  'Disappointed': 'Disappointed',
+  'Learned': 'Learned',
+  'Breakout from support/resistance': 'Breakout from support/resistance',
+  'Moving average crossover': 'Moving average crossover',
+  'Support/resistance bounce': 'Support/resistance bounce',
+  'Trend continuation': 'Trend continuation',
+  'RSI divergence': 'RSI divergence',
+  'Supply/demand zone': 'Supply/demand zone',
 }
 
 export function getEnglishText(czechText: string, isEnglishDomain: boolean): string {

@@ -39,12 +39,12 @@ const generateDemoTrades = (): Trade[] => {
   const sessions = ["Asian", "London", "New York", "Overlap"]
   const tradeTypes = ["Scalp", "Day Trade", "Swing"]
   const emotions = [
-    ["Klidný", "Sebevědomý", "Nervózní", "Nejistý", "Nadšený", "Unavený"],
-    ["Klidný", "Stresovaný", "Sebevědomý", "Panický", "Soustředěný"],
-    ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Poučený"],
+    ["Calm", "Confident", "Nervous", "Uncertain", "Excited", "Tired"],
+    ["Calm", "Stressed", "Confident", "Panicked", "Focused"],
+    ["Satisfied", "Frustrated", "Proud", "Disappointed", "Learned"],
   ]
   const reasons = [
-    "Breakout ze support/resistance",
+    "Breakout from support/resistance",
     "Moving average crossover",
     "Support/resistance bounce",
     "Trend continuation",
@@ -55,18 +55,18 @@ const generateDemoTrades = (): Trade[] => {
   const baseDate = new Date()
   let tradeCount = 0
 
-  // Generuj obchody od 1.2 do 1.4 (virtual mode)
-  const startDate = new Date(2026, 1, 1) // 1.2.2026
-  const endDate = new Date(2026, 1, 13)  // 1.4.2026 (13. března - 1.4 znamená 13. den čtvrtého měsíce? nebo 1.-4. února?)
+  // Generate trades from 2/1 to 2/13 (virtual mode)
+  const startDate = new Date(2026, 1, 1) // 2/1/2026
+  const endDate = new Date(2026, 1, 13)  // 2/13/2026
   
   for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
     const dateStr = date.toISOString().split("T")[0]
     const dayOfWeek = date.getDay()
 
-    // Přeskočit víkendy
+    // Skip weekends
     if (dayOfWeek === 0 || dayOfWeek === 6) continue
 
-    // 3-6 obchodů za den ve virtual modu
+    // 3-6 trades per day in virtual mode
     const tradesPerDay = Math.floor(Math.random() * 4) + 3
     for (let i = 0; i < tradesPerDay; i++) {
       const isWinningTrade = Math.random() > 0.35

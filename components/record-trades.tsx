@@ -273,8 +273,8 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
     // Minimal validation - just require pair
     if (!currentTrade.pair) {
       toast({
-        title: "Chyba",
-        description: "Vyplňte prosím minimálně měnový pár",
+        title: "Error",
+        description: "Please enter at least a currency pair",
         variant: "destructive",
       })
       return
@@ -674,7 +674,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Důvod vstupu</label>
+                <label className="text-sm text-gray-300 block mb-2">Entry Reason</label>
                 <textarea
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   rows={2}
@@ -684,7 +684,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Důvod výstupu</label>
+                <label className="text-sm text-gray-300 block mb-2">Exit Reason</label>
                 <textarea
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   rows={2}
@@ -694,7 +694,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Detailní analýza</label>
+                <label className="text-sm text-gray-300 block mb-2">Detailed Analysis</label>
                 <textarea
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   rows={3}
@@ -713,7 +713,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                   onChange={(e) => setCurrentTrade({ ...currentTrade, followedPlan: e.target.checked })}
                   className="rounded"
                 />
-                Následoval jsem plán
+                    I followed the plan
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-300">
                 <input
@@ -731,7 +731,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                   onChange={(e) => setCurrentTrade({ ...currentTrade, missedDueToHesitation: e.target.checked })}
                   className="rounded"
                 />
-                Zmeškal jsem příležitost kvůli váhání
+                    I missed the opportunity due to hesitation
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-300">
                 <input
@@ -745,7 +745,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
             </div>
 
             <div>
-              <label className="text-sm text-gray-300 block mb-2">Popis chování</label>
+                <label className="text-sm text-gray-300 block mb-2">Behavior Description</label>
               <textarea
                 className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                 rows={2}
@@ -757,7 +757,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Tagy (oddělené čárkou)</label>
+                <label className="text-sm text-gray-300 block mb-2">Tags (comma-separated)</label>
                 <input
                   type="text"
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
@@ -767,7 +767,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Poznámky</label>
+                <label className="text-sm text-gray-300 block mb-2">Notes</label>
                 <input
                   type="text"
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
@@ -936,13 +936,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                     <div className="border-t border-slate-600/30 pt-4 space-y-3">
                       {trade.entryReason && (
                         <div>
-                          <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Důvod vstupu</p>
+                          <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Entry Reason</p>
                           <p className="text-sm text-gray-200">{trade.entryReason}</p>
                         </div>
                       )}
                       {trade.exitReason && (
                         <div>
-                          <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Důvod výstupu</p>
+                          <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Exit Reason</p>
                           <p className="text-sm text-gray-200">{trade.exitReason}</p>
                         </div>
                       )}
@@ -951,7 +951,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                     {/* Detailed Analysis */}
                     {trade.detailedAnalysis && (
                       <div className="border-t border-slate-600/30 pt-4">
-                        <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Detailní analýza</p>
+                        <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Detailed Analysis</p>
                         <p className="text-sm text-gray-200 leading-relaxed">{trade.detailedAnalysis}</p>
                       </div>
                     )}
@@ -974,7 +974,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                         </div>
                         <div className={`p-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${trade.revengeTrade ? "bg-red-500/20 text-red-300 border border-red-500/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"}`}>
                           <div className="w-3 h-3 rounded-full" style={{ background: trade.revengeTrade ? "currentColor" : "currentColor" }} />
-                          {trade.revengeTrade ? "✗ Revenge trade" : "✓ Bez revenže"}
+                          {trade.revengeTrade ? "✗ Revenge trade" : "✓ No revenge"}
                         </div>
                       </div>
                     </div>
@@ -984,13 +984,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                       <div className="border-t border-slate-600/30 pt-4 space-y-3">
                         {trade.behaviorDescription && (
                           <div>
-                            <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Popis chování</p>
+                            <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Behavior Description</p>
                             <p className="text-sm text-gray-200">{trade.behaviorDescription}</p>
                           </div>
                         )}
                         {Array.isArray(trade.tags) && trade.tags.length > 0 && (
                           <div>
-                            <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Tagy</p>
+                            <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Tags</p>
                             <div className="flex flex-wrap gap-2">
                               {trade.tags.map((tag) => (
                                 <span key={tag} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-semibold border border-blue-500/30">
@@ -1002,7 +1002,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                         )}
                         {trade.notes && (
                           <div>
-                            <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Poznámky</p>
+                            <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Notes</p>
                             <p className="text-sm text-gray-200">{trade.notes}</p>
                           </div>
                         )}
