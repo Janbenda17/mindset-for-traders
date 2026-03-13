@@ -55,22 +55,22 @@ interface FailEntry {
 const failTypes = [
   { value: "revenge-trade", label: "Revenge Trade", icon: Flame, color: "text-red-400" },
   { value: "overtrading", label: "Overtrading", icon: TrendingDown, color: "text-orange-400" },
-  { value: "no-stoploss", label: "Bez Stop-Loss", icon: Shield, color: "text-yellow-400" },
-  { value: "plan-violation", label: "Porušení plánu", icon: Target, color: "text-purple-400" },
-  { value: "fomo", label: "FOMO vstup", icon: Clock, color: "text-blue-400" },
-  { value: "emotional", label: "Emocionální rozhodnutí", icon: Brain, color: "text-pink-400" },
-  { value: "other", label: "Jiné", icon: AlertTriangle, color: "text-gray-400" },
+  { value: "no-stoploss", label: "No Stop-Loss", icon: Shield, color: "text-yellow-400" },
+  { value: "plan-violation", label: "Plan Violation", icon: Target, color: "text-purple-400" },
+  { value: "fomo", label: "FOMO Entry", icon: Clock, color: "text-blue-400" },
+  { value: "emotional", label: "Emotional Decision", icon: Brain, color: "text-pink-400" },
+  { value: "other", label: "Other", icon: AlertTriangle, color: "text-gray-400" },
 ]
 
 const emotions = [
-  "Frustrace",
-  "Strach",
-  "Chamtivost",
-  "Netrpělivost",
-  "Přílišná sebedůvěra",
-  "Stres",
-  "Nuda",
-  "Zoufalství",
+  "Frustration",
+  "Fear",
+  "Greed",
+  "Impatience",
+  "Overconfidence",
+  "Stress",
+  "Boredom",
+  "Desperation",
 ]
 
 // Demo data for virtual mode
@@ -80,26 +80,26 @@ const generateDemoFails = (): FailEntry[] => {
       id: "demo-1",
       date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       type: "revenge-trade",
-      description: "Po ztrátě 2% jsem okamžitě vstoupil do dalšího obchodu bez analýzy.",
-      trigger: "Předchozí ztráta mě rozhodila",
-      emotion: "Frustrace",
-      consequence: "Další ztráta 1.5%, celkem -3.5% za den",
+      description: "After losing 2%, I immediately entered another trade without analysis.",
+      trigger: "Previous loss threw me off",
+      emotion: "Frustration",
+      consequence: "Another loss of 1.5%, total -3.5% for the day",
       aiAnalysis:
-        "Revenge trading je jedním z nejčastějších vzorců destruktivního chování. Tvůj mozek se snaží 'vyrovnat' ztrátu, ale tím pouze zvětšuješ riziko. Klíčové je přijmout ztrátu jako součást tradingu a dát si pauzu.",
-      actionPlan: "Po každé ztrátě nad 1% si dám minimálně 30 minut pauzu od obrazovky.",
+        "Revenge trading is one of the most common patterns of destructive behavior. Your brain tries to 'even the score', but you're only increasing risk. The key is to accept the loss as part of trading and take a break.",
+      actionPlan: "After each loss over 1%, I'll take at least 30 minutes away from the screen.",
       resolved: false,
     },
     {
       id: "demo-2",
       date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       type: "fomo",
-      description: "Viděl jsem velký pohyb na BTC a vstoupil jsem pozdě do trendu.",
-      trigger: "Sledoval jsem Twitter a viděl jak ostatní vydělávají",
-      emotion: "Chamtivost",
-      consequence: "Vstup na vrcholu, ztráta 2%",
+      description: "I saw a big move on BTC and entered late into the trend.",
+      trigger: "I was watching Twitter and seeing others making money",
+      emotion: "Greed",
+      consequence: "Entered at the top, loss of 2%",
       aiAnalysis:
-        "FOMO je mocná emoce, kterou sociální média zesilují. Pamatuj, že vidíš pouze úspěšné obchody ostatních. Tvůj plán je důležitější než honba za pohybem.",
-      actionPlan: "Budu obchodovat pouze setupy z mého watchlistu, ne reakce na sociální média.",
+        "FOMO is a powerful emotion amplified by social media. Remember, you only see others' successful trades. Your plan is more important than chasing movements.",
+      actionPlan: "I will only trade setups from my watchlist, not reactions to social media.",
       resolved: true,
       resolvedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     },
@@ -107,13 +107,13 @@ const generateDemoFails = (): FailEntry[] => {
       id: "demo-3",
       date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
       type: "overtrading",
-      description: "Udělal jsem příliš mnoho obchodů místo čekání na kvalitní setupy.",
-      trigger: "Nudil jsem se a chtěl jsem 'něco dělat'",
-      emotion: "Nuda",
-      consequence: "Komisní poplatky sežraly zisky, nakonec -0.5%",
+      description: "I made too many trades instead of waiting for quality setups.",
+      trigger: "I was bored and wanted to 'do something'",
+      emotion: "Boredom",
+      consequence: "Commissions ate the profits, ended at -0.5%",
       aiAnalysis:
-        "Overtrading často pramení z potřeby akce, ne z kvalitních příležitostí. Méně je více. Kvalitní trader čeká na své setupy.",
-      actionPlan: "Zaměřím se pouze na A+ setupy. Po každém obchodu 15 min pauza.",
+        "Overtrading often stems from the need for action, not quality opportunities. Less is more. Quality traders wait for their setups.",
+      actionPlan: "I'll focus only on A+ setups. Take a 15-minute break after each trade.",
       resolved: true,
       resolvedDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     },
@@ -122,13 +122,13 @@ const generateDemoFails = (): FailEntry[] => {
 
 const generateAIAnalysis = (type: string, description: string, emotion: string): string => {
   const analyses: Record<string, string> = {
-    "revenge-trade": `Revenge trading je přirozená, ale destruktivní reakce na ztrátu. Tvůj mozek se snaží "vyrovnat" skóre, ale tím jen zvyšuješ riziko. Klíčové je přijmout ztrátu jako běžnou součást tradingu. Zkus po ztrátě udělat 5 hlubokých nádechů a připomenout si, že jedna ztráta nedefinuje tvůj celkový výkon.`,
-    overtrading: `Overtrading často signalizuje nudu nebo potřebu akce místo kvalitních příležitostí. Pamatuj: nejlepší tradeři většinu času čekají. Kvalita > kvantita. Zkus si stanovit denní limit obchodů a dodržuj ho.`,
-    "no-stoploss": `Trading bez stop-lossu je jako jízda bez bezpečnostního pásu. Jedna špatná situace může zničit týdny práce. Stop-loss není přiznání porážky, je to profesionální risk management.`,
-    "plan-violation": `Porušení plánu ukazuje na konflikt mezi tím, co víš že je správné, a tím co cítíš v momentu. Zkus si před každým obchodem nahlas říct: "Je tento obchod v souladu s mým plánem?"`,
-    fomo: `FOMO (strach z promeškání) je mocná emoce zesílená sociálními médii. Pamatuj: vždy bude další příležitost. Trhy tu budou i zítra. Tvůj plán je důležitější než honba za pohybem.`,
-    emotional: `Emocionální rozhodnutí v tradingu vedou k nekonzistentním výsledkům. Tvé emoce ti říkají důležité informace - ale neměly by řídit tvé obchody. Zkus si vytvořit checklist, který musíš projít před každým obchodem.`,
-    other: `Každé selhání je příležitost k učení. Důležité je identifikovat vzorec a vytvořit konkrétní plán, jak se mu příště vyhnout.`,
+    "revenge-trade": `Revenge trading is a natural but destructive response to a loss. Your brain tries to "even the score", but you're only increasing risk. The key is to accept the loss as a normal part of trading. Try taking 5 deep breaths after a loss and reminding yourself that one loss doesn't define your overall performance.`,
+    overtrading: `Overtrading often signals boredom or a need for action rather than quality opportunities. Remember: the best traders wait most of the time. Quality > quantity. Try setting a daily trade limit and stick to it.`,
+    "no-stoploss": `Trading without a stop-loss is like driving without a seatbelt. One bad situation can wipe out weeks of work. A stop-loss isn't admitting defeat, it's professional risk management.`,
+    "plan-violation": `Plan violations show a conflict between what you know is right and what you feel in the moment. Try telling yourself out loud before each trade: "Is this trade aligned with my plan?"`,
+    fomo: `FOMO (fear of missing out) is a powerful emotion amplified by social media. Remember: there will always be another opportunity. Markets will be here tomorrow. Your plan is more important than chasing movements.`,
+    emotional: `Emotional decisions in trading lead to inconsistent results. Your emotions tell you important information - but they shouldn't drive your trades. Try creating a checklist you must go through before each trade.`,
+    other: `Every failure is an opportunity to learn. The important thing is to identify the pattern and create a specific plan to avoid it next time.`,
   }
 
   return analyses[type] || analyses["other"]
@@ -180,8 +180,8 @@ export default function FailLogPage() {
   const addEntry = () => {
     if (!newEntry.type || !newEntry.description) {
       toast({
-        title: "Chybí povinná pole",
-        description: "Vyplň typ selhání a popis.",
+        title: "Required fields missing",
+        description: "Fill in the failure type and description.",
         variant: "destructive",
       })
       return
@@ -214,8 +214,8 @@ export default function FailLogPage() {
     setIsAddDialogOpen(false)
 
     toast({
-      title: "Selhání zaznamenáno",
-      description: "AI analyzovala tvé selhání a přidala doporučení.",
+      title: "Failure recorded",
+      description: "AI analyzed your failure and added recommendations.",
     })
   }
 
@@ -288,7 +288,7 @@ export default function FailLogPage() {
         <Link href="/bonus" className="inline-flex mb-6">
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
             <ArrowLeft className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-400">Zpět</span>
+            <span className="text-sm text-gray-400">Back</span>
           </div>
         </Link>
 
@@ -301,31 +301,31 @@ export default function FailLogPage() {
               </div>
               Fail Log
             </h1>
-            <p className="text-gray-400 mt-1">Učení z chyb je klíčem k růstu</p>
+            <p className="text-gray-400 mt-1">Learning from mistakes is the key to growth</p>
           </div>
 
           <div className="flex items-center gap-2">
-            {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Demo režim</Badge>}
+            {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Demo Mode</Badge>}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-red-600 hover:bg-red-700">
                   <Plus className="w-4 h-4 mr-2" />
-                  Zaznamenat selhání
+                  Record Failure
                 </Button>
               </DialogTrigger>
               <DialogContent className="bg-slate-900 border-slate-700 max-w-lg">
                 <DialogHeader>
-                  <DialogTitle className="text-white">Nový záznam selhání</DialogTitle>
+                  <DialogTitle className="text-white">New Failure Entry</DialogTitle>
                   <DialogDescription className="text-gray-400">
-                    Poctivě analyzuj, co se stalo. To je první krok k nápravě.
+                    Honestly analyze what happened. That's the first step to fix it.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto pr-2">
                   <div>
-                    <Label className="text-gray-300">Typ selhání *</Label>
+                    <Label className="text-gray-300">Failure Type *</Label>
                     <Select value={newEntry.type} onValueChange={(v) => setNewEntry({ ...newEntry, type: v })}>
                       <SelectTrigger className="bg-slate-800 border-slate-700 text-white mt-1">
-                        <SelectValue placeholder="Vyber typ..." />
+                        <SelectValue placeholder="Select type..." />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-700">
                         {failTypes.map((type) => (
@@ -341,30 +341,30 @@ export default function FailLogPage() {
                   </div>
 
                   <div>
-                    <Label className="text-gray-300">Co se stalo? *</Label>
+                    <Label className="text-gray-300">What Happened? *</Label>
                     <Textarea
                       value={newEntry.description}
                       onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })}
-                      placeholder="Popiš situaci..."
+                      placeholder="Describe the situation..."
                       className="bg-slate-800 border-slate-700 text-white mt-1 min-h-[80px]"
                     />
                   </div>
 
                   <div>
-                    <Label className="text-gray-300">Co to spustilo?</Label>
+                    <Label className="text-gray-300">What Triggered It?</Label>
                     <Input
                       value={newEntry.trigger}
                       onChange={(e) => setNewEntry({ ...newEntry, trigger: e.target.value })}
-                      placeholder="Např. velká ztráta, stres z práce..."
+                      placeholder="e.g. big loss, work stress..."
                       className="bg-slate-800 border-slate-700 text-white mt-1"
                     />
                   </div>
 
                   <div>
-                    <Label className="text-gray-300">Jaká emoce převládala?</Label>
+                    <Label className="text-gray-300">What Emotion Dominated?</Label>
                     <Select value={newEntry.emotion} onValueChange={(v) => setNewEntry({ ...newEntry, emotion: v })}>
                       <SelectTrigger className="bg-slate-800 border-slate-700 text-white mt-1">
-                        <SelectValue placeholder="Vyber emoci..." />
+                        <SelectValue placeholder="Select emotion..." />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-700">
                         {emotions.map((emotion) => (
@@ -377,27 +377,27 @@ export default function FailLogPage() {
                   </div>
 
                   <div>
-                    <Label className="text-gray-300">Jaké byly následky?</Label>
+                    <Label className="text-gray-300">What Were the Consequences?</Label>
                     <Input
                       value={newEntry.consequence}
                       onChange={(e) => setNewEntry({ ...newEntry, consequence: e.target.value })}
-                      placeholder="Např. ztráta 2%, propásnutá příležitost..."
+                      placeholder="e.g. loss 2%, missed opportunity..."
                       className="bg-slate-800 border-slate-700 text-white mt-1"
                     />
                   </div>
 
                   <div>
-                    <Label className="text-gray-300">Můj plán nápravy</Label>
+                    <Label className="text-gray-300">My Recovery Plan</Label>
                     <Textarea
                       value={newEntry.actionPlan}
                       onChange={(e) => setNewEntry({ ...newEntry, actionPlan: e.target.value })}
-                      placeholder="Co udělám příště jinak?"
+                      placeholder="What will I do differently next time?"
                       className="bg-slate-800 border-slate-700 text-white mt-1 min-h-[60px]"
                     />
                   </div>
 
                   <Button onClick={addEntry} className="w-full bg-red-600 hover:bg-red-700">
-                    Uložit záznam
+                    Save Entry
                   </Button>
                 </div>
               </DialogContent>
@@ -413,7 +413,7 @@ export default function FailLogPage() {
                 <XCircle className="w-5 h-5 text-red-400" />
                 <span className="text-2xl font-bold text-white">{unresolvedCount}</span>
               </div>
-              <p className="text-xs text-gray-400">Nevyřešených</p>
+              <p className="text-xs text-gray-400">Unresolved</p>
             </CardContent>
           </Card>
           <Card className="bg-slate-900/50 border-slate-800">
@@ -422,7 +422,7 @@ export default function FailLogPage() {
                 <CheckCircle2 className="w-5 h-5 text-green-400" />
                 <span className="text-2xl font-bold text-white">{resolvedCount}</span>
               </div>
-              <p className="text-xs text-gray-400">Vyřešených</p>
+              <p className="text-xs text-gray-400">Resolved</p>
             </CardContent>
           </Card>
           <Card className="bg-slate-900/50 border-slate-800">
@@ -445,7 +445,7 @@ export default function FailLogPage() {
                     <BarChart3 className="w-5 h-5 text-gray-400 mx-auto mb-4" />
                     <span className="text-2xl font-bold text-white">-</span>
                   </div>
-                  <p className="text-xs text-gray-400">Nejčastější typ</p>
+                  <p className="text-xs text-gray-400">Most Common Type</p>
                 </>
               )}
             </CardContent>
@@ -458,8 +458,8 @@ export default function FailLogPage() {
             <Card className="bg-slate-900/50 border-slate-800">
               <CardContent className="py-12 text-center">
                 <AlertTriangle className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">Zatím žádné záznamy</p>
-                <p className="text-sm text-gray-500 mt-1">Každé selhání je příležitost k učení</p>
+                <p className="text-gray-400">No entries yet</p>
+                <p className="text-sm text-gray-500 mt-1">Every failure is an opportunity to learn</p>
               </CardContent>
             </Card>
           ) : (
@@ -493,7 +493,7 @@ export default function FailLogPage() {
                           {entry.resolved && (
                             <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
                               <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Vyřešeno
+                              Resolved
                             </Badge>
                           )}
                         </div>
@@ -502,13 +502,13 @@ export default function FailLogPage() {
 
                         {entry.emotion && (
                           <p className="text-sm text-gray-400 mb-2">
-                            <span className="text-pink-400">Emoce:</span> {entry.emotion}
+                            <span className="text-pink-400">Emotion:</span> {entry.emotion}
                           </p>
                         )}
 
                         {entry.consequence && (
                           <p className="text-sm text-gray-400 mb-3">
-                            <span className="text-orange-400">Následky:</span> {entry.consequence}
+                            <span className="text-orange-400">Consequences:</span> {entry.consequence}
                           </p>
                         )}
 
@@ -516,7 +516,7 @@ export default function FailLogPage() {
                         <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 mb-3">
                           <div className="flex items-center gap-2 mb-2">
                             <Sparkles className="w-4 h-4 text-purple-400" />
-                            <span className="text-sm font-medium text-purple-400">AI Analýza</span>
+                            <span className="text-sm font-medium text-purple-400">AI Analysis</span>
                           </div>
                           <p className="text-sm text-gray-300">{entry.aiAnalysis}</p>
                         </div>
@@ -525,7 +525,7 @@ export default function FailLogPage() {
                           <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                             <div className="flex items-center gap-2 mb-2">
                               <Lightbulb className="w-4 h-4 text-blue-400" />
-                              <span className="text-sm font-medium text-blue-400">Plán nápravy</span>
+                              <span className="text-sm font-medium text-blue-400">Recovery Plan</span>
                             </div>
                             <p className="text-sm text-gray-300">{entry.actionPlan}</p>
                           </div>
@@ -539,7 +539,7 @@ export default function FailLogPage() {
                           onClick={() => toggleResolved(entry.id)}
                           className="border-slate-700 text-green-400 hover:text-green-300 hover:border-green-500/50"
                         >
-                          Označit vyřešené
+                          Mark Resolved
                         </Button>
                       )}
                     </div>
