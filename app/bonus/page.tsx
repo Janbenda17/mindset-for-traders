@@ -8,46 +8,46 @@ import { TopNavigation } from "@/components/top-navigation"
 
 const bonusItems = [
   {
-    name: "Trading Rutiny",
+    name: "Trading Routines",
     href: "/routines",
     icon: Sun,
-    description: "Vytvoř si své ranní a večerní trading rutiny pro maximální výkon",
+    description: "Create your morning and evening trading routines for maximum performance",
     color: "from-amber-500 to-orange-500",
     bgColor: "from-amber-500/10 to-orange-500/10",
     borderColor: "border-amber-500/30",
   },
   {
-    name: "Trading Cíle",
+    name: "Trading Goals",
     href: "/trading-goals",
     icon: Target,
-    description: "Nastav si konkrétní cíle a sleduj svůj pokrok směrem k úspěchu",
+    description: "Set specific goals and track your progress towards success",
     color: "from-blue-500 to-cyan-500",
     bgColor: "from-blue-500/10 to-cyan-500/10",
     borderColor: "border-blue-500/30",
   },
   {
-    name: "Záznam Chyb",
+    name: "Error Log",
     href: "/fail-log",
     icon: AlertTriangle,
-    description: "Dokumentuj své chyby a poučuj se z nich pro lepší trading",
+    description: "Document your mistakes and learn from them for better trading",
     color: "from-red-500 to-pink-500",
     bgColor: "from-red-500/10 to-pink-500/10",
     borderColor: "border-red-500/30",
   },
   {
-    name: "Odměny",
+    name: "Rewards",
     href: "/rewards",
     icon: Trophy,
-    description: "Motivuj se odměnami za dosažení svých trading cílů",
+    description: "Motivate yourself with rewards for achieving your trading goals",
     color: "from-yellow-500 to-amber-500",
     bgColor: "from-yellow-500/10 to-amber-500/10",
     borderColor: "border-yellow-500/30",
   },
   {
-    name: "Identita Tradera",
+    name: "Trader Identity",
     href: "/trading-identity",
     icon: User,
-    description: "Definuj svou identitu tradera a drž se svých principů",
+    description: "Define your trader identity and stick to your principles",
     color: "from-purple-500 to-pink-500",
     bgColor: "from-purple-500/10 to-pink-500/10",
     borderColor: "border-purple-500/30",
@@ -66,14 +66,14 @@ export default function BonusPage() {
             <div className="inline-flex items-center gap-2 mb-4">
               <Trophy className="w-8 h-8 text-yellow-400" />
               <Badge className="bg-green-500/20 text-green-300 border-green-500/30 px-3 py-1">
-                NOVÉ
+                NEW
               </Badge>
             </div>
             <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-4">
-              Bonusové Nástroje
+              Bonus Tools
             </h1>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-              Rozšířené nástroje pro maximalizaci tvého trading potenciálu a osobního rozvoje
+              Extended tools to maximize your trading potential and personal development
             </p>
           </div>
 
@@ -115,12 +115,12 @@ export default function BonusPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white mb-2">
-                    Proč používat bonusové nástroje?
+                    Why use bonus tools?
                   </h3>
                   <p className="text-gray-400 leading-relaxed">
-                    Tyto nástroje jsou navrženy, aby ti pomohly budovat konzistentní trading rutiny, 
-                    učit se ze svých chyb a udržet motivaci na tvé cestě k úspěšnému tradingu. 
-                    Každý nástroj se zaměřuje na specifickou oblast osobního a profesního rozvoje tradera.
+                    These tools are designed to help you build consistent trading routines, 
+                    learn from your mistakes, and maintain motivation on your journey to successful trading. 
+                    Each tool focuses on a specific area of trader's personal and professional development.
                   </p>
                 </div>
               </div>
