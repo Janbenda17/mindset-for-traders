@@ -704,6 +704,27 @@ export const czechToEnglishMap: Record<string, string> = {
 
   'I felt well prepared for trading.': 'I felt well prepared for trading.',
   'Good day, I stuck to the plan.': 'Good day, I stuck to the plan.',
+
+  // Trading Routines Page - Additional Translations
+  'Trading Routines': 'Trading Routines',
+  'Consistent routines = consistent results': 'Consistent routines = consistent results',
+  'Back': 'Back',
+  'Demo Mode': 'Demo Mode',
+  'In demo mode, changes cannot be saved. Switch to Live mode.': 'In demo mode, changes cannot be saved. Switch to Live mode.',
+  'Item deleted': 'Item deleted',
+  'Enter item name': 'Enter item name',
+  'In demo mode, items cannot be added.': 'In demo mode, items cannot be added.',
+  'Item added': 'Item added',
+  'Saved to history': 'Saved to history',
+  'Custom': 'Custom',
+  'Routine History': 'Routine History',
+  'Last 30 days': 'Last 30 days',
+  'No history yet': 'No history yet',
+  'Start completing routines and see your progress here': 'Start completing routines and see your progress here',
+  'Streak (days)': 'Streak (days)',
+  'Average Completion': 'Average Completion',
+  'Days in History': 'Days in History',
+  'Save to History': 'Save to History',
 }
 
 export function getEnglishText(czechText: string, isEnglishDomain: boolean): string {

@@ -370,8 +370,8 @@ export default function RoutinesPage() {
   const toggleItem = (routineType: "morning" | "evening", itemId: string) => {
     if (!isLiveMode) {
       toast({
-        title: "Demo režim",
-        description: "V demo režimu nelze ukládat změny. Přepni do Live režimu.",
+        title: "Demo Mode",
+        description: "In demo mode, changes cannot be saved. Switch to Live mode.",
         variant: "destructive",
       })
       return
@@ -410,21 +410,21 @@ export default function RoutinesPage() {
     } else {
       setEveningRoutine((prev) => prev.filter((item) => item.id !== itemId))
     }
-    toast({ title: "Položka smazána" })
+    toast({ title: "Item deleted" })
   }
 
   const addCustomItem = () => {
     if (!isLiveMode) {
       toast({
-        title: "Demo režim",
-        description: "V demo režimu nelze přidávat položky.",
+        title: "Demo Mode",
+        description: "In demo mode, items cannot be added.",
         variant: "destructive",
       })
       return
     }
 
     if (!newItem.title.trim()) {
-      toast({ title: "Zadej název položky", variant: "destructive" })
+      toast({ title: "Enter item name", variant: "destructive" })
       return
     }
 
@@ -453,7 +453,7 @@ export default function RoutinesPage() {
       routine: "morning",
     })
     setIsAddDialogOpen(false)
-    toast({ title: "Položka přidána" })
+    toast({ title: "Item added" })
   }
 
   const saveToHistory = () => {
@@ -479,7 +479,7 @@ export default function RoutinesPage() {
       return [...filtered, todayEntry].slice(-30)
     })
 
-    toast({ title: "Uloženo do historie" })
+    toast({ title: "Saved to history" })
   }
 
   const getProgress = (routine: RoutineItem[]) => {
@@ -608,7 +608,7 @@ export default function RoutinesPage() {
                       variant="outline"
                       className="text-[10px] px-1.5 py-0 h-4 border-purple-500/30 text-purple-400"
                     >
-                      Vlastní
+                      Custom
                     </Badge>
                   )}
                 </div>
@@ -656,7 +656,7 @@ export default function RoutinesPage() {
         <Link href="/bonus" className="inline-flex mb-6">
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
             <ArrowLeft className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-400">Zpět</span>
+            <span className="text-sm text-gray-400">Back</span>
           </div>
         </Link>
 
@@ -673,7 +673,7 @@ export default function RoutinesPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Demo režim</Badge>}
+            {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Demo Mode</Badge>}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -799,7 +799,7 @@ export default function RoutinesPage() {
                 <Flame className="w-5 h-5 text-orange-400" />
                 <span className="text-2xl font-bold text-white">{streak}</span>
               </div>
-              <p className="text-xs text-gray-400">Streak (dny)</p>
+                    <p className="text-xs text-gray-400">Streak (days)</p>
             </CardContent>
           </Card>
           <Card className="bg-slate-900/50 border-slate-800">
@@ -808,7 +808,7 @@ export default function RoutinesPage() {
                 <BarChart3 className="w-5 h-5 text-blue-400" />
                 <span className="text-2xl font-bold text-white">{avgCompletion}%</span>
               </div>
-              <p className="text-xs text-gray-400">Průměr plnění</p>
+                    <p className="text-xs text-gray-400">Average Completion</p>
             </CardContent>
           </Card>
           <Card className="bg-slate-900/50 border-slate-800">
@@ -817,7 +817,7 @@ export default function RoutinesPage() {
                 <Calendar className="w-5 h-5 text-purple-400" />
                 <span className="text-2xl font-bold text-white">{history.length}</span>
               </div>
-              <p className="text-xs text-gray-400">Dní v historii</p>
+                    <p className="text-xs text-gray-400">Days in History</p>
             </CardContent>
           </Card>
         </div>
@@ -830,21 +830,21 @@ export default function RoutinesPage() {
               className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400"
             >
               <Sun className="w-4 h-4 mr-2" />
-              Ranní
+              Morning
             </TabsTrigger>
             <TabsTrigger
               value="evening"
               className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400"
             >
               <Moon className="w-4 h-4 mr-2" />
-              Večerní
+              Evening
             </TabsTrigger>
             <TabsTrigger
               value="history"
               className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400"
             >
               <History className="w-4 h-4 mr-2" />
-              Historie
+              History
             </TabsTrigger>
           </TabsList>
 
@@ -873,7 +873,7 @@ export default function RoutinesPage() {
                 {renderRoutineItems(morningRoutine, "morning")}
 
                 <div className="pt-4 border-t border-slate-700/50">
-                  <Label className="text-gray-300 text-sm">Poznámky (volitelné)</Label>
+                  <Label className="text-gray-300 text-sm">Notes (optional)</Label>
                   <Textarea
                     value={morningNotes}
                     onChange={(e) => setMorningNotes(e.target.value)}
@@ -886,7 +886,7 @@ export default function RoutinesPage() {
                 {isLiveMode && (
                   <Button onClick={saveToHistory} className="w-full bg-orange-600 hover:bg-orange-700">
                     <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Uložit do historie
+                    Save to History
                   </Button>
                 )}
               </CardContent>
@@ -918,7 +918,7 @@ export default function RoutinesPage() {
                 {renderRoutineItems(eveningRoutine, "evening")}
 
                 <div className="pt-4 border-t border-slate-700/50">
-                  <Label className="text-gray-300 text-sm">Poznámky (volitelné)</Label>
+                  <Label className="text-gray-300 text-sm">Notes (optional)</Label>
                   <Textarea
                     value={eveningNotes}
                     onChange={(e) => setEveningNotes(e.target.value)}
@@ -931,7 +931,7 @@ export default function RoutinesPage() {
                 {isLiveMode && (
                   <Button onClick={saveToHistory} className="w-full bg-blue-600 hover:bg-blue-700">
                     <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Uložit do historie
+                    Save to History
                   </Button>
                 )}
               </CardContent>
@@ -947,8 +947,8 @@ export default function RoutinesPage() {
                     <History className="w-5 h-5 text-purple-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-white">Historie rutin</CardTitle>
-                    <CardDescription>Posledních 30 dní</CardDescription>
+                    <CardTitle className="text-white">Routine History</CardTitle>
+                    <CardDescription>Last 30 days</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -956,8 +956,8 @@ export default function RoutinesPage() {
                 {history.length === 0 ? (
                   <div className="text-center py-12">
                     <History className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400">Zatím žádná historie</p>
-                    <p className="text-sm text-gray-500 mt-1">Začni plnit rutiny a uvidíš zde svůj pokrok</p>
+                    <p className="text-gray-400">No history yet</p>
+                    <p className="text-sm text-gray-500 mt-1">Start completing routines and see your progress here</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -999,7 +999,7 @@ export default function RoutinesPage() {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <Sun className="w-3 h-3 text-orange-400" />
-                                <span className="text-xs text-gray-400">Ranní</span>
+                                <span className="text-xs text-gray-400">Morning</span>
                                 <span className="text-xs text-white ml-auto">
                                   {day.morningCompleted}/{day.morningTotal}
                                 </span>
@@ -1009,7 +1009,7 @@ export default function RoutinesPage() {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <Moon className="w-3 h-3 text-blue-400" />
-                                <span className="text-xs text-gray-400">Večerní</span>
+                                <span className="text-xs text-gray-400">Evening</span>
                                 <span className="text-xs text-white ml-auto">
                                   {day.eveningCompleted}/{day.eveningTotal}
                                 </span>
@@ -1022,12 +1022,12 @@ export default function RoutinesPage() {
                             <div className="mt-3 pt-3 border-t border-slate-700/50">
                               {day.morningNotes && (
                                 <p className="text-xs text-gray-400">
-                                  <span className="text-orange-400">Ráno:</span> {day.morningNotes}
+                                  <span className="text-orange-400">Morning:</span> {day.morningNotes}
                                 </p>
                               )}
                               {day.eveningNotes && (
                                 <p className="text-xs text-gray-400 mt-1">
-                                  <span className="text-blue-400">Večer:</span> {day.eveningNotes}
+                                  <span className="text-blue-400">Evening:</span> {day.eveningNotes}
                                 </p>
                               )}
                             </div>
