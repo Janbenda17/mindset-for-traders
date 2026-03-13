@@ -109,7 +109,7 @@ interface DailySummary {
 const stageData = [
   {
     id: 1,
-    name: "1",
+    name: "Morning Routine",
     icon: Sun,
     href: "/morning-check",
     color: "from-orange-500 to-rose-500",
@@ -118,7 +118,7 @@ const stageData = [
   },
   {
     id: 2,
-    name: "2",
+    name: "Daily Intention",
     icon: Target,
     href: "/daily-intention",
     color: "from-yellow-500 to-amber-500",
@@ -127,7 +127,7 @@ const stageData = [
   },
   {
     id: 3,
-    name: "3",
+    name: "Trading Plan",
     icon: BookOpen,
     href: "/trading-plan",
     color: "from-cyan-500 to-teal-500",
@@ -136,7 +136,7 @@ const stageData = [
   },
   {
     id: 4,
-    name: "4",
+    name: "Record Trades",
     icon: Clock,
     href: "/record-trades",
     color: "from-blue-500 to-indigo-500",
@@ -145,7 +145,7 @@ const stageData = [
   },
   {
     id: 5,
-    name: "5",
+    name: "Daily Summary",
     icon: Shield,
     href: "/daily-summary",
     color: "from-green-500 to-emerald-500",
@@ -1258,13 +1258,13 @@ export default function DailyTrackerPage() {
                       {isExpanded && (
                         <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs whitespace-nowrap">
                           {isCompleted && (
-                            <span className="text-green-400">✓ Hotovo</span>
+                            <span className="text-green-400">✓ Done</span>
                           )}
                           {isActive && (
-                            <span className="text-yellow-400">→ Aktivní</span>
+                            <span className="text-yellow-400">→ Active</span>
                           )}
                           {!isUnlocked && (
-                            <span className="text-slate-500">🔒 Zamčeno</span>
+                            <span className="text-slate-500">🔒 Locked</span>
                           )}
                         </div>
                       )}
@@ -1302,7 +1302,7 @@ export default function DailyTrackerPage() {
                   className="h-14 px-8 text-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
                 >
                   <ArrowRight className="h-6 w-6 mr-2" />
-                  Pokračovat
+                  Continue
                 </Button>
               </CardContent>
             </Card>
@@ -1312,9 +1312,9 @@ export default function DailyTrackerPage() {
             <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10">
               <CardContent className="p-16 text-center">
                 <Sun className="h-24 w-24 mx-auto mb-6 text-orange-400" />
-                <h3 className="text-3xl font-black mb-4">Začni Dnešní Den!</h3>
+                <h3 className="text-3xl font-black mb-4">Start Your Day!</h3>
                 <p className="text-xl text-muted-foreground mb-8">
-                  Ještě jsi nezačal dnešní Obchodní Den. Začni Ranním Hodnocením!
+                  You haven't started today's Trading Day yet. Start with Morning Routine!
                 </p>
                 <Button
                   onClick={() => router.push("/morning-check")}
@@ -1322,7 +1322,7 @@ export default function DailyTrackerPage() {
                   className="h-16 px-12 text-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600"
                 >
                   <Sun className="h-6 w-6 mr-2" />
-                  Začít Ranní Kontrolu
+                  Start Morning Routine
                 </Button>
               </CardContent>
             </Card>
@@ -1362,7 +1362,7 @@ export default function DailyTrackerPage() {
                               {entry.date === format(new Date(), "yyyy-MM-dd") && (
                                 <Badge className="mt-2 bg-orange-500/20 text-orange-400 border-orange-500/30">
                                   <Target className="h-3 w-3 mr-1" />
-                                  Dnes
+                                  Today
                                 </Badge>
                               )}
                             </div>
@@ -1373,15 +1373,15 @@ export default function DailyTrackerPage() {
                                 <div className={cn("text-4xl font-black", getReadinessColor(entryReadiness))}>
                                   {entryReadiness !== null ? `${entryReadiness}%` : "---"}
                                 </div>
-                                <div className="text-xs text-muted-foreground">připravenost</div>
+                                <div className="text-xs text-muted-foreground">readiness</div>
                               </div>
                             )}
                             <div className="text-center">
                               <div className="text-2xl font-black mb-1">{entry.stagesCompleted}/5</div>
-                              <div className="text-xs text-muted-foreground">fáze</div>
+                              <div className="text-xs text-muted-foreground">stages</div>
                             </div>
                             <Button variant="ghost" size="sm">
-                              {isExpanded ? "Skrýt" : "Zobrazit"}
+                              {isExpanded ? "Hide" : "Show"}
                             </Button>
                           </div>
                         </div>
@@ -1398,9 +1398,9 @@ export default function DailyTrackerPage() {
                                 </div>
                                 <div>
                                   <h3 className="text-2xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                                    Shrnutí Dne
+                                    Daily Summary
                                   </h3>
-                                  <p className="text-sm text-muted-foreground">Fáze 5 - Kompletní přehled dne</p>
+                                  <p className="text-sm text-muted-foreground">Stage 5 - Complete day overview</p>
                                 </div>
                               </div>
 
@@ -1409,7 +1409,7 @@ export default function DailyTrackerPage() {
                                 <div>
                                   <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                     <DollarSign className="h-5 w-5 text-emerald-400" />
-                                    Obchodní Výsledky
+                                    Trading Results
                                   </h4>
                                   <div className="grid md:grid-cols-3 gap-4 mb-4">
                                     <div className="p-4 rounded-xl bg-black/30 border border-white/10">
