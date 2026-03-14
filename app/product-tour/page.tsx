@@ -49,13 +49,13 @@ export default function ProductTourPage() {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-6xl md:text-8xl font-black text-white mb-6 bg-gradient-to-r from-purple-200 via-white to-indigo-200 bg-clip-text text-transparent">
-              Proč MindTrader AI vznikl
+              Why MindTrader AI was created
             </h1>
             <p className="text-2xl md:text-3xl text-purple-100 leading-relaxed">
-              Většina toolů se zaměřuje na <span className="text-white font-bold">"co obchodovat"</span>
+              Most tools focus on <span className="text-white font-bold">"what to trade"</span>
             </p>
             <p className="text-2xl md:text-3xl text-purple-100 leading-relaxed mt-4">
-              Ale problém je v <span className="text-red-400 font-bold">psychice</span>
+              But the problem is in your <span className="text-red-400 font-bold">psychology</span>
             </p>
           </motion.div>
 
@@ -66,9 +66,9 @@ export default function ProductTourPage() {
             className="grid md:grid-cols-3 gap-6 mt-16"
           >
             {[
-              { icon: AlertTriangle, text: 'Impulsivní rozhodnutí', color: 'from-red-500 to-orange-500' },
-              { icon: Target, text: 'Porušování plánu', color: 'from-orange-500 to-yellow-500' },
-              { icon: Brain, text: 'Špatný mentální stav', color: 'from-purple-500 to-pink-500' }
+              { icon: AlertTriangle, text: 'Impulsive decisions', color: 'from-red-500 to-orange-500' },
+              { icon: Target, text: 'Plan violations', color: 'from-orange-500 to-yellow-500' },
+              { icon: Brain, text: 'Poor mental state', color: 'from-purple-500 to-pink-500' }
             ].map((item, i) => (
               <motion.div
                 key={i}
