@@ -16,15 +16,15 @@ export function MindTraderAIPreview() {
         {/* AI Welcome */}
         <div className="flex justify-start">
           <div className="max-w-xs bg-slate-700/50 rounded-lg p-3 border border-purple-400/30 text-white text-xs leading-relaxed">
-            <p className="font-semibold text-purple-300 mb-1">Ahoj! 👋</p>
-            <p>Jsem tvůj AI coach pro trading psychiku. Co tě trápí?</p>
+            <p className="font-semibold text-purple-300 mb-1">Hi! 👋</p>
+            <p>I'm your AI coach for trading psychology. What's bothering you?</p>
           </div>
         </div>
 
         {/* User Message */}
         <div className="flex justify-end">
           <div className="max-w-xs bg-purple-600/70 rounded-lg p-3 text-white text-xs">
-            Měl jsem ztrátu a chci ji vrátit...
+            I had a loss and want to get it back...
           </div>
         </div>
 
@@ -32,14 +32,14 @@ export function MindTraderAIPreview() {
         <div className="flex justify-start">
           <div className="max-w-xs bg-red-900/30 rounded-lg p-3 border border-red-500/30 text-white text-xs leading-relaxed">
             <p className="font-semibold text-red-300 mb-1">⚠️ Revenge Trading!</p>
-            <p className="text-slate-200">STOP! Dej si 15min pauzu. Walk, voda, dýchání. Tvůj mozek dělá špatná rozhodnutí teď.</p>
+            <p className="text-slate-200">STOP! Take a 15 minute break. Walk, drink water, breathe. Your brain is making bad decisions right now.</p>
           </div>
         </div>
 
         {/* User Message */}
         <div className="flex justify-end">
           <div className="max-w-xs bg-purple-600/70 rounded-lg p-3 text-white text-xs">
-            Jak se mám zbavit stresu?
+            How do I relieve stress?
           </div>
         </div>
 
@@ -49,8 +49,8 @@ export function MindTraderAIPreview() {
             <p className="font-semibold text-green-300 mb-2">💚 Stress Relief:</p>
             <ul className="space-y-1 text-slate-200">
               <li>• Box breathing: 4-4-4</li>
-              <li>• 10min bez telefonu</li>
-              <li>• Připomni si: 1 loss ≠ jsi bad trader</li>
+              <li>• 10 min without phone</li>
+              <li>• Remind yourself: 1 loss ≠ you're a bad trader</li>
             </ul>
           </div>
         </div>
@@ -60,7 +60,7 @@ export function MindTraderAIPreview() {
       <div className="flex gap-2 pt-3 border-t border-slate-600/50">
         <input 
           type="text" 
-          placeholder="Ptej se..." 
+          placeholder="Ask..." 
           className="flex-1 bg-slate-700/40 border border-slate-600/50 rounded px-3 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-purple-500/50"
           disabled
         />

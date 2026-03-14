@@ -294,8 +294,8 @@ export default function AccountPage() {
 
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: "Chyba",
-        description: "Soubor je příliš velký (max 5MB)",
+        title: "Error",
+        description: "File is too large (max 5MB)",
         variant: "destructive",
       })
       return
@@ -303,8 +303,8 @@ export default function AccountPage() {
 
     if (!file.type.startsWith("image/")) {
       toast({
-        title: "Chyba",
-        description: "Soubor musí být obrázek",
+        title: "Error",
+        description: "File must be an image",
         variant: "destructive",
       })
       return
@@ -323,8 +323,8 @@ export default function AccountPage() {
       saveUserData(userData)
 
       toast({
-        title: "Úspěch",
-        description: "Fotka byla nahrána",
+        title: "Success",
+        description: "Photo uploaded successfully",
       })
     }
     reader.readAsDataURL(file)
@@ -340,8 +340,8 @@ export default function AccountPage() {
     }
 
     toast({
-      title: "Úspěch",
-        description: "Fotka byla odstraněna",
+      title: "Success",
+        description: "Photo removed successfully",
     })
   }
 
@@ -376,16 +376,16 @@ export default function AccountPage() {
       saveUserData(userData)
 
       toast({
-        title: "Úspěch",
-        description: "Profil byl uložen",
+        title: "Success",
+        description: "Profile saved",
       })
 
       window.dispatchEvent(new Event("settings-updated"))
     } catch (error) {
       console.error("Error saving profile:", error)
       toast({
-        title: "Chyba",
-        description: "Nepodařilo se uložit změny.",
+        title: "Error",
+        description: "Failed to save changes.",
         variant: "destructive",
       })
     } finally {
@@ -411,16 +411,16 @@ export default function AccountPage() {
       saveUserData(userData)
 
       toast({
-        title: "Úspěch",
-        description: "Notifikace uloženy",
+        title: "Success",
+        description: "Notifications saved",
       })
 
       window.dispatchEvent(new Event("settings-updated"))
     } catch (error) {
       console.error("Error saving notifications:", error)
       toast({
-        title: "Chyba",
-        description: "Nepodařilo se uložit nastavení.",
+        title: "Error",
+        description: "Failed to save settings.",
         variant: "destructive",
       })
     }
@@ -444,14 +444,14 @@ export default function AccountPage() {
       saveUserData(userData)
 
       toast({
-        title: "Úspěch",
-        description: "Zabezpečení uloženo",
+        title: "Success",
+        description: "Security settings saved",
       })
     } catch (error) {
       console.error("Error saving security settings:", error)
       toast({
-        title: "Chyba",
-        description: "Nepodařilo se uložit nastavení.",
+        title: "Error",
+        description: "Failed to save settings.",
         variant: "destructive",
       })
     }
@@ -460,8 +460,8 @@ export default function AccountPage() {
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       toast({
-        title: "Chyba",
-        description: "Hesla se neshodují",
+        title: "Error",
+        description: "Passwords do not match",
         variant: "destructive",
       })
       return
@@ -469,8 +469,8 @@ export default function AccountPage() {
 
     if (newPassword.length < 8) {
       toast({
-        title: "Chyba",
-        description: "Heslo musí mít alespoň 8 znaků",
+        title: "Error",
+        description: "Password must be at least 8 characters",
         variant: "destructive",
       })
       return
@@ -488,8 +488,8 @@ export default function AccountPage() {
       }
 
       toast({
-        title: "Úspěch",
-        description: language === "cs" ? "Heslo bylo úspěšně změněno" : "Password changed successfully",
+        title: "Success",
+        description: language === "cs" ? "Password changed successfully" : "Password changed successfully",
       })
 
       setCurrentPassword("")
@@ -504,8 +504,8 @@ export default function AccountPage() {
     } catch (error: any) {
       console.error("Error changing password:", error)
       toast({
-        title: "Chyba",
-        description: error.message || (language === "cs" ? "Nepodařilo se změnit heslo" : "Failed to change password"),
+        title: "Error",
+        description: error.message || "Failed to change password",
         variant: "destructive",
       })
     } finally {
@@ -527,13 +527,13 @@ export default function AccountPage() {
       URL.revokeObjectURL(url)
 
       toast({
-        title: "Úspěch",
-        description: language === "cs" ? "Data byla exportována" : "Data exported",
+        title: "Success",
+        description: "Data exported",
       })
     } catch (error) {
       toast({
-        title: "Chyba",
-        description: language === "cs" ? "Export selhal" : "Export failed",
+        title: "Error",
+        description: "Export failed",
         variant: "destructive",
       })
     }
@@ -542,9 +542,7 @@ export default function AccountPage() {
   const handleDeleteAccount = () => {
     if (
       confirm(
-        language === "cs"
-          ? "Opravdu chcete smazat účet? Tato akce je nevratná."
-          : "Are you sure you want to delete your account? This action cannot be undone.",
+        "Are you sure you want to delete your account? This action cannot be undone.",
       )
     ) {
       clearAllDemoData()
@@ -559,8 +557,8 @@ export default function AccountPage() {
       await upgradeToPremium()
     } catch (error) {
       toast({
-        title: "Chyba",
-        description: language === "cs" ? "Nepodařilo se otevřít platební bránu" : "Failed to open payment gateway",
+        title: "Error",
+        description: "Failed to open payment gateway",
         variant: "destructive",
       })
     } finally {
@@ -585,8 +583,8 @@ export default function AccountPage() {
     } catch (error) {
       console.error("Error opening billing portal:", error)
       toast({
-        title: "Chyba",
-        description: language === "cs" ? "Nepodařilo se otevřít správu předplatného" : "Failed to open subscription management",
+        title: "Error",
+        description: "Failed to open subscription management",
         variant: "destructive",
       })
     }
@@ -594,9 +592,7 @@ export default function AccountPage() {
 
   const handleCancelSubscription = async () => {
     if (
-      !confirm(
-        language === "cs" ? "Opravdu chcete zrušit předplatné?" : "Are you sure you want to cancel your subscription?",
-      )
+      !confirm("Are you sure you want to cancel your subscription?")
     ) {
       return
     }
@@ -605,17 +601,15 @@ export default function AccountPage() {
       const success = await cancelSubscription()
       if (success) {
         toast({
-          title: language === "cs" ? "Předplatné zrušeno" : "Subscription cancelled",
+          title: "Subscription cancelled",
           description:
-            language === "cs"
-              ? "Vaše předplatné bude zrušeno na konci aktuálního období"
-              : "Your subscription will be cancelled at the end of the current period",
+            "Your subscription will be cancelled at the end of the current period",
         })
       }
     } catch (error) {
       toast({
-        title: "Chyba",
-        description: language === "cs" ? "Nepodařilo se zrušit předplatné" : "Failed to cancel subscription",
+        title: "Error",
+        description: "Failed to cancel subscription",
         variant: "destructive",
       })
     } finally {
@@ -624,32 +618,32 @@ export default function AccountPage() {
   }
 
   const premiumFeatures = [
-    "Přepnutí do Live Režimu",
-    "Reálné statistiky a trading",
-    "Pokročilé analytics & grafy",
-    "AI MindTrader kouč (Neomezeně)",
-    "Detailní trading deník s fotkami",
-    "Export dat (CSV, PDF)",
-    "Hloubkové emocionální analýzy",
-    "Risk management kalkulačka",
-    "Prioritní podpora 24/7",
-    "Team Club premium funkce",
+    "Switch to Live Mode",
+    "Real-time statistics and trading",
+    "Advanced analytics & charts",
+    "AI MindTrader coach (Unlimited)",
+    "Detailed trading journal with photos",
+    "Export data (CSV, PDF)",
+    "In-depth emotional analysis",
+    "Risk management calculator",
+    "Priority support 24/7",
+    "Team Club premium features",
   ]
 
   const freeFeatures = [
-    "Pouze Virtuální Režim",
-    "Průzkum rozhraní a funkcí",
-    "Základní deník (Virtuální data)",
-    "Základní mood tracking",
-    "Komunitní přístup",
+    "Virtual Mode Only",
+    "Interface and feature exploration",
+    "Basic journal (Virtual data)",
+    "Basic mood tracking",
+    "Community access",
   ]
 
   const requestNotificationPermission = async () => {
     if (!("Notification" in window)) {
       toast({
-        title: language === "cs" ? "Nepodporováno" : "Not Supported",
+        title: language === "cs" ? "Not Supported" : "Not Supported",
         description:
-          language === "cs" ? "Váš prohlížeč nepodporuje notifikace" : "Your browser doesn't support notifications",
+          language === "cs" ? "Your browser doesn't support notifications" : "Your browser doesn't support notifications",
         variant: "destructive",
       })
       return false
@@ -662,14 +656,14 @@ export default function AccountPage() {
     const permission = await Notification.requestPermission()
     if (permission === "granted") {
       toast({
-        title: language === "cs" ? "Povoleno" : "Enabled",
-        description: language === "cs" ? "Push notifikace byly povoleny" : "Push notifications enabled",
+        title: language === "cs" ? "Enabled" : "Enabled",
+        description: language === "cs" ? "Push notifications enabled" : "Push notifications enabled",
       })
       return true
     } else {
       toast({
-        title: language === "cs" ? "Zamítnuto" : "Denied",
-        description: language === "cs" ? "Push notifikace byly zamítnuty" : "Push notifications denied",
+        title: language === "cs" ? "Denied" : "Denied",
+        description: language === "cs" ? "Push notifications denied" : "Push notifications denied",
         variant: "destructive",
       })
       return false
@@ -701,9 +695,8 @@ export default function AccountPage() {
   const sendTestNotification = async () => {
     if (!("Notification" in window)) {
       toast({
-        title: language === "cs" ? "Nepodporováno" : "Not Supported",
-        description:
-          language === "cs" ? "Váš prohlížeč nepodporuje notifikace" : "Your browser doesn't support notifications",
+        title: "Not Supported",
+        description: "Your browser doesn't support notifications",
         variant: "destructive",
       })
       return
@@ -713,11 +706,8 @@ export default function AccountPage() {
       const permission = await Notification.requestPermission()
       if (permission !== "granted") {
         toast({
-          title: language === "cs" ? "Zamítnuto" : "Denied",
-          description:
-            language === "cs"
-              ? "Povolte notifikace v nastavení prohlížeče"
-              : "Enable notifications in browser settings",
+          title: "Denied",
+          description: "Enable notifications in browser settings",
           variant: "destructive",
         })
         return
@@ -726,19 +716,16 @@ export default function AccountPage() {
 
     if (Notification.permission !== "granted") {
       toast({
-        title: "Chyba",
-        description:
-          language === "cs"
-            ? "Notifikace nejsou povoleny. Povolte je v nastavení prohlížeče."
-            : "Notifications are not allowed. Enable them in browser settings.",
+        title: "Error",
+        description: "Notifications are not allowed. Enable them in browser settings.",
         variant: "destructive",
       })
       return
     }
 
     try {
-      const notification = new Notification(language === "cs" ? "Trader Mindset" : "Trader Mindset", {
-        body: language === "cs" ? "Push notifikace fungují správně!" : "Push notifications are working!",
+      const notification = new Notification("Trader Mindset", {
+        body: "Push notifications are working!",
         icon: "/icon-192.png",
         badge: "/icon-192.png",
         tag: "test-notification",
@@ -751,14 +738,14 @@ export default function AccountPage() {
       }
 
       toast({
-        title: language === "cs" ? "Odesláno" : "Sent",
-        description: language === "cs" ? "Testovací notifikace byla odeslána" : "Test notification was sent",
+        title: "Sent",
+        description: "Test notification was sent",
       })
     } catch (error) {
       console.error("Notification error:", error)
       toast({
-        title: "Chyba",
-        description: language === "cs" ? "Nepodařilo se odeslat notifikaci" : "Failed to send notification",
+        title: "Error",
+        description: "Failed to send notification",
         variant: "destructive",
       })
     }
@@ -776,8 +763,8 @@ export default function AccountPage() {
   const send2FACode = async () => {
     if (!twoFactorContact) {
       toast({
-        title: "Chyba",
-        description: language === "cs" ? "Zadejte kontakt" : "Enter contact",
+        title: "Error",
+        description: "Enter contact",
         variant: "destructive",
       })
       return
@@ -787,8 +774,8 @@ export default function AccountPage() {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(twoFactorContact)) {
         toast({
-          title: "Chyba",
-          description: language === "cs" ? "Zadejte platný email" : "Enter a valid email",
+          title: "Error",
+          description: "Enter a valid email",
           variant: "destructive",
         })
         return
@@ -797,8 +784,8 @@ export default function AccountPage() {
       const phoneRegex = /^[+]?[\d\s-]{9,}$/
       if (!phoneRegex.test(twoFactorContact)) {
         toast({
-          title: "Chyba",
-          description: language === "cs" ? "Zadejte platné telefonní číslo" : "Enter a valid phone number",
+          title: "Error",
+          description: "Enter a valid phone number",
           variant: "destructive",
         })
         return
@@ -816,11 +803,8 @@ export default function AccountPage() {
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
     toast({
-      title: language === "cs" ? "Kód odeslán" : "Code Sent",
-      description:
-        language === "cs"
-          ? `Ověřovací kód byl odeslán na ${twoFactorContact}`
-          : `Verification code sent to ${twoFactorContact}`,
+      title: "Code Sent",
+      description: `Verification code sent to ${twoFactorContact}`,
     })
 
     setSendingCode(false)
@@ -830,8 +814,8 @@ export default function AccountPage() {
   const verify2FACode = () => {
     if (verificationCode !== pendingCode) {
       toast({
-        title: "Chyba",
-        description: language === "cs" ? "Nesprávný kód" : "Invalid code",
+        title: "Error",
+        description: "Invalid code",
         variant: "destructive",
       })
       return
@@ -856,11 +840,8 @@ export default function AccountPage() {
     setShow2FADialog(false)
 
     toast({
-      title: language === "cs" ? "2FA aktivováno" : "2FA Enabled",
-      description:
-        language === "cs"
-          ? "Dvoufaktorové ověření bylo úspěšně aktivováno"
-          : "Two-factor authentication enabled successfully",
+      title: "2FA Enabled",
+      description: "Two-factor authentication enabled successfully",
     })
 
     window.dispatchEvent(new Event("settings-updated"))

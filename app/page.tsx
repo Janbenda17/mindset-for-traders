@@ -44,15 +44,15 @@ export default function HomePage() {
       weekly_review_highlight: 'AI poznatky + akční plán',
       
       fail_log_title: 'Fail Log',
-      fail_log_desc: 'Zaznamenáš všechny své prohry. AI analyzuje jestli to byla strategie, psychika, nebo hloupá chyba. Učíš se z každé ztráty. Fail Log tě učí být lepším traderem - bez stejných chyb znovu. Sem patří všechny prohry. Nechraň si ego.',
-      fail_log_highlight: 'Nechraň si ego - nauč se ze ztrát!',
+      fail_log_desc: 'Record all your losses. AI analyzes whether it was strategy, psychology, or just a stupid mistake. You learn from every loss. Fail Log teaches you to be a better trader - no repeating the same mistakes. All losses go here. Don\'t protect your ego.',
+      fail_log_highlight: 'Don\'t protect your ego - learn from losses!',
       
       team_club_title: 'Team Club',
       team_club_desc: 'Elitní komunita top traderů. Sdílení obchodů, diskuse, accountability. Když selžeš – někdo tě vytáhne. Když vyhraješ – slavíme spolu. Tady se nestydíš za fail. Tady se z něj stáváš lepší.',
       team_club_highlight: 'Komunita > Solo trading',
       
-      cta_text: 'Zbývá ti jen psychika. Strategii už máš. Počítej s tím že prvních 30 dní bude tvrdých. Pak už to popluje na autopilota.',
-      cta_button: 'Začít zdarma - 14 dní',
+      cta_text: 'All that\'s left is psychology. You have the strategy. Expect the first 30 days to be tough. After that it runs on autopilot.',
+      cta_button: 'Start Free - 14 Days',
     },
     en: {
       daily_tracker_title: 'Daily Tracker',
@@ -157,7 +157,7 @@ export default function HomePage() {
       <div className="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-yellow-900/80 to-orange-900/80 backdrop-blur-sm border-b border-yellow-500/30 py-1 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
           <span className="text-yellow-100 text-xs md:text-sm font-medium">
-            {language === 'en' ? '14 days free' : '14 dní zdarma'}
+            {language === 'en' ? '14 days free' : '14 days free'}
           </span>
           <Button 
             onClick={handlePricingClick}

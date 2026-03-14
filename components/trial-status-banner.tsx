@@ -13,14 +13,14 @@ export function TrialStatusBanner() {
       <Zap className='h-4 w-4 text-blue-600' />
       <AlertDescription className="flex items-center justify-between w-full">
         <div className='text-blue-800'>
-          <p className="font-semibold text-sm md:text-base">Vyzkousej naplno zdarma</p>
+          <p className="font-semibold text-sm md:text-base">Try it fully free</p>
         </div>
         <Button 
           onClick={() => router.push('/upgrade')}
           size="sm" 
           className='bg-blue-600 hover:bg-blue-700 text-white'
         >
-          Vyzkousej 14 dní zdarma
+          Try 14 days free
         </Button>
       </AlertDescription>
     </Alert>

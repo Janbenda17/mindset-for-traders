@@ -645,7 +645,7 @@ function generateStudentsFromRealData(trades: any[], journals: any[], moodEntrie
     {
       id: userId,
       name: "Ty",
-      nickname: "Můj Profil",
+      nickname: "My Profile",
       avatar: "/trader-avatar.png",
       traderType: "day-trader",
       readiness: readiness,
@@ -655,12 +655,12 @@ function generateStudentsFromRealData(trades: any[], journals: any[], moodEntrie
       pnlHistory: trades.slice(-7).map((t: any) => t.pnl || t.profitLoss || 0),
       journalStreak: journalStreak,
       status: readiness < 50 ? "critical" : readiness < 70 ? "warning" : "stable",
-      lastActive: "právě teď",
+      lastActive: "just now",
       triggers: [],
       strengths: [],
       weaknesses: [],
       aiDiagnosis:
-        trades.length > 0 ? "Analyzuji tvoje data..." : "Začni tradovat a přidávat záznamy do deníku pro AI analýzu.",
+        trades.length > 0 ? "Analyzing your data..." : "Start trading and adding journal entries for AI analysis.",
       mentorNotes: [],
       todos: [],
     },
@@ -2541,7 +2541,7 @@ function StudentTeamClubView({
                               </div>
                               <h3 className="text-white font-bold text-base mb-1">{challenge.title}</h3>
                               <p className="text-slate-400 text-sm">
-                                {challenge.duration} dní · Zbývá {challenge.daysLeft} dní
+                                {challenge.duration} days · {challenge.daysLeft} days remaining
                               </p>
                             </div>
                             {isAdmin && (

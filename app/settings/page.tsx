@@ -97,7 +97,7 @@ export default function SettingsPage() {
       id: "metatrader",
       name: "MetaTrader 5",
       icon: <TrendingUp className="w-5 h-5" />,
-      description: "Automatický import obchodů",
+      description: "Automatic trade import",
       connected: false,
     },
     {

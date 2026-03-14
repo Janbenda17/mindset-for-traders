@@ -182,15 +182,15 @@ export function PricingPage() {
       "Mood tracking",
     ],
     premium: [
-      "14 dní zdarma - bez placení",
-      "Všechny funkce na svých datech",
-      "Možnost přepnout na Live Mode",
-      "Neomezený obchodní deník",
-      "Pokročilé analýzy a reporty",
+      "14 days free - no payment",
+      "All features on your data",
+      "Option to switch to Live Mode",
+      "Unlimited trading journal",
+      "Advanced analytics and reports",
       "MindTrader AI Pro",
-      "Export dat a reportů",
-      "Pokročilé psychologické metriky",
-      "Risk management nástroje",
+      "Data and report exports",
+      "Advanced psychological metrics",
+      "Risk management tools",
     ],
   }
 
@@ -220,12 +220,12 @@ export function PricingPage() {
             variant="secondary"
             className="mb-6 px-4 py-2 text-sm font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800"
           >
-            🚀 Investujte do své psychologie
+            🚀 Invest in your psychology
           </Badge>
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight">
-            Vyberte si plán pro{" "}
+            Choose your plan for{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-              ziskový trading
+              profitable trading
             </span>
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
