@@ -226,15 +226,6 @@ export default function IntroPage() {
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
-              <Link href="/">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-2 border-purple-400 text-purple-300 hover:bg-purple-900/40 font-bold px-10 py-6 text-lg rounded-xl w-full sm:w-auto"
-                >
-                  Back Home
-                </Button>
-              </Link>
             </div>
           </div>
         </motion.div>
