@@ -1063,7 +1063,7 @@ export default function AccountPage() {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Jméno</Label>
+                    <Label className="text-gray-300">Full Name</Label>
                     <Input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -1071,7 +1071,7 @@ export default function AccountPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Přezdívka</Label>
+                    <Label className="text-gray-300">Nickname</Label>
                     <Input
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}

@@ -104,35 +104,35 @@ export default function SettingsPage() {
       id: "tradingview",
       name: "TradingView",
       icon: <Activity className="w-5 h-5" />,
-      description: "Sync trading zón a screenshotů",
+      description: "Sync trading zones and screenshots",
       connected: false,
     },
     {
       id: "fitbit",
       name: "Fitbit / Oura",
       icon: <Heart className="w-5 h-5" />,
-      description: "Sledování spánku a aktivity",
+      description: "Sleep and activity tracking",
       connected: false,
     },
     {
       id: "google",
       name: "Google Calendar",
       icon: <Calendar className="w-5 h-5" />,
-      description: "Sync s denní rutinou",
+      description: "Sync with daily routine",
       connected: false,
     },
     {
       id: "discord",
       name: "Discord",
       icon: <Bell className="w-5 h-5" />,
-      description: "Notifikace pro mentoring",
+      description: "Mentoring notifications",
       connected: false,
     },
     {
       id: "ai-api",
       name: "MindTrader AI API",
       icon: <Brain className="w-5 h-5" />,
-      description: "Povolení přístupu k datům",
+      description: "Enable data access",
       connected: true,
       status: "active",
     },
@@ -205,13 +205,13 @@ export default function SettingsPage() {
       saveUserData(userData)
 
       toast({
-        title: "✅ Nastavení uloženo",
-        description: "Všechny změny byly úspěšně uloženy.",
+        title: "Settings saved",
+        description: "All changes have been saved successfully.",
       })
     } catch (error) {
       toast({
-        title: "❌ Chyba",
-        description: "Nepodařilo se uložit nastavení.",
+        title: "Error",
+        description: "Failed to save settings.",
         variant: "destructive",
       })
     } finally {
@@ -231,13 +231,13 @@ export default function SettingsPage() {
       URL.revokeObjectURL(url)
 
       toast({
-        title: "✅ Export úspěšný",
-        description: "Data byla stažena.",
+        title: "Export successful",
+        description: "Data downloaded.",
       })
     } catch (error) {
       toast({
-        title: "❌ Chyba",
-        description: "Nepodařilo se exportovat data.",
+        title: "Error",
+        description: "Failed to export data.",
         variant: "destructive",
       })
     }
@@ -257,8 +257,8 @@ export default function SettingsPage() {
     )
 
     toast({
-      title: integrations.find((i) => i.id === id)?.connected ? "🔌 Odpojeno" : "✅ Připojeno",
-      description: `Integrace ${integrations.find((i) => i.id === id)?.name} byla ${integrations.find((i) => i.id === id)?.connected ? "odpojena" : "připojena"}.`,
+      title: integrations.find((i) => i.id === id)?.connected ? "Disconnected" : "Connected",
+      description: `${integrations.find((i) => i.id === id)?.name} was ${integrations.find((i) => i.id === id)?.connected ? "disconnected" : "connected"}.`,
     })
   }
 
@@ -275,12 +275,12 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">⚙️ Nastavení</h1>
-            <p className="text-gray-400">Profesionální kontrolní centrum tvého účtu</p>
+            <h1 className="text-4xl font-bold text-white mb-2">Settings</h1>
+            <p className="text-gray-400">Professional control center for your account</p>
           </div>
           <Button onClick={saveSettings} disabled={loading} className="bg-purple-600 hover:bg-purple-700">
             <CheckCircle className="w-4 h-4 mr-2" />
-            {loading ? "Ukládám..." : "Uložit změny"}
+            {loading ? "Saving..." : "Save Changes"}
           </Button>
         </div>
 
@@ -305,8 +305,8 @@ export default function SettingsPage() {
             {/* Profile Card */}
             <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle className="text-white">👤 Profil</CardTitle>
-                <CardDescription className="text-gray-400">Základní informace o účtu</CardDescription>
+                <CardTitle className="text-white">Profile</CardTitle>
+                <CardDescription className="text-gray-400">Basic account information</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center space-x-6">
@@ -317,9 +317,9 @@ export default function SettingsPage() {
                   <div className="space-y-2">
                     <Button variant="outline" className="bg-transparent border-slate-600 text-white">
                       <Upload className="w-4 h-4 mr-2" />
-                      Změnit fotku
+                      Change photo
                     </Button>
-                    <p className="text-sm text-gray-400">PNG, JPG až 5MB</p>
+                    <p className="text-sm text-gray-400">PNG, JPG up to 5MB</p>
                   </div>
                 </div>
 
@@ -327,7 +327,7 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Jméno</Label>
+                    <Label className="text-gray-300">Full Name</Label>
                     <Input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -336,11 +336,11 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Přezdívka</Label>
+                    <Label className="text-gray-300">Nickname</Label>
                     <Input
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
-                      placeholder="Jak tě má volat AI?"
+                      placeholder="What should AI call you?"
                       className="bg-slate-800 border-slate-700 text-white"
                     />
                   </div>
@@ -373,17 +373,17 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Časové pásmo</Label>
+                    <Label className="text-gray-300">Timezone</Label>
                     <Select value={timezone} onValueChange={setTimezone}>
                       <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-700">
                         <SelectItem value="Europe/Prague" className="text-white">
-                          Praha (CET)
+                          Prague (CET)
                         </SelectItem>
                         <SelectItem value="Europe/London" className="text-white">
-                          Londýn (GMT)
+                          London (GMT)
                         </SelectItem>
                         <SelectItem value="America/New_York" className="text-white">
                           New York (EST)
@@ -393,62 +393,62 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <AIHintBox message="💡 Přezdívka pomáhá AI komunikovat osobněji – trader 'Honza' má lepší engagement než 'User#123'." />
+                <AIHintBox message="Nickname helps AI communicate more personally - trader 'John' has better engagement than 'User#123'." />
               </CardContent>
             </Card>
 
             {/* Security Card */}
             <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle className="text-white">🔐 Zabezpečení</CardTitle>
-                <CardDescription className="text-gray-400">Ochrana tvého účtu</CardDescription>
+                <CardTitle className="text-white">Security</CardTitle>
+                <CardDescription className="text-gray-400">Protect your account</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
                   <div className="space-y-1">
-                    <p className="font-medium text-white">Dvoufaktorové ověření (2FA)</p>
-                    <p className="text-sm text-gray-400">Zvýšená bezpečnost přihlášení</p>
+                    <p className="font-medium text-white">Two-Factor Authentication (2FA)</p>
+                    <p className="text-sm text-gray-400">Enhanced login security</p>
                   </div>
                   <Switch checked={twoFactorEnabled} onCheckedChange={setTwoFactorEnabled} />
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label className="text-gray-300">Změnit heslo</Label>
+                    <Label className="text-gray-300">Change Password</Label>
                     <Button variant="outline" className="bg-transparent border-slate-600 text-white">
                       <Lock className="w-4 h-4 mr-2" />
-                      Změnit
+                      Change
                     </Button>
                   </div>
 
                   <Separator className="bg-slate-700" />
 
                   <div>
-                    <Label className="text-gray-300 mb-2 block">Aktivní relace</Label>
+                    <Label className="text-gray-300 mb-2 block">Active Sessions</Label>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <Smartphone className="w-5 h-5 text-green-400" />
                           <div>
-                            <p className="text-sm font-medium text-white">Aktuální zařízení</p>
-                            <p className="text-xs text-gray-400">Praha, Česko • Právě teď</p>
+                            <p className="text-sm font-medium text-white">Current Device</p>
+                            <p className="text-xs text-gray-400">Prague, Czech Republic • Just now</p>
                           </div>
                         </div>
-                        <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Aktivní</Badge>
+                        <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Active</Badge>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <AIHintBox message="⚠️ AI doporučuje zapnout 2FA – tvůj účet má aktivní mentoring data." />
+                <AIHintBox message="AI recommends enabling 2FA - your account has active mentoring data." />
               </CardContent>
             </Card>
 
             {/* Subscription Card */}
             <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle className="text-white">💳 Předplatné</CardTitle>
-                <CardDescription className="text-gray-400">Správa tvého tarifu</CardDescription>
+                <CardTitle className="text-white">Subscription</CardTitle>
+                <CardDescription className="text-gray-400">Manage your plan</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-6 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg">
@@ -457,7 +457,7 @@ export default function SettingsPage() {
                       {subscription?.plan === "premium" ? "Premium" : "Free"} Plan
                     </h3>
                     <p className="text-gray-400 mt-1">
-                      {subscription?.plan === "premium" ? "€59/měsíc" : "Základní funkce"}
+                      {subscription?.plan === "premium" ? "$49/month" : "Basic features"}
                     </p>
                   </div>
                   <Badge
@@ -467,14 +467,14 @@ export default function SettingsPage() {
                         : "bg-gray-500/20 text-gray-300 border-gray-500/30"
                     }
                   >
-                    {subscription?.plan === "premium" ? "✨ Aktivní" : "📦 Základní"}
+                    {subscription?.plan === "premium" ? "Active" : "Free"}
                   </Badge>
                 </div>
 
                 {subscription?.plan === "free" && (
                   <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
                     <Zap className="w-4 h-4 mr-2" />
-                    Upgradovat na Premium
+                    Upgrade to Premium
                   </Button>
                 )}
               </CardContent>
@@ -486,33 +486,33 @@ export default function SettingsPage() {
             {/* App Preferences */}
             <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle className="text-white">🎨 Vzhled aplikace</CardTitle>
-                <CardDescription className="text-gray-400">Personalizuj si prostředí</CardDescription>
+                <CardTitle className="text-white">Appearance</CardTitle>
+                <CardDescription className="text-gray-400">Personalize your environment</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Jazyk</Label>
+                    <Label className="text-gray-300">Language</Label>
                     <Select value={language} onValueChange={setLanguage}>
                       <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-700">
                         <SelectItem value="cs" className="text-white">
-                          🇨🇿 Čeština
+                          Czech
                         </SelectItem>
                         <SelectItem value="en" className="text-white">
-                          🇬🇧 English
+                          English
                         </SelectItem>
                         <SelectItem value="de" className="text-white">
-                          🇩🇪 Deutsch
+                          German
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Téma</Label>
+                    <Label className="text-gray-300">Theme</Label>
                     <Select value={theme} onValueChange={(value: any) => setTheme(value)}>
                       <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
                         <SelectValue />
@@ -751,15 +751,15 @@ export default function SettingsPage() {
                   Reset AI modelu (nový začátek)
                 </Button>
 
-                <AIHintBox message="💡 Aktuálně používáš empatického psychologa s týdenními reporty. Většina traderů má nejlepší výsledky s tímto nastavením." />
+                <AIHintBox message="Currently you use empathetic coach with weekly reports. Most traders get best results with this setting." />
               </CardContent>
             </Card>
 
             {/* Integrations */}
             <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-xl">
               <CardHeader>
-                <CardTitle className="text-white">🔌 Integrace</CardTitle>
-                <CardDescription className="text-gray-400">Propoj své trading platformy a nástroje</CardDescription>
+                <CardTitle className="text-white">Integrations</CardTitle>
+                <CardDescription className="text-gray-400">Connect your trading platforms and tools</CardDescription>
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-96">
@@ -808,7 +808,7 @@ export default function SettingsPage() {
                   </div>
                 </ScrollArea>
 
-                <AIHintBox message="🔌 MetaTrader integrace automaticky importuje tvé obchody – ušetří ti 80% času s manuálním zapisováním." />
+                <AIHintBox message="MetaTrader integration automatically imports your trades - saves you 80% time on manual entry." />
               </CardContent>
             </Card>
 
@@ -851,7 +851,7 @@ export default function SettingsPage() {
                   <Switch checked={sportTracking} onCheckedChange={setSportTracking} />
                 </div>
 
-                <AIHintBox message="💤 Korelace spánek-výkon: tradeři se 7+ h spánku mají o 23% lepší win rate." />
+                <AIHintBox message="Sleep-performance correlation: traders with 7+ hours of sleep have 23% better win rate." />
               </CardContent>
             </Card>
 
