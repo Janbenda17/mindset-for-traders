@@ -32,8 +32,6 @@ export default function IntroPage() {
   ]
 
   const stats = [
-    { value: "+600", label: "Traders", highlight: "who mapped their mindset" },
-    { value: "1900+", label: "Errors saved", highlight: "from emotional decisions" },
     { value: "-42%", label: "Error reduction", highlight: "on average in 3 months" }
   ]
 
@@ -130,7 +128,7 @@ export default function IntroPage() {
               </li>
               <li className="flex gap-3">
                 <span className="text-green-400">→</span>
-                <span><strong>Community:</strong> 600+ traders with the same goal</span>
+                <span><strong>Community:</strong> Traders with the same goal</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-green-400">→</span>
