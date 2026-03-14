@@ -106,10 +106,10 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
       }
     }),
     weeklyPerformanceData: [
-      { week: "1-7 Led", pnl: 2450, trades: 12, winRate: 58, avgMood: 68, avgReadiness: 72 },
-      { week: "8-14 Led", pnl: -890, trades: 15, winRate: 40, avgMood: 52, avgReadiness: 58 },
-      { week: "15-21 Led", pnl: 3780, trades: 18, winRate: 67, avgMood: 75, avgReadiness: 80 },
-      { week: "22-28 Led", pnl: 1520, trades: 14, winRate: 57, avgMood: 65, avgReadiness: 68 },
+      { week: "1-7 Jan", pnl: 2450, trades: 12, winRate: 58, avgMood: 68, avgReadiness: 72 },
+      { week: "8-14 Jan", pnl: -890, trades: 15, winRate: 40, avgMood: 52, avgReadiness: 58 },
+      { week: "15-21 Jan", pnl: 3780, trades: 18, winRate: 67, avgMood: 75, avgReadiness: 80 },
+      { week: "22-28 Jan", pnl: 1520, trades: 14, winRate: 57, avgMood: 65, avgReadiness: 68 },
     ],
     dailyMoodData: Array.from({ length: 30 }, (_, i) => {
       const date = new Date()
@@ -195,9 +195,9 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
       {
         type: "warning",
         icon: "😩",
-        title: isEn ? "Elevated stress level" : "Zvýšený stress level",
-        description: isEn ? `Your stress (${35}%) is slightly elevated. Error potential is growing.` : `Tvůj stress (${35}%) je mírně zvýšený. Potenciál pro chyby roste.`,
-        action: isEn ? "Implement 5min meditation or short walk after each loss." : "Implementuj 5min meditaci nebo krátkou procházku po každé ztrátě.",
+        title: isEn ? "Elevated stress level" : "Elevated stress level",
+        description: isEn ? `Your stress (${35}%) is slightly elevated. Error potential is growing.` : `Your stress (${35}%) is slightly elevated. Error potential is growing.`,
+        action: isEn ? "Implement 5min meditation or short walk after each loss." : "Implement 5min meditation or short walk after each loss.",
         impact: "high",
       },
     ],
@@ -337,7 +337,7 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
     moodPerformanceData: Array.from({ length: 30 }, (_, i) => ({
       mood: Math.floor(Math.random() * 40) + 50,
       pnl: Math.floor(Math.random() * 2500) - 500,
-      date: `${i + 1}. Led`,
+      date: `${i + 1}. Jan`,
       size: Math.abs(Math.floor(Math.random() * 2500) - 500) / 10 + 5,
     })),
   }
