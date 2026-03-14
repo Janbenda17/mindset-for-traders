@@ -438,7 +438,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-400 mt-0.5">
-                          {profileData.email || "Nastavit email v profilu"}
+                          {profileData.email || "Set email in profile"}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
                           {profileData.isPremium ? (
@@ -447,10 +447,10 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                               Premium
                             </Badge>
                           ) : (
-                            <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">Zdarma</Badge>
+                            <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">Free</Badge>
                           )}
                           <Badge className="bg-blue-600/20 text-blue-400 border-blue-500/30 text-xs">
-                            Úroveň {profileData.level}
+                            Level {profileData.level}
                           </Badge>
                           <Badge className="bg-orange-600/20 text-orange-400 border-orange-500/30 text-xs">
                             {getExperienceLabel(profileData.experienceLevel)}

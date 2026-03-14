@@ -281,7 +281,7 @@ export default function AccountPage() {
       totalTrades: tradeEntries.length,
       winRate: Math.round(winRate),
       totalPnL: Math.round(totalPnL),
-      memberSince: new Date().toLocaleDateString("cs-CZ"),
+      memberSince: new Date().toLocaleDateString("en-US"),
     })
     } catch (error) {
       console.error("[v0] Error loading settings:", error)

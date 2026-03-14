@@ -109,21 +109,21 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
   }
 
   const monthNames = [
-    "Leden",
-    "Únor",
-    "Březen",
-    "Duben",
-    "Květen",
-    "Červen",
-    "Červenec",
-    "Srpen",
-    "Září",
-    "Říjen",
-    "Listopad",
-    "Prosinec",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ]
 
-  const dayNames = ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"]
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
   const monthlyStats = () => {
     const monthEntries = entries.filter((entry) => {
@@ -159,7 +159,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
             <div className="p-4 pb-3">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-gray-400 text-xs font-medium mb-1">P&L měsíce</p>
+                  <p className="text-gray-400 text-xs font-medium mb-1">Monthly P/L</p>
                   <p className={cn("text-3xl font-bold", stats.pnl >= 0 ? "text-emerald-400" : "text-rose-400")}>
                     {stats.pnl >= 0 ? "+" : ""}${stats.pnl}
                   </p>
@@ -210,7 +210,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
             <div className="p-4 pb-3">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-gray-400 text-xs font-medium mb-1">Obchodů</p>
+                  <p className="text-gray-400 text-xs font-medium mb-1">Trades</p>
                   <p className="text-3xl font-bold text-white">{stats.trades}</p>
                 </div>
                 <div className="p-3 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20">
@@ -232,7 +232,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
             <div className="p-4 pb-3">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-gray-400 text-xs font-medium mb-1">Průměr/den</p>
+                  <p className="text-gray-400 text-xs font-medium mb-1">Avg/Day</p>
                   <p className={cn("text-3xl font-bold", stats.avgPerDay >= 0 ? "text-emerald-400" : "text-rose-400")}>
                     {stats.avgPerDay >= 0 ? "+" : ""}${stats.avgPerDay}
                   </p>
@@ -382,19 +382,19 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-700/50 border border-slate-600">
                 <div className="w-4 h-4 rounded bg-gradient-to-br from-emerald-500/30 to-green-500/20" />
-                <span className="text-xs text-gray-300">Ziskový den</span>
+                <span className="text-xs text-gray-300">Profit day</span>
               </div>
               <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-700/50 border border-slate-600">
                 <div className="w-4 h-4 rounded bg-gradient-to-br from-rose-500/30 to-red-500/20" />
-                <span className="text-xs text-gray-300">Ztrátový den</span>
+                <span className="text-xs text-gray-300">Loss day</span>
               </div>
               <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-700/50 border border-slate-600">
                 <div className="w-4 h-4 rounded bg-slate-700/40 border border-purple-500" />
-                <span className="text-xs text-gray-300">Dnešní den</span>
+                <span className="text-xs text-gray-300">Today</span>
               </div>
               <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-700/50 border border-slate-600">
                 <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                <span className="text-xs text-gray-300">Obchod</span>
+                <span className="text-xs text-gray-300">Trade</span>
               </div>
             </div>
           </CardContent>
@@ -405,7 +405,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
           <CardContent className="p-6">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-purple-400" />
-              {selectedDate ? `${selectedDate.getDate()}. ${monthNames[selectedDate.getMonth()]}` : "Vyber den"}
+              {selectedDate ? `${selectedDate.getDate()}. ${monthNames[selectedDate.getMonth()]}` : "Select day"}
             </h3>
             {selectedDate && selectedEntries.length > 0 ? (
               <div className="space-y-3">
@@ -430,10 +430,10 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
                             )}
                           >
                             {entry.type === "trade"
-                              ? "📊 Obchod"
+                              ? "📊 Trade"
                               : entry.type === "behavior"
-                                ? "🧠 Chování"
-                                : "📝 Deník"}
+                                ? "🧠 Behavior"
+                                : "📝 Note"}
                           </Badge>
                           {pnl !== 0 && (
                             <div
