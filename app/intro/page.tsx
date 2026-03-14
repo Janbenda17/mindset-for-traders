@@ -32,7 +32,9 @@ export default function IntroPage() {
   ]
 
   const stats = [
-    { value: "-42%", label: "Error reduction", highlight: "on average in 3 months" }
+    { value: "9/10", label: "of traders have", highlight: "psychological issues" },
+    { value: "↓42%", label: "Less", highlight: "revenge trading" },
+    { value: "24/7", label: "AI analysis of", highlight: "your mindset" }
   ]
 
   return (
