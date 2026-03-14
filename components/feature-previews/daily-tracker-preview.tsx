@@ -18,7 +18,7 @@ export function DailyTrackerPreview() {
         <div className="flex items-center justify-between border-b border-slate-600/50 pb-3">
           <div className="flex items-center gap-2">
             <Sun className="w-5 h-5 text-yellow-400" />
-            <h3 className="text-lg font-bold text-white">Ráno Check-in</h3>
+            <h3 className="text-lg font-bold text-white">Morning Check-in</h3>
           </div>
         </div>
 
@@ -28,7 +28,7 @@ export function DailyTrackerPreview() {
           <div className="bg-slate-700/40 rounded p-3 border border-slate-600/30">
             <div className="flex items-center gap-1.5 mb-2">
               <Moon className="w-4 h-4 text-blue-400 flex-shrink-0" />
-              <span className="text-xs text-slate-300 font-semibold truncate">Spánek</span>
+              <span className="text-xs text-slate-300 font-semibold truncate">Sleep</span>
               <span className="text-xs font-bold text-blue-300 ml-auto">{mockData.sleepHours}h</span>
             </div>
             <Progress value={mockData.sleepHours * 12.5} className="h-1" />
@@ -38,7 +38,7 @@ export function DailyTrackerPreview() {
           <div className="bg-slate-700/40 rounded p-3 border border-slate-600/30">
             <div className="flex items-center gap-1.5 mb-2">
               <Zap className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-              <span className="text-xs text-slate-300 font-semibold truncate">Energie</span>
+              <span className="text-xs text-slate-300 font-semibold truncate">Energy</span>
               <span className="text-xs font-bold text-yellow-300 ml-auto">{mockData.energyLevel}%</span>
             </div>
             <Progress value={mockData.energyLevel} className="h-1" />
@@ -48,7 +48,7 @@ export function DailyTrackerPreview() {
           <div className="bg-slate-700/40 rounded p-3 border border-slate-600/30">
             <div className="flex items-center gap-1.5 mb-2">
               <Heart className="w-4 h-4 text-red-400 flex-shrink-0" />
-              <span className="text-xs text-slate-300 font-semibold truncate">Stres</span>
+              <span className="text-xs text-slate-300 font-semibold truncate">Stress</span>
               <span className="text-xs font-bold text-red-300 ml-auto">{mockData.stressLevel}%</span>
             </div>
             <Progress value={mockData.stressLevel} className="h-1" />
@@ -68,7 +68,7 @@ export function DailyTrackerPreview() {
           <div className="bg-slate-700/40 rounded p-3 border border-slate-600/30">
             <div className="flex items-center gap-1.5 mb-2">
               <Activity className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span className="text-xs text-slate-300 font-semibold truncate">Fyzika</span>
+              <span className="text-xs text-slate-300 font-semibold truncate">Physical</span>
               <span className="text-xs font-bold text-green-300 ml-auto">{mockData.physicalHealth}%</span>
             </div>
             <Progress value={mockData.physicalHealth} className="h-1" />
@@ -78,7 +78,7 @@ export function DailyTrackerPreview() {
           <div className="bg-slate-700/40 rounded p-3 border border-slate-600/30">
             <div className="flex items-center gap-1.5 mb-2">
               <Heart className="w-4 h-4 text-pink-400 flex-shrink-0" />
-              <span className="text-xs text-slate-300 font-semibold truncate">Emoce</span>
+              <span className="text-xs text-slate-300 font-semibold truncate">Emotions</span>
               <span className="text-xs font-bold text-pink-300 ml-auto">{mockData.emotionalState}%</span>
             </div>
             <Progress value={mockData.emotionalState} className="h-1" />

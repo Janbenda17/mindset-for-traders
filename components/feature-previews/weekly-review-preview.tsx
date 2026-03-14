@@ -6,7 +6,7 @@ export function WeeklyReviewPreview() {
     <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 flex flex-col overflow-hidden">
       {/* Header */}
       <h3 className="text-white font-bold text-base mb-3 pb-2 border-b border-slate-600/50">
-        Týdenní Přehled
+        Weekly Review
       </h3>
 
       {/* Stats 2x2 Grid */}
@@ -48,7 +48,7 @@ export function WeeklyReviewPreview() {
             <span className="text-xs text-slate-300 font-semibold">Trades</span>
           </div>
           <p className="text-2xl font-black text-orange-400">3</p>
-          <p className="text-xs text-slate-400 mt-1">kvalitní</p>
+          <p className="text-xs text-slate-400 mt-1">quality</p>
         </div>
       </div>
 
@@ -61,11 +61,11 @@ export function WeeklyReviewPreview() {
         
         <div className="bg-slate-700/30 rounded-lg p-3 border border-purple-400/30 flex-1 overflow-y-auto">
           <p className="text-xs text-slate-200 leading-relaxed">
-            <span className="text-purple-300 font-semibold block mb-1">✓ Výborná disciplína!</span>
-            Žádný revenge trading z 3 tradů. Spánek 7.5h je optimální pro trading.
+            <span className="text-purple-300 font-semibold block mb-1">✓ Excellent discipline!</span>
+            No revenge trading from 3 trades. 7.5h sleep is optimal for trading.
           </p>
           <p className="text-xs text-slate-300 leading-relaxed mt-2">
-            Pokračuj v ranních ochodech - tam máš best edge. Věnuj pozornost stress managementu.
+            Keep morning trades - that's your best edge. Focus on stress management.
           </p>
         </div>
       </div>
