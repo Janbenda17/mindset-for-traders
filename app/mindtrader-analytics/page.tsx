@@ -213,7 +213,7 @@ function generateMindTraderAnalytics(timeframe: "week" | "month" | "quarter") {
   if (currentJournalStreak >= 7) {
     insights.push({
       icon: "📝",
-      text: `${currentJournalStreak} dní journaling streak! Konzistence se vyplácí.`,
+      text: `${currentJournalStreak} days journaling streak! Consistency pays off.`,
       type: "positive",
     })
   }
@@ -224,17 +224,17 @@ function generateMindTraderAnalytics(timeframe: "week" | "month" | "quarter") {
   // Challenges (mock data)
   const challenges = {
     completed: [
-      { name: "7 dní bez revenge tradingu", reward: "+50 XP" },
-      { name: "5 dní journaling streak", reward: "+30 XP" },
+      { name: "7 days without revenge trading", reward: "+50 XP" },
+      { name: "5 days journaling streak", reward: "+30 XP" },
     ],
-    failed: [{ name: "Udržet readiness >75%", reason: "Dosaženo jen 68%" }],
+    failed: [{ name: "Keep readiness >75%", reason: "Only reached 68%" }],
   }
 
   // AI Forecast
   const forecastGrowth = disciplineTrend > 0 ? Math.round(disciplineTrend * 1.5) : Math.round(disciplineTrend * 1.2)
 
   return {
-    period: timeframe === "week" ? "tento týden" : timeframe === "month" ? "tento měsíc" : "toto čtvrtletí",
+    period: timeframe === "week" ? "this week" : timeframe === "month" ? "this month" : "this quarter",
 
     // 1. Dashboard
     dashboard: {

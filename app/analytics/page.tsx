@@ -2393,8 +2393,7 @@ export default function PsychologyAnalyticsPage() {
                             <div>
                               <p className="text-cyan-300 font-semibold text-sm mb-1">💡 Pattern Insight:</p>
                               <p className="text-white text-sm">
-                                Tvůj best trading window je London Open (08:00-12:00). Soustřeď 70% tradů do tohoto
-                                času!
+                                Your best trading window is London Open (08:00-12:00). Focus 70% of your trades on this time!
                               </p>
                             </div>
                           </div>
@@ -2420,7 +2419,7 @@ export default function PsychologyAnalyticsPage() {
                           <TrendingUpDown className="w-5 h-5 text-purple-400" />
                           Winning vs Losing Streaks
                         </CardTitle>
-                        <CardDescription className="text-gray-400">Kdy zvládáš série výher a proher?</CardDescription>
+                        <CardDescription className="text-gray-400">How well do you handle winning and losing streaks?</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
@@ -2430,9 +2429,9 @@ export default function PsychologyAnalyticsPage() {
                               <p className="text-green-300 font-semibold text-sm">Winning Streaks</p>
                             </div>
                             <p className="text-3xl font-bold text-white mb-1">
-                              {analyticsData.streakStats.maxWinStreak} <span className="text-lg text-gray-400">tradů</span>
+                              {analyticsData.streakStats.maxWinStreak} <span className="text-lg text-gray-400">trades</span>
                             </p>
-                            <p className="text-green-400 text-xs">Nejdelší série</p>
+                            <p className="text-green-400 text-xs">Longest Streak</p>
                           </div>
 
                           <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/30">
@@ -2532,7 +2531,7 @@ export default function PsychologyAnalyticsPage() {
                               trades: Math.floor(Math.random() * 30) + 20,
                               avgPnL: Math.floor((Math.random() - 0.1) * 400),
                               color: "green",
-                              recommendation: "BEST - Tvůj top market!",
+                              recommendation: "BEST - Your top market!",
                             },
                             {
                               condition: "Ranging",
@@ -2541,7 +2540,7 @@ export default function PsychologyAnalyticsPage() {
                               trades: Math.floor(Math.random() * 25) + 15,
                               avgPnL: Math.floor((Math.random() - 0.35) * 250),
                               color: "yellow",
-                              recommendation: "Opatrně - nižší edge",
+                              recommendation: "Caution - lower edge",
                             },
                             {
                               condition: "High Volatility",
@@ -2559,7 +2558,7 @@ export default function PsychologyAnalyticsPage() {
                               trades: Math.floor(Math.random() * 15) + 5,
                               avgPnL: Math.floor((Math.random() - 0.45) * 200),
                               color: "slate",
-                              recommendation: "AVOID - nejhorší edge",
+                              recommendation: "AVOID - worst edge",
                             },
                           ].map((market, idx) => (
                             <Card
@@ -2632,7 +2631,7 @@ export default function PsychologyAnalyticsPage() {
                             <div>
                               <p className="text-green-300 font-bold text-base mb-2">🎯 Pattern Recommendation:</p>
                               <p className="text-white text-sm mb-2">
-                                Tuje performance je o 45% lepší v strong trending markets! Nauč se identifikovat trendy
+                                Tuje performance je o 45% lepší v strong trending markets! Learn to identify trends using:
                                 pomocí:
                               </p>
                               <ul className="text-gray-300 text-sm space-y-1 ml-4 list-disc">
@@ -2694,7 +2693,7 @@ export default function PsychologyAnalyticsPage() {
                               <p className="text-center text-gray-200 text-xl leading-relaxed mb-8 max-w-3xl mx-auto">
                                 Implementací těchto psychologických změn můžeš výrazně zlepšit svou mentální kondici a
                                 trading performance.
-                                <span className="text-cyan-300 font-bold"> Zaměř se na mindset = zaměř se na výsledky!</span>{" "}
+                                <span className="text-cyan-300 font-bold">Focus on mindset = focus on results!</span>{" "}
                                 🚀
                               </p>
                             </div>
@@ -2860,7 +2859,7 @@ export default function PsychologyAnalyticsPage() {
                       <p className="text-center text-gray-200 text-xl leading-relaxed mb-8 max-w-3xl mx-auto">
                         Implementací těchto psychologických změn můžeš výrazně zlepšit svou mentální kondici a trading
                         performance.
-                        <span className="text-cyan-300 font-bold">Zaměř se na mindset = zaměř se na výsledky!</span> 🚀
+                        <span className="text-cyan-300 font-bold">Focus on mindset = focus on results!</span> 🚀
                       </p>
 
                       <div className="grid grid-cols-3 gap-4">

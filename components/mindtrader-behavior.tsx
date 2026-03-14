@@ -27,25 +27,25 @@ import {
 } from "recharts"
 
 const radarData = [
-  { subject: "Disciplína", value: 85 || 0 },
-  { subject: "Strategie", value: 92 || 0 },
-  { subject: "Psychologie", value: 65 || 0 },
+  { subject: "Discipline", value: 85 || 0 },
+  { subject: "Strategy", value: 92 || 0 },
+  { subject: "Psychology", value: 65 || 0 },
   { subject: "Risk Mgmt", value: 78 || 0 },
-  { subject: "Zdraví", value: 70 || 0 },
-  { subject: "Rutina", value: 88 || 0 },
+  { subject: "Health", value: 70 || 0 },
+  { subject: "Routine", value: 88 || 0 },
 ]
 
 const mentalPnlData = [
-  { day: "Po", mental: 85 || 0, pnl: 280 || 0, cumPnl: 280 || 0, size: 100 },
-  { day: "Út", mental: 72 || 0, pnl: 150 || 0, cumPnl: 430 || 0, size: 100 },
-  { day: "St", mental: 90 || 0, pnl: 420 || 0, cumPnl: 850 || 0, size: 100 },
-  { day: "Čt", mental: 45 || 0, pnl: -200 || 0, cumPnl: 650 || 0, size: 100 },
-  { day: "Pá", mental: 88 || 0, pnl: 320 || 0, cumPnl: 970 || 0, size: 100 },
-  { day: "Po", mental: 65 || 0, pnl: 90 || 0, cumPnl: 1060 || 0, size: 100 },
-  { day: "Út", mental: 95 || 0, pnl: 480 || 0, cumPnl: 1540 || 0, size: 100 },
-  { day: "St", mental: 40 || 0, pnl: -180 || 0, cumPnl: 1360 || 0, size: 100 },
-  { day: "Čt", mental: 80 || 0, pnl: 210 || 0, cumPnl: 1570 || 0, size: 100 },
-  { day: "Pá", mental: 92 || 0, pnl: 390 || 0, cumPnl: 1960 || 0, size: 100 },
+  { day: "Mon", mental: 85 || 0, pnl: 280 || 0, cumPnl: 280 || 0, size: 100 },
+  { day: "Tue", mental: 72 || 0, pnl: 150 || 0, cumPnl: 430 || 0, size: 100 },
+  { day: "Wed", mental: 90 || 0, pnl: 420 || 0, cumPnl: 850 || 0, size: 100 },
+  { day: "Thu", mental: 45 || 0, pnl: -200 || 0, cumPnl: 650 || 0, size: 100 },
+  { day: "Fri", mental: 88 || 0, pnl: 320 || 0, cumPnl: 970 || 0, size: 100 },
+  { day: "Mon", mental: 65 || 0, pnl: 90 || 0, cumPnl: 1060 || 0, size: 100 },
+  { day: "Tue", mental: 95 || 0, pnl: 480 || 0, cumPnl: 1540 || 0, size: 100 },
+  { day: "Wed", mental: 40 || 0, pnl: -180 || 0, cumPnl: 1360 || 0, size: 100 },
+  { day: "Thu", mental: 80 || 0, pnl: 210 || 0, cumPnl: 1570 || 0, size: 100 },
+  { day: "Fri", mental: 92 || 0, pnl: 390 || 0, cumPnl: 1960 || 0, size: 100 },
 ]
 
 export function MindTraderBehavior() {
@@ -66,7 +66,7 @@ export function MindTraderBehavior() {
   }
 
   const detectedBiasesCount = Object.values(biases).filter(Boolean).length
-  const riskLevel = detectedBiasesCount > 2 ? "Vysoké" : detectedBiasesCount > 0 ? "Střední" : "Nízké"
+  const riskLevel = detectedBiasesCount > 2 ? "High" : detectedBiasesCount > 0 ? "Medium" : "Low"
 
   const readinessScore = Math.round(((flowState[0] || 0) + (100 - (stressLevel[0] || 0))) / 2) || 0
   const focusScore = flowState[0] || 0
@@ -96,7 +96,7 @@ export function MindTraderBehavior() {
                   <Brain className="w-6 h-6" />
                   Psychological Readiness
                 </h2>
-                <p className="text-muted-foreground">Profesionální analýza před-obchodního stavu</p>
+                <p className="text-muted-foreground">Professional analysis of pre-trading state</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -146,8 +146,7 @@ export function MindTraderBehavior() {
           <CardHeader>
             <CardTitle>Mental Performance vs P&L Correlation</CardTitle>
             <CardDescription>
-              Jasná vizualizace: Každý bod představuje jeden obchodní den. Vidíte přímou souvislost mezi stavem mysli a
-              výsledkem.
+              Clear visualization: Each point represents one trading day. You see the direct connection between your mental state and results.
             </CardDescription>
           </CardHeader>
           <CardContent className="h-[480px]">

@@ -130,8 +130,8 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
     tradesByDay[date].push(trade)
   })
 
-  // Psychology metrics - korelace readiness s výsledky
-  // Mapovat morning checks na trades po datech pro zjištění readiness v den obchodu
+  // Psychology metrics - correlation of readiness with results
+  // Map morning checks to trades by date to determine readiness on trading day
   const dailyReadiness: { [key: string]: number } = {}
   morningChecks.forEach((mc) => {
     const date = mc.date || new Date().toISOString().split("T")[0]
@@ -141,7 +141,7 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
   const dailyPnL = Object.entries(tradesByDay).map(([date, dayTrades]) => ({
     date,
     pnl: dayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0),
-    readiness: dailyReadiness[date] || 0, // Brat readiness z morning check pro ten den
+    readiness: dailyReadiness[date] || 0, // Take readiness from morning check for that day
   }))
 
   const bestDay = dailyPnL.reduce((best, day) => (day.pnl > best.pnl ? day : best), { date: "", pnl: 0, readiness: 0 })
@@ -151,7 +151,7 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
     readiness: 0,
   })
 
-  // Zařadit trades podle readiness v den obchodu
+  // Categorize trades by readiness on trading day
   const highReadinessTrades = trades.filter((t) => {
     const date = t.date || t.created_at?.split("T")[0] || new Date().toISOString().split("T")[0]
     return (dailyReadiness[date] || 0) >= 70
@@ -323,8 +323,8 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
     },
     // Added psychological insights and patterns from real data
     psychologicalProfile: [
-      { subject: "Disciplína", A: Math.round(disciplineScore) },
-      { subject: "Konsistence", A: Math.round(consistencyScore) },
+      { subject: "Discipline", A: Math.round(disciplineScore) },
+      { subject: "Consistency", A: Math.round(consistencyScore) },
       { subject: "Stress", A: Math.max(0, 100 - (revengeIncidents * 10)) }, // Lower is better
       { subject: "Readiness", A: Math.round(avgReadiness) },
       { subject: "Mood", A: Math.round(avgMood) },
@@ -338,9 +338,9 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
         ? [{
             type: "success" as const,
             icon: "🎯",
-            title: "Disciplína na vysoké úrovni",
-            description: `Dodržuješ plán v ${Math.round(disciplineScore)}% obchodů - to je excellent!`,
-            action: "Pokračuj v tomto tempu!",
+            title: "Discipline at High Level",
+            description: `You follow the plan in ${Math.round(disciplineScore)}% of trades - that's excellent!`,
+            action: "Keep up this pace!",
             impact: "positive" as const,
           }]
         : []),
@@ -348,9 +348,9 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
         ? [{
             type: "critical" as const,
             icon: "😤",
-            title: "KRITICKÝ: Revenge trading pattern!",
-            description: `Detekovali jsme ${revengeIncidents} incidentů revenge tradingu. Toto tě stojí peníze.`,
-            action: "STOP: Po 2 ztrátách za sebou si vezmi pauzu 30 minut!",
+            title: "CRITICAL: Revenge trading pattern!",
+            description: `We detected ${revengeIncidents} revenge trading incidents. This costs you money.`,
+            action: "STOP: After 2 consecutive losses, take a 30 minute break!",
             impact: "critical" as const,
           }]
         : []),
@@ -358,9 +358,9 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
         ? [{
             type: "warning" as const,
             icon: "😴",
-            title: "Nízká readiness = horší výsledky",
-            description: `Tvá průměrná readiness je ${Math.round(avgReadiness)}%. Měla by být min. 70%+`,
-            action: "Zlepši sleep a morning routine - je to kritické!",
+            title: "Low readiness = worse results",
+            description: `Your average readiness is ${Math.round(avgReadiness)}%. Should be 70%+`,
+            action: "Improve sleep and morning routine - it's critical!",
             impact: "high" as const,
           }]
         : []),
@@ -375,20 +375,20 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
             impact: -(revengeIncidents * 1000),
             color: "#dc2626",
             severity: revengeIncidents > 3 ? "critical" : "high",
-            description: "Pokus rychle získat zpět ztráty - nejnebezpečnější pattern",
-            recommendation: "STOP trading po 2 ztrátách. Minimálně 30min pauza.",
+            description: "Attempt to quickly recover losses - most dangerous pattern",
+            recommendation: "STOP trading after 2 losses. Minimum 30min break.",
           }]
         : []),
       ...(disciplineScore < 50
         ? [{
-            name: "Nedisciplínovaný obchod",
+            name: "Undisciplined Trading",
             emoji: "📉",
             count: Math.round((1 - disciplineScore / 100) * trades.length),
             impact: -(Math.round((1 - disciplineScore / 100) * trades.length * 500)),
             color: "#f97316",
             severity: "high",
-            description: "Trading bez dodržení svého plánu",
-            recommendation: "Vytvoř a drž se svého trading plánu!",
+            description: "Trading without following your plan",
+            recommendation: "Create and stick to your trading plan!",
           }]
         : []),
     ],
@@ -397,30 +397,30 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
         ? [{
             priority: "critical" as const,
             emoji: "⛔",
-            title: "ZASTAVIT REVENGE TRADING",
-            description: `Detekováno ${revengeIncidents} incidentů. Systém pro zastavení:`,
-            action: "Po 2 ztrátách: PAUSE 30min, zavolej si, ujasni si hlavu.",
-            impact: `Potenciální úspora: $${revengeIncidents * 2000}`,
+            title: "STOP REVENGE TRADING",
+            description: `${revengeIncidents} incidents detected. System to stop:`,
+            action: "After 2 losses: PAUSE 30min, take a walk, clear your head.",
+            impact: `Potential savings: $${revengeIncidents * 2000}`,
           }]
         : []),
       ...(disciplineScore < 70
         ? [{
             priority: "high" as const,
             emoji: "🎯",
-            title: "Vylepš disciplínu",
-            description: `Plán dodržuješ jen v ${Math.round(disciplineScore)}%. Target: 85%+`,
-            action: "Každý obchod musí splňovat 3 kritéria tvého plánu.",
-            impact: "Potenciální nárůst: +15% P&L",
+            title: "Improve Discipline",
+            description: `You follow the plan in ${Math.round(disciplineScore)}% of trades. Target: 85%+`,
+            action: "Every trade must meet 3 criteria of your plan.",
+            impact: "Potential increase: +15% P&L",
           }]
         : []),
       ...(avgReadiness < 70
         ? [{
             priority: "high" as const,
             emoji: "😴",
-            title: "Zlepši morning readiness",
-            description: `Tvá readiness: ${Math.round(avgReadiness)}%. Měla by být 75%+`,
-            action: "Spánek 7-8h, ranní rutina 20min (meditace/cvičení)",
-            impact: "Korelace: +readiness = +lepší rozhodování",
+            title: "Improve Morning Readiness",
+            description: `Your readiness: ${Math.round(avgReadiness)}%. Should be 75%+`,
+            action: "Sleep 7-8h, morning routine 20min (meditation/exercise)",
+            impact: "Correlation: +readiness = +better decisions",
           }]
         : []),
     ],
