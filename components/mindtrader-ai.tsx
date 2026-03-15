@@ -242,29 +242,29 @@ const MindTraderAI = () => {
   // AI Personalities
   const personalities = {
     calm: {
-      name: isEn ? "🧘 Calm Mentor" : "🧘 Calm Mentor",
-      description: isEn ? "Calm, empathetic, helps with emotions" : "Calm, empathetic, helps with emotions",
+      name: isEn ? "🧘 Calm Mentor" : "🧘 Klidný Mentor",
+      description: isEn ? "Calm, empathetic, helps with emotions" : "Klidný, empatický, pomáhá s emocemi",
       icon: Heart,
       color: "from-blue-500 to-indigo-500",
       locked: false,
     },
     strict: {
-      name: isEn ? "⚡ Strict Coach" : "⚡ Strict Coach",
-      description: isEn ? "Direct, pushes for discipline" : "Direct, pushes for discipline",
+      name: isEn ? "⚡ Strict Coach" : "⚡ Přísný Kouč",
+      description: isEn ? "Direct, pushes for discipline" : "Přímý, tlačí na disciplínu",
       icon: Target,
       color: "from-red-500 to-orange-500",
       locked: false,
     },
     analytical: {
-      name: isEn ? "🧩 Analytical Advisor" : "🧩 Analytical Advisor",
-      description: isEn ? "Data-driven, scientific" : "Data-driven, scientific",
+      name: isEn ? "🧩 Analytical Advisor" : "🧩 Analytický Poradce",
+      description: isEn ? "Data-driven, scientific" : "Datově řízený, vědecký",
       icon: BarChart2,
       color: "from-purple-500 to-pink-500",
       locked: false,
     },
     balanced: {
-      name: isEn ? "💬 Balanced Support" : "💬 Balanced Support",
-      description: isEn ? "Mix of empathy and performance" : "Mix of empathy and performance",
+      name: isEn ? "💬 Balanced Support" : "💬 Vyvážená Podpora",
+      description: isEn ? "Mix of empathy and performance" : "Mix empatie a výkonu",
       icon: Zap,
       color: "from-green-500 to-emerald-500",
       locked: false,
@@ -275,26 +275,26 @@ const MindTraderAI = () => {
   const modes = {
     mind: {
       name: isEn ? "🧠 MIND AI" : "🧠 MIND AI",
-      description: isEn ? "Your psychological partner - instant emotional help" : "Your psychological partner - instant emotional help",
+      description: isEn ? "Your psychological partner - instant emotional help" : "Tvůj psychologický partner - okamžitá emoční pomoc",
       icon: Brain,
       locked: false,
     },
     analytics: {
       name: isEn ? "📊 ANALYTICS AI" : "📊 ANALYTICS AI",
-      description: isEn ? "Smart performance analysis - data-driven insights" : "Smart performance analysis - data-driven insights",
+      description: isEn ? "Smart performance analysis - data-driven insights" : "Chytrá analýza výkonu - datové poznatky",
       icon: BarChart2,
       locked: false,
     },
     coach: {
       name: isEn ? "🎯 COACH AI" : "🎯 COACH AI",
-      description: isEn ? "Personal discipline and growth trainer" : "Personal discipline and growth trainer",
+      description: isEn ? "Personal discipline and growth trainer" : "Osobní trenér disciplíny a růstu",
       icon: Target,
       locked: false,
     },
   }
 
   // Quick Prompts
-  const quickPrompts = [
+  const quickPrompts = isEn ? [
     "How to recover from loss?",
     "How to handle fear?",
     "Help me with discipline",
@@ -303,12 +303,23 @@ const MindTraderAI = () => {
     "How to improve risk management?",
     "How to strengthen mental power?",
     "How to avoid revenge trading?",
+  ] : [
+    "Jak se zotavit po ztrátě?",
+    "Jak zvládat strach?",
+    "Pomoz mi s disciplínou",
+    "Porušil jsem plán, co dělat?",
+    "Jak překonat FOMO?",
+    "Jak zlepšit risk management?",
+    "Jak posílit mentální sílu?",
+    "Jak se vyhnout revenge tradingu?",
   ]
 
   // Initialize with welcome message
   useEffect(() => {
     if (messages.length === 0) {
-      const welcomeMessage = `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Complete morning check"}\n\nWhat's bothering you? How can I help?`
+      const welcomeMessage = isEn
+        ? `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Complete morning check"}\n\nWhat's bothering you? How can I help?`
+        : `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nVidím tvá data a jsem tady abych ti pomohl s psychologií tradingu.\n\nTvoje aktuální readiness skóre: ${currentReadiness !== null ? currentReadiness + "%" : "Vyplň ranní kontrolu"}\n\nCo tě trápí? Jak ti mohu pomoci?`
 
       setMessages([
         {
@@ -322,7 +333,9 @@ const MindTraderAI = () => {
   }, [currentReadiness, isEn])
 
   const triggerRecoveryMode = () => {
-    const recoveryMessage = `🚨 Recovery Mode active - AI detected a difficult day. Follow recommendations below.\n\n1. **Breathing** - 4-7-8 technique (4s inhale, 7s hold, 8s exhale)\n2. **Journal** - What are you feeling right now?\n3. **Rest** - Minimum 2 hours break\n4. **Return** - When readiness >70%\n\nBest trade = no trade. 💪`
+    const recoveryMessage = isEn
+      ? `🚨 Recovery Mode active - AI detected a difficult day. Follow recommendations below.\n\n1. **Breathing** - 4-7-8 technique (4s inhale, 7s hold, 8s exhale)\n2. **Journal** - What are you feeling right now?\n3. **Rest** - Minimum 2 hours break\n4. **Return** - When readiness >70%\n\nBest trade = no trade. 💪`
+      : `🚨 Recovery Mode aktivní - AI detekovalo těžký den. Postupuj podle doporučení níže.\n\n1. **Dýchání** - technika 4-7-8 (nadech 4s, držení 7s, výdech 8s)\n2. **Deník** - Co teď cítíš?\n3. **Odpočinek** - Minimálně 2 hodiny pauza\n4. **Návrat** - Až bude readiness >70%\n\nNejlepší trade = žádný trade. 💪`
 
     const recoveryMsg = {
       role: "assistant",
@@ -393,7 +406,8 @@ const MindTraderAI = () => {
           message: messageContent,
           personality: aiPersonality,
           mode: aiMode,
-          isVirtualMode: !isLiveMode, // Add flag to indicate virtual mode
+          language: language,
+          isVirtualMode: !isLiveMode,
           context: {
             mood: currentMorningCheck?.sleep_quality || 5,
             stress: currentMorningCheck?.stress_level || 5,
