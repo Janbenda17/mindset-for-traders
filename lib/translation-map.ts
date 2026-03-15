@@ -90,6 +90,16 @@ export const czechToEnglishMap: Record<string, string> = {
   'Dodržuj plán - uzavírej pozice na TP nebo trailing stop, ne emocionálně.': 'Follow the plan - close positions at TP or trailing stop, not emotionally.',
   'Overconfidence': 'Overconfidence',
   'Po sérii výher trading s příliš velkým rizikem': 'Trading with too much risk after a series of wins',
+  
+  // Psychological states
+  'Zdravý': 'Healthy',
+  'Problém': 'Problem',
+  'Nostabilní': 'Unstable',
+  
+  // Psychologická Analytics
+  'Psychologická Analytics': 'Psychological Analytics',
+  'Korelace psychiky s výsledky': 'Psychology to Results Correlation',
+  
   'Performance podle Trading Session': 'Performance by Trading Session',
   'When do you trade best during the day?': 'When do you trade best during the day?',
   'Asian Session': 'Asian Session',
