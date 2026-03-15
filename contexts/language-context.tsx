@@ -90,6 +90,9 @@ const translations = {
 
     // Navigation & Pages
     "nav.overview": "Přehled",
+    "nav.mindset": "Mindset",
+    "nav.patterns": "Vzorce",
+    "nav.actionPlan": "Plán akcí",
     "nav.feed": "Feed",
     "nav.challenges": "Výzvy",
     "nav.studyBuddies": "Study Buddies",
@@ -196,6 +199,9 @@ const translations = {
 
     // Navigation & Pages
     "nav.overview": "Overview",
+    "nav.mindset": "Mindset",
+    "nav.patterns": "Patterns",
+    "nav.actionPlan": "Action Plan",
     "nav.feed": "Feed",
     "nav.challenges": "Challenges",
     "nav.studyBuddies": "Study Buddies",

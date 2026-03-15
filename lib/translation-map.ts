@@ -1,5 +1,14 @@
 // Complete Czech to English translations mapping
 export const czechToEnglishMap: Record<string, string> = {
+  // Navigation tabs
+  'Přehled': 'Overview',
+  'Mindset': 'Mindset',
+  'Vzorce': 'Patterns',
+  'Plán akcí': 'Action Plan',
+  'Overview': 'Overview',
+  'Patterns': 'Patterns',
+  'Action Plan': 'Action Plan',
+
   // Dashboard
   'Nástěnka': 'Dashboard',
   'Celkový kapitál': 'Total Capital',
