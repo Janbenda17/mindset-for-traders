@@ -64,6 +64,30 @@ interface MorningCheckData {
   emotionalState: number
 }
 
+const EMOTIONS_BEFORE_CS = [
+  "Klidný",
+  "Sebejistý",
+  "Nervózní",
+  "Nejistý",
+  "Nadšený",
+  "Unavený",
+  "Soustředěný",
+  "Rozrušený",
+]
+
+const EMOTIONS_DURING_CS = [
+  "Klidný",
+  "Vystresovaný",
+  "Sebejistý",
+  "Panikující",
+  "Soustředěný",
+  "Rozptýlený",
+  "Trpělivý",
+  "Netrpělivý",
+]
+
+const EMOTIONS_AFTER_CS = ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Poučený", "Naštvaný", "Klidný", "Euforický"]
+
 const EMOTIONS_BEFORE = [
   "Calm",
   "Confident",
@@ -99,57 +123,59 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
   const isEn = language === "en"
   
   const txt = {
-    recordTrade: isEn ? "Record Trade" : "Record Trade",
-    recordDesc: isEn ? "Record your trades and get deeper insights into your trading" : "Record your trades and get deeper insights into your trading",
-    todayOverview: isEn ? "Today's Overview" : "Today's Overview",
-    totalTrades: isEn ? "Total Trades" : "Total Trades",
-    currencyPair: isEn ? "Currency Pair" : "Currency Pair",
-    direction: isEn ? "Direction" : "Direction",
-    openingDate: isEn ? "Opening Date" : "Opening Date",
-    openingTime: isEn ? "Opening Time" : "Opening Time",
-    closingDate: isEn ? "Closing Date" : "Closing Date",
-    closingTime: isEn ? "Closing Time" : "Closing Time",
+    recordTrade: isEn ? "Record Trade" : "Zaznamenat obchod",
+    recordDesc: isEn ? "Record your trades and get deeper insights into your trading" : "Zaznamenej své obchody a získej hlubší přehled o svém tradingu",
+    todayOverview: isEn ? "Today's Overview" : "Přehled dneška",
+    totalTrades: isEn ? "Total Trades" : "Celkem obchodů",
+    currencyPair: isEn ? "Currency Pair" : "Měnový pár",
+    direction: isEn ? "Direction" : "Směr",
+    openingDate: isEn ? "Opening Date" : "Datum otevření",
+    openingTime: isEn ? "Opening Time" : "Čas otevření",
+    closingDate: isEn ? "Closing Date" : "Datum zavření",
+    closingTime: isEn ? "Closing Time" : "Čas zavření",
     session: isEn ? "Session" : "Session",
-    tradeType: isEn ? "Trade Type" : "Trade Type",
+    tradeType: isEn ? "Trade Type" : "Typ obchodu",
     pips: isEn ? "Pips" : "Pips",
     pnlDollar: isEn ? "P&L ($)" : "P&L ($)",
-    psychAnalysis: isEn ? "Psychological Analysis" : "Psychological Analysis",
-    confidenceBefore: isEn ? "Confidence Before" : "Confidence Before",
-    stress: isEn ? "Stress" : "Stress",
-    choose: isEn ? "Choose..." : "Choose...",
-    entryReason: isEn ? "Entry Reason" : "Entry Reason",
-    whyEntered: isEn ? "Why did you enter this trade?" : "Why did you enter this trade?",
-    exitReason: isEn ? "Exit Reason" : "Exit Reason",
-    whyExited: isEn ? "Why did you exit this trade?" : "Why did you exit this trade?",
-    detailedAnalysis: isEn ? "Detailed Analysis" : "Detailed Analysis",
-    whatHappened: isEn ? "What happened? What worked? What didn't?" : "What happened? What worked? What didn't?",
-    followedPlan: isEn ? "I followed the plan" : "I followed the plan",
-    exitedEarly: isEn ? "I exited too early" : "I exited too early",
-    missedOpportunity: isEn ? "I missed the opportunity due to hesitation" : "I missed the opportunity due to hesitation",
+    psychAnalysis: isEn ? "Psychological Analysis" : "Psychologická analýza",
+    confidenceBefore: isEn ? "Confidence Before" : "Sebejistota před",
+    stress: isEn ? "Stress" : "Stres",
+    choose: isEn ? "Choose..." : "Vyber...",
+    entryReason: isEn ? "Entry Reason" : "Důvod vstupu",
+    whyEntered: isEn ? "Why did you enter this trade?" : "Proč jsi vstoupil do tohoto obchodu?",
+    exitReason: isEn ? "Exit Reason" : "Důvod výstupu",
+    whyExited: isEn ? "Why did you exit this trade?" : "Proč jsi vystoupil z tohoto obchodu?",
+    detailedAnalysis: isEn ? "Detailed Analysis" : "Detailní analýza",
+    whatHappened: isEn ? "What happened? What worked? What didn't?" : "Co se stalo? Co fungovalo? Co ne?",
+    followedPlan: isEn ? "I followed the plan" : "Dodržel jsem plán",
+    exitedEarly: isEn ? "I exited too early" : "Vystoupil jsem příliš brzy",
+    missedOpportunity: isEn ? "I missed the opportunity due to hesitation" : "Propásl jsem příležitost kvůli váhání",
     revengeTrade: isEn ? "Revenge trade" : "Revenge trade",
-    behaviorDesc: isEn ? "Behavior Description" : "Behavior Description",
-    howBehaved: isEn ? "How did you behave during the trade?" : "How did you behave during the trade?",
-    tags: isEn ? "Tags (comma-separated)" : "Tags (comma-separated)",
-    notes: isEn ? "Notes" : "Notes",
-    additionalNotes: isEn ? "Additional notes..." : "Additional notes...",
-    saveTrade: isEn ? "Save Trade" : "Save Trade",
-    noTradesYet: isEn ? "No trades today" : "No trades today",
-    noTradesDesc: isEn ? "No trades today - stage 4 closed" : "No trades today - stage 4 closed",
-    currencyPairLabel: isEn ? "Currency Pair" : "Currency Pair",
+    behaviorDesc: isEn ? "Behavior Description" : "Popis chování",
+    howBehaved: isEn ? "How did you behave during the trade?" : "Jak jsi se choval během obchodu?",
+    tags: isEn ? "Tags (comma-separated)" : "Štítky (oddělené čárkou)",
+    notes: isEn ? "Notes" : "Poznámky",
+    additionalNotes: isEn ? "Additional notes..." : "Doplňující poznámky...",
+    saveTrade: isEn ? "Save Trade" : "Uložit obchod",
+    noTradesYet: isEn ? "No trades today" : "Dnes žádné obchody",
+    noTradesDesc: isEn ? "No trades today - stage 4 closed" : "Dnes žádné obchody - fáze 4 uzavřena",
+    currencyPairLabel: isEn ? "Currency Pair" : "Měnový pár",
     sessionLabel: isEn ? "Session" : "Session",
-    tradeTypeLabel: isEn ? "Trade Type" : "Trade Type",
-    notAvailable: isEn ? "Not available" : "Not available",
-    confidence: isEn ? "Confidence (before)" : "Confidence (before)",
-    entryReasonLabel: isEn ? "Entry Reason" : "Entry Reason",
-    exitReasonLabel: isEn ? "Exit Reason" : "Exit Reason",
-    detailedAnalysisLabel: isEn ? "Detailed Analysis" : "Detailed Analysis",
-    earlyExit: isEn ? "⚠ Early exit" : "⚠ Early exit",
-    plannedExit: isEn ? "✓ Planned exit" : "✓ Planned exit",
+    tradeTypeLabel: isEn ? "Trade Type" : "Typ obchodu",
+    notAvailable: isEn ? "Not available" : "Není k dispozici",
+    confidence: isEn ? "Confidence (before)" : "Sebejistota (před)",
+    entryReasonLabel: isEn ? "Entry Reason" : "Důvod vstupu",
+    exitReasonLabel: isEn ? "Exit Reason" : "Důvod výstupu",
+    detailedAnalysisLabel: isEn ? "Detailed Analysis" : "Detailní analýza",
+    earlyExit: isEn ? "⚠ Early exit" : "⚠ Předčasný výstup",
+    plannedExit: isEn ? "✓ Planned exit" : "✓ Plánovaný výstup",
     revengeTradeIndicator: isEn ? "✗ Revenge trade" : "✗ Revenge trade",
-    noRevenge: isEn ? "✓ No revenge" : "✓ No revenge",
-    behaviorDescLabel: isEn ? "Behavior Description" : "Behavior Description",
-    tagsLabel: isEn ? "Tags" : "Tags",
-    notesLabel: isEn ? "Notes" : "Notes",
+    noRevenge: isEn ? "✓ No revenge" : "✓ Bez revenge",
+    behaviorDescLabel: isEn ? "Behavior Description" : "Popis chování",
+    tagsLabel: isEn ? "Tags" : "Štítky",
+    notesLabel: isEn ? "Notes" : "Poznámky",
+    allRecords: isEn ? "All Records" : "Všechny záznamy",
+    select: isEn ? "Select" : "Vybrat",
   }
   const [isLoading, setIsLoading] = useState(false)
   const [todayPlan, setTodayPlan] = useState<TradingPlanData | null>(null)
@@ -626,14 +652,14 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Emotion Before</label>
+                <label className="text-sm text-gray-300 block mb-2">{isEn ? "Emotion Before" : "Emoce před"}</label>
                 <select
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   value={currentTrade.emotionBefore}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, emotionBefore: e.target.value })}
                 >
-                  <option value="">Vyber...</option>
-                  {EMOTIONS_BEFORE.map((emotion) => (
+                  <option value="">{isEn ? "Select..." : "Vyber..."}</option>
+                  {(isEn ? EMOTIONS_BEFORE : EMOTIONS_BEFORE_CS).map((emotion) => (
                     <option key={emotion} value={emotion}>
                       {emotion}
                     </option>
@@ -641,14 +667,14 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Emotion During</label>
+                <label className="text-sm text-gray-300 block mb-2">{isEn ? "Emotion During" : "Emoce během"}</label>
                 <select
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   value={currentTrade.emotionDuring}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, emotionDuring: e.target.value })}
                 >
-                  <option value="">Select...</option>
-                  {EMOTIONS_DURING.map((emotion) => (
+                  <option value="">{isEn ? "Select..." : "Vyber..."}</option>
+                  {(isEn ? EMOTIONS_DURING : EMOTIONS_DURING_CS).map((emotion) => (
                     <option key={emotion} value={emotion}>
                       {emotion}
                     </option>
@@ -656,14 +682,14 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Emotion After</label>
+                <label className="text-sm text-gray-300 block mb-2">{isEn ? "Emotion After" : "Emoce po"}</label>
                 <select
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   value={currentTrade.emotionAfter}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, emotionAfter: e.target.value })}
                 >
-                  <option value="">Select...</option>
-                  {EMOTIONS_AFTER.map((emotion) => (
+                  <option value="">{isEn ? "Select..." : "Vyber..."}</option>
+                  {(isEn ? EMOTIONS_AFTER : EMOTIONS_AFTER_CS).map((emotion) => (
                     <option key={emotion} value={emotion}>
                       {emotion}
                     </option>
@@ -674,33 +700,33 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Entry Reason</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.entryReason}</label>
                 <textarea
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   rows={2}
                   value={currentTrade.entryReason}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, entryReason: e.target.value })}
-                  placeholder="Proč jsi vstoupil do tohoto tradu?"
+                  placeholder={txt.whyEntered}
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Exit Reason</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.exitReason}</label>
                 <textarea
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   rows={2}
                   value={currentTrade.exitReason}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, exitReason: e.target.value })}
-                  placeholder="Proč jsi z tradu vystoupil?"
+                  placeholder={txt.whyExited}
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Detailed Analysis</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.detailedAnalysis}</label>
                 <textarea
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   rows={3}
                   value={currentTrade.detailedAnalysis}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, detailedAnalysis: e.target.value })}
-                  placeholder="Co se stalo? Co fungovalo? Co ne?"
+                  placeholder={txt.whatHappened}
                 />
               </div>
             </div>
@@ -713,7 +739,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                   onChange={(e) => setCurrentTrade({ ...currentTrade, followedPlan: e.target.checked })}
                   className="rounded"
                 />
-                    I followed the plan
+                {txt.followedPlan}
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-300">
                 <input
@@ -722,7 +748,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                   onChange={(e) => setCurrentTrade({ ...currentTrade, exitedEarly: e.target.checked })}
                   className="rounded"
                 />
-                Vystoupil jsem příliš brzy
+                {txt.exitedEarly}
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-300">
                 <input
@@ -731,7 +757,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                   onChange={(e) => setCurrentTrade({ ...currentTrade, missedDueToHesitation: e.target.checked })}
                   className="rounded"
                 />
-                    I missed the opportunity due to hesitation
+                {txt.missedOpportunity}
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-300">
                 <input
@@ -740,24 +766,24 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                   onChange={(e) => setCurrentTrade({ ...currentTrade, revengeTrade: e.target.checked })}
                   className="rounded"
                 />
-                Revenge trade
+                {txt.revengeTrade}
               </label>
             </div>
 
             <div>
-                <label className="text-sm text-gray-300 block mb-2">Behavior Description</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.behaviorDesc}</label>
               <textarea
                 className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                 rows={2}
                 value={currentTrade.behaviorDescription}
                 onChange={(e) => setCurrentTrade({ ...currentTrade, behaviorDescription: e.target.value })}
-                placeholder="Jak ses během tradu choval?"
+                placeholder={txt.howBehaved}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Tags (comma-separated)</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.tags}</label>
                 <input
                   type="text"
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
@@ -767,7 +793,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Notes</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.notes}</label>
                 <input
                   type="text"
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"

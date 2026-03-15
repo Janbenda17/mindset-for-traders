@@ -5,56 +5,70 @@ import { Badge } from "@/components/ui/badge"
 import { Sun, Target, AlertTriangle, Trophy, User, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { TopNavigation } from "@/components/top-navigation"
-
-const bonusItems = [
-  {
-    name: "Trading Routines",
-    href: "/routines",
-    icon: Sun,
-    description: "Create your morning and evening trading routines for maximum performance",
-    color: "from-amber-500 to-orange-500",
-    bgColor: "from-amber-500/10 to-orange-500/10",
-    borderColor: "border-amber-500/30",
-  },
-  {
-    name: "Trading Goals",
-    href: "/trading-goals",
-    icon: Target,
-    description: "Set specific goals and track your progress towards success",
-    color: "from-blue-500 to-cyan-500",
-    bgColor: "from-blue-500/10 to-cyan-500/10",
-    borderColor: "border-blue-500/30",
-  },
-  {
-    name: "Error Log",
-    href: "/fail-log",
-    icon: AlertTriangle,
-    description: "Document your mistakes and learn from them for better trading",
-    color: "from-red-500 to-pink-500",
-    bgColor: "from-red-500/10 to-pink-500/10",
-    borderColor: "border-red-500/30",
-  },
-  {
-    name: "Rewards",
-    href: "/rewards",
-    icon: Trophy,
-    description: "Motivate yourself with rewards for achieving your trading goals",
-    color: "from-yellow-500 to-amber-500",
-    bgColor: "from-yellow-500/10 to-amber-500/10",
-    borderColor: "border-yellow-500/30",
-  },
-  {
-    name: "Trader Identity",
-    href: "/trading-identity",
-    icon: User,
-    description: "Define your trader identity and stick to your principles",
-    color: "from-purple-500 to-pink-500",
-    bgColor: "from-purple-500/10 to-pink-500/10",
-    borderColor: "border-purple-500/30",
-  },
-]
+import { useLanguage } from "@/contexts/language-context"
 
 export default function BonusPage() {
+  const { language } = useLanguage()
+  const isEn = language === "en"
+
+  const bonusItems = [
+    {
+      name: isEn ? "Trading Routines" : "Obchodní rutiny",
+      href: "/routines",
+      icon: Sun,
+      description: isEn
+        ? "Create your morning and evening trading routines for maximum performance"
+        : "Vytvoř si ranní a večerní obchodní rutiny pro maximální výkon",
+      color: "from-amber-500 to-orange-500",
+      bgColor: "from-amber-500/10 to-orange-500/10",
+      borderColor: "border-amber-500/30",
+    },
+    {
+      name: isEn ? "Trading Goals" : "Obchodní cíle",
+      href: "/trading-goals",
+      icon: Target,
+      description: isEn
+        ? "Set specific goals and track your progress towards success"
+        : "Nastav si konkrétní cíle a sleduj svůj pokrok k úspěchu",
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "from-blue-500/10 to-cyan-500/10",
+      borderColor: "border-blue-500/30",
+    },
+    {
+      name: isEn ? "Error Log" : "Deník chyb",
+      href: "/fail-log",
+      icon: AlertTriangle,
+      description: isEn
+        ? "Document your mistakes and learn from them for better trading"
+        : "Dokumentuj své chyby a uč se z nich pro lepší obchodování",
+      color: "from-red-500 to-pink-500",
+      bgColor: "from-red-500/10 to-pink-500/10",
+      borderColor: "border-red-500/30",
+    },
+    {
+      name: isEn ? "Rewards" : "Odměny",
+      href: "/rewards",
+      icon: Trophy,
+      description: isEn
+        ? "Motivate yourself with rewards for achieving your trading goals"
+        : "Motivuj se odměnami za dosažení svých obchodních cílů",
+      color: "from-yellow-500 to-amber-500",
+      bgColor: "from-yellow-500/10 to-amber-500/10",
+      borderColor: "border-yellow-500/30",
+    },
+    {
+      name: isEn ? "Trader Identity" : "Identita obchodníka",
+      href: "/trading-identity",
+      icon: User,
+      description: isEn
+        ? "Define your trader identity and stick to your principles"
+        : "Definuj svou identitu obchodníka a drž se svých principů",
+      color: "from-purple-500 to-pink-500",
+      bgColor: "from-purple-500/10 to-pink-500/10",
+      borderColor: "border-purple-500/30",
+    },
+  ]
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <TopNavigation />
@@ -66,14 +80,16 @@ export default function BonusPage() {
             <div className="inline-flex items-center gap-2 mb-4">
               <Trophy className="w-8 h-8 text-yellow-400" />
               <Badge className="bg-green-500/20 text-green-300 border-green-500/30 px-3 py-1">
-                NEW
+                {isEn ? "NEW" : "NOVÉ"}
               </Badge>
             </div>
             <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-4">
-              Bonus Tools
+              {isEn ? "Bonus Tools" : "Bonusové nástroje"}
             </h1>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-              Extended tools to maximize your trading potential and personal development
+              {isEn
+                ? "Extended tools to maximize your trading potential and personal development"
+                : "Rozšířené nástroje pro maximalizaci vašeho obchodního potenciálu a osobního rozvoje"}
             </p>
           </div>
 
@@ -99,7 +115,6 @@ export default function BonusPage() {
                     </p>
                   </CardContent>
                   
-                  {/* Gradient overlay on hover */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
                 </Card>
               </Link>
@@ -115,12 +130,12 @@ export default function BonusPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white mb-2">
-                    Why use bonus tools?
+                    {isEn ? "Why use bonus tools?" : "Proč používat bonusové nástroje?"}
                   </h3>
                   <p className="text-gray-400 leading-relaxed">
-                    These tools are designed to help you build consistent trading routines, 
-                    learn from your mistakes, and maintain motivation on your journey to successful trading. 
-                    Each tool focuses on a specific area of trader's personal and professional development.
+                    {isEn
+                      ? "These tools are designed to help you build consistent trading routines, learn from your mistakes, and maintain motivation on your journey to successful trading. Each tool focuses on a specific area of trader's personal and professional development."
+                      : "Tyto nástroje jsou navrženy tak, aby ti pomohly budovat konzistentní obchodní rutiny, učit se ze svých chyb a udržovat motivaci na cestě k úspěšnému obchodování. Každý nástroj se zaměřuje na konkrétní oblast osobního a profesního rozvoje obchodníka."}
                   </p>
                 </div>
               </div>

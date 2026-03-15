@@ -42,6 +42,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useLiveMode } from "@/contexts/live-mode-context"
 import { useData } from "@/contexts/data-context"
 import { supabase } from "@/lib/supabase/browser"
+import { useLanguage } from "@/contexts/language-context"
 
 interface MorningCheckData {
   id: string
@@ -109,7 +110,7 @@ interface DailySummary {
 const stageData = [
   {
     id: 1,
-    name: "Morning Routine",
+    name: isEn ? "Morning Routine" : "Ranní rutina",
     icon: Sun,
     href: "/morning-check",
     color: "from-orange-500 to-rose-500",
@@ -118,7 +119,7 @@ const stageData = [
   },
   {
     id: 2,
-    name: "Daily Intention",
+    name: isEn ? "Daily Intention" : "Denní záměr",
     icon: Target,
     href: "/daily-intention",
     color: "from-yellow-500 to-amber-500",
@@ -127,7 +128,7 @@ const stageData = [
   },
   {
     id: 3,
-    name: "Trading Plan",
+    name: isEn ? "Trading Plan" : "Obchodní plán",
     icon: BookOpen,
     href: "/trading-plan",
     color: "from-cyan-500 to-teal-500",
@@ -136,7 +137,7 @@ const stageData = [
   },
   {
     id: 4,
-    name: "Record Trades",
+    name: isEn ? "Record Trades" : "Zaznamenat obchody",
     icon: Clock,
     href: "/record-trades",
     color: "from-blue-500 to-indigo-500",
@@ -145,7 +146,7 @@ const stageData = [
   },
   {
     id: 5,
-    name: "Daily Summary",
+    name: isEn ? "Daily Summary" : "Denní shrnutí",
     icon: Shield,
     href: "/daily-summary",
     color: "from-green-500 to-emerald-500",
@@ -166,6 +167,8 @@ export default function DailyTrackerPage() {
 
   const { tradingStyle, config } = useTradingStyle()
   const { user, authReady } = useAuth()
+  const { language } = useLanguage()
+  const isEn = language === "en"
 
   const [entries, setEntries] = useState<DailySummary[]>([])
   const [activeTab, setActiveTab] = useState("today")
@@ -463,12 +466,13 @@ export default function DailyTrackerPage() {
     const currentReadinessScore = score ?? todayEntry?.overallScore ?? null
 
     if (!currentMorningCheck || currentReadinessScore === undefined || currentReadinessScore === null) {
-      return "Complete Morning Routine for detailed AI analysis of your psychological state and trading readiness."
+      return isEn
+        ? "Complete Morning Routine for detailed AI analysis of your psychological state and trading readiness."
+        : "Dokončete Ranní rutinu pro detailní AI analýzu vašeho psychického stavu a připravenosti k obchodování."
     }
 
     let insight = ""
     
-    // Analyze key metrics with more nuanced interpretation
     const sleep = currentMorningCheck.sleepQuality
     const sleepHours = currentMorningCheck.sleepHours || 0
     const stress = currentMorningCheck.stressLevel
@@ -478,52 +482,67 @@ export default function DailyTrackerPage() {
     const physical = currentMorningCheck.physicalHealth || 5
     const readiness = currentReadinessScore
     
-    // Calculate additional scores for deeper insights
     const emotionalResilience = (mood + energy) / 2
     const cognitiveCapacity = (focus + sleep) / 2
     const stressBuffer = Math.max(0, 10 - stress)
     
-    // Generate detailed, personalized insight with trading psychology focus
     if (readiness >= 80) {
-      insight = `🟢 PEAK PERFORMANCE! Readiness ${readiness}%. `
+      insight = isEn
+        ? `🟢 PEAK PERFORMANCE! Readiness ${readiness}%. `
+        : `🟢 VRCHOLNÝ VÝKON! Připravenost ${readiness}%. `
       if (focus >= 8 && stress <= 3) {
-        insight += `Rare combination: high focus (${focus}/10) + low stress (${stress}/10) = IDEAL conditions for complex decision-making. Your working memory is at maximum. `
+        insight += isEn
+          ? `Rare combination: high focus (${focus}/10) + low stress (${stress}/10) = IDEAL conditions for complex decision-making. `
+          : `Vzácná kombinace: vysoké soustředění (${focus}/10) + nízký stres (${stress}/10) = IDEÁLNÍ podmínky pro složité rozhodování. `
       }
       if (emotionalResilience >= 8) {
-        insight += `Emotional resilience (${Math.round(emotionalResilience)}/10) means you won't act irrationally after a loss. `
+        insight += isEn
+          ? `Emotional resilience (${Math.round(emotionalResilience)}/10) means you won't act irrationally after a loss. `
+          : `Emocionální odolnost (${Math.round(emotionalResilience)}/10) znamená, že nebudeš jednat iracionálně po ztrátě. `
       }
-      if (physical >= 8) {
-        insight += `Physical health (${physical}/10) increases your ability to sustain focus without fatigue. `
-      }
-      insight += `🎯 TRADING STRATEGY: Target A+ and B+ patterns with strict risk management. CAUTION: High confidence can lead to overconfidence - if you have a winning streak, INCREASE discipline, not position size.`
+      insight += isEn
+        ? `🎯 TRADING STRATEGY: Target A+ and B+ patterns. CAUTION: High confidence can lead to overconfidence.`
+        : `🎯 STRATEGIE: Cíl na A+ a B+ vzory. POZOR: Vysoké sebevědomí může vést k přílišné sebedůvěře.`
     } else if (readiness >= 70) {
-      insight = `🟡 GOOD DAY, BUT NOT IDEAL. Readiness ${readiness}%. `
+      insight = isEn
+        ? `🟡 GOOD DAY, BUT NOT IDEAL. Readiness ${readiness}%. `
+        : `🟡 DOBRÝ DEN, ALE NE IDEÁLNÍ. Připravenost ${readiness}%. `
       if (stress >= 6 && focus <= 6) {
-        insight += `Combination of elevated stress (${stress}/10) and poor focus (${focus}/10) means signals will blend with noise. Error risk is ~30% higher. `
+        insight += isEn
+          ? `Elevated stress (${stress}/10) and poor focus (${focus}/10) means error risk is ~30% higher. `
+          : `Zvýšený stres (${stress}/10) a slabé soustředění (${focus}/10) zvyšuje riziko chyb o ~30%. `
       } else if (sleep < 6) {
-        insight += `Sleep was insufficient (${sleepHours}h, score ${sleep}/10) - your neurochemicals for decision-making aren't fully prepared. `
-      } else if (energy < 6) {
-        insight += `Low energy (${energy}/10) = reduced stamina. After 1-2 hours your decision quality will decline. `
+        insight += isEn
+          ? `Sleep was insufficient (${sleepHours}h, score ${sleep}/10) - your neurochemicals aren't fully prepared. `
+          : `Spánek byl nedostatečný (${sleepHours}h, skóre ${sleep}/10) - neurochemikálie pro rozhodování nejsou plně připraveny. `
       }
-      insight += `💡 TACTIC: Trade only high-probability patterns. Consider 50-75% of normal position size. If you have 2 losses in a row, end the session.`
+      insight += isEn
+        ? `💡 TACTIC: Trade only high-probability patterns. Consider 50-75% of normal position size.`
+        : `💡 TAKTIKA: Obchoduj jen vzory s vysokou pravděpodobností. Zvažte 50-75% normální velikosti pozice.`
     } else if (readiness >= 60) {
-      insight = `🟠 SERIOUS WARNING. Readiness only ${readiness}%. `
+      insight = isEn
+        ? `🟠 SERIOUS WARNING. Readiness only ${readiness}%. `
+        : `🟠 VÁŽNÉ VAROVÁNÍ. Připravenost pouze ${readiness}%. `
       if (stress >= 7) {
-        insight += `CRITICAL: Stress (${stress}/10) is high + low readiness. Your amygdala is overactive - this leads to "fight or flight" behavior, which in trading means REVENGE TRADING. `
+        insight += isEn
+          ? `CRITICAL: Stress (${stress}/10) is high - leads to revenge trading risk. `
+          : `KRITICKY: Stres (${stress}/10) je vysoký - hrozí revenge trading. `
       }
-      if (mood <= 4) {
-        insight += `Negative mood (${mood}/10) increases loss aversion. You'll hold losses without following your trading plan. `
-      }
-      insight += `⚠️ RECOMMENDATION: Paper trading session or demo to refresh skills. If you MUST trade: One-third position size, stop loss -0.5% of account (not 2%).`
+      insight += isEn
+        ? `⚠️ RECOMMENDATION: Paper trading or demo. If you MUST trade: one-third position size.`
+        : `⚠️ DOPORUČENÍ: Paper trading nebo demo. Pokud MUSÍŠ obchodovat: třetina normální pozice.`
     } else {
-      insight = `🛑 TRADING TODAY IS NOT SUITABLE. Readiness ${readiness}% is critically low. `
+      insight = isEn
+        ? `🛑 TRADING TODAY IS NOT SUITABLE. Readiness ${readiness}% is critically low. `
+        : `🛑 DNES NENÍ VHODNÉ OBCHODOVAT. Připravenost ${readiness}% je kriticky nízká. `
       if (stress >= 8 && energy <= 3) {
-        insight += `Combination of maximum stress (${stress}/10) and minimum energy (${energy}/10) = your brain is in survival mode. The prefrontal cortex (responsible decision-making) is offline. `
+        insight += isEn
+          ? `Maximum stress (${stress}/10) and minimum energy (${energy}/10) = brain in survival mode. `
+          : `Maximální stres (${stress}/10) a minimální energie (${energy}/10) = mozek v survival módu. `
       }
-      if (mood <= 2) {
-        insight += `Depressive state (${mood}/10) = irrational risk tolerance and unwillingness to learn. Risk management won't be followed. `
-      }
-      insight += `💚 ACTION: Self-care is more important than trading now. 30min walk, healthy meal, meditation. Come back to trading tomorrow with fresh energy.`
+      insight += isEn
+        ? `💚 ACTION: Self-care is more important than trading now. 30min walk, healthy meal, meditation.`
+        : `💚 AKCE: Péče o sebe je teď důležitější než trading. 30min procházka, zdravé jídlo, meditace.`
     }
     
     return insight
@@ -533,9 +552,9 @@ export default function DailyTrackerPage() {
   const generateTradingDecision = (morningCheckData?: any, score?: number | null) => {
     if (!morningCheckData || score === undefined || score === null) {
       return {
-        message: "Complete Morning Routine for AI analysis.",
-        tips: ["Start with Morning Routine"],
-        details: ["Morning Routine Not Completed"],
+        message: isEn ? "Complete Morning Routine for AI analysis." : "Dokončete Ranní rutinu pro AI analýzu.",
+        tips: [isEn ? "Start with Morning Routine" : "Začněte s Ranní rutinou"],
+        details: [isEn ? "Morning Routine Not Completed" : "Ranní rutina nedokončena"],
       }
     }
 
@@ -553,85 +572,89 @@ export default function DailyTrackerPage() {
     const lowStressMetric = morningCheckData.stressLevel <= 3
     const highEnergy = morningCheckData.energyLevel >= 8
     
-    // Additional metrics for better advice
     const physicalHealth = morningCheckData.physicalHealth || 5
     const exercised = morningCheckData.exercised || false
     const meditatedToday = morningCheckData.meditationTime > 0 || false
 
     let positiveNote = ""
-    if (highFocus) positiveNote = "✓ Focus is excellent - that's your greatest strength!"
-    else if (lowStressMetric) positiveNote = "✓ At least you have low stress - your mind is at peace."
-    else if (highEnergy) positiveNote = "✓ Energy at high levels - physically you're ready."
-    else if (meditatedToday) positiveNote = "✓ You meditated today - this will help with emotional control."
-    else if (exercised) positiveNote = "✓ Exercise today = better brain function and self-control."
+    if (highFocus) positiveNote = isEn ? "✓ Focus is excellent - that's your greatest strength!" : "✓ Soustředění je vynikající - to je tvá největší síla!"
+    else if (lowStressMetric) positiveNote = isEn ? "✓ At least you have low stress - your mind is at peace." : "✓ Aspoň máš nízký stres - tvá mysl je v klidu."
+    else if (highEnergy) positiveNote = isEn ? "✓ Energy at high levels - physically you're ready." : "✓ Energie na vysoké úrovni - fyzicky jsi připraven/a."
+    else if (meditatedToday) positiveNote = isEn ? "✓ You meditated today - this will help with emotional control." : "✓ Dnes jsi meditoval/a - to pomůže s emoční kontrolou."
+    else if (exercised) positiveNote = isEn ? "✓ Exercise today = better brain function and self-control." : "✓ Cvičení dnes = lepší funkce mozku a sebeovládání."
 
     if (poorSleep) {
-      message = `⚠️ CRITICAL: Only ${morningCheckData.sleepHours}h sleep (quality ${morningCheckData.sleepQuality}/10). Sleep deprivation = -30-40% in decision-making ability.`
+      message = isEn
+        ? `⚠️ CRITICAL: Only ${morningCheckData.sleepHours}h sleep (quality ${morningCheckData.sleepQuality}/10). Sleep deprivation = -30-40% in decision-making ability.`
+        : `⚠️ KRITICKÝ: Pouze ${morningCheckData.sleepHours}h spánku (kvalita ${morningCheckData.sleepQuality}/10). Nedostatek spánku = -30-40% ve schopnosti rozhodování.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Sleep: ${morningCheckData.sleepHours}h, quality ${morningCheckData.sleepQuality}/10 - INSUFFICIENT`)
-      tips.push("🧘 Therapy: 15-20min meditation or relaxation (improves focus and calms mind)")
-      tips.push("📊 Risk: Max 2 trades at 25% position or SKIP trading today")
-      tips.push("🎯 Bonus: If you must trade, trade only patterns from your trading plan (no impulsive)")
-      tips.push("⏰ Priority: Evening sleep = best investment for tomorrow")
+      details.push(isEn ? `Sleep: ${morningCheckData.sleepHours}h, quality ${morningCheckData.sleepQuality}/10 - INSUFFICIENT` : `Spánek: ${morningCheckData.sleepHours}h, kvalita ${morningCheckData.sleepQuality}/10 - NEDOSTATEČNÝ`)
+      tips.push(isEn ? "🧘 Therapy: 15-20min meditation or relaxation" : "🧘 Terapie: 15-20min meditace nebo relaxace")
+      tips.push(isEn ? "📊 Risk: Max 2 trades at 25% position or SKIP trading today" : "📊 Riziko: Max 2 obchody na 25% pozici nebo VYNECHEJ obchodování dnes")
+      tips.push(isEn ? "⏰ Priority: Evening sleep = best investment for tomorrow" : "⏰ Priorita: Večerní spánek = nejlepší investice pro zítřek")
     } else if (highStress) {
-      message = `🔥 WARNING: Stress ${morningCheckData.stressLevel}/10 is high. Active amygdala = impulsive decisions, revenge trading risk.`
+      message = isEn
+        ? `🔥 WARNING: Stress ${morningCheckData.stressLevel}/10 is high. Active amygdala = impulsive decisions, revenge trading risk.`
+        : `🔥 VAROVÁNÍ: Stres ${morningCheckData.stressLevel}/10 je vysoký. Aktivní amygdala = impulzivní rozhodnutí, riziko revenge tradingu.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Stress: ${morningCheckData.stressLevel}/10 - ELEVATED`)
-      tips.push("🧘‍♀️ Therapy: 20min progressive relaxation or cold shower (resets nervous system)")
-      tips.push("📉 Risk Management: -50% position size, double-check every entry, emotion journal")
-      tips.push("⏸️ Breaks: Every 30min take a 5-10min break (walk, water, fresh air)")
-      tips.push("🎖️ Trigger avoidance: Avoid news/social media during trading")
+      details.push(isEn ? `Stress: ${morningCheckData.stressLevel}/10 - ELEVATED` : `Stres: ${morningCheckData.stressLevel}/10 - ZVÝŠENÝ`)
+      tips.push(isEn ? "🧘‍♀️ Therapy: 20min progressive relaxation or cold shower" : "🧘‍♀️ Terapie: 20min progresivní relaxace nebo studená sprcha")
+      tips.push(isEn ? "📉 Risk Management: -50% position size, double-check every entry" : "📉 Řízení rizik: -50% velikost pozice, dvojitá kontrola každého vstupu")
+      tips.push(isEn ? "⏸️ Breaks: Every 30min take a 5-10min break" : "⏸️ Přestávky: Každých 30min si dej 5-10min pauzu")
     } else if (lowFocus) {
-      message = `😴 PROBLEM: Focus only ${morningCheckData.focus}/10 means high risk of missing signals and false entries (+40% errors).`
+      message = isEn
+        ? `😴 PROBLEM: Focus only ${morningCheckData.focus}/10 means high risk of missing signals and false entries (+40% errors).`
+        : `😴 PROBLÉM: Soustředění pouze ${morningCheckData.focus}/10 znamená vysoké riziko přehlédnutí signálů a falešných vstupů (+40% chyb).`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Focus: ${morningCheckData.focus}/10 - LOW`)
-      tips.push("🚀 Root solution: 15-20min outdoors in nature (sunlight resets attention)")
-      tips.push("🎯 Optimization: Simple setup - only 1-2 pairs, 1 timeframe, 1 strategy")
-      tips.push("⚙️ Tools: Forest app on phone, white noise (no music)")
-      tips.push("☕ Quick boost: Consider small caffeine dose (but not after lunch - disrupts sleep)")
+      details.push(isEn ? `Focus: ${morningCheckData.focus}/10 - LOW` : `Soustředění: ${morningCheckData.focus}/10 - NÍZKÉ`)
+      tips.push(isEn ? "🚀 Root solution: 15-20min outdoors in nature (sunlight resets attention)" : "🚀 Kořenové řešení: 15-20min venku v přírodě (sluneční světlo resetuje pozornost)")
+      tips.push(isEn ? "🎯 Optimization: Simple setup - only 1-2 pairs, 1 timeframe, 1 strategy" : "🎯 Optimalizace: Jednoduchý setup - pouze 1-2 páry, 1 časový rámec, 1 strategie")
     } else if (lowEnergy) {
-      message = `🔋 LOW ENERGY: ${morningCheckData.energyLevel}/10 energy. Afternoon fatigue = worse decisions, cutting losses = difficult.`
+      message = isEn
+        ? `🔋 LOW ENERGY: ${morningCheckData.energyLevel}/10 energy. Afternoon fatigue = worse decisions.`
+        : `🔋 NÍZKÁ ENERGIE: ${morningCheckData.energyLevel}/10 energie. Odpolední únava = horší rozhodnutí.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Energy: ${morningCheckData.energyLevel}/10 - LOW`)
-      tips.push("🍗 Nutrition: Proteins + complex carbs (oats, rice) = steady energy without crash")
-      tips.push("💪 Activity: 10-15min light exercise or yoga = serotonin + dopamine boost")
-      tips.push("⏱️ Timing: Trade only 9-12 (peak hours). Afternoon = rest and logging trades.")
-      tips.push("💤 Recovery: Tonight stay calm, less screen time.")
+      details.push(isEn ? `Energy: ${morningCheckData.energyLevel}/10 - LOW` : `Energie: ${morningCheckData.energyLevel}/10 - NÍZKÁ`)
+      tips.push(isEn ? "🍗 Nutrition: Proteins + complex carbs = steady energy without crash" : "🍗 Výživa: Bílkoviny + komplexní sacharidy = stabilní energie bez propadu")
+      tips.push(isEn ? "💪 Activity: 10-15min light exercise or yoga = serotonin boost" : "💪 Aktivita: 10-15min lehké cvičení nebo yoga = boost serotoninu")
+      tips.push(isEn ? "⏱️ Timing: Trade only 9-12 (peak hours)" : "⏱️ Načasování: Obchoduj pouze 9-12 (špičkové hodiny)")
     } else if (badMood) {
-      message = `😔 EMOTION PROBLEM: Mood ${morningCheckData.emotionalState}/10. Risk: Loss aversion bias, holding losing positions, revenge trading.`
+      message = isEn
+        ? `😔 EMOTION PROBLEM: Mood ${morningCheckData.emotionalState}/10. Risk: Loss aversion bias, holding losing positions, revenge trading.`
+        : `😔 EMOČNÍ PROBLÉM: Nálada ${morningCheckData.emotionalState}/10. Riziko: Averze ke ztrátám, držení ztrátových pozic, revenge trading.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Emotional state: ${morningCheckData.emotionalState}/10 - NEGATIVE`)
-      tips.push("🎭 Psychology: Write down WHY you're sad - external context separates from trading decisions")
-      tips.push("🚫 Safety: SKIP trading today, or only demo/paper trading")
-      tips.push("💝 Self-care: 20min something you enjoy - music, movie, friends, hobbies")
-      tips.push("📔 Reflection: What event today affected your mood? What can you change tomorrow?")
+      details.push(isEn ? `Emotional state: ${morningCheckData.emotionalState}/10 - NEGATIVE` : `Emoční stav: ${morningCheckData.emotionalState}/10 - NEGATIVNÍ`)
+      tips.push(isEn ? "🎭 Psychology: Write down WHY you're sad" : "🎭 Psychologie: Zapiš si PROČ jsi smutný/á")
+      tips.push(isEn ? "🚫 Safety: SKIP trading today, or only demo/paper trading" : "🚫 Bezpečnost: VYNECHEJ obchodování dnes, nebo jen demo/paper trading")
+      tips.push(isEn ? "💝 Self-care: 20min something you enjoy" : "💝 Péče o sebe: 20min něco co tě baví")
     } else if (goodConditions) {
-      message = `✅ IDEÁLNÍ DEN! Skóre ${score}% = ZELENÁ ZNAMENÍ. Psychologicky i fyzicky jsi optimálně připravený.`
+      message = isEn
+        ? `✅ IDEAL DAY! Score ${score}% = GREEN LIGHT. Psychologically and physically optimally prepared.`
+        : `✅ IDEÁLNÍ DEN! Skóre ${score}% = ZELENÁ ZNAMENÍ. Psychologicky i fyzicky jsi optimálně připravený.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Všechny metriky v OPTIMÁLNÍM rozsahu - vzácné okno!`)
-      tips.push("🎯 Strategie: Obchoduj A+ a B+ vzory s PLNOU disciplínou. To je tvá nejlepší šance.")
-      tips.push("⚡ Mindset: Buď pozorný na přílišnou sebedůvěru - vítězství mohou vést k riskanci")
-      tips.push("⏱️ Sezení: 3-4 hodiny obchodování, pak přestávka na stole pro osvěžení")
-      tips.push("📊 Záznam: Podrobné poznámky na každém obchodu - učit se v horku situace!")
+      details.push(isEn ? `All metrics in OPTIMAL range - rare window!` : `Všechny metriky v OPTIMÁLNÍM rozsahu - vzácné okno!`)
+      tips.push(isEn ? "🎯 Strategy: Trade A+ and B+ patterns with FULL discipline" : "🎯 Strategie: Obchoduj A+ a B+ vzory s PLNOU disciplínou")
+      tips.push(isEn ? "⚡ Mindset: Beware of overconfidence - wins can lead to recklessness" : "⚡ Mindset: Buď pozorný na přílišnou sebedůvěru - vítězství mohou vést k riskanci")
+      tips.push(isEn ? "⏱️ Session: 3-4 hours trading, then break for refresh" : "⏱️ Sezení: 3-4 hodiny obchodování, pak přestávka pro osvěžení")
+      tips.push(isEn ? "📊 Record: Detailed notes on each trade - learn in the heat of the moment!" : "📊 Záznam: Podrobné poznámky na každém obchodu - učit se v horku situace!")
     } else {
-      message = `⚠️ SMÍŠENÝ DEN: Skóre ${score}% je pod normálem. Zvažte úpravy řízení rizika.`
+      message = isEn
+        ? `⚠️ MIXED DAY: Score ${score}% is below normal. Consider risk management adjustments.`
+        : `⚠️ SMÍŠENÝ DEN: Skóre ${score}% je pod normálem. Zvažte úpravy řízení rizika.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Připravenost: ${score}% - HRANIČÍ`)
-      tips.push("🎚️ Nastavení: 50-75% normální pozice, těsnější zastavovací ztráta, dvojí kontrola vstupů")
-      tips.push("🧩 Strategie: Jen nejvyšší pravděpodobnostní vzory, přeskočit marginální")
-      tips.push("📚 Alternativa: Vzdělávací den - kontrola backtestů, úkoly, obchodní plán")
-      tips.push("🎖️ Sebezlepšování: Kterou jednu věc bys mohl/a dnes vylepšit?")
+      details.push(isEn ? `Readiness: ${score}% - BORDERLINE` : `Připravenost: ${score}% - HRANIČÍ`)
+      tips.push(isEn ? "🎚️ Settings: 50-75% normal position, tighter stop loss" : "🎚️ Nastavení: 50-75% normální pozice, těsnější zastavovací ztráta")
+      tips.push(isEn ? "🧩 Strategy: Only highest probability patterns, skip marginal" : "🧩 Strategie: Jen nejvyšší pravděpodobnostní vzory, přeskočit marginální")
+      tips.push(isEn ? "📚 Alternative: Education day - review backtests, trading plan" : "📚 Alternativa: Vzdělávací den - kontrola backtestů, obchodní plán")
     }
 
-    // Add positive detail if available and not already the main focus
-    if (highFocus && !lowFocus) details.push("✓ Soustředění: VYNIKAJÍCÍ (Silná stránka)")
-    else if (lowStressMetric && !highStress) details.push("✓ Stres: MINIMÁLNÍ (Psychická výhoda)")
-    else if (highEnergy && !lowEnergy) details.push("✓ Energie: VYSOKÁ (Fyzická síla)")
-    if (exercised) details.push("✓ Cvičení: Dnes jsi cvičil/a (+ osobní disciplína)")
+    if (highFocus && !lowFocus) details.push(isEn ? "✓ Focus: EXCELLENT (Strength)" : "✓ Soustředění: VYNIKAJÍCÍ (Silná stránka)")
+    else if (lowStressMetric && !highStress) details.push(isEn ? "✓ Stress: MINIMAL (Psychological advantage)" : "✓ Stres: MINIMÁLNÍ (Psychická výhoda)")
+    else if (highEnergy && !lowEnergy) details.push(isEn ? "✓ Energy: HIGH (Physical strength)" : "✓ Energie: VYSOKÁ (Fyzická síla)")
+    if (exercised) details.push(isEn ? "✓ Exercise: You exercised today (+personal discipline)" : "✓ Cvičení: Dnes jsi cvičil/a (+ osobní disciplína)")
 
     return { message, tips, details }
   }
-
   const tradingDecision = generateTradingDecision(
     isLiveMode ? todayEntry?.morningCheck : virtualData?.[0]?.morningCheck,
     readinessScore,
