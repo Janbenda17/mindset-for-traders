@@ -1097,6 +1097,22 @@ export const czechToEnglishMap: Record<string, string> = {
   'I was bored and wanted to \'do something\'': 'I was bored and wanted to \'do something\'',
   'Commissions ate the profits, ended at -0.5%': 'Commissions ate the profits, ended at -0.5%',
   'Overtrading often stems from the need for action, not quality opportunities. Less is more. Quality traders wait for their setups.': 'Overtrading often stems from the need for action, not quality opportunities. Less is more. Quality traders wait for their setups.',
+  
+  // Trading Journal - Forms
+  'Všechny Záznamy': 'All Records',
+  'Žádné záznamy': 'No records',
+  'Nový Záznam': 'New Entry',
+  'Čas otevření': 'Open Time',
+  'Čas zavření': 'Close Time',
+  'Datum zavření': 'Close Date',
+  'Emotion before': 'Emotion Before',
+  'Emotion after': 'Emotion After',
+  'Vystoupil jsem příliš brzy': 'Exited too early',
+  'Save Obchod': 'Save Trade',
+  'Uložit Obchod': 'Save Trade',
+  'Uložit Trades': 'Save Trades',
+  'Trading Journal': 'Trading Journal',
+  'Tvůj Trading Journal': 'Your Trading Journal',
   'I\'ll focus only on A+ setups. Take a 15-minute break after each trade.': 'I\'ll focus only on A+ setups. Take a 15-minute break after each trade.',
 
   'Fail Log': 'Fail Log',
