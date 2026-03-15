@@ -17,6 +17,7 @@ export const czechToEnglishMap: Record<string, string> = {
 
   // Daily Tracker
   'Daily Tracker': 'Daily Tracker',
+  'Dayní Sledování': 'Daily Tracking',
   'Denní Tracker': 'Daily Tracker',
   'Ranní Check': 'Morning Check',
   'Odeslat': 'Submit',
@@ -28,6 +29,7 @@ export const czechToEnglishMap: Record<string, string> = {
   'Tvůj Trading Status Dnes': 'Your Trading Status Today',
   'Detailní Trading Analýza': 'Detailed Trading Analysis',
   'Nastavíš si pravidla dne – AI tě hlídá, abys je dodržel': 'Set your daily rules - AI watches to ensure you follow them',
+  'Demo režim': 'Virtual Mode',
 
   // MindTrader AI
   'MindTrader AI': 'MindTrader AI',
