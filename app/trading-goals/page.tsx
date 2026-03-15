@@ -36,6 +36,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useData } from "@/contexts/data-context"
+import { useLanguage } from "@/contexts/language-context"
 import { createStorageClient } from "@/lib/storage-client"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -138,9 +139,49 @@ export default function TradingGoalsPage() {
   const { toast } = useToast()
   const { isLiveMode } = useData()
   const { user } = useAuth()
+  const { language } = useLanguage()
+  const isEn = language === "en"
   const storage = createStorageClient(user?.id || null)
   const [goals, setGoals] = useState<Goal[]>([])
   const [isAddingGoal, setIsAddingGoal] = useState(false)
+
+  const txt = {
+    back: isEn ? "Back" : "Zpět",
+    goalTracking: isEn ? "Goal Tracking" : "Sledování cílů",
+    tradingGoals: isEn ? "Trading Goals" : "Obchodní cíle",
+    trackProgress: isEn ? "Track your progress and achieve your goals" : "Sleduj svůj pokrok a dosáhni svých cílů",
+    addGoal: isEn ? "Add Goal" : "Přidat cíl",
+    newTradingGoal: isEn ? "New Trading Goal" : "Nový obchodní cíl",
+    defineGoal: isEn ? "Define your new goal" : "Definuj svůj nový cíl",
+    goalName: isEn ? "Goal Name" : "Název cíle",
+    description: isEn ? "Description" : "Popis",
+    category: isEn ? "Category" : "Kategorie",
+    priority: isEn ? "Priority" : "Priorita",
+    high: isEn ? "High" : "Vysoká",
+    medium: isEn ? "Medium" : "Střední",
+    low: isEn ? "Low" : "Nízká",
+    targetValue: isEn ? "Target Value" : "Cílová hodnota",
+    unit: isEn ? "Unit" : "Jednotka",
+    current: isEn ? "Current" : "Aktuální",
+    deadline: isEn ? "Deadline" : "Termín",
+    reminders: isEn ? "Reminders" : "Připomenutí",
+    reminderFrequency: isEn ? "Reminder Frequency" : "Frekvence připomenutí",
+    daily: isEn ? "Daily" : "Denně",
+    weekly: isEn ? "Weekly" : "Týdně",
+    noReminders: isEn ? "No Reminders" : "Bez připomenutí",
+    activeGoals: isEn ? "Active Goals" : "Aktivní cíle",
+    completedGoals: isEn ? "Completed Goals" : "Dokončené cíle",
+    overallProgress: isEn ? "Overall Progress" : "Celkový pokrok",
+    notificationsEnabled: isEn ? "Notifications enabled" : "Připomenutí zapnuta",
+    notificationsDisabled: isEn ? "Notifications disabled" : "Připomenutí vypnuta",
+    goalAdded: isEn ? "Goal added" : "Cíl přidán",
+    newGoalCreated: isEn ? "New trading goal has been created" : "Nový obchodní cíl byl vytvořen",
+    goalAchieved: isEn ? "Congratulations!" : "Gratulujeme!",
+    goalRemoved: isEn ? "Deleted" : "Smazáno",
+    goalRemovedDesc: isEn ? "Goal has been removed" : "Cíl byl smazán",
+    errorTitle: isEn ? "Error" : "Chyba",
+    fillRequired: isEn ? "Fill in name and deadline" : "Vyplň název a termín",
+  }
 
   const [newGoal, setNewGoal] = useState({
     title: "",

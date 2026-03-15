@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -49,6 +49,7 @@ import { useToast } from "@/hooks/use-toast"
 import { getUserData, saveUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
 import { useAuth } from "@/contexts/auth-context"
+import { useLanguage } from "@/contexts/language-context"
 import { cn } from "@/lib/utils"
 import { createStorageClient } from "@/lib/storage-client"
 
@@ -105,11 +106,11 @@ interface RoutineHistory {
   eveningItems: { id: string; title: string; completed: boolean }[]
 }
 
-const defaultMorningRoutine: RoutineItem[] = [
+const defaultMorningRoutine = (isEn: boolean): RoutineItem[] => [
   {
     id: "m1",
-    title: "Morning Meditation",
-    description: "5-10 minutes of calm breathing",
+    title: isEn ? "Morning Meditation" : "Ranní meditace",
+    description: isEn ? "5-10 minutes of calm breathing" : "5-10 minut klidného dýchání",
     iconName: "Brain",
     completed: false,
     category: "mindset",
@@ -117,8 +118,8 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
   {
     id: "m2",
-    title: "Physical Activity",
-    description: "Stretching or short exercise",
+    title: isEn ? "Physical Activity" : "Fyzická aktivita",
+    description: isEn ? "Stretching or short exercise" : "Protažení nebo krátké cvičení",
     iconName: "Dumbbell",
     completed: false,
     category: "body",
@@ -126,8 +127,8 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
   {
     id: "m3",
-    title: "Healthy Breakfast",
-    description: "Quality food for energy",
+    title: isEn ? "Healthy Breakfast" : "Zdravá snídaně",
+    description: isEn ? "Quality food for energy" : "Kvalitní jídlo pro energii",
     iconName: "Coffee",
     completed: false,
     category: "body",
@@ -135,8 +136,8 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
   {
     id: "m4",
-    title: "Market Check",
-    description: "Overview of overnight movements",
+    title: isEn ? "Market Check" : "Kontrola trhu",
+    description: isEn ? "Overview of overnight movements" : "Přehled nočních pohybů",
     iconName: "TrendingUp",
     completed: false,
     category: "preparation",
@@ -144,8 +145,8 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
   {
     id: "m5",
-    title: "Daily Goals",
-    description: "Set a maximum of 3 goals for the day",
+    title: isEn ? "Daily Goals" : "Denní cíle",
+    description: isEn ? "Set a maximum of 3 goals for the day" : "Nastav si max. 3 cíle na den",
     iconName: "Target",
     completed: false,
     category: "preparation",
@@ -153,8 +154,8 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
   {
     id: "m6",
-    title: "Visualization",
-    description: "Imagine a successful trading day",
+    title: isEn ? "Visualization" : "Vizualizace",
+    description: isEn ? "Imagine a successful trading day" : "Představ si úspěšný obchodní den",
     iconName: "Eye",
     completed: false,
     category: "mindset",
@@ -162,11 +163,11 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
 ]
 
-const defaultEveningRoutine: RoutineItem[] = [
+const defaultEveningRoutine = (isEn: boolean): RoutineItem[] => [
   {
     id: "e1",
-    title: "Trade Review",
-    description: "Evaluation of today's trades",
+    title: isEn ? "Trade Review" : "Přehledy obchodů",
+    description: isEn ? "Evaluation of today's trades" : "Vyhodnocení dnešních obchodů",
     iconName: "BookOpen",
     completed: false,
     category: "review",
@@ -174,8 +175,8 @@ const defaultEveningRoutine: RoutineItem[] = [
   },
   {
     id: "e2",
-    title: "Journal Update",
-    description: "Write in trading journal",
+    title: isEn ? "Journal Update" : "Aktualizace deníku",
+    description: isEn ? "Write in trading journal" : "Zapiš do obchodního deníku",
     iconName: "BookOpen",
     completed: false,
     category: "review",
@@ -183,8 +184,8 @@ const defaultEveningRoutine: RoutineItem[] = [
   },
   {
     id: "e3",
-    title: "Gratitude",
-    description: "3 things I'm grateful for",
+    title: isEn ? "Gratitude" : "Vděčnost",
+    description: isEn ? "3 things I'm grateful for" : "3 věci za které jsem vděčný/á",
     iconName: "Heart",
     completed: false,
     category: "mindset",
@@ -192,8 +193,8 @@ const defaultEveningRoutine: RoutineItem[] = [
   },
   {
     id: "e4",
-    title: "Prepare for Tomorrow",
-    description: "Watchlist and plan for next day",
+    title: isEn ? "Prepare for Tomorrow" : "Příprava na zítřek",
+    description: isEn ? "Watchlist and plan for next day" : "Watchlist a plán na příští den",
     iconName: "Target",
     completed: false,
     category: "preparation",
@@ -201,8 +202,8 @@ const defaultEveningRoutine: RoutineItem[] = [
   },
   {
     id: "e5",
-    title: "Relaxation",
-    description: "Screen-free time",
+    title: isEn ? "Relaxation" : "Relaxace",
+    description: isEn ? "Screen-free time" : "Čas bez obrazovky",
     iconName: "Wind",
     completed: false,
     category: "body",
@@ -210,8 +211,8 @@ const defaultEveningRoutine: RoutineItem[] = [
   },
   {
     id: "e6",
-    title: "Quality Sleep",
-    description: "Prepare for 7-8 hours of sleep",
+    title: isEn ? "Quality Sleep" : "Kvalitní spánek",
+    description: isEn ? "Prepare for 7-8 hours of sleep" : "Příprava na 7-8 hodin spánku",
     iconName: "Moon",
     completed: false,
     category: "body",
@@ -258,11 +259,13 @@ export default function RoutinesPage() {
   const { isLiveMode } = useData()
   const { user } = useAuth()
   const { toast } = useToast()
+  const { language } = useLanguage()
+  const isEn = language === "en"
 
   const storage = createStorageClient(user?.id || null)
 
-  const [morningRoutine, setMorningRoutine] = useState<RoutineItem[]>(defaultMorningRoutine)
-  const [eveningRoutine, setEveningRoutine] = useState<RoutineItem[]>(defaultEveningRoutine)
+  const [morningRoutine, setMorningRoutine] = useState<RoutineItem[]>(defaultMorningRoutine(isEn))
+  const [eveningRoutine, setEveningRoutine] = useState<RoutineItem[]>(defaultEveningRoutine(isEn))
   const [morningNotes, setMorningNotes] = useState("")
   const [eveningNotes, setEveningNotes] = useState("")
   const [history, setHistory] = useState<RoutineHistory[]>([])
@@ -281,6 +284,44 @@ export default function RoutinesPage() {
   const [dragOverItemId, setDragOverItemId] = useState<string | null>(null)
 
   const today = new Date().toISOString().split("T")[0]
+
+  const txt = {
+    back: isEn ? "Back" : "Zpět",
+    routines: isEn ? "Trading Routines" : "Obchodní rutiny",
+    subtitle: isEn ? "Consistency in routines = Consistency in results" : "Konzistentní rutiny = konzistentní výsledky",
+    demoMode: isEn ? "Demo Mode" : "Demo režim",
+    addCustomItem: isEn ? "Add Custom Item" : "Přidat vlastní položku",
+    createCustom: isEn ? "Create your own routine item" : "Vytvoř si vlastní položku do rutiny",
+    name: isEn ? "Name" : "Název",
+    enterName: isEn ? "e.g. Cold shower" : "Např. Studená sprcha",
+    description: isEn ? "Description (optional)" : "Popis (volitelný)",
+    shortDescription: isEn ? "Short description" : "Krátký popis",
+    icon: isEn ? "Icon" : "Ikona",
+    routine: isEn ? "Routine" : "Rutina",
+    morning: isEn ? "Morning" : "Ráno",
+    evening: isEn ? "Večer",
+    category: isEn ? "Category" : "Kategorie",
+    mindset: isEn ? "Mindset" : "Mindset",
+    body: isEn ? "Body" : "Tělo",
+    preparation: isEn ? "Preparation" : "Příprava",
+    review: isEn ? "Review" : "Přehledy",
+    addItem: isEn ? "Add Item" : "Přidat položku",
+    enterItemName: isEn ? "Enter item name" : "Zadej název položky",
+    itemAdded: isEn ? "Item added" : "Položka přidána",
+    itemDeleted: isEn ? "Item deleted" : "Položka smazána",
+    noCustomItems: isEn ? "In demo mode, items cannot be added" : "V demo režimu nelze přidávat položky",
+    editMode: isEn ? "Edit" : "Upravit",
+    saveHistory: isEn ? "Save to History" : "Uložit do historii",
+    savedToHistory: isEn ? "Saved to history" : "Uloženo do historii",
+    morning Routine: isEn ? "Morning Routine" : "Ranní rutina",
+    eveningRoutine: isEn ? "Evening Routine" : "Večerní rutina",
+    progress: isEn ? "Progress" : "Pokrok",
+    history: isEn ? "History" : "Historie",
+    custom: isEn ? "Custom" : "Vlastní",
+    stats: isEn ? "Your Stats" : "Tvoje statistiky",
+    streak: isEn ? "Streak" : "Série",
+    averageCompletion: isEn ? "Average Completion" : "Průměrné dokončení",
+  }
 
   useEffect(() => {
     if (!isLiveMode) {
@@ -656,7 +697,7 @@ export default function RoutinesPage() {
         <Link href="/bonus" className="inline-flex mb-6">
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
             <ArrowLeft className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-400">Back</span>
+            <span className="text-sm text-gray-400">{txt.back}</span>
           </div>
         </Link>
 
@@ -667,13 +708,13 @@ export default function RoutinesPage() {
               <div className="p-2 bg-gradient-to-r from-orange-500 to-pink-500 rounded-xl">
                 <Sun className="w-6 h-6 text-white" />
               </div>
-              Trading Rutiny
+              {txt.routines}
             </h1>
-            <p className="text-gray-400 mt-1">Konzistentní rutiny = konzistentní výsledky</p>
+            <p className="text-gray-400 mt-1">{txt.subtitle}</p>
           </div>
 
           <div className="flex items-center gap-2">
-            {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Demo Mode</Badge>}
+            {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">{txt.demoMode}</Badge>}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -686,31 +727,31 @@ export default function RoutinesPage() {
               </DialogTrigger>
               <DialogContent className="bg-slate-900 border-slate-700">
                 <DialogHeader>
-                  <DialogTitle className="text-white">Přidat vlastní položku</DialogTitle>
-                  <DialogDescription className="text-gray-400">Vytvoř si vlastní položku do rutiny</DialogDescription>
+                  <DialogTitle className="text-white">{txt.addCustomItem}</DialogTitle>
+                  <DialogDescription className="text-gray-400">{txt.createCustom}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div>
-                    <Label className="text-gray-300">Název</Label>
+                    <Label className="text-gray-300">{txt.name}</Label>
                     <Input
                       value={newItem.title}
                       onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
-                      placeholder="Např. Studená sprcha"
+                      placeholder={txt.enterName}
                       className="bg-slate-800 border-slate-700 text-white mt-1"
                     />
                   </div>
                   <div>
-                    <Label className="text-gray-300">Popis (volitelný)</Label>
+                    <Label className="text-gray-300">{txt.description}</Label>
                     <Input
                       value={newItem.description}
                       onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                      placeholder="Krátký popis"
+                      placeholder={txt.shortDescription}
                       className="bg-slate-800 border-slate-700 text-white mt-1"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-gray-300">Ikona</Label>
+                      <Label className="text-gray-300">{txt.icon}</Label>
                       <Select value={newItem.iconName} onValueChange={(v) => setNewItem({ ...newItem, iconName: v })}>
                         <SelectTrigger className="bg-slate-800 border-slate-700 text-white mt-1">
                           <SelectValue />
@@ -725,7 +766,7 @@ export default function RoutinesPage() {
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-gray-300">Rutina</Label>
+                      <Label className="text-gray-300">{txt.routine}</Label>
                       <Select
                         value={newItem.routine}
                         onValueChange={(v: "morning" | "evening") => setNewItem({ ...newItem, routine: v })}
@@ -734,12 +775,12 @@ export default function RoutinesPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="morning" className="text-white">
-                          Morning
-                        </SelectItem>
-                        <SelectItem value="evening" className="text-white">
-                          Evening
-                        </SelectItem>
+                          <SelectItem value="morning" className="text-white">
+                            {txt.morning}
+                          </SelectItem>
+                          <SelectItem value="evening" className="text-white">
+                            {txt.evening}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
