@@ -1121,6 +1121,23 @@ export const czechToEnglishMap: Record<string, string> = {
   'active challenges': 'active challenges',
   '0 active challenges': '0 active challenges',
   'a weekly cile': 'a weekly goals',
+  
+  // Badges & Achievements
+  'Odznaky & Achievementy': 'Badges & Achievements',
+  'Odznaky & Achievements': 'Badges & Achievements',
+  'Sleduj svůj progress a odemykej odznaky': 'Track your progress and unlock badges',
+  'Celkové XP': 'Total XP',
+  'Odemknuté odznaky': 'Unlocked Badges',
+  'Nojdelší streak': 'Longest Streak',
+  'Tvůj Level': 'Your Level',
+  'Beginner': 'Beginner',
+  'Začínáš svou cestu': 'You\'re starting your journey',
+  'Uvědomění': 'Awareness',
+  'MindPoints': 'MindPoints',
+  'XP do Zasvěcenec': 'XP to Initiate',
+  'Calm Score': 'Calm Score',
+  'Focus Rating': 'Focus Rating',
+  'Recovery Index': 'Recovery Index',
 }
 
 export function getEnglishText(czechText: string, isEnglishDomain: boolean): string {
