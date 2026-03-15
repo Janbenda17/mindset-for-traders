@@ -237,24 +237,25 @@ const translations = {
 
 function detectLanguage(): Language {
   if (typeof window === "undefined") {
-    // Server-side: check env var first, then default
     const forceLocale = process.env.NEXT_PUBLIC_FORCE_LOCALE
-    if (forceLocale === "cs") return "cs"
     if (forceLocale === "en") return "en"
     return "cs"
   }
 
-  // Client-side: check env var, then check hostname
+  // Client-side: env var has highest priority
   const forceLocale = process.env.NEXT_PUBLIC_FORCE_LOCALE
-  if (forceLocale === "cs") return "cs"
   if (forceLocale === "en") return "en"
+  if (forceLocale === "cs") return "cs"
 
   const hostname = window.location.hostname
+
+  // Only switch to English for explicit .ai / .au / .com production domains
+  // vusercontent.net preview and localhost always default to Czech
   const isEnglish =
     hostname.endsWith(".ai") ||
     hostname.endsWith(".au") ||
-    hostname.endsWith(".com") ||
-    (hostname.includes("vusercontent.net") && !hostname.includes("-cz-"))
+    (hostname.endsWith(".com") && !hostname.includes("vusercontent"))
+
   return isEnglish ? "en" : "cs"
 }
 

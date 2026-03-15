@@ -1197,24 +1197,21 @@ export function getEnglishText(czechText: string, isEnglishDomain: boolean): str
 }
 
 export function isEnglishDomain(): boolean {
-  // First priority: check env var (set in Vercel)
-  const forceLocale = typeof window !== 'undefined' ? (window as any).NEXT_PUBLIC_FORCE_LOCALE : process.env.NEXT_PUBLIC_FORCE_LOCALE
-  if (forceLocale === 'cs') return false
-  if (forceLocale === 'en') return true
-  
-  if (typeof window === 'undefined') return false
+  // Env var has highest priority (set in Vercel per-project)
+  const forceLocale = process.env.NEXT_PUBLIC_FORCE_LOCALE
+  if (forceLocale === "en") return true
+  if (forceLocale === "cs") return false
+
+  if (typeof window === "undefined") return false
   const hostname = window.location.hostname
-  
-  // For vusercontent.net preview: check if hostname contains "-cz-" pattern
-  // (Vercel preview domains use pattern like: appname-branchname-hash.vusercontent.net)
-  if (hostname.includes('vusercontent.net')) {
-    const isCzechBranch = hostname.includes('-cz-')
-    console.log('[v0] Domain detection - hostname:', hostname, 'isCzech:', isCzechBranch)
-    return !isCzechBranch // return true if NOT czech
-  }
-  
-  // Check for .ai, .au, .com domains
-  const isEnglish = hostname.endsWith('.ai') || hostname.endsWith('.au') || hostname.endsWith('.com') || hostname === 'localhost' || hostname === '127.0.0.1'
-  console.log('[v0] Domain detection - hostname:', hostname, 'isEnglish:', isEnglish)
+
+  // Only English for explicit production .ai / .au / .com domains
+  // vusercontent.net preview, localhost always = Czech (default)
+  const isEnglish =
+    hostname.endsWith(".ai") ||
+    hostname.endsWith(".au") ||
+    (hostname.endsWith(".com") && !hostname.includes("vusercontent"))
+
   return isEnglish
+}
 }
