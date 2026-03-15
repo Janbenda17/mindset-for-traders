@@ -236,13 +236,25 @@ const translations = {
 }
 
 function detectLanguage(): Language {
-  if (typeof window === "undefined") return "cs"
+  if (typeof window === "undefined") {
+    // Server-side: check env var first, then default
+    const forceLocale = process.env.NEXT_PUBLIC_FORCE_LOCALE
+    if (forceLocale === "cs") return "cs"
+    if (forceLocale === "en") return "en"
+    return "cs"
+  }
+
+  // Client-side: check env var, then check hostname
+  const forceLocale = process.env.NEXT_PUBLIC_FORCE_LOCALE
+  if (forceLocale === "cs") return "cs"
+  if (forceLocale === "en") return "en"
+
   const hostname = window.location.hostname
   const isEnglish =
     hostname.endsWith(".ai") ||
     hostname.endsWith(".au") ||
     hostname.endsWith(".com") ||
-    hostname.includes("vusercontent.net")
+    (hostname.includes("vusercontent.net") && !hostname.includes("-cz-"))
   return isEnglish ? "en" : "cs"
 }
 
