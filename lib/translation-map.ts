@@ -1214,4 +1214,3 @@ export function isEnglishDomain(): boolean {
 
   return isEnglish
 }
-}
