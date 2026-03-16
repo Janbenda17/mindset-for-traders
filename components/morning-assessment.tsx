@@ -12,6 +12,7 @@ import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
 import { useGamification } from "@/contexts/gamification-context"
 import { useAuth } from "@/contexts/auth-context"
+import { useLanguage } from "@/contexts/language-context"
 import {
   Moon,
   Coffee,
@@ -63,6 +64,27 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
   const { isLiveMode, addMorningCheck } = useData()
   const { addXP, incrementStreak, incrementStat } = useGamification()
   const { user } = useAuth()
+  const { language } = useLanguage()
+  const isEn = language === "en"
+
+  const txt = {
+    sleepQuality: isEn ? "Sleep Quality" : "Kvalita spánku",
+    quality: isEn ? "Quality" : "Kvalita",
+    hours: isEn ? "Hours" : "Hodin",
+    energyFocus: isEn ? "Energy & Focus" : "Energie a soustředění",
+    energyLevel: isEn ? "Energy Level" : "Úroveň energie",
+    focusLevel: isEn ? "Focus Level" : "Úroveň soustředění",
+    mentalState: isEn ? "Mental State" : "Psychický stav",
+    stressLevel: isEn ? "Stress Level" : "Úroveň stresu",
+    emotionalState: isEn ? "Emotional State" : "Emoční stav",
+    physicalHealth: isEn ? "Physical Health & Habits" : "Fyzické zdraví a zvyky",
+    exercise: isEn ? "Exercise" : "Cvičení",
+    exercised: isEn ? "I exercised this morning" : "Cvičil jsem si ráno",
+    morningRoutine: isEn ? "Morning Routine Completed" : "Ranní rutina dokončena",
+    meditation: isEn ? "Meditation" : "Meditace",
+    min: isEn ? "min" : "min",
+    liveMode: isEn ? "Available only in Live Mode" : "Dostupné pouze v Live režimu",
+  }
 
   // Check if stage 1 is locked from context
   const stage1 = stages.find((s) => s.id === 1)
@@ -490,13 +512,13 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Moon className="h-5 w-5 text-indigo-400" />
-              Sleep Quality
+              {txt.sleepQuality}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Quality</span>
+                <span className="text-sm text-muted-foreground">{txt.quality}</span>
                 <span className="text-lg font-bold text-indigo-400">{assessment.sleepQuality}/10</span>
               </div>
               <Slider
@@ -510,7 +532,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Hours</span>
+                <span className="text-sm text-muted-foreground">{txt.hours}</span>
                 <span className="text-lg font-bold text-indigo-400">{assessment.sleepHours}h</span>
               </div>
               <Slider
@@ -529,13 +551,13 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-yellow-400" />
-              Energy & Focus
+              {txt.energyFocus}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Energy Level</span>
+                <span className="text-sm text-muted-foreground">{txt.energyLevel}</span>
                 <span className="text-lg font-bold text-yellow-400">{assessment.energyLevel}/10</span>
               </div>
               <Slider
@@ -549,7 +571,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Focus Level</span>
+                <span className="text-sm text-muted-foreground">{txt.focusLevel}</span>
                 <span className="text-lg font-bold text-yellow-400">{assessment.focus}/10</span>
               </div>
               <Slider
@@ -568,13 +590,13 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-purple-400" />
-              Mental State
+              {txt.mentalState}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Stress Level</span>
+                <span className="text-sm text-muted-foreground">{txt.stressLevel}</span>
                 <span className="text-lg font-bold text-purple-400">{assessment.stressLevel}/10</span>
               </div>
               <Slider
@@ -588,7 +610,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Emotional State</span>
+                <span className="text-sm text-muted-foreground">{txt.emotionalState}</span>
                 <span className="text-lg font-bold text-purple-400">{assessment.emotionalState}/10</span>
               </div>
               <Slider
@@ -607,7 +629,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Heart className="h-5 w-5 text-green-400" />
-              Physical Health & Habits
+              {txt.physicalHealth}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
