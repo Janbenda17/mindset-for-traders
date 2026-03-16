@@ -1,3 +1,4 @@
+// Trading Routines component - with proper imports
 "use client"
 
 import { useState, useEffect } from "react"
