@@ -299,7 +299,7 @@ export default function RoutinesPage() {
     icon: isEn ? "Icon" : "Ikona",
     routine: isEn ? "Routine" : "Rutina",
     morning: isEn ? "Morning" : "Ráno",
-    evening: isEn ? "Večer",
+    evening: isEn ? "Evening" : "Večer",
     category: isEn ? "Category" : "Kategorie",
     mindset: isEn ? "Mindset" : "Mindset",
     body: isEn ? "Body" : "Tělo",
