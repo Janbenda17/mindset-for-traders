@@ -237,23 +237,20 @@ const translations = {
 
 function detectLanguage(): Language {
   if (typeof window === "undefined") {
-    const forceLocale = process.env.NEXT_PUBLIC_FORCE_LOCALE
-    if (forceLocale === "cs") return "cs"
-    if (forceLocale === "en") return "en"
+    // Server-side: default to English
     return "en"
   }
 
-  // Client-side: env var has highest priority
-  const forceLocale = process.env.NEXT_PUBLIC_FORCE_LOCALE
-  if (forceLocale === "cs") return "cs"
-  if (forceLocale === "en") return "en"
-
+  // Client-side: Hostname has priority over env var
   const hostname = window.location.hostname
-
-  // .cz domain = Czech, everything else = English
-  const isCzech = hostname.endsWith(".cz")
-
-  return isCzech ? "cs" : "en"
+  
+  // .cz domain = Czech
+  if (hostname.endsWith(".cz")) {
+    return "cs"
+  }
+  
+  // .ai and other domains = English (default)
+  return "en"
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
