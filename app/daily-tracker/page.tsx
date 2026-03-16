@@ -171,7 +171,6 @@ export default function DailyTrackerPage() {
   ]
 
   const [entries, setEntries] = useState<DailySummary[]>([])
-  const [todayEntry, setTodayEntry] = useState<DailySummary | null>(null)
   const [activeTab, setActiveTab] = useState("today")
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
   const [expandedStage, setExpandedStage] = useState<number | null>(null)
