@@ -57,11 +57,25 @@ interface Goal {
   lastReminderSent?: string
 }
 
-const demoGoals: Goal[] = [
+const demoGoals = (isEn: boolean) => {
+  const txt = {
+    goal1Title: isEn ? "Achieve 70% Win Rate" : "Dosáhnout 70% úspěšnosti",
+    goal1Desc: isEn ? "Increase trading success by focusing only on A+ setups" : "Zvýšit úspěšnost obchodování zaměřením se na A+ setupy",
+    goal2Title: isEn ? "30 days without revenge trading" : "30 dní bez revenge tradingu",
+    goal2Desc: isEn ? "Maintain discipline and avoid emotional trading after losses" : "Zachovat disciplínu a vyhnout se emočnímu tradingu po ztrátách",
+    goal3Title: isEn ? "Profit Factor above 2.0" : "Profit Factor vyšší než 2.0",
+    goal3Desc: isEn ? "Improve profit-to-loss ratio by optimizing risk management" : "Zlepšit poměr zisku k ztrátě optimalizací řízení rizik",
+    goal4Title: isEn ? "Meditate every day before trading" : "Meditovat každý den před tradingem",
+    goal4Desc: isEn ? "Create a 10-minute morning meditation routine for better focus" : "Vytvořit 10minutovou ranní meditační rutinu pro lepší soustředění",
+    goal5Title: isEn ? "Increase balance by $5,000" : "Zvýšit zůstatek o 5000 dolarů",
+    goal5Desc: isEn ? "Consistent account growth through quality trades" : "Konzistentní růst účtu prostřednictvím kvalitních obchodů",
+  }
+  
+  return [
   {
     id: "demo-1",
-    title: "Achieve 70% Win Rate",
-    description: "Increase trading success by focusing only on A+ setups",
+    title: txt.goal1Title,
+    description: txt.goal1Desc,
     category: "skills",
     targetValue: 70,
     currentValue: 62,
@@ -75,8 +89,8 @@ const demoGoals: Goal[] = [
   },
   {
     id: "demo-2",
-    title: "30 days without revenge trading",
-    description: "Maintain discipline and avoid emotional trading after losses",
+    title: txt.goal2Title,
+    description: txt.goal2Desc,
     category: "discipline",
     targetValue: 30,
     currentValue: 18,
@@ -90,8 +104,8 @@ const demoGoals: Goal[] = [
   },
   {
     id: "demo-3",
-    title: "Profit Factor above 2.0",
-    description: "Improve profit-to-loss ratio by optimizing risk management",
+    title: txt.goal3Title,
+    description: txt.goal3Desc,
     category: "profit",
     targetValue: 2.0,
     currentValue: 1.65,
@@ -105,8 +119,8 @@ const demoGoals: Goal[] = [
   },
   {
     id: "demo-4",
-    title: "Meditate every day before trading",
-    description: "Create a 10-minute morning meditation routine for better focus",
+    title: txt.goal4Title,
+    description: txt.goal4Desc,
     category: "mindset",
     targetValue: 21,
     currentValue: 21,
@@ -120,8 +134,8 @@ const demoGoals: Goal[] = [
   },
   {
     id: "demo-5",
-    title: "Increase balance by $5,000",
-    description: "Consistent account growth through quality trades",
+    title: txt.goal5Title,
+    description: txt.goal5Desc,
     category: "profit",
     targetValue: 5000,
     currentValue: 3200,
@@ -133,7 +147,8 @@ const demoGoals: Goal[] = [
     notificationsEnabled: true,
     reminderFrequency: "weekly",
   },
-]
+] as Goal[]
+}
 
 export default function TradingGoalsPage() {
   const { toast } = useToast()
@@ -181,6 +196,20 @@ export default function TradingGoalsPage() {
     goalRemovedDesc: isEn ? "Goal has been removed" : "Cíl byl smazán",
     errorTitle: isEn ? "Error" : "Chyba",
     fillRequired: isEn ? "Fill in name and deadline" : "Vyplň název a termín",
+    // Demo goals
+    goal1Title: isEn ? "Achieve 70% Win Rate" : "Dosáhnout 70% úspěšnosti",
+    goal1Desc: isEn ? "Increase trading success by focusing only on A+ setups" : "Zvýšit úspěšnost obchodování zaměřením se na A+ setupy",
+    goal2Title: isEn ? "30 days without revenge trading" : "30 dní bez revenge tradingu",
+    goal2Desc: isEn ? "Maintain discipline and avoid emotional trading after losses" : "Zachovat disciplínu a vyhnout se emočnímu tradingu po ztrátách",
+    goal3Title: isEn ? "Profit Factor above 2.0" : "Profit Factor vyšší než 2.0",
+    goal3Desc: isEn ? "Improve profit-to-loss ratio by optimizing risk management" : "Zlepšit poměr zisku k ztrátě optimalizací řízení rizik",
+    goal4Title: isEn ? "Meditate every day before trading" : "Meditovat každý den před tradingem",
+    goal4Desc: isEn ? "Create a 10-minute morning meditation routine for better focus" : "Vytvořit 10minutovou ranní meditační rutinu pro lepší soustředění",
+    goal5Title: isEn ? "Increase balance by $5,000" : "Zvýšit zůstatek o 5000 dolarů",
+    goal5Desc: isEn ? "Consistent account growth through quality trades" : "Konzistentní růst účtu prostřednictvím kvalitních obchodů",
+    achieved: isEn ? "Achieved: 21 days" : "Dosaženo: 21 dní",
+    daysRemaining: isEn ? "days remaining" : "dní zbývá",
+    withReminders: isEn ? "With Reminders" : "S připomenutím",
   }
 
   const [newGoal, setNewGoal] = useState({
@@ -201,11 +230,11 @@ export default function TradingGoalsPage() {
       const saved = storage.get<Goal[]>("trading-goals", [])
       setGoals(saved)
     } else {
-      setGoals(demoGoals)
+      setGoals(demoGoals(isEn))
     }
 
     checkAndSendReminders()
-  }, [isLiveMode, user?.id])
+  }, [isLiveMode, user?.id, isEn])
 
   const saveGoals = (updatedGoals: Goal[]) => {
     setGoals(updatedGoals)

@@ -27,6 +27,7 @@ import { format } from "date-fns"
 import { cs } from "date-fns/locale"
 import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
+import { useLanguage } from "@/contexts/language-context"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
 
@@ -73,6 +74,37 @@ export function DailySummary() {
   const router = useRouter()
   const { completeStage, stages } = useDailyStage()
   const { getAllTrades, isLiveMode, morningChecks, dailyIntentions, tradingPlans } = useData()
+  const { language } = useLanguage()
+  const isEn = language === "en"
+
+  const txt = {
+    tradeHistory: isEn ? "Trade History" : "Historie Obchodů",
+    viewAll: isEn ? "View All" : "Zobrazit vše",
+    noTrades: isEn ? "No trades today" : "Dnes žádné obchody",
+    recognized: isEn ? "Recognized Psychological Patterns" : "Rozpoznané psychologické vzorce",
+    noPatterns: isEn ? "No stable patterns detected yet" : "Zatím žádné stabilní patterny detekovány",
+    mood: isEn ? "Mood" : "Nálada",
+    aiAnalysis: isEn ? "AI Daily Analysis" : "AI denní analýza",
+    whatWentWell: isEn ? "What Went Well" : "Co se povedlo",
+    areasImprovement: isEn ? "Areas for Improvement" : "Oblasti pro zlepšení",
+    psychAnalysis: isEn ? "Psychological Analysis & Mental State" : "Psychologická analýza a mentální stav",
+    deeperLook: isEn ? "Deeper look at your mindset and psychological patterns" : "Hlubší pohled na tvůj mindset a psychologické vzorce",
+    currentState: isEn ? "Your psychological profile today:" : "Tvůj psychologický profil dnes:",
+    nalaida: isEn ? "Mood" : "Nálada",
+    stres: isEn ? "Stress" : "Stres",
+    focus: isEn ? "Focus" : "Soustředění",
+    riskAssessment: isEn ? "Risk Assessment & Risk Management" : "Posouzení rizika a řízení rizik",
+    performancePrediction: isEn ? "Performance Prediction & Success Rate" : "Předpověď výkonu a úspěšnost",
+    actionItems: isEn ? "Action Items for Tomorrow" : "Akční položky na zítřek",
+    journaling: isEn ? "Journaling: Write down emotions before trading for better self-awareness" : "Deníčko: Zapiš si emoce před obchodováním pro lepší sebepovědomí",
+    limit: isEn ? "Limit: Focus only on A+ setups, quality > quantity" : "Limit: Soustředí se na A+ setupy, kvalita > kvantita",
+    excellent: isEn ? "Excellent" : "Výborné",
+    sleep: isEn ? "sleep provided mental sharpness and clarity" : "spánek poskytl duševní ostrost a jasnost",
+    focus2: isEn ? "high focus enabled capturing all key signals" : "vysoké soustředění umožnilo zachytit všechny klíčové signály",
+    profitable: isEn ? "Profitable day:" : "Zisková den:",
+    negativeEmotional: isEn ? "Negative emotional state affected objectivity" : "Negativní emoční stav ovlivnil objektivitu",
+    overtrading: isEn ? "Overtrading: Too much activity reduces decision quality" : "Overtrading: Příliš mnoho aktivit snižuje kvalitu rozhodování",
+  }
 
   // Check if stage 5 is locked
   const stage5 = stages.find((s) => s.id === 5)
@@ -517,9 +549,9 @@ export function DailySummary() {
         {/* Trade History Section */}
         <Card className="lg:col-span-2 bg-zinc-900/50 border-white/10">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-medium">Historie Obchodů</CardTitle>
+            <CardTitle className="text-lg font-medium">{txt.tradeHistory}</CardTitle>
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white">
-              Zobrazit vše <ChevronRight className="w-4 h-4 ml-1" />
+              {txt.viewAll} <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </CardHeader>
           <CardContent>
@@ -534,7 +566,7 @@ export function DailySummary() {
                       <div className={cn("w-2 h-2 rounded-full", trade.pnl > 0 ? "bg-emerald-500" : "bg-rose-500")} />
                       <div>
                         <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                          <Eye className="w-3 h-3" /> Recognized Psychological Patterns
+                          <Eye className="w-3 h-3" /> {txt.recognized}
                         </h4>
                         <div className="space-y-2">
                           {aiInsights.patternRecognition.length > 0 ? (
@@ -544,7 +576,7 @@ export function DailySummary() {
                               </div>
                             ))
                           ) : (
-                            <p className="text-sm text-muted-foreground">Zatím žádné stabilní patterny detekovány</p>
+                            <p className="text-sm text-muted-foreground">{txt.noPatterns}</p>
                           )}
                         </div>
                       </div>
@@ -576,7 +608,7 @@ export function DailySummary() {
                         {trade.pnl > 0 ? "+" : ""}
                         {trade.pnl.toFixed(2)} $
                       </span>
-                      <span className="text-xs text-muted-foreground">Mood: {trade.mood}/10</span>
+                      <span className="text-xs text-muted-foreground">{txt.mood}: {trade.mood}/10</span>
                     </div>
                   </div>
                 ))}
@@ -586,7 +618,7 @@ export function DailySummary() {
                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
                   <Activity className="w-6 h-6 opacity-50" />
                 </div>
-                <p>Dnes žádné obchody</p>
+                <p>{txt.noTrades}</p>
               </div>
             )}
           </CardContent>
@@ -599,13 +631,13 @@ export function DailySummary() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Sparkles className="w-5 h-5 text-purple-400" />
-                AI Daily Analysis
+                {txt.aiAnalysis}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
                 <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <CheckCircle className="w-3 h-3" /> What Went Well
+                  <CheckCircle className="w-3 h-3" /> {txt.whatWentWell}
                 </h4>
                 <ul className="space-y-2">
                   {aiInsights.strengths.length > 0 ? (
@@ -623,7 +655,7 @@ export function DailySummary() {
 
               <div>
                 <h4 className="text-xs font-semibold text-rose-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <AlertTriangle className="w-3 h-3" /> Areas for Improvement
+                  <AlertTriangle className="w-3 h-3" /> {txt.areasImprovement}
                 </h4>
                 <ul className="space-y-2">
                   {aiInsights.weaknesses.length > 0 ? (
@@ -646,9 +678,9 @@ export function DailySummary() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Brain className="w-5 h-5 text-indigo-400" />
-                Psychological Analysis & Mental State
+                {txt.psychAnalysis}
               </CardTitle>
-              <p className="text-xs text-gray-400 mt-2 font-normal">Hlubší pohled na tvůj mindset a psychologické vzorce</p>
+              <p className="text-xs text-gray-400 mt-2 font-normal">{txt.deeperLook}</p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
