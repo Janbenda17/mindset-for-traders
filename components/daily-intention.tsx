@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
+import { useLanguage } from "@/contexts/language-context"
 import { Target, Shield, Brain, TrendingUp, CheckCircle } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
@@ -34,6 +35,41 @@ export function DailyIntention() {
   const { toast } = useToast()
   const { completeStage, stages } = useDailyStage()
   const { isLiveMode, portfolioValue } = useData()
+  const { language } = useLanguage()
+  const isEn = language === "en"
+
+  const txt = {
+    setIntention: isEn ? "Set Your Daily Intention" : "Nastav si denní záměr",
+    defineGoals: isEn ? "Define clear goals and limits before starting today's trading" : "Definuj si jasné cíle a limity před začátkem dnešního obchodování",
+    clearGoals: isEn ? "Clear Trading Goals" : "Jasné obchodní cíle",
+    riskManagement: isEn ? "Risk Management" : "Řízení rizik",
+    mentalPrep: isEn ? "Mental Preparation" : "Duševní příprava",
+    todayGoals: isEn ? "Today's Trading Goals" : "Dnešní obchodní cíle",
+    goalQuestion: isEn ? "What do you want to achieve today? (e.g. Take only A+ setups, stick to 2% risk rule, focus on patience...)" : "Co chceš dnes dosáhnout? (např. Brát pouze A+ setupy, držet se pravidla 2% rizika, soustředit se na trpělivost...)",
+    tipBeSpecific: isEn ? "💡 Tip: Be specific and focus on process goals, not just profit goals" : "💡 Tip: Buď konkrétní a soustředí se na procesní cíle, ne jen na ziskovost",
+    maxRisk: isEn ? "Maximum Risk" : "Maximální riziko",
+    riskPerTrade: isEn ? "Risk Per Trade (%)" : "Riziko na obchod (%)",
+    percent: "%",
+    maxRiskDollars: isEn ? "Maximum Risk in Dollars" : "Maximální riziko v dolarech",
+    basedOn: isEn ? "Based on portfolio:" : "Na základě portfolia:",
+    emotionalGoal: isEn ? "Emotional Goal" : "Emoční cíl",
+    todayI: isEn ? "Today I will be" : "Dnes budu",
+    strategy: isEn ? "Today's Trading Strategy" : "Dnešní obchodní strategie",
+    strategyQuestion: isEn ? "What is your strategy for today? (e.g. Trend following on EUR/USD, waiting for breakout confirmation, trading only London session...)" : "Jaká je tvá strategie pro dnes? (např. Sledování trendu na EUR/USD, čekání na potvrzení průrazu, obchodování pouze během londýnské session...)",
+    tipStrategy: isEn ? "💡 Tip: Include specific setups you're looking for and market conditions" : "💡 Tip: Zahrnuj specifické setupy, které hledáš, a tržní podmínky",
+    compass: isEn ? "Your Daily Trading Compass" : "Tvůj denní obchodní kompas",
+    compassDesc: isEn ? "Setting your daily intention will help you stay focused and disciplined throughout the trading day. You can review and reflect on your intentions anytime in the Daily Tracker." : "Nastavení svého denního záměru ti pomůže zůstat soustředěný a disciplinovaný po celý obchodní den. Svůj záměr můžeš zkontrolovat a reflektovat kdykoliv v Daily Tracker.",
+    liveOnly: isEn ? "Available only in Live Mode" : "Dostupné pouze v Live režimu",
+    saveBtn: isEn ? "💾 Save Intention" : "💾 Uložit záměr",
+    stageLocked: isEn ? "Stage Locked" : "Etapa uzamčena",
+    stageLockedDesc: isEn ? "Stage 2 (Daily Intention) has already been completed today and is locked. Changes cannot be made." : "Etapa 2 (Denní záměr) již byla dnes dokončena a je uzamčena. Změny nelze provést.",
+    demoMode: isEn ? "Demo Mode" : "Demo režim",
+    demoModeDesc: isEn ? "This feature is only available in Live Mode. Your data will not be saved in Demo Mode." : "Tato funkce je dostupná pouze v Live Mode. Tvá data se v Demo Mode nebudou ukládat.",
+    missingInfo: isEn ? "Missing Information" : "Chybějící informace",
+    missingInfoDesc: isEn ? "Please fill in your goals and strategy" : "Vyplň prosím své cíle a strategii",
+    saved: isEn ? "✅ Daily Intention Set!" : "✅ Denní záměr nastaven!",
+    savedDesc: isEn ? "Your daily goals and strategy have been saved" : "Tvé denní cíle a strategie byly uloženy",
+  }
   const [intention, setIntention] = useState<DailyIntentionData>({
     date: new Date().toISOString().split("T")[0],
     goals: "",
@@ -52,8 +88,8 @@ export function DailyIntention() {
     // Check if stage is locked
     if (isStage2Locked) {
       toast({
-        title: "Stage Locked",
-        description: "Stage 2 (Daily Intention) has already been completed today and is locked. Changes cannot be made.",
+        title: txt.stageLocked,
+        description: txt.stageLockedDesc,
         variant: "destructive",
         duration: 3000,
       })
@@ -62,8 +98,8 @@ export function DailyIntention() {
 
     if (!isLiveMode) {
       toast({
-        title: "Demo Mode",
-        description: "This feature is only available in Live Mode. Your data will not be saved in Demo Mode.",
+        title: txt.demoMode,
+        description: txt.demoModeDesc,
         variant: "destructive",
         duration: 3000,
       })
@@ -72,8 +108,8 @@ export function DailyIntention() {
 
     if (!intention.goals.trim() || !intention.strategy.trim()) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in your goals and strategy",
+        title: txt.missingInfo,
+        description: txt.missingInfoDesc,
         variant: "destructive",
         duration: 3000,
       })
@@ -93,8 +129,8 @@ export function DailyIntention() {
     completeStage(2)
 
     toast({
-      title: "✅ Daily Intention Set!",
-      description: "Your daily goals and strategy have been saved",
+      title: txt.saved,
+      description: txt.savedDesc,
       duration: 3000,
     })
 
@@ -115,22 +151,22 @@ export function DailyIntention() {
               <Target className="h-10 w-10 text-blue-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-3xl font-black text-blue-400 mb-2">Set Your Daily Intention</h3>
-              <p className="text-lg text-muted-foreground mb-4">
-                Define clear goals and limits before starting today's trading
+      <h3 className="text-3xl font-black text-blue-400 mb-2">{txt.setIntention}</h3>
+      <p className="text-gray-400 mb-6">
+        {txt.defineGoals}
               </p>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="h-4 w-4 text-green-400" />
-                  <span>Clear Trading Goals</span>
+                  <span>{txt.clearGoals}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Shield className="h-4 w-4 text-orange-400" />
-                  <span>Risk Management</span>
+                  <span>{txt.riskManagement}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Brain className="h-4 w-4 text-purple-400" />
-                  <span>Mental Preparation</span>
+                  <span>{txt.mentalPrep}</span>
                 </div>
               </div>
             </div>
@@ -143,18 +179,18 @@ export function DailyIntention() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-green-400" />
-            Today's Trading Goals
+            {txt.todayGoals}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
             value={intention.goals}
             onChange={(e) => setIntention({ ...intention, goals: e.target.value })}
-            placeholder="What do you want to achieve today? (e.g. Take only A+ setups, stick to 2% risk rule, focus on patience...)"
+            placeholder={txt.goalQuestion}
             className="min-h-[120px] bg-white/5 border-white/10 resize-none text-base"
           />
           <p className="text-xs text-muted-foreground mt-2">
-            💡 Tip: Be specific and focus on process goals, not just profit goals
+            {txt.tipBeSpecific}
           </p>
         </CardContent>
       </Card>
@@ -165,12 +201,12 @@ export function DailyIntention() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-red-400" />
-              Maximum Risk
+              {txt.maxRisk}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">Risk Per Trade (%)</label>
+              <label className="text-sm text-muted-foreground">{txt.riskPerTrade}</label>
               <div className="flex items-center gap-4">
                 <Input
                   type="number"
@@ -183,14 +219,14 @@ export function DailyIntention() {
                   step="0.1"
                   className="h-12 text-lg font-bold bg-white/5 border-white/10 text-center"
                 />
-                <span className="text-lg font-bold text-red-400">%</span>
+                <span className="text-lg font-bold text-red-400">{txt.percent}</span>
               </div>
             </div>
             <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-              <div className="text-sm text-muted-foreground mb-1">Maximum Risk in Dollars</div>
+              <div className="text-sm text-muted-foreground mb-1">{txt.maxRiskDollars}</div>
               <div className="text-3xl font-black text-red-400">${maxRiskDollars.toFixed(2)}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Based on portfolio: ${portfolioValue.toLocaleString()}
+                {txt.basedOn} ${portfolioValue.toLocaleString()}
               </div>
             </div>
           </CardContent>
@@ -201,7 +237,7 @@ export function DailyIntention() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-purple-400" />
-              Emotional Goal
+              {txt.emotionalGoal}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -222,7 +258,7 @@ export function DailyIntention() {
             </Select>
             {selectedEmotion && (
               <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                <div className="text-sm text-muted-foreground mb-1">Today I will be</div>
+                <div className="text-sm text-muted-foreground mb-1">{txt.todayI}</div>
                 <div className={cn("text-2xl font-black", selectedEmotion.color)}>{selectedEmotion.label}</div>
               </div>
             )}
@@ -235,18 +271,18 @@ export function DailyIntention() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-blue-400" />
-            Today's Trading Strategy
+            {txt.strategy}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
             value={intention.strategy}
             onChange={(e) => setIntention({ ...intention, strategy: e.target.value })}
-            placeholder="What is your strategy for today? (e.g. Trend following on EUR/USD, waiting for breakout confirmation, trading only London session...)"
+            placeholder={txt.strategyQuestion}
             className="min-h-[120px] bg-white/5 border-white/10 resize-none text-base"
           />
           <p className="text-xs text-muted-foreground mt-2">
-            💡 Tip: Include specific setups you're looking for and market conditions
+            {txt.tipStrategy}
           </p>
         </CardContent>
       </Card>
@@ -255,9 +291,9 @@ export function DailyIntention() {
       <div className="p-6 rounded-xl bg-blue-500/10 border-2 border-blue-500/30 flex items-start gap-4">
         <CheckCircle className="h-6 w-6 text-blue-400 flex-shrink-0 mt-1" />
         <div>
-          <h4 className="font-bold text-blue-400 mb-2">Your Daily Trading Compass</h4>
+          <h4 className="font-bold text-blue-400 mb-2">{txt.compass}</h4>
           <p className="text-sm text-muted-foreground">
-            Setting your daily intention will help you stay focused and disciplined throughout the trading day. You can review and reflect on your intentions anytime in the Daily Tracker.
+            {txt.compassDesc}
           </p>
         </div>
       </div>
@@ -276,10 +312,10 @@ export function DailyIntention() {
       >
         <CheckCircle className="w-6 h-6 mr-2" />
         {isStage2Locked
-          ? "Closed - Daily Intention was completed today"
+          ? isEn ? "Closed - Daily Intention was completed today" : "Uzavřeno - Denní záměr byl dnes dokončen"
           : isLiveMode
-            ? "Set Daily Intention"
-            : "Available only in Live Mode"}
+            ? txt.saveBtn
+            : txt.liveOnly}
       </Button>
     </div>
   )
