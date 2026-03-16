@@ -238,25 +238,22 @@ const translations = {
 function detectLanguage(): Language {
   if (typeof window === "undefined") {
     const forceLocale = process.env.NEXT_PUBLIC_FORCE_LOCALE
+    if (forceLocale === "cs") return "cs"
     if (forceLocale === "en") return "en"
-    return "cs"
+    return "en"
   }
 
   // Client-side: env var has highest priority
   const forceLocale = process.env.NEXT_PUBLIC_FORCE_LOCALE
-  if (forceLocale === "en") return "en"
   if (forceLocale === "cs") return "cs"
+  if (forceLocale === "en") return "en"
 
   const hostname = window.location.hostname
 
-  // Only switch to English for explicit .ai / .au / .com production domains
-  // vusercontent.net preview and localhost always default to Czech
-  const isEnglish =
-    hostname.endsWith(".ai") ||
-    hostname.endsWith(".au") ||
-    (hostname.endsWith(".com") && !hostname.includes("vusercontent"))
+  // .cz domain = Czech, everything else = English
+  const isCzech = hostname.endsWith(".cz")
 
-  return isEnglish ? "en" : "cs"
+  return isCzech ? "cs" : "en"
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
