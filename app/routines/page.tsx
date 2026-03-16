@@ -313,7 +313,7 @@ export default function RoutinesPage() {
     editMode: isEn ? "Edit" : "Upravit",
     saveHistory: isEn ? "Save to History" : "Uložit do historii",
     savedToHistory: isEn ? "Saved to history" : "Uloženo do historii",
-    morning Routine: isEn ? "Morning Routine" : "Ranní rutina",
+    morningRoutine: isEn ? "Morning Routine" : "Ranní rutina",
     eveningRoutine: isEn ? "Evening Routine" : "Večerní rutina",
     progress: isEn ? "Progress" : "Pokrok",
     history: isEn ? "History" : "Historie",
