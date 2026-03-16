@@ -313,18 +313,18 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
       {
         priority: "high" as const,
         emoji: "📋",
-        title: "DISCIPLINE - Key to profitability!",
-        description: `Low discipline (${78}%) equals gambling, not trading.`,
-        action: "Create a checklist BEFORE every trading session: 1) Plan checked? 2) Emotional state OK? 3) Positions OK? No trade without completing the checklist!",
-        impact: "The difference between a losing and a winning trader.",
+        title: isEn ? "DISCIPLINE - Key to profitability!" : "DISCIPLÍNA - Klíč k ziskovosti!",
+        description: isEn ? `Low discipline (${78}%) equals gambling, not trading.` : `Nízká disciplína (${78}%) se rovná hazardu, ne obchodování.`,
+        action: isEn ? "Create a checklist BEFORE every trading session: 1) Plan checked? 2) Emotional state OK? 3) Positions OK? No trade without completing the checklist!" : "Vytvoř si checklist PŘED každou obchodní session: 1) Plán zkontrolován? 2) Emočně v pořádku? 3) Pozice v pořádku? Bez checklist není obchod!",
+        impact: isEn ? "The difference between a losing and a winning trader." : "Rozdíl mezi ztrátovým a vítězným obchodníkem.",
       },
       {
         priority: "medium" as const,
         emoji: "😰",
-        title: "REDUCE STRESS - Critical level!",
-        description: `High stress (${35}%) destroys your decisions and long-term health.`,
-        action: "Immediately start with 10min breathing exercises BEFORE each trade and after 2 consecutive losses. Consider reducing positions by 50%.",
-        impact: "Your performance and health are at risk!",
+        title: isEn ? "REDUCE STRESS - Critical level!" : "SNÍŽIT STRES - Kritická úroveň!",
+        description: isEn ? `High stress (${35}%) destroys your decisions and long-term health.` : `Vysoký stres (${35}%) ničí tvoje rozhodnutí a dlouhodobé zdraví.`,
+        action: isEn ? "Immediately start with 10min breathing exercises BEFORE each trade and after 2 consecutive losses. Consider reducing positions by 50%." : "Okamžitě začni s 10min cvičeními dýchání PŘED každým obchodem a po 2 po sobě jdoucích ztrátách. Zvažuj snížení pozic o 50%.",
+        impact: isEn ? "Your performance and health are at risk!" : "Tvůj výkon a zdraví jsou v ohrožení!",
       },
     ],
     weekdayChartData: [
@@ -1273,7 +1273,7 @@ export default function PsychologyAnalyticsPage() {
   const analyticsData = useMemo(() => {
     if (!isLiveMode) {
       // Virtual mode - vždy vrat demo data
-      const demoAnalytics = generateDemoData("balanced")
+      const demoAnalytics = generateDemoData("balanced", isEn)
       const analysis = generatePsychologicalAnalysis(
         demoAnalytics.trades || [],
         [], // journals
@@ -1281,7 +1281,7 @@ export default function PsychologyAnalyticsPage() {
         false, // isLiveMode
         "balanced",
         "month",
-        true // isEn - always English for demo
+        isEn // Use current language setting
       )
       return {
         ...demoAnalytics,
@@ -1313,7 +1313,7 @@ export default function PsychologyAnalyticsPage() {
       true, // isLiveMode
       "balanced",
       "month",
-      true // isEn - always English
+      isEn // Use current language setting
     )
     
     const psychMetrics = calculatePsychologicalMetrics(allTrades, moodDataFromTrades)
