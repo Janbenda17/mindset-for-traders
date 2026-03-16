@@ -27,6 +27,7 @@ import {
 import { format } from "date-fns"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { getUserStorageKey } from "@/utils/storage-namespace"
+import { useLanguage } from "@/contexts/language-context"
 
 interface TradingPlanData {
   date: string
@@ -46,8 +47,55 @@ export function TradingPlan() {
   const router = useRouter()
   const { toast } = useToast()
   const { completeStage, stages } = useDailyStage()
+  const { language } = useLanguage()
+  const isEn = language === "en"
   const [isLoading, setIsLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+
+  const txt = {
+    newPlan: isEn ? "✨ New Plan" : "✨ Nový plán",
+    whyImportant: isEn ? "💡 Why Is a Trading Plan Important?" : "💡 Proč je obchodní plán důležitý?",
+    tradingWithout: isEn ? "Trading without a plan is gambling. A detailed plan will help you maintain discipline, avoid impulsive decisions and systematically improve your results. The more specific your plan, the better your results!" : "Obchodování bez plánu je hazard. Detailní plán ti pomůže zachovat disciplínu, vyhnout se impulsivním rozhodnutím a systematicky zlepšovat výsledky. Čím konkrétněji plánuješ, tím lepší výsledky!",
+    setupStrategy: isEn ? "🎯 Setup & Strategy" : "🎯 Setup a strategie",
+    whatSetups: isEn ? "What will you look for today and where?" : "Co budeš dnes hledat a kde?",
+    setupsQuestion: isEn ? "What Setups Am I Looking For Today?" : "Jaké setupy dnes hledám?",
+    setupsExample: isEn ? "E.g: Range breakout, Pullback to trendline, Support/Resistance bounce...\nBe specific! E.g. 'Only clean breakouts above 4H resistance with retest'" : "Např: Breakout z rangu, Pullback k trendlince, Bounce od Support/Resistance...\nBuď konkrétní! Např. 'Jen čisté breakouty nad 4H rezistencí s retestem'",
+    pairsQuestion: isEn ? "Which Pairs Am I Monitoring?" : "Které páry monitoruji?",
+    pairsExample: isEn ? "EUR/USD, GBP/USD, GOLD..." : "EUR/USD, GBP/USD, ZLATO...",
+    timeframesLabel: isEn ? "Timeframes" : "Timeframy",
+    timeframesExample: isEn ? "4H for bias, 15min for entry..." : "4H pro bias, 15min pro vstup...",
+    marketAnalysis: isEn ? "Market Analysis & Bias" : "Tržní analýza a bias",
+    marketAnalysisExample: isEn ? "What is my bias today? Bullish/Bearish? Why?" : "Jaký je můj bias dnes? Bullish/Bearish? Proč?",
+    keyLevels: isEn ? "Key Levels (Support/Resistance)" : "Klíčové hladiny (Support/Resistance)",
+    keyLevelsExample: isEn ? "Important price levels I'm monitoring today..." : "Důležité cenové hladiny které dnes monitoruji...",
+    entryRules: isEn ? "✅ Entry Rules" : "✅ Pravidla vstupu",
+    entryConditions: isEn ? "Under what conditions will I enter a position?" : "Za jakých podmínek vstoupím do pozice?",
+    entryChecklist: isEn ? "Entry Checklist" : "Checklist pro vstup",
+    entryChecklistExample: isEn ? "1. Breakout confirmed on 15min\n2. Volume higher than average\n3. Retest successful\n4. No important news next 30min...\nThe more specific, the better! Each point = checkbox before entry." : "1. Breakout potvrzen na 15min\n2. Volume vyšší než průměr\n3. Retest úspěšný\n4. Žádné důležité zprávy příští 30min...\nČím konkrétněji, tím lépe! Každý bod = checkbox před vstupem.",
+    exitRules: isEn ? "🚪 Exit Rules" : "🚪 Pravidla výstupu",
+    exitWhen: isEn ? "When and how will I close the position?" : "Kdy a jak zavřu pozici?",
+    exitStrategy: isEn ? "Exit Strategy" : "Strategie výstupu",
+    exitStrategyExample: isEn ? "1. TP1 at 1:1.5 (close 50%)\n2. TP2 at 1:3 (close 50%)\n3. Move SL to BE after TP1\n4. Trailing stop after TP2..." : "1. TP1 na 1:1.5 (zavři 50%)\n2. TP2 na 1:3 (zavři 50%)\n3. Přesuň SL na BE po TP1\n4. Trailing stop po TP2...",
+    stopLossLabel: isEn ? "Stop Loss Strategy" : "Strategie Stop Loss",
+    stopLossExample: isEn ? "Below last swing low, below support level..." : "Pod poslední swing low, pod support hladinu...",
+    takeProfitLabel: isEn ? "Take Profit Strategy" : "Strategie Take Profit",
+    takeProfitExample: isEn ? "At resistance, 1:2 RR, fibonacci extension..." : "U rezistence, 1:2 RR, fibonacci rozšíření...",
+    additionalNotes: isEn ? "📝 Additional Notes" : "📝 Další poznámky",
+    anythingElse: isEn ? "Anything else that is important today" : "Cokoli dalšího, co je důležité dnes",
+    notesExample: isEn ? "Special events (news, earnings), market sentiment, personal notes..." : "Speciální события (zprávy, earnings), nálada trhu, osobní poznámky...",
+    backDashboard: isEn ? "Back to Dashboard" : "Zpět na Dashboard",
+    savePlan: isEn ? "Save Plan & Continue" : "Uložit plán a pokračovat",
+    goldenRule: isEn ? "⚠️ Golden Rule:" : "⚠️ Zlaté pravidlo:",
+    goldenRuleText: isEn ? "If your setup is not in the trading plan, DON'T TRADE IT! Improvisation = losses." : "Pokud tvůj setup není v plánu, NETRASUJ HO! Improvizace = ztráty.",
+    stageLocked: isEn ? "Stage Locked" : "Etapa uzamčena",
+    stageLockedDesc: isEn ? "Stage 3 (Trading Plan) has already been completed today and is locked. Changes cannot be made." : "Etapa 3 (Obchodní plán) již byla dnes dokončena a je uzamčena. Změny nelze provést.",
+    demoMode: isEn ? "Demo Mode" : "Demo režim",
+    demoModeDesc: isEn ? "This feature is only available in Live Mode. Your data will not be saved in Demo Mode." : "Tato funkce je dostupná pouze v Live Mode. Tvá data se v Demo Mode nebudou ukládat.",
+    missingInfo: isEn ? "Missing Information" : "Chybějící informace",
+    missingInfoDesc: isEn ? "Please fill in all required fields (marked with *)" : "Vyplň prosím všechna povinná pole (označená *)",
+    saved: isEn ? "✅ Trading Plan Saved!" : "✅ Obchodní plán uložen!",
+    savedDesc: isEn ? "Your trading plan has been saved for today" : "Tvůj obchodní plán byl uložen na dnes",
+  }
 
   // Check if stage 3 is locked
   const stage3 = stages.find((s) => s.id === 3)
@@ -196,7 +244,7 @@ export function TradingPlan() {
               </div>
             </div>
             <Badge className="text-base px-6 py-2 rounded-full bg-blue-500/20 text-blue-400 border-blue-500/30">
-              {isEditing ? "📝 Editing" : "✨ New Plan"}
+              {isEditing ? "📝 Editing" : txt.newPlan}
             </Badge>
           </div>
         </div>
@@ -205,9 +253,9 @@ export function TradingPlan() {
       {/* Info Alert */}
       <Alert className="mb-8 border-blue-500/30 bg-blue-500/10">
         <Info className="h-5 w-5 text-blue-400" />
-        <AlertTitle className="text-blue-400 font-bold">💡 Why Is a Trading Plan Important?</AlertTitle>
+        <AlertTitle className="text-blue-400 font-bold">{txt.whyImportant}</AlertTitle>
         <AlertDescription className="text-muted-foreground">
-          Trading without a plan is gambling. A detailed plan will help you maintain discipline, avoid impulsive decisions and systematically improve your results. The more specific your plan, the better your results!
+          {txt.tradingWithout}
         </AlertDescription>
       </Alert>
 
@@ -216,26 +264,26 @@ export function TradingPlan() {
         <Card className="border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-400">
-              <Target className="h-6 w-6" />🎯 Setup & Strategy
+              <Target className="h-6 w-6" />{txt.setupStrategy}
             </CardTitle>
-            <CardDescription>What will you look for today and where?</CardDescription>
+            <CardDescription>{txt.whatSetups}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="setups" className="text-white flex items-center gap-2">
                 <Activity className="h-4 w-4 text-green-400" />
-                What Setups Am I Looking For Today? *
+                {txt.setupsQuestion} *
               </Label>
               <Textarea
                 id="setups"
                 value={formData.setups}
                 onChange={(e) => handleChange("setups", e.target.value)}
-                placeholder="E.g: Range breakout, Pullback to trendline, Support/Resistance bounce..."
+                placeholder={txt.setupsExample}
                 className="min-h-24 bg-slate-900/50 border-green-500/30 text-white"
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Be specific! E.g. 'Only clean breakouts above 4H resistance with retest'
+                {txt.setupsExample.split('\n')[1]}
               </p>
             </div>
 
