@@ -202,6 +202,8 @@ export default function JournalPage() {
     // Final message
     excellentJob: isEn ? "Excellent Job!" : "Výborně!",
     tradingGreat: isEn ? "Your trading is in great shape. Keep going! 🚀" : "Tvé obchodování je ve skvělé formě. Pokračuj! 🚀",
+    personalizedRecommendations: isEn ? "personalized recommendations for improving performance" : "personalizovaných doporučení pro zlepšení výkonu",
+    viewInsights: isEn ? "View Insights" : "Zobrazit Insights",
   }
 
   useEffect(() => {
@@ -480,8 +482,8 @@ export default function JournalPage() {
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg text-xs md:text-sm px-3 md:px-4"
             >
               <Brain className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              <span className="hidden md:inline">AI Insights</span>
-              <span className="md:hidden">AI</span>
+              <span className="hidden md:inline">{txt.aiInsights}</span>
+              <span className="md:hidden">{txt.aiShort}</span>
               {insights.length > 0 && (
                 <Badge className="ml-1 md:ml-2 bg-white/20 text-white border-0 text-xs">{insights.length}</Badge>
               )}
@@ -760,7 +762,7 @@ export default function JournalPage() {
                   <div>
                     <h3 className="text-white font-bold text-lg">{txt.aiInsightsAvailable}</h3>
                     <p className="text-gray-300 text-sm">
-                      {insights.length} personalized recommendations for improving performance
+                      {insights.length} {txt.personalizedRecommendations}
                     </p>
                   </div>
                 </div>
@@ -769,7 +771,7 @@ export default function JournalPage() {
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                 >
                   <Eye className="w-4 h-4 mr-2" />
-                  Zobrazit Insights
+                  {txt.viewInsights}
                 </Button>
               </div>
             </CardContent>
@@ -1142,10 +1144,10 @@ export default function JournalPage() {
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
               <Brain className="w-6 h-6 text-purple-400" />
-              AI Insights & Doporučení
+              {txt.aiInsights} & {isEn ? "Recommendations" : "Doporučení"}
               <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
                 <Sparkles className="w-3 h-3 mr-1" />
-                {insights.length} insights
+                {insights.length} {isEn ? "insights" : "poznatků"}
               </Badge>
             </DialogTitle>
           </DialogHeader>
@@ -1188,8 +1190,8 @@ export default function JournalPage() {
                 <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center border-2 border-purple-500/30">
                   <Sparkles className="w-10 h-10 text-purple-400" />
                 </div>
-                <p className="text-lg font-medium text-gray-400 mb-2">Skvělá práce!</p>
-                <p className="text-sm text-gray-500">Tvůj trading je v perfektní kondici. Pokračuj! 🚀</p>
+                <p className="text-lg font-medium text-gray-400 mb-2">{txt.excellentJob}</p>
+                <p className="text-sm text-gray-500">{txt.tradingGreat}</p>
               </div>
             )}
           </div>
