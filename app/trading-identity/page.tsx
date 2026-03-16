@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useData } from "@/contexts/data-context"
+import { useLanguage } from "@/contexts/language-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -774,6 +775,30 @@ const generateRecommendations = (
 export default function TradingIdentityPage() {
   const { toast } = useToast()
   const { isLiveMode } = useData()
+  const { language } = useLanguage()
+  const isEn = language === "en"
+
+  const txt = {
+    tradingIdentity: isEn ? "Trading Identity" : "Obchodní identita",
+    yourPersonalityProfile: isEn ? "Your personality profile" : "Tvůj profil osobnosti",
+    demo: isEn ? "Demo" : "Demo",
+    retakeTest: isEn ? "Retake Test" : "Opakovat test",
+    yourTradingPersona: isEn ? "Your Trading Persona" : "Tvoje obchodní persona",
+    psychologicalProfile: isEn ? "Psychological Profile" : "Psychologický profil",
+    emotionalControl: isEn ? "Emotional Control" : "Emoční kontrola",
+    discipline: isEn ? "Discipline" : "Disciplína",
+    patience: isEn ? "Patience" : "Trpělivost",
+    riskTolerance: isEn ? "Risk Tolerance" : "Tolerance vůči riziku",
+    analyticalThinking: isEn ? "Analytical Thinking" : "Analytické myšlení",
+    adaptability: isEn ? "Adaptability" : "Adaptabilita",
+    yourStrengths: isEn ? "Your Strengths" : "Tvoje silné stránky",
+    whatToWatchFor: isEn ? "What to Watch For" : "Na co si dát pozor",
+    personalizedRecommendations: isEn ? "Personalized Recommendations" : "Personalizovaná doporučení",
+    tradingIdentityBuilder: isEn ? "Trading Identity Builder" : "Tvůrce obchodní identity",
+    discoverTradingStyle: isEn ? "Discover your trading style, strengths, and areas for development. The test takes approximately 5 minutes." : "Objevi svůj obchodní styl, silné stránky a oblasti pro rozvoj. Test trvá přibližně 5 minut.",
+    startTest: isEn ? "Start Test" : "Začít test",
+    skipTest: isEn ? "Skip (Demo)" : "Přeskočit (Demo)",
+  }
 
   const [currentStep, setCurrentStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string | number>>({})
@@ -1079,19 +1104,19 @@ export default function TradingIdentityPage() {
                 <Brain className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Trading Identity</h1>
-                <p className="text-sm text-gray-400">Your personality profile</p>
+                <h1 className="text-2xl font-bold text-white">{txt.tradingIdentity}</h1>
+                <p className="text-sm text-gray-400">{txt.yourPersonalityProfile}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Demo</Badge>}
+              {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">{txt.demo}</Badge>}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={resetProfile}
                 className="border-slate-700 text-gray-300 bg-transparent"
               >
-                Retake Test
+                {txt.retakeTest}
               </Button>
             </div>
           </div>
@@ -1108,7 +1133,7 @@ export default function TradingIdentityPage() {
                 </div>
                 <div className="flex-1">
                   <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 mb-3">
-                    Your Trading Persona
+                    {txt.yourTradingPersona}
                   </Badge>
                   <h2 className="text-3xl font-bold text-white mb-3">{personaInfo?.name}</h2>
                   <p className="text-gray-300 text-lg leading-relaxed">{profile.description}</p>
@@ -1137,19 +1162,19 @@ export default function TradingIdentityPage() {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Brain className="w-5 h-5 text-purple-400" />
-                Psychological Profile
+                {txt.psychologicalProfile}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
                 {Object.entries(profile.psychologicalProfile).map(([key, value]) => {
                   const labels: Record<string, string> = {
-                    emotionalControl: "Emotional Control",
-                    discipline: "Discipline",
-                    patience: "Patience",
-                    riskTolerance: "Risk Tolerance",
-                    analyticalThinking: "Analytical Thinking",
-                    adaptability: "Adaptability",
+                    emotionalControl: txt.emotionalControl,
+                    discipline: txt.discipline,
+                    patience: txt.patience,
+                    riskTolerance: txt.riskTolerance,
+                    analyticalThinking: txt.analyticalThinking,
+                    adaptability: txt.adaptability,
                   }
                   return (
                     <div key={key} className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/50">
@@ -1176,7 +1201,7 @@ export default function TradingIdentityPage() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-green-400" />
-                  Your Strengths
+                  {txt.yourStrengths}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1196,10 +1221,10 @@ export default function TradingIdentityPage() {
 
             <Card className="bg-slate-900/40 backdrop-blur-md border-slate-700/50">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-orange-400" />
-                  What to Watch For
-                </CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-orange-400" />
+                {txt.whatToWatchFor}
+              </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -1220,10 +1245,10 @@ export default function TradingIdentityPage() {
           {/* Recommendations */}
           <Card className="bg-slate-900/40 backdrop-blur-md border-slate-700/50">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Lightbulb className="w-5 h-5 text-yellow-400" />
-                Personalized Recommendations
-              </CardTitle>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-yellow-400" />
+              {txt.personalizedRecommendations}
+            </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
@@ -1274,13 +1299,13 @@ export default function TradingIdentityPage() {
             <div className="p-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl w-fit mx-auto mb-6">
               <Brain className="w-12 h-12 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-4">Trading Identity Builder</h1>
+            <h1 className="text-3xl font-bold text-white mb-4">{txt.tradingIdentityBuilder}</h1>
             <p className="text-gray-400 mb-8 max-w-md mx-auto">
-              Discover your trading style, strengths, and areas for development. The test takes approximately 5 minutes.
+              {txt.discoverTradingStyle}
             </p>
             <Button onClick={startQuiz} size="lg" className="bg-purple-600 hover:bg-purple-700">
               <Zap className="w-5 h-5 mr-2" />
-              Start Test
+              {txt.startTest}
             </Button>
           </CardContent>
         </Card>
