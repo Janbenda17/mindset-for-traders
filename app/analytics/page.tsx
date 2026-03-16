@@ -1212,6 +1212,8 @@ export default function PsychologyAnalyticsPage() {
   const { user, authReady } = useAuth()
   const { isLiveMode, isLoading: modeLoading } = useLiveMode()
   const { getAllTrades, getAllMorningChecks } = useData()
+  const { language } = useLanguage()
+  const isEn = language === "en"
   const {
     analytics,
     isLoading: analyticsLoading,
