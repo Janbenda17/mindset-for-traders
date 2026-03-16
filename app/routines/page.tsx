@@ -900,8 +900,8 @@ export default function RoutinesPage() {
                       <Sun className="w-5 h-5 text-orange-400" />
                     </div>
                     <div>
-                      <CardTitle className="text-white">Morning Routine</CardTitle>
-                      <CardDescription>Prepare yourself for a successful trading day</CardDescription>
+                      <CardTitle className="text-white">{txt.morningRoutine}</CardTitle>
+                      <CardDescription>{isEn ? "Prepare yourself for a successful trading day" : "Připrav se na úspěšný obchodní den"}</CardDescription>
                     </div>
                   </div>
                   <div className="text-right">
@@ -945,8 +945,8 @@ export default function RoutinesPage() {
                       <Moon className="w-5 h-5 text-blue-400" />
                     </div>
                     <div>
-                      <CardTitle className="text-white">Evening Routine</CardTitle>
-                      <CardDescription>Close your day and prepare for tomorrow</CardDescription>
+                      <CardTitle className="text-white">{txt.eveningRoutine}</CardTitle>
+                      <CardDescription>{isEn ? "Close your day and prepare for tomorrow" : "Uzavři svůj den a připravuj se na zítřek"}</CardDescription>
                     </div>
                   </div>
                   <div className="text-right">
@@ -989,7 +989,7 @@ export default function RoutinesPage() {
                     <History className="w-5 h-5 text-purple-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-white">Routine History</CardTitle>
+                    <CardTitle className="text-white">{isEn ? "Routine History" : "Historie rutiny"}</CardTitle>
                     <CardDescription>Last 30 days</CardDescription>
                   </div>
                 </div>
