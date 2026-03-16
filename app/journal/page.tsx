@@ -127,81 +127,81 @@ export default function JournalPage() {
 
   const txt = {
     // Page title and subtitle
-    journalTitle: isEn ? "Trading Journal" : "Trading Journal",
-    journalSubtitle: isEn ? "Record your thoughts, emotions, and lessons from trading." : "Record your thoughts, emotions, and lessons from trading.",
+    journalTitle: isEn ? "Trading Journal" : "Obchodní deník",
+    journalSubtitle: isEn ? "Record your thoughts, emotions, and lessons from trading." : "Zaznamenávej své myšlenky, emoce a lekce z obchodování.",
     
     // Virtual mode notice
-    virtualNotice: isEn ? "You are currently viewing data in Virtual mode" : "You are currently viewing data in Virtual mode",
-    virtualNotice2: isEn ? " – how it may look during software use" : " – how it may look during software use",
+    virtualNotice: isEn ? "You are currently viewing data in Virtual mode" : "Právě prohlížíš data ve Virtual režimu",
+    virtualNotice2: isEn ? " – how it may look during software use" : " – jak by to vypadalo během používání software",
     
     // Tab labels
-    aiInsights: isEn ? "AI Insights" : "AI Insights",
+    aiInsights: isEn ? "AI Insights" : "AI Analýza",
     aiShort: isEn ? "AI" : "AI",
-    quickEntry: isEn ? "Quick Entry" : "Quick Entry",
-    newEntry: isEn ? "New Entry" : "New Entry",
-    cal: isEn ? "Cal" : "Cal",
-    calendar: isEn ? "Calendar" : "Calendar",
-    allRecords: isEn ? "All Records" : "All Records",
-    list: isEn ? "List" : "List",
-    stats: isEn ? "Stats" : "Stats",
+    quickEntry: isEn ? "Quick Entry" : "Rychlý záznam",
+    newEntry: isEn ? "New Entry" : "Nový záznam",
+    cal: isEn ? "Cal" : "Kal",
+    calendar: isEn ? "Calendar" : "Kalendář",
+    allRecords: isEn ? "All Records" : "Všechny záznamy",
+    list: isEn ? "List" : "Seznam",
+    stats: isEn ? "Stats" : "Statistika",
     
     // Stats labels
-    total: isEn ? "Total" : "Total",
-    records: isEn ? "Records" : "Records",
-    thisWeek: isEn ? "This Week" : "This Week",
-    avgPerDay: isEn ? "Avg/Day" : "Avg/Day",
-    streak: isEn ? "Streak" : "Streak",
-    totalPnL: isEn ? "Total P&L" : "Total P&L",
-    winRate: isEn ? "Win Rate" : "Win Rate",
-    bestDay: isEn ? "Best Day" : "Best Day",
-    mood: isEn ? "Mood" : "Mood",
+    total: isEn ? "Total" : "Celkem",
+    records: isEn ? "Records" : "Záznamů",
+    thisWeek: isEn ? "This Week" : "Tento týden",
+    avgPerDay: isEn ? "Avg/Day" : "Průměr/Den",
+    streak: isEn ? "Streak" : "Série",
+    totalPnL: isEn ? "Total P&L" : "Celkový P&L",
+    winRate: isEn ? "Win Rate" : "Míra výher",
+    bestDay: isEn ? "Best Day" : "Nejlepší den",
+    mood: isEn ? "Mood" : "Nálada",
     
     // Insights
-    aiInsightsAvailable: isEn ? "AI Insights available!" : "AI Insights available!",
-    greatConsistency: isEn ? "Great Consistency!" : "Great Consistency!",
-    consistencyMsg: (streak: number) => isEn ? `You've journaled for ${streak} days in a row. Keep it up!` : `You've journaled for ${streak} days in a row. Keep it up!`,
-    improveConsistency: isEn ? "Improve Consistency" : "Improve Consistency",
-    consistencyWarning: isEn ? "Regular journaling is key to success. Try writing every day!" : "Regular journaling is key to success. Try writing every day!",
-    excellentWinRate: isEn ? "Excellent Win Rate!" : "Excellent Win Rate!",
-    winRateSuccess: (wr: number) => isEn ? `${wr}% win rate is professional level. Great work!` : `${wr}% win rate is professional level. Great work!`,
-    winRateNeeds: isEn ? "Win Rate Needs Improvement" : "Win Rate Needs Improvement",
-    winRateWarning: (wr: number) => isEn ? `${wr}% win rate is below break-even. Check your strategy!` : `${wr}% win rate is below break-even. Check your strategy!`,
-    greatPnL: isEn ? "Great P&L!" : "Great P&L!",
-    pnLSuccess: (pnl: number) => isEn ? `+$${pnl} is excellent performance. Keep it up!` : `+$${pnl} is excellent performance. Keep it up!`,
-    negativePnL: isEn ? "Negative P&L" : "Negative P&L",
-    pnLWarning: (pnl: number) => isEn ? `${pnl} requires immediate action. Review your risk management!` : `${pnl} requires immediate action. Review your risk management!`,
-    greatMood: isEn ? "Great Mood!" : "Great Mood!",
-    moodSuccess: (mood: number) => isEn ? `Average mood ${mood}/10 is excellent. Positive mindset = better results!` : `Average mood ${mood}/10 is excellent. Positive mindset = better results!`,
-    lowMood: isEn ? "Low Mood" : "Low Mood",
-    moodWarning: (mood: number) => isEn ? `Average mood ${mood}/10. Focus on mental health!` : `Average mood ${mood}/10. Focus on mental health!`,
-    excellentProfitFactor: isEn ? "Excellent Profit Factor!" : "Excellent Profit Factor!",
-    profitFactorMsg: (pf: number) => isEn ? `Profit factor ${pf.toFixed(2)} is excellent. Your wins are bigger than losses!` : `Profit factor ${pf.toFixed(2)} is excellent. Your wins are bigger than losses!`,
+    aiInsightsAvailable: isEn ? "AI Insights available!" : "AI Analýza dostupná!",
+    greatConsistency: isEn ? "Great Consistency!" : "Skvělá konzistence!",
+    consistencyMsg: (streak: number) => isEn ? `You've journaled for ${streak} days in a row. Keep it up!` : `Zaznamenáváš si ${streak} dní v kuse. Pokračuj!`,
+    improveConsistency: isEn ? "Improve Consistency" : "Vylepši konzistenci",
+    consistencyWarning: isEn ? "Regular journaling is key to success. Try writing every day!" : "Pravidelné zaznamenávání je klíčem k úspěchu. Zkus psát každý den!",
+    excellentWinRate: isEn ? "Excellent Win Rate!" : "Vynikající míra výher!",
+    winRateSuccess: (wr: number) => isEn ? `${wr}% win rate is professional level. Great work!` : `${wr}% míra výher je profesionální úroveň. Skvělá práce!`,
+    winRateNeeds: isEn ? "Win Rate Needs Improvement" : "Míra výher potřebuje vylepšení",
+    winRateWarning: (wr: number) => isEn ? `${wr}% win rate is below break-even. Check your strategy!` : `${wr}% míra výher je pod rentabilností. Zkontroluj svou strategii!`,
+    greatPnL: isEn ? "Great P&L!" : "Skvělý P&L!",
+    pnLSuccess: (pnl: number) => isEn ? `+$${pnl} is excellent performance. Keep it up!` : `+$${pnl} je vynikající výkon. Pokračuj!`,
+    negativePnL: isEn ? "Negative P&L" : "Negativní P&L",
+    pnLWarning: (pnl: number) => isEn ? `${pnl} requires immediate action. Review your risk management!` : `${pnl} vyžaduje okamžité jednání. Zkontroluj řízení rizik!`,
+    greatMood: isEn ? "Great Mood!" : "Skvělá nálada!",
+    moodSuccess: (mood: number) => isEn ? `Average mood ${mood}/10 is excellent. Positive mindset = better results!` : `Průměrná nálada ${mood}/10 je vynikající. Pozitivní myšlení = lepší výsledky!`,
+    lowMood: isEn ? "Low Mood" : "Nízká nálada",
+    moodWarning: (mood: number) => isEn ? `Average mood ${mood}/10. Focus on mental health!` : `Průměrná nálada ${mood}/10. Soustřeď se na duševní zdraví!`,
+    excellentProfitFactor: isEn ? "Excellent Profit Factor!" : "Vynikající profit faktor!",
+    profitFactorMsg: (pf: number) => isEn ? `Profit factor ${pf.toFixed(2)} is excellent. Your wins are bigger than losses!` : `Profit faktor ${pf.toFixed(2)} je vynikající. Tvoje výhry jsou větší než ztráty!`,
     
     // Trade stats
-    profitingTrades: isEn ? "Profitable Trades" : "Profitable Trades",
-    avgProfit: isEn ? "Average Profit" : "Average Profit",
-    losingTrades: isEn ? "Losing Trades" : "Losing Trades",
-    avgLoss: isEn ? "Average Loss" : "Average Loss",
-    profitFactor: isEn ? "Profit Factor" : "Profit Factor",
-    rating: isEn ? "Rating" : "Rating",
-    bestDayVal: isEn ? "Best Day" : "Best Day",
-    worstDay: isEn ? "Worst Day" : "Worst Day",
-    thisMonth: isEn ? "This Month" : "This Month",
+    profitingTrades: isEn ? "Profitable Trades" : "Ziskové obchody",
+    avgProfit: isEn ? "Average Profit" : "Průměrný zisk",
+    losingTrades: isEn ? "Losing Trades" : "Ztrátové obchody",
+    avgLoss: isEn ? "Average Loss" : "Průměrná ztráta",
+    profitFactor: isEn ? "Profit Factor" : "Profit faktor",
+    rating: isEn ? "Rating" : "Hodnocení",
+    bestDayVal: isEn ? "Best Day" : "Nejlepší den",
+    worstDay: isEn ? "Worst Day" : "Nejhorší den",
+    thisMonth: isEn ? "This Month" : "Tento měsíc",
     
     // Empty state
-    noRecords: isEn ? "No records yet" : "No records yet",
-    startRecording: isEn ? "Start recording your trades and insights" : "Start recording your trades and insights",
+    noRecords: isEn ? "No records yet" : "Zatím žádné záznamy",
+    startRecording: isEn ? "Start recording your trades and insights" : "Začni zaznamenávat své obchody a poznatky",
     
     // Entry details
-    emotionBefore: isEn ? "Emotion Before" : "Emotion Before",
-    emotionDuring: isEn ? "Emotion During" : "Emotion During",
-    emotionAfter: isEn ? "Emotion After" : "Emotion After",
-    confidence: isEn ? "Confidence" : "Confidence",
-    stressLevel: isEn ? "Stress Level" : "Stress Level",
+    emotionBefore: isEn ? "Emotion Before" : "Emoce před",
+    emotionDuring: isEn ? "Emotion During" : "Emoce během",
+    emotionAfter: isEn ? "Emotion After" : "Emoce po",
+    confidence: isEn ? "Confidence" : "Sebejistota",
+    stressLevel: isEn ? "Stress Level" : "Úroveň stresu",
     
     // Final message
-    excellentJob: isEn ? "Excellent Job!" : "Excellent Job!",
-    tradingGreat: isEn ? "Your trading is in great shape. Keep going! 🚀" : "Your trading is in great shape. Keep going! 🚀",
+    excellentJob: isEn ? "Excellent Job!" : "Výborně!",
+    tradingGreat: isEn ? "Your trading is in great shape. Keep going! 🚀" : "Tvé obchodování je ve skvělé formě. Pokračuj! 🚀",
   }
 
   useEffect(() => {
@@ -350,34 +350,32 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "🔥",
-        title: "Great Consistency!",
-        message: `You've journaled for ${stats.streak} days in a row. Keep it up!`,
+        title: txt.greatConsistency,
+        message: txt.consistencyMsg(stats.streak),
       })
     } else if (stats.streak < 3 && stats.totalEntries > 0) {
-      // Only show if there are entries
       insights.push({
         type: "warning",
         icon: "⚠️",
-        title: "Improve Consistency",
-        message: "Regular journaling is key to success. Try writing every day!",
+        title: txt.improveConsistency,
+        message: txt.consistencyWarning,
       })
     }
 
     if (stats.totalTrades > 0) {
-      // Only show if there are trades
       if (stats.winRate >= 60) {
         insights.push({
           type: "success",
           icon: "🎯",
-          title: "Excellent Win Rate!",
-          message: `${stats.winRate}% win rate is professional level. Great work!`,
+          title: txt.excellentWinRate,
+          message: txt.winRateSuccess(stats.winRate),
         })
       } else if (stats.winRate < 50) {
         insights.push({
           type: "critical",
           icon: "🚨",
-          title: "Win Rate Needs Improvement",
-          message: `${stats.winRate}% win rate is below break-even. Check your strategy!`,
+          title: txt.winRateNeeds,
+          message: txt.winRateWarning(stats.winRate),
         })
       }
     }
@@ -386,15 +384,15 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "💰",
-        title: "Great P&L!",
-        message: `+$${stats.totalPnL} is excellent performance. Keep it up!`,
+        title: txt.greatPnL,
+        message: txt.pnLSuccess(stats.totalPnL),
       })
     } else if (stats.totalPnL < -500) {
       insights.push({
         type: "critical",
         icon: "📉",
-        title: "Negative P&L",
-        message: `${stats.totalPnL} requires immediate action. Review your risk management!`,
+        title: txt.negativePnL,
+        message: txt.pnLWarning(stats.totalPnL),
       })
     }
 
@@ -402,16 +400,15 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "😊",
-        title: "Great Mood!",
-        message: `Average mood ${stats.avgMood}/10 is excellent. Positive mindset = better results!`,
+        title: txt.greatMood,
+        message: txt.moodSuccess(stats.avgMood),
       })
     } else if (stats.avgMood < 5 && stats.totalEntries > 0) {
-      // Only show if there are entries
       insights.push({
         type: "warning",
         icon: "😔",
-        title: "Low Mood",
-        message: `Average mood ${stats.avgMood}/10. Focus on mental health!`,
+        title: txt.lowMood,
+        message: txt.moodWarning(stats.avgMood),
       })
     }
 
@@ -420,8 +417,8 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "⚡",
-        title: "Excellent Profit Factor!",
-        message: `Profit factor ${profitFactor.toFixed(2)} is excellent. Your wins are bigger than losses!`,
+        title: txt.excellentProfitFactor,
+        message: txt.profitFactorMsg(profitFactor),
       })
     }
 
