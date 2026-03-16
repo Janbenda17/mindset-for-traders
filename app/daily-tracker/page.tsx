@@ -106,55 +106,6 @@ interface DailySummary {
   stagesCompleted: number
 }
 
-// Define stageData here
-const stageData = [
-  {
-    id: 1,
-    name: isEn ? "Morning Routine" : "Ranní rutina",
-    icon: Sun,
-    href: "/morning-check",
-    color: "from-orange-500 to-rose-500",
-    bgColor: "bg-gradient-to-br from-orange-500/20 to-rose-500/20",
-    borderColor: "border-orange-500/30",
-  },
-  {
-    id: 2,
-    name: isEn ? "Daily Intention" : "Denní záměr",
-    icon: Target,
-    href: "/daily-intention",
-    color: "from-yellow-500 to-amber-500",
-    bgColor: "bg-gradient-to-br from-yellow-500/20 to-amber-500/20",
-    borderColor: "border-yellow-500/30",
-  },
-  {
-    id: 3,
-    name: isEn ? "Trading Plan" : "Obchodní plán",
-    icon: BookOpen,
-    href: "/trading-plan",
-    color: "from-cyan-500 to-teal-500",
-    bgColor: "bg-gradient-to-br from-cyan-500/20 to-teal-500/20",
-    borderColor: "border-cyan-500/30",
-  },
-  {
-    id: 4,
-    name: isEn ? "Record Trades" : "Zaznamenat obchody",
-    icon: Clock,
-    href: "/record-trades",
-    color: "from-blue-500 to-indigo-500",
-    bgColor: "bg-gradient-to-br from-blue-500/20 to-indigo-500/20",
-    borderColor: "border-blue-500/30",
-  },
-  {
-    id: 5,
-    name: isEn ? "Daily Summary" : "Denní shrnutí",
-    icon: Shield,
-    href: "/daily-summary",
-    color: "from-green-500 to-emerald-500",
-    bgColor: "bg-gradient-to-br from-green-500/20 to-emerald-500/20",
-    borderColor: "border-green-500/30",
-  },
-]
-
 export default function DailyTrackerPage() {
   const { isLiveMode, isLoading: modeLoading } = useLiveMode()
   // FIX: Moved supabase initialization here to resolve "use before declaration" error.
@@ -170,7 +121,54 @@ export default function DailyTrackerPage() {
   const { language } = useLanguage()
   const isEn = language === "en"
 
-  const [entries, setEntries] = useState<DailySummary[]>([])
+  // Define stageData here inside component so it has access to isEn
+  const stageData = [
+    {
+      id: 1,
+      name: isEn ? "Morning Routine" : "Ranní rutina",
+      icon: Sun,
+      href: "/morning-check",
+      color: "from-orange-500 to-rose-500",
+      bgColor: "bg-gradient-to-br from-orange-500/20 to-rose-500/20",
+      borderColor: "border-orange-500/30",
+    },
+    {
+      id: 2,
+      name: isEn ? "Daily Intention" : "Denní záměr",
+      icon: Target,
+      href: "/daily-intention",
+      color: "from-yellow-500 to-amber-500",
+      bgColor: "bg-gradient-to-br from-yellow-500/20 to-amber-500/20",
+      borderColor: "border-yellow-500/30",
+    },
+    {
+      id: 3,
+      name: isEn ? "Trading Plan" : "Obchodní plán",
+      icon: BookOpen,
+      href: "/trading-plan",
+      color: "from-cyan-500 to-teal-500",
+      bgColor: "bg-gradient-to-br from-cyan-500/20 to-teal-500/20",
+      borderColor: "border-cyan-500/30",
+    },
+    {
+      id: 4,
+      name: isEn ? "Record Trades" : "Zaznamenat obchody",
+      icon: Clock,
+      href: "/record-trades",
+      color: "from-blue-500 to-indigo-500",
+      bgColor: "bg-gradient-to-br from-blue-500/20 to-indigo-500/20",
+      borderColor: "border-blue-500/30",
+    },
+    {
+      id: 5,
+      name: isEn ? "Daily Summary" : "Denní shrnutí",
+      icon: Shield,
+      href: "/daily-summary",
+      color: "from-green-500 to-emerald-500",
+      bgColor: "bg-gradient-to-br from-green-500/20 to-emerald-500/20",
+      borderColor: "border-green-500/30",
+    },
+  ]
   const [activeTab, setActiveTab] = useState("today")
   const [expandedEntry, setExpandedEntry] = useState<string | null>(null)
   const [expandedStage, setExpandedStage] = useState<number | null>(null)
