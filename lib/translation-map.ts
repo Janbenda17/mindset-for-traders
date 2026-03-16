@@ -1197,20 +1197,19 @@ export function getEnglishText(czechText: string, isEnglishDomain: boolean): str
 }
 
 export function isEnglishDomain(): boolean {
-  // Env var has highest priority (set in Vercel per-project)
-  const forceLocale = process.env.NEXT_PUBLIC_FORCE_LOCALE
-  if (forceLocale === "en") return true
-  if (forceLocale === "cs") return false
-
-  if (typeof window === "undefined") return false
+  if (typeof window === "undefined") return true
   const hostname = window.location.hostname
 
   // Only English for explicit production .ai / .au / .com domains
+  // .cz domains are Czech
   // vusercontent.net preview, localhost always = Czech (default)
   const isEnglish =
     hostname.endsWith(".ai") ||
     hostname.endsWith(".au") ||
     (hostname.endsWith(".com") && !hostname.includes("vusercontent"))
+
+  // If .cz domain, always Czech (no env override)
+  if (hostname.endsWith(".cz")) return false
 
   return isEnglish
 }
