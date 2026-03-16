@@ -221,41 +221,6 @@ const defaultEveningRoutine = (isEn: boolean): RoutineItem[] => [
   },
 ]
 
-const generateDemoHistory = (): RoutineHistory[] => {
-  const history: RoutineHistory[] = []
-  const now = new Date()
-
-  for (let i = 14; i >= 1; i--) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-
-    const morningCompleted = Math.floor(Math.random() * 3) + 4 // 4-6
-    const eveningCompleted = Math.floor(Math.random() * 3) + 3 // 3-5
-
-    history.push({
-      date: date.toISOString().split("T")[0],
-      morningCompleted,
-      morningTotal: 6,
-      eveningCompleted,
-      eveningTotal: 6,
-      morningNotes: i % 3 === 0 ? "I felt well prepared for trading." : "",
-      eveningNotes: i % 4 === 0 ? "Good day, I stuck to the plan." : "",
-      morningItems: defaultMorningRoutine.map((item, idx) => ({
-        id: item.id,
-        title: item.title,
-        completed: idx < morningCompleted,
-      })),
-      eveningItems: defaultEveningRoutine.map((item, idx) => ({
-        id: item.id,
-        title: item.title,
-        completed: idx < eveningCompleted,
-      })),
-    })
-  }
-
-  return history
-}
-
 export default function RoutinesPage() {
   const { isLiveMode } = useData()
   const { user } = useAuth()
@@ -264,6 +229,42 @@ export default function RoutinesPage() {
   const isEn = language === "en"
 
   const storage = createStorageClient(user?.id || null)
+
+  // Move generateDemoHistory inside component so it has access to isEn
+  const generateDemoHistory = (): RoutineHistory[] => {
+    const history: RoutineHistory[] = []
+    const now = new Date()
+
+    for (let i = 14; i >= 1; i--) {
+      const date = new Date(now)
+      date.setDate(date.getDate() - i)
+
+      const morningCompleted = Math.floor(Math.random() * 3) + 4 // 4-6
+      const eveningCompleted = Math.floor(Math.random() * 3) + 3 // 3-5
+
+      history.push({
+        date: date.toISOString().split("T")[0],
+        morningCompleted,
+        morningTotal: 6,
+        eveningCompleted,
+        eveningTotal: 6,
+        morningNotes: i % 3 === 0 ? "I felt well prepared for trading." : "",
+        eveningNotes: i % 4 === 0 ? "Good day, I stuck to the plan." : "",
+        morningItems: defaultMorningRoutine(isEn).map((item, idx) => ({
+          id: item.id,
+          title: item.title,
+          completed: idx < morningCompleted,
+        })),
+        eveningItems: defaultEveningRoutine(isEn).map((item, idx) => ({
+          id: item.id,
+          title: item.title,
+          completed: idx < eveningCompleted,
+        })),
+      })
+    }
+
+    return history
+  }
 
   const [morningRoutine, setMorningRoutine] = useState<RoutineItem[]>(defaultMorningRoutine(isEn))
   const [eveningRoutine, setEveningRoutine] = useState<RoutineItem[]>(defaultEveningRoutine(isEn))
