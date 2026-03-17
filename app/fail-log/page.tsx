@@ -324,9 +324,6 @@ export default function FailLogPage() {
   const mostCommonType = mostCommonTypeValue
     ? getFailTypes(isEn).find((t) => t.value === mostCommonTypeValue)
     : null
-    },
-    {} as Record<string, number>,
-  )
 
   const topFailType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]
 
