@@ -310,28 +310,20 @@ export default function FailLogPage() {
 
   const unresolvedCount = entries.filter((e) => !e.resolved).length
   const resolvedCount = entries.filter((e) => e.resolved).length
-  const mostCommonType =
-    entries.length > 0
-      ? failTypes.find(
-          (t) =>
-            t.value ===
-            entries
-              .reduce(
-                (acc, e) => {
-                  acc[e.type] = (acc[e.type] || 0) + 1
-                  return acc
-                },
-                {} as Record<string, number>,
-              )
-              .toString(),
-        )
-      : null
-
+  
   // Calculate most common fail type
   const typeCounts = entries.reduce(
     (acc, e) => {
       acc[e.type] = (acc[e.type] || 0) + 1
       return acc
+    },
+    {} as Record<string, number>,
+  )
+  
+  const mostCommonTypeValue = Object.entries(typeCounts).sort(([, a], [, b]) => b - a)[0]?.[0]
+  const mostCommonType = mostCommonTypeValue
+    ? getFailTypes(isEn).find((t) => t.value === mostCommonTypeValue)
+    : null
     },
     {} as Record<string, number>,
   )
