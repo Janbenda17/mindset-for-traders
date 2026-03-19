@@ -41,7 +41,7 @@ import { supabase } from "@/lib/supabase/client"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useAuth } from "@/contexts/auth-context"
 import { useLiveMode } from "@/contexts/live-mode-context"
-import { useT } from "@/contexts/language-context"
+import { useT, useLanguage } from "@/contexts/language-context"
 
 interface TopNavigationProps {
   initialTheme?: string
@@ -53,6 +53,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const { isLiveMode, switchToLive } = useLiveMode()
   const { isPremium } = useSubscription()
   const t = useT()
+  const { language } = useLanguage()
+  const isEn = language === "en"
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProductsOpen, setIsProductsOpen] = useState(false)
@@ -181,10 +183,10 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
   const getExperienceLabel = (level: string) => {
     switch (level) {
-      case "beginner": return t('nav_home') === 'Dashboard' ? "Beginner" : "Začátečník"
-      case "intermediate": return t('nav_home') === 'Dashboard' ? "Intermediate" : "Pokročilý"
-      case "advanced": return t('nav_home') === 'Dashboard' ? "Advanced" : "Pokročilý"
-      case "expert": return t('nav_home') === 'Dashboard' ? "Expert Trader" : "Expert Trader"
+      case "beginner": return isEn ? "Beginner" : "Začátečník"
+      case "intermediate": return isEn ? "Intermediate" : "Pokročilý"
+      case "advanced": return isEn ? "Advanced" : "Pokročilý"
+      case "expert": return isEn ? "Expert Trader" : "Expert Trader"
       default: return "Trader"
     }
   }
@@ -236,7 +238,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="relative px-4 h-10 text-sm font-semibold text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 transition-all duration-300 group flex items-center gap-2 rounded-lg shadow-lg shadow-purple-500/20"
                   >
-                    <span>{t('nav_home') === 'Dashboard' ? 'Products' : 'Produkty'}</span>
+                    <span>{isEn ? 'Products' : 'Produkty'}</span>
                     <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -283,7 +285,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
-                {t('nav_home') === 'Dashboard' ? 'Pricing' : 'Ceník'}
+                {isEn ? 'Pricing' : 'Ceník'}
               </Button>
             </Link>
 
@@ -297,7 +299,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
-                {t('nav_home') === 'Dashboard' ? 'About' : 'O nás'}
+                {isEn ? 'About' : 'O nás'}
               </Button>
             </Link>
           </div>
@@ -312,7 +314,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-64 bg-slate-900/95 backdrop-blur-md border-slate-700" align="end">
                 <div className="p-2">
-                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">{t('nav_home') === 'Dashboard' ? 'MAIN MENU' : 'HLAVNÍ MENU'}</p>
+                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">{isEn ? 'MAIN MENU' : 'HLAVNÍ MENU'}</p>
                   {mainNavigation.map((item) => {
                     const isActive = pathname === item.href
                     
@@ -358,7 +360,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="relative px-4 h-10 text-sm font-semibold text-white hover:text-gray-200 transition-colors"
                   >
-                    {t('nav_home') === 'Dashboard' ? 'Profile' : 'Profil'}
+                  {isEn ? 'Profile' : 'Profil'}
                     <ChevronDown className="w-4 h-4 ml-2 transition-transform group-data-[state=open]:rotate-180" />
                   </Button>
                 </Link>
@@ -393,12 +395,12 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 {isSwitchingToLive ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    {t('nav_home') === 'Dashboard' ? 'Switching...' : 'Přepínaní...'}
+                    {isEn ? 'Switching...' : 'Přepínaní...'}
                   </>
                 ) : (
                   <>
                     <Zap className="w-4 h-4" />
-                    Switch to Live Mode
+                    {isEn ? 'Switch to Live Mode' : 'Přepnout do Live Mode'}
                   </>
                 )}
               </Button>
@@ -434,11 +436,11 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                         <div className="flex items-center space-x-2">
                           <h3 className="text-white font-bold text-lg">{profileData.name}</h3>
                           <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs px-2 py-0.5">
-                            Online
+                            {isEn ? 'Online' : 'Online'}
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-400 mt-0.5">
-                          {profileData.email || "Set email in profile"}
+                          {profileData.email || (isEn ? "Set email in profile" : "Nastav email v profilu")}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
                           {profileData.isPremium ? (
@@ -447,10 +449,12 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                               Premium
                             </Badge>
                           ) : (
-                            <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">Free</Badge>
+                            <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">
+                              {isEn ? 'Free' : 'Zdarma'}
+                            </Badge>
                           )}
                           <Badge className="bg-blue-600/20 text-blue-400 border-blue-500/30 text-xs">
-                            Level {profileData.level}
+                            {isEn ? 'Level' : 'Úroveň'} {profileData.level}
                           </Badge>
                           <Badge className="bg-orange-600/20 text-orange-400 border-orange-500/30 text-xs">
                             {getExperienceLabel(profileData.experienceLevel)}
@@ -470,8 +474,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                           <User className="w-4 h-4 text-blue-400" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-white font-medium text-sm">Můj profil</p>
-                          <p className="text-xs text-gray-400">Osobní údaje a statistiky</p>
+                          <p className="text-white font-medium text-sm">{isEn ? 'My Profile' : 'Můj profil'}</p>
+                          <p className="text-xs text-gray-400">{isEn ? 'Personal info and statistics' : 'Osobní údaje a statistiky'}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -485,8 +489,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                           <Settings className="w-4 h-4 text-purple-400" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-white font-medium text-sm">Nastavení</p>
-                          <p className="text-xs text-gray-400">Notifikace, zabezpečení</p>
+                          <p className="text-white font-medium text-sm">{isEn ? 'Settings' : 'Nastavení'}</p>
+                          <p className="text-xs text-gray-400">{isEn ? 'Notifications, security' : 'Notifikace, zabezpečení'}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -500,8 +504,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                           <CreditCard className="w-4 h-4 text-orange-400" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-white font-medium text-sm">Předplatné & Billing</p>
-                          <p className="text-xs text-gray-400">Správa plateb a předplatného</p>
+                          <p className="text-white font-medium text-sm">{isEn ? 'Subscription & Billing' : 'Předplatné & Billing'}</p>
+                          <p className="text-xs text-gray-400">{isEn ? 'Manage payments and subscription' : 'Správa plateb a předplatného'}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -517,7 +521,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                       <div className="p-2 bg-red-500/10 rounded-lg">
                         <LogOut className="w-4 h-4 text-red-400" />
                       </div>
-                      <span className="text-red-400 font-medium text-sm">Odhlásit se</span>
+                      <span className="text-red-400 font-medium text-sm">{isEn ? 'Log out' : 'Odhlásit se'}</span>
                     </DropdownMenuItem>
                   </div>
               </DropdownMenuContent>
