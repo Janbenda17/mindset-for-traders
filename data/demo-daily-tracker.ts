@@ -38,12 +38,21 @@ export interface DemoTradingPlan {
   maxRisk: number
 }
 
+export interface AIInsights {
+  keyInsights: string[]
+  predictions: string[]
+  recommendations: string[]
+  riskFactors: string[]
+  strengths: string[]
+}
+
 export interface DemoDailyTracker {
   date: string
   morningCheck: DemoMorningCheck
   intention: DemoDailyIntention
   plan: DemoTradingPlan
   trades: any[]
+  insights: AIInsights
   overallScore: number
   stagesCompleted: number
 }
@@ -103,6 +112,31 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 9,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Your sleep quality and focus are at peak levels today - optimal conditions for trading",
+        "Morning routine completed with exercise and meditation has elevated your mental clarity",
+        "Current emotional state shows confidence without overconfidence - perfect balance for execution",
+      ],
+      predictions: [
+        "High probability of profitable trades if you stick to your A+ setups only",
+        "Your disciplined approach today should result in better trade selection quality",
+      ],
+      recommendations: [
+        "Take advantage of your peak state - this is an ideal day for taking calculated risks",
+        "Document your successful decision-making process for reference on lower-energy days",
+        "Avoid the temptation to overtrade - quality over quantity remains the priority",
+      ],
+      riskFactors: [
+        "Overconfidence risk - maintain strict position size discipline even on high-energy days",
+        "FOMO risk - stick to your watchlist and don't chase moves",
+      ],
+      strengths: [
+        "Exceptional mental clarity and focus",
+        "Well-rested and physically prepared",
+        "Strong emotional stability",
+      ],
+    },
     overallScore: 78,
     stagesCompleted: 5,
   })
@@ -157,6 +191,31 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 8,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Good balance between sleep and activity - you're maintaining consistency",
+        "Morning routine completion shows discipline is becoming a habit",
+        "Energy levels remain strong despite lower sleep hours than yesterday",
+      ],
+      predictions: [
+        "Continuation of positive trading performance with slightly tighter discipline",
+        "Your consistency will help maintain win rate above 60%",
+      ],
+      recommendations: [
+        "Maintain current routine - consistency is building positive habits",
+        "Consider increasing meditation time by 5 minutes for stress reduction",
+        "Your calm emotional state is an asset - use it for patient trade selection",
+      ],
+      riskFactors: [
+        "Minor stress increase - ensure you're not rushing decision-making",
+        "Energy slightly lower - avoid extending trading hours",
+      ],
+      strengths: [
+        "Consistent routine execution",
+        "Maintained focus despite reduced sleep",
+        "Good emotional control",
+      ],
+    },
     overallScore: 75,
     stagesCompleted: 5,
   })
@@ -200,6 +259,32 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
       maxRisk: 1,
     },
     trades: [],
+    insights: {
+      keyInsights: [
+        "Sleep quality declining - this impacts your decision-making accuracy",
+        "Lower focus and energy levels detected - high-risk environment for trading",
+        "Lack of morning routine execution is correlated with reduced readiness score",
+      ],
+      predictions: [
+        "Probability of overtrading or poor trade selection increases by 35% today",
+        "Recommend reducing position sizes or taking a break from active trading",
+      ],
+      recommendations: [
+        "Consider NO-TRADE day or paper trading only to preserve capital",
+        "Prioritize recovery - get 8+ hours of sleep tonight and resume routine",
+        "If trading, reduce position sizes by 50% and focus on A+ setups only",
+        "Extra meditation or relaxation would help manage stress levels",
+      ],
+      riskFactors: [
+        "Significantly reduced sleep quality impacts risk assessment ability",
+        "Stress level elevation combined with lower focus is concerning pattern",
+        "No morning routine increases emotional decision-making risk",
+      ],
+      strengths: [
+        "You're aware of your condition - awareness is first step to recovery",
+        "Willingness to take cautious approach shows maturity",
+      ],
+    },
     overallScore: 72,
     stagesCompleted: 4,
   })
@@ -254,6 +339,33 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 6,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Recovery day initiated - readiness at minimum acceptable threshold",
+        "Loss taken today is attributed to low mental state, not strategy failure",
+        "Pattern detected: insufficient sleep always correlates with losing days",
+      ],
+      predictions: [
+        "With 8+ hours tonight, tomorrow readiness should improve dramatically",
+        "Recovery protocol today will set up excellent trading conditions tomorrow",
+      ],
+      recommendations: [
+        "IMPORTANT: Take full rest day today - prioritize sleep recovery",
+        "Implement strict morning routine tomorrow regardless of tiredness",
+        "This is temporary setback - mental recovery is investment in future wins",
+        "Review today's loss not as failure but as data point for recovery science",
+      ],
+      riskFactors: [
+        "Severely compromised mental and physical state",
+        "Risk of revenge trading tomorrow if loss isn't mentally processed",
+        "Continued trading despite low readiness will compound losses",
+      ],
+      strengths: [
+        "You caught yourself before bigger losses occurred",
+        "Taking observation approach shows wisdom",
+        "Small loss is acceptable price for learning",
+      ],
+    },
     overallScore: 70,
     stagesCompleted: 5,
   })
@@ -308,6 +420,34 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 9,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Recovery successful! All metrics show significant improvement from yesterday",
+        "Peak performance day - sleep recovery combined with full routine created ideal conditions",
+        "Strong recovery demonstrates that discipline trumps current market conditions",
+      ],
+      predictions: [
+        "Momentum from today should carry into tomorrow if routine maintained",
+        "Recovery trade of $840 more than compensates for yesterday's $200 loss",
+        "Win rate should tick up as mental state improves",
+      ],
+      recommendations: [
+        "Document today's successful execution as reference for similar future situations",
+        "Maintain the sleep and routine discipline that led to this recovery",
+        "Use today's confidence wisely - scale positions conservatively, not aggressively",
+        "This is proof that recovery protocol works - apply same method next time",
+      ],
+      riskFactors: [
+        "Slight overconfidence risk after strong comeback - avoid revenge trades",
+        "Don't assume tomorrow will be equally strong - maintain discipline",
+      ],
+      strengths: [
+        "Outstanding mental recovery and discipline",
+        "Peak physical and mental performance achieved",
+        "Excellent trade execution - took full advantage of setup",
+        "Proved resilience through recovery cycle",
+      ],
+    },
     overallScore: 80,
     stagesCompleted: 5,
   })
@@ -362,6 +502,33 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 8,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Consistency building - second consecutive day of high readiness achieved",
+        "Sleep pattern optimization is now establishing as baseline",
+        "Morning routine has become automatic - habit formation complete",
+      ],
+      predictions: [
+        "Consistency like this typically leads to +3% monthly improvement in win rate",
+        "Next loss will be easier to recover from due to established recovery protocol",
+      ],
+      recommendations: [
+        "Continue 8-hour sleep schedule - it's now your competitive advantage",
+        "Maintain routine even on weekends for optimal long-term performance",
+        "Scalp trade execution today shows good adaptability - nice session",
+        "Document this 2-day strong streak in your trader journal",
+      ],
+      riskFactors: [
+        "Only risk: maintaining discipline if streak breaks",
+        "Complacency about established routine",
+      ],
+      strengths: [
+        "Strong consistency in execution",
+        "Excellent adaptability across different trading sessions",
+        "Sustained high energy and mental clarity",
+        "Building strong habit foundation",
+      ],
+    },
     overallScore: 80,
     stagesCompleted: 5,
   })
@@ -416,6 +583,33 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 7,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Weekly summary: 7-day average readiness of 75.3 - excellent baseline",
+        "Only 2 losses (Days 3-4) during low readiness period - proved risk management works",
+        "Recovery cycle completed successfully - full portfolio reset achieved",
+      ],
+      predictions: [
+        "Next week should show 65%+ win rate based on readiness pattern",
+        "Maintaining routine will result in cumulative +5-8% monthly performance boost",
+      ],
+      recommendations: [
+        "Schedule weekly recovery meeting to review readiness vs performance correlation",
+        "Week 2 focus: Build on consistency foundation, increase position sizes on high-readiness days",
+        "Prioritize routine compliance above all else - it's your primary edge",
+        "Consider this week as your readiness baseline for future comparison",
+      ],
+      riskFactors: [
+        "Next week complacency - maintain discipline despite positive results",
+        "Don't increase position sizes too aggressively",
+      ],
+      strengths: [
+        "Demonstrated recovery protocol effectiveness",
+        "Strong week overall with 5 wins, 2 losses = 71% win rate",
+        "Total weekly P&L: +$2,669 profit with excellent risk management",
+        "Habit formation across sleep, routine, and meditation established",
+      ],
+    },
     overallScore: 73,
     stagesCompleted: 5,
   })
