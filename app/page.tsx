@@ -14,7 +14,6 @@ import { MindTraderAIPreview } from '@/components/feature-previews/mindtrader-ai
 import { WeeklyReviewPreview } from '@/components/feature-previews/weekly-review-preview'
 import { FailLogPreview } from '@/components/feature-previews/fail-log-preview'
 import { TeamClubPreview } from '@/components/feature-previews/team-club-preview'
-import { TradingStatusToday } from '@/components/trading-status-today'
 
 export default function HomePage() {
   const router = useRouter()
@@ -220,17 +219,6 @@ export default function HomePage() {
               <p className="text-xs sm:text-sm text-purple-200 mt-2">{stat.label}</p>
             </div>
           ))}
-        </motion.div>
-
-        {/* Trading Status Today - Only for authenticated users or demo */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="mb-20"
-        >
-          <TradingStatusToday />
         </motion.div>
 
         {/* Features Stack - Text Left, Image Right */}
