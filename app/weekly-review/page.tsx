@@ -37,7 +37,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { getScoped, setScoped } from "@/lib/storage"
 import { useData } from "@/contexts/data-context"
 import { useAnalytics } from "@/contexts/analytics-context"
-import { useT } from "@/contexts/language-context"
+import { useT, useLanguage } from "@/contexts/language-context"
 
 interface WeeklyReview {
   id: string
@@ -81,6 +81,22 @@ export default function WeeklyReviewPage() {
   const { analytics } = useAnalytics()
   const { user } = useAuth()
   const t = useT()
+  const { language } = useLanguage()
+  const isEn = language === "en"
+
+  const txt = {
+    weeklyReview: isEn ? "Weekly Review" : "Týdenní přezkum",
+    manualReview: isEn ? "Manual Review" : "Ruční přezkum",
+    aiReview: isEn ? "AI-Powered Review" : "Přezkum poháněný AI",
+    summary: isEn ? "Summary" : "Souhrn",
+    whatWorked: isEn ? "What Worked?" : "Co fungovalo?",
+    whatDidntWork: isEn ? "What Didn't Work?" : "Co nefungovalo?",
+    emotionalPatterns: isEn ? "Emotional Patterns" : "Emoční vzory",
+    mistakesMade: isEn ? "Mistakes Made" : "Udělaní chyby",
+    lessonsLearned: isEn ? "Lessons Learned" : "Naučené lekce",
+    actionPlan: isEn ? "Action Plan" : "Akční plán",
+    savedReviews: isEn ? "Saved Reviews" : "Uložené přezkumy",
+  }
   
   const [currentWeekData, setCurrentWeekData] = useState<any>(null)
   const [reviewVariant, setReviewVariant] = useState<"manual" | "ai">("manual")

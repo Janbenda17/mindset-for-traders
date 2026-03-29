@@ -84,6 +84,15 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
     meditation: isEn ? "Meditation" : "Meditace",
     min: isEn ? "min" : "min",
     liveMode: isEn ? "Available only in Live Mode" : "Dostupné pouze v Live režimu",
+    stage1: isEn ? "Stage 1: Sleep & Recovery" : "Stupeň 1: Spánek a zotavení",
+    stage2: isEn ? "Stage 2: Physical Preparation" : "Stupeň 2: Fyzická příprava",
+    stage3: isEn ? "Stage 3: Mental State" : "Stupeň 3: Psychický stav",
+    stage4: isEn ? "Stage 4: Emotional Balance" : "Stupeň 4: Emoční rovnováha",
+    stage5: isEn ? "Stage 5: Final Score & Readiness" : "Stupeň 5: Finální skóre a připravenost",
+    beCareful: isEn ? "⚠️ Be Careful" : "⚠️ Buď opatrný",
+    reducePosSize: isEn ? "Reduce position sizes by 50% and increase discipline." : "Sniž velikosti pozic o 50% a zvýš disciplínu.",
+    dontTrade: isEn ? "🛑 Don't Trade Today" : "🛑 Neobchoduj dnes",
+    focusRest: isEn ? "Focus on rest and preparation. Paper trading or studying." : "Zaměř se na odpočinek a přípravu. Papírový obchod nebo studium.",
   }
 
   // Check if stage 1 is locked from context
@@ -195,8 +204,8 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       }
     } else if (score >= 60) {
       return {
-        text: "⚠️ Be Careful",
-        subtext: "Reduce position sizes by 50% and increase discipline.",
+        text: txt.beCareful,
+        subtext: txt.reducePosSize,
         color: "text-yellow-500",
         bgColor: "bg-yellow-500/10",
         borderColor: "border-yellow-500/30",
@@ -204,8 +213,8 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       }
     } else {
       return {
-        text: "🛑 Don't Trade Today",
-        subtext: "Focus on rest and preparation. Paper trading or studying.",
+        text: txt.dontTrade,
+        subtext: txt.focusRest,
         color: "text-red-500",
         bgColor: "bg-red-500/10",
         borderColor: "border-red-500/30",
