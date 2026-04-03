@@ -221,68 +221,46 @@ export default function HomePage() {
           ))}
         </motion.div>
 
-        {/* Features Stack - Text Left, Image Right */}
-        <div className="space-y-12 md:space-y-16 mb-16">
-          {features.map((feature, index) => {
+        {/* Features Grid - Simple 5 Cards with Benefits */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
+          {features.map((feature) => {
             const Icon = feature.icon
-            const isEven = index % 2 === 0
             return (
               <motion.div
                 key={feature.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+                transition={{ duration: 0.6 }}
                 viewport={{ once: true }}
               >
                 <Link href={feature.href}>
-                  <div className="group grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-center">
-                    {/* Text Content - Left or Right based on index */}
-                    <div className={isEven ? 'md:col-start-1' : 'md:col-start-2 md:order-2'}>
-                      <div className="flex items-start gap-4 mb-4">
-                        <div className="p-3 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-lg backdrop-blur-sm border border-purple-400/50 flex-shrink-0">
-                          <Icon className="w-6 h-6 text-purple-300" />
-                        </div>
-                        <div>
-                          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2">
-                            {feature.title}
-                          </h2>
-                        </div>
-                      </div>
-                      
-                      {/* Highlight Badge */}
-                      {feature.highlight && (
-                        <motion.div
-                          initial={{ opacity: 0, x: -10 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.2 }}
-                          className="mb-4 inline-block px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/50"
-                        >
-                          <span className="text-sm font-bold text-yellow-300">✨ {feature.highlight}</span>
-                        </motion.div>
-                      )}
-                      
-                      <p className="text-base md:text-lg text-purple-100/90 leading-relaxed mb-6">
-                        {feature.description}
-                      </p>
-                      
-                      <div className="flex items-center gap-2 text-purple-300 font-semibold group-hover:gap-3 transition-all">
-                        <span>{language === 'en' ? 'Try it now' : 'Vyzkoušej'}</span>
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                      </div>
+                  <div className="group h-full p-6 md:p-8 rounded-xl lg:rounded-2xl bg-gradient-to-br from-purple-900/40 to-slate-900/60 border border-purple-500/30 hover:border-purple-400/60 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-purple-500/20">
+                    {/* Icon */}
+                    <div className="p-3 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-lg w-fit mb-4 group-hover:scale-110 transition-transform">
+                      <Icon className="w-6 h-6 text-purple-300" />
                     </div>
-
-                    {/* Preview Container - Right or Left based on index */}
-                    <div className={isEven ? 'md:col-start-2 md:order-2' : 'md:col-start-1 md:order-1'}>
-                      <div className="relative rounded-2xl lg:rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 group-hover:shadow-2xl group-hover:shadow-purple-500/50 h-64 sm:h-80 md:h-96">
-                        <div className="relative w-full h-full bg-gradient-to-br from-slate-900 to-slate-950">
-                          {feature.preview && <feature.preview />}
-                          {/* Gradient overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-40" />
-                        </div>
-
-                        {/* Shine effect on hover */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -skew-x-12 group-hover:translate-x-full" />
+                    
+                    {/* Title */}
+                    <h3 className="text-xl md:text-2xl font-black text-white mb-2">
+                      {feature.title}
+                    </h3>
+                    
+                    {/* Highlight Badge */}
+                    {feature.highlight && (
+                      <div className="mb-4 inline-block px-2.5 py-1 rounded-full bg-yellow-500/20 border border-yellow-400/50">
+                        <span className="text-xs font-bold text-yellow-300">⭐ {feature.highlight}</span>
                       </div>
+                    )}
+                    
+                    {/* Description */}
+                    <p className="text-sm md:text-base text-purple-100/80 leading-relaxed mb-6 line-clamp-4">
+                      {feature.description}
+                    </p>
+                    
+                    {/* CTA */}
+                    <div className="flex items-center gap-2 text-purple-300 font-semibold text-sm group-hover:gap-3 transition-all">
+                      <span>{language === 'en' ? 'Explore' : 'Prozkoumat'}</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </Link>
@@ -290,6 +268,76 @@ export default function HomePage() {
             )
           })}
         </div>
+
+        {/* Key Benefits Section - What You Get */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="mb-20 bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border border-purple-500/30 rounded-2xl lg:rounded-3xl p-10 md:p-14"
+        >
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-10 text-center">
+            {language === 'en' ? 'What You Get From MindTrader' : 'Co získáš s MindTrader'}
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Zap,
+                title: language === 'en' ? '5x Better Decisions' : '5x lepší rozhodnutí',
+                desc: language === 'en' ? 'Track your psychology, see patterns, trade only on your best days.' : 'Sleduj svou psychiku, vidíš vzory, obchoduješ jen v nejlepších dnech.',
+              },
+              {
+                icon: Brain,
+                title: language === 'en' ? 'Stop Emotional Trading' : 'Zastaň emoční obchodování',
+                desc: language === 'en' ? 'Real-time AI coach stops you before FOMO, revenge trading, or panic.' : 'AI coach ti zabrání prasknutím FOMO, revenge tradingu či panice.',
+              },
+              {
+                icon: TrendingUp,
+                title: language === 'en' ? 'Learn From Losses' : 'Učení se ze ztrát',
+                desc: language === 'en' ? 'Every loss logged, analyzed, understood. No repeating mistakes twice.' : 'Každá ztráta zalogovaná, analyzovaná. Žádné opakování chyb.',
+              },
+              {
+                icon: Calendar,
+                title: language === 'en' ? 'Weekly Progress' : 'Týdenní pokrok',
+                desc: language === 'en' ? 'AI shows your weak spots, win rate, and exact action plan for next week.' : 'AI ti ukáže tvé slabiny, win rate, a konkrétní plán na příští týden.',
+              },
+              {
+                icon: Users,
+                title: language === 'en' ? 'Community Support' : 'Komunita podpory',
+                desc: language === 'en' ? 'Share wins, ask for advice, be accountable. You\'re not trading alone.' : 'Sdílej vítězství, ptej se, buď zodpovědný. Neobchoduješ sám.',
+              },
+              {
+                icon: AlertCircle,
+                title: language === 'en' ? 'Fail Log Analytics' : 'Analýza chyb',
+                desc: language === 'en' ? 'Understand if you fail from bad strategy or bad psychology. The difference is huge.' : 'Poznej jestli selhání je ze strategie či psychiky. Obrovský rozdíl.',
+              },
+            ].map((benefit, i) => {
+              const BenefitIcon = benefit.icon
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: i * 0.05 }}
+                  viewport={{ once: true }}
+                  className="p-5 md:p-6 rounded-lg bg-slate-900/50 border border-purple-500/20 hover:border-purple-400/40 transition-all"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 bg-purple-500/20 rounded-lg flex-shrink-0 mt-1">
+                      <BenefitIcon className="w-5 h-5 text-purple-300" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white mb-1.5">{benefit.title}</h4>
+                      <p className="text-sm text-purple-100/70 leading-relaxed">{benefit.desc}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+        </motion.div>
 
         {/* CTA Section - More Compelling */}
         <motion.div
