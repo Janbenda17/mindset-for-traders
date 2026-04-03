@@ -221,6 +221,70 @@ export default function HomePage() {
           ))}
         </motion.div>
 
+        {/* Features Overview - What's Inside */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="mb-16"
+        >
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-8 text-center">
+            {language === 'en' ? 'What\'s Inside MindTrader' : 'Co je v MindTrader'}
+          </h2>
+          
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+            {features.map((feature) => {
+              const Icon = feature.icon
+              return (
+                <div
+                  key={feature.id}
+                  className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border border-purple-500/30 hover:border-purple-400/60 transition-all duration-300 flex items-center gap-2.5 cursor-pointer hover:shadow-lg hover:shadow-purple-500/20"
+                >
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-300 flex-shrink-0" />
+                  <span className="text-sm sm:text-base font-semibold text-white whitespace-nowrap">
+                    {feature.title}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </motion.div>
+
+        {/* Demo Mode CTA - Try Everything */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="mb-20 bg-gradient-to-r from-purple-900/50 via-indigo-900/50 to-pink-900/30 border border-purple-400/40 rounded-2xl lg:rounded-3xl p-10 md:p-12 text-center"
+        >
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">
+              {language === 'en' ? 'Try Demo Mode First' : 'Vyzkoušej Demo režim'}
+            </h2>
+            <p className="text-base sm:text-lg text-purple-100/90 mb-8">
+              {language === 'en' 
+                ? 'Walk through all features with 28 days of realistic demo data. See exactly how MindTrader works before going live.' 
+                : 'Projdi si všechny funkce s 28 dny realistických demo dat. Vidíš přesně jak software pracuje než přejdeš na live.'}
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/daily-tracker">
+                <Button size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white w-full sm:w-auto">
+                  <Zap className="w-5 h-5 mr-2" />
+                  {language === 'en' ? 'Explore Demo' : 'Vyzkoušej Demo'}
+                </Button>
+              </Link>
+              <Link href="/auth/login">
+                <Button size="lg" variant="outline" className="border-purple-400/60 text-purple-300 hover:bg-purple-500/10 w-full sm:w-auto">
+                  {language === 'en' ? 'Go Live Now' : 'Přejít na Live'}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Features Grid - Simple 5 Cards with Benefits */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
           {features.map((feature) => {
