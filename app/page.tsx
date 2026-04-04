@@ -79,7 +79,6 @@ export default function HomePage() {
       cta_button: 'Start Free - 14 Days',
     }
   }
-  }
 
   const t = (key: string) => translations[language][key as keyof typeof translations['cs']] || key
 
