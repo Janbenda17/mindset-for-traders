@@ -221,118 +221,71 @@ export default function HomePage() {
           ))}
         </motion.div>
 
-        {/* Simple Features Grid - Quick Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+        {/* Simple Features Grid - With SHORT descriptions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-16">
           {features.map((feature) => {
             const Icon = feature.icon
+            const descriptions: Record<string, Record<string, string>> = {
+              'daily-tracker': {
+                en: 'Track your morning psychology each day. See when you have edge.',
+                cs: 'Sleduj psychiku každé ráno. Vidíš kdy máš edge.'
+              },
+              'mindtrader-ai': {
+                en: 'AI coach in real-time. Stops FOMO, revenge trading, emotions.',
+                cs: 'AI kouč v reálném čase. Zastaví FOMO, revenge, emoce.'
+              },
+              'weekly-review': {
+                en: 'Every Friday: see losses, get AI analysis, plan next week.',
+                cs: 'Každý pátek: vidíš chyby, AI analýza, plán na týden.'
+              },
+              'fail-log': {
+                en: 'All losses in one place. Understand why. Don\'t repeat mistakes.',
+                cs: 'Všechny ztráty na místě. Pochop proč. Neopakovaš chyby.'
+              },
+              'team-club': {
+                en: 'Community of traders. Share, discuss, accountability. Not alone.',
+                cs: 'Komunita traderů. Sdílení, diskuse, zodpovědnost.'
+              }
+            }
+            
+            const desc = descriptions[feature.id]?.[language] || feature.description
+            
             return (
-              <Link key={feature.id} href={feature.href}>
-                <div className="group p-5 rounded-lg bg-gradient-to-br from-purple-900/30 to-indigo-900/30 border border-purple-500/20 hover:border-purple-400/60 transition-all cursor-pointer hover:shadow-lg hover:shadow-purple-500/20 h-full">
-                  <div className="mb-3 p-2.5 bg-purple-500/20 rounded-lg w-fit group-hover:scale-110 transition-transform">
-                    <Icon className="w-5 h-5 text-purple-300" />
-                  </div>
-                  <h3 className="font-bold text-white text-sm">{feature.title}</h3>
+              <div key={feature.id} className="group p-6 rounded-xl bg-gradient-to-br from-purple-900/40 to-indigo-900/30 border border-purple-500/30 hover:border-purple-400/60 transition-all hover:shadow-lg hover:shadow-purple-500/20">
+                <div className="mb-4 p-3 bg-purple-500/20 rounded-lg w-fit group-hover:scale-110 transition-transform">
+                  <Icon className="w-6 h-6 text-purple-300" />
                 </div>
-              </Link>
+                <h3 className="font-bold text-white text-base mb-2">{feature.title}</h3>
+                <p className="text-sm text-purple-100/80 leading-relaxed">{desc}</p>
+              </div>
             )
           })}
         </div>
 
-        {/* CTA Section */}
+        {/* Single CTA Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="mb-16 text-center"
+          className="text-center py-16"
         >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-6">
-            {language === 'en' ? 'Explore MindTrader in Demo Mode' : 'Prozkoumat MindTrader v Demo režimu'}
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
+            {language === 'en' ? 'Ready to become top 7%?' : 'Připraven se stát top 7%?'}
           </h2>
-          <p className="text-base text-purple-100/80 mb-8 max-w-lg mx-auto">
-            {language === 'en' 
-              ? 'Test-drive with 28 days of realistic data. See exactly how the software works before going live.' 
-              : 'Vyzkoušej s 28 dny reálných dat. Vidíš jak software funguje před tím než půjdeš live.'}
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/daily-tracker">
-              <Button size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white">
-                <Zap className="w-5 h-5 mr-2" />
-                {language === 'en' ? 'Try Demo' : 'Vyzkoušej Demo'}
-              </Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button size="lg" variant="outline" className="border-purple-400/60 text-purple-300 hover:bg-purple-500/10">
-                {language === 'en' ? 'Go Live' : 'Přejít na Live'}
-              </Button>
-            </Link>
-          </div>
-        </motion.div>
-
-        {/* CTA Section - More Compelling */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center py-16 mb-8"
-        >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-3 leading-tight">
-            {language === 'en' ? 'Ready to become' : 'Připraven se stát'} <span className="text-gradient bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">{language === 'en' ? 'top 7%?' : 'top 7%?'}</span>
-          </h2>
-          <p className="text-lg text-purple-200/80 max-w-2xl mx-auto mb-8">
-            {t('cta_text')}
+          <p className="text-base sm:text-lg text-purple-100/80 mb-8 max-w-xl mx-auto">
+            {language === 'en'
+              ? 'Only psychology is left. You have the strategy. First 30 days are tough. Then it runs on autopilot.'
+              : 'Zbývá jen psychika. Máš strategii. Prvních 30 dní bude těžko. Pak to jede na autopilota.'}
           </p>
           <Button
             size="lg"
             onClick={handlePricingClick}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-lg px-12 py-6 rounded-xl"
           >
-            {t('cta_button')} <ArrowRight className="ml-2 h-5 w-5" />
+            {language === 'en' ? 'Start Free - 14 Days' : 'Začít zdarma - 14 dní'} <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </motion.div>
-
-        {/* Premium Upgrade Banner - Only show for authenticated users */}
-        {user && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="relative overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-yellow-900/60 via-yellow-800/40 to-orange-900/60 border-2 border-yellow-400/60 p-8 md:p-12 shadow-2xl shadow-yellow-500/30 mt-16"
-        >
-          {/* Golden glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 to-orange-400/5" />
-          <div className="absolute -top-1/2 -right-1/2 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" />
-          
-          <div className="relative z-10 text-center">
-            <h3 className="text-3xl md:text-5xl font-black text-white mb-4">
-              {language === 'en' ? 'Premium:' : 'Premium:'} <span className="text-yellow-300">{language === 'en' ? 'Ending soon' : 'Končí brzy'}</span>
-            </h3>
-            <p className="text-lg md:text-2xl text-yellow-50 mb-8 font-semibold">
-              {language === 'en' ? 'Only' : 'Jen'} <span className="text-yellow-300 text-3xl">1499 Kč</span> ({language === 'en' ? 'instead of' : 'místo'} <span className="text-yellow-200 line-through">2499 Kč</span>)
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-slate-900 font-black text-lg px-10 py-7 rounded-xl shadow-lg shadow-yellow-500/50"
-                onClick={handlePricingClick}
-              >
-                {language === 'en' ? 'Activate LIVE' : 'Aktivovat LIVE'}
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-2 border-yellow-400 text-yellow-300 hover:bg-yellow-900/40 font-bold text-lg px-10 py-7 rounded-xl"
-                onClick={handlePricingClick}
-              >
-                {language === 'en' ? 'More info' : 'Více informací'}
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-        )}
       </div>
     </div>
   )
