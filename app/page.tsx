@@ -31,53 +31,54 @@ export default function HomePage() {
   // Translations
   const translations = {
     cs: {
-      daily_tracker_title: 'Denní Tracker',
-      daily_tracker_desc: 'Každé ráno zaznamenáš svůj psychologický stav v 30 sekund. AI detekuje tvoje podmínky na obchodování. Vidíš patterny kdy máš edge a kdy bys měl sedět. Výsledek? Méně ztracených dní a 5x přesnější rozhodnutí. Jsme oba věděli že psychika rozhoduje. Teď ji máš pod kontrolou.',
-      daily_tracker_highlight: '5x přesnější rozhodnutí',
+      daily_tracker_title: 'Daily Tracker',
+      daily_tracker_desc: 'Zaznamenáš své psychické stav každé ráno. AI vidí kdy máš edge, kdy ne. Výsledek: méně ztrátových dní.',
+      daily_tracker_highlight: '5x lepší rozhodnutí',
       
-      mindtrader_title: 'MindTrader AI',
-      mindtrader_desc: 'Tvůj 24/7 personal trading coach. Máš FOMO ? Revenge trading tě láká? Ptej se. AI analyzuje tvůj psychologický stav v reálném čase a dáva ti konkrétní, science-based rady. Nejde o motivační hlášky - jde o to zastavit tě než uděláš katastrofální chybu z emocí.',
-      mindtrader_highlight: 'Realtime psychologické rady',
+      mindtrader_title: 'AI Coach',
+      mindtrader_desc: 'Chceš FOMO? Revenge trade? Zeptej se. AI ti zabrání psychickým chybám v reálném čase.',
+      mindtrader_highlight: 'Zastaň emoce',
       
-      weekly_review_title: 'Týdenní Review',
-      weekly_review_desc: 'Každý pátek se podíváš zpět. AI ti ukáže tvá slabá místa, win rate, psychologické vzorce. Vidíš kde konkrétně padáš - zda je to strategické nebo psychologické selhání. Pak dostaneš konkrétní, akční plán co změnit příští týden.',
-      weekly_review_highlight: 'AI poznatky + akční plán',
+      weekly_review_title: 'Weekly Review',
+      weekly_review_desc: 'Každý pátek vidíš svá selhání. AI ti řekne je-li to strategie či psychika. Máš konkrétní plán na další týden.',
+      weekly_review_highlight: 'Učení z chyb',
       
       fail_log_title: 'Fail Log',
-      fail_log_desc: 'Zaznamenávej všechny své ztráty. AI analyzuje zda to bylo strategické selhání, psychologické, nebo jen hloupá chyba. Učíš se z každé ztráty. Fail Log tě učí být lepší trader - bez opakování stejných chyb. Všechny ztráty sem. Nechraň si ego.',
-      fail_log_highlight: 'Nechraň si ego - učí se ze ztrát!',
+      fail_log_desc: 'Všechny ztráty na jednom místě. AI analyzuje proč. Chybná strategie nebo psychika? Neopakuj stejné chyby.',
+      fail_log_highlight: 'Neobraňuj ego',
       
       team_club_title: 'Team Club',
-      team_club_desc: 'Elitní komunita top traderů. Sdílení obchodů, diskuse, accountability. Když selžeš – někdo tě vytáhne. Když vyhraješ – slavíme spolu. Tady se nestydíš za fail. Tady se z něj stáváš lepší.',
-      team_club_highlight: 'Komunita > Solo trading',
+      team_club_desc: 'Komunita top traderů. Sdílení obchodů, diskuse, accountability. Nejsi sám.',
+      team_club_highlight: 'Komunita > solo',
       
-      cta_text: 'Zbývá jen psychika. Máš strategii. Počítej s tím, že první 30 dní budou těžké. Pak to jede na autopilota.',
+      cta_text: 'Zbývá jen psychika. Máš strategii. První 30 dní budou těžké. Pak to jede na autopilota.',
       cta_button: 'Začít zdarma - 14 dní',
     },
     en: {
       daily_tracker_title: 'Daily Tracker',
-      daily_tracker_desc: 'Every morning record your psychological state in 30 seconds. AI detects your trading conditions. See patterns when you have edge and when you should sit. Result? Fewer losing days and 5x more precise decisions. We both knew psychology decides. Now you have it under control.',
-      daily_tracker_highlight: '5x more precise decisions',
+      daily_tracker_desc: 'Log your psychological state each morning. AI shows you when you have edge and when you don\'t. Result: fewer losing days.',
+      daily_tracker_highlight: '5x better decisions',
       
-      mindtrader_title: 'MindTrader AI',
-      mindtrader_desc: 'Your 24/7 personal trading coach. Got FOMO? Tempted by revenge trading? Ask. AI analyzes your psychological state in real-time and gives you concrete, science-based advice. Not about motivational talk - it\'s about stopping you before you make a catastrophic emotional mistake.',
-      mindtrader_highlight: 'Real-time psychological guidance',
+      mindtrader_title: 'AI Coach',
+      mindtrader_desc: 'Have FOMO? Tempted to revenge trade? Ask. AI stops you from making emotional mistakes in real-time.',
+      mindtrader_highlight: 'Stop emotions',
       
       weekly_review_title: 'Weekly Review',
-      weekly_review_desc: 'Every Friday you look back. AI shows you your weak spots, win rate, psychological patterns. You see exactly where you fail - whether it\'s strategic or psychological. Then you get a concrete, actionable plan for what to change next week.',
-      weekly_review_highlight: 'AI insights + action plan',
+      weekly_review_desc: 'Every Friday see your failures. AI tells you if it\'s strategy or psychology. Get a concrete action plan.',
+      weekly_review_highlight: 'Learn from losses',
       
       fail_log_title: 'Fail Log',
-      fail_log_desc: 'Record all your losses. AI analyzes whether it was strategy, psychology, or just a stupid mistake. You learn from every loss. Fail Log teaches you to be a better trader - no repeating the same mistakes. All losses go here. Don\'t protect your ego.',
-      fail_log_highlight: 'Don\'t protect your ego - learn from losses!',
+      fail_log_desc: 'All losses in one place. AI analyzes why. Bad strategy or bad psychology? Don\'t repeat mistakes.',
+      fail_log_highlight: 'Don\'t protect ego',
       
       team_club_title: 'Team Club',
-      team_club_desc: 'Elite community of top traders. Share trades, discuss strategies, accountability. When you fail – someone pulls you up. When you win – we celebrate together. Here you\'re not ashamed of failure. Here you become better because of it.',
-      team_club_highlight: 'Community > Solo trading',
+      team_club_desc: 'Community of top traders. Share trades, discuss, accountability. You\'re not trading alone.',
+      team_club_highlight: 'Community > solo',
       
-      cta_text: 'All that\'s left is psychology. You have the strategy. Expect the first 30 days to be tough. After that it runs on autopilot.',
+      cta_text: 'Only psychology is left. You have the strategy. First 30 days are tough. Then it runs on autopilot.',
       cta_button: 'Start Free - 14 Days',
     }
+  }
   }
 
   const t = (key: string) => translations[language][key as keyof typeof translations['cs']] || key
