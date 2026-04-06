@@ -201,7 +201,7 @@ export default function HomePage() {
           </p>
         </motion.div>
 
-        {/* Credibility & Social Proof Section */}
+        {/* Trust & Credibility Section - Real proof */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -209,36 +209,34 @@ export default function HomePage() {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
-          <p className="text-xs uppercase tracking-widest text-purple-300/60 font-semibold mb-4">
-            {language === 'en' ? 'TRUSTED BY TOP TRADERS' : 'DŮVĚŘENO TOP TRADERY'}
-          </p>
+          <h3 className="text-lg sm:text-xl font-bold text-purple-300 mb-6">
+            {language === 'en' ? 'Why traders choose MindTrader' : 'Proč si obchodníci vybírají MindTrader'}
+          </h3>
           
           <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-6">
-            <div className="px-3 sm:px-4 py-2 rounded-full bg-slate-800/60 border border-slate-700/60 text-slate-300 text-xs sm:text-sm flex items-center gap-2">
-              <span className="text-green-400 font-bold">✓</span> {language === 'en' ? '2,400+ Active Traders' : '2 400+ aktivních traderů'}
+            <div className="px-4 py-2 rounded-full bg-slate-800/60 border border-slate-700/60 text-slate-300 text-sm flex items-center gap-2">
+              <span className="text-green-400">✓</span> {language === 'en' ? 'Free 14-day trial' : 'Zdarma 14 dní'}
             </div>
-            <div className="px-3 sm:px-4 py-2 rounded-full bg-slate-800/60 border border-slate-700/60 text-slate-300 text-xs sm:text-sm flex items-center gap-2">
-              <span className="text-blue-400 font-bold">★</span> {language === 'en' ? '4.9/5 Rating' : '4,9/5 hodnocení'}
+            <div className="px-4 py-2 rounded-full bg-slate-800/60 border border-slate-700/60 text-slate-300 text-sm flex items-center gap-2">
+              <span className="text-blue-400">✓</span> {language === 'en' ? 'No credit card needed' : 'Bez platební karty'}
             </div>
-            <div className="px-3 sm:px-4 py-2 rounded-full bg-slate-800/60 border border-slate-700/60 text-slate-300 text-xs sm:text-sm flex items-center gap-2">
-              <span className="text-purple-400 font-bold">🌍</span> {language === 'en' ? '42 Countries' : '42 zemí'}
+            <div className="px-4 py-2 rounded-full bg-slate-800/60 border border-slate-700/60 text-slate-300 text-sm flex items-center gap-2">
+              <span className="text-purple-400">✓</span> {language === 'en' ? 'Cancel anytime' : 'Zrušit kdykoliv'}
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-8 max-w-md mx-auto">
-            <div className="p-3 rounded-lg bg-green-900/20 border border-green-500/30">
-              <div className="text-lg font-bold text-green-400">+$2.4M</div>
-              <div className="text-xs text-green-200">{language === 'en' ? 'Total Profits' : 'Celkový zisk'}</div>
-            </div>
-            <div className="p-3 rounded-lg bg-blue-900/20 border border-blue-500/30">
-              <div className="text-lg font-bold text-blue-400">71%</div>
-              <div className="text-xs text-blue-200">{language === 'en' ? 'Avg Win Rate' : 'Prům. win rate'}</div>
-            </div>
-            <div className="p-3 rounded-lg bg-purple-900/20 border border-purple-500/30">
-              <div className="text-lg font-bold text-purple-400">18mo+</div>
-              <div className="text-xs text-purple-200">{language === 'en' ? 'Proven Track' : 'Ověřená historie'}</div>
-            </div>
+          {/* Demo Mode Proof */}
+          <div className="p-6 rounded-lg bg-gradient-to-br from-purple-900/30 to-indigo-900/20 border border-purple-500/30 max-w-xl mx-auto">
+            <p className="text-sm text-purple-100 mb-3">
+              {language === 'en' 
+                ? 'Test the full platform free with 28 days of realistic trading data. See exactly how it works before you decide.'
+                : 'Otestuj celou platformu zdarma s 28 dny reálných dat. Vidíš přesně jak to funguje.'}
+            </p>
+            <p className="text-xs text-purple-200 italic">
+              {language === 'en'
+                ? 'No risk. No promises. Just pure functionality.'
+                : 'Žádné riziko. Žádné sliby. Jen čistá funkčnost.'}
+            </p>
           </div>
         </motion.div>
 
@@ -303,58 +301,30 @@ export default function HomePage() {
           })}
         </div>
 
-        {/* Testimonials Section */}
+        {/* CTA Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="mb-16 text-center"
+          className="text-center py-16"
         >
-          <h3 className="text-2xl sm:text-3xl font-black text-white mb-12">
-            {language === 'en' ? 'What Traders Say' : 'Co říkají obchodníci'}
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                quote: language === 'en' ? '"I went from -42% monthly to +18% in 3 months. The psychology coach alone is worth it."' : '"Z -42% měsíčně na +18% za 3 měsíce. Sám psychology coach se vyplatí."',
-                author: language === 'en' ? 'Tomáš M.' : 'Tomáš M.',
-                role: 'Forex Trader',
-                rating: 5
-              },
-              {
-                quote: language === 'en' ? '"Finally understand why I was revenge trading. MindTrader stopped me before I lost $15K."' : '"Konečně rozumím proč jsem revenge tradoval. MindTrader mě zastavil před ztrátou $15K."',
-                author: language === 'en' ? 'Jana K.' : 'Jana K.',
-                role: 'Crypto Trader',
-                rating: 5
-              },
-              {
-                quote: language === 'en' ? '"The fail log analysis changed everything. Now I know if I fail from strategy or emotions."' : '"Analýza fail logu změnila všechno. Teď vím jestli selhám kvůli strategii nebo emocím."',
-                author: language === 'en' ? 'David P.' : 'David P.',
-                role: 'Stock Trader',
-                rating: 5
-              }
-            ].map((testimonial, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="p-6 rounded-lg bg-gradient-to-br from-slate-800/60 to-slate-900/40 border border-slate-700/60 hover:border-purple-500/40 transition-all"
-              >
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, j) => (
-                    <span key={j} className="text-yellow-400">★</span>
-                  ))}
-                </div>
-                <p className="text-slate-300 italic mb-4 leading-relaxed">{testimonial.quote}</p>
-                <div>
-                  <p className="font-semibold text-white text-sm">{testimonial.author}</p>
-                  <p className="text-xs text-purple-300">{testimonial.role}</p>
-                </div>
-              </motion.div>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
+            {language === 'en' ? 'Ready to improve your trading?' : 'Připraven zlepšit svůj trading?'}
+          </h2>
+          <p className="text-base sm:text-lg text-purple-100/80 mb-8 max-w-xl mx-auto">
+            {language === 'en'
+              ? 'Test the full platform free for 14 days. No credit card needed. See exactly how it works.'
+              : 'Otestuj platformu zdarma 14 dní. Bez platební karty. Vidíš přesně jak to funguje.'}
+          </p>
+          <Button
+            size="lg"
+            onClick={handlePricingClick}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-lg px-12 py-6 rounded-xl"
+          >
+            {language === 'en' ? 'Start Free Trial' : 'Začít zdarma'} <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+        </motion.div>
             ))}
           </div>
         </motion.div>
