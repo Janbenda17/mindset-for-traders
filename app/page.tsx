@@ -325,32 +325,6 @@ export default function HomePage() {
             {language === 'en' ? 'Start Free Trial' : 'Začít zdarma'} <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </motion.div>
-            ))}
-          </div>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center py-16"
-        >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
-            {language === 'en' ? 'Ready to become top 7%?' : 'Připraven se stát top 7%?'}
-          </h2>
-          <p className="text-base sm:text-lg text-purple-100/80 mb-8 max-w-xl mx-auto">
-            {language === 'en'
-              ? 'Only psychology is left. You have the strategy. First 30 days are tough. Then it runs on autopilot.'
-              : 'Zbývá jen psychika. Máš strategii. Prvních 30 dní bude těžko. Pak to jede na autopilota.'}
-          </p>
-          <Button
-            size="lg"
-            onClick={handlePricingClick}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-lg px-12 py-6 rounded-xl"
-          >
-            {language === 'en' ? 'Start Free - 14 Days' : 'Začít zdarma - 14 dní'} <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
-        </motion.div>
       </div>
     </div>
   )
