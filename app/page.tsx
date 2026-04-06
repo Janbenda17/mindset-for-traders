@@ -207,96 +207,60 @@ export default function HomePage() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="mb-16 text-center"
+          className="mb-20 text-center"
         >
-          <h3 className="text-lg sm:text-xl font-bold text-purple-300 mb-6">
-            {language === 'en' ? 'Why traders choose MindTrader' : 'Proč si obchodníci vybírají MindTrader'}
-          </h3>
-          
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-6">
-            <div className="px-4 py-2 rounded-full bg-slate-800/60 border border-slate-700/60 text-slate-300 text-sm flex items-center gap-2">
-              <span className="text-green-400">✓</span> {language === 'en' ? 'Free 14-day trial' : 'Zdarma 14 dní'}
+          <div className="inline-flex gap-3 flex-wrap justify-center">
+            <div className="px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-300 text-sm flex items-center gap-2">
+              <span className="text-green-400 font-bold">✓</span> Free 14-day trial
             </div>
-            <div className="px-4 py-2 rounded-full bg-slate-800/60 border border-slate-700/60 text-slate-300 text-sm flex items-center gap-2">
-              <span className="text-blue-400">✓</span> {language === 'en' ? 'No credit card needed' : 'Bez platební karty'}
+            <div className="px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-300 text-sm flex items-center gap-2">
+              <span className="text-green-400 font-bold">✓</span> No credit card
             </div>
-            <div className="px-4 py-2 rounded-full bg-slate-800/60 border border-slate-700/60 text-slate-300 text-sm flex items-center gap-2">
-              <span className="text-purple-400">✓</span> {language === 'en' ? 'Cancel anytime' : 'Zrušit kdykoliv'}
+            <div className="px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-300 text-sm flex items-center gap-2">
+              <span className="text-green-400 font-bold">✓</span> Cancel anytime
             </div>
-          </div>
-
-          {/* Demo Mode Proof */}
-          <div className="p-6 rounded-lg bg-gradient-to-br from-purple-900/30 to-indigo-900/20 border border-purple-500/30 max-w-xl mx-auto">
-            <p className="text-sm text-purple-100 mb-3">
-              {language === 'en' 
-                ? 'Test the full platform free with 28 days of realistic trading data. See exactly how it works before you decide.'
-                : 'Otestuj celou platformu zdarma s 28 dny reálných dat. Vidíš přesně jak to funguje.'}
-            </p>
-            <p className="text-xs text-purple-200 italic">
-              {language === 'en'
-                ? 'No risk. No promises. Just pure functionality.'
-                : 'Žádné riziko. Žádné sliby. Jen čistá funkčnost.'}
-            </p>
           </div>
         </motion.div>
 
-        {/* Stats Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="flex justify-center items-center gap-4 mb-20 flex-wrap"
-        >
-          {[
-            { number: '9/10', label: language === 'en' ? 'of traders have psychological issues' : 'Obchodníků má psychické problémy' },
-            { number: '↓42%', label: language === 'en' ? 'Less revenge trading' : 'Méně revenge tradingu' },
-            { number: '24/7', label: language === 'en' ? 'AI analysis of your mindset' : 'AI analýza tvého mindetu' }
-          ].map((stat, i) => (
-            <div key={i} className="p-6 rounded-lg bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 text-center w-full sm:w-auto sm:min-w-[200px]">
-              <p className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">{stat.number}</p>
-              <p className="text-xs sm:text-sm text-purple-200 mt-2">{stat.label}</p>
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Simple Features Grid - With SHORT descriptions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-16">
+        {/* Features Section - Clean 5 card grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-20">
           {features.map((feature) => {
             const Icon = feature.icon
             const descriptions: Record<string, Record<string, string>> = {
               'daily-tracker': {
-                en: 'Track your morning psychology each day. See when you have edge.',
-                cs: 'Sleduj psychiku každé ráno. Vidíš kdy máš edge.'
+                en: 'Log your psychology each morning. See your patterns. Trade with edge.',
+                cs: 'Zaznamenej psychiku ráno. Vidíš vzory. Obchoduj s výhodou.'
               },
               'mindtrader-ai': {
-                en: 'AI coach in real-time. Stops FOMO, revenge trading, emotions.',
-                cs: 'AI kouč v reálném čase. Zastaví FOMO, revenge, emoce.'
+                en: 'Real-time AI coach. Stops FOMO, revenge trading, and emotional mistakes.',
+                cs: 'AI kouč v reálném čase. Zastaví FOMO, revenge i emočně chyby.'
               },
               'weekly-review': {
-                en: 'Every Friday: see losses, get AI analysis, plan next week.',
-                cs: 'Každý pátek: vidíš chyby, AI analýza, plán na týden.'
+                en: 'Every Friday: see losses, AI analysis, concrete action plan for next week.',
+                cs: 'Každý pátek: vidíš ztráty, AI analýza, konkrétní plán na týden.'
               },
               'fail-log': {
-                en: 'All losses in one place. Understand why. Don\'t repeat mistakes.',
-                cs: 'Všechny ztráty na místě. Pochop proč. Neopakovaš chyby.'
+                en: 'All losses analyzed. Understand: strategy failure or psychology failure?',
+                cs: 'Všechny ztráty analyzovány. Strategie nebo psychika? To je klíč.'
               },
               'team-club': {
-                en: 'Community of traders. Share, discuss, accountability. Not alone.',
-                cs: 'Komunita traderů. Sdílení, diskuse, zodpovědnost.'
+                en: 'Private trader community. Share wins, accountability, mentorship.',
+                cs: 'Komunita traderů. Sdílení, zodpovědnost, mentorství.'
               }
             }
             
             const desc = descriptions[feature.id]?.[language] || feature.description
             
             return (
-              <div key={feature.id} className="group p-6 rounded-xl bg-gradient-to-br from-purple-900/40 to-indigo-900/30 border border-purple-500/30 hover:border-purple-400/60 transition-all hover:shadow-lg hover:shadow-purple-500/20">
-                <div className="mb-4 p-3 bg-purple-500/20 rounded-lg w-fit group-hover:scale-110 transition-transform">
-                  <Icon className="w-6 h-6 text-purple-300" />
+              <Link key={feature.id} href={feature.href}>
+                <div className="group p-6 rounded-lg bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-slate-700/50 hover:border-purple-400/50 transition-all hover:shadow-lg hover:shadow-purple-500/20 h-full cursor-pointer">
+                  <div className="mb-4 p-3 bg-purple-500/20 rounded-lg w-fit group-hover:scale-110 transition-transform">
+                    <Icon className="w-5 h-5 text-purple-300" />
+                  </div>
+                  <h3 className="font-bold text-white text-base mb-3">{feature.title}</h3>
+                  <p className="text-sm text-slate-300 leading-relaxed">{desc}</p>
                 </div>
-                <h3 className="font-bold text-white text-base mb-2">{feature.title}</h3>
-                <p className="text-sm text-purple-100/80 leading-relaxed">{desc}</p>
-              </div>
+              </Link>
             )
           })}
         </div>
