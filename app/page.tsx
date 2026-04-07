@@ -211,58 +211,83 @@ export default function HomePage() {
         >
           <div className="inline-flex gap-3 flex-wrap justify-center">
             <div className="px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-300 text-sm flex items-center gap-2">
-              <span className="text-green-400 font-bold">✓</span> Free 14-day trial
+              <span className="text-green-400 font-bold">✓</span> {language === 'en' ? 'Free 14-day trial' : 'Zdarma 14 dní'}
             </div>
             <div className="px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-300 text-sm flex items-center gap-2">
-              <span className="text-green-400 font-bold">✓</span> No credit card
+              <span className="text-green-400 font-bold">✓</span> {language === 'en' ? 'Full access to all features' : 'Plný přístup ke všem funkcím'}
             </div>
             <div className="px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-300 text-sm flex items-center gap-2">
-              <span className="text-green-400 font-bold">✓</span> Cancel anytime
+              <span className="text-green-400 font-bold">✓</span> {language === 'en' ? 'Cancel anytime' : 'Zrušit kdykoliv'}
             </div>
           </div>
         </motion.div>
 
-        {/* Features Section - Clean 5 card grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-20">
-          {features.map((feature) => {
-            const Icon = feature.icon
-            const descriptions: Record<string, Record<string, string>> = {
-              'daily-tracker': {
-                en: 'Log your psychology each morning. See your patterns. Trade with edge.',
-                cs: 'Zaznamenej psychiku ráno. Vidíš vzory. Obchoduj s výhodou.'
-              },
-              'mindtrader-ai': {
-                en: 'Real-time AI coach. Stops FOMO, revenge trading, and emotional mistakes.',
-                cs: 'AI kouč v reálném čase. Zastaví FOMO, revenge i emočně chyby.'
-              },
-              'weekly-review': {
-                en: 'Every Friday: see losses, AI analysis, concrete action plan for next week.',
-                cs: 'Každý pátek: vidíš ztráty, AI analýza, konkrétní plán na týden.'
-              },
-              'fail-log': {
-                en: 'All losses analyzed. Understand: strategy failure or psychology failure?',
-                cs: 'Všechny ztráty analyzovány. Strategie nebo psychika? To je klíč.'
-              },
-              'team-club': {
-                en: 'Private trader community. Share wins, accountability, mentorship.',
-                cs: 'Komunita traderů. Sdílení, zodpovědnost, mentorství.'
+        {/* Features Section - Beautiful 5 card grid */}
+        <div className="mb-20">
+          <h2 className="text-2xl sm:text-3xl font-black text-white mb-12 text-center">
+            {language === 'en' ? 'Everything You Need' : 'Vše co potřebuješ'}
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+            {features.map((feature, idx) => {
+              const Icon = feature.icon
+              const descriptions: Record<string, Record<string, string>> = {
+                'daily-tracker': {
+                  en: 'Log your psychology each morning. See your patterns. Trade with edge.',
+                  cs: 'Zaznamenej psychiku ráno. Vidíš vzory. Obchoduj s výhodou.'
+                },
+                'mindtrader-ai': {
+                  en: 'Real-time AI coach. Stops FOMO, revenge trading, and emotional mistakes.',
+                  cs: 'AI kouč v reálném čase. Zastaví FOMO, revenge i emočně chyby.'
+                },
+                'weekly-review': {
+                  en: 'Every Friday: see losses, AI analysis, concrete action plan for next week.',
+                  cs: 'Každý pátek: vidíš ztráty, AI analýza, konkrétní plán na týden.'
+                },
+                'fail-log': {
+                  en: 'All losses analyzed. Understand: strategy failure or psychology failure?',
+                  cs: 'Všechny ztráty analyzovány. Strategie nebo psychika? To je klíč.'
+                },
+                'team-club': {
+                  en: 'Private trader community. Share wins, accountability, mentorship.',
+                  cs: 'Komunita traderů. Sdílení, zodpovědnost, mentorství.'
+                }
               }
-            }
-            
-            const desc = descriptions[feature.id]?.[language] || feature.description
-            
-            return (
-              <Link key={feature.id} href={feature.href}>
-                <div className="group p-6 rounded-lg bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-slate-700/50 hover:border-purple-400/50 transition-all hover:shadow-lg hover:shadow-purple-500/20 h-full cursor-pointer">
-                  <div className="mb-4 p-3 bg-purple-500/20 rounded-lg w-fit group-hover:scale-110 transition-transform">
-                    <Icon className="w-5 h-5 text-purple-300" />
-                  </div>
-                  <h3 className="font-bold text-white text-base mb-3">{feature.title}</h3>
-                  <p className="text-sm text-slate-300 leading-relaxed">{desc}</p>
-                </div>
-              </Link>
-            )
-          })}
+              
+              const desc = descriptions[feature.id]?.[language] || feature.description
+              const colors = [
+                'from-blue-900/40 to-blue-800/20 border-blue-600/40 hover:border-blue-400/60',
+                'from-purple-900/40 to-purple-800/20 border-purple-600/40 hover:border-purple-400/60',
+                'from-pink-900/40 to-pink-800/20 border-pink-600/40 hover:border-pink-400/60',
+                'from-indigo-900/40 to-indigo-800/20 border-indigo-600/40 hover:border-indigo-400/60',
+                'from-emerald-900/40 to-emerald-800/20 border-emerald-600/40 hover:border-emerald-400/60',
+              ]
+              const iconColors = ['text-blue-300', 'text-purple-300', 'text-pink-300', 'text-indigo-300', 'text-emerald-300']
+              const bgColors = ['bg-blue-500/20', 'bg-purple-500/20', 'bg-pink-500/20', 'bg-indigo-500/20', 'bg-emerald-500/20']
+              
+              return (
+                <Link key={feature.id} href={feature.href}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: idx * 0.1 }}
+                    viewport={{ once: true }}
+                    className={`group p-6 rounded-xl bg-gradient-to-br ${colors[idx]} transition-all hover:shadow-lg hover:shadow-${['blue', 'purple', 'pink', 'indigo', 'emerald'][idx]}-500/30 h-full cursor-pointer`}
+                  >
+                    <div className={`mb-4 p-3 ${bgColors[idx]} rounded-lg w-fit group-hover:scale-110 transition-transform`}>
+                      <Icon className={`w-6 h-6 ${iconColors[idx]}`} />
+                    </div>
+                    <h3 className="font-bold text-white text-base mb-3">{feature.title}</h3>
+                    <p className="text-sm text-slate-300 leading-relaxed">{desc}</p>
+                    <div className="mt-4 flex items-center gap-2 text-xs opacity-60 group-hover:opacity-100 transition-opacity">
+                      <span>{language === 'en' ? 'Explore' : 'Prozkoumat'}</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </div>
+                  </motion.div>
+                </Link>
+              )
+            })}
+          </div>
         </div>
 
         {/* CTA Section */}
