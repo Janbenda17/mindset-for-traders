@@ -324,29 +324,6 @@ export default function HomePage() {
     </div>
   )
 }
-    {
-      id: 5,
-      title: t('team_club_title'),
-      description: t('team_club_desc'),
-      preview: TeamClubPreview,
-      icon: Users,
-      href: '/find-partner',
-      highlight: t('team_club_highlight')
-    }
-  ]
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
-      {/* Galaxy background effects */}
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent" />
-      
-      {/* Stars */}
-      <div className="fixed inset-0 opacity-60">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
