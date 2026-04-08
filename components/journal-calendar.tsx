@@ -17,6 +17,9 @@ import { Button } from "@/components/ui/button"
 import { getJournalEntries } from "@/utils/storage-utils"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
+import { useAuth } from "@/contexts/auth-context"
+import { useLiveMode } from "@/contexts/live-mode-context"
+import { getScoped } from "@/lib/storage"
 import { generateVirtualTrades, generateVirtualJournalEntries } from "@/lib/virtual-data-generator"
 
 interface JournalCalendarProps {
@@ -28,11 +31,13 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [entries, setEntries] = useState<any[]>([])
-  const { isLiveMode } = useData()
+  const { getAllTrades } = useData()
+  const { user } = useAuth()
+  const { isLiveMode } = useLiveMode()
 
   useEffect(() => {
     loadEntries()
-  }, [isLiveMode, demoEntries])
+  }, [isLiveMode, demoEntries, user?.id])
 
   const loadEntries = () => {
     if (!isLiveMode && demoEntries && demoEntries.length > 0) {
@@ -44,9 +49,10 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
       const virtualJournals = generateVirtualJournalEntries(5)
       setEntries([...virtualTrades, ...virtualJournals])
     } else {
-      // Use real entries in live mode
-      const journalEntries = getJournalEntries()
-      setEntries(journalEntries)
+      // LIVE MODE: Load from data context (Supabase data, not localStorage)
+      const allTrades = getAllTrades()
+      console.log("[v0] JournalCalendar - Loading trades from Supabase via getAllTrades:", allTrades.length)
+      setEntries(allTrades)
     }
   }
 
@@ -68,7 +74,16 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
 
   const getEntriesForDate = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-    return entries.filter((entry) => entry.date === dateStr)
+    // Filter by date field (which contains when the trade was recorded/created)
+    return entries.filter((entry) => {
+      // Use date field - it should be the primary date for filtering
+      const entryDate = entry.date || entry.recordedDate
+      // Debug log for trades missing on calendar
+      if (entryDate === dateStr && entry.type === "trade") {
+        console.log("[v0] Trade found for date:", dateStr, entry)
+      }
+      return entryDate === dateStr
+    })
   }
 
   const getStatsForDate = (day: number) => {
@@ -94,21 +109,21 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
   }
 
   const monthNames = [
-    "Leden",
-    "Únor",
-    "Březen",
-    "Duben",
-    "Květen",
-    "Červen",
-    "Červenec",
-    "Srpen",
-    "Září",
-    "Říjen",
-    "Listopad",
-    "Prosinec",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ]
 
-  const dayNames = ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"]
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
   const monthlyStats = () => {
     const monthEntries = entries.filter((entry) => {
@@ -144,7 +159,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
             <div className="p-4 pb-3">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-gray-400 text-xs font-medium mb-1">P&L měsíce</p>
+                  <p className="text-gray-400 text-xs font-medium mb-1">Monthly P/L</p>
                   <p className={cn("text-3xl font-bold", stats.pnl >= 0 ? "text-emerald-400" : "text-rose-400")}>
                     {stats.pnl >= 0 ? "+" : ""}${stats.pnl}
                   </p>
@@ -195,7 +210,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
             <div className="p-4 pb-3">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-gray-400 text-xs font-medium mb-1">Obchodů</p>
+                  <p className="text-gray-400 text-xs font-medium mb-1">Trades</p>
                   <p className="text-3xl font-bold text-white">{stats.trades}</p>
                 </div>
                 <div className="p-3 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20">
@@ -217,7 +232,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
             <div className="p-4 pb-3">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-gray-400 text-xs font-medium mb-1">Průměr/den</p>
+                  <p className="text-gray-400 text-xs font-medium mb-1">Avg/Day</p>
                   <p className={cn("text-3xl font-bold", stats.avgPerDay >= 0 ? "text-emerald-400" : "text-rose-400")}>
                     {stats.avgPerDay >= 0 ? "+" : ""}${stats.avgPerDay}
                   </p>
@@ -252,7 +267,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
                   <CalendarIcon className="w-6 h-6 text-purple-400" />
                   {monthNames[month]} {year}
                 </h2>
-                <p className="text-sm text-gray-400 mt-1">{stats.trades} obchodů tento měsíc</p>
+                <p className="text-sm text-gray-400 mt-1">{stats.trades} trades this month</p>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -269,7 +284,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
                   onClick={() => setCurrentDate(new Date())}
                   className="bg-slate-700/50 border-slate-600 text-white hover:bg-slate-700 hover:border-purple-500"
                 >
-                  Dnes
+                  Today
                 </Button>
                 <Button
                   variant="outline"
@@ -367,19 +382,19 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-700/50 border border-slate-600">
                 <div className="w-4 h-4 rounded bg-gradient-to-br from-emerald-500/30 to-green-500/20" />
-                <span className="text-xs text-gray-300">Ziskový den</span>
+                <span className="text-xs text-gray-300">Profit day</span>
               </div>
               <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-700/50 border border-slate-600">
                 <div className="w-4 h-4 rounded bg-gradient-to-br from-rose-500/30 to-red-500/20" />
-                <span className="text-xs text-gray-300">Ztrátový den</span>
+                <span className="text-xs text-gray-300">Loss day</span>
               </div>
               <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-700/50 border border-slate-600">
                 <div className="w-4 h-4 rounded bg-slate-700/40 border border-purple-500" />
-                <span className="text-xs text-gray-300">Dnešní den</span>
+                <span className="text-xs text-gray-300">Today</span>
               </div>
               <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-700/50 border border-slate-600">
                 <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                <span className="text-xs text-gray-300">Obchod</span>
+                <span className="text-xs text-gray-300">Trade</span>
               </div>
             </div>
           </CardContent>
@@ -390,7 +405,7 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
           <CardContent className="p-6">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-purple-400" />
-              {selectedDate ? `${selectedDate.getDate()}. ${monthNames[selectedDate.getMonth()]}` : "Vyber den"}
+              {selectedDate ? `${selectedDate.getDate()}. ${monthNames[selectedDate.getMonth()]}` : "Select day"}
             </h3>
             {selectedDate && selectedEntries.length > 0 ? (
               <div className="space-y-3">
@@ -415,10 +430,10 @@ export function JournalCalendar({ onDateSelect, demoEntries }: JournalCalendarPr
                             )}
                           >
                             {entry.type === "trade"
-                              ? "📊 Obchod"
+                              ? "📊 Trade"
                               : entry.type === "behavior"
-                                ? "🧠 Chování"
-                                : "📝 Deník"}
+                                ? "🧠 Behavior"
+                                : "📝 Note"}
                           </Badge>
                           {pnl !== 0 && (
                             <div

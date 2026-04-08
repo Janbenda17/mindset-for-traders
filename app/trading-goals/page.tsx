@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,6 +36,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useData } from "@/contexts/data-context"
+import { useLanguage } from "@/contexts/language-context"
 import { createStorageClient } from "@/lib/storage-client"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -54,11 +57,25 @@ interface Goal {
   lastReminderSent?: string
 }
 
-const demoGoals: Goal[] = [
+const demoGoals = (isEn: boolean) => {
+  const txt = {
+    goal1Title: isEn ? "Achieve 70% Win Rate" : "Dosáhnout 70% úspěšnosti",
+    goal1Desc: isEn ? "Increase trading success by focusing only on A+ setups" : "Zvýšit úspěšnost obchodování zaměřením se na A+ setupy",
+    goal2Title: isEn ? "30 days without revenge trading" : "30 dní bez revenge tradingu",
+    goal2Desc: isEn ? "Maintain discipline and avoid emotional trading after losses" : "Zachovat disciplínu a vyhnout se emočnímu tradingu po ztrátách",
+    goal3Title: isEn ? "Profit Factor above 2.0" : "Profit Factor vyšší než 2.0",
+    goal3Desc: isEn ? "Improve profit-to-loss ratio by optimizing risk management" : "Zlepšit poměr zisku k ztrátě optimalizací řízení rizik",
+    goal4Title: isEn ? "Meditate every day before trading" : "Meditovat každý den před tradingem",
+    goal4Desc: isEn ? "Create a 10-minute morning meditation routine for better focus" : "Vytvořit 10minutovou ranní meditační rutinu pro lepší soustředění",
+    goal5Title: isEn ? "Increase balance by $5,000" : "Zvýšit zůstatek o 5000 dolarů",
+    goal5Desc: isEn ? "Consistent account growth through quality trades" : "Konzistentní růst účtu prostřednictvím kvalitních obchodů",
+  }
+  
+  return [
   {
     id: "demo-1",
-    title: "Dosáhnout 70% Win Rate",
-    description: "Zvýšit úspěšnost obchodů zaměřením pouze na A+ setupy",
+    title: txt.goal1Title,
+    description: txt.goal1Desc,
     category: "skills",
     targetValue: 70,
     currentValue: 62,
@@ -72,12 +89,12 @@ const demoGoals: Goal[] = [
   },
   {
     id: "demo-2",
-    title: "30 dní bez revenge tradingu",
-    description: "Udržet disciplínu a neprovádět emocionální obchody po ztrátě",
+    title: txt.goal2Title,
+    description: txt.goal2Desc,
     category: "discipline",
     targetValue: 30,
     currentValue: 18,
-    unit: "dní",
+    unit: "days",
     deadline: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     priority: "high",
     status: "active",
@@ -87,8 +104,8 @@ const demoGoals: Goal[] = [
   },
   {
     id: "demo-3",
-    title: "Profit Factor nad 2.0",
-    description: "Zlepšit poměr zisků k ztrátám optimalizací risk managementu",
+    title: txt.goal3Title,
+    description: txt.goal3Desc,
     category: "profit",
     targetValue: 2.0,
     currentValue: 1.65,
@@ -102,12 +119,12 @@ const demoGoals: Goal[] = [
   },
   {
     id: "demo-4",
-    title: "Meditace každý den před tradingem",
-    description: "Vytvořit rutinu 10min ranní meditace pro lepší focus",
+    title: txt.goal4Title,
+    description: txt.goal4Desc,
     category: "mindset",
     targetValue: 21,
     currentValue: 21,
-    unit: "dní",
+    unit: "days",
     deadline: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     priority: "medium",
     status: "completed",
@@ -117,8 +134,8 @@ const demoGoals: Goal[] = [
   },
   {
     id: "demo-5",
-    title: "Zvýšit balance o $5,000",
-    description: "Konzistentní růst účtu přes kvalitní obchody",
+    title: txt.goal5Title,
+    description: txt.goal5Desc,
     category: "profit",
     targetValue: 5000,
     currentValue: 3200,
@@ -130,15 +147,70 @@ const demoGoals: Goal[] = [
     notificationsEnabled: true,
     reminderFrequency: "weekly",
   },
-]
+] as Goal[]
+}
 
 export default function TradingGoalsPage() {
   const { toast } = useToast()
   const { isLiveMode } = useData()
   const { user } = useAuth()
+  const { language } = useLanguage()
+  const isEn = language === "en"
   const storage = createStorageClient(user?.id || null)
   const [goals, setGoals] = useState<Goal[]>([])
   const [isAddingGoal, setIsAddingGoal] = useState(false)
+
+  const txt = {
+    back: isEn ? "Back" : "Zpět",
+    goalTracking: isEn ? "Goal Tracking" : "Sledování cílů",
+    tradingGoals: isEn ? "Trading Goals" : "Obchodní cíle",
+    trackProgress: isEn ? "Track your progress and achieve your goals" : "Sleduj svůj pokrok a dosáhni svých cílů",
+    addGoal: isEn ? "Add Goal" : "Přidat cíl",
+    newTradingGoal: isEn ? "New Trading Goal" : "Nový obchodní cíl",
+    defineGoal: isEn ? "Define your new goal" : "Definuj svůj nový cíl",
+    goalName: isEn ? "Goal Name" : "Název cíle",
+    description: isEn ? "Description" : "Popis",
+    category: isEn ? "Category" : "Kategorie",
+    priority: isEn ? "Priority" : "Priorita",
+    high: isEn ? "High" : "Vysoká",
+    medium: isEn ? "Medium" : "Střední",
+    low: isEn ? "Low" : "Nízká",
+    targetValue: isEn ? "Target Value" : "Cílová hodnota",
+    unit: isEn ? "Unit" : "Jednotka",
+    current: isEn ? "Current" : "Aktuální",
+    deadline: isEn ? "Deadline" : "Termín",
+    reminders: isEn ? "Reminders" : "Připomenutí",
+    reminderFrequency: isEn ? "Reminder Frequency" : "Frekvence připomenutí",
+    daily: isEn ? "Daily" : "Denně",
+    weekly: isEn ? "Weekly" : "Týdně",
+    noReminders: isEn ? "No Reminders" : "Bez připomenutí",
+    activeGoals: isEn ? "Active Goals" : "Aktivní cíle",
+    completedGoals: isEn ? "Completed Goals" : "Dokončené cíle",
+    overallProgress: isEn ? "Overall Progress" : "Celkový pokrok",
+    notificationsEnabled: isEn ? "Notifications enabled" : "Připomenutí zapnuta",
+    notificationsDisabled: isEn ? "Notifications disabled" : "Připomenutí vypnuta",
+    goalAdded: isEn ? "Goal added" : "Cíl přidán",
+    newGoalCreated: isEn ? "New trading goal has been created" : "Nový obchodní cíl byl vytvořen",
+    goalAchieved: isEn ? "Congratulations!" : "Gratulujeme!",
+    goalRemoved: isEn ? "Deleted" : "Smazáno",
+    goalRemovedDesc: isEn ? "Goal has been removed" : "Cíl byl smazán",
+    errorTitle: isEn ? "Error" : "Chyba",
+    fillRequired: isEn ? "Fill in name and deadline" : "Vyplň název a termín",
+    // Demo goals
+    goal1Title: isEn ? "Achieve 70% Win Rate" : "Dosáhnout 70% úspěšnosti",
+    goal1Desc: isEn ? "Increase trading success by focusing only on A+ setups" : "Zvýšit úspěšnost obchodování zaměřením se na A+ setupy",
+    goal2Title: isEn ? "30 days without revenge trading" : "30 dní bez revenge tradingu",
+    goal2Desc: isEn ? "Maintain discipline and avoid emotional trading after losses" : "Zachovat disciplínu a vyhnout se emočnímu tradingu po ztrátách",
+    goal3Title: isEn ? "Profit Factor above 2.0" : "Profit Factor vyšší než 2.0",
+    goal3Desc: isEn ? "Improve profit-to-loss ratio by optimizing risk management" : "Zlepšit poměr zisku k ztrátě optimalizací řízení rizik",
+    goal4Title: isEn ? "Meditate every day before trading" : "Meditovat každý den před tradingem",
+    goal4Desc: isEn ? "Create a 10-minute morning meditation routine for better focus" : "Vytvořit 10minutovou ranní meditační rutinu pro lepší soustředění",
+    goal5Title: isEn ? "Increase balance by $5,000" : "Zvýšit zůstatek o 5000 dolarů",
+    goal5Desc: isEn ? "Consistent account growth through quality trades" : "Konzistentní růst účtu prostřednictvím kvalitních obchodů",
+    achieved: isEn ? "Achieved: 21 days" : "Dosaženo: 21 dní",
+    daysRemaining: isEn ? "days remaining" : "dní zbývá",
+    withReminders: isEn ? "With Reminders" : "S připomenutím",
+  }
 
   const [newGoal, setNewGoal] = useState({
     title: "",
@@ -158,11 +230,11 @@ export default function TradingGoalsPage() {
       const saved = storage.get<Goal[]>("trading-goals", [])
       setGoals(saved)
     } else {
-      setGoals(demoGoals)
+      setGoals(demoGoals(isEn))
     }
 
     checkAndSendReminders()
-  }, [isLiveMode, user?.id])
+  }, [isLiveMode, user?.id, isEn])
 
   const saveGoals = (updatedGoals: Goal[]) => {
     setGoals(updatedGoals)
@@ -205,8 +277,8 @@ export default function TradingGoalsPage() {
       const progress = goal.targetValue > 0 ? Math.round((goal.currentValue / goal.targetValue) * 100) : 0
       const daysRemaining = getDaysRemaining(goal.deadline)
 
-      new Notification("Trading Cíl - Připomínka", {
-        body: `${goal.title}\nProgress: ${progress}% | Zbývá ${daysRemaining} dní`,
+      new Notification("Trading Goal - Reminder", {
+        body: `${goal.title}\nProgress: ${progress}% | ${daysRemaining} days remaining`,
         icon: "/favicon.ico",
         tag: `goal-${goal.id}`,
       })
@@ -230,8 +302,8 @@ export default function TradingGoalsPage() {
 
     const goal = updated.find((g) => g.id === goalId)
     toast({
-      title: goal?.notificationsEnabled ? "Notifikace zapnuty" : "Notifikace vypnuty",
-      description: `Připomínky pro "${goal?.title}" byly ${goal?.notificationsEnabled ? "aktivovány" : "deaktivovány"}`,
+      title: goal?.notificationsEnabled ? "Notifications enabled" : "Notifications disabled",
+      description: `Reminders for "${goal?.title}" have been ${goal?.notificationsEnabled ? "enabled" : "disabled"}`,
     })
   }
 
@@ -247,7 +319,7 @@ export default function TradingGoalsPage() {
 
   const addGoal = () => {
     if (!newGoal.title || !newGoal.deadline) {
-      toast({ title: "Chyba", description: "Vyplňte název a deadline", variant: "destructive" })
+      toast({ title: "Error", description: "Fill in name and deadline", variant: "destructive" })
       return
     }
 
@@ -276,7 +348,7 @@ export default function TradingGoalsPage() {
       reminderFrequency: "weekly",
     })
     setIsAddingGoal(false)
-    toast({ title: "Cíl přidán", description: "Nový trading cíl byl vytvořen" })
+    toast({ title: "Goal added", description: "New trading goal has been created" })
   }
 
   const updateProgress = (goalId: string, newValue: number) => {
@@ -285,8 +357,8 @@ export default function TradingGoalsPage() {
         const isCompleted = newValue >= g.targetValue
         if (isCompleted && g.status !== "completed") {
           if (g.notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
-            new Notification("Cíl splněn! 🎉", {
-              body: `Gratulace! Splnil jsi cíl "${g.title}"`,
+            new Notification("Goal achieved! 🎉", {
+              body: `Congratulations! You achieved the goal "${g.title}"`,
               icon: "/favicon.ico",
             })
           }
@@ -303,13 +375,13 @@ export default function TradingGoalsPage() {
 
     const goal = updated.find((g) => g.id === goalId)
     if (goal?.status === "completed") {
-      toast({ title: "Gratulace!", description: `Cíl "${goal.title}" byl splněn!` })
+      toast({ title: "Congratulations!", description: `Goal "${goal.title}" has been achieved!` })
     }
   }
 
   const deleteGoal = (goalId: string) => {
     saveGoals(goals.filter((g) => g.id !== goalId))
-    toast({ title: "Smazáno", description: "Cíl byl odstraněn" })
+    toast({ title: "Deleted", description: "Goal has been removed" })
   }
 
   const getCategoryIcon = (category: string) => {
@@ -373,6 +445,14 @@ export default function TradingGoalsPage() {
       </div>
 
       <div className="max-w-6xl mx-auto relative z-10">
+        {/* Back Button */}
+        <Link href="/bonus" className="inline-flex mb-6">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
+            <ArrowLeft className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-gray-400">Back</span>
+          </div>
+        </Link>
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
@@ -382,47 +462,47 @@ export default function TradingGoalsPage() {
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               Trading{" "}
-              <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Cíle</span>
+              <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Goals</span>
             </h1>
-            <p className="text-gray-400">Sledujte svůj pokrok a dosahujte cílů</p>
+            <p className="text-gray-400">Track your progress and achieve your goals</p>
           </div>
 
           <Dialog open={isAddingGoal} onOpenChange={setIsAddingGoal}>
             <DialogTrigger asChild>
               <Button className="bg-purple-600 hover:bg-purple-700">
                 <Plus className="w-4 h-4 mr-2" />
-                Přidat Cíl
+                Add Goal
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-slate-900 border-slate-700 max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-white">Nový Trading Cíl</DialogTitle>
-                <DialogDescription>Definujte svůj nový cíl</DialogDescription>
+                <DialogTitle className="text-white">New Trading Goal</DialogTitle>
+                <DialogDescription>Define your new goal</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Název cíle</Label>
+                  <Label className="text-gray-300">Goal Name</Label>
                   <Input
                     value={newGoal.title}
                     onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
-                    placeholder="např. Dosáhnout 10% měsíčního zisku"
+                    placeholder="e.g. Achieve 10% monthly profit"
                     className="bg-slate-800 border-slate-600 text-white"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Popis</Label>
+                  <Label className="text-gray-300">Description</Label>
                   <Textarea
                     value={newGoal.description}
                     onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
-                    placeholder="Detailní popis cíle..."
+                    placeholder="Detailed description of the goal..."
                     className="bg-slate-800 border-slate-600 text-white"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Kategorie</Label>
+                    <Label className="text-gray-300">Category</Label>
                     <Select
                       value={newGoal.category}
                       onValueChange={(v) => setNewGoal({ ...newGoal, category: v as Goal["category"] })}
@@ -431,17 +511,17 @@ export default function TradingGoalsPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-600">
-                        <SelectItem value="profit">Zisk</SelectItem>
-                        <SelectItem value="skills">Dovednosti</SelectItem>
-                        <SelectItem value="discipline">Disciplína</SelectItem>
+                        <SelectItem value="profit">Profit</SelectItem>
+                        <SelectItem value="skills">Skills</SelectItem>
+                        <SelectItem value="discipline">Discipline</SelectItem>
                         <SelectItem value="mindset">Mindset</SelectItem>
-                        <SelectItem value="custom">Vlastní</SelectItem>
+                        <SelectItem value="custom">Custom</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Priorita</Label>
+                    <Label className="text-gray-300">Priority</Label>
                     <Select
                       value={newGoal.priority}
                       onValueChange={(v) => setNewGoal({ ...newGoal, priority: v as Goal["priority"] })}
@@ -450,9 +530,9 @@ export default function TradingGoalsPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-600">
-                        <SelectItem value="high">Vysoká</SelectItem>
-                        <SelectItem value="medium">Střední</SelectItem>
-                        <SelectItem value="low">Nízká</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -460,7 +540,7 @@ export default function TradingGoalsPage() {
 
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Cílová hodnota</Label>
+                    <Label className="text-gray-300">Target Value</Label>
                     <Input
                       type="number"
                       value={newGoal.targetValue}
@@ -469,16 +549,16 @@ export default function TradingGoalsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Jednotka</Label>
+                    <Label className="text-gray-300">Unit</Label>
                     <Input
                       value={newGoal.unit}
                       onChange={(e) => setNewGoal({ ...newGoal, unit: e.target.value })}
-                      placeholder="$, %, obchody"
+                      placeholder="$, %, trades"
                       className="bg-slate-800 border-slate-600 text-white"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-300">Aktuální</Label>
+                    <Label className="text-gray-300">Current</Label>
                     <Input
                       type="number"
                       value={newGoal.currentValue}
@@ -502,7 +582,7 @@ export default function TradingGoalsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Bell className="w-4 h-4 text-purple-400" />
-                      <Label className="text-gray-300">Připomínky</Label>
+                      <Label className="text-gray-300">Reminders</Label>
                     </div>
                     <Switch
                       checked={newGoal.notificationsEnabled}
@@ -512,7 +592,7 @@ export default function TradingGoalsPage() {
 
                   {newGoal.notificationsEnabled && (
                     <div className="space-y-2">
-                      <Label className="text-gray-400 text-sm">Frekvence připomínek</Label>
+                      <Label className="text-gray-400 text-sm">Reminder Frequency</Label>
                       <Select
                         value={newGoal.reminderFrequency}
                         onValueChange={(v) =>
@@ -523,9 +603,9 @@ export default function TradingGoalsPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-800 border-slate-600">
-                          <SelectItem value="daily">Denně</SelectItem>
-                          <SelectItem value="weekly">Týdně</SelectItem>
-                          <SelectItem value="none">Bez připomínek</SelectItem>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="none">No Reminders</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -533,7 +613,7 @@ export default function TradingGoalsPage() {
                 </div>
 
                 <Button onClick={addGoal} className="w-full bg-purple-600 hover:bg-purple-700">
-                  Vytvořit Cíl
+                  Create Goal
                 </Button>
               </div>
             </DialogContent>
@@ -548,7 +628,7 @@ export default function TradingGoalsPage() {
                 <Target className="w-6 h-6 text-purple-400" />
               </div>
               <div>
-                <p className="text-gray-400 text-sm">Aktivní cíle</p>
+                <p className="text-gray-400 text-sm">Active Goals</p>
                 <p className="text-2xl font-bold text-white">{activeGoals.length}</p>
               </div>
             </CardContent>
@@ -560,7 +640,7 @@ export default function TradingGoalsPage() {
                 <Trophy className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <p className="text-gray-400 text-sm">Splněné</p>
+                <p className="text-gray-400 text-sm">Completed</p>
                 <p className="text-2xl font-bold text-white">{completedGoals.length}</p>
               </div>
             </CardContent>
@@ -572,7 +652,7 @@ export default function TradingGoalsPage() {
                 <TrendingUp className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <p className="text-gray-400 text-sm">Celkový progress</p>
+                <p className="text-gray-400 text-sm">Overall Progress</p>
                 <p className="text-2xl font-bold text-white">{overallProgress.toFixed(0)}%</p>
               </div>
             </CardContent>
@@ -584,7 +664,7 @@ export default function TradingGoalsPage() {
                 <Bell className="w-6 h-6 text-orange-400" />
               </div>
               <div>
-                <p className="text-gray-400 text-sm">S připomínkami</p>
+                <p className="text-gray-400 text-sm">With Reminders</p>
                 <p className="text-2xl font-bold text-white">{goals.filter((g) => g.notificationsEnabled).length}</p>
               </div>
             </CardContent>
@@ -596,11 +676,11 @@ export default function TradingGoalsPage() {
           <Card className="bg-slate-800/50 border-slate-700/50 border-dashed">
             <CardContent className="p-12 text-center">
               <Target className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">Žádné cíle</h3>
-              <p className="text-gray-400 mb-6">Začněte tím, že si nastavíte svůj první trading cíl</p>
+              <h3 className="text-xl font-semibold text-white mb-2">No goals</h3>
+              <p className="text-gray-400 mb-6">Start by setting your first trading goal</p>
               <Button onClick={() => setIsAddingGoal(true)} className="bg-purple-600 hover:bg-purple-700">
                 <Plus className="w-4 h-4 mr-2" />
-                Přidat první cíl
+                Add First Goal
               </Button>
             </CardContent>
           </Card>
@@ -611,7 +691,7 @@ export default function TradingGoalsPage() {
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                   <Target className="w-5 h-5 text-purple-400" />
-                  Aktivní Cíle
+                  Active Goals
                 </h2>
                 <div className="grid gap-4">
                   {activeGoals.map((goal) => {
@@ -642,7 +722,7 @@ export default function TradingGoalsPage() {
                                       variant="outline"
                                     >
                                       <Bell className="w-3 h-3 mr-1" />
-                                      {goal.reminderFrequency === "daily" ? "Denně" : "Týdně"}
+                                      {goal.reminderFrequency === "daily" ? "Daily" : "Weekly"}
                                     </Badge>
                                   )}
                                 </div>
@@ -654,7 +734,7 @@ export default function TradingGoalsPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => toggleNotifications(goal.id)}
-                                title={goal.notificationsEnabled ? "Vypnout připomínky" : "Zapnout připomínky"}
+                                title={goal.notificationsEnabled ? "Disable reminders" : "Enable reminders"}
                               >
                                 {goal.notificationsEnabled ? (
                                   <Bell className="w-4 h-4 text-purple-400" />
@@ -681,7 +761,7 @@ export default function TradingGoalsPage() {
                               <div className="flex items-center gap-2 text-sm">
                                 <Clock className="w-4 h-4 text-gray-500" />
                                 <span className={`${daysRemaining < 7 ? "text-red-400" : "text-gray-400"}`}>
-                                  {daysRemaining > 0 ? `${daysRemaining} dní zbývá` : "Deadline prošel"}
+                                  {daysRemaining > 0 ? `${daysRemaining} days remaining` : "Deadline passed"}
                                 </span>
                               </div>
 
@@ -709,7 +789,7 @@ export default function TradingGoalsPage() {
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-green-400" />
-                  Splněné Cíle
+                  Completed Goals
                 </h2>
                 <div className="grid gap-4">
                   {completedGoals.map((goal) => {
@@ -724,7 +804,7 @@ export default function TradingGoalsPage() {
                           <div className="flex-1">
                             <h3 className="text-white font-medium">{goal.title}</h3>
                             <p className="text-sm text-gray-400">
-                              Splněno: {goal.currentValue} {goal.unit}
+                              Achieved: {goal.currentValue} {goal.unit}
                             </p>
                           </div>
                           <Button variant="ghost" size="sm" onClick={() => deleteGoal(goal.id)}>

@@ -227,7 +227,7 @@ export function AnalyticsOverview({
                             "h-full transition-all",
                             sessionPnl > 0 ? "bg-gradient-to-r from-green-500 to-emerald-400" : "bg-red-500/70",
                           )}
-                          style={{ width: `${sessionWinRate}%` }}
+                          style={{ width: `${Math.round(sessionWinRate)}%` }}
                         />
                       </div>
                       <span className="text-xs text-gray-400 w-12 text-right">{Math.round(sessionWinRate)}%</span>

@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import ClientLayout from "./ClientLayout"
@@ -14,7 +14,7 @@ import { DailyStageProvider } from "@/contexts/daily-stage-context"
 import { LanguageProvider } from "@/contexts/language-context"
 import { AIInsightsProvider } from "@/contexts/ai-insights-context"
 import { CommunityChallengesProvider } from "@/contexts/community-challenges-context"
-import { MilestoneCelebrationsProvider } from "@/contexts/milestone-celebrations-context"
+import { AutoTranslator } from '@/components/auto-translator'
 import { StreakProvider } from "@/contexts/streak-context"
 import { NotificationsProvider } from "@/contexts/notifications-context"
 import { CloudSyncProvider } from "@/contexts/cloud-sync-context"
@@ -22,6 +22,7 @@ import { TradingIntegrationProvider } from "@/contexts/trading-integration-conte
 import { AdminProvider } from "@/contexts/admin-context"
 import { LiveModeProvider } from "@/contexts/live-mode-context"
 import { AnalyticsProvider } from "@/contexts/analytics-context"
+import { MilestoneCelebrationsProvider } from "@/contexts/milestone-celebrations-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -29,6 +30,14 @@ export const metadata: Metadata = {
   title: "MindTrader AI - Trading Psychology Platform",
   description: "Advanced trading psychology and performance tracking platform",
     generator: 'v0.app'
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: "#0f172a",
 }
 
 export default function RootLayout({
@@ -60,6 +69,7 @@ export default function RootLayout({
         )}
       </head>
       <body className={inter.className}>
+        <AutoTranslator />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -68,9 +78,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <LiveModeProvider>
-              <AdminProvider>
-                <SubscriptionProvider>
+            <SubscriptionProvider>
+              <LiveModeProvider>
+                <AdminProvider>
                   <GamificationProvider>
                     <TradingStyleProvider>
                       <DataProvider>
@@ -100,9 +110,9 @@ export default function RootLayout({
                       </DataProvider>
                     </TradingStyleProvider>
                   </GamificationProvider>
-                </SubscriptionProvider>
-              </AdminProvider>
-            </LiveModeProvider>
+                </AdminProvider>
+              </LiveModeProvider>
+            </SubscriptionProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

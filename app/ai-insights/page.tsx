@@ -18,7 +18,7 @@ export default function AIInsightsPage() {
 
   return (
     <div className="min-h-screen bg-transparent pt-20">
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
+      <div className="max-w-7xl p-6 space-y-8 px-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

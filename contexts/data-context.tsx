@@ -17,6 +17,7 @@ import {
 interface Trade {
   id: string
   date: string
+  recordedDate?: string // Date when trade was recorded (important for today's overview)
   pair: string
   direction: string
   entryPrice: number
@@ -89,6 +90,10 @@ interface DataState {
   morningChecks: MorningCheck[]
   journalEntries: any[]
   weeklyReviews: WeeklyReview[]
+  dailyTrackerEntries: any[] // spánek, energie, meditace, fyzické zdraví
+  tradingPlans: any[] // plány pro dny
+  dailyIntentions: any[] // záměry a max_risk per day
+  tradingRoutines: any[] // pre/post market checklists
   isLiveMode: boolean | undefined
   hasEverSwitchedToLive: boolean
   showLiveWarning: boolean
@@ -110,6 +115,10 @@ type DataAction =
   | { type: "SET_JOURNAL_ENTRIES"; payload: any[] }
   | { type: "ADD_WEEKLY_REVIEW"; payload: WeeklyReview }
   | { type: "SET_WEEKLY_REVIEWS"; payload: WeeklyReview[] }
+  | { type: "SET_DAILY_TRACKER_ENTRIES"; payload: any[] }
+  | { type: "SET_TRADING_PLANS"; payload: any[] }
+  | { type: "SET_DAILY_INTENTIONS"; payload: any[] }
+  | { type: "SET_TRADING_ROUTINES"; payload: any[] }
   | { type: "SET_LIVE_MODE"; payload: boolean | undefined }
   | { type: "SET_EVER_SWITCHED_LIVE"; payload: boolean }
   | { type: "SET_SHOW_WARNING"; payload: boolean }
@@ -143,6 +152,14 @@ function dataReducer(state: DataState, action: DataAction): DataState {
       return { ...state, weeklyReviews: [...state.weeklyReviews, action.payload] }
     case "SET_WEEKLY_REVIEWS":
       return { ...state, weeklyReviews: action.payload }
+    case "SET_DAILY_TRACKER_ENTRIES":
+      return { ...state, dailyTrackerEntries: action.payload }
+    case "SET_TRADING_PLANS":
+      return { ...state, tradingPlans: action.payload }
+    case "SET_DAILY_INTENTIONS":
+      return { ...state, dailyIntentions: action.payload }
+    case "SET_TRADING_ROUTINES":
+      return { ...state, tradingRoutines: action.payload }
     case "SET_LIVE_MODE":
       return { ...state, isLiveMode: action.payload }
     case "SET_EVER_SWITCHED_LIVE":
@@ -164,6 +181,10 @@ function dataReducer(state: DataState, action: DataAction): DataState {
         morningChecks: [],
         journalEntries: [],
         weeklyReviews: [],
+        dailyTrackerEntries: [],
+        tradingPlans: [],
+        dailyIntentions: [],
+        tradingRoutines: [],
         dataLoaded: false,
         dataOwnerUserId: null,
       }
@@ -174,6 +195,10 @@ function dataReducer(state: DataState, action: DataAction): DataState {
         morningChecks: [],
         journalEntries: [],
         weeklyReviews: [],
+        dailyTrackerEntries: [],
+        tradingPlans: [],
+        dailyIntentions: [],
+        tradingRoutines: [],
         dataLoaded: false,
         userId: action.payload,
         dataOwnerUserId: action.payload,
@@ -190,6 +215,10 @@ interface DataContextType {
   morningChecks: MorningCheck[]
   journalEntries: any[]
   weeklyReviews: WeeklyReview[]
+  dailyTrackerEntries: any[]
+  tradingPlans: any[]
+  dailyIntentions: any[]
+  tradingRoutines: any[]
   isLiveMode: boolean | undefined
   hasEverSwitchedToLive: boolean
   showLiveWarning: boolean
@@ -220,6 +249,10 @@ interface DataContextType {
   getAllJournalEntries: () => any[]
   getAllMorningChecks: () => MorningCheck[]
   getAllWeeklyReviews: () => WeeklyReview[]
+  getAllDailyTrackerEntries: () => any[]
+  getAllTradingPlans: () => any[]
+  getAllDailyIntentions: () => any[]
+  getAllTradingRoutines: () => any[]
   getTradingStats: () => any
   resetAllScores: () => void
   isOwner: boolean
@@ -235,6 +268,10 @@ const initialState: DataState = {
   morningChecks: [],
   journalEntries: [],
   weeklyReviews: [],
+  dailyTrackerEntries: [],
+  tradingPlans: [],
+  dailyIntentions: [],
+  tradingRoutines: [],
   isLiveMode: undefined as any,
   hasEverSwitchedToLive: false,
   showLiveWarning: false,
@@ -326,138 +363,218 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log(`[v0] ✓ LIVE MODE ACTIVE - Loading ONLY from Supabase for user ${user.id}`)
 
     try {
-      const { data: journalData, error: tradesError } = await supabase
-        .from("journal_entries")
-        .select("*")
-        .eq("user_id", user.id)
-        .not("pair", "is", null)
-        .order("created_at", { ascending: false })
+      try {
+        console.log("[v0] [LiveMode] Attempting to load trades from Supabase...")
+        const { data: journalData, error: tradesError } = await supabase
+          .from("journal_entries")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("type", "trade")
+          .order("created_at", { ascending: false })
 
-      if (!tradesError && journalData) {
-        const trades = journalData.map((entry: any) => ({
-          id: entry.id,
-          date: entry.date,
-          pair: entry.pair,
-          direction: entry.direction || "long",
-          entryPrice: entry.entry_price || 0,
-          exitPrice: entry.exit_price || 0,
-          quantity: entry.quantity || 0,
-          pnl: entry.pnl || 0,
-          mood: entry.mood,
-          confidence: entry.confidence,
-          stress: entry.stress,
-          discipline: entry.discipline,
-          emotionBefore: entry.emotion_before,
-          emotionDuring: entry.emotion_during,
-          emotionAfter: entry.emotion_after,
-          notes: entry.notes,
-          entryReason: entry.entry_reason,
-          exitReason: entry.exit_reason,
-          marketConditions: entry.market_conditions,
-          revengeTrade: entry.revenge_trade,
-          exitedEarly: entry.exited_early,
-          missedDueToHesitation: entry.missed_due_to_hesitation,
-          matchedPlan: entry.matched_plan,
-          tags: entry.tags,
-          // NEW FIELDS
-          openTime: entry.open_time,
-          closeTime: entry.close_time,
-          session: entry.session,
-          tradeType: entry.trade_type,
-          pips: entry.pips,
-          positionSize: entry.position_size,
-          confidenceBefore: entry.confidence_before,
-          stressLevel: entry.stress_level,
-          detailedAnalysis: entry.detailed_analysis,
-          behaviorDescription: entry.behavior_description,
-          openDate: entry.open_date,
-          closeDate: entry.close_date,
-          followedPlan: entry.followed_plan,
-        }))
-        console.log(`[v0] Loaded ${trades.length} trades from journal_entries for user ${user.id}`)
-        dispatch({ type: "SET_TRADES", payload: trades })
-      } else if (tradesError) {
-        console.error("[v0] Error loading trades:", tradesError.message)
+        console.log("[v0] [LiveMode] Trades query result:", { hasData: !!journalData, hasError: !!tradesError, errorMsg: tradesError?.message, count: journalData?.length })
+
+        if (!tradesError && journalData) {
+          const trades = journalData.map((entry: any) => ({
+            id: entry.id,
+            type: "trade", // Required for calendar filtering
+            date: entry.date,
+            pair: entry.pair,
+            direction: entry.direction || "long",
+            entryPrice: entry.entry_price || 0,
+            exitPrice: entry.exit_price || 0,
+            quantity: entry.quantity || 0,
+            pnl: entry.pnl || 0,
+            profitLoss: entry.profit_loss || entry.pnl || 0, // Fallback for calendar stats
+            mood: entry.mood,
+            confidence: entry.confidence,
+            stress: entry.stress,
+            discipline: entry.discipline,
+            emotionBefore: entry.emotion_before,
+            emotionDuring: entry.emotion_during,
+            emotionAfter: entry.emotion_after,
+            notes: entry.notes,
+            entryReason: entry.entry_reason,
+            exitReason: entry.exit_reason,
+            marketConditions: entry.market_conditions,
+            revengeTrade: entry.revenge_trade,
+            exitedEarly: entry.exited_early,
+            missedDueToHesitation: entry.missed_due_to_hesitation,
+            matchedPlan: entry.matched_plan,
+            tags: entry.tags,
+            // NEW FIELDS
+            openTime: entry.open_time,
+            closeTime: entry.close_time,
+            session: entry.session,
+            tradeType: entry.trade_type,
+            pips: entry.pips,
+            positionSize: entry.position_size,
+            confidenceBefore: entry.confidence_before,
+            stressLevel: entry.stress_level,
+            detailedAnalysis: entry.detailed_analysis,
+            behaviorDescription: entry.behavior_description,
+            openDate: entry.open_date,
+            closeDate: entry.close_date,
+            followedPlan: entry.followed_plan,
+          }))
+          console.log(`[v0] Loaded ${trades.length} trades from journal_entries for user ${user.id}`)
+          dispatch({ type: "SET_TRADES", payload: trades })
+        } else if (tradesError) {
+          console.error("[v0] Error loading trades:", tradesError.message || tradesError)
+          dispatch({ type: "SET_TRADES", payload: [] })
+        }
+      } catch (err) {
+        console.error("[v0] Exception loading trades:", err instanceof Error ? err.message : String(err))
+        console.error("[v0] Full error:", err)
         dispatch({ type: "SET_TRADES", payload: [] })
       }
 
-      const { data: morningChecks, error: morningError } = await supabase
-        .from("morning_checks")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("date", { ascending: false })
+      try {
+        const { data: morningChecks, error: morningError } = await supabase
+          .from("morning_checks")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("date", { ascending: false })
 
-      if (!morningError && morningChecks) {
-        const mappedChecks = morningChecks.map((check: any) => ({
-          id: check.id,
-          date: check.date,
-          score: check.score,
-          emotionalState: check.emotional_state,
-          stressLevel: check.stress_level,
-          sleepHours: check.sleep_hours,
-          sleepQuality: check.sleep_quality,
-          energyLevel: check.energy_level,
-          focus: check.focus,
-          physicalHealth: check.physical_health,
-          hydration: check.hydration,
-          exercised: check.exercised,
-          morningRoutine: check.morning_routine,
-          meditation: check.meditation,
-          locked: check.locked,
-        }))
-        console.log(`[v0] Loaded ${mappedChecks.length} morning checks from Supabase for user ${user.id}`)
-        dispatch({ type: "SET_MORNING_CHECKS", payload: mappedChecks })
-      } else if (morningError) {
-        console.error("[v0] Error loading morning checks:", morningError.message)
+        if (!morningError && morningChecks) {
+          const mappedChecks = morningChecks.map((check: any) => ({
+            id: check.id,
+            date: check.date,
+            score: check.score,
+            emotionalState: check.emotional_state,
+            stressLevel: check.stress_level,
+            sleepHours: check.sleep_hours,
+            sleepQuality: check.sleep_quality,
+            energyLevel: check.energy_level,
+            focus: check.focus,
+            physicalHealth: check.physical_health,
+            hydration: check.hydration,
+            exercised: check.exercised,
+            morningRoutine: check.morning_routine,
+            meditation: check.meditation,
+            locked: check.locked,
+          }))
+          console.log(`[v0] Loaded ${mappedChecks.length} morning checks from Supabase for user ${user.id}`)
+          dispatch({ type: "SET_MORNING_CHECKS", payload: mappedChecks })
+        } else if (morningError) {
+          console.error("[v0] Error loading morning checks:", morningError.message || morningError)
+          dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
+        }
+      } catch (err) {
+        console.error("[v0] Exception loading morning checks:", err instanceof Error ? err.message : String(err))
         dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
       }
 
-      const { data: journalEntries, error: journalError } = await supabase
-        .from("journal_entries")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
+      try {
+        const { data: journalEntries, error: journalError } = await supabase
+          .from("journal_entries")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
 
-      if (!journalError && journalEntries) {
-        const mappedEntries = journalEntries.map((entry: any) => ({
-          ...entry,
-          emotionBefore: entry.emotion_before,
-          emotionDuring: entry.emotion_during,
-          emotionAfter: entry.emotion_after,
-          entryReason: entry.entry_reason,
-          exitReason: entry.exit_reason,
-          marketConditions: entry.market_conditions,
-          confidenceBefore: entry.confidence_before,
-          stressLevel: entry.stress_level,
-          detailedAnalysis: entry.detailed_analysis,
-          behaviorDescription: entry.behavior_description,
-          openTime: entry.open_time,
-          closeTime: entry.close_time,
-          tradeType: entry.trade_type,
-          positionSize: entry.position_size,
-          profitLoss: entry.pnl,
-        }))
-        console.log(`[v0] Loaded ${mappedEntries.length} journal entries from Supabase for user ${user.id}`)
-        dispatch({ type: "SET_JOURNAL_ENTRIES", payload: mappedEntries })
-      } else if (journalError) {
-        console.error("[v0] Error loading journal entries:", journalError)
+        if (!journalError && journalEntries) {
+          const mappedEntries = journalEntries.map((entry: any) => ({
+            ...entry,
+            emotionBefore: entry.emotion_before,
+            emotionDuring: entry.emotion_during,
+            emotionAfter: entry.emotion_after,
+            entryReason: entry.entry_reason,
+            exitReason: entry.exit_reason,
+            marketConditions: entry.market_conditions,
+          }))
+          console.log(`[v0] Loaded ${journalEntries.length} journal entries from Supabase for user ${user.id}`)
+          dispatch({ type: "SET_JOURNAL_ENTRIES", payload: mappedEntries })
+        } else if (journalError) {
+          console.error("[v0] Error loading journal entries:", journalError.message || journalError)
+          dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
+        }
+      } catch (err) {
+        console.error("[v0] Exception loading journal entries:", err instanceof Error ? err.message : String(err))
         dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
       }
 
-      const { data: weeklyReviews, error: weeklyError } = await supabase
-        .from("weekly_reviews")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
+      try {
+        const { data: weeklyReviews, error: weeklyError } = await supabase
+          .from("weekly_reviews")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
 
-      if (!weeklyError && weeklyReviews) {
-        console.log(`[v0] Loaded ${weeklyReviews.length} weekly reviews from Supabase for user ${user.id}`)
-        dispatch({ type: "SET_WEEKLY_REVIEWS", payload: weeklyReviews })
-      } else if (weeklyError) {
-        if (weeklyError.message !== "signal is aborted without reason") {
-          console.error("[v0] Error loading weekly reviews:", weeklyError)
+        if (!weeklyError && weeklyReviews) {
+          console.log(`[v0] Loaded ${weeklyReviews.length} weekly reviews from Supabase for user ${user.id}`)
+          dispatch({ type: "SET_WEEKLY_REVIEWS", payload: weeklyReviews })
+        } else if (weeklyError) {
+          if (weeklyError.message !== "signal is aborted without reason") {
+            console.error("[v0] Error loading weekly reviews:", weeklyError)
+          }
+          dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
         }
+      } catch (err) {
+        console.error("[v0] Exception loading weekly reviews:", err instanceof Error ? err.message : String(err))
         dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
+      }
+
+      // Load trading plans from trading_plans table
+      try {
+        const { data: plans, error: plansError } = await supabase
+          .from("trading_plans")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("date", { ascending: false })
+
+        if (!plansError && plans) {
+          const mappedPlans = plans.map((p: any) => ({
+            date: p.date,
+            market_bias: p.market_bias || "",
+            max_risk_per_trade: p.max_risk_per_trade || 0,
+            max_daily_drawdown: p.max_daily_drawdown || 0,
+            position_sizing_rule: p.position_sizing_rule || "",
+            planned_setups: p.planned_setups || [],
+            instruments: p.instruments || [],
+            key_levels: p.key_levels || [],
+            news_events: p.news_events || [],
+            notes: p.notes || "",
+          }))
+          console.log(`[v0] Loaded ${mappedPlans.length} trading plans from trading_plans table for user ${user.id}`)
+          dispatch({ type: "SET_TRADING_PLANS", payload: mappedPlans })
+        } else if (plansError) {
+          console.error("[v0] Error loading trading plans:", plansError)
+          dispatch({ type: "SET_TRADING_PLANS", payload: [] })
+        }
+      } catch (err) {
+        console.error("[v0] Exception loading trading plans:", err instanceof Error ? err.message : String(err))
+        dispatch({ type: "SET_TRADING_PLANS", payload: [] })
+      }
+
+      // Load daily intentions from daily_intentions table
+      try {
+        const { data: intentions, error: intentionsError } = await supabase
+          .from("daily_intentions")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("date", { ascending: false })
+
+        if (!intentionsError && intentions) {
+          const mappedIntentions = intentions.map((i: any) => ({
+            date: i.date,
+            main_intention: i.main_intention || "",
+            secondary_intentions: i.secondary_intentions || [],
+            focus_areas: i.focus_areas || [],
+            max_trades: i.max_trades || 0,
+            max_risk_per_trade: i.max_risk_per_trade || 0,
+            max_daily_loss: i.max_daily_loss || 0,
+            intention_met: i.intention_met || false,
+            reflection: i.reflection || "",
+          }))
+          console.log(`[v0] Loaded ${mappedIntentions.length} daily intentions from daily_intentions table for user ${user.id}`)
+          dispatch({ type: "SET_DAILY_INTENTIONS", payload: mappedIntentions })
+        } else if (intentionsError) {
+          console.error("[v0] Error loading daily intentions:", intentionsError)
+          dispatch({ type: "SET_DAILY_INTENTIONS", payload: [] })
+        }
+      } catch (err) {
+        console.error("[v0] Exception loading daily intentions:", err instanceof Error ? err.message : String(err))
+        dispatch({ type: "SET_DAILY_INTENTIONS", payload: [] })
       }
 
       dispatch({ type: "SET_DATA_OWNER", payload: user.id })
@@ -471,6 +588,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
       dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
       dispatch({ type: "SET_WEEKLY_REVIEWS", payload: [] })
+      dispatch({ type: "SET_TRADING_PLANS", payload: [] })
+      dispatch({ type: "SET_DAILY_INTENTIONS", payload: [] })
       dispatch({ type: "SET_DATA_LOADED", payload: true })
     } finally {
       loadingRef.current = false
@@ -494,16 +613,27 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         `[v0] Mode changed from ${prevModeRef.current ? "LIVE" : "VIRTUAL"} to ${isLiveMode ? "LIVE" : "VIRTUAL"} - clearing data`,
       )
       dispatch({ type: "CLEAR_ALL_DATA" })
+      
+      // Give UI time to clear old data before loading new data
+      if (isLiveMode) {
+        setTimeout(() => {
+          console.log("[v0] Mode change complete, loading new live mode data...")
+          loadDataFromSupabase()
+        }, 500)
+      } else {
+        loadVirtualData(user.id)
+      }
+    } else {
+      // Normal load (not a mode change)
+      console.log(`[v0] Mode debug: isLiveMode=${isLiveMode}, userId=${user.id}`)
+
+      if (isLiveMode) {
+        loadDataFromSupabase()
+      } else {
+        loadVirtualData(user.id)
+      }
     }
     prevModeRef.current = isLiveMode
-
-    console.log(`[v0] Mode debug: isLiveMode=${isLiveMode}, userId=${user.id}`)
-
-    if (isLiveMode) {
-      loadDataFromSupabase()
-    } else {
-      loadVirtualData(user.id)
-    }
   }, [user?.id, isLiveMode, authReady, modeLoading, loadDataFromSupabase, loadVirtualData])
 
   const currentReadiness = useMemo(() => {
@@ -592,9 +722,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }, 500)
         return true
       } else if (user?.id) {
+        // VIRTUAL MODE - add to state and localStorage
         const newTrades = [...state.trades, trade]
         dispatch({ type: "ADD_TRADE", payload: trade })
         setScoped("virtual", user.id, "trades", newTrades)
+        
+        // Trigger data refresh so calendar, analytics, and today's overview update
+        console.log("[v0] Virtual mode - trade added, triggering data refresh")
+        setTimeout(() => {
+          // Dispatch refresh to trigger UI updates
+          dispatch({ type: "SET_TRADES", payload: newTrades })
+        }, 100)
         return true
       }
       return false
@@ -835,6 +973,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getAllJournalEntries = useCallback(() => state.journalEntries, [state.journalEntries])
   const getAllMorningChecks = useCallback(() => state.morningChecks, [state.morningChecks])
   const getAllWeeklyReviews = useCallback(() => state.weeklyReviews, [state.weeklyReviews])
+  const getAllDailyTrackerEntries = useCallback(() => state.dailyTrackerEntries, [state.dailyTrackerEntries])
+  const getAllTradingPlans = useCallback(() => state.tradingPlans, [state.tradingPlans])
+  const getAllDailyIntentions = useCallback(() => state.dailyIntentions, [state.dailyIntentions])
+  const getAllTradingRoutines = useCallback(() => state.tradingRoutines, [state.tradingRoutines])
 
   const getTradingStats = useCallback(() => {
     const trades = state.trades
@@ -969,6 +1111,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getAllJournalEntries,
       getAllMorningChecks,
       getAllWeeklyReviews,
+      getAllDailyTrackerEntries,
+      getAllTradingPlans,
+      getAllDailyIntentions,
+      getAllTradingRoutines,
       getTradingStats,
       resetAllScores,
       isOwner,
@@ -1000,6 +1146,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getAllTrades,
       getAllJournalEntries,
       getAllMorningChecks,
+      getAllWeeklyReviews,
+      getAllDailyTrackerEntries,
+      getAllTradingPlans,
+      getAllDailyIntentions,
+      getAllTradingRoutines,
       getAllWeeklyReviews,
       getTradingStats,
       resetAllScores,

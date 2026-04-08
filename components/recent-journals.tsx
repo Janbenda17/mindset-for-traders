@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useLanguage } from "@/contexts/language-context"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { BookOpen, TrendingUp, TrendingDown, Minus } from "lucide-react"
@@ -61,9 +62,9 @@ export function RecentJournals() {
   }
 
   const getEntryTypeLabel = (entry: JournalEntry) => {
-    if (entry.type === "trade") return "Obchod"
-    if (entry.type === "behavior") return "Chování"
-    return "Deník"
+    if (entry.type === "trade") return "Trade"
+    if (entry.type === "behavior") return "Behavior"
+    return "Journal"
   }
 
   if (isLoading) {

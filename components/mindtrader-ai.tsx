@@ -12,7 +12,7 @@ import { useData } from "@/contexts/data-context"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useLiveMode } from "@/contexts/live-mode-context"
 import { getUserStorageKey } from "@/utils/storage-namespace"
-import { useTranslation } from "react-i18next"
+import { useLanguage } from "@/contexts/language-context"
 
 const GalaxyBackground = () => (
   <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-purple-900 to-slate-950 overflow-hidden pointer-events-none z-0">
@@ -49,29 +49,29 @@ const GalaxyBackground = () => (
 )
 
 const MindTraderAI = () => {
-  const { t, i18n } = useTranslation()
-  const language = i18n.language
+  const { language } = useLanguage()
+  const isEn = language === "en"
 
   const scenarios = [
     {
       id: "recovery",
-      label: "🔴 Jak se zotavit po ztrátě?",
-      content: "Jak se zotavit po ztrátě?"
+      label: isEn ? "🔴 How to recover from loss?" : "🔴 Jak se zotavit po ztrátě?",
+      content: isEn ? "How to recover from loss?" : "Jak se zotavit po ztrátě?"
     },
     {
       id: "fear",
-      label: "😰 Jak zvládat strach?",
-      content: "Jak zvládat strach?"
+      label: isEn ? "😰 How to handle fear?" : "😰 Jak zvládat strach?",
+      content: isEn ? "How to handle fear?" : "Jak zvládat strach?"
     },
     {
       id: "discipline",
-      label: "⚠️ Pomoz mi s disciplínou",
-      content: "Pomoz mi s disciplínou"
+      label: isEn ? "⚠️ Help me with discipline" : "⚠️ Pomoz mi s disciplínou",
+      content: isEn ? "Help me with discipline" : "Pomoz mi s disciplínou"
     },
     {
       id: "plan-violation",
-      label: "❌ Porušil jsem plán, co dělat?",
-      content: "Porušil jsem plán, co dělat?"
+      label: isEn ? "❌ I broke the plan, what to do?" : "❌ Porušil jsem plán, co dělat?",
+      content: isEn ? "I broke the plan, what to do?" : "Porušil jsem plán, co dělat?"
     }
   ]
 
@@ -139,7 +139,7 @@ const MindTraderAI = () => {
   // Check for losses in recent trades to trigger recovery mode
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0]
-    const todayTrades = trades.filter((t) => t.date === today || t.closeDate === today)
+    const todayTrades = trades.filter((t) => (t.recordedDate || t.date) === today || t.closeDate === today)
 
     const totalLoss = todayTrades.reduce((sum, trade) => {
       const pnl = trade.pnl || trade.profitLoss || 0
@@ -242,29 +242,29 @@ const MindTraderAI = () => {
   // AI Personalities
   const personalities = {
     calm: {
-      name: language === "cs" ? "🧘 Klidný Mentor" : "🧘 Klidný Mentor",
-      description: language === "cs" ? "Klidný, empatický, pomáhá s emocemi" : "Klidný, empatický, pomáhá s emocemi",
+      name: isEn ? "🧘 Calm Mentor" : "🧘 Klidný Mentor",
+      description: isEn ? "Calm, empathetic, helps with emotions" : "Klidný, empatický, pomáhá s emocemi",
       icon: Heart,
       color: "from-blue-500 to-indigo-500",
       locked: false,
     },
     strict: {
-      name: language === "cs" ? "⚡ Přísný Kouč" : "⚡ Strict Coach",
-      description: language === "cs" ? "Přímý, tlačí na disciplínu" : "Direct, pushes for discipline",
+      name: isEn ? "⚡ Strict Coach" : "⚡ Přísný Kouč",
+      description: isEn ? "Direct, pushes for discipline" : "Přímý, tlačí na disciplínu",
       icon: Target,
       color: "from-red-500 to-orange-500",
       locked: false,
     },
     analytical: {
-      name: language === "cs" ? "🧩 Analytický Poradce" : "🧩 Analytical Advisor",
-      description: language === "cs" ? "Datově orientovaný, vědecký" : "Data-driven, scientific",
+      name: isEn ? "🧩 Analytical Advisor" : "🧩 Analytický Poradce",
+      description: isEn ? "Data-driven, scientific" : "Datově řízený, vědecký",
       icon: BarChart2,
       color: "from-purple-500 to-pink-500",
       locked: false,
     },
     balanced: {
-      name: language === "cs" ? "💬 Vyvážená Podpora" : "💬 Balanced Support",
-      description: language === "cs" ? "Mix empatie a výkonu" : "Mix of empathy and performance",
+      name: isEn ? "💬 Balanced Support" : "💬 Vyvážená Podpora",
+      description: isEn ? "Mix of empathy and performance" : "Mix empatie a výkonu",
       icon: Zap,
       color: "from-green-500 to-emerald-500",
       locked: false,
@@ -274,62 +274,52 @@ const MindTraderAI = () => {
   // AI Modes
   const modes = {
     mind: {
-      name: language === "cs" ? "🧠 MIND AI" : "🧠 MIND AI",
-      description:
-        language === "cs"
-          ? "Tvůj psychologický parťák - okamžitá pomoc s emocemi"
-          : "Your psychological partner - instant emotional help",
+      name: isEn ? "🧠 MIND AI" : "🧠 MIND AI",
+      description: isEn ? "Your psychological partner - instant emotional help" : "Tvůj psychologický partner - okamžitá emoční pomoc",
       icon: Brain,
       locked: false,
     },
     analytics: {
-      name: language === "cs" ? "📊 ANALYTICS AI" : "📊 ANALYTICS AI",
-      description:
-        language === "cs"
-          ? "Chytrá výkonnostní analýza - rozbor podle dat"
-          : "Smart performance analysis - data-driven insights",
+      name: isEn ? "📊 ANALYTICS AI" : "📊 ANALYTICS AI",
+      description: isEn ? "Smart performance analysis - data-driven insights" : "Chytrá analýza výkonu - datové poznatky",
       icon: BarChart2,
       locked: false,
     },
     coach: {
-      name: language === "cs" ? "🎯 COACH AI" : "🎯 COACH AI",
-      description: language === "cs" ? "Osobní trenér disciplíny a růstu" : "Personal discipline and growth trainer",
+      name: isEn ? "🎯 COACH AI" : "🎯 COACH AI",
+      description: isEn ? "Personal discipline and growth trainer" : "Osobní trenér disciplíny a růstu",
       icon: Target,
       locked: false,
     },
   }
 
   // Quick Prompts
-  const quickPrompts =
-    language === "cs"
-      ? [
-          "Jak se zotavit po ztrátě?",
-          "Jak zvládat strach?",
-          "Pomoz mi s disciplínou",
-          "Porušil jsem plán, co dělat?",
-          "Jak překonat FOMO?",
-          "Jak zlepšit risk management?",
-          "Jak posílit mentální sílu?",
-          "Jak se vyhnout revenge trading?",
-        ]
-      : [
-        "Jak se zotavit po ztrátě?",
-        "Jak zvládat strach?",
-        "Pomoz mi s disciplínou",
-        "Porušil jsem plán, co dělat?",
-          "How to overcome FOMO?",
-          "How to improve risk management?",
-          "How to strengthen mental power?",
-          "How to avoid revenge trading?",
-        ]
+  const quickPrompts = isEn ? [
+    "How to recover from loss?",
+    "How to handle fear?",
+    "Help me with discipline",
+    "I broke the plan, what to do?",
+    "How to overcome FOMO?",
+    "How to improve risk management?",
+    "How to strengthen mental power?",
+    "How to avoid revenge trading?",
+  ] : [
+    "Jak se zotavit po ztrátě?",
+    "Jak zvládat strach?",
+    "Pomoz mi s disciplínou",
+    "Porušil jsem plán, co dělat?",
+    "Jak překonat FOMO?",
+    "Jak zlepšit risk management?",
+    "Jak posílit mentální sílu?",
+    "Jak se vyhnout revenge tradingu?",
+  ]
 
   // Initialize with welcome message
   useEffect(() => {
     if (messages.length === 0) {
-      const welcomeMessage =
-      language === "cs"
-        ? `Ahoj! Jsem tvůj MindTrader AI trenér. 🧠\n\nViděl jsem tvá data a jsem tu, abych ti pomohl s trading psychologií.\n\nTvůj aktuální readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Dokonči ranní check"}\n\nCo tě trápí? Jak ti mohu pomoci?`
-        : `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nViděl jsem tvoje data a jsem tady abych ti pomohl s trading psychologií.\n\nTvoje aktuální skóre připravenosti: ${currentReadiness !== null ? currentReadiness + "%" : "Vyplň Ranní kontrolu"}\n\nCo tě trápí? Jak ti mohu pomoci?`
+      const welcomeMessage = isEn
+        ? `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Complete morning check"}\n\nWhat's bothering you? How can I help?`
+        : `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nVidím tvá data a jsem tady abych ti pomohl s psychologií tradingu.\n\nTvoje aktuální readiness skóre: ${currentReadiness !== null ? currentReadiness + "%" : "Vyplň ranní kontrolu"}\n\nCo tě trápí? Jak ti mohu pomoci?`
 
       setMessages([
         {
@@ -340,13 +330,12 @@ const MindTraderAI = () => {
         },
       ])
     }
-  }, [currentReadiness, language])
+  }, [currentReadiness, isEn])
 
   const triggerRecoveryMode = () => {
-    const recoveryMessage =
-      language === "cs"
-        ? `🚨 Recovery Mode aktivní - AI detekoval obtížný den. Následuj doporučení níže.\n\n1. **Dýchání** - 4-7-8 technika (4s nádech, 7s hold, 8s výdech)\n2. **Zapiš si myšlenky** - Co cítíš právě teď?\n3. **Odpočinek** - Minimálně 2 hodiny pauza\n4. **Návrat** - Až readiness >70%\n\nNejlepší obchod = žádný obchod. 💪`
-        : `🚨 Recovery Mode active - AI detected a difficult day. Follow recommendations below.\n\n1. **Breathing** - 4-7-8 technique (4s inhale, 7s hold, 8s exhale)\n2. **Journal** - What are you feeling right now?\n3. **Rest** - Minimum 2 hours break\n4. **Return** - When readiness >70%\n\nBest trade = no trade. 💪`
+    const recoveryMessage = isEn
+      ? `🚨 Recovery Mode active - AI detected a difficult day. Follow recommendations below.\n\n1. **Breathing** - 4-7-8 technique (4s inhale, 7s hold, 8s exhale)\n2. **Journal** - What are you feeling right now?\n3. **Rest** - Minimum 2 hours break\n4. **Return** - When readiness >70%\n\nBest trade = no trade. 💪`
+      : `🚨 Recovery Mode aktivní - AI detekovalo těžký den. Postupuj podle doporučení níže.\n\n1. **Dýchání** - technika 4-7-8 (nadech 4s, držení 7s, výdech 8s)\n2. **Deník** - Co teď cítíš?\n3. **Odpočinek** - Minimálně 2 hodiny pauza\n4. **Návrat** - Až bude readiness >70%\n\nNejlepší trade = žádný trade. 💪`
 
     const recoveryMsg = {
       role: "assistant",
@@ -417,7 +406,8 @@ const MindTraderAI = () => {
           message: messageContent,
           personality: aiPersonality,
           mode: aiMode,
-          isVirtualMode: !isLiveMode, // Add flag to indicate virtual mode
+          language: language,
+          isVirtualMode: !isLiveMode,
           context: {
             mood: currentMorningCheck?.sleep_quality || 5,
             stress: currentMorningCheck?.stress_level || 5,
@@ -625,10 +615,10 @@ const MindTraderAI = () => {
   }
 
   const getReadinessStatus = (score) => {
-    if (score === null) return language === "cs" ? "Není dostupné" : "Not available"
-    if (score >= 75) return language === "cs" ? "Dobré podmínky ✅" : "Good conditions ✅"
-    if (score >= 60) return language === "cs" ? "Buď opatrný ⚠️" : "Be cautious ⚠️"
-    return language === "cs" ? "Neobchoduj 🛑" : "Don't trade 🛑"
+    if (score === null) return isEn ? "Not available" : "Není dostupné"
+    if (score >= 75) return isEn ? "Good conditions ✅" : "Dobré podmínky ✅"
+    if (score >= 60) return isEn ? "Be cautious ⚠️" : "Buď opatrný ⚠️"
+    return isEn ? "Don't trade 🛑" : "Neobchoduj 🛑"
   }
 
   const readinessDisplay = () => {
@@ -638,7 +628,7 @@ const MindTraderAI = () => {
         const demoScore = Math.floor(Math.random() * 21) + 70 // Random between 70-90
         return <div className="text-lg font-bold text-green-400">{demoScore}% (Demo)</div>
       }
-      return <div className="text-sm text-slate-400">{t("mindtrader.noReadiness") || "Vyplňte Morning Check"}</div>
+      return <div className="text-sm text-slate-400">{isEn ? "Complete morning check" : "Complete morning check"}</div>
     }
     return <div className="text-lg font-bold text-blue-400">{Math.round(currentReadiness)}%</div>
   }
@@ -656,7 +646,7 @@ const MindTraderAI = () => {
               <div className="flex items-center gap-2">
                 <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                 <CardTitle className="text-base sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-purple-200 to-cyan-200 bg-clip-text text-transparent">
-                  Tvoje Připravenost
+                  {isEn ? "Your Readiness" : "Your Readiness"}
                 </CardTitle>
               </div>
             </CardHeader>
@@ -682,7 +672,7 @@ const MindTraderAI = () => {
               <div className="flex-1 space-y-4">
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-purple-300 uppercase tracking-widest">
-                    🤖 Režimy AI
+                    {isEn ? "🤖 AI Modes" : "🤖 AI Modes"}
                   </p>
                   <div className="h-0.5 w-8 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full" />
                 </div>
@@ -736,12 +726,10 @@ const MindTraderAI = () => {
                         </div>
                         <div>
                           <p className="text-base font-bold text-purple-200">
-                            {language === "cs" ? "Pojďme začít!" : "Let's Get Started!"}
+                            {isEn ? "Let's Get Started!" : "Let's Get Started!"}
                           </p>
                           <p className="text-sm text-slate-400 mt-2 max-w-xs mx-auto">
-                            {language === "cs"
-                              ? "Vyber režim a ptej se mě na cokoli"
-                              : "Choose a mode and ask me anything"}
+                            {isEn ? "Choose a mode and ask me anything" : "Choose a mode and ask me anything"}
                           </p>
                         </div>
                       </div>
@@ -817,7 +805,7 @@ const MindTraderAI = () => {
                   )}
                   {!isLiveMode && messages.length === 0 ? (
                     <div className="space-y-3">
-                      <p className="text-xs text-gray-400 font-semibold uppercase">Vyber si scénář:</p>
+                      <p className="text-xs text-gray-400 font-semibold uppercase">Choose a scenario:</p>
                       <div className="flex flex-col gap-2">
                         {scenarios.map((scenario) => (
                           <Button
@@ -841,7 +829,7 @@ const MindTraderAI = () => {
                       <Textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Piš svou zprávu..."
+                        placeholder="Type your message..."
                         disabled={!isLiveMode}
                         className="bg-slate-800 border-2 border-purple-400/30 focus:border-purple-400/60 text-white placeholder-slate-500 resize-none h-12 rounded-lg flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         onKeyDown={(e) => {

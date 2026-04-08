@@ -1,7 +1,10 @@
+// Trading Routines component - with proper imports
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowLeft } from "lucide-react"
+import Link from "next/link"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -40,12 +43,14 @@ import {
   BarChart3,
   Settings,
   Sparkles,
+  GripVertical,
   type LucideIcon,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getUserData, saveUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
 import { useAuth } from "@/contexts/auth-context"
+import { useLanguage } from "@/contexts/language-context"
 import { cn } from "@/lib/utils"
 import { createStorageClient } from "@/lib/storage-client"
 
@@ -65,18 +70,18 @@ const iconMap: Record<string, LucideIcon> = {
 }
 
 const iconOptions = [
-  { value: "Brain", label: "Mozek" },
-  { value: "Dumbbell", label: "Cvičení" },
-  { value: "Coffee", label: "Káva" },
-  { value: "TrendingUp", label: "Graf" },
-  { value: "Target", label: "Cíl" },
-  { value: "Eye", label: "Oko" },
-  { value: "BookOpen", label: "Kniha" },
-  { value: "Heart", label: "Srdce" },
-  { value: "Wind", label: "Relaxace" },
-  { value: "Moon", label: "Měsíc" },
-  { value: "Sun", label: "Slunce" },
-  { value: "Sparkles", label: "Jiskry" },
+  { value: "Brain", label: "Brain" },
+  { value: "Dumbbell", label: "Exercise" },
+  { value: "Coffee", label: "Coffee" },
+  { value: "TrendingUp", label: "Chart" },
+  { value: "Target", label: "Goal" },
+  { value: "Eye", label: "Eye" },
+  { value: "BookOpen", label: "Book" },
+  { value: "Heart", label: "Heart" },
+  { value: "Wind", label: "Relaxation" },
+  { value: "Moon", label: "Moon" },
+  { value: "Sun", label: "Sun" },
+  { value: "Sparkles", label: "Sparkles" },
 ]
 
 interface RoutineItem {
@@ -102,11 +107,11 @@ interface RoutineHistory {
   eveningItems: { id: string; title: string; completed: boolean }[]
 }
 
-const defaultMorningRoutine: RoutineItem[] = [
+const defaultMorningRoutine = (isEn: boolean): RoutineItem[] => [
   {
     id: "m1",
-    title: "Ranní meditace",
-    description: "5-10 minut klidného dýchání",
+    title: isEn ? "Morning Meditation" : "Ranní meditace",
+    description: isEn ? "5-10 minutes of calm breathing" : "5-10 minut klidného dýchání",
     iconName: "Brain",
     completed: false,
     category: "mindset",
@@ -114,8 +119,8 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
   {
     id: "m2",
-    title: "Fyzická aktivita",
-    description: "Protažení nebo krátké cvičení",
+    title: isEn ? "Physical Activity" : "Fyzická aktivita",
+    description: isEn ? "Stretching or short exercise" : "Protažení nebo krátké cvičení",
     iconName: "Dumbbell",
     completed: false,
     category: "body",
@@ -123,8 +128,8 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
   {
     id: "m3",
-    title: "Zdravá snídaně",
-    description: "Kvalitní jídlo pro energii",
+    title: isEn ? "Healthy Breakfast" : "Zdravá snídaně",
+    description: isEn ? "Quality food for energy" : "Kvalitní jídlo pro energii",
     iconName: "Coffee",
     completed: false,
     category: "body",
@@ -132,8 +137,8 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
   {
     id: "m4",
-    title: "Kontrola trhů",
-    description: "Přehled overnight pohybů",
+    title: isEn ? "Market Check" : "Kontrola trhu",
+    description: isEn ? "Overview of overnight movements" : "Přehled nočních pohybů",
     iconName: "TrendingUp",
     completed: false,
     category: "preparation",
@@ -141,8 +146,8 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
   {
     id: "m5",
-    title: "Denní cíle",
-    description: "Stanovení max. 3 cílů na den",
+    title: isEn ? "Daily Goals" : "Denní cíle",
+    description: isEn ? "Set a maximum of 3 goals for the day" : "Nastav si max. 3 cíle na den",
     iconName: "Target",
     completed: false,
     category: "preparation",
@@ -150,8 +155,8 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
   {
     id: "m6",
-    title: "Vizualizace",
-    description: "Představ si úspěšný trading den",
+    title: isEn ? "Visualization" : "Vizualizace",
+    description: isEn ? "Imagine a successful trading day" : "Představ si úspěšný obchodní den",
     iconName: "Eye",
     completed: false,
     category: "mindset",
@@ -159,11 +164,11 @@ const defaultMorningRoutine: RoutineItem[] = [
   },
 ]
 
-const defaultEveningRoutine: RoutineItem[] = [
+const defaultEveningRoutine = (isEn: boolean): RoutineItem[] => [
   {
     id: "e1",
-    title: "Review obchodů",
-    description: "Zhodnocení dnešních tradů",
+    title: isEn ? "Trade Review" : "Přehledy obchodů",
+    description: isEn ? "Evaluation of today's trades" : "Vyhodnocení dnešních obchodů",
     iconName: "BookOpen",
     completed: false,
     category: "review",
@@ -171,8 +176,8 @@ const defaultEveningRoutine: RoutineItem[] = [
   },
   {
     id: "e2",
-    title: "Aktualizace deníku",
-    description: "Zápis do trading deníku",
+    title: isEn ? "Journal Update" : "Aktualizace deníku",
+    description: isEn ? "Write in trading journal" : "Zapiš do obchodního deníku",
     iconName: "BookOpen",
     completed: false,
     category: "review",
@@ -180,8 +185,8 @@ const defaultEveningRoutine: RoutineItem[] = [
   },
   {
     id: "e3",
-    title: "Vděčnost",
-    description: "3 věci za které jsem vděčný",
+    title: isEn ? "Gratitude" : "Vděčnost",
+    description: isEn ? "3 things I'm grateful for" : "3 věci za které jsem vděčný/á",
     iconName: "Heart",
     completed: false,
     category: "mindset",
@@ -189,8 +194,8 @@ const defaultEveningRoutine: RoutineItem[] = [
   },
   {
     id: "e4",
-    title: "Příprava na zítra",
-    description: "Watchlist a plán na další den",
+    title: isEn ? "Prepare for Tomorrow" : "Příprava na zítřek",
+    description: isEn ? "Watchlist and plan for next day" : "Watchlist a plán na příští den",
     iconName: "Target",
     completed: false,
     category: "preparation",
@@ -198,8 +203,8 @@ const defaultEveningRoutine: RoutineItem[] = [
   },
   {
     id: "e5",
-    title: "Relaxace",
-    description: "Odpočinek od obrazovek",
+    title: isEn ? "Relaxation" : "Relaxace",
+    description: isEn ? "Screen-free time" : "Čas bez obrazovky",
     iconName: "Wind",
     completed: false,
     category: "body",
@@ -207,8 +212,8 @@ const defaultEveningRoutine: RoutineItem[] = [
   },
   {
     id: "e6",
-    title: "Kvalitní spánek",
-    description: "Příprava na 7-8 hodin spánku",
+    title: isEn ? "Quality Sleep" : "Kvalitní spánek",
+    description: isEn ? "Prepare for 7-8 hours of sleep" : "Příprava na 7-8 hodin spánku",
     iconName: "Moon",
     completed: false,
     category: "body",
@@ -216,50 +221,53 @@ const defaultEveningRoutine: RoutineItem[] = [
   },
 ]
 
-const generateDemoHistory = (): RoutineHistory[] => {
-  const history: RoutineHistory[] = []
-  const now = new Date()
-
-  for (let i = 14; i >= 1; i--) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-
-    const morningCompleted = Math.floor(Math.random() * 3) + 4 // 4-6
-    const eveningCompleted = Math.floor(Math.random() * 3) + 3 // 3-5
-
-    history.push({
-      date: date.toISOString().split("T")[0],
-      morningCompleted,
-      morningTotal: 6,
-      eveningCompleted,
-      eveningTotal: 6,
-      morningNotes: i % 3 === 0 ? "Cítil jsem se dobře připravený na trading." : "",
-      eveningNotes: i % 4 === 0 ? "Dobrý den, dodržel jsem plán." : "",
-      morningItems: defaultMorningRoutine.map((item, idx) => ({
-        id: item.id,
-        title: item.title,
-        completed: idx < morningCompleted,
-      })),
-      eveningItems: defaultEveningRoutine.map((item, idx) => ({
-        id: item.id,
-        title: item.title,
-        completed: idx < eveningCompleted,
-      })),
-    })
-  }
-
-  return history
-}
-
 export default function RoutinesPage() {
   const { isLiveMode } = useData()
   const { user } = useAuth()
   const { toast } = useToast()
+  const { language } = useLanguage()
+  const isEn = language === "en"
 
   const storage = createStorageClient(user?.id || null)
 
-  const [morningRoutine, setMorningRoutine] = useState<RoutineItem[]>(defaultMorningRoutine)
-  const [eveningRoutine, setEveningRoutine] = useState<RoutineItem[]>(defaultEveningRoutine)
+  // Move generateDemoHistory inside component so it has access to isEn
+  const generateDemoHistory = (): RoutineHistory[] => {
+    const history: RoutineHistory[] = []
+    const now = new Date()
+
+    for (let i = 14; i >= 1; i--) {
+      const date = new Date(now)
+      date.setDate(date.getDate() - i)
+
+      const morningCompleted = Math.floor(Math.random() * 3) + 4 // 4-6
+      const eveningCompleted = Math.floor(Math.random() * 3) + 3 // 3-5
+
+      history.push({
+        date: date.toISOString().split("T")[0],
+        morningCompleted,
+        morningTotal: 6,
+        eveningCompleted,
+        eveningTotal: 6,
+        morningNotes: i % 3 === 0 ? "I felt well prepared for trading." : "",
+        eveningNotes: i % 4 === 0 ? "Good day, I stuck to the plan." : "",
+        morningItems: defaultMorningRoutine(isEn).map((item, idx) => ({
+          id: item.id,
+          title: item.title,
+          completed: idx < morningCompleted,
+        })),
+        eveningItems: defaultEveningRoutine(isEn).map((item, idx) => ({
+          id: item.id,
+          title: item.title,
+          completed: idx < eveningCompleted,
+        })),
+      })
+    }
+
+    return history
+  }
+
+  const [morningRoutine, setMorningRoutine] = useState<RoutineItem[]>(defaultMorningRoutine(isEn))
+  const [eveningRoutine, setEveningRoutine] = useState<RoutineItem[]>(defaultEveningRoutine(isEn))
   const [morningNotes, setMorningNotes] = useState("")
   const [eveningNotes, setEveningNotes] = useState("")
   const [history, setHistory] = useState<RoutineHistory[]>([])
@@ -274,8 +282,48 @@ export default function RoutinesPage() {
     category: "mindset" as const,
     routine: "morning" as "morning" | "evening",
   })
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null)
+  const [dragOverItemId, setDragOverItemId] = useState<string | null>(null)
 
   const today = new Date().toISOString().split("T")[0]
+
+  const txt = {
+    back: isEn ? "Back" : "Zpět",
+    routines: isEn ? "Trading Routines" : "Obchodní rutiny",
+    subtitle: isEn ? "Consistency in routines = Consistency in results" : "Konzistentní rutiny = konzistentní výsledky",
+    demoMode: isEn ? "Demo Mode" : "Demo režim",
+    addCustomItem: isEn ? "Add Custom Item" : "Přidat vlastní položku",
+    createCustom: isEn ? "Create your own routine item" : "Vytvoř si vlastní položku do rutiny",
+    name: isEn ? "Name" : "Název",
+    enterName: isEn ? "e.g. Cold shower" : "Např. Studená sprcha",
+    description: isEn ? "Description (optional)" : "Popis (volitelný)",
+    shortDescription: isEn ? "Short description" : "Krátký popis",
+    icon: isEn ? "Icon" : "Ikona",
+    routine: isEn ? "Routine" : "Rutina",
+    morning: isEn ? "Morning" : "Ráno",
+    evening: isEn ? "Evening" : "Večer",
+    category: isEn ? "Category" : "Kategorie",
+    mindset: isEn ? "Mindset" : "Mindset",
+    body: isEn ? "Body" : "Tělo",
+    preparation: isEn ? "Preparation" : "Příprava",
+    review: isEn ? "Review" : "Přehledy",
+    addItem: isEn ? "Add Item" : "Přidat položku",
+    enterItemName: isEn ? "Enter item name" : "Zadej název položky",
+    itemAdded: isEn ? "Item added" : "Položka přidána",
+    itemDeleted: isEn ? "Item deleted" : "Položka smazána",
+    noCustomItems: isEn ? "In demo mode, items cannot be added" : "V demo režimu nelze přidávat položky",
+    editMode: isEn ? "Edit" : "Upravit",
+    saveHistory: isEn ? "Save to History" : "Uložit do historii",
+    savedToHistory: isEn ? "Saved to history" : "Uloženo do historii",
+    morningRoutine: isEn ? "Morning Routine" : "Ranní rutina",
+    eveningRoutine: isEn ? "Evening Routine" : "Večerní rutina",
+    progress: isEn ? "Progress" : "Pokrok",
+    history: isEn ? "History" : "Historie",
+    custom: isEn ? "Custom" : "Vlastní",
+    stats: isEn ? "Your Stats" : "Tvoje statistiky",
+    streak: isEn ? "Streak" : "Série",
+    averageCompletion: isEn ? "Average Completion" : "Průměrné dokončení",
+  }
 
   useEffect(() => {
     if (!isLiveMode) {
@@ -365,8 +413,8 @@ export default function RoutinesPage() {
   const toggleItem = (routineType: "morning" | "evening", itemId: string) => {
     if (!isLiveMode) {
       toast({
-        title: "Demo režim",
-        description: "V demo režimu nelze ukládat změny. Přepni do Live režimu.",
+        title: "Demo Mode",
+        description: "In demo mode, changes cannot be saved. Switch to Live mode.",
         variant: "destructive",
       })
       return
@@ -405,21 +453,21 @@ export default function RoutinesPage() {
     } else {
       setEveningRoutine((prev) => prev.filter((item) => item.id !== itemId))
     }
-    toast({ title: "Položka smazána" })
+    toast({ title: "Item deleted" })
   }
 
   const addCustomItem = () => {
     if (!isLiveMode) {
       toast({
-        title: "Demo režim",
-        description: "V demo režimu nelze přidávat položky.",
+        title: "Demo Mode",
+        description: "In demo mode, items cannot be added.",
         variant: "destructive",
       })
       return
     }
 
     if (!newItem.title.trim()) {
-      toast({ title: "Zadej název položky", variant: "destructive" })
+      toast({ title: "Enter item name", variant: "destructive" })
       return
     }
 
@@ -448,7 +496,7 @@ export default function RoutinesPage() {
       routine: "morning",
     })
     setIsAddDialogOpen(false)
-    toast({ title: "Položka přidána" })
+    toast({ title: "Item added" })
   }
 
   const saveToHistory = () => {
@@ -474,7 +522,7 @@ export default function RoutinesPage() {
       return [...filtered, todayEntry].slice(-30)
     })
 
-    toast({ title: "Uloženo do historie" })
+    toast({ title: "Saved to history" })
   }
 
   const getProgress = (routine: RoutineItem[]) => {
@@ -501,6 +549,49 @@ export default function RoutinesPage() {
   const renderRoutineItems = (items: RoutineItem[], routineType: "morning" | "evening") => {
     const activeItems = isEditMode ? items : items.filter((i) => i.isActive)
 
+    const handleDragStart = (e: React.DragEvent, itemId: string) => {
+      setDraggedItemId(itemId)
+      e.dataTransfer.effectAllowed = "move"
+    }
+
+    const handleDragOver = (e: React.DragEvent, itemId: string) => {
+      e.preventDefault()
+      e.dataTransfer.dropEffect = "move"
+      setDragOverItemId(itemId)
+    }
+
+    const handleDrop = (e: React.DragEvent, targetItemId: string) => {
+      e.preventDefault()
+      if (!draggedItemId || draggedItemId === targetItemId) {
+        setDraggedItemId(null)
+        setDragOverItemId(null)
+        return
+      }
+
+      const draggedIndex = items.findIndex((i) => i.id === draggedItemId)
+      const targetIndex = items.findIndex((i) => i.id === targetItemId)
+
+      if (draggedIndex === -1 || targetIndex === -1) return
+
+      const newItems = [...items]
+      const [removed] = newItems.splice(draggedIndex, 1)
+      newItems.splice(targetIndex, 0, removed)
+
+      if (routineType === "morning") {
+        setMorningRoutine(newItems)
+      } else {
+        setEveningRoutine(newItems)
+      }
+
+      setDraggedItemId(null)
+      setDragOverItemId(null)
+    }
+
+    const handleDragEnd = () => {
+      setDraggedItemId(null)
+      setDragOverItemId(null)
+    }
+
     return (
       <div className="space-y-3">
         {activeItems.map((item) => {
@@ -508,8 +599,16 @@ export default function RoutinesPage() {
           return (
             <div
               key={item.id}
+              draggable={isEditMode}
+              onDragStart={(e) => handleDragStart(e, item.id)}
+              onDragOver={(e) => handleDragOver(e, item.id)}
+              onDrop={(e) => handleDrop(e, item.id)}
+              onDragEnd={handleDragEnd}
               className={cn(
                 "flex items-start gap-3 p-3 rounded-xl border transition-all",
+                isEditMode && "cursor-move",
+                draggedItemId === item.id && "opacity-50 bg-slate-700/50",
+                dragOverItemId === item.id && draggedItemId !== item.id && "border-blue-500/50 bg-blue-500/5",
                 item.completed && !isEditMode
                   ? "bg-green-500/10 border-green-500/30"
                   : "bg-slate-800/50 border-slate-700/50 hover:border-slate-600/50",
@@ -517,11 +616,14 @@ export default function RoutinesPage() {
               )}
             >
               {isEditMode ? (
-                <Checkbox
-                  checked={item.isActive}
-                  onCheckedChange={() => toggleItemActive(routineType, item.id)}
-                  className="mt-1"
-                />
+                <div className="flex items-start gap-2">
+                  <GripVertical className="w-4 h-4 text-gray-500 mt-1 flex-shrink-0" />
+                  <Checkbox
+                    checked={item.isActive}
+                    onCheckedChange={() => toggleItemActive(routineType, item.id)}
+                    className="mt-1"
+                  />
+                </div>
               ) : (
                 <Checkbox
                   checked={item.completed}
@@ -549,7 +651,7 @@ export default function RoutinesPage() {
                       variant="outline"
                       className="text-[10px] px-1.5 py-0 h-4 border-purple-500/30 text-purple-400"
                     >
-                      Vlastní
+                      Custom
                     </Badge>
                   )}
                 </div>
@@ -593,6 +695,14 @@ export default function RoutinesPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 relative z-10">
+        {/* Back Button */}
+        <Link href="/bonus" className="inline-flex mb-6">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
+            <ArrowLeft className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-gray-400">{txt.back}</span>
+          </div>
+        </Link>
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -600,13 +710,13 @@ export default function RoutinesPage() {
               <div className="p-2 bg-gradient-to-r from-orange-500 to-pink-500 rounded-xl">
                 <Sun className="w-6 h-6 text-white" />
               </div>
-              Trading Rutiny
+              {txt.routines}
             </h1>
-            <p className="text-gray-400 mt-1">Konzistentní rutiny = konzistentní výsledky</p>
+            <p className="text-gray-400 mt-1">{txt.subtitle}</p>
           </div>
 
           <div className="flex items-center gap-2">
-            {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Demo režim</Badge>}
+            {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">{txt.demoMode}</Badge>}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -619,31 +729,31 @@ export default function RoutinesPage() {
               </DialogTrigger>
               <DialogContent className="bg-slate-900 border-slate-700">
                 <DialogHeader>
-                  <DialogTitle className="text-white">Přidat vlastní položku</DialogTitle>
-                  <DialogDescription className="text-gray-400">Vytvoř si vlastní položku do rutiny</DialogDescription>
+                  <DialogTitle className="text-white">{txt.addCustomItem}</DialogTitle>
+                  <DialogDescription className="text-gray-400">{txt.createCustom}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div>
-                    <Label className="text-gray-300">Název</Label>
+                    <Label className="text-gray-300">{txt.name}</Label>
                     <Input
                       value={newItem.title}
                       onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
-                      placeholder="Např. Studená sprcha"
+                      placeholder={txt.enterName}
                       className="bg-slate-800 border-slate-700 text-white mt-1"
                     />
                   </div>
                   <div>
-                    <Label className="text-gray-300">Popis (volitelný)</Label>
+                    <Label className="text-gray-300">{txt.description}</Label>
                     <Input
                       value={newItem.description}
                       onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                      placeholder="Krátký popis"
+                      placeholder={txt.shortDescription}
                       className="bg-slate-800 border-slate-700 text-white mt-1"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-gray-300">Ikona</Label>
+                      <Label className="text-gray-300">{txt.icon}</Label>
                       <Select value={newItem.iconName} onValueChange={(v) => setNewItem({ ...newItem, iconName: v })}>
                         <SelectTrigger className="bg-slate-800 border-slate-700 text-white mt-1">
                           <SelectValue />
@@ -658,7 +768,7 @@ export default function RoutinesPage() {
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-gray-300">Rutina</Label>
+                      <Label className="text-gray-300">{txt.routine}</Label>
                       <Select
                         value={newItem.routine}
                         onValueChange={(v: "morning" | "evening") => setNewItem({ ...newItem, routine: v })}
@@ -668,17 +778,17 @@ export default function RoutinesPage() {
                         </SelectTrigger>
                         <SelectContent className="bg-slate-800 border-slate-700">
                           <SelectItem value="morning" className="text-white">
-                            Ranní
+                            {txt.morning}
                           </SelectItem>
                           <SelectItem value="evening" className="text-white">
-                            Večerní
+                            {txt.evening}
                           </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div>
-                    <Label className="text-gray-300">Kategorie</Label>
+                    <Label className="text-gray-300">Category</Label>
                     <Select
                       value={newItem.category}
                       onValueChange={(v: "mindset" | "body" | "preparation" | "review") =>
@@ -732,7 +842,7 @@ export default function RoutinesPage() {
                 <Flame className="w-5 h-5 text-orange-400" />
                 <span className="text-2xl font-bold text-white">{streak}</span>
               </div>
-              <p className="text-xs text-gray-400">Streak (dny)</p>
+                    <p className="text-xs text-gray-400">Streak (days)</p>
             </CardContent>
           </Card>
           <Card className="bg-slate-900/50 border-slate-800">
@@ -741,7 +851,7 @@ export default function RoutinesPage() {
                 <BarChart3 className="w-5 h-5 text-blue-400" />
                 <span className="text-2xl font-bold text-white">{avgCompletion}%</span>
               </div>
-              <p className="text-xs text-gray-400">Průměr plnění</p>
+                    <p className="text-xs text-gray-400">Average Completion</p>
             </CardContent>
           </Card>
           <Card className="bg-slate-900/50 border-slate-800">
@@ -750,7 +860,7 @@ export default function RoutinesPage() {
                 <Calendar className="w-5 h-5 text-purple-400" />
                 <span className="text-2xl font-bold text-white">{history.length}</span>
               </div>
-              <p className="text-xs text-gray-400">Dní v historii</p>
+                    <p className="text-xs text-gray-400">Days in History</p>
             </CardContent>
           </Card>
         </div>
@@ -763,21 +873,21 @@ export default function RoutinesPage() {
               className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400"
             >
               <Sun className="w-4 h-4 mr-2" />
-              Ranní
+              Morning
             </TabsTrigger>
             <TabsTrigger
               value="evening"
               className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400"
             >
               <Moon className="w-4 h-4 mr-2" />
-              Večerní
+              Evening
             </TabsTrigger>
             <TabsTrigger
               value="history"
               className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400"
             >
               <History className="w-4 h-4 mr-2" />
-              Historie
+              History
             </TabsTrigger>
           </TabsList>
 
@@ -791,13 +901,13 @@ export default function RoutinesPage() {
                       <Sun className="w-5 h-5 text-orange-400" />
                     </div>
                     <div>
-                      <CardTitle className="text-white">Ranní rutina</CardTitle>
-                      <CardDescription>Připrav se na úspěšný trading den</CardDescription>
+                      <CardTitle className="text-white">{txt.morningRoutine}</CardTitle>
+                      <CardDescription>{isEn ? "Prepare yourself for a successful trading day" : "Připrav se na úspěšný obchodní den"}</CardDescription>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-white">{Math.round(getProgress(morningRoutine))}%</p>
-                    <p className="text-xs text-gray-400">Hotovo</p>
+                    <p className="text-xs text-gray-400">Completed</p>
                   </div>
                 </div>
                 <Progress value={getProgress(morningRoutine)} className="h-2 mt-4" />
@@ -806,11 +916,11 @@ export default function RoutinesPage() {
                 {renderRoutineItems(morningRoutine, "morning")}
 
                 <div className="pt-4 border-t border-slate-700/50">
-                  <Label className="text-gray-300 text-sm">Poznámky (volitelné)</Label>
+                  <Label className="text-gray-300 text-sm">Notes (optional)</Label>
                   <Textarea
                     value={morningNotes}
                     onChange={(e) => setMorningNotes(e.target.value)}
-                    placeholder="Jak se cítíš ráno? Jaké máš očekávání od dne?"
+                    placeholder="How do you feel in the morning? What are your expectations for the day?"
                     className="bg-slate-800/50 border-slate-700 text-white mt-2 min-h-[80px]"
                     disabled={!isLiveMode}
                   />
@@ -819,7 +929,7 @@ export default function RoutinesPage() {
                 {isLiveMode && (
                   <Button onClick={saveToHistory} className="w-full bg-orange-600 hover:bg-orange-700">
                     <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Uložit do historie
+                    Save to History
                   </Button>
                 )}
               </CardContent>
@@ -836,13 +946,13 @@ export default function RoutinesPage() {
                       <Moon className="w-5 h-5 text-blue-400" />
                     </div>
                     <div>
-                      <CardTitle className="text-white">Večerní rutina</CardTitle>
-                      <CardDescription>Uzavři den a připrav se na zítřek</CardDescription>
+                      <CardTitle className="text-white">{txt.eveningRoutine}</CardTitle>
+                      <CardDescription>{isEn ? "Close your day and prepare for tomorrow" : "Uzavři svůj den a připravuj se na zítřek"}</CardDescription>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-white">{Math.round(getProgress(eveningRoutine))}%</p>
-                    <p className="text-xs text-gray-400">Hotovo</p>
+                    <p className="text-xs text-gray-400">Completed</p>
                   </div>
                 </div>
                 <Progress value={getProgress(eveningRoutine)} className="h-2 mt-4" />
@@ -851,11 +961,11 @@ export default function RoutinesPage() {
                 {renderRoutineItems(eveningRoutine, "evening")}
 
                 <div className="pt-4 border-t border-slate-700/50">
-                  <Label className="text-gray-300 text-sm">Poznámky (volitelné)</Label>
+                  <Label className="text-gray-300 text-sm">Notes (optional)</Label>
                   <Textarea
                     value={eveningNotes}
                     onChange={(e) => setEveningNotes(e.target.value)}
-                    placeholder="Jak proběhl trading den? Co bys udělal jinak?"
+                    placeholder="How was the trading day? What would you do differently?"
                     className="bg-slate-800/50 border-slate-700 text-white mt-2 min-h-[80px]"
                     disabled={!isLiveMode}
                   />
@@ -864,7 +974,7 @@ export default function RoutinesPage() {
                 {isLiveMode && (
                   <Button onClick={saveToHistory} className="w-full bg-blue-600 hover:bg-blue-700">
                     <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Uložit do historie
+                    Save to History
                   </Button>
                 )}
               </CardContent>
@@ -880,8 +990,8 @@ export default function RoutinesPage() {
                     <History className="w-5 h-5 text-purple-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-white">Historie rutin</CardTitle>
-                    <CardDescription>Posledních 30 dní</CardDescription>
+                    <CardTitle className="text-white">{isEn ? "Routine History" : "Historie rutiny"}</CardTitle>
+                    <CardDescription>Last 30 days</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -889,8 +999,8 @@ export default function RoutinesPage() {
                 {history.length === 0 ? (
                   <div className="text-center py-12">
                     <History className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400">Zatím žádná historie</p>
-                    <p className="text-sm text-gray-500 mt-1">Začni plnit rutiny a uvidíš zde svůj pokrok</p>
+                    <p className="text-gray-400">No history yet</p>
+                    <p className="text-sm text-gray-500 mt-1">Start completing routines and see your progress here</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -932,7 +1042,7 @@ export default function RoutinesPage() {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <Sun className="w-3 h-3 text-orange-400" />
-                                <span className="text-xs text-gray-400">Ranní</span>
+                                <span className="text-xs text-gray-400">Morning</span>
                                 <span className="text-xs text-white ml-auto">
                                   {day.morningCompleted}/{day.morningTotal}
                                 </span>
@@ -942,7 +1052,7 @@ export default function RoutinesPage() {
                             <div>
                               <div className="flex items-center gap-2 mb-1">
                                 <Moon className="w-3 h-3 text-blue-400" />
-                                <span className="text-xs text-gray-400">Večerní</span>
+                                <span className="text-xs text-gray-400">Evening</span>
                                 <span className="text-xs text-white ml-auto">
                                   {day.eveningCompleted}/{day.eveningTotal}
                                 </span>
@@ -955,12 +1065,12 @@ export default function RoutinesPage() {
                             <div className="mt-3 pt-3 border-t border-slate-700/50">
                               {day.morningNotes && (
                                 <p className="text-xs text-gray-400">
-                                  <span className="text-orange-400">Ráno:</span> {day.morningNotes}
+                                  <span className="text-orange-400">Morning:</span> {day.morningNotes}
                                 </p>
                               )}
                               {day.eveningNotes && (
                                 <p className="text-xs text-gray-400 mt-1">
-                                  <span className="text-blue-400">Večer:</span> {day.eveningNotes}
+                                  <span className="text-blue-400">Evening:</span> {day.eveningNotes}
                                 </p>
                               )}
                             </div>

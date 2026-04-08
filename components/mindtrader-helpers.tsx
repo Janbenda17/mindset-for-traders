@@ -33,13 +33,13 @@ export function MindTraderHelpers() {
 
   // Sample affirmations
   const affirmations = [
-    "Jsem disciplinovaný obchodník a dodržuji svůj plán.",
-    "Obchoduji s klidem a trpělivostí.",
-    "Ztráty jsou součástí procesu a přijímám je.",
-    "Obchoduji trh takový, jaký je, ne jaký bych chtěl, aby byl.",
-    "Udržuji emocionální rovnováhu bez ohledu na zisk nebo ztrátu.",
-    "Soustředím se na proces, ne na výsledek každého obchodu.",
-    "Jsem odpoutaný od peněz při obchodních rozhodnutích.",
+    "I am a disciplined trader and I follow my plan.",
+    "I trade with calm and patience.",
+    "Losses are part of the process and I accept them.",
+    "I trade the market as it is, not as I wish it to be.",
+    "I maintain emotional balance regardless of profit or loss.",
+    "I focus on the process, not the result of each trade.",
+    "I am detached from money in trading decisions.",
   ]
 
   // Get random affirmation

@@ -38,13 +38,13 @@ export default function SignUpPage() {
     setError(null)
 
     if (password !== repeatPassword) {
-      setError("Hesla se neshodují")
+      setError("Passwords do not match")
       setIsLoading(false)
       return
     }
 
     if (!isPasswordValid) {
-      setError("Heslo musí obsahovat: malá + velká písmena + čísla (min. 6 znaků)")
+      setError("Password must contain: lowercase + uppercase letters + numbers (min. 6 characters)")
       setIsLoading(false)
       return
     }

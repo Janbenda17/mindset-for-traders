@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>
   register: (data: { email: string; password: string; name: string }) => Promise<boolean>
   logout: () => void
+  resetPassword: (email: string) => Promise<boolean>
   isLoading: boolean
   authReady: boolean
   clearAllAccounts: () => void
@@ -170,112 +171,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       console.log("[v0] ===== PŘIHLÁŠENÍ START =====")
-      console.log("[v0] Email:", email)
-      console.log("[v0] Password length:", password.length)
-      console.log("[v0] Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL ? "✓" : "❌")
-      console.log("[v0] Supabase Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "✓" : "❌")
 
-      console.log("[v0] Volání supabase.auth.signInWithPassword()...")
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Call our server-side login endpoint instead of Supabase directly
+      // This avoids Supabase rate limiting
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        credentials: "include", // IMPORTANT: Send and receive cookies
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       })
 
-      console.log("[v0] Response od signIn:", { hasError: !!error, hasUser: !!data.user, hasSession: !!data.session })
+      const result = await response.json()
 
-      if (error) {
-        console.error("[v0] ❌ LOGIN ERROR:", {
-          message: error.message,
-          status: error.status,
-        })
-
-        let errorMessage = error.message
-        
-        // Speciální handling pro rate limit - throw error aby se zpracoval v komponentě
-        if (error.message.includes("rate limit") || error.message.includes("too many")) {
-          throw new Error("RATE_LIMIT_EXCEEDED")
-        } else if (error.message.includes("Invalid login credentials") || error.message.includes("Invalid password")) {
-          errorMessage = "Nesprávný email nebo heslo. Prosím zkontrolujte a zkuste znovu."
-        } else if (error.message.includes("Email not confirmed")) {
-          errorMessage = "Prosím potvrďte svůj email. Podívejte se do schránky (včetně spamu)."
-        }
-
-        toast({
-          title: "Chyba přihlášení",
-          description: errorMessage,
-          variant: "destructive",
-        })
-        return false
+      if (!response.ok) {
+        console.error("[v0] LOGIN ERROR:", result.error)
+        throw new Error(result.error)
       }
 
-      if (!data.user || !data.session) {
-        console.error("[v0] ❌ Žádný user nebo session vrácen")
-        toast({
-          title: "Chyba přihlášení",
-          description: "Přihlášení se nezdařilo. Zkuste to prosím znovu.",
-          variant: "destructive",
-        })
-        return false
+      if (!result.user || !result.session) {
+        console.error("[v0] Žádný user nebo session")
+        throw new Error("NO_USER_OR_SESSION")
       }
 
-      console.log("[v0] ✅ Přihlášení úspěšné:", data.user.email)
+      console.log("[v0] ✅ Přihlášení úspěšné - nastavuji session do Supabase client")
+      
+      // Set the session in Supabase client so subsequent calls work
+      await supabase.auth.setSession(result.session)
 
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-      console.log("[v0] Ověření session:", {
-        hasSession: !!sessionData.session,
-        sessionError: sessionError?.message,
-      })
-
-      if (sessionData.session) {
-        console.log("[v0] ✅ Session ověřena - kontroluji onboarding status...")
-        
-        // Explicitly set user state from session
-        const userData = {
-          id: data.user.id,
-          email: data.user.email!,
-          name: data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Trader",
-        }
-        lastUserIdRef.current = data.user.id
-        setUser(userData)
-        
-        // Check if user needs to complete onboarding
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("onboarding_completed")
-          .eq("user_id", data.user.id)
-          .maybeSingle()
-
-        const needsOnboarding = !profileData?.onboarding_completed
-
-        // Wait a moment more for React state to update
-        await new Promise((resolve) => setTimeout(resolve, 300))
-        
-        if (needsOnboarding) {
-          console.log("[v0] User potřebuje onboarding - redirect na /onboarding")
-          router.push("/onboarding")
-        } else {
-          console.log("[v0] User má hotový onboarding - redirect na /")
-          router.push("/")
-        }
-      } else {
-        console.log("[v0] ⚠️ Session chybí - přesto redirect na /")
-        await new Promise((resolve) => setTimeout(resolve, 300))
-        router.push("/")
+      const userData = {
+        id: result.user.id,
+        email: result.user.email!,
+        name: result.user.user_metadata?.name || result.user.email?.split("@")[0] || "Trader",
       }
+      lastUserIdRef.current = result.user.id
+      setUser(userData)
+
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      router.push("/")
 
       return true
     } catch (error) {
-      console.error("[v0] ===== LOGIN ERROR =====")
-      console.error("[v0] Error type:", error?.constructor?.name)
-      console.error("[v0] Message:", error?.message)
-      console.error("[v0] Stack:", error?.stack)
-      
-      toast({
-        title: "Chyba přihlášení",
-        description: "Došlo k neočekávané chybě. Zkuste to prosím znovu za chvíli.",
-        variant: "destructive",
-      })
-      return false
+      console.error("[v0] LOGIN ERROR:", error instanceof Error ? error.message : String(error))
+      throw error
     }
   }
 
@@ -373,24 +310,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Start 14-day free trial automatically
-      console.log("[v0] Zahajuji 14denní free trial...")
-      try {
-        const trialResponse = await fetch("/api/subscription/start-trial", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: authData.user.id }),
-        })
-
-        if (trialResponse.ok) {
-          const trialData = await trialResponse.json()
-          console.log("[v0] ✅ Trial zahájen:", trialData.trialEndsAt)
-        } else {
-          console.error("[v0] ❌ Chyba při zahájení trialu")
-        }
-      } catch (trialError) {
-        console.error("[v0] ❌ Trial request error:", trialError)
-      }
+      // Nový uživatel má pouze FREE verzi (bez trial)
+      console.log("[v0] Nový uživatel - nastavuji FREE verzi bez trial...")
 
       toast({
         title: "Registrace úspěšná!",
@@ -416,17 +337,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
-    const userId = user?.id
-    const userEmail = user?.email
-
-    if (userId) {
-      console.log(`[v0] Logout: clearing data for userId=${userId}, email=${userEmail}`)
-      clearUserScoped(userId)
-      localStorage.removeItem("gamification-data")
-      localStorage.removeItem(`mindtrader:${userId}:mode`)
-    }
-
-    supabase.auth.signOut()
+    // Clear cookies and session
+    supabase.auth.signOut().catch((err) => console.error("[v0] Logout error:", err))
 
     console.log("[v0] Logout - clearing user state")
     lastUserIdRef.current = null
@@ -440,8 +352,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = "/auth/login"
   }
 
+  const resetPassword = async (email: string): Promise<boolean> => {
+    try {
+      console.log("[v0] Resetting password for:", email)
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      })
+
+      if (error) {
+        console.error("[v0] Password reset error:", error.message)
+        toast({
+          title: "Chyba",
+          description: error.message,
+          variant: "destructive",
+        })
+        return false
+      }
+
+      console.log("[v0] Password reset email sent successfully")
+      toast({
+        title: "Email poslán",
+        description: "Podívejte se do své emailové schránky pro pokyny k obnovení hesla",
+      })
+      return true
+    } catch (error) {
+      console.error("[v0] Password reset error:", error)
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se poslat email pro obnovení hesla",
+        variant: "destructive",
+      })
+      return false
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading, authReady, clearAllAccounts }}>
+    <AuthContext.Provider value={{ user, login, register, logout, resetPassword, isLoading, authReady, clearAllAccounts }}>
       {children}
     </AuthContext.Provider>
   )
@@ -456,6 +403,7 @@ export function useAuth() {
         login: async () => false,
         register: async () => false,
         logout: () => {},
+        resetPassword: async () => false,
         isLoading: true,
         authReady: false,
         clearAllAccounts: () => {},

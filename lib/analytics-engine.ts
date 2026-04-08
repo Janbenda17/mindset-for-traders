@@ -2,6 +2,10 @@ export interface AnalyticsData {
   trades: any[]
   morningChecks: any[]
   journalEntries: any[]
+  dailyTrackerEntries?: any[]
+  tradingPlans?: any[]
+  dailyIntentions?: any[]
+  tradingRoutines?: any[]
 }
 
 export interface ComputedAnalytics {
@@ -13,8 +17,8 @@ export interface ComputedAnalytics {
     averageLoss: number
     avgReadiness: number
     avgMood: number
-    bestDay: { date: string; pnl: number; readiness: number }
-    worstDay: { date: string; pnl: number; readiness: number }
+    bestDay: any
+    worstDay: any
   }
   psychology: {
     readinessCorrelation: number
@@ -23,7 +27,7 @@ export interface ComputedAnalytics {
     consistencyScore: number
     revengeIncidents: number
   }
-  progression?: {
+  progression: {
     currentDay: number
     daysCompleted: number
     todayComplete: boolean
@@ -34,10 +38,10 @@ export interface ComputedAnalytics {
     requirementsText: string[]
   }
   stages: {
-    shouldUnlockStage2: boolean // Has morning check data
-    shouldUnlockStage3: boolean // Has daily intention data
-    shouldUnlockStage4: boolean // Has trades recorded
-    shouldUnlockStage5: boolean // Has trades recorded
+    shouldUnlockStage2: boolean
+    shouldUnlockStage3: boolean
+    shouldUnlockStage4: boolean
+    shouldUnlockStage5: boolean
   }
   weeklyInsights: {
     bestPerformingDay: string
@@ -46,10 +50,53 @@ export interface ComputedAnalytics {
     readinessVsResults: string
     nextWeekFocus: string[]
   }
+  psychologicalProfile: Array<{ subject: string; A: number }>
+  psychInsights: Array<{
+    type: "success" | "warning" | "critical"
+    icon: string
+    title: string
+    description: string
+    action: string
+    impact: string
+  }>
+  emotionalPatterns: Array<{
+    name: string
+    emoji: string
+    count: number
+    impact: number
+    color: string
+    severity: "low" | "medium" | "high" | "critical"
+    description: string
+    recommendation: string
+  }>
+  actionPlan: Array<{
+    priority: "low" | "medium" | "high" | "critical"
+    emoji: string
+    title: string
+    description: string
+    action: string
+    impact: string
+  }>
 }
 
 export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
-  const { trades, morningChecks, journalEntries } = data
+  const { 
+    trades = [], 
+    morningChecks = [], 
+    journalEntries = [],
+    dailyTrackerEntries = [],
+    tradingPlans = [],
+    dailyIntentions = [],
+    tradingRoutines = []
+  } = data
+
+  console.log("[v0] [Analytics Engine] Computing analytics with:", {
+    trades: trades.length,
+    morningChecks: morningChecks.length,
+    journalEntries: journalEntries.length,
+    tradingPlans: tradingPlans.length,
+    dailyIntentions: dailyIntentions.length,
+  })
 
   // Summary calculations
   const wins = trades.filter((t) => (t.pnl || 0) > 0)
@@ -83,8 +130,8 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
     tradesByDay[date].push(trade)
   })
 
-  // Psychology metrics - korelace readiness s výsledky
-  // Mapovat morning checks na trades po datech pro zjištění readiness v den obchodu
+  // Psychology metrics - correlation of readiness with results
+  // Map morning checks to trades by date to determine readiness on trading day
   const dailyReadiness: { [key: string]: number } = {}
   morningChecks.forEach((mc) => {
     const date = mc.date || new Date().toISOString().split("T")[0]
@@ -94,7 +141,7 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
   const dailyPnL = Object.entries(tradesByDay).map(([date, dayTrades]) => ({
     date,
     pnl: dayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0),
-    readiness: dailyReadiness[date] || 0, // Brat readiness z morning check pro ten den
+    readiness: dailyReadiness[date] || 0, // Take readiness from morning check for that day
   }))
 
   const bestDay = dailyPnL.reduce((best, day) => (day.pnl > best.pnl ? day : best), { date: "", pnl: 0, readiness: 0 })
@@ -104,7 +151,7 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
     readiness: 0,
   })
 
-  // Zařadit trades podle readiness v den obchodu
+  // Categorize trades by readiness on trading day
   const highReadinessTrades = trades.filter((t) => {
     const date = t.date || t.created_at?.split("T")[0] || new Date().toISOString().split("T")[0]
     return (dailyReadiness[date] || 0) >= 70
@@ -274,5 +321,108 @@ export function computeAnalytics(data: AnalyticsData): ComputedAnalytics {
       readinessVsResults,
       nextWeekFocus,
     },
+    // Added psychological insights and patterns from real data
+    psychologicalProfile: [
+      { subject: "Discipline", A: Math.round(disciplineScore) },
+      { subject: "Consistency", A: Math.round(consistencyScore) },
+      { subject: "Stress", A: Math.max(0, 100 - (revengeIncidents * 10)) }, // Lower is better
+      { subject: "Readiness", A: Math.round(avgReadiness) },
+      { subject: "Mood", A: Math.round(avgMood) },
+      { subject: "Concentration", A: Math.round(Math.max(0, 100 - (trades.length > 0 ? (revengeIncidents / trades.length * 100) : 0))) },
+      { subject: "Risk Management", A: Math.round(100 - Math.abs(winRate - 55) * 0.5) },
+      { subject: "Confidence", A: Math.round(Math.min(100, winRate)) },
+    ],
+    psychInsights: [
+      // Generate insights based on real metrics
+      ...(disciplineScore > 80
+        ? [{
+            type: "success" as const,
+            icon: "🎯",
+            title: "Discipline at High Level",
+            description: `You follow the plan in ${Math.round(disciplineScore)}% of trades - that's excellent!`,
+            action: "Keep up this pace!",
+            impact: "positive" as const,
+          }]
+        : []),
+      ...(revengeIncidents > 2
+        ? [{
+            type: "critical" as const,
+            icon: "😤",
+            title: "CRITICAL: Revenge trading pattern!",
+            description: `We detected ${revengeIncidents} revenge trading incidents. This costs you money.`,
+            action: "STOP: After 2 consecutive losses, take a 30 minute break!",
+            impact: "critical" as const,
+          }]
+        : []),
+      ...(avgReadiness < 60
+        ? [{
+            type: "warning" as const,
+            icon: "😴",
+            title: "Low readiness = worse results",
+            description: `Your average readiness is ${Math.round(avgReadiness)}%. Should be 70%+`,
+            action: "Improve sleep and morning routine - it's critical!",
+            impact: "high" as const,
+          }]
+        : []),
+    ],
+    emotionalPatterns: [
+      // Generate patterns based on analysis
+      ...(revengeIncidents > 0
+        ? [{
+            name: "Revenge Trading",
+            emoji: "😤",
+            count: revengeIncidents,
+            impact: -(revengeIncidents * 1000),
+            color: "#dc2626",
+            severity: revengeIncidents > 3 ? "critical" : "high",
+            description: "Attempt to quickly recover losses - most dangerous pattern",
+            recommendation: "STOP trading after 2 losses. Minimum 30min break.",
+          }]
+        : []),
+      ...(disciplineScore < 50
+        ? [{
+            name: "Undisciplined Trading",
+            emoji: "📉",
+            count: Math.round((1 - disciplineScore / 100) * trades.length),
+            impact: -(Math.round((1 - disciplineScore / 100) * trades.length * 500)),
+            color: "#f97316",
+            severity: "high",
+            description: "Trading without following your plan",
+            recommendation: "Create and stick to your trading plan!",
+          }]
+        : []),
+    ],
+    actionPlan: [
+      ...(revengeIncidents > 0
+        ? [{
+            priority: "critical" as const,
+            emoji: "⛔",
+            title: "STOP REVENGE TRADING",
+            description: `${revengeIncidents} incidents detected. System to stop:`,
+            action: "After 2 losses: PAUSE 30min, take a walk, clear your head.",
+            impact: `Potential savings: $${revengeIncidents * 2000}`,
+          }]
+        : []),
+      ...(disciplineScore < 70
+        ? [{
+            priority: "high" as const,
+            emoji: "🎯",
+            title: "Improve Discipline",
+            description: `You follow the plan in ${Math.round(disciplineScore)}% of trades. Target: 85%+`,
+            action: "Every trade must meet 3 criteria of your plan.",
+            impact: "Potential increase: +15% P&L",
+          }]
+        : []),
+      ...(avgReadiness < 70
+        ? [{
+            priority: "high" as const,
+            emoji: "😴",
+            title: "Improve Morning Readiness",
+            description: `Your readiness: ${Math.round(avgReadiness)}%. Should be 75%+`,
+            action: "Sleep 7-8h, morning routine 20min (meditation/exercise)",
+            impact: "Correlation: +readiness = +better decisions",
+          }]
+        : []),
+    ],
   }
 }
