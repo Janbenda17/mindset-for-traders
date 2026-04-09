@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
@@ -168,9 +169,9 @@ const DEMO_POSTS: CommunityPost[] = [
     author: "Jana Svobodová",
     avatar: "/trader-avatar.png",
     content:
-      "Po 3 týdnech práce na trpělivosti jsem dnes měla perfektní trade! Čekala jsem 4 hodiny na svůj A+ setup a vyplatilo se to. +$420 🎯",
+      "After 3 weeks of working on patience, I had the perfect trade today! I waited 4 hours for my A+ setup and it paid off. +$420 🎯",
     type: "win",
-    timestamp: "před 2h",
+    timestamp: "2h ago",
     likes: 34,
     comments: 12,
     isLiked: false,
@@ -181,9 +182,9 @@ const DEMO_POSTS: CommunityPost[] = [
     author: "Martin Novák",
     avatar: "/trader-avatar.png",
     content:
-      "Dnes jsem udělal chybu - šel jsem do revenge trade po ztrátě. Ztratil jsem další $180. ALE tentokrát jsem to zastavil po 1 tradu, ne po 5 jako dřív.",
+      "I made a mistake today - I went into revenge trading after a loss. Lost another $180. BUT this time I stopped after 1 trade instead of 5 like before.",
     type: "loss",
-    timestamp: "před 4h",
+    timestamp: "4h ago",
     likes: 56,
     comments: 18,
     isLiked: true,
@@ -194,9 +195,9 @@ const DEMO_POSTS: CommunityPost[] = [
     author: "Petra Nová",
     avatar: "/trader-avatar.png",
     content:
-      "Zjistila jsem, že moje nejlepší obchody dělám mezi 9-11 dopoledne. Po obědě už nemám takovou koncentraci. Začínám si dělat poznámky o tom, kdy traduju nejlíp.",
+      "I discovered that my best trades are between 9-11 AM. After lunch my concentration drops. I'm starting to make notes about when I trade best.",
     type: "insight",
-    timestamp: "před 6h",
+    timestamp: "6h ago",
     likes: 42,
     comments: 15,
     isLiked: false,
@@ -207,9 +208,9 @@ const DEMO_POSTS: CommunityPost[] = [
     author: "Tomáš Dvořák",
     avatar: "/trader-avatar.png",
     content:
-      "Někdo ví, jak se zbavit strachu po sérii ztrát? Mám 3 losing trades za sebou a teď se bojím vstoupit do dalšího, i když vidím dobrý setup.",
+      "Does anyone know how to get over fear after a series of losses? I have 3 losing trades in a row and now I'm afraid to enter another, even though I see a good setup.",
     type: "question",
-    timestamp: "před 8h",
+    timestamp: "8h ago",
     likes: 28,
     comments: 24,
     isLiked: false,
@@ -262,90 +263,90 @@ const DEMO_BUDDIES: StudyBuddy[] = [
 const DEMO_CHALLENGES: Challenge[] = [
   {
     id: "1",
-    title: "Nula Pomstových Obchodů - 30 Denní Výzva",
-    description: "30 dní bez jediného revenge tradu. Po každé ztrátě povinná 30 min pauza.",
+    title: "Zero Revenge Trading - 30 Day Challenge",
+    description: "30 days without a single revenge trade. Mandatory 30 min break after each loss.",
     type: "behavioral",
     category: "intermediate",
     participants: 142,
     daysLeft: 23,
     duration: 30,
     progress: 23,
-    reward: "🏆 Odvážný Warrior bez Pomsty + 1000 XP",
+    reward: "🏆 Brave Warrior Without Revenge + 1000 XP",
     joined: false,
     difficulty: 7,
     xpReward: 1000,
   },
   {
     id: "2",
-    title: "Zvládnutí Ranní Rutiny",
-    description: "21 dní konzistentní ranní rutiny před tradingem (meditation, journal, prep).",
+    title: "Master Morning Routine",
+    description: "21 days of consistent morning routine before trading (meditation, journal, prep).",
     type: "routine",
     category: "beginner",
     participants: 89,
     daysLeft: 15,
     duration: 21,
     progress: 0,
-    reward: "⭐ Ranní Válečník + 500 XP",
+    reward: "⭐ Morning Warrior + 500 XP",
     joined: false,
     difficulty: 4,
     xpReward: 500,
   },
   {
     id: "3",
-    title: "Dokonalý Streak Journálování",
-    description: "30 dní bez přerušení journálování. Každý trade musí mít zápis.",
+    title: "Perfect Journal Streak",
+    description: "30 days without a break in journaling. Every trade must have an entry.",
     type: "routine",
     category: "intermediate",
     participants: 234,
     daysLeft: 28,
     duration: 30,
     progress: 0,
-    reward: "📔 Mistr Journálů + 800 XP",
+    reward: "📔 Journal Master + 800 XP",
     joined: false,
     difficulty: 6,
     xpReward: 800,
   },
   {
     id: "4",
-    title: "Mindfulness Meditace - 14 Dní",
-    description: "14 dní denní meditace min. 10 minut. Prokázaně snižuje impulzivitu o 40%.",
+    title: "Mindfulness Meditation - 14 Days",
+    description: "14 days of daily meditation min. 10 minutes. Proven to reduce impulsivity by 40%.",
     type: "mental",
     category: "beginner",
     participants: 167,
     daysLeft: 10,
     duration: 14,
     progress: 0,
-    reward: "🧘 Zenový Obchodník + 400 XP",
+    reward: "🧘 Zen Trader + 400 XP",
     joined: false,
     difficulty: 3,
     xpReward: 400,
   },
   {
     id: "5",
-    title: "Elita Řízení Rizika",
-    description: "30 dní s max 1% risk per trade. Ani jeden trade s větším rizikem.",
+    title: "Risk Management Elite",
+    description: "30 days with max 1% risk per trade. Not a single trade exceeding the risk.",
     type: "skill",
     category: "advanced",
     participants: 98,
     daysLeft: 25,
     duration: 30,
     progress: 0,
-    reward: "💎 Mistr Rizika + 1200 XP",
+    reward: "💎 Risk Master + 1200 XP",
     joined: false,
     difficulty: 9,
     xpReward: 1200,
   },
   {
     id: "6",
-    title: "Bez FOMO - 21 Denní Výzva",
-    description: "21 dní bez FOMO obchodů. Jen plánované setupy podle strategie.",
+    title: "No FOMO - 21 Day Challenge",
+    description: "21 days without FOMO trades. Only planned setups according to strategy.",
     type: "behavioral",
     category: "intermediate",
     participants: 201,
     daysLeft: 18,
     duration: 21,
     progress: 0,
-    reward: "🎯 Profesionál Trpělivosti + 750 XP",
+    reward: "🎯 Patience Professional + 750 XP",
     joined: false,
     difficulty: 7,
     xpReward: 750,
@@ -355,7 +356,7 @@ const DEMO_CHALLENGES: Challenge[] = [
 const DEMO_TRADING_ROOMS: TradingRoom[] = [
   {
     id: "1",
-    name: "Ranní Tržní Analýza",
+    name: "Morning Market Analysis",
     host: "Mentor Jan",
     participants: 47,
     maxParticipants: 100,
@@ -377,7 +378,7 @@ const DEMO_TRADING_ROOMS: TradingRoom[] = [
   },
   {
     id: "3",
-    name: "Týdenní Review & Plánování",
+    name: "Weekly Review & Planning",
     host: "Mentor Jana",
     participants: 0,
     maxParticipants: 100,
@@ -389,7 +390,7 @@ const DEMO_TRADING_ROOMS: TradingRoom[] = [
   {
     id: "4",
     name: "Psychology Q&A",
-    host: "Dr. Novák (Psycholog)",
+    host: "Dr. Novák (Psychologist)",
     participants: 0,
     maxParticipants: 75,
     startTime: "19:00",
@@ -402,50 +403,50 @@ const DEMO_TRADING_ROOMS: TradingRoom[] = [
 const DEMO_MENTOR_QA: MentorQA[] = [
   {
     id: "1",
-    question: "Jak poznat, že jsem v revenge trading módu?",
+    question: "How do I know if I'm in revenge trading mode?",
     askedBy: "Martin N.",
     answer:
-      "Skvělá otázka! Revenge trading má 3 jasné signály: 1) Trading hned po ztrátě bez pauzy, 2) Zvětšení position size, 3) Ignorování setupu. Nejlepší obrana je mít pravidlo: Po ztrátě minimálně 30 min pauza.",
+      "Great question! Revenge trading has 3 clear signals: 1) Trading right after a loss without a break, 2) Increasing position size, 3) Ignoring your setup criteria. The best defense is having a rule: At least 30 min break after every loss.",
     answeredBy: "Mentor Jana",
     likes: 124,
-    timestamp: "před 5h",
+    timestamp: "5h ago",
     status: "answered",
   },
   {
     id: "2",
-    question: "Je lepší tradovat ráno nebo odpoledne?",
+    question: "Is it better to trade in the morning or afternoon?",
     askedBy: "Petra K.",
     answer:
-      "Záleží na tobě! London session (8-12h) má nejvyšší volatilitu, ale vyžaduje rychlé rozhodování. US session (14-20h) je klidnější. Experimentuj a sleduj si, kdy máš nejlepší výsledky.",
+      "It depends on you! London session (8-12h) has highest volatility but requires quick decisions. US session (14-20h) is calmer. Experiment and track when you get your best results.",
     answeredBy: "Mentor Jan",
     likes: 89,
-    timestamp: "před 1 den",
+    timestamp: "1 day ago",
     status: "answered",
   },
   {
     id: "3",
-    question: "Stačí 50% win rate k profitabilitě?",
+    question: "Is 50% win rate enough to be profitable?",
     askedBy: "Tomáš D.",
     answer:
-      "Absolutně! S dobrým risk/reward ratio (min 1:2) jsi profitable i s 40% win rate. Důležitější než win rate je konzistentnost a risk management.",
+      "Absolutely! With good risk/reward ratio (min 1:2) you can be profitable even with 40% win rate. More important than win rate is consistency and risk management.",
     answeredBy: "Mentor Jana",
     likes: 67,
-    timestamp: "před 2 dny",
+    timestamp: "2 days ago",
     status: "answered",
   },
   {
     id: "4",
-    question: "Jak se vyhnout overtrading?",
+    question: "How do I avoid overtrading?",
     askedBy: "Jan P.",
-    timestamp: "před 3h",
+    timestamp: "3h ago",
     likes: 12,
     status: "pending",
   },
   {
     id: "5",
-    question: "Můžu být profitable bez technické analýzy?",
+    question: "Can I be profitable without technical analysis?",
     askedBy: "Lucie M.",
-    timestamp: "před 5h",
+    timestamp: "5h ago",
     likes: 8,
     status: "pending",
   },
@@ -456,44 +457,44 @@ const DEMO_SUCCESS_STORIES: SuccessStory[] = [
     id: "1",
     author: "Jana Svobodová",
     avatar: "/trader-avatar.png",
-    title: "Z -$2,000 na +$5,400 za 3 měsíce",
+    title: "From -$2,000 to +$5,400 in 3 months",
     content:
-      "Před 3 měsíci jsem byla v hluboké frustraci. Ztratila jsem $2,000 kvůli revenge tradingu a impulzivním rozhodnutím. Díky Team Club challenges jsem kompletně změnila approach. 'Zero Revenge Trading' mi pomohla nastavit si pravidla a 'Perfect Journal Streak' mě naučila disciplíně.",
+      "3 months ago I was deeply frustrated. I had lost $2,000 due to revenge trading and impulsive decisions. Thanks to Team Club challenges, I completely changed my approach. The 'Zero Revenge Trading' challenge helped me set rules and 'Perfect Journal Streak' taught me discipline.",
     beforeAfter: {
       before: [
         { metric: "Win Rate", value: "43%" },
         { metric: "Monthly P/L", value: "-$670" },
-        { metric: "Avg. Revenge Trades", value: "5/měsíc" },
+        { metric: "Avg. Revenge Trades", value: "5/month" },
       ],
       after: [
         { metric: "Win Rate", value: "68%" },
         { metric: "Monthly P/L", value: "+$1,800" },
-        { metric: "Avg. Revenge Trades", value: "0/měsíc" },
+        { metric: "Avg. Revenge Trades", value: "0/month" },
       ],
     },
-    timestamp: "před 2 dny",
+    timestamp: "2 days ago",
     likes: 234,
   },
   {
     id: "2",
     author: "Martin Novák",
     avatar: "/trader-avatar.png",
-    title: "Překonal jsem FOMO a ztrojnásobil profit",
+    title: "Overcame FOMO and tripled profit",
     content:
-      "FOMO mě stálo tisíce. Vstupoval jsem do každého tradu ze strachu, že mi ujede. Po 'No FOMO Challenge' a práci s mentorem jsem se naučil trpělivosti. Teď čekám jen na A+ setupy a moje profit se ztrojnásobil.",
+      "FOMO cost me thousands. I entered every trade out of fear of missing out. After the 'No FOMO Challenge' and work with my mentor, I learned patience. Now I only wait for A+ setups and my profit has tripled.",
     beforeAfter: {
       before: [
-        { metric: "Trades/měsíc", value: "120+" },
+        { metric: "Trades/month", value: "120+" },
         { metric: "Win Rate", value: "52%" },
         { metric: "Monthly P/L", value: "+$400" },
       ],
       after: [
-        { metric: "Trades/měsíc", value: "45" },
+        { metric: "Trades/month", value: "45" },
         { metric: "Win Rate", value: "71%" },
         { metric: "Monthly P/L", value: "+$1,200" },
       ],
     },
-    timestamp: "před 1 týden",
+    timestamp: "1 week ago",
     likes: 189,
   },
 ]
@@ -513,14 +514,14 @@ const DEMO_STUDENTS: Student[] = [
     pnlHistory: [1000, 1100, 1200, 1150, 1300, 1400, 1250],
     journalStreak: 28,
     status: "stable",
-    lastActive: "před 2h",
-    triggers: ["FOMO", "Nadměrné obchodování"],
-    strengths: ["Řízení rizika", "Disciplína"],
-    weaknesses: ["Trpělivost", "Emoční kontrola"],
+    lastActive: "2h ago",
+    triggers: ["FOMO", "Overtrading"],
+    strengths: ["Risk Management", "Discipline"],
+    weaknesses: ["Patience", "Emotional Control"],
     aiDiagnosis:
-      "Alena ukazuje vysokou úroveň disciplíny a silný systém řízení rizik. Její konzistentní journaling ji udržuje na správné cestě.",
-    mentorNotes: ["Pokračuj v zaměření na kvalitu setupů."],
-    todos: ["Zkontroluj obchody za minulý týden.", "Cvič 10minutovou meditaci denně."],
+      "Alena shows high discipline and a strong risk management system. Her consistent journaling keeps her on the right track.",
+    mentorNotes: ["Keep focusing on setup quality."],
+    todos: ["Review last week's trades.", "Practice 10-minute meditation daily."],
   },
   {
     id: "demo-2",
@@ -535,14 +536,14 @@ const DEMO_STUDENTS: Student[] = [
     pnlHistory: [-500, -400, -350, -300, -250, -320, -300],
     journalStreak: 10,
     status: "warning",
-    lastActive: "před 1 dnem",
-    triggers: ["Pomstový trading", "Netrpělivost"],
-    strengths: ["Vývoj strategie", "Analýza"],
-    weaknesses: ["Emoční kontrola", "Exekuce obchodů"],
+    lastActive: "1 day ago",
+    triggers: ["Revenge Trading", "Impatience"],
+    strengths: ["Strategy Development", "Analysis"],
+    weaknesses: ["Emotional Control", "Trade Execution"],
     aiDiagnosis:
-      "Martin má solidní strategie, ale bojuje s emoční kontrolou, což vede k pomstovému tradingu. Zlepšení journalingu a zavedení pauz po ztrátě pomůže.",
-    mentorNotes: ["Zaměř se na dodržování plánu.", "Projdi si výzvu 'Bez FOMO'."],
-    todos: ["Zaznamenej každý obchod příštích 7 dní.", "Po každé ztrátě si udělej 30minutovou pauzu."],
+      "Martin has solid strategies but struggles with emotional control leading to revenge trading. Improving journaling and taking breaks after losses will help.",
+    mentorNotes: ["Focus on following the plan.", "Complete the 'No FOMO' challenge."],
+    todos: ["Log every trade for the next 7 days.", "Take a 30-minute break after each loss."],
   },
   {
     id: "demo-3",
@@ -557,14 +558,14 @@ const DEMO_STUDENTS: Student[] = [
     pnlHistory: [600, 700, 750, 800, 850, 820, 800],
     journalStreak: 5,
     status: "critical",
-    lastActive: "před 3h",
-    triggers: ["Přílišná páka", "Nedostatek spánku"],
-    strengths: ["Rychlé rozhodování"],
-    weaknesses: ["Řízení rizika", "Emoční stabilita"],
+    lastActive: "3h ago",
+    triggers: ["Excessive Leverage", "Sleep Deprivation"],
+    strengths: ["Quick Decision Making"],
+    weaknesses: ["Risk Management", "Emotional Stability"],
     aiDiagnosis:
-      "Karlova nízká připravenost a občasné vážné chyby naznačují problémy s emoční stabilitou a risk managementem. Doporučuje se zaměřit na wellness a obchodní plán.",
-    mentorNotes: ["Prioritizuj spánek a zdravé návyky.", "Striktní dodržování rizika na obchod."],
-    todos: ["Sleduj spánkový režim.", "Omezte max riziko na 1% na obchod.", "Medituj 5 minut před otevřením trhu."],
+      "Karel's low readiness and occasional serious errors suggest issues with emotional stability and risk management. Focus on wellness and trading plan is recommended.",
+    mentorNotes: ["Prioritize sleep and healthy habits.", "Strict adherence to risk per trade."],
+    todos: ["Track your sleep schedule.", "Limit max risk to 1% per trade.", "Meditate 5 minutes before market open."],
   },
 ]
 
@@ -644,7 +645,7 @@ function generateStudentsFromRealData(trades: any[], journals: any[], moodEntrie
     {
       id: userId,
       name: "Ty",
-      nickname: "Můj Profil",
+      nickname: "My Profile",
       avatar: "/trader-avatar.png",
       traderType: "day-trader",
       readiness: readiness,
@@ -654,12 +655,12 @@ function generateStudentsFromRealData(trades: any[], journals: any[], moodEntrie
       pnlHistory: trades.slice(-7).map((t: any) => t.pnl || t.profitLoss || 0),
       journalStreak: journalStreak,
       status: readiness < 50 ? "critical" : readiness < 70 ? "warning" : "stable",
-      lastActive: "právě teď",
+      lastActive: "just now",
       triggers: [],
       strengths: [],
       weaknesses: [],
       aiDiagnosis:
-        trades.length > 0 ? "Analyzuji tvoje data..." : "Začni tradovat a přidávat záznamy do deníku pro AI analýzu.",
+        trades.length > 0 ? "Analyzing your data..." : "Start trading and adding journal entries for AI analysis.",
       mentorNotes: [],
       todos: [],
     },
@@ -839,6 +840,8 @@ function StudentTeamClubView({
   const [postFilter, setPostFilter] = useState<"all" | "win" | "loss" | "insight" | "question">("all")
   // Leaderboard state
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<"weekly" | "monthly" | "alltime">("weekly")
+  const [leaderboardData, setLeaderboardData] = useState<any[]>([])
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true)
 
   const [dailyLimits, setDailyLimits] = useState<{
     feed: { date: string; count: number }
@@ -941,18 +944,18 @@ function StudentTeamClubView({
 
   // ADD: Month names for success story selector
   const MONTH_NAMES = [
-    "Leden",
-    "Únor",
-    "Březen",
-    "Duben",
-    "Květen",
-    "Červen",
-    "Červenec",
-    "Srpen",
-    "Září",
-    "Říjen",
-    "Listopad",
-    "Prosinec",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ]
 
   // ADD: Get available months (last 12 months)
@@ -974,19 +977,13 @@ function StudentTeamClubView({
   // ADD: Load data in live mode from localStorage
   useEffect(() => {
     if (isLiveMode) {
-      // Load saved data from localStorage
-      // Use scoped keys if user is logged in
-      const savedPosts = user?.id ? getScoped(user.id, "team-club-posts") : localStorage.getItem("team-club-posts")
-      const savedQA = user?.id ? getScoped(user.id, "team-club-qa") : localStorage.getItem("team-club-qa")
-      const savedStories = user?.id
-        ? getScoped(user.id, "team-club-stories")
-        : localStorage.getItem("team-club-stories")
-      const savedBuddies = user?.id
-        ? getScoped(user.id, "team-club-buddies")
-        : localStorage.getItem("team-club-buddies")
-      const savedChallenges = user?.id
-        ? getScoped(user.id, "team-club-challenges")
-        : localStorage.getItem("team-club-challenges")
+      // Load SHARED data from localStorage (NOT scoped to user)
+      // This ensures ALL users see the SAME team club data
+      const savedPosts = localStorage.getItem("team-club-posts")
+      const savedQA = localStorage.getItem("team-club-qa")
+      const savedStories = localStorage.getItem("team-club-stories")
+      const savedBuddies = localStorage.getItem("team-club-buddies")
+      const savedChallenges = localStorage.getItem("team-club-challenges")
 
       if (savedPosts && posts.length === 0) setPosts(JSON.parse(savedPosts))
       if (savedQA && mentorQA.length === 0) setMentorQA(JSON.parse(savedQA))
@@ -1010,18 +1007,19 @@ function StudentTeamClubView({
       setMentorQA(DEMO_MENTOR_QA)
       setSuccessStories(DEMO_SUCCESS_STORIES)
     }
-  }, [isLiveMode, user?.id, posts.length, mentorQA.length, successStories.length, buddies.length, challenges.length]) // Add dependencies to prevent stale state
+  }, [isLiveMode, posts.length, mentorQA.length, successStories.length, buddies.length, challenges.length]) // Removed user?.id to ensure shared data
 
   useEffect(() => {
-    if (isLiveMode && user?.id) {
-      if (posts.length > 0) setScoped(user.id, "team-club-posts", JSON.stringify(posts))
-      if (mentorQA.length > 0) setScoped(user.id, "team-club-qa", JSON.stringify(mentorQA))
-      if (successStories.length > 0) setScoped(user.id, "team-club-stories", JSON.stringify(successStories))
-      if (buddies.length > 0) setScoped(user.id, "team-club-buddies", JSON.stringify(buddies))
-      // Challenges are now saved in handleAddChallenge and handleDeleteChallenge
-      // setScoped(user.id, "team-club-challenges", JSON.stringify(challenges))
+    if (isLiveMode) {
+      // Save SHARED data to localStorage (NOT scoped to user)
+      // This ensures ALL users save to the SAME shared data store
+      if (posts.length > 0) localStorage.setItem("team-club-posts", JSON.stringify(posts))
+      if (mentorQA.length > 0) localStorage.setItem("team-club-qa", JSON.stringify(mentorQA))
+      if (successStories.length > 0) localStorage.setItem("team-club-stories", JSON.stringify(successStories))
+      if (buddies.length > 0) localStorage.setItem("team-club-buddies", JSON.stringify(buddies))
+      if (challenges.length > 0) localStorage.setItem("team-club-challenges", JSON.stringify(challenges))
     }
-  }, [posts, mentorQA, successStories, buddies, isLiveMode, user?.id, challenges]) // Challenges are now saved in handleAddChallenge and handleDeleteChallenge
+  }, [posts, mentorQA, successStories, buddies, isLiveMode, challenges]) // Removed user?.id to ensure shared data
 
   useEffect(() => {
     const savedLimits = localStorage.getItem("teamclub-daily-limits")
@@ -1033,6 +1031,23 @@ function StudentTeamClubView({
       setReportedPosts(JSON.parse(savedReports))
     }
   }, [])
+
+  // Load leaderboard data when period changes
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      setLeaderboardLoading(true)
+      try {
+        const data = await getLeaderboardData()
+        setLeaderboardData(data)
+      } catch (error) {
+        console.error("[v0] Error loading leaderboard:", error)
+        setLeaderboardData(getDemoLeaderboardData())
+      } finally {
+        setLeaderboardLoading(false)
+      }
+    }
+    loadLeaderboard()
+  }, [leaderboardPeriod])
 
   const trades = getAllTrades()
   const journals = getAllJournalEntries()
@@ -1069,8 +1084,8 @@ function StudentTeamClubView({
   }
 
   const communityStats = {
-    onlineMembers: isLiveMode ? 1 : 487,
-    totalMembers: isLiveMode ? 1 : 1243,
+    onlineMembers: isLiveMode ? (buddies ? buddies.filter((b: any) => b.status === "online").length : 1) : 487,
+    totalMembers: isLiveMode ? (buddies ? buddies.length : 1) : 1243,
     activeChallenges: challenges.filter((c) => c.joined).length,
     liveRooms: rooms.filter((r) => r.status === "live").length,
     todayPosts: posts.length,
@@ -1194,26 +1209,40 @@ function StudentTeamClubView({
   }
 
   // Leaderboard helper functions
-  const getLeaderboardData = () => {
-    if (isLiveMode) {
-      // In live mode, show only the user's own data
-      const user = getUserStats()
-      if (user.xp > 0 || user.pnl !== 0 || user.streak > 0) {
-        return [
-          {
-            rank: 1,
-            name: "Ty",
-            discipline: user.discipline,
-            streak: user.streak,
-            xp: user.xp,
-            pnl: user.pnl,
-            avatar: "/trader-avatar.png",
-          },
-        ]
-      }
-      return []
-    }
+  const getLeaderboardData = async () => {
+    try {
+      // Use API endpoint which bypasses RLS by using service role key
+      const response = await fetch("/api/leaderboard", { cache: "no-store" })
 
+      if (!response.ok) {
+        console.error("[v0] Error loading leaderboard from API:", response.statusText)
+        return getDemoLeaderboardData()
+      }
+
+      const { leaderboard } = await response.json()
+
+      if (!leaderboard || leaderboard.length === 0) {
+        console.log("[v0] No leaderboard data from API, using demo data")
+        return getDemoLeaderboardData()
+      }
+
+      console.log(`[v0] Loaded ${leaderboard.length} traders for leaderboard`)
+
+      // Apply period filtering (adjust XP for display purposes)
+      if (leaderboardPeriod === "weekly") {
+        return leaderboard.map((d: any) => ({ ...d, xp: Math.round(d.xp * 0.15) }))
+      } else if (leaderboardPeriod === "monthly") {
+        return leaderboard.map((d: any) => ({ ...d, xp: Math.round(d.xp * 0.4) }))
+      }
+
+      return leaderboard
+    } catch (error) {
+      console.error("[v0] Error loading leaderboard:", error)
+      return getDemoLeaderboardData()
+    }
+  }
+
+  const getDemoLeaderboardData = () => {
     // Demo mode with bigger numbers (thousands $)
     const demoData = [
       {
@@ -1250,15 +1279,30 @@ function StudentTeamClubView({
         pnl: 980,
         avatar: "/trader-avatar.png",
       },
+      { rank: 11, name: "Ondřej Krčál", discipline: 73, streak: 11, xp: 3200, pnl: 750, avatar: "/trader-avatar.png" },
+      { rank: 12, name: "Zuzana Kučerová", discipline: 71, streak: 9, xp: 2850, pnl: 620, avatar: "/trader-avatar.png" },
+      { rank: 13, name: "Pavel Sedláček", discipline: 69, streak: 8, xp: 2500, pnl: 480, avatar: "/trader-avatar.png" },
+      { rank: 14, name: "Michaela Pokorná", discipline: 67, streak: 7, xp: 2200, pnl: 350, avatar: "/trader-avatar.png" },
+      { rank: 15, name: "Dominik Vlášek", discipline: 65, streak: 6, xp: 1900, pnl: 220, avatar: "/trader-avatar.png" },
+      { rank: 16, name: "Alena Čermáková", discipline: 63, streak: 5, xp: 1600, pnl: 150, avatar: "/trader-avatar.png" },
+      { rank: 17, name: "Rostislav Junek", discipline: 61, streak: 4, xp: 1400, pnl: 100, avatar: "/trader-avatar.png" },
+      { rank: 18, name: "Lenka Beranová", discipline: 59, streak: 3, xp: 1100, pnl: 80, avatar: "/trader-avatar.png" },
+      { rank: 19, name: "Stanislav Bláha", discipline: 57, streak: 2, xp: 900, pnl: 60, avatar: "/trader-avatar.png" },
+      { rank: 20, name: "Věra Filipová", discipline: 55, streak: 1, xp: 700, pnl: 40, avatar: "/trader-avatar.png" },
+      { rank: 21, name: "Jiří Pilný", discipline: 53, streak: 0, xp: 550, pnl: 30, avatar: "/trader-avatar.png" },
+      { rank: 22, name: "Miriam Hladká", discipline: 51, streak: 0, xp: 450, pnl: 20, avatar: "/trader-avatar.png" },
+      { rank: 23, name: "František Varga", discipline: 49, streak: 0, xp: 350, pnl: 10, avatar: "/trader-avatar.png" },
+      { rank: 24, name: "Helena Svobodová", discipline: 47, streak: 0, xp: 280, pnl: 5, avatar: "/trader-avatar.png" },
+      { rank: 25, name: "Václav Horák", discipline: 45, streak: 0, xp: 200, pnl: 0, avatar: "/trader-avatar.png" },
     ]
 
     // Filter based on period for demo variation
     if (leaderboardPeriod === "weekly") {
-      return demoData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.15), pnl: Math.round(d.pnl * 0.25) }))
+      return demoData.slice(0, 5).map((d) => ({ ...d, xp: Math.round(d.xp * 0.15), pnl: Math.round(d.pnl * 0.25) }))
     } else if (leaderboardPeriod === "monthly") {
-      return demoData.map((d) => ({ ...d, xp: Math.round(d.xp * 0.4), pnl: Math.round(d.pnl * 0.5) }))
+      return demoData.slice(0, 5).map((d) => ({ ...d, xp: Math.round(d.xp * 0.4), pnl: Math.round(d.pnl * 0.5) }))
     }
-    return demoData
+    return demoData.slice(0, 5)
   }
 
   const getUserStats = () => {
@@ -1292,15 +1336,20 @@ function StudentTeamClubView({
   }
 
   const getUserPosition = () => {
-    // Mock function to get user's position
-    const user = getUserStats()
-    const leaderboard = getLeaderboardData()
-    const found = leaderboard.find((trader) => trader.name === user.name)
-    if (found) {
-      return found.rank
+    // Get user's position in leaderboard by finding by userId
+    if (!user?.id || !leaderboardData || leaderboardData.length === 0) {
+      return "?"
     }
-    // Fallback if user is not in the top 10 (or wherever we query)
-    return 15 // Example fallback
+
+    // Find user in leaderboard by userId
+    const userIndex = leaderboardData.findIndex((trader) => trader.userId === user.id)
+
+    if (userIndex !== -1) {
+      return leaderboardData[userIndex].rank
+    }
+
+    // Fallback: user is not in loaded leaderboard (not in profiles table)
+    return "?"
   }
 
   // Function to get today's date string for daily limits
@@ -2492,7 +2541,7 @@ function StudentTeamClubView({
                               </div>
                               <h3 className="text-white font-bold text-base mb-1">{challenge.title}</h3>
                               <p className="text-slate-400 text-sm">
-                                {challenge.duration} dní · Zbývá {challenge.daysLeft} dní
+                                {challenge.duration} days · {challenge.daysLeft} days remaining
                               </p>
                             </div>
                             {isAdmin && (
@@ -2899,50 +2948,54 @@ function StudentTeamClubView({
                   ))}
                 </div>
 
-                {/* Top 5 Leaderboard */}
-                <div className="space-y-3">
-                  {getLeaderboardData()
-                    .slice(0, 5)
-                    .map((trader) => (
-                      <div
-                        key={trader.rank}
-                        className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-xl hover:bg-slate-700/50 transition-all"
-                      >
+                {/* Leaderboard - All Users Sorted by XP */}
+                <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                  {leaderboardLoading ? (
+                    <div className="text-center py-8">
+                      <p className="text-slate-400">Načítám leaderboard...</p>
+                    </div>
+                  ) : leaderboardData.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-slate-400">Žádní tradeři v leaderboardu</p>
+                    </div>
+                  ) : (
+                    leaderboardData.slice(0, 5).map((trader) => (
                         <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
-                            trader.rank === 1
-                              ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-white"
-                              : trader.rank === 2
-                                ? "bg-gradient-to-br from-slate-400 to-slate-500 text-white"
-                                : trader.rank === 3
-                                  ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white"
-                                  : "bg-slate-600 text-white"
-                          }`}
+                          key={trader.rank}
+                          className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-xl hover:bg-slate-700/50 transition-all"
                         >
-                          {trader.rank}
-                        </div>
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage src={trader.avatar || "/placeholder.svg"} />
-                          <AvatarFallback>{trader.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <h4 className="text-white font-bold">{trader.name}</h4>
-                          <div className="flex items-center gap-3 text-xs text-slate-400">
-                            <span className="flex items-center gap-1">
-                              <Target className="h-3 w-3" />
-                              {trader.discipline}% disciplína
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Flame className="h-3 w-3 text-orange-400" />
-                              {trader.streak} dní
-                            </span>
+                          <div
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
+                              trader.rank === 1
+                                ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-white"
+                                : trader.rank === 2
+                                  ? "bg-gradient-to-br from-slate-400 to-slate-500 text-white"
+                                  : trader.rank === 3
+                                    ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white"
+                                    : "bg-slate-600 text-white"
+                            }`}
+                          >
+                            {trader.rank}
+                          </div>
+                          <Avatar className="w-12 h-12">
+                            <AvatarImage src={trader.avatar || "/placeholder.svg"} />
+                            <AvatarFallback>{trader.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <h4 className="text-white font-bold">{trader.name}</h4>
+                            <div className="flex items-center gap-3 text-xs text-slate-400">
+                              <span className="flex items-center gap-1">
+                                <Flame className="h-3 w-3 text-orange-400" />
+                                Level {trader.level}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-purple-400 font-bold">{trader.xp} XP</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-purple-400 font-bold">{trader.xp} XP</p>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                  )}
                 </div>
 
                 {/* User Position - below Top 5 */}
@@ -3152,9 +3205,9 @@ function StudentTeamClubView({
           {/* SUCCESS STORIES TAB */}
           <TabsContent value="success" className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white mb-1">Příběhy úspěchu</h2>
+              <h2 className="text-2xl font-bold text-white mb-1">Success Stories</h2>
               <p className="text-slate-400 text-sm">
-                Inspirace od komunity · Reálné transformace · Dokázali to, dokážeš to taky
+                Inspiration from community · Real transformations · They did it, you can too
               </p>
             </div>
 
@@ -3171,21 +3224,21 @@ function StudentTeamClubView({
                   <Alert className="mb-4 bg-amber-500/10 border-amber-500/30">
                     <Clock className="h-4 w-4 text-amber-400" />
                     <AlertDescription className="text-amber-400">
-                      Dnes jsi již sdílel příběh. Další můžeš sdílet zítra.
+                      You've already shared a story today. You can share another tomorrow.
                     </AlertDescription>
                   </Alert>
                 )}
 
                 <div className="space-y-3">
                   <Input
-                    placeholder="Název tvého příběhu..."
+                    placeholder="Your story title..."
                     value={newStoryTitle}
                     onChange={(e) => setNewStoryTitle(e.target.value)}
                     disabled={!canPostToday("success")}
                     className="bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-500 rounded-xl disabled:opacity-50"
                   />
                   <Textarea
-                    placeholder="Popiš svou cestu, co ti pomohlo, jaké překážky jsi překonal..."
+                    placeholder="Describe your journey, what helped you, what obstacles you overcame..."
                     value={newStoryContent}
                     onChange={(e) => setNewStoryContent(e.target.value)}
                     disabled={!canPostToday("success")}
@@ -3195,14 +3248,14 @@ function StudentTeamClubView({
                   {/* ADD: Month selection for before/after comparison */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-slate-400 mb-1 block">Měsíc "Před"</label>
+                      <label className="text-xs text-slate-400 mb-1 block">Month "Before"</label>
                       <Select
                         value={selectedMonth1}
                         onValueChange={setSelectedMonth1}
                         disabled={!canPostToday("success")}
                       >
                         <SelectTrigger className="bg-slate-900/50 border-slate-700/50 text-white rounded-xl">
-                          <SelectValue placeholder="Vyber měsíc..." />
+                          <SelectValue placeholder="Select month..." />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-900 border-slate-700">
                           {getAvailableMonths().map((month) => (
@@ -3214,14 +3267,14 @@ function StudentTeamClubView({
                       </Select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400 mb-1 block">Měsíc "Po"</label>
+                      <label className="text-xs text-slate-400 mb-1 block">Month "After"</label>
                       <Select
                         value={selectedMonth2}
                         onValueChange={setSelectedMonth2}
                         disabled={!canPostToday("success")}
                       >
                         <SelectTrigger className="bg-slate-900/50 border-slate-700/50 text-white rounded-xl">
-                          <SelectValue placeholder="Vyber měsíc..." />
+                          <SelectValue placeholder="Select month..." />
                         </SelectTrigger>
                         <SelectContent className="bg-slate-900 border-slate-700">
                           {getAvailableMonths().map((month) => (
@@ -3238,14 +3291,14 @@ function StudentTeamClubView({
                   {selectedMonth1 && selectedMonth2 && (
                     <div className="grid grid-cols-2 gap-3 p-3 bg-slate-800/50 rounded-xl">
                       <div>
-                        <p className="text-xs text-slate-400 mb-2">Měsíc "Před"</p>
+                        <p className="text-xs text-slate-400 mb-2">Month "Before"</p>
                         {(() => {
                           const [y, m] = selectedMonth1.split("-").map(Number)
                           const stats = getMonthlyStats(y, m)
                           return (
                             <div className="space-y-1 text-sm">
                               <p className="text-slate-300">
-                                Úspěšnost: <span className="text-white">{stats.winRate}%</span>
+                                Success Rate: <span className="text-white">{stats.winRate}%</span>
                               </p>
                               <p className="text-slate-300">
                                 P&L:{" "}
@@ -3268,14 +3321,14 @@ function StudentTeamClubView({
                         })()}
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400 mb-2">Měsíc "Po"</p>
+                        <p className="text-xs text-slate-400 mb-2">Month "After"</p>
                         {(() => {
                           const [y, m] = selectedMonth2.split("-").map(Number)
                           const stats = getMonthlyStats(y, m)
                           return (
                             <div className="space-y-1 text-sm">
                               <p className="text-slate-300">
-                                Úspěšnost: <span className="text-white">{stats.winRate}%</span>
+                                Success Rate: <span className="text-white">{stats.winRate}%</span>
                               </p>
                               <p className="text-slate-300">
                                 P&L:{" "}
@@ -3312,7 +3365,7 @@ function StudentTeamClubView({
                     className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl w-full disabled:opacity-50"
                   >
                     <Star className="h-4 w-4 mr-2" />
-                    Sdílet můj příběh
+                    Share My Story
                   </Button>
                 </div>
               </CardContent>
@@ -3347,7 +3400,7 @@ function StudentTeamClubView({
                       <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-5">
                         <h4 className="text-red-400 font-bold text-sm mb-4 flex items-center gap-2">
                           <XCircle className="h-4 w-4" />
-                          Před (3 měsíce)
+                          Before (3 months ago)
                         </h4>
                         <div className="space-y-3">
                           {story.beforeAfter.before.map((stat, index) => (
@@ -3362,7 +3415,7 @@ function StudentTeamClubView({
                       <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-5">
                         <h4 className="text-emerald-400 font-bold text-sm mb-4 flex items-center gap-2">
                           <CheckCircle className="h-4 w-4" />
-                          Po (Teď)
+                          After (Now)
                         </h4>
                         <div className="space-y-3">
                           {story.beforeAfter.after.map((stat, index) => (
@@ -3387,11 +3440,11 @@ function StudentTeamClubView({
                       </Button>
                       <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-8">
                         <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-                        Komentáře
+                        Comments
                       </Button>
                       <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-8">
                         <Share2 className="h-3.5 w-3.5 mr-1.5" />
-                        Sdílet
+                        Share
                       </Button>
                       <Button
                         size="sm"
@@ -3538,31 +3591,6 @@ function TeamClubPage() {
         <div className="text-center">
           <Brain className="w-16 h-16 text-purple-400 animate-pulse mx-auto mb-4" />
           <p className="text-slate-400">Načítám Tým...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // In LIVE mode, Team Club is locked
-  if (isLiveMode) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center">
-        <div className="text-center max-w-md px-4">
-          <div className="mb-6 flex justify-center">
-            <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-2xl inline-block">
-              <Lock className="w-12 h-12 text-red-400" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-black text-white mb-3">Tým je zamčený</h1>
-          <p className="text-lg text-purple-300 mb-6">
-            Tým není dostupný v Live Mode. Vrať se do Virtuálního Režimu, pokud chceš prozkoumat komunitu.
-          </p>
-          <Button 
-            onClick={() => window.history.back()}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-8 py-3 rounded-lg"
-          >
-            Zpět
-          </Button>
         </div>
       </div>
     )

@@ -55,9 +55,9 @@ export async function POST(request: NextRequest) {
         .from("xp_log")
         .select("id")
         .eq("user_id", user.id)
-        .eq("action", "loss_reset")
-        .gte("awarded_at", `${today}T00:00:00`)
-        .single()
+        .eq("source", "loss_reset")
+        .gte("created_at", `${today}T00:00:00`)
+        .maybeSingle()
 
       if (todayReset) {
         return NextResponse.json({ 
@@ -73,9 +73,9 @@ export async function POST(request: NextRequest) {
         .from("xp_log")
         .select("id")
         .eq("user_id", user.id)
-        .eq("action", "morning_check")
-        .gte("awarded_at", `${today}T00:00:00`)
-        .single()
+        .eq("source", "morning_check")
+        .gte("created_at", `${today}T00:00:00`)
+        .maybeSingle()
 
       if (todayCheck) {
         return NextResponse.json({ 
@@ -85,16 +85,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check for daily_stage - prevent duplicates
+    // Check for daily_stage - prevent duplicates (store stage in reason field)
     if (action === "daily_stage" && metadata?.stage) {
       const { data: stageXP } = await supabase
         .from("xp_log")
         .select("id")
         .eq("user_id", user.id)
-        .eq("action", "daily_stage")
-        .eq("metadata->stage", metadata.stage)
-        .gte("awarded_at", `${today}T00:00:00`)
-        .single()
+        .eq("source", "daily_stage")
+        .ilike("reason", `%stage_${metadata.stage}%`)
+        .gte("created_at", `${today}T00:00:00`)
+        .maybeSingle()
 
       if (stageXP) {
         return NextResponse.json({ 
@@ -141,10 +141,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Log XP award
+    const reasonText = action === "daily_stage" 
+      ? `XP award: ${action} (stage_${metadata?.stage})`
+      : `XP award: ${action}`
+    
     const { error: logError } = await supabase.from("xp_log").insert({
       user_id: user.id,
       amount: xpAmount,
-      reason: `XP award: ${action}`,
+      reason: reasonText,
       source: action,
     })
 

@@ -28,9 +28,9 @@ export async function POST(request: NextRequest) {
       .from("profiles")
       .update({
         subscription_status: "trial",
-        subscription_tier: "pro",
+        subscription_tier: "free",  // User is on FREE tier with trial access
         trial_ends_at: trialEndsAt.toISOString(),
-        is_premium: true,
+        is_premium: false,  // NOT premium until they pay!
       })
       .eq("user_id", userId)
 

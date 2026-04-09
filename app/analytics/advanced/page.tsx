@@ -31,13 +31,13 @@ export default function AdvancedAnalyticsPage() {
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-3">
               <Brain className="w-10 h-10 text-purple-400" />
-              Pokročilá analytika
+              Advanced Analytics
               <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
                 <Sparkles className="w-3 h-3 mr-1" />
-                Napájena AI
+                AI Powered
               </Badge>
             </h1>
-            <p className="text-gray-400 mt-2">Pokročilé AI analýzy s hlubokými insights do vašeho tradingu</p>
+            <p className="text-gray-400 mt-2">Advanced AI analysis with deep insights into your trading</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -49,11 +49,11 @@ export default function AdvancedAnalyticsPage() {
               className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50"
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
-              Obnovit AI
+              Refresh AI
             </Button>
             <Button variant="outline" size="sm" className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50">
               <Download className="w-4 h-4 mr-2" />
-              Exportovat report
+              Export Report
             </Button>
           </div>
         </div>
@@ -66,9 +66,9 @@ export default function AdvancedAnalyticsPage() {
                 <Brain className="w-8 h-8 text-purple-400" />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-white mb-2">AI Trading poznatky</h3>
+                <h3 className="text-xl font-bold text-white mb-2">AI Trading Insights</h3>
                 <p className="text-gray-300">
-                  Naše AI analyzovala vaše trading vzory a identifikovala klíčové oblasti pro zlepšení. Aktuální
+                  Our AI has analyzed your trading patterns and identified key areas for improvement. Current
                   confidence score: <span className="text-green-400 font-semibold">87%</span>
                 </p>
               </div>
@@ -85,15 +85,15 @@ export default function AdvancedAnalyticsPage() {
           <TabsList className="bg-slate-800/50 border border-slate-700/50 grid grid-cols-2 lg:grid-cols-5">
             <TabsTrigger value="performance" className="data-[state=active]:bg-purple-600">
               <BarChart3 className="w-4 h-4 mr-2" />
-              Výkon
+              Performance
             </TabsTrigger>
             <TabsTrigger value="psychology" className="data-[state=active]:bg-purple-600">
               <Brain className="w-4 h-4 mr-2" />
-              Psychologie
+              Psychology
             </TabsTrigger>
             <TabsTrigger value="patterns" className="data-[state=active]:bg-purple-600">
               <PieChart className="w-4 h-4 mr-2" />
-              Vzorce
+              Patterns
             </TabsTrigger>
             <TabsTrigger value="risk" className="data-[state=active]:bg-purple-600">
               <Activity className="w-4 h-4 mr-2" />
@@ -101,7 +101,7 @@ export default function AdvancedAnalyticsPage() {
             </TabsTrigger>
             <TabsTrigger value="correlation" className="data-[state=active]:bg-purple-600">
               <Target className="w-4 h-4 mr-2" />
-              Korelace
+              Correlation
             </TabsTrigger>
           </TabsList>
 

@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
+import { useAuth } from "@/contexts/auth-context"
+import { getScoped } from "@/lib/storage"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -211,7 +213,7 @@ function generateMindTraderAnalytics(timeframe: "week" | "month" | "quarter") {
   if (currentJournalStreak >= 7) {
     insights.push({
       icon: "📝",
-      text: `${currentJournalStreak} dní journaling streak! Konzistence se vyplácí.`,
+      text: `${currentJournalStreak} days journaling streak! Consistency pays off.`,
       type: "positive",
     })
   }
@@ -222,17 +224,17 @@ function generateMindTraderAnalytics(timeframe: "week" | "month" | "quarter") {
   // Challenges (mock data)
   const challenges = {
     completed: [
-      { name: "7 dní bez revenge tradingu", reward: "+50 XP" },
-      { name: "5 dní journaling streak", reward: "+30 XP" },
+      { name: "7 days without revenge trading", reward: "+50 XP" },
+      { name: "5 days journaling streak", reward: "+30 XP" },
     ],
-    failed: [{ name: "Udržet readiness >75%", reason: "Dosaženo jen 68%" }],
+    failed: [{ name: "Keep readiness >75%", reason: "Only reached 68%" }],
   }
 
   // AI Forecast
   const forecastGrowth = disciplineTrend > 0 ? Math.round(disciplineTrend * 1.5) : Math.round(disciplineTrend * 1.2)
 
   return {
-    period: timeframe === "week" ? "tento týden" : timeframe === "month" ? "tento měsíc" : "toto čtvrtletí",
+    period: timeframe === "week" ? "this week" : timeframe === "month" ? "this month" : "this quarter",
 
     // 1. Dashboard
     dashboard: {
@@ -339,28 +341,32 @@ function generateMindTraderAnalytics(timeframe: "week" | "month" | "quarter") {
   }
 }
 
-const getReadinessFromStorage = () => {
-  const entries = JSON.parse(localStorage.getItem("daily-tracker-entries") || "[]")
+const getReadinessFromStorage = (userId: string | null) => {
+  if (!userId) return 0
+  const entries = getScoped("virtual", userId, "daily-tracker-entries", [])
   const today = new Date().toISOString().split("T")[0]
   const todayEntry = entries.find((e: any) => e.date === today)
   return todayEntry?.morningCheck?.score || 0
 }
 
 export default function MindTraderAnalyticsPage() {
+  const { user } = useAuth()
   const [timeframe, setTimeframe] = useState<"week" | "month" | "quarter">("month")
   const [loading, setLoading] = useState(true)
   const [readinessScore, setReadinessScore] = useState(0)
 
   useEffect(() => {
     // Get readiness from daily tracker entries
-    const entries = JSON.parse(localStorage.getItem("daily-tracker-entries") || "[]")
-    const today = new Date().toISOString().split("T")[0]
-    const todayEntry = entries.find((e: any) => e.date === today)
-    if (todayEntry?.morningCheck?.score) {
-      setReadinessScore(todayEntry.morningCheck.score)
+    if (user?.id) {
+      const entries = getScoped("virtual", user.id, "daily-tracker-entries", [])
+      const today = new Date().toISOString().split("T")[0]
+      const todayEntry = entries.find((e: any) => e.date === today)
+      if (todayEntry?.morningCheck?.score) {
+        setReadinessScore(todayEntry.morningCheck.score)
+      }
     }
     setTimeout(() => setLoading(false), 500)
-  }, [])
+  }, [user])
 
   const analytics = useMemo(() => generateMindTraderAnalytics(timeframe), [timeframe])
 

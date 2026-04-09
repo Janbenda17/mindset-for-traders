@@ -23,71 +23,71 @@ import { Button } from "@/components/ui/button"
 const tourPages = [
   {
     id: "why",
-    title: "Proč MindTrader vznikl?",
-    subtitle: "80% traderů selhává kvůli psychologii, ne strategii",
+    title: "Why was MindTrader created?",
+    subtitle: "80% of traders fail due to psychology, not strategy",
     content: {
-      problem: "Většina traderů má solidní strategie, ale stejně ztrácí. Proč? Emoce sabotují každý plán.",
-      solution: "MindTrader ti pomůže držet disciplínu, rozpoznat emoční triggery a obchodovat podle plánu, ne podle pocitů.",
+      problem: "Most traders have solid strategies but still lose. Why? Emotions sabotage every plan.",
+      solution: "MindTrader helps you stay disciplined, recognize emotional triggers, and trade by plan—not by feeling.",
       stats: [
-        { label: "traderů ztrácí kvůli emocím", value: "80%" },
-        { label: "zlepšení po 30 dnech", value: "40%" },
-        { label: "snížení impulzivních tradů", value: "65%" },
+        { label: "traders lose due to emotions", value: "80%" },
+        { label: "improvement in 30 days", value: "40%" },
+        { label: "reduction in impulsive trades", value: "65%" },
       ]
     }
   },
   {
     id: "features",
-    title: "Co MindTrader obsahuje",
-    subtitle: "Nástroje na každý den tvé trading journey",
+    title: "What MindTrader includes",
+    subtitle: "Tools for every day of your trading journey",
     features: [
       {
         icon: Calendar,
         title: "Daily Tracker",
-        description: "Každé ráno nastavíš podmínky (max risk, počet tradů, emoční hranice). Když se jich držíš, emoce tě nepřeválcují.",
+        description: "Every morning, set your conditions (max risk, trade count, emotional limits). When you follow them, emotions won't overwhelm you.",
         color: "from-cyan-500 to-blue-500"
       },
       {
         icon: Brain,
         title: "MindTrader AI",
-        description: "AI sleduje tvůj stav v real-time. Když začneš porušovat plán nebo se necháš unést, upozorní tě.",
+        description: "AI monitors your state in real-time. When you start violating your plan or getting swept away, it alerts you.",
         color: "from-purple-500 to-pink-500"
       },
       {
         icon: BarChart3,
         title: "Weekly Review",
-        description: "Každý týden shrnutí: kde jsi chyboval, které emoce tě stály peníze, co změnit příště.",
+        description: "Each week: summary of mistakes, which emotions cost you money, what to change next time.",
         color: "from-orange-500 to-red-500"
       },
       {
         icon: BookOpen,
         title: "Trading Journal",
-        description: "Zaznamenávej trades včetně emocí. AI ti pak ukáže vzorce a co sabotuje tvé výsledky.",
+        description: "Record trades including emotions. AI then shows you patterns and what sabotages your results.",
         color: "from-green-500 to-emerald-500"
       },
       {
         icon: Target,
         title: "Psychology Analytics",
-        description: "Data o tiltu, FOMO, revenge tradingu. Vidíš korelaci mezi psychikou a výsledky.",
+        description: "Data on tilt, FOMO, revenge trading. See the correlation between psychology and results.",
         color: "from-yellow-500 to-amber-500"
       },
       {
         icon: Zap,
-        title: "Gamifikace",
-        description: "XP body, level, achievementy. Mentální trénink jako hra – motivace držet disciplínu dlouhodobě.",
+        title: "Gamification",
+        description: "XP points, levels, achievements. Mental training as a game—stay motivated for long-term discipline.",
         color: "from-indigo-500 to-violet-500"
       }
     ]
   },
   {
     id: "cta",
-    title: "Vyzkoušej si MindTrader teď",
-    subtitle: "Žádná registrace, žádné riziko",
+    title: "Try MindTrader now",
+    subtitle: "No registration, no risk",
     benefits: [
-      "Bez registrace – rovnou do akce",
-      "Bez kreditní karty",
-      "Virtual Mode – testovací data, nic se neukládá",
-      "Všechny funkce dostupné hned",
-      "Když se ti to líbí, přepneš na LIVE za 30 sekund"
+      "No registration – straight into action",
+      "No credit card required",
+      "Demo Mode – test data, nothing is saved",
+      "All features available immediately",
+      "When you like it, switch to LIVE in 30 seconds"
     ]
   }
 ]

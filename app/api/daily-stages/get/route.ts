@@ -39,30 +39,72 @@ export async function GET(request: Request) {
     }
 
     if (!existingStages) {
-      // Demo data for VIRTUAL mode - with stage 5 unlocked
-      if (isVirtualMode) {
-        return NextResponse.json({
-          current_stage: 1,
-          morning_check_completed: true,
-          morning_check_completed_at: new Date(Date.now() - 3600000).toISOString(),
-          daily_intention_completed: true,
-          daily_intention_completed_at: new Date(Date.now() - 2400000).toISOString(),
-          trading_plan_completed: true,
-          trading_plan_completed_at: new Date(Date.now() - 1800000).toISOString(),
-          record_trades_completed: true,
-          record_trades_completed_at: new Date(Date.now() - 600000).toISOString(),
-          daily_summary_completed: false,
-          completedToday: ["morning_check", "daily_intention", "trading_plan", "record_trade"],
-        })
-      }
-
-      return NextResponse.json({
+      // No existing record for today - create a fresh one
+      const freshStages = {
+        user_id: user.id,
+        date: today,
         current_stage: 1,
         morning_check_completed: false,
         daily_intention_completed: false,
         trading_plan_completed: false,
         record_trades_completed: false,
-        completedToday: [],
+        daily_summary_completed: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      // LIVE MODE: Insert fresh record
+      if (!isVirtualMode) {
+        console.log("[v0] [DailyStages] Fresh day in LIVE MODE - creating new record")
+        const { error: upsertError } = await supabase
+          .from("daily_stages")
+          .upsert(freshStages, { onConflict: "user_id,date" })
+        
+        if (upsertError) {
+          console.error("[v0] Error upserting daily stages:", upsertError)
+          // If duplicate already exists, just fetch and return it
+          const { data: existingRecord } = await supabase
+            .from("daily_stages")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("date", today)
+            .maybeSingle()
+          
+          if (existingRecord) {
+            const completedToday = []
+            if (existingRecord.morning_check_completed) completedToday.push("morning_check")
+            if (existingRecord.daily_intention_completed) completedToday.push("daily_intention")
+            if (existingRecord.trading_plan_completed) completedToday.push("trading_plan")
+            if (existingRecord.record_trades_completed) completedToday.push("record_trade")
+            if (existingRecord.daily_summary_completed) completedToday.push("daily_summary")
+            
+            return NextResponse.json({
+              ...existingRecord,
+              completedToday,
+            })
+          }
+        }
+        
+        return NextResponse.json({
+          ...freshStages,
+          completedToday: [],
+        })
+      }
+
+      // VIRTUAL MODE: Return demo data (don't insert)
+      console.log("[v0] [DailyStages] Fresh day in VIRTUAL MODE - returning demo data")
+      return NextResponse.json({
+        current_stage: 1,
+        morning_check_completed: true,
+        morning_check_completed_at: new Date(Date.now() - 3600000).toISOString(),
+        daily_intention_completed: true,
+        daily_intention_completed_at: new Date(Date.now() - 2400000).toISOString(),
+        trading_plan_completed: true,
+        trading_plan_completed_at: new Date(Date.now() - 1800000).toISOString(),
+        record_trades_completed: true,
+        record_trades_completed_at: new Date(Date.now() - 600000).toISOString(),
+        daily_summary_completed: false,
+        completedToday: ["morning_check", "daily_intention", "trading_plan", "record_trade"],
       })
     }
 

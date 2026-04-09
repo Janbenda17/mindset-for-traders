@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import {
   Sun,
   CheckCircle,
+  CheckCircle2,
   BookOpen,
   Moon,
   Target,
@@ -37,10 +38,11 @@ import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useTradingStyle } from "@/contexts/trading-style-context"
 import { generateVirtualDailyTrackerData } from "@/data/demo-daily-tracker"
 import { useAuth } from "@/contexts/auth-context"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useLiveMode } from "@/contexts/live-mode-context"
 import { useData } from "@/contexts/data-context"
 import { supabase } from "@/lib/supabase/browser"
+import { useLanguage } from "@/contexts/language-context"
 
 interface MorningCheckData {
   id: string
@@ -104,55 +106,6 @@ interface DailySummary {
   stagesCompleted: number
 }
 
-// Define stageData here
-const stageData = [
-  {
-    id: 1,
-    name: "1",
-    icon: Sun,
-    href: "/morning-check",
-    color: "from-orange-500 to-rose-500",
-    bgColor: "bg-gradient-to-br from-orange-500/20 to-rose-500/20",
-    borderColor: "border-orange-500/30",
-  },
-  {
-    id: 2,
-    name: "2",
-    icon: Target,
-    href: "/daily-intention",
-    color: "from-yellow-500 to-amber-500",
-    bgColor: "bg-gradient-to-br from-yellow-500/20 to-amber-500/20",
-    borderColor: "border-yellow-500/30",
-  },
-  {
-    id: 3,
-    name: "3",
-    icon: BookOpen,
-    href: "/trading-plan",
-    color: "from-cyan-500 to-teal-500",
-    bgColor: "bg-gradient-to-br from-cyan-500/20 to-teal-500/20",
-    borderColor: "border-cyan-500/30",
-  },
-  {
-    id: 4,
-    name: "4",
-    icon: Clock,
-    href: "/record-trades",
-    color: "from-blue-500 to-indigo-500",
-    bgColor: "bg-gradient-to-br from-blue-500/20 to-indigo-500/20",
-    borderColor: "border-blue-500/30",
-  },
-  {
-    id: 5,
-    name: "5",
-    icon: Shield,
-    href: "/daily-summary",
-    color: "from-green-500 to-emerald-500",
-    bgColor: "bg-gradient-to-br from-green-500/20 to-emerald-500/20",
-    borderColor: "border-green-500/30",
-  },
-]
-
 export default function DailyTrackerPage() {
   const { isLiveMode, isLoading: modeLoading } = useLiveMode()
   // FIX: Moved supabase initialization here to resolve "use before declaration" error.
@@ -165,6 +118,57 @@ export default function DailyTrackerPage() {
 
   const { tradingStyle, config } = useTradingStyle()
   const { user, authReady } = useAuth()
+  const { language } = useLanguage()
+  const isEn = language === "en"
+
+  // Define stageData here inside component so it has access to isEn
+  const stageData = [
+    {
+      id: 1,
+      name: isEn ? "Morning Routine" : "Ranní rutina",
+      icon: Sun,
+      href: "/morning-check",
+      color: "from-orange-500 to-rose-500",
+      bgColor: "bg-gradient-to-br from-orange-500/20 to-rose-500/20",
+      borderColor: "border-orange-500/30",
+    },
+    {
+      id: 2,
+      name: isEn ? "Daily Intention" : "Denní záměr",
+      icon: Target,
+      href: "/daily-intention",
+      color: "from-yellow-500 to-amber-500",
+      bgColor: "bg-gradient-to-br from-yellow-500/20 to-amber-500/20",
+      borderColor: "border-yellow-500/30",
+    },
+    {
+      id: 3,
+      name: isEn ? "Trading Plan" : "Obchodní plán",
+      icon: BookOpen,
+      href: "/trading-plan",
+      color: "from-cyan-500 to-teal-500",
+      bgColor: "bg-gradient-to-br from-cyan-500/20 to-teal-500/20",
+      borderColor: "border-cyan-500/30",
+    },
+    {
+      id: 4,
+      name: isEn ? "Record Trades" : "Zaznamenat obchody",
+      icon: Clock,
+      href: "/record-trades",
+      color: "from-blue-500 to-indigo-500",
+      bgColor: "bg-gradient-to-br from-blue-500/20 to-indigo-500/20",
+      borderColor: "border-blue-500/30",
+    },
+    {
+      id: 5,
+      name: isEn ? "Daily Summary" : "Denní shrnutí",
+      icon: Shield,
+      href: "/daily-summary",
+      color: "from-green-500 to-emerald-500",
+      bgColor: "bg-gradient-to-br from-green-500/20 to-emerald-500/20",
+      borderColor: "border-green-500/30",
+    },
+  ]
 
   const [entries, setEntries] = useState<DailySummary[]>([])
   const [activeTab, setActiveTab] = useState("today")
@@ -293,23 +297,70 @@ export default function DailyTrackerPage() {
       const combinedData: DailySummary[] = []
       const allDates = new Set<string>()
 
+      console.log(`[v0] [DailyTracker] LIVE: morningChecks=${morningChecks.length}, trades=${trades.length}, intentions=${dailyIntentions?.length}, plans=${tradingPlans?.length}`)
+
       morningChecks.forEach((m: any) => allDates.add(m.date))
-      trades.forEach((t: any) => allDates.add(t.date))
+      trades.forEach((t: any) => {
+        console.log("[v0] [DailyTracker] Adding trade to dates set:", t.date, t.pair)
+        allDates.add(t.date)
+      })
       dailyIntentions?.forEach((i: any) => allDates.add(i.date))
       tradingPlans?.forEach((p: any) => allDates.add(p.date))
 
+      // In LIVE MODE, fetch daily_stages records to get accurate stage completion data
+      let stagesRecords: any[] = []
+      if (isLiveMode && user?.id) {
+        try {
+          const { data } = await supabase
+            .from("daily_stages")
+            .select("*")
+            .eq("user_id", user.id)
+          stagesRecords = data || []
+          console.log("[v0] [DailyTracker] Loaded daily_stages records:", stagesRecords.length)
+        } catch (err) {
+          console.error("[v0] [DailyTracker] Error loading daily_stages:", err)
+        }
+      }
+
       allDates.forEach((date) => {
         const morningCheck = morningChecks.find((m: any) => m.date === date)
-        const dayTrades = trades.filter((t: any) => t.date === date)
-        const intention = dailyIntentions?.find((i: any) => i.date === date)
-        const plan = tradingPlans?.find((p: any) => p.date === date)
+      const dayTrades = trades.filter((t: any) => t.date === date)
+      const intention = dailyIntentions && dailyIntentions.length > 0 ? dailyIntentions.find((i: any) => i.date === date) : undefined
+      const plan = tradingPlans && tradingPlans.length > 0 ? tradingPlans.find((p: any) => p.date === date) : undefined
+        
+        // Match stages by date - normalize date format to YYYY-MM-DD
+        const stagesRecord = stagesRecords.find((sr: any) => {
+          const stageDate = sr.date ? sr.date.split('T')[0] : sr.date
+          return stageDate === date
+        })
+        
+        if (stagesRecord) {
+          console.log("[v0] [DailyTracker] Found stagesRecord for date:", date, "completed:", {
+            morning: stagesRecord.morning_check_completed,
+            intention: stagesRecord.daily_intention_completed,
+            plan: stagesRecord.trading_plan_completed,
+            trades: stagesRecord.record_trades_completed,
+            summary: stagesRecord.daily_summary_completed
+          })
+        }
 
-        if (morningCheck || intention || plan || dayTrades.length > 0) {
+        if (morningCheck || intention || plan || dayTrades.length > 0 || stagesRecord) {
           let stagesCompleted = 0
-          if (morningCheck) stagesCompleted++
-          if (intention) stagesCompleted++
-          if (plan) stagesCompleted++
-          if (dayTrades.length > 0) stagesCompleted++
+          
+          // ALWAYS use stagesRecord if available - this is the source of truth from daily_stages table
+          if (stagesRecord) {
+            if (stagesRecord.morning_check_completed) stagesCompleted++
+            if (stagesRecord.daily_intention_completed) stagesCompleted++
+            if (stagesRecord.trading_plan_completed) stagesCompleted++
+            if (stagesRecord.record_trades_completed) stagesCompleted++
+            if (stagesRecord.daily_summary_completed) stagesCompleted++
+          } else {
+            // Fallback: count based on available data (when stagesRecord doesn't exist)
+            if (morningCheck) stagesCompleted++
+            if (intention) stagesCompleted++
+            if (plan) stagesCompleted++
+            if (dayTrades.length > 0) stagesCompleted++
+          }
 
           combinedData.push({
             date,
@@ -323,7 +374,18 @@ export default function DailyTrackerPage() {
         }
       })
 
+      // Sort entries by date descending
       combinedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      
+      console.log(`[v0] [DailyTracker] Combined entries:`, combinedData.map(e => ({
+        date: e.date,
+        hasM: !!e.morningCheck,
+        hasI: !!e.intention,
+        hasP: !!e.plan,
+        trades: e.trades.length,
+        stagesCompleted: e.stagesCompleted
+      })))
+      
       setEntries(combinedData)
       console.log(`[v0] [DailyTracker] LIVE: Loaded ${combinedData.length} entries`)
     } catch (error) {
@@ -355,13 +417,32 @@ export default function DailyTrackerPage() {
         <div className="flex flex-col items-center gap-4">
           <AlertTriangle className="h-8 w-8 text-yellow-500" />
           <p className="text-muted-foreground">Pro LIVE mód se prosím přihlaste</p>
-          <Button onClick={() => router.push("/auth/login")}>Přihlásit se</Button>
+                  <Button onClick={() => router.push("/auth/login")}>Přihlásit se</Button>
         </div>
       </div>
     )
   }
 
-  const todayEntry = entries.find((e) => e.date === format(new Date(), "yyyy-MM-dd")) || entries[0]
+  // Compute todayEntry dynamically from fresh data sources
+  const today = format(new Date(), "yyyy-MM-dd")
+  const todayMorningCheck = morningChecks.find((m: any) => m.date === today)
+  const todayTrades = trades.filter((t: any) => t.date === today)
+  const todayIntention = dailyIntentions?.find((i: any) => i.date === today)
+  const todayPlan = tradingPlans?.find((p: any) => p.date === today)
+
+  // Build todayEntry from fresh data (stagesCompleted will be set after todayStages is computed)
+  let todayEntry: any = {
+    date: today,
+    morningCheck: todayMorningCheck,
+    intention: todayIntention,
+    plan: todayPlan,
+    trades: todayTrades,
+    overallScore: todayMorningCheck?.score || null,
+    stagesCompleted: 0, // Will be updated below
+  }
+
+  // For history entries - include ALL dates including today, not just past days
+  const historyEntries = entries
 
   const readinessScore = todayEntry?.overallScore ?? null
 
@@ -385,62 +466,83 @@ export default function DailyTrackerPage() {
     const currentReadinessScore = score ?? todayEntry?.overallScore ?? null
 
     if (!currentMorningCheck || currentReadinessScore === undefined || currentReadinessScore === null) {
-      return "Vyplň Ranní Kontrolu pro získání detailní AI analýzy tvého psychologického stavu a připravenosti k obchodování."
+      return isEn
+        ? "Complete Morning Routine for detailed AI analysis of your psychological state and trading readiness."
+        : "Dokončete Ranní rutinu pro detailní AI analýzu vašeho psychického stavu a připravenosti k obchodování."
     }
 
     let insight = ""
     
-    // Analyze key metrics
     const sleep = currentMorningCheck.sleepQuality
+    const sleepHours = currentMorningCheck.sleepHours || 0
     const stress = currentMorningCheck.stressLevel
     const focus = currentMorningCheck.focus
     const energy = currentMorningCheck.energyLevel
     const mood = currentMorningCheck.emotionalState
+    const physical = currentMorningCheck.physicalHealth || 5
     const readiness = currentReadinessScore
     
-    // Generate detailed, personalized insight
+    const emotionalResilience = (mood + energy) / 2
+    const cognitiveCapacity = (focus + sleep) / 2
+    const stressBuffer = Math.max(0, 10 - stress)
+    
     if (readiness >= 80) {
-      insight = `🟢 IDEÁLNÍ PODMÍNKY PRO TRADING! Připravenost ${readiness}%. `
-      if (focus >= 8) {
-        insight += `Tvůj focus je EXCELENTNÍ (${focus}/10) - to je rarní kombinace s vysokou připraveností. Tvůj prefrontální kůra (logické centrum) je nyní dominantní. `
+      insight = isEn
+        ? `🟢 PEAK PERFORMANCE! Readiness ${readiness}%. `
+        : `🟢 VRCHOLNÝ VÝKON! Připravenost ${readiness}%. `
+      if (focus >= 8 && stress <= 3) {
+        insight += isEn
+          ? `Rare combination: high focus (${focus}/10) + low stress (${stress}/10) = IDEAL conditions for complex decision-making. `
+          : `Vzácná kombinace: vysoké soustředění (${focus}/10) + nízký stres (${stress}/10) = IDEÁLNÍ podmínky pro složité rozhodování. `
       }
-      if (stress <= 3) {
-        insight += `Stres ${stress}/10 znamená, že tvůj amygdala není aktivovaná - ideální pro racionální obchodování bez emocí. `
+      if (emotionalResilience >= 8) {
+        insight += isEn
+          ? `Emotional resilience (${Math.round(emotionalResilience)}/10) means you won't act irrationally after a loss. `
+          : `Emocionální odolnost (${Math.round(emotionalResilience)}/10) znamená, že nebudeš jednat iracionálně po ztrátě. `
       }
-      if (energy >= 8) {
-        insight += `Energie ${energy}/10 ti dá sílu na delší session bez zahubení kvality rozhodnutí. `
-      }
-      insight += `DOPORUČENÍ: Toto je okno "flow state" - traduj A+ setupy s plnou sebedůvěrou. Pozor: Vysoká sebedůvěra může vést k overconfidence - drž se plánu ještě důsledněji.`
+      insight += isEn
+        ? `🎯 TRADING STRATEGY: Target A+ and B+ patterns. CAUTION: High confidence can lead to overconfidence.`
+        : `🎯 STRATEGIE: Cíl na A+ a B+ vzory. POZOR: Vysoké sebevědomí může vést k přílišné sebedůvěře.`
     } else if (readiness >= 70) {
-      insight = `🟡 DOBRÉ PODMÍNKY, ALE S VÝHRADAMI. Připravenost ${readiness}%. `
-      if (stress >= 7) {
-        insight += `UPOZORNĚNÍ: Stres ${stress}/10 je zvýšený. Tvůj amygdala je hyperaktivní - snižuje to kvalitu výkonného funčování o ~25%. `
+      insight = isEn
+        ? `🟡 GOOD DAY, BUT NOT IDEAL. Readiness ${readiness}%. `
+        : `🟡 DOBRÝ DEN, ALE NE IDEÁLNÍ. Připravenost ${readiness}%. `
+      if (stress >= 6 && focus <= 6) {
+        insight += isEn
+          ? `Elevated stress (${stress}/10) and poor focus (${focus}/10) means error risk is ~30% higher. `
+          : `Zvýšený stres (${stress}/10) a slabé soustředění (${focus}/10) zvyšuje riziko chyb o ~30%. `
+      } else if (sleep < 6) {
+        insight += isEn
+          ? `Sleep was insufficient (${sleepHours}h, score ${sleep}/10) - your neurochemicals aren't fully prepared. `
+          : `Spánek byl nedostatečný (${sleepHours}h, skóre ${sleep}/10) - neurochemikálie pro rozhodování nejsou plně připraveny. `
       }
-      if (focus < 6) {
-        insight += `Focus je slabý (${focus}/10) - znamená to zvýšené riziko vynechávání signálů. Zkus Pomodoro (25min focus, 5min pauza). `
-      }
-      if (sleep < 6) {
-        insight += `Spánek ${sleep}/10 je nedostatečný - tvé rozhodovací schopnosti jsou oslabené. Zvažte kratší session. `
-      }
-      insight += `STRATEGIE: Traduj pouze setup s vyšší probability - přeskoč setups na hraně tebou definovaného plánu.`
+      insight += isEn
+        ? `💡 TACTIC: Trade only high-probability patterns. Consider 50-75% of normal position size.`
+        : `💡 TAKTIKA: Obchoduj jen vzory s vysokou pravděpodobností. Zvažte 50-75% normální velikosti pozice.`
     } else if (readiness >= 60) {
-      insight = `🟠 OPATRNOST DOPORUČENA. Připravenost pouze ${readiness}%. `
-      if (stress >= 8) {
-        insight += `Vysoký stres (${stress}/10) + nízká připravenost = vysoké riziko revenge tradingu. Tvůj risk management bude nejenom teoretický, ale KRITICKÝ. `
+      insight = isEn
+        ? `🟠 SERIOUS WARNING. Readiness only ${readiness}%. `
+        : `🟠 VÁŽNÉ VAROVÁNÍ. Připravenost pouze ${readiness}%. `
+      if (stress >= 7) {
+        insight += isEn
+          ? `CRITICAL: Stress (${stress}/10) is high - leads to revenge trading risk. `
+          : `KRITICKY: Stres (${stress}/10) je vysoký - hrozí revenge trading. `
       }
-      if (mood < 5) {
-        insight += `Negativní nálada (${mood}/10) koreluje s 40% zvýšením chybovosti. Tvůj tolerance k riziku je psychologicky deformovaná. `
-      }
-      insight += `DOPORUČENÍ: Zvažte krátkou session nebo paper trading pro procvičení bez rizika. Pokud tradujete: Poloviční pozice, x2 risk management controls.`
+      insight += isEn
+        ? `⚠️ RECOMMENDATION: Paper trading or demo. If you MUST trade: one-third position size.`
+        : `⚠️ DOPORUČENÍ: Paper trading nebo demo. Pokud MUSÍŠ obchodovat: třetina normální pozice.`
     } else {
-      insight = `🛑 NEOBCHODUJ DNES. Připravenost ${readiness}% je pod bezpečným prahem. `
-      if (stress >= 8) {
-        insight += `Stres ${stress}/10 + nízká energia = toxická kombinace pro trading. Tvůj mozek je teď zaměřený na survival, ne na logiku. `
+      insight = isEn
+        ? `🛑 TRADING TODAY IS NOT SUITABLE. Readiness ${readiness}% is critically low. `
+        : `🛑 DNES NENÍ VHODNÉ OBCHODOVAT. Připravenost ${readiness}% je kriticky nízká. `
+      if (stress >= 8 && energy <= 3) {
+        insight += isEn
+          ? `Maximum stress (${stress}/10) and minimum energy (${energy}/10) = brain in survival mode. `
+          : `Maximální stres (${stress}/10) a minimální energie (${energy}/10) = mozek v survival módu. `
       }
-      if (mood <= 3) {
-        insight += `Depresivní nálada (${mood}/10) znamená, že tvá loss aversion bude iracionální - budete držet ztráty příliš dlouho. `
-      }
-      insight += `Doporučuji: Dnes se věnuj sebepéči - projdi se, medituj, odpočívej. Vrať se k tradingu zítra. Psychologická příprava > trading session bez přípravy.`
+      insight += isEn
+        ? `💚 ACTION: Self-care is more important than trading now. 30min walk, healthy meal, meditation.`
+        : `💚 AKCE: Péče o sebe je teď důležitější než trading. 30min procházka, zdravé jídlo, meditace.`
     }
     
     return insight
@@ -450,9 +552,9 @@ export default function DailyTrackerPage() {
   const generateTradingDecision = (morningCheckData?: any, score?: number | null) => {
     if (!morningCheckData || score === undefined || score === null) {
       return {
-        message: "Vyplň Ranní Kontrolu pro získání AI analýzy.",
-        tips: ["Začni s Ranní Kontrolou"],
-        details: ["Ranní Kontrola nevyplněna"],
+        message: isEn ? "Complete Morning Routine for AI analysis." : "Dokončete Ranní rutinu pro AI analýzu.",
+        tips: [isEn ? "Start with Morning Routine" : "Začněte s Ranní rutinou"],
+        details: [isEn ? "Morning Routine Not Completed" : "Ranní rutina nedokončena"],
       }
     }
 
@@ -469,70 +571,90 @@ export default function DailyTrackerPage() {
     const highFocus = morningCheckData.focus >= 8
     const lowStressMetric = morningCheckData.stressLevel <= 3
     const highEnergy = morningCheckData.energyLevel >= 8
+    
+    const physicalHealth = morningCheckData.physicalHealth || 5
+    const exercised = morningCheckData.exercised || false
+    const meditatedToday = morningCheckData.meditationTime > 0 || false
 
     let positiveNote = ""
-    if (highFocus) positiveNote = "Tvůj focus je ale výborný!"
-    else if (lowStressMetric) positiveNote = "Alespoň máš nízký stres."
-    else if (highEnergy) positiveNote = "Tvá energie je na vysoké úrovni."
+    if (highFocus) positiveNote = isEn ? "✓ Focus is excellent - that's your greatest strength!" : "✓ Soustředění je vynikající - to je tvá největší síla!"
+    else if (lowStressMetric) positiveNote = isEn ? "✓ At least you have low stress - your mind is at peace." : "✓ Aspoň máš nízký stres - tvá mysl je v klidu."
+    else if (highEnergy) positiveNote = isEn ? "✓ Energy at high levels - physically you're ready." : "✓ Energie na vysoké úrovni - fyzicky jsi připraven/a."
+    else if (meditatedToday) positiveNote = isEn ? "✓ You meditated today - this will help with emotional control." : "✓ Dnes jsi meditoval/a - to pomůže s emoční kontrolou."
+    else if (exercised) positiveNote = isEn ? "✓ Exercise today = better brain function and self-control." : "✓ Cvičení dnes = lepší funkce mozku a sebeovládání."
 
     if (poorSleep) {
-      message = `Naspal jsi jen ${morningCheckData.sleepHours}h (kvalita ${morningCheckData.sleepQuality}/10). Nedostatek spánku snižuje rozhodování o 30-40%.`
+      message = isEn
+        ? `⚠️ CRITICAL: Only ${morningCheckData.sleepHours}h sleep (quality ${morningCheckData.sleepQuality}/10). Sleep deprivation = -30-40% in decision-making ability.`
+        : `⚠️ KRITICKÝ: Pouze ${morningCheckData.sleepHours}h spánku (kvalita ${morningCheckData.sleepQuality}/10). Nedostatek spánku = -30-40% ve schopnosti rozhodování.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Spánek: ${morningCheckData.sleepHours}h, kvalita ${morningCheckData.sleepQuality}/10`)
-      tips.push("Dej si 10-15min meditaci před tradingem")
-      tips.push("Zvaž vynechání tradingu nebo max 1-2 trades s polovičním riskem")
-      tips.push("Dnes večer jdi spát o 1-2 hodiny dříve")
+      details.push(isEn ? `Sleep: ${morningCheckData.sleepHours}h, quality ${morningCheckData.sleepQuality}/10 - INSUFFICIENT` : `Spánek: ${morningCheckData.sleepHours}h, kvalita ${morningCheckData.sleepQuality}/10 - NEDOSTATEČNÝ`)
+      tips.push(isEn ? "🧘 Therapy: 15-20min meditation or relaxation" : "🧘 Terapie: 15-20min meditace nebo relaxace")
+      tips.push(isEn ? "📊 Risk: Max 2 trades at 25% position or SKIP trading today" : "📊 Riziko: Max 2 obchody na 25% pozici nebo VYNECHEJ obchodování dnes")
+      tips.push(isEn ? "⏰ Priority: Evening sleep = best investment for tomorrow" : "⏰ Priorita: Večerní spánek = nejlepší investice pro zítřek")
     } else if (highStress) {
-      message = `Vysoká úroveň stresu (${morningCheckData.stressLevel}/10) zvyšuje riziko impulzivních vstupů.`
+      message = isEn
+        ? `🔥 WARNING: Stress ${morningCheckData.stressLevel}/10 is high. Active amygdala = impulsive decisions, revenge trading risk.`
+        : `🔥 VAROVÁNÍ: Stres ${morningCheckData.stressLevel}/10 je vysoký. Aktivní amygdala = impulzivní rozhodnutí, riziko revenge tradingu.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Stres: ${morningCheckData.stressLevel}/10`)
-      tips.push("Udělej 15-20min deep breathing před tradingem")
-      tips.push("Zvaž redukci velikosti pozic na 30-50%")
-      tips.push("Dělej častější pauzy - každých 30 minut")
+      details.push(isEn ? `Stress: ${morningCheckData.stressLevel}/10 - ELEVATED` : `Stres: ${morningCheckData.stressLevel}/10 - ZVÝŠENÝ`)
+      tips.push(isEn ? "🧘‍♀️ Therapy: 20min progressive relaxation or cold shower" : "🧘‍♀️ Terapie: 20min progresivní relaxace nebo studená sprcha")
+      tips.push(isEn ? "📉 Risk Management: -50% position size, double-check every entry" : "📉 Řízení rizik: -50% velikost pozice, dvojitá kontrola každého vstupu")
+      tips.push(isEn ? "⏸️ Breaks: Every 30min take a 5-10min break" : "⏸️ Přestávky: Každých 30min si dej 5-10min pauzu")
     } else if (lowFocus) {
-      message = `Nízký focus (${morningCheckData.focus}/10) zvyšuje riziko špatných vstupů o 40%.`
+      message = isEn
+        ? `😴 PROBLEM: Focus only ${morningCheckData.focus}/10 means high risk of missing signals and false entries (+40% errors).`
+        : `😴 PROBLÉM: Soustředění pouze ${morningCheckData.focus}/10 znamená vysoké riziko přehlédnutí signálů a falešných vstupů (+40% chyb).`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Focus: ${morningCheckData.focus}/10`)
-      tips.push("Běž se na 15-20min projít venku před tradingem")
-      tips.push("Zavři všechny nepotřebné aplikace")
-      tips.push("Dělej Pomodoro - 25min focus, 5min pauza")
+      details.push(isEn ? `Focus: ${morningCheckData.focus}/10 - LOW` : `Soustředění: ${morningCheckData.focus}/10 - NÍZKÉ`)
+      tips.push(isEn ? "🚀 Root solution: 15-20min outdoors in nature (sunlight resets attention)" : "🚀 Kořenové řešení: 15-20min venku v přírodě (sluneční světlo resetuje pozornost)")
+      tips.push(isEn ? "🎯 Optimization: Simple setup - only 1-2 pairs, 1 timeframe, 1 strategy" : "🎯 Optimalizace: Jednoduchý setup - pouze 1-2 páry, 1 časový rámec, 1 strategie")
     } else if (lowEnergy) {
-      message = `Nízká energie (${morningCheckData.energyLevel}/10) může vést k únavě a horším rozhodnutím.`
+      message = isEn
+        ? `🔋 LOW ENERGY: ${morningCheckData.energyLevel}/10 energy. Afternoon fatigue = worse decisions.`
+        : `🔋 NÍZKÁ ENERGIE: ${morningCheckData.energyLevel}/10 energie. Odpolední únava = horší rozhodnutí.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Energie: ${morningCheckData.energyLevel}/10`)
-      tips.push("Dej si zdravou snídani s proteiny")
-      tips.push("Tkus 10-15min lehkého cvičení")
-      tips.push("Zvaž kratší trading session - max 2-3 hodiny")
+      details.push(isEn ? `Energy: ${morningCheckData.energyLevel}/10 - LOW` : `Energie: ${morningCheckData.energyLevel}/10 - NÍZKÁ`)
+      tips.push(isEn ? "🍗 Nutrition: Proteins + complex carbs = steady energy without crash" : "🍗 Výživa: Bílkoviny + komplexní sacharidy = stabilní energie bez propadu")
+      tips.push(isEn ? "💪 Activity: 10-15min light exercise or yoga = serotonin boost" : "💪 Aktivita: 10-15min lehké cvičení nebo yoga = boost serotoninu")
+      tips.push(isEn ? "⏱️ Timing: Trade only 9-12 (peak hours)" : "⏱️ Načasování: Obchoduj pouze 9-12 (špičkové hodiny)")
     } else if (badMood) {
-      message = `Emoční stav není ideální (${morningCheckData.emotionalState}/10). Riziko revenge tradingu.`
+      message = isEn
+        ? `😔 EMOTION PROBLEM: Mood ${morningCheckData.emotionalState}/10. Risk: Loss aversion bias, holding losing positions, revenge trading.`
+        : `😔 EMOČNÍ PROBLÉM: Nálada ${morningCheckData.emotionalState}/10. Riziko: Averze ke ztrátám, držení ztrátových pozic, revenge trading.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Emoční stav: ${morningCheckData.emotionalState}/10`)
-      tips.push("Vezmi si pauzu, udělej něco co tě uklidní")
-      tips.push("Zvaž vynechání tradingu dnes")
-      tips.push("Zapiš si své emoce do journalu")
+      details.push(isEn ? `Emotional state: ${morningCheckData.emotionalState}/10 - NEGATIVE` : `Emoční stav: ${morningCheckData.emotionalState}/10 - NEGATIVNÍ`)
+      tips.push(isEn ? "🎭 Psychology: Write down WHY you're sad" : "🎭 Psychologie: Zapiš si PROČ jsi smutný/á")
+      tips.push(isEn ? "🚫 Safety: SKIP trading today, or only demo/paper trading" : "🚫 Bezpečnost: VYNECHEJ obchodování dnes, nebo jen demo/paper trading")
+      tips.push(isEn ? "💝 Self-care: 20min something you enjoy" : "💝 Péče o sebe: 20min něco co tě baví")
     } else if (goodConditions) {
-      message = `Výborné podmínky! Připravenost ${score}%! Jsi připravený na obchodování.`
+      message = isEn
+        ? `✅ IDEAL DAY! Score ${score}% = GREEN LIGHT. Psychologically and physically optimally prepared.`
+        : `✅ IDEÁLNÍ DEN! Skóre ${score}% = ZELENÁ ZNAMENÍ. Psychologicky i fyzicky jsi optimálně připravený.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Všechny metriky v optimálním rozsahu`)
-      tips.push("Drž se svého trading plánu")
-      tips.push("Sleduj své emoce během tradingu")
-      tips.push("Dělej pravidelné pauzy každou hodinu")
+      details.push(isEn ? `All metrics in OPTIMAL range - rare window!` : `Všechny metriky v OPTIMÁLNÍM rozsahu - vzácné okno!`)
+      tips.push(isEn ? "🎯 Strategy: Trade A+ and B+ patterns with FULL discipline" : "🎯 Strategie: Obchoduj A+ a B+ vzory s PLNOU disciplínou")
+      tips.push(isEn ? "⚡ Mindset: Beware of overconfidence - wins can lead to recklessness" : "⚡ Mindset: Buď pozorný na přílišnou sebedůvěru - vítězství mohou vést k riskanci")
+      tips.push(isEn ? "⏱️ Session: 3-4 hours trading, then break for refresh" : "⏱️ Sezení: 3-4 hodiny obchodování, pak přestávka pro osvěžení")
+      tips.push(isEn ? "📊 Record: Detailed notes on each trade - learn in the heat of the moment!" : "📊 Záznam: Podrobné poznámky na každém obchodu - učit se v horku situace!")
     } else {
-      message = `Připravenost ${score}% je pod hranicí 70%. Zvaž snížení risku.`
+      message = isEn
+        ? `⚠️ MIXED DAY: Score ${score}% is below normal. Consider risk management adjustments.`
+        : `⚠️ SMÍŠENÝ DEN: Skóre ${score}% je pod normálem. Zvažte úpravy řízení rizika.`
       if (positiveNote) message += ` ${positiveNote}`
-      details.push(`Připravenost: ${score}%`)
-      tips.push("Prioritou je tvé zdraví a dlouhodobý úspěch")
-      tips.push("Dnes je lepší den na odpočinek nebo vzdělávání")
+      details.push(isEn ? `Readiness: ${score}% - BORDERLINE` : `Připravenost: ${score}% - HRANIČÍ`)
+      tips.push(isEn ? "🎚️ Settings: 50-75% normal position, tighter stop loss" : "🎚️ Nastavení: 50-75% normální pozice, těsnější zastavovací ztráta")
+      tips.push(isEn ? "🧩 Strategy: Only highest probability patterns, skip marginal" : "🧩 Strategie: Jen nejvyšší pravděpodobnostní vzory, přeskočit marginální")
+      tips.push(isEn ? "📚 Alternative: Education day - review backtests, trading plan" : "📚 Alternativa: Vzdělávací den - kontrola backtestů, obchodní plán")
     }
 
-    // Add positive detail if available and not already the main focus
-    if (highFocus && !lowFocus) details.push("Soustředění: Excelentní (Silná stránka)")
-    else if (lowStressMetric && !highStress) details.push("Stres: Minimální (Výhoda)")
-    else if (highEnergy && !lowEnergy) details.push("Energie: Vysoká (Síla)")
+    if (highFocus && !lowFocus) details.push(isEn ? "✓ Focus: EXCELLENT (Strength)" : "✓ Soustředění: VYNIKAJÍCÍ (Silná stránka)")
+    else if (lowStressMetric && !highStress) details.push(isEn ? "✓ Stress: MINIMAL (Psychological advantage)" : "✓ Stres: MINIMÁLNÍ (Psychická výhoda)")
+    else if (highEnergy && !lowEnergy) details.push(isEn ? "✓ Energy: HIGH (Physical strength)" : "✓ Energie: VYSOKÁ (Fyzická síla)")
+    if (exercised) details.push(isEn ? "✓ Exercise: You exercised today (+personal discipline)" : "✓ Cvičení: Dnes jsi cvičil/a (+ osobní disciplína)")
 
     return { message, tips, details }
   }
-
   const tradingDecision = generateTradingDecision(
     isLiveMode ? todayEntry?.morningCheck : virtualData?.[0]?.morningCheck,
     readinessScore,
@@ -617,7 +739,11 @@ export default function DailyTrackerPage() {
     unlocked: !isLiveMode ? true : stage.unlocked,
   }))
 
-  const isMorningCheckCompleted = todayStages.find((s) => s.id === 1)?.completed || false
+  // Update todayEntry with actual stagesCompleted count
+  todayEntry.stagesCompleted = todayStages.filter((s) => s.completed).length
+
+  // Check if morning check is actually completed - use REAL data, not UI state
+  const isMorningCheckCompleted = (isLiveMode && todayMorningCheck) ? true : (todayStages.find((s) => s.id === 1)?.completed || false)
 
   // Update handleStageComplete to save to Supabase in LIVE mode
   const handleStageComplete = async (stageNum: number, data: Record<string, unknown>) => {
@@ -783,7 +909,7 @@ export default function DailyTrackerPage() {
         <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-3 px-4 flex items-center gap-3 mb-6">
           <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
           <span className="text-xs sm:text-sm text-amber-100">
-            <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+                  <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
           </span>
         </div>
       )}
@@ -803,8 +929,7 @@ export default function DailyTrackerPage() {
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-500 rounded-xl md:text-base text-sm font-bold"
           >
             <CalendarIcon className="md:h-5 md:w-5 h-4 w-4 mr-2" />
-            Historie
-          </TabsTrigger>
+            Historie          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="today" className="space-y-6 md:space-y-8">
@@ -826,14 +951,14 @@ export default function DailyTrackerPage() {
                                 Readiness
                               </CardTitle>
                               <CardDescription className="md:text-xl text-sm mt-1 md:block hidden">
-                                Tvá připravenost na dnešní den
+                                Your readiness for today
                               </CardDescription>
                             </div>
                           </div>
                         </div>
                         <div className="text-center">
                           <div className={cn("md:text-8xl text-6xl font-black", getReadinessColor(readinessScore))}>
-                            {readinessScore !== null ? `${readinessScore}%` : "Nevyplněno"}
+                            {readinessScore !== null ? `${readinessScore}%` : "Not Completed"}
                           </div>
                           <Badge
                             className={cn(
@@ -859,7 +984,7 @@ export default function DailyTrackerPage() {
                           <Progress value={readinessScore ?? 0} className="h-3" />
                         </div>
 
-                        <div className="grid md:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
                           <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                             <div className="flex items-center gap-2 mb-2">
                               <Moon className="h-4 w-4 text-indigo-400" />
@@ -891,7 +1016,7 @@ export default function DailyTrackerPage() {
                           <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                             <div className="flex items-center gap-2 mb-2">
                               <AlertTriangle className="h-4 w-4 text-red-400" />
-                              <span className="text-xs text-muted-foreground">Stres</span>
+                              <span className="text-xs text-muted-foreground">Stress</span>
                             </div>
                             <div className="text-xl font-black text-white">
                               {todayEntry.morningCheck?.stressLevel}/10
@@ -918,9 +1043,12 @@ export default function DailyTrackerPage() {
                 <div className="flex items-start gap-4">
                   <Lightbulb className="h-6 w-6 text-cyan-400 flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-2">AI Trading Insights</h3>
+                    <h3 className="text-lg font-bold text-white mb-2">Tvůj Trading Status Dnes</h3>
                     <p className="text-gray-300 leading-relaxed">
                       {generateAIInsights(todayEntry?.morningCheck, readinessScore)}
+                    </p>
+                    <p className="text-gray-400 text-sm mt-3 leading-relaxed">
+                      Tvá příprava určuje kvalitu rozhodnutí. AI analyzuje tvůj psychologický stav a doporučuje optimální trading okna nebo kdy si odpočinout.
                     </p>
                   </div>
                 </div>
@@ -939,11 +1067,11 @@ export default function DailyTrackerPage() {
                       <CardTitle className="flex items-center gap-2 text-3xl">
                         <Brain className="h-8 w-8 text-purple-400" />
                         <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                          AI Trading Insights
+                          Detailní Trading Analýza
                         </span>
                       </CardTitle>
                       <CardDescription className="text-lg mt-2">
-                        Detailní analýza a personalizovaný feedback
+                        Personalized recommendations based on your psychological state and trading history
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -954,11 +1082,11 @@ export default function DailyTrackerPage() {
                         </div>
 
                         {tradingDecision.details.length > 0 &&
-                          tradingDecision.details[0] !== "Morning Check nevyplněn" && (
+                          tradingDecision.details[0] !== "Morning Routine Not Completed" && (
                             <div className="space-y-2">
                               <div className="flex items-center gap-2 mb-3">
                                 <Activity className="h-5 w-5 text-cyan-400" />
-                                <h3 className="text-lg font-bold text-white">Detailní Analýza:</h3>
+                                <h3 className="text-lg font-bold text-white">Detailed Analysis:</h3>
                               </div>
                               <div className="space-y-2">
                                 {tradingDecision.details.map((detail, i) => (
@@ -977,7 +1105,7 @@ export default function DailyTrackerPage() {
                         <div className="space-y-3">
                           <div className="flex items-center gap-2 mb-4">
                             <Lightbulb className="h-5 w-5 text-yellow-400" />
-                            <h3 className="text-lg font-bold text-white">Akční Kroky:</h3>
+                            <h3 className="text-lg font-bold text-white">Action Steps:</h3>
                           </div>
                           <div className="space-y-2">
                             {tradingDecision.tips.map((tip, i) => (
@@ -1006,11 +1134,11 @@ export default function DailyTrackerPage() {
                       <CardTitle className="flex items-center gap-2 text-3xl">
                         <Lightbulb className="h-8 w-8 text-amber-400" />
                         <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-                          Insights & Doporučení
+                          Insights & Recommendations
                         </span>
                       </CardTitle>
                       <CardDescription className="text-lg">
-                        Personalizované tipy pro zlepšení tvého trading výkonu
+                        Personalized tips to improve your trading performance
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -1153,13 +1281,13 @@ export default function DailyTrackerPage() {
                       {isExpanded && (
                         <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs whitespace-nowrap">
                           {isCompleted && (
-                            <span className="text-green-400">✓ Hotovo</span>
+                            <span className="text-green-400">✓ Done</span>
                           )}
                           {isActive && (
-                            <span className="text-yellow-400">→ Aktivní</span>
+                            <span className="text-yellow-400">→ Active</span>
                           )}
                           {!isUnlocked && (
-                            <span className="text-slate-500">🔒 Zamčeno</span>
+                            <span className="text-slate-500">🔒 Locked</span>
                           )}
                         </div>
                       )}
@@ -1175,11 +1303,11 @@ export default function DailyTrackerPage() {
             <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10">
               <CardContent className="p-8 text-center">
                 <Target className="h-16 w-16 mx-auto mb-4 text-orange-400" />
-                <h3 className="text-2xl font-black mb-2">Pokračuj v Denním Toku!</h3>
-                <p className="text-muted-foreground mb-6">
-                  Dokončil jsi{" "}
+              <h3 className="text-2xl font-black mb-2">Continue with Daily Flow!</h3>
+              <p className="text-gray-300">
+                You completed{" "}
                   {!isLiveMode ? virtualData?.[0]?.stagesCompleted : todayStages.filter((s) => s.completed).length} z 5
-                  stages. Pokračuj dál!
+                  stages. Keep going!
                 </p>
                 <Button
                   onClick={() => {
@@ -1197,7 +1325,7 @@ export default function DailyTrackerPage() {
                   className="h-14 px-8 text-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
                 >
                   <ArrowRight className="h-6 w-6 mr-2" />
-                  Pokračovat
+                  Continue
                 </Button>
               </CardContent>
             </Card>
@@ -1207,9 +1335,9 @@ export default function DailyTrackerPage() {
             <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10">
               <CardContent className="p-16 text-center">
                 <Sun className="h-24 w-24 mx-auto mb-6 text-orange-400" />
-                <h3 className="text-3xl font-black mb-4">Začni Dnešní Den!</h3>
+                <h3 className="text-3xl font-black mb-4">Start Your Day!</h3>
                 <p className="text-xl text-muted-foreground mb-8">
-                  Ještě jsi nezačal dnešní Obchodní Den. Začni Ranním Hodnocením!
+                  You haven't started today's Trading Day yet. Start with Morning Routine!
                 </p>
                 <Button
                   onClick={() => router.push("/morning-check")}
@@ -1217,7 +1345,7 @@ export default function DailyTrackerPage() {
                   className="h-16 px-12 text-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600"
                 >
                   <Sun className="h-6 w-6 mr-2" />
-                  Začít Ranní Kontrolu
+                  Start Morning Routine
                 </Button>
               </CardContent>
             </Card>
@@ -1226,9 +1354,9 @@ export default function DailyTrackerPage() {
 
         {/* HISTORY TAB */}
         <TabsContent value="history" className="space-y-8">
-          {entries.length > 0 ? (
+          {historyEntries.length > 0 ? (
             <div className="space-y-4">
-              {entries.map((entry) => {
+              {historyEntries.map((entry) => {
                 const entryReadiness = entry.morningCheck?.score ?? null
                 const isExpanded = expandedEntry === entry.date
 
@@ -1257,7 +1385,7 @@ export default function DailyTrackerPage() {
                               {entry.date === format(new Date(), "yyyy-MM-dd") && (
                                 <Badge className="mt-2 bg-orange-500/20 text-orange-400 border-orange-500/30">
                                   <Target className="h-3 w-3 mr-1" />
-                                  Dnes
+                                  Today
                                 </Badge>
                               )}
                             </div>
@@ -1268,15 +1396,15 @@ export default function DailyTrackerPage() {
                                 <div className={cn("text-4xl font-black", getReadinessColor(entryReadiness))}>
                                   {entryReadiness !== null ? `${entryReadiness}%` : "---"}
                                 </div>
-                                <div className="text-xs text-muted-foreground">připravenost</div>
+                                <div className="text-xs text-muted-foreground">readiness</div>
                               </div>
                             )}
                             <div className="text-center">
                               <div className="text-2xl font-black mb-1">{entry.stagesCompleted}/5</div>
-                              <div className="text-xs text-muted-foreground">fáze</div>
+                              <div className="text-xs text-muted-foreground">stages</div>
                             </div>
                             <Button variant="ghost" size="sm">
-                              {isExpanded ? "Skrýt" : "Zobrazit"}
+                              {isExpanded ? "Hide" : "Show"}
                             </Button>
                           </div>
                         </div>
@@ -1293,9 +1421,9 @@ export default function DailyTrackerPage() {
                                 </div>
                                 <div>
                                   <h3 className="text-2xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                                    Shrnutí Dne
+                                    Daily Summary
                                   </h3>
-                                  <p className="text-sm text-muted-foreground">Fáze 5 - Kompletní přehled dne</p>
+                                  <p className="text-sm text-muted-foreground">Stage 5 - Complete day overview</p>
                                 </div>
                               </div>
 
@@ -1304,7 +1432,7 @@ export default function DailyTrackerPage() {
                                 <div>
                                   <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                     <DollarSign className="h-5 w-5 text-emerald-400" />
-                                    Obchodní Výsledky
+                                    Trading Results
                                   </h4>
                                   <div className="grid md:grid-cols-3 gap-4 mb-4">
                                     <div className="p-4 rounded-xl bg-black/30 border border-white/10">
@@ -1420,7 +1548,7 @@ export default function DailyTrackerPage() {
                                         {dayDecision.tips.length > 0 && (
                                           <div className="space-y-2">
                                             <div className="text-xs font-semibold text-yellow-400 uppercase tracking-wider">
-                                              Akční Kroky
+                                              Action Steps
                                             </div>
                                             {dayDecision.tips.map((tip, i) => (
                                               <div
@@ -1445,7 +1573,7 @@ export default function DailyTrackerPage() {
                                   <Sun className="h-5 w-5 text-orange-400" />
                                   Ranní Připravenost
                                 </h4>
-                                <div className="grid md:grid-cols-5 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
                                   <div className="p-3 rounded-xl bg-white/5 border border-white/10">
                                     <div className="flex items-center gap-2 mb-2">
                                       <Moon className="h-4 w-4 text-indigo-400" />
@@ -1527,12 +1655,58 @@ export default function DailyTrackerPage() {
                             </div>
                           )}
 
+                          {/* Show stages progress - ALWAYS show this */}
+                          <div>
+                            <h4 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                              <CheckCircle2 className="h-5 w-5 text-green-400" />
+                              Fáze Dne - Postup ({entry.stagesCompleted}/5)
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                              {[
+                                { stage: 1, name: "Ranní Kontrola", key: "morning_check_completed" },
+                                { stage: 2, name: "Záměr Dne", key: "daily_intention_completed" },
+                                { stage: 3, name: "Obchodní Plán", key: "trading_plan_completed" },
+                                { stage: 4, name: "Obchody", key: "record_trades_completed" },
+                                { stage: 5, name: "Shrnutí", key: "daily_summary_completed" },
+                              ].map(({ stage, name, key }) => {
+                                const isCompleted = entry.stagesCompleted >= stage
+                                return (
+                                  <div
+                                    key={stage}
+                                    className={`p-3 rounded-lg border transition-all ${
+                                      isCompleted
+                                        ? "bg-green-500/10 border-green-500/30"
+                                        : "bg-slate-700/20 border-slate-600/30"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                                        isCompleted ? "bg-green-500/20 border-green-500" : "border-slate-600"
+                                      }`}>
+                                        {isCompleted && <div className="h-2 w-2 bg-green-400 rounded-full" />}
+                                      </div>
+                                      <span className="text-xs text-white font-bold">Fáze {stage}</span>
+                                    </div>
+                                    <div className={`text-sm font-medium ${isCompleted ? "text-green-300" : "text-slate-400"}`}>
+                                      {name}
+                                    </div>
+                                    {isCompleted && (
+                                      <div className="text-xs text-green-400 mt-1 flex items-center gap-1">
+                                        <CheckCircle2 className="h-3 w-3" />
+                                        Hotovo
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+
                           {/* Show simplified view if Stage 5 not completed */}
                           {entry.stagesCompleted < 5 && (
-                            <div className="text-center py-8 text-muted-foreground">
-                              <Moon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                              <p className="text-lg font-medium">Fáze 5 nebyla dokončena</p>
-                              <p className="text-sm mt-1">Zobrazují se pouze základní metriky z Ranní Kontroly</p>
+                            <div className="text-center py-6 text-muted-foreground border-t border-white/10 mt-6 pt-6">
+                              <Moon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm">Zbývající fáze k dokončení: {5 - entry.stagesCompleted}</p>
                             </div>
                           )}
                         </div>
@@ -1560,3 +1734,4 @@ export default function DailyTrackerPage() {
     </div>
   )
 }
+// Cache bust - rebuild

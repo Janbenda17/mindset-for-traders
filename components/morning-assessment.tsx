@@ -12,6 +12,7 @@ import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
 import { useGamification } from "@/contexts/gamification-context"
 import { useAuth } from "@/contexts/auth-context"
+import { useLanguage } from "@/contexts/language-context"
 import {
   Moon,
   Coffee,
@@ -59,10 +60,44 @@ const EXERCISE_TYPES = [
 export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
   const router = useRouter()
   const { toast } = useToast()
-  const { completeStage } = useDailyStage()
+  const { completeStage, stages } = useDailyStage()
   const { isLiveMode, addMorningCheck } = useData()
   const { addXP, incrementStreak, incrementStat } = useGamification()
   const { user } = useAuth()
+  const { language } = useLanguage()
+  const isEn = language === "en"
+
+  const txt = {
+    sleepQuality: isEn ? "Sleep Quality" : "Kvalita spánku",
+    quality: isEn ? "Quality" : "Kvalita",
+    hours: isEn ? "Hours" : "Hodin",
+    energyFocus: isEn ? "Energy & Focus" : "Energie a soustředění",
+    energyLevel: isEn ? "Energy Level" : "Úroveň energie",
+    focusLevel: isEn ? "Focus Level" : "Úroveň soustředění",
+    mentalState: isEn ? "Mental State" : "Psychický stav",
+    stressLevel: isEn ? "Stress Level" : "Úroveň stresu",
+    emotionalState: isEn ? "Emotional State" : "Emoční stav",
+    physicalHealth: isEn ? "Physical Health & Habits" : "Fyzické zdraví a zvyky",
+    exercise: isEn ? "Exercise" : "Cvičení",
+    exercised: isEn ? "I exercised this morning" : "Cvičil jsem si ráno",
+    morningRoutine: isEn ? "Morning Routine Completed" : "Ranní rutina dokončena",
+    meditation: isEn ? "Meditation" : "Meditace",
+    min: isEn ? "min" : "min",
+    liveMode: isEn ? "Available only in Live Mode" : "Dostupné pouze v Live režimu",
+    stage1: isEn ? "Stage 1: Sleep & Recovery" : "Stupeň 1: Spánek a zotavení",
+    stage2: isEn ? "Stage 2: Physical Preparation" : "Stupeň 2: Fyzická příprava",
+    stage3: isEn ? "Stage 3: Mental State" : "Stupeň 3: Psychický stav",
+    stage4: isEn ? "Stage 4: Emotional Balance" : "Stupeň 4: Emoční rovnováha",
+    stage5: isEn ? "Stage 5: Final Score & Readiness" : "Stupeň 5: Finální skóre a připravenost",
+    beCareful: isEn ? "⚠️ Be Careful" : "⚠️ Buď opatrný",
+    reducePosSize: isEn ? "Reduce position sizes by 50% and increase discipline." : "Sniž velikosti pozic o 50% a zvýš disciplínu.",
+    dontTrade: isEn ? "🛑 Don't Trade Today" : "🛑 Neobchoduj dnes",
+    focusRest: isEn ? "Focus on rest and preparation. Paper trading or studying." : "Zaměř se na odpočinek a přípravu. Papírový obchod nebo studium.",
+  }
+
+  // Check if stage 1 is locked from context
+  const stage1 = stages.find((s) => s.id === 1)
+  const isStage1Locked = stage1?.locked || false
   const [isLocked, setIsLocked] = useState(false)
   const [assessment, setAssessment] = useState<MorningCheckData>({
     id: "",
@@ -85,10 +120,9 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
 
   useEffect(() => {
     const todayDate = new Date().toISOString().split("T")[0]
-    const lockKey = `user-${user?.id}-morning-check-locked-${todayDate}`
-    const locked = localStorage.getItem(lockKey) === "true"
-
-    if (locked) {
+    
+    // Use locked status from context (more reliable)
+    if (isStage1Locked) {
       setIsLocked(true)
       const storageKey = `user-${user?.id}-mindtrader-morning-checks`
       const saved = localStorage.getItem(storageKey) || "[]"
@@ -97,8 +131,23 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       if (todayCheck) {
         setAssessment(todayCheck)
       }
+    } else {
+      // Fallback to localStorage lock (for backward compatibility)
+      const lockKey = `user-${user?.id}-morning-check-locked-${todayDate}`
+      const locked = localStorage.getItem(lockKey) === "true"
+
+      if (locked) {
+        setIsLocked(true)
+        const storageKey = `user-${user?.id}-mindtrader-morning-checks`
+        const saved = localStorage.getItem(storageKey) || "[]"
+        const checks = JSON.parse(saved)
+        const todayCheck = checks.find((c: MorningCheckData) => c.date === todayDate)
+        if (todayCheck) {
+          setAssessment(todayCheck)
+        }
+      }
     }
-  }, [user?.id])
+  }, [user?.id, isStage1Locked])
 
   const calculateScore = () => {
     const weights = {
@@ -155,8 +204,8 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       }
     } else if (score >= 60) {
       return {
-        text: "⚠️ Buď opatrný",
-        subtext: "Redukuj position sizes o 50% a zvyš disciplínu.",
+        text: txt.beCareful,
+        subtext: txt.reducePosSize,
         color: "text-yellow-500",
         bgColor: "bg-yellow-500/10",
         borderColor: "border-yellow-500/30",
@@ -164,8 +213,8 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       }
     } else {
       return {
-        text: "🛑 Neobchoduj dnes",
-        subtext: "Zaměř se na odpočinek a přípravu. Paper trading nebo studium.",
+        text: txt.dontTrade,
+        subtext: txt.focusRest,
         color: "text-red-500",
         bgColor: "bg-red-500/10",
         borderColor: "border-red-500/30",
@@ -342,13 +391,13 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
       }
 
       if (assessment.exercised) {
-        addXP(15, "Cvičení dokončeno")
+        addXP(15, "Exercise Completed")
         incrementStat("totalExercises")
         incrementStreak("exercise")
       }
 
       if (assessment.meditationTime > 0) {
-        addXP(15, "Meditace dokončena")
+        addXP(15, "Meditation Completed")
         incrementStat("totalMeditations")
         incrementStreak("meditation")
       }
@@ -361,7 +410,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
 
     toast({
       title: "✅ Morning Check Complete & Locked!",
-      description: `Data zamčena a přenesena do Daily Tracker. Score: ${assessment.score}%`,
+      description: `Data locked and transferred to Daily Tracker. Score: ${assessment.score}%`,
       duration: 3000,
     })
 
@@ -412,188 +461,9 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
   const currentScore = calculateScore()
   const recommendation = getRecommendation(currentScore)
   const RecommendationIcon = recommendation.icon
-
+  
   if (isLocked) {
-    return (
-      <div className="space-y-8">
-        <Card className="border-2 border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-center gap-4">
-              <div className="p-4 rounded-2xl bg-green-500/20 border-2 border-green-500/30">
-                <Lock className="h-8 w-8 text-green-400" />
-              </div>
-              <div className="text-center">
-                <h3 className="text-3xl font-black text-green-400">Data Zamčena ✅</h3>
-                <p className="text-lg text-muted-foreground mt-1">
-                  Tvůj Morning Check je dokončen a zamčen. Data se resetují o půlnoci.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={cn("border-2", recommendation.borderColor, recommendation.bgColor)}>
-          <CardContent className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={cn("p-4 rounded-2xl", recommendation.bgColor, "border-2", recommendation.borderColor)}
-                  >
-                    <RecommendationIcon className={cn("h-8 w-8", recommendation.color)} />
-                  </div>
-                  <div>
-                    <h3 className={cn("text-3xl font-black", recommendation.color)}>{recommendation.text}</h3>
-                    <p className="text-lg text-muted-foreground mt-1">{recommendation.subtext}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="relative w-32 h-32">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      className="text-white/5"
-                    />
-                    <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray={`${(currentScore / 100) * 352} 352`}
-                      strokeLinecap="round"
-                      className={cn("transition-all duration-1000", recommendation.color)}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-4xl font-black text-white">{currentScore}%</div>
-                    <div className="text-xs text-muted-foreground">Score</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm border border-indigo-500/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Moon className="h-5 w-5 text-indigo-400" />
-                Kvalita spánku
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Kvalita</span>
-                <span className="text-2xl font-bold text-indigo-400">{assessment.sleepQuality}/10</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Hodiny</span>
-                <span className="text-2xl font-bold text-indigo-400">{assessment.sleepHours}h</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm border border-yellow-500/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-yellow-400" />
-                Energie a Focus
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Úroveň energie</span>
-                <span className="text-2xl font-bold text-yellow-400">{assessment.energyLevel}/10</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Úroveň soustředění</span>
-                <span className="text-2xl font-bold text-yellow-400">{assessment.focus}/10</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm border border-purple-500/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-purple-400" />
-                Mentální stav
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Úroveň stresu</span>
-                <span className="text-2xl font-bold text-purple-400">{assessment.stressLevel}/10</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Emoční stav</span>
-                <span className="text-2xl font-bold text-purple-400">{assessment.emotionalState}/10</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm border border-green-500/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Heart className="h-5 w-5 text-green-400" />
-                Fyzický stav a návyky
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Fyzické zdraví</span>
-                <span className="text-2xl font-bold text-green-400">{assessment.physicalHealth}/10</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {assessment.exercised && (
-          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 backdrop-blur-sm border border-blue-500/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Dumbbell className="h-5 w-5 text-blue-400" />
-                Cvičení dokončeno
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="text-4xl">{EXERCISE_TYPES.find((t) => t.value === assessment.exerciseType)?.label}</div>
-                <div>
-                  <div className="text-2xl font-bold text-blue-400">{assessment.exerciseDuration} min</div>
-                  <div className="text-sm text-muted-foreground">Trvání</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="flex gap-4">
-          <Button
-            onClick={() => router.push("/record-trades")}
-            className="flex-1 h-14 text-lg font-bold rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-lg"
-          >
-            <CheckCircle className="w-5 h-5 mr-2" />
-            Zaznamenat Trade
-          </Button>
-          <Button
-            onClick={() => onComplete?.()}
-            variant="outline"
-            className="flex-1 h-14 text-lg font-bold rounded-2xl"
-          >
-            Zavřít
-          </Button>
-        </div>
-      </div>
-    )
+    return <div className="p-8">Data Zamčena</div>
   }
 
   return (
@@ -651,13 +521,13 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Moon className="h-5 w-5 text-indigo-400" />
-              Kvalita spánku
+              {txt.sleepQuality}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Kvalita</span>
+                <span className="text-sm text-muted-foreground">{txt.quality}</span>
                 <span className="text-lg font-bold text-indigo-400">{assessment.sleepQuality}/10</span>
               </div>
               <Slider
@@ -671,7 +541,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Hodiny</span>
+                <span className="text-sm text-muted-foreground">{txt.hours}</span>
                 <span className="text-lg font-bold text-indigo-400">{assessment.sleepHours}h</span>
               </div>
               <Slider
@@ -690,13 +560,13 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-yellow-400" />
-              Energie a Focus
+              {txt.energyFocus}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Úroveň energie</span>
+                <span className="text-sm text-muted-foreground">{txt.energyLevel}</span>
                 <span className="text-lg font-bold text-yellow-400">{assessment.energyLevel}/10</span>
               </div>
               <Slider
@@ -710,7 +580,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Úroveň soustředění</span>
+                <span className="text-sm text-muted-foreground">{txt.focusLevel}</span>
                 <span className="text-lg font-bold text-yellow-400">{assessment.focus}/10</span>
               </div>
               <Slider
@@ -729,13 +599,13 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-purple-400" />
-              Mentální stav
+              {txt.mentalState}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Úroveň stresu</span>
+                <span className="text-sm text-muted-foreground">{txt.stressLevel}</span>
                 <span className="text-lg font-bold text-purple-400">{assessment.stressLevel}/10</span>
               </div>
               <Slider
@@ -749,14 +619,14 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Emoční stav</span>
+                <span className="text-sm text-muted-foreground">{txt.emotionalState}</span>
                 <span className="text-lg font-bold text-purple-400">{assessment.emotionalState}/10</span>
               </div>
               <Slider
                 value={[assessment.emotionalState]}
                 onValueChange={([val]) => setAssessment({ ...assessment, emotionalState: val })}
                 min={1}
-                max={10
+                max={10}
                 step={1}
                 className="h-3"
               />
@@ -768,13 +638,13 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Heart className="h-5 w-5 text-green-400" />
-              Fyzický stav a návyky
+              {txt.physicalHealth}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Fyzické zdraví</span>
+                <span className="text-sm text-muted-foreground">Physical Health</span>
                 <span className="text-lg font-bold text-green-400">{assessment.physicalHealth}/10</span>
               </div>
               <Slider
@@ -794,7 +664,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Dumbbell className="h-5 w-5 text-blue-400" />
-            Cvičení
+            Exercise
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -803,7 +673,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
               checked={assessment.exercised}
               onCheckedChange={(checked) => setAssessment({ ...assessment, exercised: checked as boolean })}
             />
-            <span className="font-medium">Dnes ráno jsem cvičil(a)</span>
+            <span className="font-medium">I exercised this morning</span>
           </label>
 
           {assessment.exercised && (
@@ -849,7 +719,7 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-cyan-400" />
-            Ranní návyky
+            Morning Habits
           </CardTitle>
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
@@ -860,12 +730,12 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
             />
             <div className="flex items-center gap-2">
               <Coffee className="h-4 w-4 text-cyan-400" />
-              <span className="font-medium">Ranní rutina dokončena</span>
+              <span className="font-medium">Morning Routine Completed</span>
             </div>
           </label>
           <div className="flex items-center space-x-3 p-4 rounded-lg border border-white/10">
             <Target className="h-4 w-4 text-cyan-400" />
-            <span className="font-medium flex-1">Meditace</span>
+            <span className="font-medium flex-1">Meditation</span>
             <input
               type="number"
               value={assessment.meditationTime}
@@ -881,11 +751,21 @@ export function MorningAssessment({ onComplete }: { onComplete?: () => void }) {
 
       <Button
         onClick={saveAssessment}
-        disabled={!isLiveMode}
-        className="w-full h-16 text-xl font-black rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 shadow-2xl disabled:opacity-50"
+        disabled={!isLiveMode || isStage1Locked}
+        className={cn(
+          "w-full h-16 text-xl font-black rounded-2xl shadow-2xl",
+          isStage1Locked
+            ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed"
+            : "bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600",
+          "disabled:opacity-50"
+        )}
       >
         <Lock className="w-6 h-6 mr-2" />
-        {isLiveMode ? `Dokončit Morning Check a Zamknout Data (${currentScore}%)` : "Dostupné pouze v Live Mode"}
+        {isStage1Locked
+          ? "Closed - Morning Check was completed today"
+          : isLiveMode
+            ? `Complete Morning Check & Lock Data (${currentScore}%)`
+            : "Available only in Live Mode"}
       </Button>
     </div>
   )

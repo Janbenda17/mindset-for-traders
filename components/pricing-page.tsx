@@ -133,7 +133,7 @@ export function PricingPage() {
 
   const handleUpgrade = async () => {
     if (!user) {
-      router.push("/login")
+      router.push("/signup")
       return
     }
 
@@ -160,14 +160,9 @@ export function PricingPage() {
       console.log("[v0] URL starts with:", data.url?.substring(0, 50))
 
       if (data.url) {
-        console.log("[v0] Redirecting to Stripe checkout...")
-        // Use window.open first to ensure it works, then fall back to location
-        const checkoutWindow = window.open(data.url, "_blank")
-        if (!checkoutWindow) {
-          // If pop-up blocked, use location href
-          console.log("[v0] Pop-up blocked, using window.location.href")
-          window.location.href = data.url
-        }
+        console.log("[v0] Opening Stripe checkout in new tab...")
+        // Open in new tab
+        window.open(data.url, "_blank")
       } else {
         throw new Error("No checkout URL returned")
       }
@@ -180,22 +175,22 @@ export function PricingPage() {
 
   const features = {
     free: [
-      "Pouze Virtuální Režim",
-      "Průzkum rozhraní a funkcí",
-      "Základní deník (Virtuální data)",
-      "Základní mood tracking",
-      "Komunitní přístup",
+      "Demo mode - virtuální data",
+      "Omezeno na 10 záznamů/měsíc",
+      "Základní obchodní deník",
+      "Jednoduché analýzy",
+      "Mood tracking",
     ],
     premium: [
-      "Přepnutí do Live Režimu",
-      "Reálné statistiky a trading",
-      "Pokročilé analytics & grafy",
-      "AI MindTrader kouč (Neomezeně)",
-      "Detailní trading deník s fotkami",
-      "Export dat (CSV, PDF)",
-      "Hloubkové emocionální analýzy",
-      "Prioritní podpora 24/7",
-      "Team Club premium funkce",
+      "14 days free - no payment",
+      "All features on your data",
+      "Option to switch to Live Mode",
+      "Unlimited trading journal",
+      "Advanced analytics and reports",
+      "MindTrader AI Pro",
+      "Data and report exports",
+      "Advanced psychological metrics",
+      "Risk management tools",
     ],
   }
 
@@ -225,12 +220,12 @@ export function PricingPage() {
             variant="secondary"
             className="mb-6 px-4 py-2 text-sm font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800"
           >
-            🚀 Investujte do své psychologie
+            🚀 Invest in your psychology
           </Badge>
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight">
-            Vyberte si plán pro{" "}
+            Choose your plan for{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-              ziskový trading
+              profitable trading
             </span>
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -291,14 +286,12 @@ export function PricingPage() {
             <CardHeader className="pb-8">
               <div className="flex items-center justify-between mb-4">
                 <CardTitle className="text-2xl font-bold">Starter</CardTitle>
-                {plan === "free" && !isActive && (
-                  <Badge variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                    Aktuální plán
-                  </Badge>
-                )}
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                  Virtual verze
+                </Badge>
               </div>
               <CardDescription className="text-base">
-                Virtuální režim pro seznámení s platformou bez rizika.
+                Demo mode s virtuálními daty pro seznámení s platformou bez rizika.
               </CardDescription>
               <div className="mt-6 flex items-baseline">
                 <span className="text-5xl font-extrabold tracking-tight">0 Kč</span>
@@ -354,16 +347,19 @@ export function PricingPage() {
                 )}
               </div>
               <CardDescription className="text-base">
-                Odemkněte Live Režim a začněte budovat reálnou kariéru.
+                Všechny funkce na svých datech s možností přepnout na Live Mode.
               </CardDescription>
-              <div className="mt-6 flex items-baseline">
-                <span className="text-2xl text-gray-500 line-through mr-3">2499 Kč</span>
-                <span className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="text-sm font-medium text-gray-500 line-through">2499 Kč</span>
+                <span className="text-5xl font-extrabold tracking-tight text-blue-600 dark:text-blue-400">
                   1499 Kč
                 </span>
-                <span className="text-gray-500 ml-2 text-lg">/měsíc</span>
+                <span className="text-gray-500 text-lg">/měsíc</span>
+                <Badge className="ml-auto bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                  Ušetříte 1000 Kč
+                </Badge>
               </div>
-              <p className="text-sm text-green-600 font-medium mt-2">Sleva 40% z běžné ceny</p>
+              <p className="text-sm text-green-600 dark:text-green-400 font-semibold mt-3">Sleva 40% - jen s 14-denní zdarma variantou</p>
             </CardHeader>
             <CardContent className="flex-grow">
               <ul className="space-y-4">
@@ -393,7 +389,7 @@ export function PricingPage() {
                     "Váš plán je aktivní"
                   ) : (
                     <>
-                      Upgradovat na Live
+                      Zkusit 14 dní zdarma
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </>
                   )}

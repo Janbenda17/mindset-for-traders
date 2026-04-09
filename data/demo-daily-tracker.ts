@@ -38,12 +38,21 @@ export interface DemoTradingPlan {
   maxRisk: number
 }
 
+export interface AIInsights {
+  keyInsights: string[]
+  predictions: string[]
+  recommendations: string[]
+  riskFactors: string[]
+  strengths: string[]
+}
+
 export interface DemoDailyTracker {
   date: string
   morningCheck: DemoMorningCheck
   intention: DemoDailyIntention
   plan: DemoTradingPlan
   trades: any[]
+  insights: AIInsights
   overallScore: number
   stagesCompleted: number
 }
@@ -103,6 +112,31 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 9,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Kvalita spánku a soustředění jsou na maximální úrovni - ideální podmínky pro obchodování",
+        "Ranní rutina s cvičením a meditací zvýšila tvou mentální jasnost",
+        "Aktuální emoční stav ukazuje sebedůvěru bez přehnání - ideální rovnováha pro realizaci",
+      ],
+      predictions: [
+        "Vysoká pravděpodobnost ziskových obchodů pokud budeš brát pouze A+ setupy",
+        "Tvůj disciplinovaný přístup by měl vést k lepší kvalitě výběru obchodů",
+      ],
+      recommendations: [
+        "Využij svého peak stavu - ideální den pro přijatá vypočítaná rizika",
+        "Zdokumentuj svůj úspěšný proces rozhodování jako referenci pro nižší energetické dny",
+        "Vyhni se pokušení přeobchodování - kvalita přebíjí kvantitu",
+      ],
+      riskFactors: [
+        "Riziko přílišné sebedůvěry - zachovej disciplínu velikosti pozic i v high-energy dnech",
+        "FOMO riziko - drž se svého watchlistu a neháněj pohyby",
+      ],
+      strengths: [
+        "Výjimečná mentální čistota a soustředění",
+        "Dobře vykoupený a fyzicky připravený",
+        "Silná emoční stabilita",
+      ],
+    },
     overallScore: 78,
     stagesCompleted: 5,
   })
@@ -157,6 +191,31 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 8,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Dobrá rovnováha mezi spánkem a aktivitou - udržuješ konzistenci",
+        "Splnění ranní rutiny ukazuje že disciplína se stává zvykem",
+        "Energetické hladiny zůstávají silné navzdory nižšímu spánku než včera",
+      ],
+      predictions: [
+        "Pokračování pozitivní obchodní výkonnosti s o něco přísnější disciplínou",
+        "Tvoje konzistentnost ti pomůže udržet win rate nad 60%",
+      ],
+      recommendations: [
+        "Udržuj současnou rutinu - konzistentnost buduje pozitivní zvyky",
+        "Zvažuj zvýšení meditace o 5 minut pro snížení stresu",
+        "Tvůj klidný emoční stav je souprava - použij jej pro trpělivý výběr obchodů",
+      ],
+      riskFactors: [
+        "Mírný nárůst stresu - ujistěte se, že nespěcháte při rozhodování",
+        "Energie mírně nižší - vyhni se prodlužování obchodních hodin",
+      ],
+      strengths: [
+        "Konzistentní provedení rutiny",
+        "Udržované soustředění navzdory snížení spánku",
+        "Dobrá emoční kontrola",
+      ],
+    },
     overallScore: 75,
     stagesCompleted: 5,
   })
@@ -200,6 +259,32 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
       maxRisk: 1,
     },
     trades: [],
+    insights: {
+      keyInsights: [
+        "Kvalita spánku klesá - to ovlivňuje přesnost tvého rozhodování",
+        "Nižší soustředění a energetické hladiny zaznamenány - high-risk prostředí pro obchodování",
+        "Nedostatek splnění ranní rutiny koreluje se sníženým skórem připravenosti",
+      ],
+      predictions: [
+        "Pravděpodobnost přeobchodování nebo špatného výběru obchodů se zvyšuje o 35%",
+        "Doporučuje se snížení velikostí pozic nebo přerušení aktivního obchodování",
+      ],
+      recommendations: [
+        "Zvažuj DEN BEZ OBCHODŮ nebo pouze papírový obchod pro zachování kapitálu",
+        "Prioritizuj zotavení - dnes noc 8+ hodin spánku a obnovení rutiny",
+        "Pokud budeš obchodovat, sniž velikosti pozic o 50% a zaměř se pouze na A+ setupy",
+        "Extra meditace nebo relaxace by pomohla zvládnout úrovně stresu",
+      ],
+      riskFactors: [
+        "Výrazně snížená kvalita spánku ovlivňuje schopnost posuzování rizika",
+        "Zvýšení úrovně stresu v kombinaci s nižším soustředěním je znepokojující vzorem",
+        "Žádná ranní rutina zvyšuje riziko emočního rozhodování",
+      ],
+      strengths: [
+        "Uvědomuješ si svůj stav - povědomí je první krok k zotavení",
+        "Ochota ke konzervativnímu přístupu ukazuje zralost",
+      ],
+    },
     overallScore: 72,
     stagesCompleted: 4,
   })
@@ -254,6 +339,33 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 6,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Den zotavení zahájen - připravenost na minimální přijatelné prahové hodnotě",
+        "Ztráta dnes je připisována nízkému psychickému stavu, ne selhání strategie",
+        "Vzor detekován: nedostatečný spánek vždy koreluje se ztrátovými dny",
+      ],
+      predictions: [
+        "S 8+ hodinami dnes v noci by se zítřejší připravenost měla dramaticky zlepšit",
+        "Protokol zotavení dnes nastaví výborné obchodní podmínky zítra",
+      ],
+      recommendations: [
+        "DŮLEŽITÉ: Vezmi si dnes plný den odpočinku - prioritizuj zotavení spánku",
+        "Implementuj přísnou ranní rutinu zítra bez ohledu na únavu",
+        "Toto je dočasné zastavení - psychické zotavení je investice do budoucích vítězství",
+        "Dnes ztrátu neposuzuj jako selhání ale jako datový bod vědy o zotavení",
+      ],
+      riskFactors: [
+        "Vážně kompromitovaný psychický a fyzický stav",
+        "Riziko revenge tradingu zítra pokud dnes ztráta psychicky nezpracuješ",
+        "Pokračování v obchodování navzdory nízkému stavu bude zesílovat ztráty",
+      ],
+      strengths: [
+        "Chytil jsi se dříve než by došlo k větším ztrátám",
+        "Observační přístup ukazuje moudrost",
+        "Malá ztráta je přijatelná cena za učení",
+      ],
+    },
     overallScore: 70,
     stagesCompleted: 5,
   })
@@ -308,6 +420,34 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 9,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Zotavení úspěšné! Všechny metriky ukazují významné zlepšení od včera",
+        "Peak performance den - zotavení spánku kombinované s plnou rutinou vytvořilo ideální podmínky",
+        "Silné zotavení ukazuje že disciplína vítězí nad aktuálními tržními podmínkami",
+      ],
+      predictions: [
+        "Moment z dnešního dne by měl pokračovat zítra pokud rutinu udržíš",
+        "Obchod zotavení $840 více než kompenzuje včerejší ztrátu $200",
+        "Win rate by měl vzrůst jak se psychický stav zlepšuje",
+      ],
+      recommendations: [
+        "Zdokumentuj dnešní úspěšnou realizaci jako referenci pro podobné budoucí situace",
+        "Udržuj spánek a rutinu disciplínu která vedla k tomuto zotavení",
+        "Dnešní sebedůvěru využij moudře - škáluj pozice konzervativně ne agresivně",
+        "Toto je důkaz že funguje protokol zotavení - aplikuj stejný postup příště",
+      ],
+      riskFactors: [
+        "Lehké riziko přílišné sebedůvěry po silném comebacku - vyhni se revenge tradům",
+        "Nepředpokládej že zítřek bude stejně silný - udržuj disciplínu",
+      ],
+      strengths: [
+        "Výjimečné psychické zotavení a disciplína",
+        "Dosažen peak fyzický a psychický výkon",
+        "Výborná realizace obchodu - plně využil možnost setupu",
+        "Prokázaná odolnost skrze cyklus zotavení",
+      ],
+    },
     overallScore: 80,
     stagesCompleted: 5,
   })
@@ -362,6 +502,33 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 8,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Konzistentnost se buduje - dosažen druhý po sobě následující den vysoké připravenosti",
+        "Optimalizace spánku se nyní připraví jako nový standard",
+        "Ranní rutina je nyní automatická - formování zvyku je hotovo",
+      ],
+      predictions: [
+        "Konzistentnost jako je tato obvykle vede k +3% měsíčnímu zlepšení win rate",
+        "Další ztráta bude jednodušší na zotavení kvůli zavedenému protokolu zotavení",
+      ],
+      recommendations: [
+        "Pokračuj v 8hodinovém spánku - je to nyní tvoje konkurenční výhoda",
+        "Udržuj rutinu i o víkendech pro optimální dlouhodobý výkon",
+        "Dnešní scalp obchod ukazuje dobrou adaptabilitu - hezká session",
+        "Zdokumentuj tuto 2denní silnou sérii do svého trader journálu",
+      ],
+      riskFactors: [
+        "Jediné riziko: udržení disciplíny pokud se séria přeruší",
+        "Samozřejmost o zavedené rutině",
+      ],
+      strengths: [
+        "Silná konzistentnost v provedení",
+        "Výborná adaptabilita napříč různými obchodními sessions",
+        "Udržovaná vysoká energie a mentální jasnost",
+        "Budování silného základu zvyků",
+      ],
+    },
     overallScore: 80,
     stagesCompleted: 5,
   })
@@ -416,6 +583,33 @@ export function generateDemoDailyTrackerData(): DemoDailyTracker[] {
         confidence: 7,
       },
     ],
+    insights: {
+      keyInsights: [
+        "Týdenní souhrn: 7denní průměr připravenosti 75,3 - výborný základ",
+        "Pouze 2 ztráty (Dny 3-4) během období nízké připravenosti - prokázalo se že řízení rizika funguje",
+        "Cyklus zotavení úspěšně hotov - úplné resetování portfólia dosaženo",
+      ],
+      predictions: [
+        "Příští týden by měl ukazovat 65%+ win rate na základě vzoru připravenosti",
+        "Udržování rutiny bude mít za následek kumulativní +5-8% měsíční zlepšení výkonu",
+      ],
+      recommendations: [
+        "Naplánuj týdenní schůzku zotavení pro přezkoumání korelace připravenosti vs výkonu",
+        "Zaměření týdne 2: Stavba na základu konzistentnosti, zvýšení velikostí pozic na vysoké připravené dny",
+        "Prioritizuj soulad rutiny nade vše - je to tvoje primární výhoda",
+        "Uvažuj tento týden jako svůj baseline připravenosti pro budoucí srovnání",
+      ],
+      riskFactors: [
+        "Příští týden samozřejmost - udržuj disciplínu navzdory pozitivním výsledkům",
+        "Nezvyšuj velikosti pozic příliš agresivně",
+      ],
+      strengths: [
+        "Demonstrace efektivnosti protokolu zotavení",
+        "Silný týden celkově s 5 vítězstvími, 2 ztrátami = 71% win rate",
+        "Celkový týdenní P&L: +$2,669 zisk s výborným řízením rizika",
+        "Vytvoření zvyků v oblasti spánku, rutiny a meditace",
+      ],
+    },
     overallScore: 73,
     stagesCompleted: 5,
   })

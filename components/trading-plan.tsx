@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useDailyStage } from "@/contexts/daily-stage-context"
+import { cn } from "@/lib/utils"
 import {
   Target,
   TrendingUp,
@@ -26,6 +27,7 @@ import {
 import { format } from "date-fns"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { getUserStorageKey } from "@/utils/storage-namespace"
+import { useLanguage } from "@/contexts/language-context"
 
 interface TradingPlanData {
   date: string
@@ -44,9 +46,60 @@ interface TradingPlanData {
 export function TradingPlan() {
   const router = useRouter()
   const { toast } = useToast()
-  const { completeStage } = useDailyStage()
+  const { completeStage, stages } = useDailyStage()
+  const { language } = useLanguage()
+  const isEn = language === "en"
   const [isLoading, setIsLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+
+  const txt = {
+    newPlan: isEn ? "✨ New Plan" : "✨ Nový plán",
+    whyImportant: isEn ? "💡 Why Is a Trading Plan Important?" : "💡 Proč je obchodní plán důležitý?",
+    tradingWithout: isEn ? "Trading without a plan is gambling. A detailed plan will help you maintain discipline, avoid impulsive decisions and systematically improve your results. The more specific your plan, the better your results!" : "Obchodování bez plánu je hazard. Detailní plán ti pomůže zachovat disciplínu, vyhnout se impulsivním rozhodnutím a systematicky zlepšovat výsledky. Čím konkrétněji plánuješ, tím lepší výsledky!",
+    setupStrategy: isEn ? "🎯 Setup & Strategy" : "🎯 Setup a strategie",
+    whatSetups: isEn ? "What will you look for today and where?" : "Co budeš dnes hledat a kde?",
+    setupsQuestion: isEn ? "What Setups Am I Looking For Today?" : "Jaké setupy dnes hledám?",
+    setupsExample: isEn ? "E.g: Range breakout, Pullback to trendline, Support/Resistance bounce...\nBe specific! E.g. 'Only clean breakouts above 4H resistance with retest'" : "Např: Breakout z rangu, Pullback k trendlince, Bounce od Support/Resistance...\nBuď konkrétní! Např. 'Jen čisté breakouty nad 4H rezistencí s retestem'",
+    pairsQuestion: isEn ? "Which Pairs Am I Monitoring?" : "Které páry monitoruji?",
+    pairsExample: isEn ? "EUR/USD, GBP/USD, GOLD..." : "EUR/USD, GBP/USD, ZLATO...",
+    timeframesLabel: isEn ? "Timeframes" : "Timeframy",
+    timeframesExample: isEn ? "4H for bias, 15min for entry..." : "4H pro bias, 15min pro vstup...",
+    marketAnalysis: isEn ? "Market Analysis & Bias" : "Tržní analýza a bias",
+    marketAnalysisExample: isEn ? "What is my bias today? Bullish/Bearish? Why?" : "Jaký je můj bias dnes? Bullish/Bearish? Proč?",
+    keyLevels: isEn ? "Key Levels (Support/Resistance)" : "Klíčové hladiny (Support/Resistance)",
+    keyLevelsExample: isEn ? "Important price levels I'm monitoring today..." : "Důležité cenové hladiny které dnes monitoruji...",
+    entryRules: isEn ? "✅ Entry Rules" : "✅ Pravidla vstupu",
+    entryConditions: isEn ? "Under what conditions will I enter a position?" : "Za jakých podmínek vstoupím do pozice?",
+    entryChecklist: isEn ? "Entry Checklist" : "Checklist pro vstup",
+    entryChecklistExample: isEn ? "1. Breakout confirmed on 15min\n2. Volume higher than average\n3. Retest successful\n4. No important news next 30min...\nThe more specific, the better! Each point = checkbox before entry." : "1. Breakout potvrzen na 15min\n2. Volume vyšší než průměr\n3. Retest úspěšný\n4. Žádné důležité zprávy příští 30min...\nČím konkrétněji, tím lépe! Každý bod = checkbox před vstupem.",
+    exitRules: isEn ? "🚪 Exit Rules" : "🚪 Pravidla výstupu",
+    exitWhen: isEn ? "When and how will I close the position?" : "Kdy a jak zavřu pozici?",
+    exitStrategy: isEn ? "Exit Strategy" : "Strategie výstupu",
+    exitStrategyExample: isEn ? "1. TP1 at 1:1.5 (close 50%)\n2. TP2 at 1:3 (close 50%)\n3. Move SL to BE after TP1\n4. Trailing stop after TP2..." : "1. TP1 na 1:1.5 (zavři 50%)\n2. TP2 na 1:3 (zavři 50%)\n3. Přesuň SL na BE po TP1\n4. Trailing stop po TP2...",
+    stopLossLabel: isEn ? "Stop Loss Strategy" : "Strategie Stop Loss",
+    stopLossExample: isEn ? "Below last swing low, below support level..." : "Pod poslední swing low, pod support hladinu...",
+    takeProfitLabel: isEn ? "Take Profit Strategy" : "Strategie Take Profit",
+    takeProfitExample: isEn ? "At resistance, 1:2 RR, fibonacci extension..." : "U rezistence, 1:2 RR, fibonacci rozšíření...",
+    additionalNotes: isEn ? "📝 Additional Notes" : "📝 Další poznámky",
+    anythingElse: isEn ? "Anything else that is important today" : "Cokoli dalšího, co je důležité dnes",
+    notesExample: isEn ? "Special events (news, earnings), market sentiment, personal notes..." : "Speciální события (zprávy, earnings), nálada trhu, osobní poznámky...",
+    backDashboard: isEn ? "Back to Dashboard" : "Zpět na Dashboard",
+    savePlan: isEn ? "Save Plan & Continue" : "Uložit plán a pokračovat",
+    goldenRule: isEn ? "⚠️ Golden Rule:" : "⚠️ Zlaté pravidlo:",
+    goldenRuleText: isEn ? "If your setup is not in the trading plan, DON'T TRADE IT! Improvisation = losses." : "Pokud tvůj setup není v plánu, NETRASUJ HO! Improvizace = ztráty.",
+    stageLocked: isEn ? "Stage Locked" : "Etapa uzamčena",
+    stageLockedDesc: isEn ? "Stage 3 (Trading Plan) has already been completed today and is locked. Changes cannot be made." : "Etapa 3 (Obchodní plán) již byla dnes dokončena a je uzamčena. Změny nelze provést.",
+    demoMode: isEn ? "Demo Mode" : "Demo režim",
+    demoModeDesc: isEn ? "This feature is only available in Live Mode. Your data will not be saved in Demo Mode." : "Tato funkce je dostupná pouze v Live Mode. Tvá data se v Demo Mode nebudou ukládat.",
+    missingInfo: isEn ? "Missing Information" : "Chybějící informace",
+    missingInfoDesc: isEn ? "Please fill in all required fields (marked with *)" : "Vyplň prosím všechna povinná pole (označená *)",
+    saved: isEn ? "✅ Trading Plan Saved!" : "✅ Obchodní plán uložen!",
+    savedDesc: isEn ? "Your trading plan has been saved for today" : "Tvůj obchodní plán byl uložen na dnes",
+  }
+
+  // Check if stage 3 is locked
+  const stage3 = stages.find((s) => s.id === 3)
+  const isStage3Locked = stage3?.locked || false
 
   const [formData, setFormData] = useState<TradingPlanData>({
     date: format(new Date(), "yyyy-MM-dd"),
@@ -80,8 +133,8 @@ export function TradingPlan() {
   const validateForm = (): boolean => {
     if (!formData.setups.trim()) {
       toast({
-        title: "Chybí setupy",
-        description: "Prosím vyplň, jaké setupy budeš dnes hledat",
+        title: "Missing Setups",
+        description: "Please describe what setups you're looking for today",
         variant: "destructive",
       })
       return false
@@ -89,8 +142,8 @@ export function TradingPlan() {
 
     if (!formData.pairs.trim()) {
       toast({
-        title: "Chybí páry",
-        description: "Prosím vyplň, které páry budeš sledovat",
+        title: "Missing Pairs",
+        description: "Please specify which pairs you'll be monitoring",
         variant: "destructive",
       })
       return false
@@ -98,8 +151,8 @@ export function TradingPlan() {
 
     if (!formData.entryRules.trim()) {
       toast({
-        title: "Chybí entry pravidla",
-        description: "Prosím definuj jasná pravidla pro vstup do pozice",
+        title: "Missing Entry Rules",
+        description: "Please define clear rules for entering a position",
         variant: "destructive",
       })
       return false
@@ -107,8 +160,8 @@ export function TradingPlan() {
 
     if (!formData.exitRules.trim()) {
       toast({
-        title: "Chybí exit pravidla",
-        description: "Prosím definuj jasná pravidla pro výstup z pozice",
+        title: "Missing Exit Rules",
+        description: "Please define clear rules for exiting a position",
         variant: "destructive",
       })
       return false
@@ -119,6 +172,17 @@ export function TradingPlan() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Check if stage is locked
+    if (isStage3Locked) {
+      toast({
+        title: "Stage Locked",
+        description: "Stage 3 (Trading Plan) has already been completed today and is locked. Changes cannot be made.",
+        variant: "destructive",
+        duration: 3000,
+      })
+      return
+    }
 
     if (!validateForm()) return
 
@@ -141,8 +205,8 @@ export function TradingPlan() {
       completeStage(3)
 
       toast({
-        title: isEditing ? "✅ Plán Aktualizován!" : "✅ Plán Vytvořen!",
-        description: "Tvůj trading plán byl úspěšně uložen. Pokračuj na Stage 4!",
+        title: isEditing ? "✅ Plan Updated!" : "✅ Plan Created!",
+        description: "Your trading plan has been successfully saved. Continue to Stage 4!",
       })
 
       setTimeout(() => {
@@ -150,8 +214,8 @@ export function TradingPlan() {
       }, 1500)
     } catch (error) {
       toast({
-        title: "Chyba",
-        description: "Něco se pokazilo. Zkus to prosím znovu.",
+        title: "Error",
+        description: "Something went wrong. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -175,12 +239,12 @@ export function TradingPlan() {
                   <h1 className="text-5xl font-black bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
                     Stage 3: Trading Plan
                   </h1>
-                  <p className="text-muted-foreground">Definuj svou strategii na dnešní trading session 📋</p>
+                  <p className="text-muted-foreground">Define your strategy for today's trading session 📋</p>
                 </div>
               </div>
             </div>
             <Badge className="text-base px-6 py-2 rounded-full bg-blue-500/20 text-blue-400 border-blue-500/30">
-              {isEditing ? "📝 Editace" : "✨ Nový Plán"}
+              {isEditing ? "📝 Editing" : txt.newPlan}
             </Badge>
           </div>
         </div>
@@ -189,10 +253,9 @@ export function TradingPlan() {
       {/* Info Alert */}
       <Alert className="mb-8 border-blue-500/30 bg-blue-500/10">
         <Info className="h-5 w-5 text-blue-400" />
-        <AlertTitle className="text-blue-400 font-bold">💡 Proč je Trading Plan důležitý?</AlertTitle>
+        <AlertTitle className="text-blue-400 font-bold">{txt.whyImportant}</AlertTitle>
         <AlertDescription className="text-muted-foreground">
-          Trading bez plánu je gambling. Detailní plán ti pomůže dodržovat disciplínu, vyhnout se impulzivním
-          rozhodnutím a systematicky zlepšovat své výsledky. Čím konkrétnější plán, tím lepší výsledky!
+          {txt.tradingWithout}
         </AlertDescription>
       </Alert>
 
@@ -201,26 +264,26 @@ export function TradingPlan() {
         <Card className="border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-400">
-              <Target className="h-6 w-6" />🎯 Setup & Strategie
+              <Target className="h-6 w-6" />{txt.setupStrategy}
             </CardTitle>
-            <CardDescription>Co dnes budeš hledat a kde?</CardDescription>
+            <CardDescription>{txt.whatSetups}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="setups" className="text-white flex items-center gap-2">
                 <Activity className="h-4 w-4 text-green-400" />
-                Jaké Setupy Dnes Hledám? *
+                {txt.setupsQuestion} *
               </Label>
               <Textarea
                 id="setups"
                 value={formData.setups}
                 onChange={(e) => handleChange("setups", e.target.value)}
-                placeholder="Např: Breakout z range, Pullback na trendovou linii, Support/Resistance bounce..."
+                placeholder={txt.setupsExample}
                 className="min-h-24 bg-slate-900/50 border-green-500/30 text-white"
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Buď konkrétní! Např. 'Pouze clean breakouty nad 4H resistance s retestem'
+                {txt.setupsExample.split('\n')[1]}
               </p>
             </div>
 
@@ -228,7 +291,7 @@ export function TradingPlan() {
               <div className="space-y-2">
                 <Label htmlFor="pairs" className="text-white flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-green-400" />
-                  Které Páry Sleduji? *
+                  Which Pairs Am I Monitoring? *
                 </Label>
                 <Input
                   id="pairs"
@@ -243,13 +306,13 @@ export function TradingPlan() {
               <div className="space-y-2">
                 <Label htmlFor="timeframes" className="text-white flex items-center gap-2">
                   <Clock className="h-4 w-4 text-green-400" />
-                  Timeframy
+                  Timeframes
                 </Label>
                 <Input
                   id="timeframes"
                   value={formData.timeframes}
                   onChange={(e) => handleChange("timeframes", e.target.value)}
-                  placeholder="4H pro bias, 15min pro entry..."
+                  placeholder="4H for bias, 15min for entry..."
                   className="bg-slate-900/50 border-green-500/30 text-white"
                 />
               </div>
@@ -263,7 +326,7 @@ export function TradingPlan() {
                 id="marketAnalysis"
                 value={formData.marketAnalysis}
                 onChange={(e) => handleChange("marketAnalysis", e.target.value)}
-                placeholder="Jaký je můj dnešní bias? Bullish/Bearish? Proč?"
+                placeholder="What is my bias today? Bullish/Bearish? Why?"
                 className="min-h-20 bg-slate-900/50 border-green-500/30 text-white"
               />
             </div>
@@ -276,7 +339,7 @@ export function TradingPlan() {
                 id="keyLevels"
                 value={formData.keyLevels}
                 onChange={(e) => handleChange("keyLevels", e.target.value)}
-                placeholder="Důležité cenové úrovně, které dnes sleduji..."
+                placeholder="Important price levels I'm monitoring today..."
                 className="min-h-20 bg-slate-900/50 border-green-500/30 text-white"
               />
             </div>
@@ -287,9 +350,9 @@ export function TradingPlan() {
         <Card className="border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-cyan-500/10">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-blue-400">
-              <ArrowRight className="h-6 w-6" />✅ Entry Pravidla
+              <ArrowRight className="h-6 w-6" />✅ Entry Rules
             </CardTitle>
-            <CardDescription>Za jakých podmínek vstoupím do pozice?</CardDescription>
+            <CardDescription>Under what conditions will I enter a position?</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
@@ -300,12 +363,12 @@ export function TradingPlan() {
                 id="entryRules"
                 value={formData.entryRules}
                 onChange={(e) => handleChange("entryRules", e.target.value)}
-                placeholder="1. Breakout potvrzený na 15min&#10;2. Volume vyšší než průměr&#10;3. Retest úspěšný&#10;4. Žádné důležité news další 30min..."
+                placeholder="1. Breakout confirmed on 15min&#10;2. Volume higher than average&#10;3. Retest successful&#10;4. No important news next 30min..."
                 className="min-h-32 bg-slate-900/50 border-blue-500/30 font-mono text-sm text-white"
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Čím konkrétnější, tím lepší! Každý bod = checkbox před vstupem.
+                The more specific, the better! Each point = checkbox before entry.
               </p>
             </div>
           </CardContent>
@@ -315,20 +378,20 @@ export function TradingPlan() {
         <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-orange-500/10">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-400">
-              <TrendingUp className="h-6 w-6" />🚪 Exit Pravidla
+              <TrendingUp className="h-6 w-6" />🚪 Exit Rules
             </CardTitle>
-            <CardDescription>Kdy a jak uzavřu pozici?</CardDescription>
+            <CardDescription>When and how will I close the position?</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="exitRules" className="text-white">
-                Exit Strategie *
+                Exit Strategy *
               </Label>
               <Textarea
                 id="exitRules"
                 value={formData.exitRules}
                 onChange={(e) => handleChange("exitRules", e.target.value)}
-                placeholder="1. TP1 na 1:1.5 (uzavřu 50%)&#10;2. TP2 na 1:3 (uzavřu 50%)&#10;3. Posunu SL na BE po TP1&#10;4. Trailing stop po TP2..."
+                placeholder="1. TP1 at 1:1.5 (close 50%)&#10;2. TP2 at 1:3 (close 50%)&#10;3. Move SL to BE after TP1&#10;4. Trailing stop after TP2..."
                 className="min-h-32 bg-slate-900/50 border-amber-500/30 font-mono text-sm text-white"
                 required
               />
@@ -337,26 +400,26 @@ export function TradingPlan() {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="stopLoss" className="text-white">
-                  Stop Loss Strategie
+                  Stop Loss Strategy
                 </Label>
                 <Textarea
                   id="stopLoss"
                   value={formData.stopLoss}
                   onChange={(e) => handleChange("stopLoss", e.target.value)}
-                  placeholder="Pod poslední swing low, pod support level..."
+                  placeholder="Below last swing low, below support level..."
                   className="min-h-20 bg-slate-900/50 border-amber-500/30 text-white"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="takeProfit" className="text-white">
-                  Take Profit Strategie
+                  Take Profit Strategy
                 </Label>
                 <Textarea
                   id="takeProfit"
                   value={formData.takeProfit}
                   onChange={(e) => handleChange("takeProfit", e.target.value)}
-                  placeholder="Na resistance, 1:2 RR, fibonacci extension..."
+                  placeholder="At resistance, 1:2 RR, fibonacci extension..."
                   className="min-h-20 bg-slate-900/50 border-amber-500/30 text-white"
                 />
               </div>
@@ -368,16 +431,16 @@ export function TradingPlan() {
         <Card className="border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-pink-500/10">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-purple-400">
-              <BookOpen className="h-6 w-6" />📝 Dodatečné Poznámky
+              <BookOpen className="h-6 w-6" />📝 Additional Notes
             </CardTitle>
-            <CardDescription>Cokoliv dalšího, co je dnes důležité</CardDescription>
+            <CardDescription>Anything else that is important today</CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => handleChange("notes", e.target.value)}
-              placeholder="Speciální události (news, earnings), market sentiment, osobní poznámky..."
+              placeholder="Special events (news, earnings), market sentiment, personal notes..."
               className="min-h-24 bg-slate-900/50 border-purple-500/30 text-white"
             />
           </CardContent>
@@ -392,22 +455,32 @@ export function TradingPlan() {
             className="h-14 px-8 text-base bg-slate-800/50 hover:bg-slate-700/50"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
-            Zpět na Dashboard
+            Back to Dashboard
           </Button>
           <Button
             type="submit"
-            disabled={isLoading}
-            className="h-14 px-8 text-base bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+            disabled={isLoading || isStage3Locked}
+            className={cn(
+              "h-14 px-8 text-base",
+              isStage3Locked
+                ? "bg-gray-600 hover:bg-gray-600 cursor-not-allowed"
+                : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+            )}
           >
-            {isLoading ? (
+            {isStage3Locked ? (
+              <>
+                <Lock className="h-5 w-5 mr-2" />
+                Closed - Plan was completed today
+              </>
+            ) : isLoading ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2" />
-                Ukládám...
+                Saving...
               </>
             ) : (
               <>
                 <Check className="h-5 w-5 mr-2" />
-                {isEditing ? "Aktualizovat Plán" : "Uložit Plán & Pokračovat"}
+                {isEditing ? "Update Plan" : "Save Plan & Continue"}
               </>
             )}
           </Button>

@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
+import { translations as i18nTranslations, type TranslationKey } from "@/lib/i18n"
 
 type Language = "cs" | "en"
 
@@ -89,6 +90,9 @@ const translations = {
 
     // Navigation & Pages
     "nav.overview": "Přehled",
+    "nav.mindset": "Mindset",
+    "nav.patterns": "Vzorce",
+    "nav.actionPlan": "Plán akcí",
     "nav.feed": "Feed",
     "nav.challenges": "Výzvy",
     "nav.studyBuddies": "Study Buddies",
@@ -195,6 +199,9 @@ const translations = {
 
     // Navigation & Pages
     "nav.overview": "Overview",
+    "nav.mindset": "Mindset",
+    "nav.patterns": "Patterns",
+    "nav.actionPlan": "Action Plan",
     "nav.feed": "Feed",
     "nav.challenges": "Challenges",
     "nav.studyBuddies": "Study Buddies",
@@ -228,28 +235,38 @@ const translations = {
   },
 }
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>("cs")
+function detectLanguage(): Language {
+  if (typeof window === "undefined") {
+    // Server-side: default to English
+    return "en"
+  }
 
-  useEffect(() => {
-    const saved = localStorage.getItem("trader-mindset-language") as Language
-    if (saved && (saved === "cs" || saved === "en")) {
-      setLanguage(saved)
-    } else {
-      // Pokud není uložený jazyk, nastavíme češtinu jako výchozí
-      setLanguage("cs")
-      localStorage.setItem("trader-mindset-language", "cs")
-    }
-  }, [])
+  // Client-side: Hostname has priority over env var
+  const hostname = window.location.hostname
+  
+  // .cz domain = Czech
+  if (hostname.endsWith(".cz")) {
+    return "cs"
+  }
+  
+  // .ai and other domains = English (default)
+  return "en"
+}
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [language, setLanguage] = useState<Language>(detectLanguage())
 
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang)
-    localStorage.setItem("trader-mindset-language", lang)
     window.dispatchEvent(new Event("language-changed"))
   }
 
   const t = (key: string): string => {
-    return translations[language][key as keyof (typeof translations)["cs"]] || key
+    const oldVal = translations[language][key as keyof (typeof translations)["cs"]]
+    if (oldVal) return oldVal
+    const newVal = i18nTranslations[language][key as TranslationKey]
+    if (newVal) return newVal
+    return key
   }
 
   return (
@@ -272,4 +289,12 @@ export function useLanguage() {
     throw new Error("useLanguage must be used within LanguageProvider")
   }
   return context
+}
+
+// Convenience hook that returns translation function for the current language
+export function useT() {
+  const { language } = useLanguage()
+  return (key: TranslationKey): string => {
+    return i18nTranslations[language][key] ?? i18nTranslations['cs'][key] ?? key
+  }
 }

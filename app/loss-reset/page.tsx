@@ -341,12 +341,66 @@ export default function LossResetPage() {
               <div className="mx-auto w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4">
                 <Flame className="h-8 w-8 text-orange-400" />
               </div>
-              <CardTitle className="text-2xl font-bold text-white">Jak se teď cítíš?</CardTitle>
-              <p className="text-gray-400 mt-2">Ohodnoť svou frustraci na škále 1-10</p>
+              <CardTitle className="text-2xl font-bold text-white">Režim Obnovy Aktivní</CardTitle>
+              <p className="text-gray-400 mt-2">Detekovali jsme těžký den. Následuj doporučení níže.</p>
             </CardHeader>
             <CardContent className="space-y-8">
+              {/* Recovery Mode Alert */}
+              <div className="p-4 rounded-lg border border-orange-500/30 bg-orange-500/10 space-y-4">
+                <div className="flex items-start gap-3">
+                  <Brain className="h-5 w-5 text-orange-400 mt-1 flex-shrink-0" />
+                  <div className="space-y-3 flex-1">
+                    <h3 className="font-semibold text-white">1. Dýchání - Technika 4-7-8</h3>
+                    <p className="text-sm text-gray-300">
+                      Pomalu vdechni na 4 sekundy, drž dech na 7 sekund, vydechni na 8 sekund. Opakuj 5-10x.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Brain className="h-5 w-5 text-orange-400 mt-1 flex-shrink-0" />
+                  <div className="space-y-3 flex-1">
+                    <h3 className="font-semibold text-white">2. Deník - Reflekce</h3>
+                    <p className="text-sm text-gray-300">
+                      Co cítíš právě teď? Napiš své pocity, strachy a myšlenky. Neusuď se, jen si je vyjasnij.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Brain className="h-5 w-5 text-orange-400 mt-1 flex-shrink-0" />
+                  <div className="space-y-3 flex-1">
+                    <h3 className="font-semibold text-white">3. Odpočinek - Minimálně 2 hodiny</h3>
+                    <p className="text-sm text-gray-300">
+                      Jdi ven, projdi se, poslouchej hudbu. Emoční systém potřebuje čas na regeneraci.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Sparkles className="h-5 w-5 text-orange-400 mt-1 flex-shrink-0" />
+                  <div className="space-y-3 flex-1">
+                    <h3 className="font-semibold text-white">4. Návrat - Až bude připravenost &gt;70%</h3>
+                    <p className="text-sm text-gray-300">
+                      Čekej na ranní check-in. Pokud je připravenost pod 70%, není to den na trading.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Flame className="h-5 w-5 text-red-400 mt-1 flex-shrink-0" />
+                  <div className="space-y-3 flex-1">
+                    <h3 className="font-semibold text-white text-red-400">Nejlepší obchod = Žádný obchod</h3>
+                    <p className="text-sm text-gray-300">
+                      Profesionálové znají, kdy se mají zastavit. Tvoje psychika je důležitější než jakýkoliv obchod.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Frustration Scale */}
               <div className="space-y-4">
+                <h3 className="font-semibold text-white text-center mb-4">Jak se teď cítíš?</h3>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">Klidný</span>
                   <span className="text-sm text-gray-400">Extrémně frustrovaný</span>

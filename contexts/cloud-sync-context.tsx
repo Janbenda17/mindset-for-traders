@@ -45,6 +45,14 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
 
     setIsSyncing(true)
     try {
+      // Verify we have a valid session before syncing
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !sessionData.session) {
+        console.log("[v0] No valid session for sync, skipping")
+        return
+      }
+
       const userData = getUserData()
 
       // Sync journal entries
@@ -81,7 +89,9 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
             updated_at: new Date().toISOString(),
           })
 
-          if (error) console.error("Error syncing journal entry:", error)
+          if (error) {
+            console.error("[v0] Error syncing journal entry:", error.message)
+          }
         }
       }
 
@@ -100,6 +110,14 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
 
     setIsSyncing(true)
     try {
+      // Verify we have a valid session before syncing
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !sessionData.session) {
+        console.log("[v0] No valid session for sync, skipping")
+        return
+      }
+
       // Fetch journal entries
       const { data: journalEntries, error: journalError } = await supabase
         .from("journal_entries")

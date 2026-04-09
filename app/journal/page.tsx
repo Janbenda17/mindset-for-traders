@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
+import { useLanguage } from "@/contexts/language-context"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -71,8 +72,8 @@ const generateDemoEntries = () => {
       date: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       title: `${direction.toUpperCase()} ${pair}`,
       content: isWin 
-        ? `Perfektní setup, dodržel jsem plán na ${session} session`
-        : `${Math.random() > 0.5 ? "Měl jsem počkat na lepší setup" : "Příliš brzy vstup, špatný timing"}`,
+        ? `Perfect setup, I followed my plan on ${session} session`
+        : `${Math.random() > 0.5 ? "I should have waited for a better setup" : "Too early entry, bad timing"}`,
       pair,
       direction,
       entryPrice: Math.random() * 100 + 1,
@@ -81,8 +82,8 @@ const generateDemoEntries = () => {
       pnl: profitLoss,
       mood,
       notes: isWin 
-        ? `Perfektní setup, dodržel jsem plán na ${session} session`
-        : `${Math.random() > 0.5 ? "Měl jsem počkat na lepší setup" : "Příliš brzy vstup, špatný timing"}`,
+        ? `Perfect setup, I followed my plan on ${session} session`
+        : `${Math.random() > 0.5 ? "I should have waited for a better setup" : "Too early entry, bad timing"}`,
       emotion: emotions[Math.floor(Math.random() * emotions.length)],
       tags: isWin ? ["A+ setup", "disciplined"] : ["learning", "improvement needed"],
       emotionBefore: emotions[Math.floor(Math.random() * emotions.length)],
@@ -100,10 +101,10 @@ const generateDemoEntries = () => {
       id: `demo-journal-${i + 1}`,
       type: "journal",
       date: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      title: `Deník - ${i % 2 === 0 ? "Dobrý" : "Náročný"} den`,
-      content: `${i % 2 === 0 ? "Dobrý" : "Náročný"} den, ${i % 3 === 0 ? "hodně jsem se naučil" : "pracuji na disciplíně"}`,
+      title: `Journal - ${i % 2 === 0 ? "Good" : "Challenging"} day`,
+      content: `${i % 2 === 0 ? "Good" : "Challenging"} day, ${i % 3 === 0 ? "I learned a lot" : "working on discipline"}`,
       mood: Math.floor(Math.random() * 40) + 50,
-      notes: `${i % 2 === 0 ? "Dobrý" : "Náročný"} den, ${i % 3 === 0 ? "hodně jsem se naučil" : "pracuji na disciplíně"}`,
+      notes: `${i % 2 === 0 ? "Good" : "Challenging"} day, ${i % 3 === 0 ? "I learned a lot" : "working on discipline"}`,
       emotion: emotions[Math.floor(Math.random() * emotions.length)],
     })
   }
@@ -120,7 +121,90 @@ export default function JournalPage() {
   const [sortedJournalEntries, setSortedJournalEntries] = useState<any[]>([])
   const { getAllJournalEntries, isLiveMode } = useData()
   const { user } = useAuth()
+  const { language } = useLanguage()
   const [virtualStats, setVirtualStats] = useState<any>(null) // State for virtual stats
+  const isEn = language === "en"
+
+  const txt = {
+    // Page title and subtitle
+    journalTitle: isEn ? "Trading Journal" : "Obchodní deník",
+    journalSubtitle: isEn ? "Record your thoughts, emotions, and lessons from trading." : "Zaznamenávej své myšlenky, emoce a lekce z obchodování.",
+    
+    // Virtual mode notice
+    virtualNotice: isEn ? "You are currently viewing data in Virtual mode" : "Právě prohlížíš data ve Virtual režimu",
+    virtualNotice2: isEn ? " – how it may look during software use" : " – jak by to vypadalo během používání software",
+    
+    // Tab labels
+    aiInsights: isEn ? "AI Insights" : "AI Analýza",
+    aiShort: isEn ? "AI" : "AI",
+    quickEntry: isEn ? "Quick Entry" : "Rychlý záznam",
+    newEntry: isEn ? "New Entry" : "Nový záznam",
+    cal: isEn ? "Cal" : "Kal",
+    calendar: isEn ? "Calendar" : "Kalendář",
+    allRecords: isEn ? "All Records" : "Všechny záznamy",
+    list: isEn ? "List" : "Seznam",
+    stats: isEn ? "Stats" : "Statistika",
+    
+    // Stats labels
+    total: isEn ? "Total" : "Celkem",
+    records: isEn ? "Records" : "Záznamů",
+    thisWeek: isEn ? "This Week" : "Tento týden",
+    avgPerDay: isEn ? "Avg/Day" : "Průměr/Den",
+    streak: isEn ? "Streak" : "Série",
+    totalPnL: isEn ? "Total P&L" : "Celkový P&L",
+    winRate: isEn ? "Win Rate" : "Míra výher",
+    bestDay: isEn ? "Best Day" : "Nejlepší den",
+    mood: isEn ? "Mood" : "Nálada",
+    
+    // Insights
+    aiInsightsAvailable: isEn ? "AI Insights available!" : "AI Analýza dostupná!",
+    greatConsistency: isEn ? "Great Consistency!" : "Skvělá konzistence!",
+    consistencyMsg: (streak: number) => isEn ? `You've journaled for ${streak} days in a row. Keep it up!` : `Zaznamenáváš si ${streak} dní v kuse. Pokračuj!`,
+    improveConsistency: isEn ? "Improve Consistency" : "Vylepši konzistenci",
+    consistencyWarning: isEn ? "Regular journaling is key to success. Try writing every day!" : "Pravidelné zaznamenávání je klíčem k úspěchu. Zkus psát každý den!",
+    excellentWinRate: isEn ? "Excellent Win Rate!" : "Vynikající míra výher!",
+    winRateSuccess: (wr: number) => isEn ? `${wr}% win rate is professional level. Great work!` : `${wr}% míra výher je profesionální úroveň. Skvělá práce!`,
+    winRateNeeds: isEn ? "Win Rate Needs Improvement" : "Míra výher potřebuje vylepšení",
+    winRateWarning: (wr: number) => isEn ? `${wr}% win rate is below break-even. Check your strategy!` : `${wr}% míra výher je pod rentabilností. Zkontroluj svou strategii!`,
+    greatPnL: isEn ? "Great P&L!" : "Skvělý P&L!",
+    pnLSuccess: (pnl: number) => isEn ? `+$${pnl} is excellent performance. Keep it up!` : `+$${pnl} je vynikající výkon. Pokračuj!`,
+    negativePnL: isEn ? "Negative P&L" : "Negativní P&L",
+    pnLWarning: (pnl: number) => isEn ? `${pnl} requires immediate action. Review your risk management!` : `${pnl} vyžaduje okamžité jednání. Zkontroluj řízení rizik!`,
+    greatMood: isEn ? "Great Mood!" : "Skvělá nálada!",
+    moodSuccess: (mood: number) => isEn ? `Average mood ${mood}/10 is excellent. Positive mindset = better results!` : `Průměrná nálada ${mood}/10 je vynikající. Pozitivní myšlení = lepší výsledky!`,
+    lowMood: isEn ? "Low Mood" : "Nízká nálada",
+    moodWarning: (mood: number) => isEn ? `Average mood ${mood}/10. Focus on mental health!` : `Průměrná nálada ${mood}/10. Soustřeď se na duševní zdraví!`,
+    excellentProfitFactor: isEn ? "Excellent Profit Factor!" : "Vynikající profit faktor!",
+    profitFactorMsg: (pf: number) => isEn ? `Profit factor ${pf.toFixed(2)} is excellent. Your wins are bigger than losses!` : `Profit faktor ${pf.toFixed(2)} je vynikající. Tvoje výhry jsou větší než ztráty!`,
+    
+    // Trade stats
+    profitingTrades: isEn ? "Profitable Trades" : "Ziskové obchody",
+    avgProfit: isEn ? "Average Profit" : "Průměrný zisk",
+    losingTrades: isEn ? "Losing Trades" : "Ztrátové obchody",
+    avgLoss: isEn ? "Average Loss" : "Průměrná ztráta",
+    profitFactor: isEn ? "Profit Factor" : "Profit faktor",
+    rating: isEn ? "Rating" : "Hodnocení",
+    bestDayVal: isEn ? "Best Day" : "Nejlepší den",
+    worstDay: isEn ? "Worst Day" : "Nejhorší den",
+    thisMonth: isEn ? "This Month" : "Tento měsíc",
+    
+    // Empty state
+    noRecords: isEn ? "No records yet" : "Zatím žádné záznamy",
+    startRecording: isEn ? "Start recording your trades and insights" : "Začni zaznamenávat své obchody a poznatky",
+    
+    // Entry details
+    emotionBefore: isEn ? "Emotion Before" : "Emoce před",
+    emotionDuring: isEn ? "Emotion During" : "Emoce během",
+    emotionAfter: isEn ? "Emotion After" : "Emoce po",
+    confidence: isEn ? "Confidence" : "Sebejistota",
+    stressLevel: isEn ? "Stress Level" : "Úroveň stresu",
+    
+    // Final message
+    excellentJob: isEn ? "Excellent Job!" : "Výborně!",
+    tradingGreat: isEn ? "Your trading is in great shape. Keep going! 🚀" : "Tvé obchodování je ve skvělé formě. Pokračuj! 🚀",
+    personalizedRecommendations: isEn ? "personalized recommendations for improving performance" : "personalizovaných doporučení pro zlepšení výkonu",
+    viewInsights: isEn ? "View Insights" : "Zobrazit Insights",
+  }
 
   useEffect(() => {
     loadEntries()
@@ -268,34 +352,32 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "🔥",
-        title: "Skvělá konzistence!",
-        message: `${stats.streak} dní v řadě jsi zapisoval do deníku. Udržuj to!`,
+        title: txt.greatConsistency,
+        message: txt.consistencyMsg(stats.streak),
       })
     } else if (stats.streak < 3 && stats.totalEntries > 0) {
-      // Only show if there are entries
       insights.push({
         type: "warning",
         icon: "⚠️",
-        title: "Zlepši konzistenci",
-        message: "Pravidelné journaling je klíč k úspěchu. Zkus psát každý den!",
+        title: txt.improveConsistency,
+        message: txt.consistencyWarning,
       })
     }
 
     if (stats.totalTrades > 0) {
-      // Only show if there are trades
       if (stats.winRate >= 60) {
         insights.push({
           type: "success",
           icon: "🎯",
-          title: "Výborný Win Rate!",
-          message: `${stats.winRate}% win rate je profesionální úroveň. Skvělá práce!`,
+          title: txt.excellentWinRate,
+          message: txt.winRateSuccess(stats.winRate),
         })
       } else if (stats.winRate < 50) {
         insights.push({
           type: "critical",
           icon: "🚨",
-          title: "Win Rate potřebuje zlepšení",
-          message: `${stats.winRate}% win rate je pod break-even. Zkontroluj svou strategii!`,
+          title: txt.winRateNeeds,
+          message: txt.winRateWarning(stats.winRate),
         })
       }
     }
@@ -304,15 +386,15 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "💰",
-        title: "Skvělé P&L!",
-        message: `+$${stats.totalPnL} je excellent performance. Pokračuj v tom!`,
+        title: txt.greatPnL,
+        message: txt.pnLSuccess(stats.totalPnL),
       })
     } else if (stats.totalPnL < -500) {
       insights.push({
         type: "critical",
         icon: "📉",
-        title: "Negativní P&L",
-        message: `${stats.totalPnL} vyžaduje okamžitou akci. Zreviduj risk management!`,
+        title: txt.negativePnL,
+        message: txt.pnLWarning(stats.totalPnL),
       })
     }
 
@@ -320,16 +402,15 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "😊",
-        title: "Skvělá nálada!",
-        message: `Průměrná nálada ${stats.avgMood}/10 je výborná. Pozitivní mindset = lepší výsledky!`,
+        title: txt.greatMood,
+        message: txt.moodSuccess(stats.avgMood),
       })
     } else if (stats.avgMood < 5 && stats.totalEntries > 0) {
-      // Only show if there are entries
       insights.push({
         type: "warning",
         icon: "😔",
-        title: "Nízká nálada",
-        message: `Průměrná nálada ${stats.avgMood}/10. Focus na mental health!`,
+        title: txt.lowMood,
+        message: txt.moodWarning(stats.avgMood),
       })
     }
 
@@ -338,8 +419,8 @@ export default function JournalPage() {
       insights.push({
         type: "success",
         icon: "⚡",
-        title: "Výborný Profit Factor!",
-        message: `Profit factor ${profitFactor.toFixed(2)} je skvělý. Tvoje výhry jsou větší než ztráty!`,
+        title: txt.excellentProfitFactor,
+        message: txt.profitFactorMsg(profitFactor),
       })
     }
 
@@ -375,14 +456,14 @@ export default function JournalPage() {
           <div>
             <h1 className="text-2xl md:text-4xl font-bold text-white mb-1 md:mb-2 flex items-center gap-2 md:gap-3">
               <BookOpen className="w-6 h-6 md:w-10 md:h-10 text-purple-400" />
-              Trading Deník
+              {txt.journalTitle}
               <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 text-xs md:text-sm">
                 <Sparkles className="w-2 h-2 md:w-3 md:h-3 mr-1" />
                 PRO
               </Badge>
             </h1>
             <p className="text-gray-300 text-sm md:text-lg hidden md:block">
-              Sleduj své obchody, analyzuj výkon a rozvíjej se jako trader 🚀
+              {txt.journalSubtitle}
             </p>
           </div>
 
@@ -390,7 +471,7 @@ export default function JournalPage() {
           <div className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-2 px-3 text-xs md:text-sm flex items-center gap-2 w-full mb-4">
             <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
             <span className="text-amber-100">
-              <span className="font-bold text-white">Momentálně si prohlížíš data ve Virtual modu</span> – jak mohou vypadat během používání softwaru
+              <span className="font-bold text-white">{txt.virtualNotice}</span>{txt.virtualNotice2}
             </span>
           </div>
         )}
@@ -401,8 +482,8 @@ export default function JournalPage() {
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg text-xs md:text-sm px-3 md:px-4"
             >
               <Brain className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              <span className="hidden md:inline">AI Insights</span>
-              <span className="md:hidden">AI</span>
+              <span className="hidden md:inline">{txt.aiInsights}</span>
+              <span className="md:hidden">{txt.aiShort}</span>
               {insights.length > 0 && (
                 <Badge className="ml-1 md:ml-2 bg-white/20 text-white border-0 text-xs">{insights.length}</Badge>
               )}
@@ -420,7 +501,7 @@ export default function JournalPage() {
               className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-lg text-xs md:text-sm px-3 md:px-4"
             >
               <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              <span className="hidden md:inline">Rychlý záznam</span>
+              <span className="hidden md:inline">{txt.quickEntry}</span>
               <span className="md:hidden">+</span>
             </Button>
           </div>
@@ -432,11 +513,11 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Celkem</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.total}</p>
                     <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">
                       {displayStats.totalEntries || displayStats.celkem}
                     </p>
-                    <p className="text-blue-400 text-[10px] md:text-xs font-semibold">Záznamů</p>
+                    <p className="text-blue-400 text-[10px] md:text-xs font-semibold">{txt.records}</p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20">
                     <BookOpen className="w-4 h-4 md:w-6 md:h-6 text-blue-400" />
@@ -457,10 +538,10 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Tento týden</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.thisWeek}</p>
                     <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.thisWeek}</p>
                     <p className="text-green-400 text-[10px] md:text-xs font-semibold flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3 md:w-4 md:h-4" /> Nových
+                      <TrendingUp className="w-3 h-3 md:w-4 md:h-4" /> {txt.newEntry}
                     </p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20">
@@ -482,11 +563,11 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Průměr/den</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.avgPerDay}</p>
                     <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">
                       {displayStats.avgPerDay || displayStats.avgPerTrade}
                     </p>
-                    <p className="text-purple-400 text-[10px] md:text-xs font-semibold">Záznamů</p>
+                    <p className="text-purple-400 text-[10px] md:text-xs font-semibold">{txt.records}</p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20">
                     <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-400" />
@@ -509,10 +590,10 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Série</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.streak}</p>
                     <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.streak}</p>
                     <p className="text-orange-400 text-[10px] md:text-xs font-semibold flex items-center gap-1">
-                      <Flame className="w-3 h-3 md:w-4 md:h-4" /> Dní
+                      <Flame className="w-3 h-3 md:w-4 md:h-4" /> {txt.bestDay}
                     </p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-orange-500/20 to-amber-500/20">
@@ -603,7 +684,7 @@ export default function JournalPage() {
                       ) : (
                         <TrendingDown className="w-3 h-3 md:w-4 md:h-4" />
                       )}
-                      {displayStats.winRate >= 60 ? "Výborný" : displayStats.winRate >= 50 ? "Dobrý" : "Slabý"}
+                      {displayStats.winRate >= 60 ? "Excellent" : displayStats.winRate >= 50 ? "Good" : "Weak"}
                     </p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
@@ -625,11 +706,11 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Nejlepší</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.bestDayVal}</p>
                     <p className="text-xl md:text-3xl font-bold text-emerald-400 mb-0.5 md:mb-1">
                       +${displayStats.bestDay}
                     </p>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-semibold">Den</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-semibold">{txt.day}</p>
                   </div>
                   <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20">
                     <Award className="w-4 h-4 md:w-6 md:h-6 text-emerald-400" />
@@ -650,7 +731,7 @@ export default function JournalPage() {
               <div className="p-2 md:p-4 pb-2 md:pb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Nálada</p>
+                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.mood}</p>
                     <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.avgMood}</p>
                     <p className="text-pink-400 text-[10px] md:text-xs font-semibold">/10 avg</p>
                   </div>
@@ -679,9 +760,9 @@ export default function JournalPage() {
                     <Sparkles className="w-6 h-6 text-purple-400" />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-lg">AI Insights dostupné!</h3>
+                    <h3 className="text-white font-bold text-lg">{txt.aiInsightsAvailable}</h3>
                     <p className="text-gray-300 text-sm">
-                      {insights.length} personalizovaných doporučení pro zlepšení výkonu
+                      {insights.length} {txt.personalizedRecommendations}
                     </p>
                   </div>
                 </div>
@@ -690,7 +771,7 @@ export default function JournalPage() {
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                 >
                   <Eye className="w-4 h-4 mr-2" />
-                  Zobrazit Insights
+                  {txt.viewInsights}
                 </Button>
               </div>
             </CardContent>
@@ -1063,10 +1144,10 @@ export default function JournalPage() {
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
               <Brain className="w-6 h-6 text-purple-400" />
-              AI Insights & Doporučení
+              {txt.aiInsights} & {isEn ? "Recommendations" : "Doporučení"}
               <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
                 <Sparkles className="w-3 h-3 mr-1" />
-                {insights.length} insights
+                {insights.length} {isEn ? "insights" : "poznatků"}
               </Badge>
             </DialogTitle>
           </DialogHeader>
@@ -1109,8 +1190,8 @@ export default function JournalPage() {
                 <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center border-2 border-purple-500/30">
                   <Sparkles className="w-10 h-10 text-purple-400" />
                 </div>
-                <p className="text-lg font-medium text-gray-400 mb-2">Skvělá práce!</p>
-                <p className="text-sm text-gray-500">Tvůj trading je v perfektní kondici. Pokračuj! 🚀</p>
+                <p className="text-lg font-medium text-gray-400 mb-2">{txt.excellentJob}</p>
+                <p className="text-sm text-gray-500">{txt.tradingGreat}</p>
               </div>
             )}
           </div>
