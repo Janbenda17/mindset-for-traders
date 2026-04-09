@@ -13,6 +13,7 @@ import { useLiveMode } from '@/contexts/live-mode-context'
 import { useAnalytics } from '@/contexts/analytics-context'
 import { useGamification } from '@/contexts/gamification-context'
 import { CapitalSettingsDialog } from '@/components/capital-settings-dialog'
+import { useT } from '@/contexts/language-context'
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const { analytics, isLoading: analyticsLoading } = useAnalytics()
   const gamification = useGamification()
   const gamificationLoading = !gamification?.data
+  const t = useT()
 
   // Calculate dynamic values from analytics
   const totalCapital = analytics?.summary.totalPnL ? Math.abs(analytics.summary.totalPnL) + userCapital : userCapital
@@ -48,26 +50,26 @@ export default function Dashboard() {
 
   const features = [
     {
-      title: 'Daily Tracker',
-      desc: 'Nastavíš si pravidla dne – AI tě hlídá, abys je dodržel',
+      title: t('daily_tracker_title'),
+      desc: t('feat_daily_desc'),
       icon: Calendar,
       href: '/daily-tracker'
     },
     {
-      title: 'MindTrader AI',
-      desc: 'Varuje tě v reálném čase před emočními chybami',
+      title: t('mindtrader_title'),
+      desc: t('feat_mindtrader_desc'),
       icon: Zap,
-      href: '/mindtrader-pro'
+      href: '/mindtrader'
     },
     {
-      title: 'Weekly Review',
-      desc: 'Shrne týden a řekne, co změnit příště',
+      title: t('weekly_review_title'),
+      desc: t('feat_weekly_desc'),
       icon: TrendingUp,
       href: '/weekly-review'
     },
     {
       title: 'Loss Reset',
-      desc: 'Rychlý reset po ztrátě – zpět do hry bez revanše',
+      desc: t('nav_home') === 'Dashboard' ? 'Quick reset after loss – back in the game without revenge' : 'Rychlý reset po ztrátě – zpět do hry bez revenge',
       icon: Target,
       href: '/loss-reset'
     }
@@ -111,7 +113,7 @@ export default function Dashboard() {
       <TopNavigation />
       
       {/* Main Content */}
-      <div className="relative z-10 pt-32 px-4 md:px-8 lg:px-12 pb-20 max-w-6xl mx-auto">
+      <div className="relative z-10 pt-32 px-2 sm:px-4 md:px-8 lg:px-12 pb-20 max-w-7xl mx-auto w-full">
         {/* Dashboard Heading */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -120,10 +122,10 @@ export default function Dashboard() {
           className="mb-12 flex items-start justify-between"
         >
           <div>
-            <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
-              Nástěnka
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
+              {t('dashboard_title')}
             </h1>
-            <p className="text-lg text-purple-200">Sleduj svůj trading progres a optimalizuj svůj mindset</p>
+            <p className="text-sm sm:text-base md:text-lg text-purple-200">{t('nav_home') === 'Dashboard' ? 'Track your trading progress and optimize your mindset' : 'Sleduj svůj trading progres a optimalizuj svůj mindset'}</p>
           </div>
           <CapitalSettingsDialog 
             currentCapital={userCapital}
@@ -142,7 +144,7 @@ export default function Dashboard() {
             <div className="max-w-6xl mx-auto bg-gradient-to-r from-green-900/80 to-emerald-900/80 backdrop-blur-sm border-b border-green-500/30 rounded-lg py-2 px-4 flex items-center justify-center gap-3 text-xs md:text-sm">
               <Crown className="w-4 h-4 text-green-300 flex-shrink-0" />
               <span className="text-green-100">
-                <span className="font-bold text-white">Jsi v Live Mode!</span> – Tvoje reálná data jsou nyní aktivní
+              <span className="font-bold text-white">{t('nav_home') === 'Dashboard' ? 'You are in Live Mode!' : 'Jsi v Live Mode!'}</span> – {t('nav_home') === 'Dashboard' ? 'Your real data is now active' : 'Tvoje reálná data jsou nyní aktivní'}
               </span>
             </div>
           </motion.div>
@@ -150,64 +152,105 @@ export default function Dashboard() {
 
         {/* Adjust top padding when banner is visible */}
         <div className={isLiveMode ? "" : "pt-16"}>
+          {/* Key Metrics Row - 4 columns */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-10"
           >
             {[
-              { label: 'Celkový kapitál', value: `$${totalCapital.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, icon: '💰', gradient: 'from-green-500 to-emerald-600' },
-              { label: 'Měsíční P/L', value: `${monthlyPL >= 0 ? '+' : ''}$${monthlyPL.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, icon: '📈', gradient: 'from-blue-500 to-cyan-600' },
-              { label: 'Aktuální Readiness', value: `${Math.round(readiness)}%`, icon: '🧠', gradient: 'from-purple-500 to-indigo-600' },
-              { label: 'Aktuální XP', value: xpValue.toLocaleString('cs-CZ'), icon: '⭐', gradient: 'from-yellow-500 to-orange-600' }
+              { 
+                label: t('dashboard_total_capital'), 
+                value: `$${totalCapital.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, 
+                color: 'text-green-400',
+                borderColor: 'border-green-500/20',
+                bgColor: 'bg-green-500/5'
+              },
+              { 
+                label: t('dashboard_monthly_pl'), 
+                value: `${monthlyPL >= 0 ? '+' : ''}$${monthlyPL.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })}`, 
+                color: 'text-blue-400',
+                borderColor: 'border-blue-500/20',
+                bgColor: 'bg-blue-500/5'
+              },
+              { 
+                label: t('dashboard_readiness'), 
+                value: `${Math.round(readiness)}%`, 
+                color: 'text-purple-400',
+                borderColor: 'border-purple-500/20',
+                bgColor: 'bg-purple-500/5'
+              },
+              { 
+                label: t('dashboard_xp'), 
+                value: xpValue.toLocaleString('cs-CZ'), 
+                color: 'text-yellow-400',
+                borderColor: 'border-yellow-500/20',
+                bgColor: 'bg-yellow-500/5'
+              }
             ].map((stat, i) => (
               <motion.div
                 key={i}
-                whileHover={{ scale: 1.05, y: -3 }}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                whileHover={{ y: -4 }}
+                className={`${stat.bgColor} ${stat.borderColor} border rounded-xl p-5 transition-all hover:border-opacity-40`}
               >
-                <p className="text-xs md:text-sm font-semibold text-slate-400 mb-2">{stat.label}</p>
-                <p className="text-2xl md:text-3xl font-black text-white">{analyticsLoading || gamificationLoading ? '...' : stat.value}</p>
+                <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">{stat.label}</p>
+                <p className={`text-3xl font-black ${stat.color} mb-1`}>
+                  {analyticsLoading || gamificationLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    stat.value
+                  )}
+                </p>
               </motion.div>
             ))}
           </motion.div>
 
-          {/* Features Grid */}
+          {/* Features Grid - 2x2 */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mb-16"
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mb-12"
           >
-            <div className="grid md:grid-cols-2 gap-6">
-              {features.map((feature, i) => (
-                <Link key={i} href={feature.href}>
-                  <motion.div
-                    whileHover={{ scale: 1.03, y: -5 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Card className="bg-white/5 backdrop-blur-md border-white/10 hover:bg-white/10 transition-all h-full cursor-pointer group">
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                            <feature.icon className="w-7 h-7 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-                            <p className="text-purple-200 leading-relaxed">{feature.desc}</p>
-                            <div className="mt-4">
-                              <Button variant="ghost" size="sm" className="text-purple-300 hover:text-white p-0 h-auto font-semibold">
-                                Vyzkoušet teď →
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                </Link>
-              ))}
+            <h2 className="text-2xl font-bold text-white mb-6">{t('dashboard_tools')}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {features.map((feature, i) => {
+                const colorScheme = [
+                  { bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: 'bg-purple-600 text-purple-100' },
+                  { bg: 'bg-blue-500/10', border: 'border-blue-500/20', icon: 'bg-blue-600 text-blue-100' },
+                  { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: 'bg-emerald-600 text-emerald-100' },
+                  { bg: 'bg-orange-500/10', border: 'border-orange-500/20', icon: 'bg-orange-600 text-orange-100' }
+                ]
+                const scheme = colorScheme[i]
+                return (
+                  <Link key={i} href={feature.href}>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }}
+                      whileHover={{ y: -4 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`${scheme.bg} ${scheme.border} border rounded-2xl p-6 transition-all cursor-pointer hover:border-opacity-40 h-full flex flex-col`}
+                    >
+                      <div className={`w-12 h-12 rounded-lg ${scheme.icon} flex items-center justify-center mb-4`}>
+                        <feature.icon className="w-6 h-6" />
+                      </div>
+
+                      <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
+                      <p className="text-slate-300 text-sm mb-6 flex-grow leading-relaxed">{feature.desc}</p>
+
+                      <div className="flex items-center gap-2 text-slate-400 text-sm font-semibold hover:text-white transition-colors">
+                        <span>{t('open')}</span>
+                        <span className="text-lg">→</span>
+                      </div>
+                    </motion.div>
+                  </Link>
+                )
+              })}
             </div>
           </motion.div>
         </div>

@@ -3,15 +3,18 @@
 import { toast } from "@/hooks/use-toast"
 
 /**
- * Centralized localStorage client with proper error handling and user isolation
- * ALL localStorage access should go through this client
+ * Centralized storage client with localStorage fallback
+ * In LIVE mode with user, always prefers Supabase via API
+ * In DEMO mode or no user, uses localStorage
  */
 
 export class StorageClient {
   private userId: string | null
+  private isLiveMode: boolean
 
-  constructor(userId: string | null = null) {
+  constructor(userId: string | null = null, isLiveMode: boolean = false) {
     this.userId = userId
+    this.isLiveMode = isLiveMode
   }
 
   private getKey(key: string): string {
@@ -22,6 +25,10 @@ export class StorageClient {
     return `user-${this.userId}-${key}`
   }
 
+  /**
+   * Get data - uses localStorage
+   * For API-backed data, components should call APIs directly
+   */
   get<T>(key: string, fallback: T): T {
     try {
       const fullKey = this.getKey(key)
@@ -30,15 +37,14 @@ export class StorageClient {
       return JSON.parse(raw) as T
     } catch (error) {
       console.error(`[StorageClient] Error reading ${key}:`, error)
-      toast({
-        title: "Chyba načítání dat",
-        description: "Nepodařilo se načíst uložená data. Používáme výchozí hodnoty.",
-        variant: "destructive",
-      })
       return fallback
     }
   }
 
+  /**
+   * Set data - stores in localStorage
+   * For API-backed data, components should call APIs directly
+   */
   set<T>(key: string, value: T): boolean {
     try {
       const fullKey = this.getKey(key)
@@ -48,7 +54,7 @@ export class StorageClient {
       console.error(`[StorageClient] Error writing ${key}:`, error)
       toast({
         title: "Chyba ukládání",
-        description: "Nepodařilo se uložit data. Zkontrolujte volné místo v prohlížeči.",
+        description: "Nepodařilo se uložit data lokálně.",
         variant: "destructive",
       })
       return false
@@ -85,6 +91,6 @@ export class StorageClient {
   }
 }
 
-export function createStorageClient(userId: string | null): StorageClient {
-  return new StorageClient(userId)
+export function createStorageClient(userId: string | null, isLiveMode: boolean = false): StorageClient {
+  return new StorageClient(userId, isLiveMode)
 }

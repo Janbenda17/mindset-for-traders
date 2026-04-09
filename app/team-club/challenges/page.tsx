@@ -17,9 +17,9 @@ export default function Challenges() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <Trophy className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Přihlášení vyžadováno</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Sign In Required</h1>
           <Button asChild>
-            <Link href="/login">Přihlásit se</Link>
+            <Link href="/login">Sign In</Link>
           </Button>
         </div>
       </div>
@@ -28,43 +28,43 @@ export default function Challenges() {
 
   const activeChallenge = {
     id: 1,
-    title: "30-denní konzistentnost",
-    description: "Obchodujte každý den po dobu 30 dní s dodržením risk managementu",
+    title: "30-Day Consistency",
+    description: "Trade every day for 30 days while maintaining proper risk management",
     progress: 18,
     total: 30,
     reward: "Premium badge + $100 bonus",
     participants: 156,
-    timeLeft: "12 dní",
+    timeLeft: "12 days",
   }
 
   const upcomingChallenges = [
     {
       id: 2,
-      title: "Týdenní profit challenge",
-      description: "Dosáhněte 5% zisku za týden s max. 2% rizikem na obchod",
-      startDate: "Za 5 dní",
-      duration: "7 dní",
+      title: "Weekly Profit Challenge",
+      description: "Achieve 5% profit for the week with max 2% risk per trade",
+      startDate: "In 5 days",
+      duration: "7 days",
       reward: "Gold badge + Mentoring session",
-      difficulty: "Pokročilý",
+      difficulty: "Advanced",
       participants: 89,
     },
     {
       id: 3,
       title: "Risk Management Master",
-      description: "Dokončete 50 obchodů bez překročení 1% rizika",
-      startDate: "Za 12 dní",
-      duration: "Flexibilní",
-      reward: "Expert badge + Certifikát",
-      difficulty: "Střední",
+      description: "Complete 50 trades without exceeding 1% risk per trade",
+      startDate: "In 12 days",
+      duration: "Flexible",
+      reward: "Expert badge + Certificate",
+      difficulty: "Intermediate",
       participants: 234,
     },
     {
       id: 4,
       title: "Swing Trading Marathon",
-      description: "Držte pozice minimálně 3 dny, dosáhněte 10% zisku",
-      startDate: "Za 18 dní",
-      duration: "30 dní",
-      reward: "Master badge + Osobní konzultace",
+      description: "Hold positions for at least 3 days, achieve 10% profit",
+      startDate: "In 18 days",
+      duration: "30 days",
+      reward: "Master badge + Personal consultation",
       difficulty: "Expert",
       participants: 67,
     },
@@ -73,15 +73,15 @@ export default function Challenges() {
   const completedChallenges = [
     {
       id: 5,
-      title: "První kroky",
-      completedDate: "Před 2 týdny",
+      title: "First Steps",
+      completedDate: "2 weeks ago",
       reward: "Beginner badge",
       rank: 23,
     },
     {
       id: 6,
-      title: "10 ziskových obchodů",
-      completedDate: "Před měsícem",
+      title: "10 Winning Trades",
+      completedDate: "1 month ago",
       reward: "Trader badge",
       rank: 45,
     },
@@ -118,7 +118,7 @@ export default function Challenges() {
     },
     {
       rank: 5,
-      name: "Vy",
+      name: "You",
       avatar: "/placeholder.svg?height=32&width=32",
       points: 1750,
       badges: 6,
@@ -132,9 +132,9 @@ export default function Challenges() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center">
             <Trophy className="w-8 h-8 mr-3 text-yellow-600" />
-            Trading Výzvy
+            Trading Challenges
           </h1>
-          <p className="text-gray-600 mt-1">Testujte své schopnosti • Soutěžte s ostatními • Získávejte odměny</p>
+          <p className="text-gray-600 mt-1">Test your skills • Compete with others • Earn rewards</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -146,7 +146,7 @@ export default function Challenges() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center space-x-2">
                     <Zap className="w-5 h-5 text-blue-600" />
-                    <span>Aktivní výzva</span>
+                    <span>Active Challenge</span>
                   </CardTitle>
                   <Badge className="bg-blue-600 text-white">
                     <Clock className="w-3 h-3 mr-1" />
@@ -163,9 +163,9 @@ export default function Challenges() {
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Pokrok</span>
+                      <span>Progress</span>
                       <span>
-                        {activeChallenge.progress}/{activeChallenge.total} dní
+                        {activeChallenge.progress}/{activeChallenge.total} days
                       </span>
                     </div>
                     <Progress value={(activeChallenge.progress / activeChallenge.total) * 100} className="h-3" />
@@ -173,18 +173,18 @@ export default function Challenges() {
 
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-blue-600">Odměna</p>
+                      <p className="text-blue-600">Reward</p>
                       <p className="font-medium">{activeChallenge.reward}</p>
                     </div>
                     <div>
-                      <p className="text-blue-600">Účastníci</p>
-                      <p className="font-medium">{activeChallenge.participants} traderů</p>
+                      <p className="text-blue-600">Participants</p>
+                      <p className="font-medium">{activeChallenge.participants} traders</p>
                     </div>
                   </div>
 
                   <Button className="w-full">
                     <Target className="w-4 h-4 mr-2" />
-                    Pokračovat ve výzvě
+                    Continue Challenge
                   </Button>
                 </div>
               </CardContent>
@@ -195,7 +195,7 @@ export default function Challenges() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Calendar className="w-5 h-5" />
-                  <span>Nadcházející výzvy</span>
+                  <span>Upcoming Challenges</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -212,7 +212,7 @@ export default function Challenges() {
                           className={
                             challenge.difficulty === "Expert"
                               ? "border-red-200 text-red-700"
-                              : challenge.difficulty === "Pokročilý"
+                              : challenge.difficulty === "Advanced"
                                 ? "border-orange-200 text-orange-700"
                                 : "border-green-200 text-green-700"
                           }
@@ -227,23 +227,23 @@ export default function Challenges() {
                           <p className="font-medium">{challenge.startDate}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Trvání</p>
+                          <p className="text-gray-500">Duration</p>
                           <p className="font-medium">{challenge.duration}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Účastníci</p>
+                          <p className="text-gray-500">Participants</p>
                           <p className="font-medium">{challenge.participants}</p>
                         </div>
                       </div>
 
                       <div className="mb-4">
-                        <p className="text-sm text-gray-500">Odměna</p>
+                        <p className="text-sm text-gray-500">Reward</p>
                         <p className="font-medium text-green-600">{challenge.reward}</p>
                       </div>
 
                       <Button variant="outline" className="w-full bg-transparent">
                         <Users className="w-4 h-4 mr-2" />
-                        Přihlásit se
+                        Join
                       </Button>
                     </div>
                   ))}
@@ -256,7 +256,7 @@ export default function Challenges() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span>Dokončené výzvy</span>
+                  <span>Completed Challenges</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -269,7 +269,7 @@ export default function Challenges() {
                       </div>
                       <div className="text-right">
                         <Badge className="bg-green-100 text-green-800 mb-1">{challenge.reward}</Badge>
-                        <p className="text-sm text-gray-500">#{challenge.rank} místo</p>
+                        <p className="text-sm text-gray-500">#{challenge.rank} place</p>
                       </div>
                     </div>
                   ))}
@@ -285,13 +285,13 @@ export default function Challenges() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Star className="w-5 h-5" />
-                  <span>Vaše statistiky</span>
+                  <span>Your Stats</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">1,750</div>
-                  <p className="text-sm text-gray-600">Celkové body</p>
+                  <p className="text-sm text-gray-600">Total Points</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-center">
@@ -301,14 +301,14 @@ export default function Challenges() {
                   </div>
                   <div>
                     <div className="text-lg font-semibold">3</div>
-                    <p className="text-xs text-gray-600">Dokončené</p>
+                    <p className="text-xs text-gray-600">Completed</p>
                   </div>
                 </div>
 
                 <div className="text-center">
                   <Badge className="bg-yellow-100 text-yellow-800">
                     <Award className="w-3 h-3 mr-1" />
-                    #5 v žebříčku
+                    #5 in Leaderboard
                   </Badge>
                 </div>
               </CardContent>
@@ -319,7 +319,7 @@ export default function Challenges() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Trophy className="w-5 h-5" />
-                  <span>Žebříček</span>
+                  <span>Leaderboard</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -328,7 +328,7 @@ export default function Challenges() {
                     <div
                       key={player.rank}
                       className={`flex items-center space-x-3 p-2 rounded-lg ${
-                        player.name === "Vy" ? "bg-blue-50 border border-blue-200" : ""
+                        player.name === "You" ? "bg-blue-50 border border-blue-200" : ""
                       }`}
                     >
                       <div
@@ -349,7 +349,7 @@ export default function Challenges() {
                         <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <p className={`text-sm font-medium ${player.name === "Vy" ? "text-blue-900" : ""}`}>
+                        <p className={`text-sm font-medium ${player.name === "You" ? "text-blue-900" : ""}`}>
                           {player.name}
                         </p>
                         <p className="text-xs text-gray-500">{player.badges} badges</p>
@@ -368,21 +368,21 @@ export default function Challenges() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <TrendingUp className="w-5 h-5" />
-                  <span>Rychlé akce</span>
+                  <span>Quick Actions</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button variant="outline" className="w-full justify-start bg-transparent">
                   <Target className="w-4 h-4 mr-2" />
-                  Vytvořit výzvu
+                  Create Challenge
                 </Button>
                 <Button variant="outline" className="w-full justify-start bg-transparent">
                   <Users className="w-4 h-4 mr-2" />
-                  Pozvat přátele
+                  Invite Friends
                 </Button>
                 <Button variant="outline" className="w-full justify-start bg-transparent">
                   <Award className="w-4 h-4 mr-2" />
-                  Moje badges
+                  My Badges
                 </Button>
               </CardContent>
             </Card>

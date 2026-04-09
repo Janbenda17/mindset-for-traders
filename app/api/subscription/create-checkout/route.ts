@@ -35,8 +35,10 @@ export async function POST(request: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser()
 
+    console.log("[v0] [CHECKOUT] Auth check:", { hasUser: !!user, hasError: !!authError, errorMsg: authError?.message })
+
     if (authError || !user) {
-      console.log("[v0] Not authenticated")
+      console.log("[v0] [CHECKOUT] Not authenticated - returning 401")
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
 
@@ -93,9 +95,11 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get("origin")
     const baseUrl = origin || process.env.NEXT_PUBLIC_BASE_URL || "https://mindtrader.vercel.app"
 
-    console.log("[v0] Request origin:", origin)
-    console.log("[v0] NEXT_PUBLIC_BASE_URL:", process.env.NEXT_PUBLIC_BASE_URL)
-    console.log("[v0] Final base URL:", baseUrl)
+    console.log("[v0] [CHECKOUT] baseUrl setup:", {
+      origin: origin || "none",
+      env_var: process.env.NEXT_PUBLIC_BASE_URL || "none",
+      final_baseUrl: baseUrl
+    })
 
     // IMPORTANT: Find correct price ID from YOUR account
     // You can find this by running: stripe prices list --product prod_***
@@ -121,9 +125,10 @@ export async function POST(request: NextRequest) {
           user_id: user.id,
           user_email: user.email || "",
         },
+        trial_period_days: 14,
       },
-      success_url: `${baseUrl}/pricing?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/pricing`,
+      success_url: `${baseUrl}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/upgrade`,
       metadata: {
         plan: "premium",
         user_id: user.id,
@@ -141,7 +146,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to create checkout session - no URL" }, { status: 500 })
     }
 
-    return NextResponse.json({ url: session.url })
+    // Return Stripe URL directly - client will redirect to it
+    return NextResponse.json({ 
+      url: session.url
+    })
   } catch (error) {
     console.error("[v0] Error creating checkout session:", error)
     return NextResponse.json({ error: "Failed to create checkout session" }, { status: 500 })

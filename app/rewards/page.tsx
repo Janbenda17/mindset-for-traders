@@ -1,11 +1,12 @@
 "use client"
 
-import { LevelProgress } from "@/components/level-progress"
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 import { AchievementsGrid } from "@/components/achievements-grid"
-import { ChallengesSection } from "@/components/challenges-section"
+import { LevelProgress } from "@/components/level-progress"
 import { useGamification } from "@/contexts/gamification-context"
 import { Card, CardContent } from "@/components/ui/card"
-import { Trophy, Target, Flame, Star } from "lucide-react"
+import { Trophy, Flame, Star } from "lucide-react"
 
 export default function RewardsPage() {
   const { data } = useGamification()
@@ -24,12 +25,6 @@ export default function RewardsPage() {
       color: "text-yellow-400",
     },
     {
-      label: "Dokončené výzvy",
-      value: data.stats.challengesCompleted,
-      icon: Target,
-      color: "text-blue-400",
-    },
-    {
       label: "Nejdelší streak",
       value: Math.max(...Object.values(data.streaks)),
       icon: Flame,
@@ -39,13 +34,21 @@ export default function RewardsPage() {
 
   return (
     <div className="min-h-screen p-6 space-y-8">
+      {/* Back Button */}
+      <Link href="/bonus" className="inline-flex">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
+          <ArrowLeft className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gray-400">Zpět</span>
+        </div>
+      </Link>
+
       <div>
-        <h1 className="text-4xl font-bold mb-2">Odměny & Achievementy</h1>
-        <p className="text-muted-foreground">Sleduj svůj progress, odemykej odznaky a dokončuj výzvy</p>
+        <h1 className="text-4xl font-bold mb-2">Odznaky & Achievementy</h1>
+        <p className="text-muted-foreground">Sleduj svůj progress a odemykej odznaky</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {stats.map((stat) => (
           <Card key={stat.label}>
             <CardContent className="p-6">
@@ -64,10 +67,7 @@ export default function RewardsPage() {
       {/* Level Progress */}
       <LevelProgress />
 
-      {/* Challenges */}
-      <ChallengesSection />
-
-      {/* Achievements */}
+      {/* Achievements/Badges */}
       <AchievementsGrid />
     </div>
   )

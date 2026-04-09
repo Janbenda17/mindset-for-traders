@@ -11,6 +11,9 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get("stripe-signature")
 
   console.log("[WEBHOOK] ========== START ==========")
+  console.log("[WEBHOOK] Raw body length:", rawBody.length)
+  console.log("[WEBHOOK] Signature header:", signature ? `${signature.substring(0, 20)}...` : "MISSING")
+  console.log("[WEBHOOK] STRIPE_WEBHOOK_SECRET env:", process.env.STRIPE_WEBHOOK_SECRET ? "✓ SET" : "✗ MISSING")
 
   if (!signature) {
     console.error("[WEBHOOK] ERROR: Missing stripe-signature header")
@@ -20,21 +23,35 @@ export async function POST(req: NextRequest) {
   const secretKey = process.env.STRIPE_SECRET_KEY
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
-  if (!secretKey || !webhookSecret) {
-    console.error("[WEBHOOK] ERROR: Missing Stripe environment variables")
-    return new Response("Configuration error", { status: 500 })
+  if (!secretKey) {
+    console.error("[WEBHOOK] ERROR: Missing STRIPE_SECRET_KEY")
+    return new Response("Configuration error: missing secret key", { status: 500 })
+  }
+
+  if (!webhookSecret) {
+    console.error("[WEBHOOK] ERROR: Missing STRIPE_WEBHOOK_SECRET - This is required for webhook verification!")
+    console.error("[WEBHOOK] Make sure STRIPE_WEBHOOK_SECRET is set in environment variables")
+    return new Response("Configuration error: missing webhook secret", { status: 500 })
   }
 
   const stripe = new Stripe(secretKey, { apiVersion: "2024-12-18" })
 
   let event: Stripe.Event
   try {
+    console.log("[WEBHOOK] Attempting to verify webhook signature...")
+    console.log("[WEBHOOK] Using webhook secret:", webhookSecret.substring(0, 10) + "...")
+    
     // Verify webhook signature using RAW body
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
     console.log("[WEBHOOK] ✓ Signature verified - event.type:", event.type)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error("[WEBHOOK] ERROR: Signature verification failed -", message)
+    console.error("[WEBHOOK] ERROR: Signature verification failed")
+    console.error("[WEBHOOK] Error details:", message)
+    console.error("[WEBHOOK] This usually means:")
+    console.error("[WEBHOOK] 1. The webhook secret in Stripe doesn't match STRIPE_WEBHOOK_SECRET env var")
+    console.error("[WEBHOOK] 2. The webhook was tampered with in transit")
+    console.error("[WEBHOOK] 3. The signature header format is invalid")
     return new Response(`Webhook signature verification failed: ${message}`, { status: 400 })
   }
 
@@ -144,6 +161,12 @@ async function handleCheckoutCompleted(
     updateData.subscription_current_period_end = periodEnd
   }
 
+  // IMPORTANTE: When premium is active, switch to live mode automatically
+  if (isPremium) {
+    updateData.trading_mode = "live"
+    console.log("[WEBHOOK]    🟢 Premium activated - switching trading_mode to LIVE")
+  }
+
   console.log("[WEBHOOK]    Updating profile by email:", email)
   console.log("[WEBHOOK]    Update data:", JSON.stringify(updateData))
 
@@ -158,7 +181,7 @@ async function handleCheckoutCompleted(
     console.error("[WEBHOOK]    Full error:", JSON.stringify(error))
   } else if (data && data.length > 0) {
     console.log("[WEBHOOK]    ✓ Profile updated successfully")
-    console.log("[WEBHOOK]    Updated profile user_id:", data[0].user_id, "is_premium:", data[0].is_premium)
+    console.log("[WEBHOOK]    Updated profile user_id:", data[0].user_id, "is_premium:", data[0].is_premium, "trading_mode:", data[0].trading_mode)
   } else {
     console.error("[WEBHOOK]    ERROR: No profile found with email:", email)
   }
@@ -197,22 +220,30 @@ async function handleSubscription(
 
   console.log("[WEBHOOK]    Updating user_id:", profile.user_id, "isPremium:", isPremium)
 
+  const updateData: Record<string, unknown> = {
+    subscription_status: subscription.status,
+    subscription_tier: isPremium ? "premium" : "free",
+    subscription_current_period_end: periodEnd,
+    stripe_subscription_id: subscription.id,
+    is_premium: isPremium,
+  }
+
+  // Switch to live mode when subscription is active
+  if (isPremium) {
+    updateData.trading_mode = "live"
+    console.log("[WEBHOOK]    🟢 Subscription active - switching trading_mode to LIVE")
+  }
+
   const { data, error } = await supabase
     .from("profiles")
-    .update({
-      subscription_status: subscription.status,
-      subscription_tier: isPremium ? "premium" : "free",
-      subscription_current_period_end: periodEnd,
-      stripe_subscription_id: subscription.id,
-      is_premium: isPremium,
-    })
+    .update(updateData)
     .eq("user_id", profile.user_id)
     .select()
 
   if (error) {
     console.error("[WEBHOOK]    ERROR:", error.message)
   } else if (data && data.length > 0) {
-    console.log("[WEBHOOK]    ✓ Subscription updated, is_premium:", data[0].is_premium)
+    console.log("[WEBHOOK]    ✓ Subscription updated, is_premium:", data[0].is_premium, "trading_mode:", data[0].trading_mode)
   }
 }
 
@@ -288,13 +319,14 @@ async function handleInvoicePaid(
       subscription_status: "active",
       subscription_tier: "premium",
       is_premium: true,
+      trading_mode: "live",  // Switch to live when invoice is paid
     })
     .eq("user_id", profile.user_id)
 
   if (error) {
     console.error("[WEBHOOK]    ERROR:", error.message)
   } else {
-    console.log("[WEBHOOK]    ✓ Premium confirmed")
+    console.log("[WEBHOOK]    ✓ Premium confirmed, trading_mode set to LIVE")
   }
 }
 

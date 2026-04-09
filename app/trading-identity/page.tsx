@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 import {
   Brain,
   Target,
@@ -18,6 +20,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useData } from "@/contexts/data-context"
+import { useLanguage } from "@/contexts/language-context"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -58,86 +61,86 @@ interface TraderProfile {
 const questions: Question[] = [
   {
     id: "trading-experience",
-    category: "Zkušenosti",
-    question: "Jak dlouho aktivně obchoduješ?",
+    category: "Experience",
+    question: "How long have you been actively trading?",
     type: "single",
     options: [
       {
         value: "beginner",
-        label: "Méně než 1 rok",
-        description: "Stále se učím základy",
+        label: "Less than 1 year",
+        description: "Still learning the basics",
         traits: ["learning", "cautious"],
       },
       {
         value: "intermediate",
-        label: "1-3 roky",
-        description: "Mám základní zkušenosti",
+        label: "1-3 years",
+        description: "I have basic experience",
         traits: ["developing", "growing"],
       },
-      { value: "advanced", label: "3-5 let", description: "Rozumím trhům dobře", traits: ["experienced", "confident"] },
-      { value: "expert", label: "5+ let", description: "Jsem zkušený trader", traits: ["expert", "seasoned"] },
+      { value: "advanced", label: "3-5 years", description: "I understand markets well", traits: ["experienced", "confident"] },
+      { value: "expert", label: "5+ years", description: "I'm an experienced trader", traits: ["expert", "seasoned"] },
     ],
   },
   {
     id: "learning-style",
-    category: "Styl učení",
-    question: "Jak se nejlépe učíš nové věci o tradingu?",
+    category: "Learning Style",
+    question: "How do you learn best about trading?",
     type: "single",
     options: [
       {
         value: "visual",
-        label: "Vizuálně",
-        description: "Grafy, videa, diagramy",
+        label: "Visually",
+        description: "Charts, videos, diagrams",
         traits: ["visual", "pattern-recognition"],
       },
       {
         value: "reading",
-        label: "Čtením",
-        description: "Knihy, články, výzkum",
+        label: "Reading",
+        description: "Books, articles, research",
         traits: ["theoretical", "analytical"],
       },
       {
         value: "practice",
-        label: "Praxí",
+        label: "Practice",
         description: "Learning by doing, backtesting",
         traits: ["practical", "hands-on"],
       },
       {
         value: "mentoring",
-        label: "Od mentora",
-        description: "Osobní vedení a feedback",
+        label: "From a mentor",
+        description: "Personal guidance and feedback",
         traits: ["social", "collaborative"],
       },
     ],
   },
   {
     id: "decision-speed",
-    category: "Rozhodování",
-    question: "Jak rychle typicky děláš obchodní rozhodnutí?",
+    category: "Decision Making",
+    question: "How quickly do you typically make trading decisions?",
     type: "single",
     options: [
       {
         value: "instant",
-        label: "Okamžitě",
-        description: "Důvěřuji intuici a zkušenostem",
+        label: "Instantly",
+        description: "I trust intuition and experience",
         traits: ["intuitive", "quick-thinker", "impulsive"],
       },
       {
         value: "quick",
-        label: "Rychle (minuty)",
-        description: "Rychlá analýza, pak akce",
+        label: "Fast (minutes)",
+        description: "Quick analysis, then action",
         traits: ["decisive", "confident", "action-oriented"],
       },
       {
         value: "moderate",
-        label: "Středně (hodiny)",
-        description: "Potřebuji čas na rozmyšlenou",
+        label: "Moderate (hours)",
+        description: "I need time to think",
         traits: ["balanced", "thoughtful"],
       },
       {
         value: "slow",
-        label: "Pomalu (dny)",
-        description: "Důkladně analyzuji všechny možnosti",
+        label: "Slow (days)",
+        description: "I analyze all options thoroughly",
         traits: ["analytical", "cautious", "patient"],
       },
     ],
@@ -145,311 +148,311 @@ const questions: Question[] = [
   {
     id: "risk-tolerance",
     category: "Risk Management",
-    question: "Jak se cítíš při riskování kapitálu?",
+    question: "How do you feel about risking capital?",
     type: "single",
     options: [
       {
         value: "aggressive",
-        label: "Agresivně",
-        description: "Vyšší risk = vyšší reward, to mě motivuje",
+        label: "Aggressively",
+        description: "Higher risk = higher reward, that motivates me",
         traits: ["risk-taker", "aggressive", "thrill-seeker"],
       },
       {
         value: "moderate",
-        label: "Vyváženě",
-        description: "Kalkulovaný risk s jasným plánem",
+        label: "Balanced",
+        description: "Calculated risk with a clear plan",
         traits: ["balanced", "strategic", "calculated"],
       },
       {
         value: "conservative",
-        label: "Konzervativně",
-        description: "Ochrana kapitálu je priorita",
+        label: "Conservatively",
+        description: "Capital preservation is priority",
         traits: ["conservative", "protective", "patient"],
       },
       {
         value: "minimal",
-        label: "Minimálně",
-        description: "Obchoduji jen s minimálním riskem",
+        label: "Minimally",
+        description: "I only trade with minimal risk",
         traits: ["risk-averse", "cautious", "anxious"],
       },
     ],
   },
   {
     id: "emotional-control",
-    category: "Emoce",
-    question: "Jak dobře kontroluješ emoce při obchodování?",
+    category: "Emotions",
+    question: "How well do you control emotions when trading?",
     type: "scale",
-    scaleLabels: { min: "Těžko ovládám", max: "Perfektní kontrola" },
+    scaleLabels: { min: "Difficult to control", max: "Perfect control" },
     scaleTraits: { low: ["emotional", "reactive"], high: ["disciplined", "stoic"] },
   },
   {
     id: "loss-reaction",
-    category: "Psychologie",
-    question: "Jak typicky reaguješ po ztrátovém obchodu?",
+    category: "Psychology",
+    question: "How do you typically react after a losing trade?",
     type: "single",
     options: [
       {
         value: "revenge",
-        label: "Chci ji hned vyrovnat",
-        description: "Těžko přijímám ztráty",
+        label: "I want to even it immediately",
+        description: "Hard to accept losses",
         traits: ["impulsive", "emotional", "revenge-trader"],
       },
       {
         value: "frustrated",
-        label: "Jsem frustrovaný",
-        description: "Ale držím se plánu",
+        label: "I'm frustrated",
+        description: "But I stick to the plan",
         traits: ["emotional", "disciplined"],
       },
       {
         value: "analyze",
-        label: "Analyzuji příčinu",
-        description: "Hledám poučení",
+        label: "I analyze the cause",
+        description: "I look for lessons",
         traits: ["analytical", "learning-oriented", "growth-mindset"],
       },
       {
         value: "accept",
-        label: "Přijímám jako součást",
-        description: "Ztráty jsou normální",
+        label: "I accept it as part of it",
+        description: "Losses are normal",
         traits: ["detached", "experienced", "stoic"],
       },
     ],
   },
   {
     id: "patience-level",
-    category: "Trpělivost",
-    question: "Jak trpělivý jsi při čekání na správný setup?",
+    category: "Patience",
+    question: "How patient are you waiting for the right setup?",
     type: "scale",
-    scaleLabels: { min: "Netrpělivý - musím být v trhu", max: "Velmi trpělivý - čekám i dny" },
+    scaleLabels: { min: "Impatient - I must be in the market", max: "Very patient - I wait even days" },
     scaleTraits: { low: ["impatient", "overtrading"], high: ["patient", "selective"] },
   },
   {
     id: "timeframe-preference",
-    category: "Styl obchodování",
-    question: "Jaký timeframe ti nejvíc vyhovuje?",
+    category: "Trading Style",
+    question: "Which timeframe works best for you?",
     type: "single",
     options: [
       {
         value: "scalping",
         label: "Scalping (M1-M5)",
-        description: "Rychlé obchody, desítky denně",
+        description: "Fast trades, dozens daily",
         traits: ["action-oriented", "quick-thinker", "high-frequency"],
       },
       {
         value: "daytrading",
         label: "Daytrading (M15-H1)",
-        description: "Obchody v rámci dne",
+        description: "Trades within a day",
         traits: ["focused", "disciplined", "intraday"],
       },
       {
         value: "swing",
         label: "Swing (H4-D1)",
-        description: "Držím pozice dny až týdny",
+        description: "I hold positions for days to weeks",
         traits: ["patient", "analytical", "swing"],
       },
       {
         value: "position",
         label: "Position (W1-MN)",
-        description: "Dlouhodobé pozice",
+        description: "Long-term positions",
         traits: ["patient", "strategic", "investor"],
       },
     ],
   },
   {
     id: "market-preference",
-    category: "Trhy",
-    question: "Které trhy preferuješ?",
+    category: "Markets",
+    question: "Which markets do you prefer?",
     type: "single",
     options: [
       {
         value: "forex",
         label: "Forex",
-        description: "Měnové páry, 24/5 trh",
+        description: "Currency pairs, 24/5 market",
         traits: ["forex", "leverage", "technical"],
       },
       {
         value: "crypto",
-        label: "Krypto",
-        description: "Bitcoin, altcoiny, 24/7",
+        label: "Crypto",
+        description: "Bitcoin, altcoins, 24/7",
         traits: ["crypto", "volatile", "risk-taker"],
       },
-      { value: "stocks", label: "Akcie", description: "US/EU burzy", traits: ["stocks", "fundamental", "news-driven"] },
+      { value: "stocks", label: "Stocks", description: "US/EU exchanges", traits: ["stocks", "fundamental", "news-driven"] },
       {
         value: "futures",
-        label: "Futures/Indexy",
-        description: "S&P, Nasdaq, komodity",
+        label: "Futures/Indices",
+        description: "S&P, Nasdaq, commodities",
         traits: ["futures", "leveraged", "professional"],
       },
     ],
   },
   {
     id: "motivation",
-    category: "Motivace",
-    question: "Co tě nejvíc motivuje k tradingu?",
+    category: "Motivation",
+    question: "What motivates you most about trading?",
     type: "single",
     options: [
       {
         value: "money",
-        label: "Finanční svoboda",
-        description: "Chci být finančně nezávislý",
+        label: "Financial Freedom",
+        description: "I want to be financially independent",
         traits: ["goal-oriented", "ambitious", "money-motivated"],
       },
       {
         value: "freedom",
-        label: "Časová svoboda",
-        description: "Pracovat odkudkoli, kdy chci",
+        label: "Time Freedom",
+        description: "Work from anywhere, whenever I want",
         traits: ["independent", "flexible", "lifestyle"],
       },
       {
         value: "challenge",
-        label: "Intelektuální výzva",
-        description: "Baví mě porazit trh",
+        label: "Intellectual Challenge",
+        description: "I enjoy beating the market",
         traits: ["competitive", "driven", "intellectual"],
       },
       {
         value: "passion",
-        label: "Vášeň pro trhy",
-        description: "Fascinují mě trhy a analýza",
+        label: "Passion for Markets",
+        description: "I'm fascinated by markets and analysis",
         traits: ["passionate", "curious", "dedicated"],
       },
     ],
   },
   {
     id: "discipline-level",
-    category: "Disciplína",
-    question: "Jak dobře dodržuješ svůj trading plán?",
+    category: "Discipline",
+    question: "How well do you stick to your trading plan?",
     type: "scale",
-    scaleLabels: { min: "Často porušuji pravidla", max: "Vždy se držím plánu" },
+    scaleLabels: { min: "Often break rules", max: "Always follow the plan" },
     scaleTraits: { low: ["undisciplined", "impulsive"], high: ["disciplined", "systematic"] },
   },
   {
     id: "analysis-style",
-    category: "Analýza",
-    question: "Jaký typ analýzy preferuješ?",
+    category: "Analysis",
+    question: "Which type of analysis do you prefer?",
     type: "single",
     options: [
       {
         value: "technical",
-        label: "Technická analýza",
-        description: "Grafy, indikátory, price action",
+        label: "Technical Analysis",
+        description: "Charts, indicators, price action",
         traits: ["technical", "visual", "pattern-based"],
       },
       {
         value: "fundamental",
-        label: "Fundamentální analýza",
-        description: "Ekonomická data, zprávy",
+        label: "Fundamental Analysis",
+        description: "Economic data, news",
         traits: ["fundamental", "research", "macro"],
       },
       {
         value: "sentiment",
-        label: "Sentiment analýza",
-        description: "Nálada trhu, COT, social",
+        label: "Sentiment Analysis",
+        description: "Market sentiment, COT, social",
         traits: ["sentiment", "contrarian", "social"],
       },
       {
         value: "mixed",
-        label: "Kombinace všech",
-        description: "Využívám vše dohromady",
+        label: "Combination of all",
+        description: "I use everything together",
         traits: ["versatile", "comprehensive", "adaptive"],
       },
     ],
   },
   {
     id: "stress-handling",
-    category: "Stres",
-    question: "Jak zvládáš stres při volatilních trzích?",
+    category: "Stress",
+    question: "How do you handle stress in volatile markets?",
     type: "single",
     options: [
       {
         value: "thrive",
-        label: "Vynikám v něm",
-        description: "Volatilita je příležitost",
+        label: "I thrive in it",
+        description: "Volatility is opportunity",
         traits: ["stress-resilient", "opportunistic", "calm"],
       },
       {
         value: "manage",
-        label: "Zvládám",
-        description: "Mám strategie na zvládání",
+        label: "I manage it",
+        description: "I have strategies for handling it",
         traits: ["adaptive", "prepared", "resilient"],
       },
       {
         value: "struggle",
-        label: "Je to náročné",
-        description: "Někdy mě to ovlivňuje",
+        label: "It's challenging",
+        description: "Sometimes it affects me",
         traits: ["stress-sensitive", "emotional"],
       },
       {
         value: "avoid",
-        label: "Vyhýbám se mu",
-        description: "Neobchoduji ve volatilitě",
+        label: "I avoid it",
+        description: "I don't trade in volatility",
         traits: ["cautious", "risk-averse", "conservative"],
       },
     ],
   },
   {
     id: "journaling",
-    category: "Sebereflexe",
-    question: "Jak často si vedeš trading deník?",
+    category: "Self-reflection",
+    question: "How often do you keep a trading journal?",
     type: "single",
     options: [
       {
         value: "always",
-        label: "Každý obchod",
-        description: "Detailní záznamy všeho",
+        label: "Every trade",
+        description: "Detailed records of everything",
         traits: ["disciplined", "analytical", "growth-oriented"],
       },
       {
         value: "often",
-        label: "Většinu obchodů",
-        description: "Zapisuji důležité věci",
+        label: "Most trades",
+        description: "I write down important things",
         traits: ["organized", "learning"],
       },
       {
         value: "sometimes",
-        label: "Občas",
-        description: "Když mám čas nebo náladu",
+        label: "Sometimes",
+        description: "When I have time or motivation",
         traits: ["inconsistent", "casual"],
       },
-      { value: "never", label: "Neveden", description: "Zatím jsem nezačal", traits: ["unstructured", "beginner"] },
+      { value: "never", label: "Never", description: "I haven't started yet", traits: ["unstructured", "beginner"] },
     ],
   },
   {
     id: "social-trading",
-    category: "Komunita",
-    question: "Jak preferuješ obchodovat?",
+    category: "Community",
+    question: "How do you prefer to trade?",
     type: "single",
     options: [
       {
         value: "alone",
-        label: "Sám",
-        description: "Potřebuji klid a soustředění",
+        label: "Alone",
+        description: "I need quiet and focus",
         traits: ["independent", "focused", "introverted"],
       },
       {
         value: "community",
-        label: "V komunitě",
-        description: "Sdílím a učím se od ostatních",
+        label: "In a community",
+        description: "I share and learn from others",
         traits: ["social", "collaborative", "community"],
       },
       {
         value: "mentor",
-        label: "S mentorem",
-        description: "Oceňuji osobní vedení",
+        label: "With a mentor",
+        description: "I value personal guidance",
         traits: ["learning-oriented", "humble", "coachable"],
       },
       {
         value: "flexible",
-        label: "Flexibilně",
-        description: "Záleží na situaci",
+        label: "Flexibly",
+        description: "It depends on the situation",
         traits: ["adaptable", "flexible", "versatile"],
       },
     ],
   },
   {
     id: "adaptability",
-    category: "Adaptabilita",
-    question: "Jak rychle se přizpůsobuješ změnám na trhu?",
+    category: "Adaptability",
+    question: "How quickly do you adapt to market changes?",
     type: "scale",
-    scaleLabels: { min: "Pomalu - držím se osvědčeného", max: "Rychle - neustále se přizpůsobuji" },
+    scaleLabels: { min: "Slowly - I stick to what works", max: "Quickly - I constantly adapt" },
     scaleTraits: { low: ["rigid", "consistent"], high: ["adaptive", "flexible"] },
   },
 ]
@@ -467,74 +470,74 @@ const personas: Record<
   }
 > = {
   "aggressive-scalper": {
-    name: "Agresivní Scalper",
+    name: "Aggressive Scalper",
     icon: Zap,
     color: "text-red-400",
     gradient: "from-red-500 to-orange-500",
     description:
-      "Žiješ pro adrenalin rychlých obchodů. Tvá síla je v rychlém rozhodování a schopnosti číst krátkodobé pohyby. Musíš si ale dávat pozor na overtrading a emocionální rozhodnutí.",
+      "You live for the adrenaline of fast trades. Your strength is in quick decision-making and reading short-term movements. But watch out for overtrading and emotional decisions.",
     idealTimeframe: "M1-M15",
-    idealMarkets: ["Forex major páry", "Indexy (NQ, ES)", "Krypto (BTC, ETH)"],
+    idealMarkets: ["Forex major pairs", "Indices (NQ, ES)", "Crypto (BTC, ETH)"],
   },
   "analytical-swing": {
-    name: "Analytický Swing Trader",
+    name: "Analytical Swing Trader",
     icon: BarChart3,
     color: "text-blue-400",
     gradient: "from-blue-500 to-cyan-500",
     description:
-      "Jsi strategický myslitel, který preferuje důkladnou analýzu před vstupem. Tvá trpělivost je tvá největší zbraň. Pozor na paralýzu z přílišné analýzy.",
+      "You're a strategic thinker who prefers thorough analysis before entry. Your patience is your greatest weapon. Beware of paralysis by analysis.",
     idealTimeframe: "H4-D1",
-    idealMarkets: ["Forex", "Akcie", "ETF"],
+    idealMarkets: ["Forex", "Stocks", "ETF"],
   },
   "balanced-daytrader": {
-    name: "Vyvážený Daytrader",
+    name: "Balanced Daytrader",
     icon: Target,
     color: "text-green-400",
     gradient: "from-green-500 to-emerald-500",
     description:
-      "Máš zdravou rovnováhu mezi analýzou a akcí. Obchoduješ s jasným plánem a víš, kdy se držet zpátky. Tvá konzistence je klíčem k dlouhodobému úspěchu.",
+      "You have a healthy balance between analysis and action. You trade with a clear plan and know when to hold back. Your consistency is key to long-term success.",
     idealTimeframe: "M15-H1",
-    idealMarkets: ["Forex", "Indexy", "Krypto"],
+    idealMarkets: ["Forex", "Indices", "Crypto"],
   },
   "cautious-investor": {
-    name: "Konzervativní Pozicionér",
+    name: "Conservative Positioner",
     icon: Shield,
     color: "text-purple-400",
     gradient: "from-purple-500 to-violet-500",
     description:
-      "Ochrana kapitálu je pro tebe na prvním místě. Preferuješ méně obchodů s vyšší pravděpodobností. Tvůj konzervativní přístup ti pomáhá přežít i těžké časy.",
+      "Capital preservation is your top priority. You prefer fewer trades with higher probability. Your conservative approach helps you survive tough times.",
     idealTimeframe: "D1-W1",
-    idealMarkets: ["Akcie", "ETF", "Forex major páry"],
+    idealMarkets: ["Stocks", "ETF", "Forex major pairs"],
   },
   "intuitive-trader": {
-    name: "Intuitivní Trader",
+    name: "Intuitive Trader",
     icon: Eye,
     color: "text-pink-400",
     gradient: "from-pink-500 to-rose-500",
     description:
-      "Spoléháš na zkušenosti a instinkt. Dokážeš 'cítit' trh způsobem, který jiní neumí popsat. Důležité je ale ověřovat intuici daty a nedělat unáhlená rozhodnutí.",
+      "You rely on experience and instinct. You can 'feel' the market in a way others can't describe. But it's important to verify intuition with data and avoid hasty decisions.",
     idealTimeframe: "M5-H1",
-    idealMarkets: ["Krypto", "Forex", "Indexy"],
+    idealMarkets: ["Crypto", "Forex", "Indices"],
   },
   "systematic-quant": {
-    name: "Systematický Quant",
+    name: "Systematic Quant",
     icon: Brain,
     color: "text-cyan-400",
     gradient: "from-cyan-500 to-teal-500",
     description:
-      "Data a pravidla jsou tvoji nejlepší přátelé. Obchoduješ podle jasně definovaného systému s minimem emocí. Tvá disciplína je příkladná, ale nezapomínej na intuici.",
-    idealTimeframe: "Různé - podle systému",
-    idealMarkets: ["Algoritmický trading", "Futures", "Forex"],
+      "Data and rules are your best friends. You trade according to a clearly defined system with minimal emotion. Your discipline is exemplary, but don't forget intuition.",
+    idealTimeframe: "Varies - depends on system",
+    idealMarkets: ["Algorithmic trading", "Futures", "Forex"],
   },
   "emotional-warrior": {
-    name: "Emocionální Bojovník",
+    name: "Emotional Warrior",
     icon: Heart,
     color: "text-amber-400",
     gradient: "from-amber-500 to-yellow-500",
     description:
-      "Trading je pro tebe emocionální jízda. Máš velký potenciál, ale musíš pracovat na ovládání emocí. Klíč je v budování disciplíny a dodržování pravidel.",
+      "Trading is an emotional ride for you. You have great potential but need to work on emotional control. The key is building discipline and following rules.",
     idealTimeframe: "H1-H4",
-    idealMarkets: ["Swing trading", "Pozice s jasným SL"],
+    idealMarkets: ["Swing trading", "Positions with clear SL"],
   },
 }
 
@@ -647,24 +650,24 @@ const demoProfile: TraderProfile = {
   persona: "analytical-swing",
   personaScore: 78,
   description:
-    "Jsi analytický swing trader s důrazem na přípravu a trpělivost. Preferuješ vizuální analýzu a rád sdílíš své poznatky s komunitou.",
+    "You are an analytical swing trader with an emphasis on preparation and patience. You prefer visual analysis and enjoy sharing your insights with the community.",
   strengths: [
-    "Důkladná analýza",
-    "Trpělivost při čekání na setup",
+    "Thorough analysis",
+    "Patience waiting for setups",
     "Risk management",
-    "Učení z chyb",
-    "Technická analýza",
+    "Learning from mistakes",
+    "Technical analysis",
   ],
-  risks: ["Přílišná analýza (paralýza)", "Pomalé reakce na změny", "Přehlížení krátkodobých příležitostí"],
+  risks: ["Overanalysis (paralysis)", "Slow reactions to changes", "Missing short-term opportunities"],
   recommendations: [
-    "Zaměř se na swing trading na H4-D1 timeframech",
-    "Vytvoř si checklist pro vstup do obchodu",
-    "Nastav si alerts místo neustálého sledování grafů",
-    "Využij komunitu pro validaci svých setupů",
-    "Pracuj na rychlejším rozhodování u jasných setupů",
+    "Focus on swing trading on H4-D1 timeframes",
+    "Create a checklist for entering trades",
+    "Set alerts instead of constantly watching charts",
+    "Use community to validate your setups",
+    "Work on faster decision-making for clear setups",
   ],
   idealTimeframe: "H4-D1",
-  idealMarkets: ["Forex", "Akcie", "ETF"],
+  idealMarkets: ["Forex", "Stocks", "ETF"],
   psychologicalProfile: {
     emotionalControl: 65,
     discipline: 75,
@@ -677,28 +680,28 @@ const demoProfile: TraderProfile = {
 
 const generateStrengths = (traits: Record<string, number>, answers: Record<string, string | number>): string[] => {
   const strengths: string[] = []
-  if (traits["analytical"] >= 2) strengths.push("Analytické myšlení")
-  if (traits["patient"] >= 2) strengths.push("Trpělivost při čekání na setup")
-  if (answers["motivation"] === "challenge") strengths.push("Intelektuální výzva")
-  if (traits["disciplined"] >= 2) strengths.push("Disciplína")
-  if (traits["social"] >= 2) strengths.push("Sociální schopnosti")
-  if (traits["practical"] >= 2) strengths.push("Praktické zkušenosti")
-  if (traits["technical"] >= 2) strengths.push("Technická analýza")
-  if (traits["fundamental"] >= 2) strengths.push("Fundamentální analýza")
-  if (traits["sentiment"] >= 2) strengths.push("Sentiment analýza")
-  if (traits["versatile"] >= 2) strengths.push("Variance")
-  if (traits["growth-mindset"] >= 2) strengths.push("Růstový myšlenkový přístup")
+  if (traits["analytical"] >= 2) strengths.push("Analytical thinking")
+  if (traits["patient"] >= 2) strengths.push("Patience waiting for setups")
+  if (answers["motivation"] === "challenge") strengths.push("Intellectual challenge")
+  if (traits["disciplined"] >= 2) strengths.push("Discipline")
+  if (traits["social"] >= 2) strengths.push("Social skills")
+  if (traits["practical"] >= 2) strengths.push("Practical experience")
+  if (traits["technical"] >= 2) strengths.push("Technical analysis")
+  if (traits["fundamental"] >= 2) strengths.push("Fundamental analysis")
+  if (traits["sentiment"] >= 2) strengths.push("Sentiment analysis")
+  if (traits["versatile"] >= 2) strengths.push("Versatility")
+  if (traits["growth-mindset"] >= 2) strengths.push("Growth mindset")
   return strengths
 }
 
 const generateRisks = (traits: Record<string, number>, answers: Record<string, string | number>): string[] => {
   const risks: string[] = []
-  if (traits["impulsive"] >= 2) risks.push("Emocionální rozhodnutí")
-  if (traits["risk-taker"] >= 2) risks.push("Vysoké risk")
+  if (traits["impulsive"] >= 2) risks.push("Emotional decision-making")
+  if (traits["risk-taker"] >= 2) risks.push("High risk")
   if (traits["overtrading"] >= 2) risks.push("Overtrading")
-  if (traits["unstructured"] >= 2) risks.push("Nestrukturovaný přístup")
-  if (traits["stress-sensitive"] >= 2) risks.push("Neflexibilita při stresu")
-  if (traits["rigid"] >= 2) risks.push("Rigidita")
+  if (traits["unstructured"] >= 2) risks.push("Unstructured approach")
+  if (traits["stress-sensitive"] >= 2) risks.push("Inflexibility under stress")
+  if (traits["rigid"] >= 2) risks.push("Rigidity")
   return risks
 }
 
@@ -710,56 +713,56 @@ const generateRecommendations = (
   const recommendations: string[] = []
   switch (persona) {
     case "aggressive-scalper":
-      recommendations.push("Zaměř se na scalping na M1-M15 timeframech")
-      recommendations.push("Vytvoř si checklist pro vstup do obchodu")
-      recommendations.push("Nastav si alerts místo neustálého sledování grafů")
-      recommendations.push("Využij komunitu pro validaci svých setupů")
-      recommendations.push("Pracuj na rychlejším rozhodování u jasných setupů")
+      recommendations.push("Focus on scalping on M1-M15 timeframes")
+      recommendations.push("Create a checklist for entering trades")
+      recommendations.push("Set alerts instead of constantly watching charts")
+      recommendations.push("Use community to validate your setups")
+      recommendations.push("Work on faster decision-making for clear setups")
       break
     case "analytical-swing":
-      recommendations.push("Zaměř se na swing trading na H4-D1 timeframech")
-      recommendations.push("Vytvoř si checklist pro vstup do obchodu")
-      recommendations.push("Nastav si alerts místo neustálého sledování grafů")
-      recommendations.push("Využij komunitu pro validaci svých setupů")
-      recommendations.push("Pracuj na rychlejším rozhodování u jasných setupů")
+      recommendations.push("Focus on swing trading on H4-D1 timeframes")
+      recommendations.push("Create a checklist for entering trades")
+      recommendations.push("Set alerts instead of constantly watching charts")
+      recommendations.push("Use community to validate your setups")
+      recommendations.push("Work on faster decision-making for clear setups")
       break
     case "balanced-daytrader":
-      recommendations.push("Zaměř se na daytrading na M15-H1 timeframech")
-      recommendations.push("Vytvoř si checklist pro vstup do obchodu")
-      recommendations.push("Nastav si alerts místo neustálého sledování grafů")
-      recommendations.push("Využij komunitu pro validaci svých setupů")
-      recommendations.push("Pracuj na rychlejším rozhodování u jasných setupů")
+      recommendations.push("Focus on daytrading on M15-H1 timeframes")
+      recommendations.push("Create a checklist for entering trades")
+      recommendations.push("Set alerts instead of constantly watching charts")
+      recommendations.push("Use community to validate your setups")
+      recommendations.push("Work on faster decision-making for clear setups")
       break
     case "cautious-investor":
-      recommendations.push("Zaměř se na pozicionér na W1-MN timeframech")
-      recommendations.push("Vytvoř si checklist pro vstup do obchodu")
-      recommendations.push("Nastav si alerts místo neustálého sledování grafů")
-      recommendations.push("Využij komunitu pro validaci svých setupů")
-      recommendations.push("Pracuj na rychlejším rozhodování u jasných setupů")
+      recommendations.push("Focus on position trading on W1-MN timeframes")
+      recommendations.push("Create a checklist for entering trades")
+      recommendations.push("Set alerts instead of constantly watching charts")
+      recommendations.push("Use community to validate your setups")
+      recommendations.push("Work on faster decision-making for clear setups")
       break
     case "intuitive-trader":
-      recommendations.push("Zaměř se na intuitivní trading na M5-H1 timeframech")
-      recommendations.push("Vytvoř si checklist pro vstup do obchodu")
-      recommendations.push("Nastav si alerts místo neustálého sledování grafů")
-      recommendations.push("Využij komunitu pro validaci svých setupů")
-      recommendations.push("Pracuj na rychlejším rozhodování u jasných setupů")
+      recommendations.push("Focus on intuitive trading on M5-H1 timeframes")
+      recommendations.push("Create a checklist for entering trades")
+      recommendations.push("Set alerts instead of constantly watching charts")
+      recommendations.push("Use community to validate your setups")
+      recommendations.push("Work on faster decision-making for clear setups")
       break
     case "systematic-quant":
-      recommendations.push("Zaměř se na systematický quant na různých timeframech")
-      recommendations.push("Vytvoř si checklist pro vstup do obchodu")
-      recommendations.push("Nastav si alerts místo neustálého sledování grafů")
-      recommendations.push("Využij komunitu pro validaci svých setupů")
-      recommendations.push("Pracuj na rychlejším rozhodování u jasných setupů")
+      recommendations.push("Focus on systematic quant trading on various timeframes")
+      recommendations.push("Create a checklist for entering trades")
+      recommendations.push("Set alerts instead of constantly watching charts")
+      recommendations.push("Use community to validate your setups")
+      recommendations.push("Work on faster decision-making for clear setups")
       break
     case "emotional-warrior":
-      recommendations.push("Zaměř se na emocionální trading na H1-H4 timeframech")
-      recommendations.push("Vytvoř si checklist pro vstup do obchodu")
-      recommendations.push("Nastav si alerts místo neustálého sledování grafů")
-      recommendations.push("Využij komunitu pro validaci svých setupů")
-      recommendations.push("Pracuj na rychlejším rozhodování u jasných setupů")
+      recommendations.push("Focus on emotional trading on H1-H4 timeframes")
+      recommendations.push("Create a checklist for entering trades")
+      recommendations.push("Set alerts instead of constantly watching charts")
+      recommendations.push("Use community to validate your setups")
+      recommendations.push("Work on faster decision-making for clear setups")
       break
     default:
-      recommendations.push("Zaměř se na daytrading na M15-H1 timeframech")
+      recommendations.push("Focus on daytrading on M15-H1 timeframes")
       recommendations.push("Vytvoř si checklist pro vstup do obchodu")
       recommendations.push("Nastav si alerts místo neustálého sledování grafů")
       recommendations.push("Využij komunitu pro validaci svých setupů")
@@ -772,6 +775,30 @@ const generateRecommendations = (
 export default function TradingIdentityPage() {
   const { toast } = useToast()
   const { isLiveMode } = useData()
+  const { language } = useLanguage()
+  const isEn = language === "en"
+
+  const txt = {
+    tradingIdentity: isEn ? "Trading Identity" : "Obchodní identita",
+    yourPersonalityProfile: isEn ? "Your personality profile" : "Tvůj profil osobnosti",
+    demo: isEn ? "Demo" : "Demo",
+    retakeTest: isEn ? "Retake Test" : "Opakovat test",
+    yourTradingPersona: isEn ? "Your Trading Persona" : "Tvoje obchodní persona",
+    psychologicalProfile: isEn ? "Psychological Profile" : "Psychologický profil",
+    emotionalControl: isEn ? "Emotional Control" : "Emoční kontrola",
+    discipline: isEn ? "Discipline" : "Disciplína",
+    patience: isEn ? "Patience" : "Trpělivost",
+    riskTolerance: isEn ? "Risk Tolerance" : "Tolerance vůči riziku",
+    analyticalThinking: isEn ? "Analytical Thinking" : "Analytické myšlení",
+    adaptability: isEn ? "Adaptability" : "Adaptabilita",
+    yourStrengths: isEn ? "Your Strengths" : "Tvoje silné stránky",
+    whatToWatchFor: isEn ? "What to Watch For" : "Na co si dát pozor",
+    personalizedRecommendations: isEn ? "Personalized Recommendations" : "Personalizovaná doporučení",
+    tradingIdentityBuilder: isEn ? "Trading Identity Builder" : "Tvůrce obchodní identity",
+    discoverTradingStyle: isEn ? "Discover your trading style, strengths, and areas for development. The test takes approximately 5 minutes." : "Objevi svůj obchodní styl, silné stránky a oblasti pro rozvoj. Test trvá přibližně 5 minut.",
+    startTest: isEn ? "Start Test" : "Začít test",
+    skipTest: isEn ? "Skip (Demo)" : "Přeskočit (Demo)",
+  }
 
   const [currentStep, setCurrentStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string | number>>({})
@@ -808,8 +835,8 @@ export default function TradingIdentityPage() {
     const currentQuestion = questions[currentStep]
     if (!answers[currentQuestion.id] && answers[currentQuestion.id] !== 0) {
       toast({
-        title: "Odpověz na otázku",
-        description: "Prosím vyber odpověď před pokračováním",
+        title: "Answer the question",
+        description: "Please select an answer before continuing",
         variant: "destructive",
       })
       return
@@ -839,8 +866,8 @@ export default function TradingIdentityPage() {
   const finishQuiz = () => {
     if (!isLiveMode) {
       toast({
-        title: "Demo režim",
-        description: "V demo režimu nelze ukládat profil.",
+        title: "Demo Mode",
+        description: "In demo mode, the profile cannot be saved.",
         variant: "destructive",
       })
       return
@@ -907,14 +934,14 @@ export default function TradingIdentityPage() {
     setProfile(newProfile)
     localStorage.setItem("trading-identity-profile", JSON.stringify(newProfile))
     setIsQuizMode(false)
-    toast({ title: "Profil vytvořen!", description: "Tvá trading identita byla analyzována" })
+    toast({ title: "Profile created!", description: "Your trading identity has been analyzed" })
   }
 
   const startQuiz = () => {
     if (!isLiveMode) {
       toast({
-        title: "Demo režim",
-        description: "V demo režimu nelze spustit test. Prohlédni si ukázkový profil.",
+        title: "Demo Mode",
+        description: "In demo mode, you cannot start the test. Check out the sample profile.",
         variant: "destructive",
       })
       return
@@ -928,7 +955,7 @@ export default function TradingIdentityPage() {
     if (!isLiveMode) return
     localStorage.removeItem("trading-identity-profile")
     setProfile(null)
-    toast({ title: "Profil resetován" })
+    toast({ title: "Profile reset" })
   }
 
   if (isQuizMode) {
@@ -943,10 +970,18 @@ export default function TradingIdentityPage() {
         </div>
 
         <div className="max-w-2xl mx-auto px-4 relative z-10">
+          {/* Back Button */}
+          <Link href="/bonus" className="inline-flex mb-6">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
+              <ArrowLeft className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-400">Back</span>
+            </div>
+          </Link>
+
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-400">
-                Otázka {currentStep + 1} z {questions.length}
+                Question {currentStep + 1} of {questions.length}
               </span>
               <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">{question.category}</Badge>
             </div>
@@ -1010,10 +1045,10 @@ export default function TradingIdentityPage() {
                   disabled={currentStep === 0}
                   className="border-slate-700 bg-transparent"
                 >
-                  Zpět
+                  Back
                 </Button>
                 <Button onClick={nextStep} className="bg-purple-600 hover:bg-purple-700">
-                  {currentStep === questions.length - 1 ? "Dokončit" : "Další"}
+                  {currentStep === questions.length - 1 ? "Finish" : "Next"}
                 </Button>
               </div>
             </CardContent>
@@ -1054,6 +1089,14 @@ export default function TradingIdentityPage() {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 relative z-10">
+          {/* Back Button */}
+          <Link href="/bonus" className="inline-flex mb-6">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
+              <ArrowLeft className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-400">Back</span>
+            </div>
+          </Link>
+
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -1061,19 +1104,19 @@ export default function TradingIdentityPage() {
                 <Brain className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Trading Identity</h1>
-                <p className="text-sm text-gray-400">Tvůj osobnostní profil</p>
+                <h1 className="text-2xl font-bold text-white">{txt.tradingIdentity}</h1>
+                <p className="text-sm text-gray-400">{txt.yourPersonalityProfile}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Demo</Badge>}
+              {!isLiveMode && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">{txt.demo}</Badge>}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={resetProfile}
                 className="border-slate-700 text-gray-300 bg-transparent"
               >
-                Opakovat test
+                {txt.retakeTest}
               </Button>
             </div>
           </div>
@@ -1090,7 +1133,7 @@ export default function TradingIdentityPage() {
                 </div>
                 <div className="flex-1">
                   <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 mb-3">
-                    Tvá Trading Persona
+                    {txt.yourTradingPersona}
                   </Badge>
                   <h2 className="text-3xl font-bold text-white mb-3">{personaInfo?.name}</h2>
                   <p className="text-gray-300 text-lg leading-relaxed">{profile.description}</p>
@@ -1119,19 +1162,19 @@ export default function TradingIdentityPage() {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Brain className="w-5 h-5 text-purple-400" />
-                Psychologický profil
+                {txt.psychologicalProfile}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
                 {Object.entries(profile.psychologicalProfile).map(([key, value]) => {
                   const labels: Record<string, string> = {
-                    emotionalControl: "Emoční kontrola",
-                    discipline: "Disciplína",
-                    patience: "Trpělivost",
-                    riskTolerance: "Tolerance rizika",
-                    analyticalThinking: "Analytické myšlení",
-                    adaptability: "Adaptabilita",
+                    emotionalControl: txt.emotionalControl,
+                    discipline: txt.discipline,
+                    patience: txt.patience,
+                    riskTolerance: txt.riskTolerance,
+                    analyticalThinking: txt.analyticalThinking,
+                    adaptability: txt.adaptability,
                   }
                   return (
                     <div key={key} className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/50">
@@ -1158,7 +1201,7 @@ export default function TradingIdentityPage() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-green-400" />
-                  Tvé silné stránky
+                  {txt.yourStrengths}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1178,10 +1221,10 @@ export default function TradingIdentityPage() {
 
             <Card className="bg-slate-900/40 backdrop-blur-md border-slate-700/50">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-orange-400" />
-                  Na co si dát pozor
-                </CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-orange-400" />
+                {txt.whatToWatchFor}
+              </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -1202,10 +1245,10 @@ export default function TradingIdentityPage() {
           {/* Recommendations */}
           <Card className="bg-slate-900/40 backdrop-blur-md border-slate-700/50">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Lightbulb className="w-5 h-5 text-yellow-400" />
-                Personalizovaná doporučení
-              </CardTitle>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-yellow-400" />
+              {txt.personalizedRecommendations}
+            </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
@@ -1256,13 +1299,13 @@ export default function TradingIdentityPage() {
             <div className="p-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl w-fit mx-auto mb-6">
               <Brain className="w-12 h-12 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-4">Trading Identity Builder</h1>
+            <h1 className="text-3xl font-bold text-white mb-4">{txt.tradingIdentityBuilder}</h1>
             <p className="text-gray-400 mb-8 max-w-md mx-auto">
-              Zjisti svůj trading styl, silné stránky a oblasti k rozvoji. Test trvá přibližně 5 minut.
+              {txt.discoverTradingStyle}
             </p>
             <Button onClick={startQuiz} size="lg" className="bg-purple-600 hover:bg-purple-700">
               <Zap className="w-5 h-5 mr-2" />
-              Spustit test
+              {txt.startTest}
             </Button>
           </CardContent>
         </Card>

@@ -155,8 +155,8 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "early-bird",
-    title: "Ranní ptáče",
-    description: "Dokončil jsi Readiness Check 7 dní v řadě",
+    title: "Early Bird",
+    description: "Completed Readiness Check 7 days in a row",
     icon: "🐦",
     xpReward: 60,
     unlocked: false,
@@ -165,8 +165,8 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "meditation-master",
-    title: "Mistr meditace",
-    description: "Meditoval jsi 21 dní v řadě",
+    title: "Meditation Master",
+    description: "Meditated 21 days in a row",
     icon: "🧘",
     xpReward: 120,
     unlocked: false,
@@ -175,8 +175,8 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "perfect-week",
-    title: "Perfektní týden",
-    description: "Splnil jsi všechny stages 7 dní v řadě",
+    title: "Perfect Week",
+    description: "Completed all stages 7 days in a row",
     icon: "⭐",
     xpReward: 80,
     unlocked: false,
@@ -185,8 +185,8 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "consistent-trader",
-    title: "Konzistentní trader",
-    description: "Zaznamenal jsi trade 30 dní v řadě",
+    title: "Consistent Trader",
+    description: "Recorded trades 30 days in a row",
     icon: "📈",
     xpReward: 150,
     unlocked: false,
@@ -195,8 +195,8 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "journaling-pro",
-    title: "Profesionální deník",
-    description: "Napsal jsi 50 journal entries",
+    title: "Journaling Pro",
+    description: "Wrote 50 journal entries",
     icon: "📝",
     xpReward: 100,
     unlocked: false,
@@ -205,8 +205,8 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "streak-master",
-    title: "Mistr streaku",
-    description: "Udržel jsi 30denní streak v Readiness Check",
+    title: "Streak Master",
+    description: "Maintained 30-day streak in Readiness Check",
     icon: "🔥",
     xpReward: 200,
     unlocked: false,
@@ -215,8 +215,8 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "fitness-warrior",
-    title: "Fitness válečník",
-    description: "Cvičil jsi 50krát",
+    title: "Fitness Warrior",
+    description: "Exercised 50 times",
     icon: "💪",
     xpReward: 100,
     unlocked: false,
@@ -225,8 +225,8 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "mindful-trader",
-    title: "Mindful trader",
-    description: "Meditoval jsi 100krát",
+    title: "Mindful Trader",
+    description: "Meditated 100 times",
     icon: "🌟",
     xpReward: 150,
     unlocked: false,
@@ -235,8 +235,8 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "challenge-champion",
-    title: "Šampion výzev",
-    description: "Dokončil jsi 5 výzev",
+    title: "Challenge Champion",
+    description: "Completed 5 challenges",
     icon: "🏆",
     xpReward: 200,
     unlocked: false,
@@ -245,8 +245,8 @@ const INITIAL_ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "calm-master",
-    title: "Mistr klidu",
-    description: "Dosáhl jsi Calm Score 80+ po dobu 7 dní",
+    title: "Calm Master",
+    description: "Achieved Calm Score 80+ for 7 days",
     icon: "🧘",
     xpReward: 120,
     unlocked: false,
@@ -286,8 +286,8 @@ const AVAILABLE_CHALLENGES: Omit<Challenge, "current" | "startDate" | "active" |
   },
   {
     id: "30-days-consistency",
-    title: "30 dní konzistence",
-    description: "30 dní konzistentního trackování",
+    title: "30 days consistency",
+    description: "30 days of consistent tracking",
     type: "streak",
     target: 30,
     difficulty: "hard",
@@ -295,8 +295,8 @@ const AVAILABLE_CHALLENGES: Omit<Challenge, "current" | "startDate" | "active" |
   },
   {
     id: "90-days-full-tracker",
-    title: "90 dní plného trackeru",
-    description: "90 dní s plně vyplněným trackerem",
+    title: "90 days full tracker",
+    description: "90 days with fully completed tracker",
     type: "streak",
     target: 90,
     difficulty: "elite",
@@ -304,8 +304,8 @@ const AVAILABLE_CHALLENGES: Omit<Challenge, "current" | "startDate" | "active" |
   },
   {
     id: "21-day-meditation",
-    title: "21 dní meditace",
-    description: "Medituj 21 dní v řadě",
+    title: "21 days meditation",
+    description: "Meditate 21 days in a row",
     type: "streak",
     target: 21,
     difficulty: "medium",
@@ -314,7 +314,7 @@ const AVAILABLE_CHALLENGES: Omit<Challenge, "current" | "startDate" | "active" |
   {
     id: "perfect-week-challenge",
     title: "Perfektní týden",
-    description: "Splň všechny stages 7 dní v řadě",
+    description: "Complete all stages 7 days in a row",
     type: "streak",
     target: 7,
     difficulty: "easy",
@@ -322,8 +322,8 @@ const AVAILABLE_CHALLENGES: Omit<Challenge, "current" | "startDate" | "active" |
   },
   {
     id: "14-day-exercise",
-    title: "14 dní cvičení",
-    description: "Cvič 14 dní v řadě",
+    title: "14 days exercise",
+    description: "Exercise 14 days in a row",
     type: "streak",
     target: 14,
     difficulty: "medium",
@@ -332,7 +332,7 @@ const AVAILABLE_CHALLENGES: Omit<Challenge, "current" | "startDate" | "active" |
   {
     id: "journal-master",
     title: "Mistr deníku",
-    description: "Napiš 30 journal entries za 30 dní",
+    description: "Write 30 journal entries in 30 days",
     type: "count",
     target: 30,
     difficulty: "hard",
@@ -600,7 +600,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       setTimeout(() => {
         const event = new CustomEvent("xp-gained", {
-          detail: { amount: xpToAdd, reason: "Záznam v obchodním deníku" },
+          detail: { amount: xpToAdd, reason: "Trading journal entry" },
         })
         window.dispatchEvent(event)
       }, 0)

@@ -20,10 +20,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 
 const patterns = [
-  { name: "Reversal na podpoře", frequency: "Vysoká", impact: "Pozitivní" },
-  { name: "Breakout selhání", frequency: "Střední", impact: "Negativní" },
-  { name: "Trend pokračování (flag)", frequency: "Vysoká", impact: "Pozitivní" },
-  { name: "Dvojitý vrchol", frequency: "Nízká", impact: "Negativní" },
+  { name: "Reversal at support", frequency: "High", impact: "Positive" },
+  { name: "Breakout failure", frequency: "Medium", impact: "Negative" },
+  { name: "Trend continuation (flag)", frequency: "High", impact: "Positive" },
+  { name: "Double top", frequency: "Low", impact: "Negative" },
 ]
 
 export function TradingPatternsDetector() {
@@ -266,8 +266,8 @@ export function TradingPatternsDetector() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Detektor obchodních vzorců</CardTitle>
-          <CardDescription>Identifikujte opakující se vzorce ve vašem obchodování.</CardDescription>
+          <CardTitle>Trading Pattern Detector</CardTitle>
+          <CardDescription>Identify recurring patterns in your trading.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -276,10 +276,10 @@ export function TradingPatternsDetector() {
                 <div>
                   <p className="font-medium">{pattern.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    Frekvence: {pattern.frequency} | Dopad: {pattern.impact}
+                    Frequency: {pattern.frequency} | Impact: {pattern.impact}
                   </p>
                 </div>
-                <Badge variant={pattern.impact === "Pozitivní" ? "default" : "destructive"}>{pattern.impact}</Badge>
+                <Badge variant={pattern.impact === "Positive" ? "default" : "destructive"}>{pattern.impact}</Badge>
               </div>
             ))}
           </div>

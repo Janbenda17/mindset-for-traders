@@ -4,8 +4,10 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Users, Trophy, Calendar, Target } from "lucide-react"
+import { Users, Trophy, Calendar, Target, Flame } from "lucide-react"
 import { useChallenges } from "@/contexts/community-challenges-context"
+import { useAuth } from "@/contexts/auth-context"
+import { useState } from "react"
 
 interface ChallengeCardProps {
   challenge: {
@@ -24,10 +26,12 @@ interface ChallengeCardProps {
 }
 
 export function ChallengeCard({ challenge }: ChallengeCardProps) {
-  const { userProgress, joinChallenge, leaveChallenge } = useChallenges()
+  const { userProgress, reloadProgress } = useChallenges()
+  const { user } = useAuth()
+  const [isCompleting, setIsCompleting] = useState(false)
+  const [justCompleted, setJustCompleted] = useState(false)
 
   const userChallengeProgress = userProgress.find((p) => p.challengeId === challenge.id)
-  const isJoined = !!userChallengeProgress
   const progress = userChallengeProgress?.progress || 0
   const isCompleted = userChallengeProgress?.completed || false
 
@@ -39,6 +43,47 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
     hard: "bg-red-500/20 text-red-400 border-red-500/30",
   }[challenge.difficulty]
 
+  const handleCompleteDaily = async () => {
+    if (!user?.id) {
+      console.error("[v0] No user ID available")
+      return
+    }
+
+    setIsCompleting(true)
+    try {
+      console.log("[v0] Completing daily challenge:", challenge.id, "for user:", user.id)
+      const response = await fetch("/api/challenges/complete-daily", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          userId: user.id,
+          challengeId: challenge.id,
+        }),
+      })
+
+      const result = await response.json()
+      
+      if (response.ok) {
+        console.log("[v0] Daily challenge completed:", result)
+        setJustCompleted(true)
+        setTimeout(() => setJustCompleted(false), 3000)
+        
+        // Reload challenge progress without full page refresh
+        await reloadProgress()
+      } else {
+        console.error("[v0] Failed to complete challenge:", result)
+        if (result.alreadyCompleted) {
+          alert("Už jsi dnes splnil tento úkol!")
+        }
+      }
+    } catch (error) {
+      console.error("[v0] Error completing daily challenge:", error)
+    } finally {
+      setIsCompleting(false)
+    }
+  }
+
   return (
     <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm hover:border-blue-500/30 transition-all">
       <div className="p-6 space-y-4">
@@ -48,7 +93,10 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
               <h3 className="text-lg font-semibold text-white">{challenge.title}</h3>
               <Badge className={`${difficultyColor} border`}>{challenge.difficulty}</Badge>
               {isCompleted && (
-                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 border">Completed</Badge>
+                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 border flex items-center gap-1">
+                  <Trophy className="w-3 h-3" />
+                  Splněno
+                </Badge>
               )}
             </div>
             <p className="text-sm text-slate-400">{challenge.description}</p>
@@ -59,50 +107,56 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
           </div>
         </div>
 
-        {isJoined && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400">Progress</span>
-              <span className="text-white font-medium">{progress}%</span>
+        {/* Progress bar - shows day streak */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Denní postupy</span>
+              <div className="flex items-center gap-1 text-orange-400">
+                <Flame className="w-4 h-4" />
+                <span className="font-semibold">{progress}/12 dní</span>
+              </div>
             </div>
-            <Progress value={progress} className="h-2" />
+            <span className="text-white font-medium">{Math.round((progress / 12) * 100)}%</span>
           </div>
-        )}
+          <Progress value={(progress / 12) * 100} className="h-2" />
+        </div>
 
         <div className="flex items-center gap-6 text-sm text-slate-400">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            <span>{challenge.participants} joined</span>
+            <span>{challenge.participants} připojeno</span>
           </div>
           <div className="flex items-center gap-2">
             <Target className="w-4 h-4" />
-            <span>{challenge.completed} completed</span>
+            <span>{challenge.completed} splněno</span>
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            <span>{daysLeft} days left</span>
+            <span>{daysLeft} dní zbývá</span>
           </div>
         </div>
 
-        <div className="pt-2">
-          {isJoined ? (
-            <Button
-              variant="outline"
-              className="w-full border-slate-700 hover:border-red-500/50 hover:bg-red-500/10 bg-transparent"
-              onClick={() => leaveChallenge(challenge.id)}
-              disabled={isCompleted}
-            >
-              {isCompleted ? "Completed" : "Leave Challenge"}
-            </Button>
-          ) : (
-            <Button
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              onClick={() => joinChallenge(challenge.id)}
-            >
-              Join Challenge
-            </Button>
-          )}
-        </div>
+        {/* Complete Daily Button */}
+        {!isCompleted ? (
+          <Button
+            onClick={handleCompleteDaily}
+            disabled={isCompleting || justCompleted}
+            className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-semibold"
+          >
+            {justCompleted ? (
+              "✓ Splněno dnes!"
+            ) : isCompleting ? (
+              "Ukládání..."
+            ) : (
+              "Splnit dneška úkol"
+            )}
+          </Button>
+        ) : (
+          <div className="w-full p-3 bg-green-500/20 border border-green-500/30 rounded-lg text-center text-green-400 font-semibold">
+            Výzva splněna! +{challenge.reward} XP
+          </div>
+        )}
       </div>
     </Card>
   )

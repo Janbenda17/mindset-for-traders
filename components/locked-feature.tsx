@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 import { useData } from "@/contexts/data-context"
 import {
   AlertDialog,
@@ -36,10 +37,18 @@ export function LockedFeature({
   requiresLive = false,
 }: LockedFeatureProps) {
   const router = useRouter()
+  const { user: authUser } = useAuth()
   const { isLiveMode, switchToLive, canSwitchModes } = useData()
   const [showLiveDialog, setShowLiveDialog] = useState(false)
 
   const handleUnlock = () => {
+    // Check if user is authenticated
+    if (!authUser) {
+      // Not authenticated - redirect to signup
+      router.push("/signup")
+      return
+    }
+
     if (requiresLive && !isLiveMode && canSwitchModes) {
       setShowLiveDialog(true)
     } else {
@@ -103,13 +112,19 @@ export function LockedFeature({
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-12 text-lg font-semibold"
             >
               <Sparkles className="w-5 h-5 mr-2" />
-              {requiresLive && !isLiveMode && canSwitchModes ? "Přepnout do Live režimu" : "Odemknout Premium funkce"}
+              {!authUser
+                ? "Zaregistrovat se pro přístup"
+                : requiresLive && !isLiveMode && canSwitchModes
+                  ? "Přepnout do Live režimu"
+                  : "Odemknout Premium funkce"}
             </Button>
 
             <p className="text-center text-sm text-gray-500">
-              {requiresLive
-                ? "Aktivní Live režim + Premium předplatné vyžadováno"
-                : "Upgrade na Premium pro přístup ke všem funkcím"}
+              {!authUser
+                ? "Zaregistrujte se pro přístup ke všem funkcím"
+                : requiresLive
+                  ? "Aktivní Live režim + Premium předplatné vyžadováno"
+                  : "Upgrade na Premium pro přístup ke všem funkcím"}
             </p>
           </CardContent>
         </Card>
