@@ -16,6 +16,7 @@ interface Stage {
   completed: boolean
   unlocked: boolean
   completedAt?: string
+  locked?: boolean // Stage cannot be edited after completion
 }
 
 interface DailyStageContextType {
@@ -99,6 +100,23 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
     }
   }, [user])
 
+  // Check every minute if date has changed and reset stages if needed
+  useEffect(() => {
+    if (!user) return
+
+    let lastCheckedDate = new Date().toISOString().split("T")[0]
+    const dateCheckInterval = setInterval(() => {
+      const currentDate = new Date().toISOString().split("T")[0]
+      if (currentDate !== lastCheckedDate) {
+        console.log(`[v0] [DailyStage] Date changed from ${lastCheckedDate} to ${currentDate} - reloading stages`)
+        lastCheckedDate = currentDate
+        loadStagesFromSupabase()
+      }
+    }, 60000) // Check every minute
+
+    return () => clearInterval(dateCheckInterval)
+  }, [user])
+
   const loadStagesFromSupabase = async () => {
     if (!user) {
       console.log("[v0] [DailyStage] No user - cannot load stages")
@@ -109,7 +127,9 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
 
     try {
       setIsLoading(true)
-      const response = await fetch("/api/daily-stages/get")
+      const response = await fetch("/api/daily-stages/get", {
+        credentials: "include",
+      })
 
       if (!response.ok) {
         console.error(`[v0] Failed to load daily stages: ${response.status} ${response.statusText}`)
@@ -123,27 +143,33 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
       const stagesWithCompletion = initialStages.map((stage) => {
         let completed = false
         let completedAt: string | undefined
+        let locked = false // Stage is locked (locked after being completed)
 
         switch (stage.id) {
           case 1:
             completed = data.morning_check_completed || false
             completedAt = data.morning_check_completed_at
+            locked = completed // Lock when completed
             break
           case 2:
             completed = data.daily_intention_completed || false
             completedAt = data.daily_intention_completed_at
+            locked = completed
             break
           case 3:
             completed = data.trading_plan_completed || false
             completedAt = data.trading_plan_completed_at
+            locked = completed
             break
           case 4:
             completed = data.record_trades_completed || false
             completedAt = data.record_trades_completed_at
+            locked = completed
             break
           case 5:
             completed = data.daily_summary_completed || false
             completedAt = data.daily_summary_completed_at
+            locked = completed
             break
         }
 
@@ -151,14 +177,27 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
           ...stage,
           completed,
           completedAt,
-          unlocked: false, // Will be set in second pass
+          locked,
         }
       })
 
-      const updatedStages = stagesWithCompletion.map((stage, index) => ({
-        ...stage,
-        unlocked: stage.id === 1 || (index > 0 && stagesWithCompletion[index - 1].completed),
-      }))
+      // STRICT SEQUENTIAL UNLOCKING: Each stage unlocks ONLY when the previous one is completed
+      const updatedStages = stagesWithCompletion.map((stage, index) => {
+        // Stage 1 is always unlocked
+        if (stage.id === 1) {
+          return { ...stage, unlocked: true }
+        }
+        
+        // All other stages unlock ONLY if the previous stage is completed
+        const previousStageCompleted = index > 0 && stagesWithCompletion[index - 1].completed
+        // Stage should be unlocked either if previous is completed OR if this stage itself is completed
+        const unlocked = previousStageCompleted || stage.completed
+        
+        return {
+          ...stage,
+          unlocked,
+        }
+      })
 
       setStages(updatedStages)
 
@@ -205,6 +244,7 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
 
       const response = await fetch("/api/daily-stages/update", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stageId, completed: true }),
       })
@@ -260,29 +300,8 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
     return Math.round((completed / stages.length) * 100)
   }
 
-  useEffect(() => {
-    if (!analytics || isLoading) return
-
-    const autoProgressStages = async () => {
-      const { stages: stageConditions } = analytics
-
-      // Auto-unlock stages based on data conditions
-      if (stageConditions.shouldUnlockStage2 && !stages[1].unlocked && !stages[1].completed) {
-        console.log("[v0] [Stages] Auto-unlocking Stage 2: Daily Intention (morning check completed)")
-        await completeStage(1)
-      }
-      if (stageConditions.shouldUnlockStage3 && !stages[2].unlocked && !stages[2].completed) {
-        console.log("[v0] [Stages] Auto-unlocking Stage 3: Trading Plan (daily intention set)")
-        await completeStage(2)
-      }
-      if (stageConditions.shouldUnlockStage5 && !stages[4].unlocked && !stages[4].completed) {
-        console.log("[v0] [Stages] Auto-unlocking Stage 5: Daily Summary (trades recorded)")
-        await completeStage(4)
-      }
-    }
-
-    autoProgressStages()
-  }, [analytics])
+  // Removed auto-progression logic - stages MUST be completed in order
+  // No more auto-unlocking or skipping stages
 
   return (
     <DailyStageContext.Provider

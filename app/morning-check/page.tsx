@@ -26,12 +26,12 @@ export default function MorningCheckPage() {
                   </div>
                   <div>
                     <h1 className="text-5xl font-black bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                      Ranní Check
+                      Morning Check
                     </h1>
                     <p className="text-muted-foreground">
                       {isLiveMode
-                        ? "Ranní vyhodnocení tvé připravenosti 🌅"
-                        : "Demo - Vyzkoušej ranní rutinu! 🎮"}
+                        ? "Morning assessment of your trading readiness 🌅"
+                        : "Demo - Try morning routine! 🎮"}
                     </p>
                   </div>
                 </div>
@@ -59,10 +59,10 @@ export default function MorningCheckPage() {
                 <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
                   <Sun className="h-5 w-5 text-orange-400" />
                 </div>
-                <h3 className="font-bold text-white">Ranní rutina</h3>
+                <h3 className="font-bold text-white">Morning Routine</h3>
               </div>
               <p className="text-sm text-gray-400">
-                Zjisti svou připravenost na trading ještě před otevřením platformy
+                Discover your trading readiness before opening the platform
               </p>
             </CardContent>
           </Card>
@@ -76,7 +76,7 @@ export default function MorningCheckPage() {
                 <h3 className="font-bold text-white">GO/NO-GO</h3>
               </div>
               <p className="text-sm text-gray-400">
-                Získej jasné rozhodnutí, jestli dnes obchodovat nebo si dát pauzu
+                Get clear decision whether to trade today or take a break
               </p>
             </CardContent>
           </Card>
@@ -87,10 +87,10 @@ export default function MorningCheckPage() {
                 <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
                   <Calendar className="h-5 w-5 text-purple-400" />
                 </div>
-                <h3 className="font-bold text-white">Pouze 5 minut</h3>
+                <h3 className="font-bold text-white">Only 5 minutes</h3>
               </div>
               <p className="text-sm text-gray-400">
-                Rychlé vyhodnocení tvého spánku, energie a mentálního stavu
+                Quick assessment of your sleep, energy and mental state
               </p>
             </CardContent>
           </Card>

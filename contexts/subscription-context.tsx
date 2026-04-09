@@ -11,9 +11,11 @@ interface SubscriptionContextType {
   isActive: boolean
   isPremium: boolean
   isLoading: boolean
+  isCanceled: boolean
   trialEndsAt: string | null
   subscriptionId: string | null
   customerId: string | null
+  subscriptionStatus: string | null
   subscribe: (plan: "free" | "premium") => Promise<boolean>
   startTrial: () => Promise<boolean>
   upgradeToPremium: () => Promise<boolean>
@@ -32,16 +34,21 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [daysRemaining, setDaysRemaining] = useState(0)
   const [isActive, setIsActive] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isCanceled, setIsCanceled] = useState(false)
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null)
   const [customerId, setCustomerId] = useState<string | null>(null)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
 
-  const { user, authReady } = useAuth() // Get authReady flag
+  const { user, authReady } = useAuth()
 
-  const isPremium = plan === "premium" && isActive
+  // isPremium is true if isActive (which comes from API and checks is_premium flag in DB)
+  const isPremium = isActive
 
+  // Check subscription status only on initial mount and when user changes
   useEffect(() => {
     if (authReady && user) {
+      console.log("[v0] [SUBSCRIPTION] Initial check for user:", user.id)
       checkSubscriptionStatus()
     }
   }, [authReady, user])
@@ -72,8 +79,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         const data = await response.json()
         setPlan(data.plan)
         setIsActive(data.isActive)
+        setSubscriptionStatus(data.status)
         setTrialEndsAt(data.trialEndsAt)
         setSubscriptionId(data.subscriptionId)
+        
+        // Check if subscription was canceled
+        setIsCanceled(data.status === "canceled")
 
         if (data.customerId) {
           setCustomerId(data.customerId)
@@ -88,7 +99,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           setDaysRemaining(Math.max(0, diffDays))
         }
 
-        console.log("[v0] Subscription status checked:", data.plan, "isPremium:", data.isActive)
+        console.log("[v0] Subscription status checked:", { plan: data.plan, isActive: data.isActive, status: data.status, isCanceled: data.status === "canceled" })
       }
     } catch (error: any) {
       if (error.name !== "AbortError") {
@@ -140,7 +151,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       console.log("[v0] Upgrade: Got checkout URL:", data.url ? "✓" : "✗")
 
       if (data.url) {
-        // Redirect to checkout
+        // Redirect to Stripe checkout (use location.href for better compatibility)
         window.location.href = data.url
         return true
       }
@@ -245,9 +256,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         isActive,
         isPremium,
         isLoading,
+        isCanceled,
         trialEndsAt,
         subscriptionId,
         customerId,
+        subscriptionStatus,
         subscribe,
         startTrial,
         upgradeToPremium,

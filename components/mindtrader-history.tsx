@@ -61,15 +61,15 @@ const EmptyStateView = () => {
     <div className="space-y-6">
       <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800">
         <CardContent className="pt-12 pb-12">
-          <div className="text-center space-y-6 max-w-2xl mx-auto">
+            <div className="text-center space-y-6 max-w-2xl mx-auto">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/50 mb-4">
               <Rocket className="w-10 h-10 text-emerald-600" />
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold text-emerald-900 dark:text-emerald-100">Začněte svou trading cestu!</h2>
+              <h2 className="text-3xl font-bold text-emerald-900 dark:text-emerald-100">Start your trading journey!</h2>
               <p className="text-lg text-muted-foreground">
-                Vaše analytika čeká na první data. Každý obchod vás přibližuje k lepšímu pochopení sebe sama.
+                Your analytics are waiting for the first data. Every trade brings you closer to better understanding yourself.
               </p>
             </div>
 
@@ -77,14 +77,14 @@ const EmptyStateView = () => {
               <div className="flex items-center justify-center gap-3">
                 <Trophy className="w-8 h-8 text-amber-500" />
                 <div className="text-left">
-                  <p className="text-sm text-muted-foreground">Zbývá zadat</p>
-                  <p className="text-4xl font-black text-emerald-600">{tradesRemaining} obchodů</p>
+                  <p className="text-sm text-muted-foreground">Remaining to enter</p>
+                  <p className="text-4xl font-black text-emerald-600">{tradesRemaining} trades</p>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Pokrok k plné analýze</span>
+                  <span className="text-muted-foreground">Progress to full analytics</span>
                   <span className="font-semibold text-emerald-600">
                     {currentTrades}/{totalTradesNeeded}
                   </span>

@@ -11,30 +11,30 @@ export default function IntroPage() {
   const features = [
     {
       icon: Brain,
-      title: "Psychologie tradingu",
-      description: "90% ztráty na trzích není o znalosti techniky, ale o kontrole emocí a mindset. Tady to měníme."
+      title: "Trading Psychology",
+      description: "90% of market losses aren't about technique—they're about emotion and mindset control. Here's where we change that."
     },
     {
       icon: Target,
-      title: "Identifikuj své vzorce",
-      description: "Pomocí AI odhalujeme tvoje opakující se chyby - FOMO, Revenge Trading, Greed a další psychologické pasti."
+      title: "Identify Your Patterns",
+      description: "Using AI, we uncover your repeating mistakes - FOMO, Revenge Trading, Greed, and other psychological traps."
     },
     {
       icon: Zap,
-      title: "Okamžitá zpětná vazba",
-      description: "Real-time analýzy, která tě zastaví dříve, než bys udělal impulsivní rozhodnutí."
+      title: "Instant Feedback",
+      description: "Real-time analysis that stops you before you make an impulsive decision."
     },
     {
       icon: Award,
-      title: "Strukturovaný progres",
-      description: "Jede z chaotické strategie na disciplínovaný trading plán se měřitelnými výsledky."
+      title: "Structured Progress",
+      description: "Move from chaotic strategy to disciplined trading with measurable results."
     }
   ]
 
   const stats = [
-    { value: "+600", label: "Traderů", highlight: "kteří zmapovali svůj mindset" },
-    { value: "1900+", label: "Chyb zachráněno", highlight: "emočními rozhodnutími" },
-    { value: "-42%", label: "Snížení chyb", highlight: "v průměru za 3 měsíce" }
+    { value: "9/10", label: "of traders have", highlight: "psychological issues" },
+    { value: "↓42%", label: "Less", highlight: "revenge trading" },
+    { value: "24/7", label: "AI analysis of", highlight: "your mindset" }
   ]
 
   return (
@@ -61,18 +61,18 @@ export default function IntroPage() {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-full mb-6">
             <Brain className="w-4 h-4 text-purple-300" />
-            <span className="text-sm text-purple-200 font-semibold">Psychologická revoluce v tradingu</span>
+            <span className="text-sm text-purple-200 font-semibold">Psychological revolution in trading</span>
           </div>
 
           <h1 className="text-6xl md:text-7xl font-black mb-6 leading-tight">
             <span className="bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 bg-clip-text text-transparent">
-              Proč MindTrader vznikl?
+              Why was MindTrader created?
             </span>
           </h1>
 
           <p className="text-xl md:text-2xl text-purple-200/80 max-w-3xl mx-auto mb-12 leading-relaxed">
-            Ztratil jsi v tradingu peníze? Věděl jsi přesně co se stalo, ale stejně ses to zopakoval? 
-            To není tvůj problém v technice - je to v psychologii.
+            Lost money trading? Knew exactly what happened, but did it again anyway? 
+            That's not your technical problem—it's your psychology.
           </p>
 
           <Link href="/signup">
@@ -80,7 +80,7 @@ export default function IntroPage() {
               size="lg"
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-8 py-6 text-lg rounded-xl shadow-lg shadow-purple-500/50"
             >
-              Zjistit více
+              Learn More
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </Link>
@@ -95,46 +95,46 @@ export default function IntroPage() {
         >
           {/* Problem */}
           <div className="bg-red-500/5 border border-red-500/20 rounded-3xl p-8 md:p-12">
-            <div className="text-3xl font-black text-red-400 mb-4">❌ Problém</div>
+            <div className="text-3xl font-black text-red-400 mb-4">❌ The Problem</div>
             <ul className="space-y-4 text-red-100/80">
               <li className="flex gap-3">
                 <span className="text-red-400">→</span>
-                <span><strong>Emoční obchody:</strong> FOMO, strach, touha se pomstít</span>
+                <span><strong>Emotional Trades:</strong> FOMO, fear, revenge urges</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-red-400">→</span>
-                <span><strong>Bez reflexe:</strong> Opakuješ stejné chyby bez analýzy</span>
+                <span><strong>No Reflection:</strong> Repeating same mistakes without analysis</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-red-400">→</span>
-                <span><strong>Izolace:</strong> Máš pocit, že si tím projdeš sám</span>
+                <span><strong>Isolation:</strong> Feeling like you're alone in this</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-red-400">→</span>
-                <span><strong>Bez směru:</strong> Strategie bez psychologické přípravy</span>
+                <span><strong>No Direction:</strong> Strategy without psychological preparation</span>
               </li>
             </ul>
           </div>
 
           {/* Solution */}
           <div className="bg-green-500/5 border border-green-500/20 rounded-3xl p-8 md:p-12">
-            <div className="text-3xl font-black text-green-400 mb-4">✓ MindTrader Řešení</div>
+            <div className="text-3xl font-black text-green-400 mb-4">✓ MindTrader Solution</div>
             <ul className="space-y-4 text-green-100/80">
               <li className="flex gap-3">
                 <span className="text-green-400">→</span>
-                <span><strong>Monitoring:</strong> AI tě varuje, než vstoupíš do impulsivního obchodu</span>
+                <span><strong>Monitoring:</strong> AI alerts you before you make an impulsive trade</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-green-400">→</span>
-                <span><strong>Analýza vzorců:</strong> Vidíš jasně, kde se duplikuješ</span>
+                <span><strong>Pattern Analysis:</strong> See clearly where you're repeating mistakes</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-green-400">→</span>
-                <span><strong>Komunita:</strong> 600+ traderů s stejným cílem</span>
+                <span><strong>Community:</strong> Traders with the same goal</span>
               </li>
               <li className="flex gap-3">
                 <span className="text-green-400">→</span>
-                <span><strong>Plán nápravy:</strong> Konkrétní kroky na cestu disciplíny</span>
+                <span><strong>Improvement Plan:</strong> Concrete steps toward discipline</span>
               </li>
             </ul>
           </div>
@@ -148,10 +148,10 @@ export default function IntroPage() {
           className="mb-24"
         >
           <h2 className="text-4xl font-black text-center mb-4 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
-            Jak to funguje
+            How It Works
           </h2>
           <p className="text-center text-purple-200/60 mb-12 text-lg">
-            Čtyři pilíře k ovládnutí tvého trading mindset
+            Four pillars to master your trading mindset
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -181,7 +181,7 @@ export default function IntroPage() {
           className="mb-24"
         >
           <h2 className="text-4xl font-black text-center mb-12 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
-            Již se stalo
+            Already Proven
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -211,10 +211,10 @@ export default function IntroPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10" />
           <div className="relative z-10">
             <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
-              Jsi připraven změnit svůj trading?
+              Ready to transform your trading?
             </h2>
             <p className="text-xl text-purple-200/80 mb-8 max-w-2xl mx-auto">
-              Začneme s mapováním tvého mindset, analýzou tvých chyb a vytvoříme plán na cestu k disciplínovanému, ziskovému tradingu.
+              We'll start by mapping your mindset, analyzing your mistakes, and creating a plan toward disciplined, profitable trading.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/pricing">
@@ -222,17 +222,8 @@ export default function IntroPage() {
                   size="lg"
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-10 py-6 text-lg rounded-xl shadow-lg shadow-purple-500/50 w-full sm:w-auto"
                 >
-                  Aktivovat Premium
+                  Activate Premium
                   <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </Link>
-              <Link href="/">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-2 border-purple-400 text-purple-300 hover:bg-purple-900/40 font-bold px-10 py-6 text-lg rounded-xl w-full sm:w-auto"
-                >
-                  Zpět domů
                 </Button>
               </Link>
             </div>

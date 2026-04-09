@@ -5,273 +5,409 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Users, Calendar, Clock, Star, BookOpen, Video, MessageSquare, TrendingUp, Target } from "lucide-react"
-import Link from "next/link"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Users, Trophy, TrendingUp, Clock, Heart, Zap, AlertCircle, CheckCircle, Lock } from "lucide-react"
+import { useState, useEffect } from "react"
+
+interface MentoringGroup {
+  id: string
+  name: string
+  description: string
+  code: string
+  mentor_id: string
+  max_members: number
+  created_at: string
+}
+
+interface GroupMember {
+  id: string
+  user_id: string
+  group_id: string
+  role: string
+  joined_at: string
+  user_name?: string
+  user_email?: string
+  today_stats?: any
+}
 
 export default function Mentoring() {
   const { user } = useAuth()
+  const [myGroups, setMyGroups] = useState<MentoringGroup[]>([])
+  const [selectedGroup, setSelectedGroup] = useState<MentoringGroup | null>(null)
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isMentor, setIsMentor] = useState(false)
+  const [joinCode, setJoinCode] = useState("")
+  const [joinMessage, setJoinMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [joiningGroup, setJoiningGroup] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      loadGroups()
+    }
+  }, [user])
+
+  const loadGroups = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch("/api/mentoring/groups", {
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const groups = data.groups || []
+        setMyGroups(groups)
+
+        if (groups.length > 0) {
+          // Check if user is a mentor of the first group
+          if (groups[0].mentor_id === user?.id) {
+            setIsMentor(true)
+          }
+          setSelectedGroup(groups[0])
+          await loadGroupMembers(groups[0].id)
+        }
+      }
+    } catch (error) {
+      console.error("Error loading mentor groups:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadGroupMembers = async (groupId: string) => {
+    try {
+      const response = await fetch(`/api/mentoring/groups/${groupId}/members`, {
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setGroupMembers(data.members || [])
+      }
+    } catch (error) {
+      console.error("Error loading group members:", error)
+    }
+  }
+
+  const handleJoinGroup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!joinCode.trim()) {
+      setJoinMessage({ type: "error", text: "Please enter a group code" })
+      return
+    }
+
+    setJoiningGroup(true)
+    try {
+      const res = await fetch("/api/mentoring/groups/join", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: joinCode.trim().toUpperCase() }),
+      })
+
+      if (res.ok) {
+        setJoinMessage({ type: "success", text: "Successfully joined the group!" })
+        setJoinCode("")
+        // Reload groups
+        setTimeout(() => loadGroups(), 1000)
+      } else {
+        const error = await res.json()
+        setJoinMessage({ type: "error", text: error.error || "Error joining group" })
+      }
+    } catch (error) {
+      setJoinMessage({ type: "error", text: "Error joining group" })
+    } finally {
+      setJoiningGroup(false)
+    }
+  }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <Users className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Přihlášení vyžadováno</h1>
-          <Button asChild>
-            <Link href="/login">Přihlásit se</Link>
-          </Button>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Mentoring</h1>
+          <p className="text-muted-foreground mt-2">Sign in to access mentoring groups</p>
         </div>
       </div>
     )
   }
 
-  const mentors = [
-    {
-      id: 1,
-      name: "Pavel Novák",
-      avatar: "/placeholder.svg?height=80&width=80",
-      title: "Senior Forex Mentor",
-      experience: "15+ let",
-      specialization: "EUR/USD, GBP/JPY, Scalping",
-      students: 247,
-      rating: 4.9,
-      successRate: "89%",
-      description: "Specializuji se na intradenní trading a scalping strategie. Pomáhám traderům najít svůj styl.",
-      nextSession: "Pondělí 18:00",
-      price: "Zdarma pro Premium",
-    },
-    {
-      id: 2,
-      name: "Marie Svobodová",
-      avatar: "/placeholder.svg?height=80&width=80",
-      title: "Trading Psychology Coach",
-      experience: "12+ let",
-      specialization: "Psychologie, Risk Management",
-      students: 189,
-      rating: 4.8,
-      successRate: "92%",
-      description: "Pomáhám traderům překonat psychologické bariéry a vybudovat správný mindset.",
-      nextSession: "Středa 19:30",
-      price: "Zdarma pro Premium",
-    },
-    {
-      id: 3,
-      name: "Jan Procházka",
-      avatar: "/placeholder.svg?height=80&width=80",
-      title: "Swing Trading Expert",
-      experience: "10+ let",
-      specialization: "Swing Trading, Technická analýza",
-      students: 156,
-      rating: 4.7,
-      successRate: "85%",
-      description: "Učím dlouhodobější strategie a fundamentální analýzu pro swing trading.",
-      nextSession: "Pátek 17:00",
-      price: "Zdarma pro Premium",
-    },
-  ]
-
-  const upcomingSessions = [
-    {
-      id: 1,
-      title: "Týdenní analýza trhů",
-      mentor: "Pavel Novák",
-      date: "Pondělí",
-      time: "18:00",
-      duration: "60 min",
-      participants: 45,
-      type: "Webinář",
-      description: "Analýza hlavních měnových párů a trading příležitostí na nadcházející týden.",
-    },
-    {
-      id: 2,
-      title: "Q&A - Vaše otázky",
-      mentor: "Marie Svobodová",
-      date: "Středa",
-      time: "19:30",
-      duration: "90 min",
-      participants: 28,
-      type: "Live Session",
-      description: "Otevřená diskuze o trading psychologii a řešení vašich problémů.",
-    },
-    {
-      id: 3,
-      title: "Swing Trading Workshop",
-      mentor: "Jan Procházka",
-      date: "Pátek",
-      time: "17:00",
-      duration: "120 min",
-      participants: 67,
-      type: "Workshop",
-      description: "Praktický workshop zaměřený na swing trading strategie a setup identifikaci.",
-    },
-  ]
+  if (loading) {
+    return <div className="text-center py-8">Loading groups...</div>
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <Star className="w-8 h-8 mr-3 text-yellow-600" />
-            Program mentoringu
-          </h1>
-          <p className="text-gray-600 mt-1">Osobní vedení od zkušených traderů • Live sessions • 1:1 konzultace</p>
-        </div>
-
-        {/* Nadcházející sezení */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Nadcházející sezení</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingSessions.map((session) => (
-              <Card key={session.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline">{session.type}</Badge>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Users className="w-4 h-4 mr-1" />
-                      {session.participants}
-                    </div>
-                  </div>
-                  <CardTitle className="text-lg">{session.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Star className="w-4 h-4 mr-2" />
-                      {session.mentor}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {session.date} {session.time}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Clock className="w-4 h-4 mr-2" />
-                      {session.duration}
-                    </div>
-                    <p className="text-sm text-gray-600">{session.description}</p>
-                    <Button className="w-full">
-                      <Video className="w-4 h-4 mr-2" />
-                      Přihlásit se
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Mentoři */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Naši mentoři</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {mentors.map((mentor) => (
-              <Card key={mentor.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="w-16 h-16">
-                      <AvatarImage src={mentor.avatar || "/placeholder.svg"} />
-                      <AvatarFallback>
-                        {mentor.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold text-lg">{mentor.name}</h3>
-                      <p className="text-sm text-gray-600">{mentor.title}</p>
-                      <div className="flex items-center mt-1">
-                        <Star className="w-4 h-4 text-yellow-500 mr-1" />
-                        <span className="text-sm font-medium">{mentor.rating}</span>
-                        <span className="text-sm text-gray-500 ml-2">({mentor.students} studentů)</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600">{mentor.description}</p>
-
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-500">Zkušenosti</p>
-                        <p className="font-medium">{mentor.experience}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Úspěšnost</p>
-                        <p className="font-medium text-green-600">{mentor.successRate}</p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-gray-500 text-sm">Specializace</p>
-                      <p className="font-medium text-sm">{mentor.specialization}</p>
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm">
-                      <div>
-                        <p className="text-gray-500">Další session</p>
-                        <p className="font-medium">{mentor.nextSession}</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">{mentor.price}</Badge>
-                    </div>
-
-                    <div className="flex space-x-2">
-                      <Button className="flex-1">
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Kontakt
-                      </Button>
-                      <Button variant="outline" className="flex-1 bg-transparent">
-                        <BookOpen className="w-4 h-4 mr-2" />
-                        Profil
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Benefits */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Video className="w-5 h-5 text-blue-600" />
-                <span>Live Sessions</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Pravidelné live sessions s možností pokládat otázky v reálném čase.</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Target className="w-5 h-5 text-green-600" />
-                <span>Personalizované vedení</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Individuální přístup podle vašeho stylu tradingu a zkušeností.</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <TrendingUp className="w-5 h-5 text-purple-600" />
-                <span>Ověřené strategie</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">Naučte se strategie, které skutečně fungují na reálných trzích.</p>
-            </CardContent>
-          </Card>
-        </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-4xl font-bold">Mentoring</h1>
+        <p className="text-muted-foreground mt-2">
+          {isMentor ? "Monitor your students' progress" : "Join a mentoring group"}
+        </p>
       </div>
+
+      {/* Join Group Section */}
+      {!isMentor && myGroups.length === 0 && (
+        <Card className="border-2 border-dashed">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Lock className="w-5 h-5" />
+              <CardTitle>Join a Group</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form onSubmit={handleJoinGroup} className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter group code (e.g. Filipfx)"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  className="flex-1"
+                  disabled={joiningGroup}
+                />
+                <Button type="submit" disabled={joiningGroup}>
+                  {joiningGroup ? "Joining..." : "Join"}
+                </Button>
+              </div>
+
+              {joinMessage && (
+                <div
+                  className={`p-3 rounded-lg flex items-center gap-2 ${
+                    joinMessage.type === "success"
+                      ? "bg-green-50 text-green-900 border border-green-200"
+                      : "bg-red-50 text-red-900 border border-red-200"
+                  }`}
+                >
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm">{joinMessage.text}</span>
+                </div>
+              )}
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Groups Tabs */}
+      {myGroups.length > 0 && (
+        <>
+          <Tabs
+            value={selectedGroup?.id || ""}
+            onValueChange={(value) => {
+              const group = myGroups.find((g) => g.id === value)
+              if (group) {
+                setSelectedGroup(group)
+                loadGroupMembers(group.id)
+                setIsMentor(group.mentor_id === user?.id)
+              }
+            }}
+          >
+            <TabsList className="w-full grid grid-cols-2 lg:grid-cols-4">
+              {myGroups.map((group) => (
+                <TabsTrigger key={group.id} value={group.id}>
+                  {group.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
+            {myGroups.map((group) => (
+              <TabsContent key={group.id} value={group.id} className="space-y-6">
+                {/* Group Header Card */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          {group.name}
+                          <Badge variant="outline">{group.code}</Badge>
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground mt-2">{group.description}</p>
+                      </div>
+                      {isMentor && <Badge>Mentor</Badge>}
+                    </div>
+                  </CardHeader>
+                </Card>
+
+                {/* Group Stats Overview */}
+                {isMentor && (
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Members</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-blue-500" />
+                          <span className="text-2xl font-bold">{groupMembers.length}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                          Average Win Rate
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4 text-green-500" />
+                          <span className="text-2xl font-bold">
+                            {groupMembers.length > 0
+                              ? (
+                                  groupMembers.reduce(
+                                    (acc, m) => acc + (m.today_stats?.win_rate || 0),
+                                    0
+                                  ) / groupMembers.length
+                                ).toFixed(1)
+                              : 0}
+                            %
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                          Trades Today
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-orange-500" />
+                          <span className="text-2xl font-bold">
+                            {groupMembers.reduce((acc, m) => acc + (m.today_stats?.trades_count || 0), 0)}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                          Average Mood
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <span className="text-2xl font-bold">
+                          {groupMembers.length > 0
+                            ? (
+                                groupMembers.reduce(
+                                  (acc, m) => acc + (m.today_stats?.mood_score || 0),
+                                  0
+                                ) / groupMembers.length
+                              ).toFixed(1)
+                            : 0}
+                          /10
+                        </span>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Members List / Leaderboard */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      {isMentor ? "Group Members - Mentoring Details" : "Your Standing in the Group"}
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {isMentor
+                        ? "Track each member's progress and identify areas for improvement"
+                        : "Compare yourself with other group members"}
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {groupMembers
+                        .sort((a, b) => {
+                          const scoreA =
+                            (a.today_stats?.sleep_hours || 0) * 10 +
+                            (a.today_stats?.trades_count || 0) * 5 +
+                            (a.today_stats?.win_rate || 0)
+                          const scoreB =
+                            (b.today_stats?.sleep_hours || 0) * 10 +
+                            (b.today_stats?.trades_count || 0) * 5 +
+                            (b.today_stats?.win_rate || 0)
+                          return scoreB - scoreA
+                        })
+                        .map((member, index) => {
+                          const stats = member.today_stats || {}
+                          const score =
+                            (stats.sleep_hours || 0) * 10 +
+                            (stats.trades_count || 0) * 5 +
+                            (stats.win_rate || 0)
+
+                          return (
+                            <div
+                              key={member.id}
+                              className="border rounded-lg p-4 hover:bg-muted/50 transition"
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <Badge variant="outline">#{index + 1}</Badge>
+                                  <div>
+                                    <p className="font-medium">{member.user_name || "User"}</p>
+                                    <p className="text-xs text-muted-foreground">{member.user_email}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-sm text-muted-foreground">Score</p>
+                                  <p className="text-2xl font-bold text-blue-600">{score.toFixed(0)}</p>
+                                </div>
+                              </div>
+
+                              {Object.keys(stats).length > 0 ? (
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                                  <div className="bg-muted p-2 rounded">
+                                    <p className="text-muted-foreground text-xs">Sleep</p>
+                                    <p className="font-bold">{stats.sleep_hours || 0}h</p>
+                                  </div>
+                                  <div className="bg-muted p-2 rounded">
+                                    <p className="text-muted-foreground text-xs">Trades</p>
+                                    <p className="font-bold">{stats.trades_count || 0}</p>
+                                  </div>
+                                  <div className="bg-muted p-2 rounded">
+                                    <p className="text-muted-foreground text-xs">Win Rate</p>
+                                    <p className="font-bold text-green-600">{stats.win_rate || 0}%</p>
+                                  </div>
+                                  <div className="bg-muted p-2 rounded">
+                                    <p className="text-muted-foreground text-xs">P&L</p>
+                                    <p
+                                      className={`font-bold ${
+                                        (stats.total_pnl || 0) >= 0 ? "text-green-600" : "text-red-600"
+                                      }`}
+                                    >
+                                      ${(stats.total_pnl || 0).toFixed(2)}
+                                    </p>
+                                  </div>
+                                  <div className="bg-muted p-2 rounded">
+                                    <p className="text-muted-foreground text-xs">Mood</p>
+                                    <p className="font-bold">{stats.mood_score || 0}/10</p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-sm text-muted-foreground italic">No data yet today</p>
+                              )}
+                            </div>
+                          )
+                        })}
+
+                      {groupMembers.length === 0 && (
+                        <p className="text-center text-muted-foreground py-8">
+                          No members in this group yet
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </>
+      )}
     </div>
   )
 }

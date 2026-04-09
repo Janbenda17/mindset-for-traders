@@ -3,11 +3,13 @@ import { useState, useEffect } from "react"
 import type React from "react"
 
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/contexts/language-context"
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
 import { useAuth } from "@/contexts/auth-context"
+import { useLiveMode } from "@/contexts/live-mode-context"
 import { showXPNotification, showLevelUpNotification } from "@/lib/xp-notifications"
 import { TrendingUp, DollarSign, BarChart3, Brain, Zap, ChevronDown, Trash2 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -62,9 +64,9 @@ interface MorningCheckData {
   emotionalState: number
 }
 
-const EMOTIONS_BEFORE = [
+const EMOTIONS_BEFORE_CS = [
   "Klidný",
-  "Sebevědomý",
+  "Sebejistý",
   "Nervózní",
   "Nejistý",
   "Nadšený",
@@ -73,25 +75,108 @@ const EMOTIONS_BEFORE = [
   "Rozrušený",
 ]
 
-const EMOTIONS_DURING = [
+const EMOTIONS_DURING_CS = [
   "Klidný",
-  "Stresovaný",
-  "Sebevědomý",
-  "Panický",
+  "Vystresovaný",
+  "Sebejistý",
+  "Panikující",
   "Soustředěný",
   "Rozptýlený",
   "Trpělivý",
   "Netrpělivý",
 ]
 
-const EMOTIONS_AFTER = ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Poučený", "Naštvaný", "Klidný", "Euforický"]
+const EMOTIONS_AFTER_CS = ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Poučený", "Naštvaný", "Klidný", "Euforický"]
+
+const EMOTIONS_BEFORE = [
+  "Calm",
+  "Confident",
+  "Nervous",
+  "Uncertain",
+  "Excited",
+  "Tired",
+  "Focused",
+  "Upset",
+]
+
+const EMOTIONS_DURING = [
+  "Calm",
+  "Stressed",
+  "Confident",
+  "Panicked",
+  "Focused",
+  "Distracted",
+  "Patient",
+  "Impatient",
+]
+
+const EMOTIONS_AFTER = ["Satisfied", "Frustrated", "Proud", "Disappointed", "Learned", "Angry", "Calm", "Euphoric"]
 
 export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
   const { toast } = useToast()
   const router = useRouter()
-  const { completeStage } = useDailyStage()
+  const { completeStage, stages } = useDailyStage()
   const { addTrade, deleteTrade } = useData()
   const { user } = useAuth()
+  const { isLiveMode } = useLiveMode()
+  const { language } = useLanguage()
+  const isEn = language === "en"
+  
+  const txt = {
+    recordTrade: isEn ? "Record Trade" : "Zaznamenat obchod",
+    recordDesc: isEn ? "Record your trades and get deeper insights into your trading" : "Zaznamenej své obchody a získej hlubší přehled o svém tradingu",
+    todayOverview: isEn ? "Today's Overview" : "Přehled dneška",
+    totalTrades: isEn ? "Total Trades" : "Celkem obchodů",
+    currencyPair: isEn ? "Currency Pair" : "Měnový pár",
+    direction: isEn ? "Direction" : "Směr",
+    openingDate: isEn ? "Opening Date" : "Datum otevření",
+    openingTime: isEn ? "Opening Time" : "Čas otevření",
+    closingDate: isEn ? "Closing Date" : "Datum zavření",
+    closingTime: isEn ? "Closing Time" : "Čas zavření",
+    session: isEn ? "Session" : "Session",
+    tradeType: isEn ? "Trade Type" : "Typ obchodu",
+    pips: isEn ? "Pips" : "Pips",
+    pnlDollar: isEn ? "P&L ($)" : "P&L ($)",
+    psychAnalysis: isEn ? "Psychological Analysis" : "Psychologická analýza",
+    confidenceBefore: isEn ? "Confidence Before" : "Sebejistota před",
+    stress: isEn ? "Stress" : "Stres",
+    choose: isEn ? "Choose..." : "Vyber...",
+    entryReason: isEn ? "Entry Reason" : "Důvod vstupu",
+    whyEntered: isEn ? "Why did you enter this trade?" : "Proč jsi vstoupil do tohoto obchodu?",
+    exitReason: isEn ? "Exit Reason" : "Důvod výstupu",
+    whyExited: isEn ? "Why did you exit this trade?" : "Proč jsi vystoupil z tohoto obchodu?",
+    detailedAnalysis: isEn ? "Detailed Analysis" : "Detailní analýza",
+    whatHappened: isEn ? "What happened? What worked? What didn't?" : "Co se stalo? Co fungovalo? Co ne?",
+    followedPlan: isEn ? "I followed the plan" : "Dodržel jsem plán",
+    exitedEarly: isEn ? "I exited too early" : "Vystoupil jsem příliš brzy",
+    missedOpportunity: isEn ? "I missed the opportunity due to hesitation" : "Propásl jsem příležitost kvůli váhání",
+    revengeTrade: isEn ? "Revenge trade" : "Revenge trade",
+    behaviorDesc: isEn ? "Behavior Description" : "Popis chování",
+    howBehaved: isEn ? "How did you behave during the trade?" : "Jak jsi se choval během obchodu?",
+    tags: isEn ? "Tags (comma-separated)" : "Štítky (oddělené čárkou)",
+    notes: isEn ? "Notes" : "Poznámky",
+    additionalNotes: isEn ? "Additional notes..." : "Doplňující poznámky...",
+    saveTrade: isEn ? "Save Trade" : "Uložit obchod",
+    noTradesYet: isEn ? "No trades today" : "Dnes žádné obchody",
+    noTradesDesc: isEn ? "No trades today - stage 4 closed" : "Dnes žádné obchody - fáze 4 uzavřena",
+    currencyPairLabel: isEn ? "Currency Pair" : "Měnový pár",
+    sessionLabel: isEn ? "Session" : "Session",
+    tradeTypeLabel: isEn ? "Trade Type" : "Typ obchodu",
+    notAvailable: isEn ? "Not available" : "Není k dispozici",
+    confidence: isEn ? "Confidence (before)" : "Sebejistota (před)",
+    entryReasonLabel: isEn ? "Entry Reason" : "Důvod vstupu",
+    exitReasonLabel: isEn ? "Exit Reason" : "Důvod výstupu",
+    detailedAnalysisLabel: isEn ? "Detailed Analysis" : "Detailní analýza",
+    earlyExit: isEn ? "⚠ Early exit" : "⚠ Předčasný výstup",
+    plannedExit: isEn ? "✓ Planned exit" : "✓ Plánovaný výstup",
+    revengeTradeIndicator: isEn ? "✗ Revenge trade" : "✗ Revenge trade",
+    noRevenge: isEn ? "✓ No revenge" : "✓ Bez revenge",
+    behaviorDescLabel: isEn ? "Behavior Description" : "Popis chování",
+    tagsLabel: isEn ? "Tags" : "Štítky",
+    notesLabel: isEn ? "Notes" : "Poznámky",
+    allRecords: isEn ? "All Records" : "Všechny záznamy",
+    select: isEn ? "Select" : "Vybrat",
+  }
   const [isLoading, setIsLoading] = useState(false)
   const [todayPlan, setTodayPlan] = useState<TradingPlanData | null>(null)
   const [morningCheck, setMorningCheck] = useState<MorningCheckData | null>(null)
@@ -214,8 +299,8 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
     // Minimal validation - just require pair
     if (!currentTrade.pair) {
       toast({
-        title: "Chyba",
-        description: "Vyplňte prosím minimálně měnový pár",
+        title: "Error",
+        description: "Please enter at least a currency pair",
         variant: "destructive",
       })
       return
@@ -245,12 +330,19 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
       return
     }
 
-    // Refresh trades from storage immediately
+    // Refresh trades
     const today = format(new Date(), "yyyy-MM-dd")
-    const tradesKey = `user-${user?.id}-mindtrader-trades`
-    const allTrades = JSON.parse(localStorage.getItem(tradesKey) || "[]")
-    const todayTrades = allTrades.filter((t: Trade) => t.date === today)
-    setTrades(todayTrades)
+    if (isLiveMode) {
+      // LIVE MODE: Get data from data context which loads from Supabase
+      console.log("[v0] LIVE MODE: Loading trades from Supabase via refreshLiveData")
+      // The data context will automatically refresh after addTrade, no need to manually refresh
+    } else {
+      // VIRTUAL MODE: Get from localStorage
+      const tradesKey = `user-${user?.id}-mindtrader-trades`
+      const allTrades = JSON.parse(localStorage.getItem(tradesKey) || "[]")
+      const todayTrades = allTrades.filter((t: Trade) => t.date === today)
+      setTrades(todayTrades)
+    }
 
     // Mark record trade as completed in daily tracker
     try {
@@ -322,15 +414,11 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
     
     toast({
       title: "Úspěch!",
-      description: "Obchod byl uložen a stage 4 je hotov!",
+      description: "Obchod byl uložen. Můžete přidat další obchody během dne.",
     })
 
-    // Attempt to complete stage
-    try {
-      await completeStage()
-    } catch (error) {
-      console.error("[v0] Error completing stage:", error)
-    }
+    // DO NOT complete stage 4 here - it should stay open so trader can add more trades
+    // Stage 4 will be auto-completed when Stage 5 (Daily Summary) is completed
 
     // Call onComplete callback if provided
     if (onComplete) {
@@ -354,9 +442,9 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
             <TrendingUp className="w-7 h-7 text-blue-300" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white mb-1">Zaznamenat obchod</h1>
+            <h1 className="text-3xl font-bold text-white mb-1">{txt.recordTrade}</h1>
             <p className="text-blue-200/80 text-sm">
-              Zaznamenejte své obchody a získejte hlubší náhled na svůj trading
+              {txt.recordDesc}
             </p>
           </div>
         </div>
@@ -366,13 +454,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
         <CardHeader className="pb-4">
           <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-emerald-400" />
-            Dnešní přehled
+            {txt.todayOverview}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-xl border border-blue-500/20 hover:border-blue-400/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
-              <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">Celkem obchodů</p>
+              <p className="text-xs text-gray-400 mb-2 uppercase tracking-wide font-semibold">{txt.totalTrades}</p>
               <p className="text-3xl font-bold text-white">{trades.length}</p>
             </div>
             <div className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-600/5 rounded-xl border border-purple-500/20 hover:border-purple-400/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
@@ -396,13 +484,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
           <CardHeader className="pb-4 border-b border-slate-700/50">
             <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-blue-400" />
-              Základní informace
+              {isEn ? "Basic Information" : "Basic Information"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 pt-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Měnový pár *</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.currencyPair} *</label>
                 <input
                   type="text"
                   placeholder="EUR/USD"
@@ -412,7 +500,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Směr *</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.direction} *</label>
                 <select
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   value={currentTrade.direction}
@@ -426,7 +514,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Datum otevření *</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.openingDate} *</label>
                 <input
                   type="date"
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
@@ -501,18 +589,6 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Velikost pozice</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
-                  value={currentTrade.positionSize}
-                  onChange={(e) =>
-                    setCurrentTrade({ ...currentTrade, positionSize: Number.parseFloat(e.target.value) })
-                  }
-                />
-              </div>
-              <div>
                 <label className="text-sm text-gray-300 block mb-2">P&L ($)</label>
                 <input
                   type="number"
@@ -530,14 +606,14 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
           <CardHeader className="pb-4 border-b border-slate-700/50">
             <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
               <Brain className="w-5 h-5 text-purple-400" />
-              Psychologická analýza
+              Psychological Analysis
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 pt-6">
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-sm text-gray-300 block mb-2">
-                  Důvěra před ({currentTrade.confidenceBefore})
+                  Confidence Before ({currentTrade.confidenceBefore})
                 </label>
                 <input
                   type="range"
@@ -551,7 +627,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Stres ({currentTrade.stressLevel})</label>
+                <label className="text-sm text-gray-300 block mb-2">Stress ({currentTrade.stressLevel})</label>
                 <input
                   type="range"
                   min="1"
@@ -562,7 +638,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Nálada ({currentTrade.mood})</label>
+                <label className="text-sm text-gray-300 block mb-2">Mood ({currentTrade.mood})</label>
                 <input
                   type="range"
                   min="1"
@@ -576,14 +652,14 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Emoce před</label>
+                <label className="text-sm text-gray-300 block mb-2">{isEn ? "Emotion Before" : "Emoce před"}</label>
                 <select
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   value={currentTrade.emotionBefore}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, emotionBefore: e.target.value })}
                 >
-                  <option value="">Vyber...</option>
-                  {EMOTIONS_BEFORE.map((emotion) => (
+                  <option value="">{isEn ? "Select..." : "Vyber..."}</option>
+                  {(isEn ? EMOTIONS_BEFORE : EMOTIONS_BEFORE_CS).map((emotion) => (
                     <option key={emotion} value={emotion}>
                       {emotion}
                     </option>
@@ -591,14 +667,14 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Emoce během</label>
+                <label className="text-sm text-gray-300 block mb-2">{isEn ? "Emotion During" : "Emoce během"}</label>
                 <select
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   value={currentTrade.emotionDuring}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, emotionDuring: e.target.value })}
                 >
-                  <option value="">Vyber...</option>
-                  {EMOTIONS_DURING.map((emotion) => (
+                  <option value="">{isEn ? "Select..." : "Vyber..."}</option>
+                  {(isEn ? EMOTIONS_DURING : EMOTIONS_DURING_CS).map((emotion) => (
                     <option key={emotion} value={emotion}>
                       {emotion}
                     </option>
@@ -606,14 +682,14 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Emoce po</label>
+                <label className="text-sm text-gray-300 block mb-2">{isEn ? "Emotion After" : "Emoce po"}</label>
                 <select
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   value={currentTrade.emotionAfter}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, emotionAfter: e.target.value })}
                 >
-                  <option value="">Vyber...</option>
-                  {EMOTIONS_AFTER.map((emotion) => (
+                  <option value="">{isEn ? "Select..." : "Vyber..."}</option>
+                  {(isEn ? EMOTIONS_AFTER : EMOTIONS_AFTER_CS).map((emotion) => (
                     <option key={emotion} value={emotion}>
                       {emotion}
                     </option>
@@ -624,33 +700,33 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Důvod vstupu</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.entryReason}</label>
                 <textarea
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   rows={2}
                   value={currentTrade.entryReason}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, entryReason: e.target.value })}
-                  placeholder="Proč jsi vstoupil do tohoto tradu?"
+                  placeholder={txt.whyEntered}
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Důvod výstupu</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.exitReason}</label>
                 <textarea
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   rows={2}
                   value={currentTrade.exitReason}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, exitReason: e.target.value })}
-                  placeholder="Proč jsi z tradu vystoupil?"
+                  placeholder={txt.whyExited}
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Detailní analýza</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.detailedAnalysis}</label>
                 <textarea
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                   rows={3}
                   value={currentTrade.detailedAnalysis}
                   onChange={(e) => setCurrentTrade({ ...currentTrade, detailedAnalysis: e.target.value })}
-                  placeholder="Co se stalo? Co fungovalo? Co ne?"
+                  placeholder={txt.whatHappened}
                 />
               </div>
             </div>
@@ -663,7 +739,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                   onChange={(e) => setCurrentTrade({ ...currentTrade, followedPlan: e.target.checked })}
                   className="rounded"
                 />
-                Následoval jsem plán
+                {txt.followedPlan}
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-300">
                 <input
@@ -672,7 +748,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                   onChange={(e) => setCurrentTrade({ ...currentTrade, exitedEarly: e.target.checked })}
                   className="rounded"
                 />
-                Vystoupil jsem příliš brzy
+                {txt.exitedEarly}
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-300">
                 <input
@@ -681,7 +757,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                   onChange={(e) => setCurrentTrade({ ...currentTrade, missedDueToHesitation: e.target.checked })}
                   className="rounded"
                 />
-                Zmeškal jsem příležitost kvůli váhání
+                {txt.missedOpportunity}
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-300">
                 <input
@@ -690,24 +766,24 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                   onChange={(e) => setCurrentTrade({ ...currentTrade, revengeTrade: e.target.checked })}
                   className="rounded"
                 />
-                Revenge trade
+                {txt.revengeTrade}
               </label>
             </div>
 
             <div>
-              <label className="text-sm text-gray-300 block mb-2">Popis chování</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.behaviorDesc}</label>
               <textarea
                 className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
                 rows={2}
                 value={currentTrade.behaviorDescription}
                 onChange={(e) => setCurrentTrade({ ...currentTrade, behaviorDescription: e.target.value })}
-                placeholder="Jak ses během tradu choval?"
+                placeholder={txt.howBehaved}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Tagy (oddělené čárkou)</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.tags}</label>
                 <input
                   type="text"
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
@@ -717,7 +793,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-2">Poznámky</label>
+                <label className="text-sm text-gray-300 block mb-2">{txt.notes}</label>
                 <input
                   type="text"
                   className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
@@ -733,17 +809,44 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold py-7 text-lg rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full text-white font-semibold py-7 text-lg rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 hover:shadow-xl hover:shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Zap className="w-5 h-5" />
           {isLoading ? "Ukládám..." : "Uložit obchod"}
+        </Button>
+
+        {/* No trades today button */}
+        <Button
+          type="button"
+          onClick={async () => {
+            setIsLoading(true)
+            try {
+              await completeStage("record-trades")
+              toast({
+                title: "✓ Stage 4 Complete",
+                description: "Today without trade - stage 4 closed",
+              })
+            } catch (error) {
+              toast({
+                title: "Error",
+                description: "Failed to close stage 4",
+                variant: "destructive",
+              })
+            } finally {
+              setIsLoading(false)
+            }
+          }}
+          disabled={isLoading}
+          className="w-full bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white font-semibold py-7 text-lg rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Today Without Trade
         </Button>
       </form>
 
       {trades.length > 0 && (
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-700/50 backdrop-blur-lg shadow-lg">
           <CardHeader className="pb-4 border-b border-slate-700/50">
-            <CardTitle className="text-lg font-semibold text-white">Dnešní obchody ({trades.length})</CardTitle>
+            <CardTitle className="text-lg font-semibold text-white">Today's Trades ({trades.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 pt-6">
             {trades.map((trade) => (
@@ -784,10 +887,6 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                         <p className="text-white font-bold">{trade.pair}</p>
                       </div>
                       <div className="bg-slate-700/30 rounded-lg p-3">
-                        <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Velikost pozice</p>
-                        <p className="text-white font-bold">{trade.positionSize} Lot</p>
-                      </div>
-                      <div className="bg-slate-700/30 rounded-lg p-3">
                         <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Session</p>
                         <p className="text-white font-bold">{trade.session || "Není"}</p>
                       </div>
@@ -814,7 +913,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                           </div>
                         </div>
                         <div className="bg-red-500/10 rounded-lg p-3 border border-red-500/20">
-                          <p className="text-xs text-gray-400 mb-1">Stres</p>
+                          <p className="text-xs text-gray-400 mb-1">Stress</p>
                           <div className="flex items-center gap-2">
                             <div className="w-full bg-slate-700/50 rounded-full h-2">
                               <div
@@ -863,13 +962,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                     <div className="border-t border-slate-600/30 pt-4 space-y-3">
                       {trade.entryReason && (
                         <div>
-                          <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Důvod vstupu</p>
+                          <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Entry Reason</p>
                           <p className="text-sm text-gray-200">{trade.entryReason}</p>
                         </div>
                       )}
                       {trade.exitReason && (
                         <div>
-                          <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Důvod výstupu</p>
+                          <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Exit Reason</p>
                           <p className="text-sm text-gray-200">{trade.exitReason}</p>
                         </div>
                       )}
@@ -878,7 +977,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                     {/* Detailed Analysis */}
                     {trade.detailedAnalysis && (
                       <div className="border-t border-slate-600/30 pt-4">
-                        <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Detailní analýza</p>
+                        <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Detailed Analysis</p>
                         <p className="text-sm text-gray-200 leading-relaxed">{trade.detailedAnalysis}</p>
                       </div>
                     )}
@@ -901,7 +1000,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                         </div>
                         <div className={`p-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${trade.revengeTrade ? "bg-red-500/20 text-red-300 border border-red-500/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"}`}>
                           <div className="w-3 h-3 rounded-full" style={{ background: trade.revengeTrade ? "currentColor" : "currentColor" }} />
-                          {trade.revengeTrade ? "✗ Revenge trade" : "✓ Bez revenže"}
+                          {trade.revengeTrade ? "✗ Revenge trade" : "✓ No revenge"}
                         </div>
                       </div>
                     </div>
@@ -911,13 +1010,13 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                       <div className="border-t border-slate-600/30 pt-4 space-y-3">
                         {trade.behaviorDescription && (
                           <div>
-                            <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Popis chování</p>
+                            <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Behavior Description</p>
                             <p className="text-sm text-gray-200">{trade.behaviorDescription}</p>
                           </div>
                         )}
                         {Array.isArray(trade.tags) && trade.tags.length > 0 && (
                           <div>
-                            <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Tagy</p>
+                            <p className="text-xs font-semibold text-gray-300 mb-2 uppercase">Tags</p>
                             <div className="flex flex-wrap gap-2">
                               {trade.tags.map((tag) => (
                                 <span key={tag} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-semibold border border-blue-500/30">
@@ -929,7 +1028,7 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
                         )}
                         {trade.notes && (
                           <div>
-                            <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Poznámky</p>
+                            <p className="text-xs font-semibold text-gray-300 mb-1 uppercase">Notes</p>
                             <p className="text-sm text-gray-200">{trade.notes}</p>
                           </div>
                         )}

@@ -40,9 +40,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if subscription is ACTIVE (premium or trialing)
-    // Zdroj pravdy je subscription_status v databázi!
-    const isActive = profile?.subscription_status === "active" || profile?.subscription_status === "trial"
-    const isPremium = isActive
+    // Zdroj pravdy je is_premium flag v databázi!
+    // Stripe uses "trialing" not "trial"
+    const isActive = profile?.is_premium === true || 
+                     profile?.subscription_status === "active" || 
+                     profile?.subscription_status === "trialing" ||
+                     profile?.subscription_status === "trial"
+    const isPremium = profile?.is_premium === true
 
     const tier = profile?.subscription_tier || "free"
 

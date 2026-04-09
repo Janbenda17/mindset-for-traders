@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react"
 import { supabase } from "@/lib/supabase/browser"
 import { useAuth } from "./auth-context"
+import { useSubscription } from "./subscription-context"
 
 interface LiveModeContextType {
   isLiveMode: boolean
@@ -15,6 +16,7 @@ const LiveModeContext = createContext<LiveModeContextType | undefined>(undefined
 
 export function LiveModeProvider({ children }: { children: ReactNode }) {
   const { user, authReady } = useAuth()
+  const { isPremium, isLoading: isSubscriptionLoading } = useSubscription()
   const [isLiveMode, setIsLiveMode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [canSwitchMode, setCanSwitchMode] = useState(true)
@@ -59,6 +61,23 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
     loadModeFromDatabase()
   }, [user, authReady])
 
+  // Auto-revert to virtual mode if premium expires
+  useEffect(() => {
+    if (!user || !isLiveMode) return
+
+    // IMPORTANT: Don't revert during subscription loading - wait for subscription status to be confirmed
+    if (isSubscriptionLoading) {
+      console.log(`[v0] [LiveMode] Subscription status still loading - NOT reverting live mode yet`)
+      return
+    }
+
+    // Only revert if subscription is definitely not active (not loading AND not premium)
+    if (!isPremium && isLiveMode) {
+      console.log(`[v0] [LiveMode] ⚠️ Premium expired for user ${user.id} - reverting to VIRTUAL mode`)
+      switchToVirtualForExpiredPremium()
+    }
+  }, [isPremium, user?.id, isLiveMode, isSubscriptionLoading])
+
   const loadModeFromDatabase = async () => {
     if (!user) {
       setIsLoading(false)
@@ -91,11 +110,31 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
           `[v0] [LiveMode] ✓ Loaded from database: ${isLive ? "LIVE" : "VIRTUAL"} (userId: ${user.id}, canSwitch: ${!isLive})`,
         )
       } else {
-        setIsLiveMode(false)
-        setCanSwitchMode(true)
-        cachedModeRef.current = false
+        // New user - check if premium and auto-enable live mode if so
+        console.log(`[v0] [LiveMode] No profile found for user ${user.id} - checking subscription status`)
+        
+        // Wait a bit for subscription to load
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        if (isPremium) {
+          console.log(`[v0] [LiveMode] User ${user.id} is premium - auto-enabling LIVE mode`)
+          setIsLiveMode(true)
+          setCanSwitchMode(false)
+          cachedModeRef.current = true
+          
+          // Also save it to database
+          await supabase
+            .from("profiles")
+            .update({ trading_mode: "live" })
+            .eq("user_id", user.id)
+        } else {
+          console.log(`[v0] [LiveMode] User ${user.id} is not premium - defaulting to VIRTUAL`)
+          setIsLiveMode(false)
+          setCanSwitchMode(true)
+          cachedModeRef.current = false
+        }
+        
         modeLoadedRef.current = true
-        console.log(`[v0] [LiveMode] No profile found - defaulting to VIRTUAL (new user, userId: ${user.id})`)
       }
     } catch (err) {
       console.error("[v0] [LiveMode] Exception loading mode:", err)
@@ -109,47 +148,47 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
   }
 
   const switchToLive = async () => {
-    if (user) {
-      // Authenticated user - switch in database
-      if (!canSwitchMode) {
-        console.error("[v0] [LiveMode] Cannot switch to live mode - already in LIVE mode (permanent)")
+    try {
+      console.log(`[v0] [LiveMode] 🔄 Starting switch to LIVE mode for user: ${user?.id}`)
+      
+      if (!user) {
+        console.log("[v0] [LiveMode] Switching to LIVE mode (demo mode)")
+        localStorage.setItem("trader-mindset-demo-mode", "live")
+        cachedModeRef.current = true
+        setIsLiveMode(true)
+        setCanSwitchMode(true)
+        modeLoadedRef.current = true
+        console.log("[v0] [LiveMode] ✓ Demo mode switched to LIVE")
         return
       }
 
-      console.log(`[v0] [LiveMode] Switching to LIVE mode for user: ${user.id} (${user.email}) - PERMANENT CHANGE`)
+      // Update database to live mode
+      console.log(`[v0] [LiveMode] Updating database to LIVE mode for user: ${user.id}`)
+      const { error } = await supabase
+        .from("profiles")
+        .update({ trading_mode: "live" })
+        .eq("user_id", user.id)
 
-      try {
-        const { error } = await supabase.from("profiles").update({ trading_mode: "live" }).eq("user_id", user.id)
-
-        if (error) {
-          console.error("[v0] [LiveMode] Failed to update mode:", error)
-          throw error
-        }
-
-        console.log(`[v0] [LiveMode] ✓ Database updated to LIVE mode (userId: ${user.id})`)
-        console.log(`[v0] [LiveMode] Mode switched -> LIVE, userId: ${user.id}, virtual data preserved in localStorage`)
-
-        cachedModeRef.current = true
-        setIsLiveMode(true)
-        setCanSwitchMode(false)
-        modeLoadedRef.current = true
-
-        setTimeout(() => {
-          window.location.reload()
-        }, 100)
-      } catch (err) {
-        console.error("[v0] [LiveMode] Error switching to live:", err)
-        throw err
+      if (error) {
+        console.error("[v0] [LiveMode] Error updating database:", error)
+        throw new Error(`Failed to update trading mode: ${error.message}`)
       }
-    } else {
-      // Demo mode - switch in localStorage
-      console.log("[v0] [LiveMode] Switching to LIVE mode (demo mode)")
-      localStorage.setItem("trader-mindset-demo-mode", "live")
+
+      console.log(`[v0] [LiveMode] ✓ Database updated to LIVE mode (userId: ${user.id})`)
+      console.log(`[v0] [LiveMode] Mode switched -> LIVE, userId: ${user.id}, virtual data preserved in localStorage`)
+
       cachedModeRef.current = true
       setIsLiveMode(true)
-      setCanSwitchMode(true)
+      setCanSwitchMode(false)
       modeLoadedRef.current = true
-      console.log("[v0] [LiveMode] ✓ Demo mode switched to LIVE")
+
+      console.log("[v0] [LiveMode] ✓ State updated, reloading...")
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
+    } catch (err) {
+      console.error("[v0] [LiveMode] Error switching to live:", err)
+      setIsSwitchingToLive(false)
     }
   }
 
@@ -166,6 +205,36 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const switchToVirtualForExpiredPremium = async () => {
+    if (!user) return
+
+    try {
+      // Update database back to virtual
+      const { error } = await supabase
+        .from("profiles")
+        .update({ trading_mode: "virtual" })
+        .eq("user_id", user.id)
+
+      if (error) {
+        console.error("[v0] [LiveMode] Error reverting to virtual:", error)
+        return
+      }
+
+      console.log(`[v0] [LiveMode] ✓ Reverted to VIRTUAL mode (premium expired) for user: ${user.id}`)
+      cachedModeRef.current = false
+      setIsLiveMode(false)
+      setCanSwitchMode(true)
+      modeLoadedRef.current = true
+
+      // Reload page to refresh data
+      setTimeout(() => {
+        window.location.reload()
+      }, 100)
+    } catch (err) {
+      console.error("[v0] [LiveMode] Exception reverting to virtual:", err)
+    }
+  }
+
   return (
     <LiveModeContext.Provider value={{ isLiveMode, isLoading, switchToLive, canSwitchMode }}>
       {children}
@@ -176,10 +245,8 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
 export function useLiveMode() {
   const context = useContext(LiveModeContext)
   if (context === undefined) {
-    if (typeof window === "undefined") {
-      return { isLiveMode: false, isLoading: true, switchToLive: async () => {}, canSwitchMode: true }
-    }
-    throw new Error("useLiveMode must be used within LiveModeProvider")
+    // Return default values during SSR/build instead of throwing
+    return { isLiveMode: false, isLoading: true, switchToLive: async () => {}, canSwitchMode: true }
   }
   return context
 }

@@ -17,8 +17,11 @@ const PUBLIC_PATHS = [
   "/contact",
   "/disclaimer",
   "/resources",
+  "/pricing",
+  "/upgrade",
   // App paths - accessible in virtual mode without auth
   "/",
+  "/bonus",
   "/dashboard",
   "/account",
   "/trades",
@@ -60,7 +63,6 @@ const PUBLIC_PATHS = [
 // Protected paths that require authentication
 const PROTECTED_PATHS = [
   "/onboarding",
-  "/pricing",
 ]
 
 export async function updateSession(request: NextRequest) {

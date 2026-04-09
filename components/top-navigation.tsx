@@ -34,46 +34,43 @@ import {
   AlertTriangle,
   ChevronDown,
   Lock,
+  Zap,
 } from "lucide-react"
 import LiveModeToggle from "@/components/live-mode-toggle"
 import { supabase } from "@/lib/supabase/client"
+import { useSubscription } from "@/contexts/subscription-context"
 import { useAuth } from "@/contexts/auth-context"
 import { useLiveMode } from "@/contexts/live-mode-context"
+import { useT, useLanguage } from "@/contexts/language-context"
 
 interface TopNavigationProps {
   initialTheme?: string
 }
 
-const mainNavigation = [
-  { name: "Nástěnka", href: "/dashboard", icon: Home, shortName: "Domů" },
-  { name: "Analytika", href: "/analytics", icon: BarChart3, shortName: "Statistiky" },
-  { name: "Obchod", href: "/journal", icon: TrendingUp, shortName: "Deník" },
-  { name: "MindTrader AI", href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
-  { name: "Denní Tracker", href: "/daily-tracker", icon: Calendar, shortName: "Denní" },
-  { name: "Týdenní Přehled", href: "/weekly-review", icon: Calendar },
-  { name: "Týmový Klub", href: "/team-club", icon: Users, badge: "PRO" },
-]
-
-const produktyNavigation = [
-  { name: "Trading Rutiny", href: "/routines", icon: Sun, badge: "NOVÉ" },
-  { name: "Trading Cíle", href: "/trading-goals", icon: Target, badge: "NOVÉ" },
-  { name: "Záznam Chyb", href: "/fail-log", icon: AlertTriangle, badge: "NOVÉ" },
-  { name: "Odměny", href: "/rewards", icon: Trophy, badge: "NOVÉ" },
-]
-
-const toolsNavigation = [
-  { name: "Risk Kalkulátor", href: "/risk-calculator", icon: Calculator, badge: "NOVÉ" },
-  { name: "Identita Tradera", href: "/trading-identity", icon: User, badge: "NOVÉ" },
-]
-
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
   const pathname = usePathname()
   const router = useRouter()
-  const { isLiveMode } = useLiveMode()
+  const { isLiveMode, switchToLive } = useLiveMode()
+  const { isPremium } = useSubscription()
+  const t = useT()
+  const { language } = useLanguage()
+  const isEn = language === "en"
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProductsOpen, setIsProductsOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isSwitchingToLive, setIsSwitchingToLive] = useState(false)
+
+  const mainNavigation = [
+    { name: t('nav_home'), href: "/dashboard", icon: Home, shortName: t('nav_home') },
+    { name: t('nav_daily_tracker'), href: "/daily-tracker", icon: Calendar, shortName: t('nav_daily_tracker') },
+    { name: t('nav_mindtrader'), href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
+    { name: t('nav_journal'), href: "/journal", icon: TrendingUp, shortName: t('nav_journal') },
+    { name: t('nav_analytics'), href: "/analytics", icon: BarChart3, shortName: t('nav_analytics') },
+    { name: t('nav_weekly_review'), href: "/weekly-review", icon: Calendar },
+    { name: t('nav_team_club'), href: "/team-club", icon: Users },
+    { name: t('nav_bonus'), href: "/bonus", icon: Trophy, badge: t('nav_new') },
+  ]
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -94,6 +91,18 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
       router.push('/signup')
     } else {
       router.push('/account')
+    }
+  }
+
+  const handleSwitchToLive = async () => {
+    try {
+      console.log("[v0] [TopNav] Clicking Switch to Live Mode...")
+      setIsSwitchingToLive(true)
+      await switchToLive()
+      // Note: page will reload after switchToLive, so this won't execute
+    } catch (error) {
+      console.error("[v0] [TopNav] Error switching to live:", error)
+      setIsSwitchingToLive(false)
     }
   }
 
@@ -174,16 +183,11 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
   const getExperienceLabel = (level: string) => {
     switch (level) {
-      case "beginner":
-        return "Začátečník"
-      case "intermediate":
-        return "Pokročilý"
-      case "advanced":
-        return "Expert"
-      case "expert":
-        return "Expert Trader"
-      default:
-        return "Trader"
+      case "beginner": return isEn ? "Beginner" : "Začátečník"
+      case "intermediate": return isEn ? "Intermediate" : "Pokročilý"
+      case "advanced": return isEn ? "Advanced" : "Pokročilý"
+      case "expert": return isEn ? "Expert Trader" : "Expert Trader"
+      default: return "Trader"
     }
   }
 
@@ -191,14 +195,12 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     logout()
   }
 
-  const isMoreActive = [...toolsNavigation].some((item) => pathname === item.href)
-
   if (isLoading) {
     return (
       <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4">
           <div className="flex justify-between items-center h-14 md:h-16">
-            <div className="text-gray-400 text-sm">Načítání...</div>
+            <div className="text-gray-400 text-sm">{t('loading')}</div>
           </div>
         </div>
       </nav>
@@ -236,101 +238,30 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="relative px-4 h-10 text-sm font-semibold text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 transition-all duration-300 group flex items-center gap-2 rounded-lg shadow-lg shadow-purple-500/20"
                   >
-                    <span>Produkty</span>
+                    <span>{isEn ? 'Products' : 'Produkty'}</span>
                     <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6" align="start">
-                {/* Řádek 1: Hlavní produkty */}
-                <div className="mb-6 pb-6 border-b border-slate-700/50">
-                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Hlavní Produkty</p>
-                  <div className="flex gap-3">
+                <DropdownMenuContent className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6" align="center">
+                {/* Hlavní produkty - 8 vedle sebe, vycentrovaný */}
+                <div className="flex justify-center w-full">
+                  <div className="grid grid-cols-8 gap-3 w-fit">
                     {mainNavigation.map((item) => {
                       const isActive = pathname === item.href
-                      const isTeamClubInLiveMode = item.href === "/team-club" && isLiveMode
-                      
-                      if (isTeamClubInLiveMode) {
-                        // Team Club locked in live mode
-                        return (
-                          <div
-                            key={item.name}
-                            className="flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-not-allowed bg-slate-800/50 border border-slate-700/50 opacity-60"
-                            title="Team Club is locked in Live Mode"
-                          >
-                            <Lock className="w-5 h-5 text-gray-400" />
-                            <span className="text-xs text-center text-gray-500">
-                              {item.name}
-                            </span>
-                          </div>
-                        )
-                      }
                       
                       return (
                         <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
-                          <div className={`flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all min-w-[100px] ${
+                          <div className={`flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all w-24 h-28 ${
                             isActive 
-                              ? "bg-purple-600/20 border border-purple-500/30" 
-                              : "hover:bg-slate-800/50 border border-slate-700/50"
+                              ? "bg-purple-600/30 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20" 
+                              : "hover:bg-slate-800/50 border-2 border-slate-700/50 hover:border-slate-600/50"
                           }`}>
-                            <item.icon className={`w-5 h-5 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                            <span className={`text-xs text-center ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                              {item.name}
-                            </span>
-                          </div>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Řádek 2: Produkty */}
-                <div className="mb-6 pb-6 border-b border-slate-700/50">
-                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Produkty</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {produktyNavigation.map((item) => {
-                      const isActive = pathname === item.href
-                      return (
-                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
-                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-                            isActive 
-                              ? "bg-purple-600/20 border border-purple-500/30" 
-                              : "hover:bg-slate-800/50 border border-slate-700/50"
-                          }`}>
-                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                            <item.icon className={`w-6 h-6 ${isActive ? "text-purple-400" : "text-gray-300"}`} />
+                            <span className={`text-xs text-center font-medium line-clamp-2 ${isActive ? "text-purple-300" : "text-white"}`}>
                               {item.name}
                             </span>
                             {item.badge && (
-                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-green-500/20 text-green-300 border-green-500/30">
-                                {item.badge}
-                              </Badge>
-                            )}
-                          </div>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Řádek 3: Nástroje */}
-                <div className="mb-6 pb-6 border-b border-slate-700/50">
-                  <p className="text-xs text-gray-400 font-semibold mb-3 uppercase tracking-wide">Nástroje</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {toolsNavigation.map((item) => {
-                      const isActive = pathname === item.href
-                      return (
-                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
-                          <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-                            isActive 
-                              ? "bg-purple-600/20 border border-purple-500/30" 
-                              : "hover:bg-slate-800/50 border border-slate-700/50"
-                          }`}>
-                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                            <span className={`text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                              {item.name}
-                            </span>
-                            {item.badge && (
-                              <Badge className="ml-auto text-xs px-1.5 py-0 h-5 bg-green-500/20 text-green-300 border-green-500/30">
+                              <Badge className="text-xs px-1.5 py-0.5 h-5 bg-green-500/30 text-green-300 border border-green-500/50">
                                 {item.badge}
                               </Badge>
                             )}
@@ -354,7 +285,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
-                Ceník
+                {isEn ? 'Pricing' : 'Ceník'}
               </Button>
             </Link>
 
@@ -368,7 +299,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
-                O nás
+                {isEn ? 'About' : 'O nás'}
               </Button>
             </Link>
           </div>
@@ -383,25 +314,9 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-64 bg-slate-900/95 backdrop-blur-md border-slate-700" align="end">
                 <div className="p-2">
-                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">HLAVNÍ MENU</p>
+                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">{isEn ? 'MAIN MENU' : 'HLAVNÍ MENU'}</p>
                   {mainNavigation.map((item) => {
                     const isActive = pathname === item.href
-                    const isTeamClubInLiveMode = item.href === "/team-club" && isLiveMode
-                    
-                    if (isTeamClubInLiveMode) {
-                      return (
-                        <div
-                          key={item.name}
-                          className="flex items-center space-x-3 px-3 py-2.5 opacity-60 cursor-not-allowed rounded-lg bg-slate-800/50"
-                          title="Team Club is locked in Live Mode"
-                        >
-                          <Lock className="w-4 h-4 text-gray-400" />
-                          <span className="flex-1 text-sm text-gray-500">
-                            {item.name}
-                          </span>
-                        </div>
-                      )
-                    }
                     
                     return (
                       <DropdownMenuItem key={item.name} asChild>
@@ -430,40 +345,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     )
                   })}
                 </div>
-                <DropdownMenuSeparator className="bg-slate-700" />
-                <div className="p-2">
-                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">NÁSTROJE</p>
-                  {toolsNavigation.map((item) => {
-                    const isActive = pathname === item.href
-                    return (
-                      <DropdownMenuItem key={item.name} asChild>
-                        <Link
-                          href={item.href}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
-                            isActive ? "bg-purple-600/20" : ""
-                          }`}
-                        >
-                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
-                            {item.name}
-                          </span>
-                          {item.badge && (
-                            <Badge
-                              className={`text-xs px-1.5 py-0 h-5 ${
-                                item.badge === "NEW"
-                                  ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                  : ""
-                              }`}
-                            >
-                              {item.badge}
-                            </Badge>
-                          )}
-                        </Link>
-                      </DropdownMenuItem>
-                    )
-                  })}
-                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -479,7 +360,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="relative px-4 h-10 text-sm font-semibold text-white hover:text-gray-200 transition-colors"
                   >
-                    Profil
+                  {isEn ? 'Profile' : 'Profil'}
                     <ChevronDown className="w-4 h-4 ml-2 transition-transform group-data-[state=open]:rotate-180" />
                   </Button>
                 </Link>
@@ -488,7 +369,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     size="sm"
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-8 px-3 text-sm font-semibold"
                   >
-                    Začít
+                    {t('free_trial')}
                   </Button>
                 </Link>
               </div>
@@ -500,9 +381,30 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 size="sm"
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
               >
-                Začít
+                {t('free_trial')}
               </Button>
             </Link>
+
+            {/* Virtual/Live Mode Toggle Button - show if authenticated, premium, and not in live mode */}
+            {isAuthenticated && isPremium && !isLiveMode && (
+              <Button
+                onClick={handleSwitchToLive}
+                disabled={isSwitchingToLive}
+                className="mr-2 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+              >
+                {isSwitchingToLive ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    {isEn ? 'Switching...' : 'Přepínaní...'}
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4" />
+                    {isEn ? 'Switch to Live Mode' : 'Přepnout do Live Mode'}
+                  </>
+                )}
+              </Button>
+            )}
 
             {/* Profile Dropdown - only show if authenticated */}
             {isAuthenticated ? (
@@ -534,11 +436,11 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                         <div className="flex items-center space-x-2">
                           <h3 className="text-white font-bold text-lg">{profileData.name}</h3>
                           <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs px-2 py-0.5">
-                            Online
+                            {isEn ? 'Online' : 'Online'}
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-400 mt-0.5">
-                          {profileData.email || "Nastavit email v profilu"}
+                          {profileData.email || (isEn ? "Set email in profile" : "Nastav email v profilu")}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
                           {profileData.isPremium ? (
@@ -547,10 +449,12 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                               Premium
                             </Badge>
                           ) : (
-                            <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">Zdarma</Badge>
+                            <Badge className="bg-slate-600/20 text-slate-400 border-slate-500/30 text-xs">
+                              {isEn ? 'Free' : 'Zdarma'}
+                            </Badge>
                           )}
                           <Badge className="bg-blue-600/20 text-blue-400 border-blue-500/30 text-xs">
-                            Úroveň {profileData.level}
+                            {isEn ? 'Level' : 'Úroveň'} {profileData.level}
                           </Badge>
                           <Badge className="bg-orange-600/20 text-orange-400 border-orange-500/30 text-xs">
                             {getExperienceLabel(profileData.experienceLevel)}
@@ -570,8 +474,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                           <User className="w-4 h-4 text-blue-400" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-white font-medium text-sm">Můj profil</p>
-                          <p className="text-xs text-gray-400">Osobní údaje a statistiky</p>
+                          <p className="text-white font-medium text-sm">{isEn ? 'My Profile' : 'Můj profil'}</p>
+                          <p className="text-xs text-gray-400">{isEn ? 'Personal info and statistics' : 'Osobní údaje a statistiky'}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -585,8 +489,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                           <Settings className="w-4 h-4 text-purple-400" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-white font-medium text-sm">Nastavení</p>
-                          <p className="text-xs text-gray-400">Notifikace, zabezpečení</p>
+                          <p className="text-white font-medium text-sm">{isEn ? 'Settings' : 'Nastavení'}</p>
+                          <p className="text-xs text-gray-400">{isEn ? 'Notifications, security' : 'Notifikace, zabezpečení'}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -600,8 +504,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                           <CreditCard className="w-4 h-4 text-orange-400" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-white font-medium text-sm">Předplatné & Billing</p>
-                          <p className="text-xs text-gray-400">Správa plateb a předplatného</p>
+                          <p className="text-white font-medium text-sm">{isEn ? 'Subscription & Billing' : 'Předplatné & Billing'}</p>
+                          <p className="text-xs text-gray-400">{isEn ? 'Manage payments and subscription' : 'Správa plateb a předplatného'}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -617,7 +521,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                       <div className="p-2 bg-red-500/10 rounded-lg">
                         <LogOut className="w-4 h-4 text-red-400" />
                       </div>
-                      <span className="text-red-400 font-medium text-sm">Odhlásit se</span>
+                      <span className="text-red-400 font-medium text-sm">{isEn ? 'Log out' : 'Odhlásit se'}</span>
                     </DropdownMenuItem>
                   </div>
               </DropdownMenuContent>

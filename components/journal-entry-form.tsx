@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
+import { useLanguage } from "@/contexts/language-context"
 import { format } from "date-fns"
 import { CalendarIcon, Plus, Clock, TrendingUp, DollarSign, Brain, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -28,28 +29,28 @@ interface JournalEntryFormProps {
 }
 
 const EMOTIONS_BEFORE = [
-  "Klidný",
-  "Sebevědomý",
-  "Nervózní",
-  "Nejistý",
-  "Nadšený",
-  "Unavený",
-  "Soustředěný",
-  "Rozrušený",
+  "Calm",
+  "Confident",
+  "Nervous",
+  "Uncertain",
+  "Excited",
+  "Tired",
+  "Focused",
+  "Upset",
 ]
 
 const EMOTIONS_DURING = [
-  "Klidný",
-  "Stresovaný",
-  "Sebevědomý",
-  "Panický",
-  "Soustředěný",
-  "Rozptýlený",
-  "Trpělivý",
-  "Netrpělivý",
+  "Calm",
+  "Stressed",
+  "Confident",
+  "Panicked",
+  "Focused",
+  "Distracted",
+  "Patient",
+  "Impatient",
 ]
 
-const EMOTIONS_AFTER = ["Spokojený", "Frustrovaný", "Hrdý", "Zklamaný", "Poučený", "Naštvaný", "Klidný", "Euforický"]
+const EMOTIONS_AFTER = ["Satisfied", "Frustrated", "Proud", "Disappointed", "Learned", "Angry", "Calm", "Euphoric"]
 
 export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact = false }: JournalEntryFormProps) {
   const [date, setDate] = useState<Date>(selectedDate || new Date())
@@ -172,8 +173,8 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
 
     if (!title.trim() || !content.trim()) {
       toast({
-        title: "Chyba",
-        description: "Název a obsah jsou povinné.",
+        title: "Error",
+        description: "Title and content are required.",
         variant: "destructive",
       })
       return
@@ -237,8 +238,8 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
     onEntryAdded?.()
 
     toast({
-      title: "Záznam uložen",
-      description: "Váš záznam byl úspěšně přidán do deníku.",
+      title: "Entry saved",
+      description: "Your entry has been successfully added to the journal.",
     })
 
     if (onClose) {
@@ -588,13 +589,13 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
               <div className="space-y-4 p-6 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-2 border-cyan-500/30">
                 <div className="flex items-center gap-2 mb-4">
                   <Target className="w-5 h-5 text-cyan-400" />
-                  <h3 className="text-lg font-bold text-white">Analýza & Důvody</h3>
+                <h3 className="text-lg font-bold text-white">Analysis & Reasons</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="entryReason" className="text-white">
-                      Důvod vstupu
+                      Entry Reason
                     </Label>
                     <Textarea
                       id="entryReason"
@@ -606,7 +607,7 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="exitReason" className="text-white">
-                      Důvod výstupu
+                      Exit Reason
                     </Label>
                     <Textarea
                       id="exitReason"
@@ -620,13 +621,13 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
 
                 <div className="space-y-2">
                   <Label htmlFor="content" className="text-white">
-                    Detailní analýza
+                    Detailed Analysis
                   </Label>
                   <Textarea
                     id="content"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    placeholder="Detailní popis obchodu, analýza, pozorování..."
+                    placeholder="Detailed trade description, analysis, observations..."
                     className="min-h-[120px] bg-slate-700/50 border-slate-600 text-white"
                     required
                   />
@@ -650,7 +651,7 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-white">Dodržel jsem plán?</Label>
+                  <Label className="text-white">Did I follow the plan?</Label>
                   <RadioGroup
                     value={matchedPlan === null ? "" : matchedPlan.toString()}
                     onValueChange={(value) => setMatchedPlan(value === "true")}
@@ -658,20 +659,20 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="true" id="plan-yes" />
                       <Label htmlFor="plan-yes" className="text-white">
-                        Ano
+                        Yes
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="false" id="plan-no" />
                       <Label htmlFor="plan-no" className="text-white">
-                        Ne
+                        No
                       </Label>
                     </div>
                   </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white">Vystoupil jsem předčasně?</Label>
+                  <Label className="text-white">Did I exit too early?</Label>
                   <RadioGroup
                     value={exitedEarly === null ? "" : exitedEarly.toString()}
                     onValueChange={(value) => setExitedEarly(value === "true")}
@@ -679,20 +680,20 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="true" id="exit-yes" />
                       <Label htmlFor="exit-yes" className="text-white">
-                        Ano
+                        Yes
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="false" id="exit-no" />
                       <Label htmlFor="exit-no" className="text-white">
-                        Ne
+                        No
                       </Label>
                     </div>
                   </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white">Zmeškal jsem příležitost kvůli váhání?</Label>
+                  <Label className="text-white">Did I miss the opportunity due to hesitation?</Label>
                   <RadioGroup
                     value={missedDueToHesitation === null ? "" : missedDueToHesitation.toString()}
                     onValueChange={(value) => setMissedDueToHesitation(value === "true")}
@@ -700,20 +701,20 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="true" id="missed-yes" />
                       <Label htmlFor="missed-yes" className="text-white">
-                        Ano
+                        Yes
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="false" id="missed-no" />
                       <Label htmlFor="missed-no" className="text-white">
-                        Ne
+                        No
                       </Label>
                     </div>
                   </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white">Byl to revenge trade?</Label>
+                  <Label className="text-white">Was this a revenge trade?</Label>
                   <RadioGroup
                     value={revengeTrade === null ? "" : revengeTrade.toString()}
                     onValueChange={(value) => setRevengeTrade(value === "true")}
@@ -721,13 +722,13 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="true" id="revenge-yes" />
                       <Label htmlFor="revenge-yes" className="text-white">
-                        Ano
+                        Yes
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="false" id="revenge-no" />
                       <Label htmlFor="revenge-no" className="text-white">
-                        Ne
+                        No
                       </Label>
                     </div>
                   </RadioGroup>
@@ -736,13 +737,13 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
 
               <div className="space-y-2">
                 <Label htmlFor="content" className="text-white">
-                  Popis chování
+                  Behavior Description
                 </Label>
                 <Textarea
                   id="content"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Popište své chování, emoce a rozhodování..."
+                  placeholder="Describe your behavior, emotions and decision-making..."
                   className="min-h-[120px] bg-slate-700/50 border-slate-600 text-white"
                   required
                 />
@@ -752,32 +753,32 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-white">Nálada: {mood[0]}/10</Label>
+              <Label className="text-white">Mood: {mood[0]}/10</Label>
               <Slider value={mood} onValueChange={setMood} max={10} min={1} step={1} className="w-full" />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="tags" className="text-white">
-                Tagy (oddělené čárkou)
+                Tags (comma-separated)
               </Label>
               <Input
                 id="tags"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
-                placeholder="forex, strategie, emoce..."
+                placeholder="forex, strategy, emotions..."
                 className="bg-slate-700/50 border-slate-600 text-white"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="notes" className="text-white">
-                Dodatečné poznámky
+                Additional Notes
               </Label>
               <Textarea
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Další poznámky a pozorování..."
+                placeholder="Additional notes and observations..."
                 className="min-h-[80px] bg-slate-700/50 border-slate-600 text-white"
               />
             </div>
@@ -787,7 +788,7 @@ export function JournalEntryForm({ selectedDate, onEntryAdded, onClose, compact 
             type="submit"
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
           >
-            Uložit záznam
+            Save Trade
           </Button>
         </form>
       </CardContent>
