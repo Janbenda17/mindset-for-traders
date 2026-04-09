@@ -100,26 +100,64 @@ export default function HomePage() {
           </motion.div>
         </div>
 
-        {/* Trust Section */}
-        <div className="text-center mb-20 py-12 border-y border-slate-800">
-          <p className="text-sm text-slate-500 uppercase tracking-widest mb-6">
-            {language === 'en' ? 'Why traders choose MindTrader' : 'Proč si obchodníci vybírají MindTrader'}
-          </p>
-          <div className="flex flex-wrap justify-center gap-8 text-slate-300">
-            <div>
-              <p className="text-2xl font-bold text-white">14 days</p>
-              <p className="text-sm text-slate-400">{language === 'en' ? 'Free trial' : 'Zdarma'}</p>
+        {/* Trust Section - Professional & Credible */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="mb-20 py-16 border-y border-slate-800"
+        >
+          <div className="text-center mb-12">
+            <p className="text-sm text-slate-500 uppercase tracking-widest mb-2">
+              {language === 'en' ? 'Why Serious Traders Trust MindTrader' : 'Proč vážní obchodníci věří MindTrader'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Trust Item 1 */}
+            <div className="p-6 rounded-lg bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition-colors">
+              <div className="text-3xl font-bold text-white mb-2">100%</div>
+              <p className="text-sm text-slate-400">{language === 'en' ? 'Transparent pricing - no hidden fees' : 'Transparentní ceny - žádné skryté poplatky'}</p>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-white">Full access</p>
-              <p className="text-sm text-slate-400">{language === 'en' ? 'All features' : 'Všechny funkce'}</p>
+
+            {/* Trust Item 2 */}
+            <div className="p-6 rounded-lg bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition-colors">
+              <div className="text-3xl font-bold text-white mb-2">14 days</div>
+              <p className="text-sm text-slate-400">{language === 'en' ? 'Free trial with full access' : 'Zdarma s plným přístupem'}</p>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-white">Cancel anytime</p>
-              <p className="text-sm text-slate-400">{language === 'en' ? 'No commitment' : 'Žádný závazek'}</p>
+
+            {/* Trust Item 3 */}
+            <div className="p-6 rounded-lg bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition-colors">
+              <div className="text-3xl font-bold text-white mb-2">24/7</div>
+              <p className="text-sm text-slate-400">{language === 'en' ? 'Real data - no fake features' : 'Opravdová data - žádné fake funkce'}</p>
+            </div>
+
+            {/* Trust Item 4 */}
+            <div className="p-6 rounded-lg bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition-colors">
+              <div className="text-3xl font-bold text-white mb-2">Instant</div>
+              <p className="text-sm text-slate-400">{language === 'en' ? 'Cancel anytime with no questions' : 'Zrušit kdykoliv bez otázek'}</p>
             </div>
           </div>
-        </div>
+
+          {/* Additional Trust Signals */}
+          <div className="mt-12 pt-12 border-t border-slate-800">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+              <div>
+                <p className="text-slate-300 mb-3">{language === 'en' ? 'Built by traders' : 'Vytvořeno obchodníky'}</p>
+                <p className="text-sm text-slate-500">{language === 'en' ? 'Founded by people who understand trading psychology' : 'Založeno lidmi kteří rozumí psychice obchodování'}</p>
+              </div>
+              <div>
+                <p className="text-slate-300 mb-3">{language === 'en' ? 'Data-driven' : 'Na datech založeno'}</p>
+                <p className="text-sm text-slate-500">{language === 'en' ? 'Real analytics, not guesses or promises' : 'Opravdová analýza, ne hádání nebo sliby'}</p>
+              </div>
+              <div>
+                <p className="text-slate-300 mb-3">{language === 'en' ? 'Always learning' : 'Neustále se vyvíjí'}</p>
+                <p className="text-sm text-slate-500">{language === 'en' ? 'Updated based on real trader feedback' : 'Aktualizováno na základě zpětné vazby'}</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Features Section */}
         <div className="pb-20">
@@ -296,7 +334,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Final CTA */}
+        {/* Final CTA - Trust Focused */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -304,18 +342,33 @@ export default function HomePage() {
           viewport={{ once: true }}
           className="text-center py-20 border-t border-slate-800"
         >
-          <h2 className="text-4xl font-black text-white mb-4">
+          <h2 className="text-4xl font-black text-white mb-6">
             {language === 'en' ? 'Ready to trade better?' : 'Připraven obchodovat lépe?'}
           </h2>
-          <p className="text-lg text-slate-400 mb-8 max-w-xl mx-auto">
-            {language === 'en'
-              ? 'Start your 14-day free trial today. Full access to all features. No credit card required.'
-              : 'Začni svůj 14 denní zdarma trial dnes. Plný přístup ke všem funkcím. Bez platební karty.'}
-          </p>
+          
+          <div className="max-w-2xl mx-auto mb-8">
+            <p className="text-lg text-slate-300 mb-4">
+              {language === 'en'
+                ? 'Start your free 14-day trial today. No credit card required. Access all features immediately.'
+                : 'Začni svůj 14denní zdarma trial dnes. Bez platební karty. Okamžitý přístup ke všem funkcím.'}
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-slate-400 mb-8">
+              <div className="flex items-center gap-2">
+                <span className="text-green-400">✓</span> {language === 'en' ? 'Full access' : 'Plný přístup'}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-green-400">✓</span> {language === 'en' ? 'No payment method' : 'Bez karty'}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-green-400">✓</span> {language === 'en' ? 'Cancel anytime' : 'Zrušit kdykoliv'}
+              </div>
+            </div>
+          </div>
+
           <Button
             size="lg"
             onClick={handlePricingClick}
-            className="bg-white text-slate-900 hover:bg-slate-100 font-bold text-base px-8 py-6 rounded-lg"
+            className="bg-white text-slate-900 hover:bg-slate-100 font-bold text-base px-10 py-6 rounded-lg"
           >
             {language === 'en' ? 'Get Started Free' : 'Začít zdarma'} <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
