@@ -5,10 +5,15 @@ import { NextRequest, NextResponse } from 'next/server'
 // In production, you'd use Terra API to handle this
 export async function GET(request: NextRequest) {
   try {
-    const origin = request.nextUrl.origin
+    // Get origin from request headers as fallback
+    const origin = request.nextUrl?.origin || request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const redirectUri = `${origin}/api/auth/apple-health/callback`
     const clientId = process.env.TERRA_CLIENT_ID
     const state = Math.random().toString(36).substring(7)
+
+    if (!clientId) {
+      return NextResponse.json({ error: 'TERRA_CLIENT_ID not configured' }, { status: 500 })
+    }
 
     // Store state in session/cookie for verification
     const response = NextResponse.redirect(
