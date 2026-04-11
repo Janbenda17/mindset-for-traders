@@ -5,13 +5,14 @@ import { NextRequest, NextResponse } from 'next/server'
 // In production, you'd use Terra API to handle this
 export async function GET(request: NextRequest) {
   try {
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/apple-health/callback`
+    const origin = request.nextUrl.origin
+    const redirectUri = `${origin}/api/auth/apple-health/callback`
     const clientId = process.env.TERRA_CLIENT_ID
     const state = Math.random().toString(36).substring(7)
 
     // Store state in session/cookie for verification
     const response = NextResponse.redirect(
-      `https://www.terraapicom.com/api/auth/apple?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}`
+      `https://www.terraapi.com/api/auth/apple?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
     )
 
     response.cookies.set('terra_oauth_state', state, {

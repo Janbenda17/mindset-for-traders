@@ -74,7 +74,7 @@ export default function IntegrationsPage() {
 
   const handleAppleHealthConnect = () => {
     // Redirect to Apple Health OAuth flow
-    window.location.href = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/apple-health`
+    window.location.href = '/api/auth/apple-health'
   }
 
   return (

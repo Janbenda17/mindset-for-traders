@@ -13,17 +13,18 @@ export async function GET(request: NextRequest) {
     const code = searchParams.get('code')
     const state = searchParams.get('state')
     const error = searchParams.get('error')
+    const origin = request.nextUrl.origin
 
     // Verify state
     const storedState = request.cookies.get('terra_oauth_state')?.value
     if (state !== storedState) {
-      return NextResponse.json({ error: 'Invalid state parameter' }, { status: 400 })
+      return NextResponse.redirect(`${origin}/settings/integrations?error=invalid_state`)
     }
 
     if (error) {
       console.error('[v0] Apple Health error:', error)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/settings/integrations?error=apple_health_failed`
+        `${origin}/settings/integrations?error=apple_health_failed`
       )
     }
 
@@ -52,14 +53,11 @@ export async function GET(request: NextRequest) {
     const terraUserId = tokenData.user.user_id
     const terraReferenceId = tokenData.user.reference_id
 
-    // Get current user from cookie
-    const cookieHeader = request.headers.get('cookie')
-    // Parse auth from session...
-    // For now, we'll get user_id from request (you'll need to implement proper session handling)
-    const userId = request.nextUrl.searchParams.get('user_id')
-
-    if (!userId) {
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login`)
+    // Get current user from session
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session?.user?.id) {
+      return NextResponse.redirect(`${origin}/login`)
     }
 
     // Save Terra ID to user profile
@@ -71,7 +69,7 @@ export async function GET(request: NextRequest) {
         sleep_sync_enabled: true,
         last_health_sync: new Date().toISOString(),
       })
-      .eq('user_id', userId)
+      .eq('user_id', session.user.id)
 
     if (updateError) {
       throw updateError
@@ -79,12 +77,13 @@ export async function GET(request: NextRequest) {
 
     // Redirect back to settings with success
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/settings/integrations?success=apple_health_connected`
+      `${origin}/settings/integrations?success=apple_health_connected`
     )
   } catch (error) {
     console.error('[v0] Apple Health callback error:', error)
+    const origin = request.nextUrl.origin
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/settings/integrations?error=callback_failed`
+      `${origin}/settings/integrations?error=callback_failed`
     )
   }
 }
