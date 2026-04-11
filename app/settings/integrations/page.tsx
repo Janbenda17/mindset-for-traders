@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -30,14 +30,17 @@ export default function IntegrationsPage() {
   const [connected, setConnected] = useState<string | null>(null)
   const [healthConnected, setHealthConnected] = useState(false)
   const [error, setError] = useState('')
+  const [sessionId, setSessionId] = useState<string>('')
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Please log in first</p>
-      </div>
-    )
-  }
+  // Initialize session ID for non-authenticated users
+  useEffect(() => {
+    let id = sessionStorage.getItem('mindtrader_session_id')
+    if (!id) {
+      id = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      sessionStorage.setItem('mindtrader_session_id', id)
+    }
+    setSessionId(id)
+  }, [])
 
   const handleBrokerConnect = async () => {
     if (!selectedBroker || !credentials.login || !credentials.password) {
