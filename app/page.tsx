@@ -377,56 +377,6 @@ export default function HomePage() {
     </div>
   )
 }
-              
-              return (
-                <Link key={feature.id} href={feature.href}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: idx * 0.1 }}
-                    viewport={{ once: true }}
-                    className={`group p-6 rounded-xl bg-gradient-to-br ${colors[idx]} transition-all hover:shadow-lg hover:shadow-${['blue', 'purple', 'pink', 'indigo', 'emerald'][idx]}-500/30 h-full cursor-pointer`}
-                  >
-                    <div className={`mb-4 p-3 ${bgColors[idx]} rounded-lg w-fit group-hover:scale-110 transition-transform`}>
-                      <Icon className={`w-6 h-6 ${iconColors[idx]}`} />
-                    </div>
-                    <h3 className="font-bold text-white text-base mb-3">{feature.title}</h3>
-                    <p className="text-sm text-slate-300 leading-relaxed">{desc}</p>
-                    <div className="mt-4 flex items-center gap-2 text-xs opacity-60 group-hover:opacity-100 transition-opacity">
-                      <span>{language === 'en' ? 'Explore' : 'Prozkoumat'}</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </div>
-                  </motion.div>
-                </Link>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center py-16"
-        >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4">
-            {language === 'en' ? 'Ready to improve your trading?' : 'Připraven zlepšit svůj trading?'}
-          </h2>
-          <p className="text-base sm:text-lg text-purple-100/80 mb-8 max-w-xl mx-auto">
-            {language === 'en'
-              ? 'Test the full platform free for 14 days. No credit card needed. See exactly how it works.'
-              : 'Otestuj platformu zdarma 14 dní. Bez platební karty. Vidíš přesně jak to funguje.'}
-          </p>
-          <Button
-            size="lg"
-            onClick={handlePricingClick}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-lg px-12 py-6 rounded-xl"
-          >
-            {language === 'en' ? 'Start Free Trial' : 'Začít zdarma'} <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
-        </motion.div>
       </div>
     </div>
   )
