@@ -6,10 +6,86 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Correlation engine - detekuje fatigue errors
+interface FatigueAnalysis {
+  hasFatigue: boolean
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  score: number
+  sleepHours: number
+  factors: string[]
+  recommendations: string[]
+}
+
+async function analyzeFatigueError(
+  userId: string,
+  date: string,
+  profitLoss: number
+): Promise<FatigueAnalysis> {
+  // Get health data for this date
+  const { data: healthData } = await supabase
+    .from('health_sync')
+    .select('sleep_hours, sleep_start_time, sleep_end_time, heart_rate_variability')
+    .eq('user_id', userId)
+    .eq('date', date)
+    .order('synced_at', { ascending: false })
+    .limit(1)
+
+  const sleepHours = healthData?.sleep_hours || 0
+  const heartRateVariability = healthData?.heart_rate_variability || 0
+
+  let score = 0
+  let severity: 'low' | 'medium' | 'high' | 'critical' = 'low'
+  const factors: string[] = []
+  const recommendations: string[] = []
+  let hasFatigue = false
+
+  // Rule 1: Sleep < 6 hours = HIGH FATIGUE
+  if (sleepHours < 6) {
+    hasFatigue = true
+    score += 50
+    severity = 'high'
+    factors.push(`Only ${sleepHours}h sleep (critical: <6h)`)
+    recommendations.push('Your sleep is critically low. Consider not trading today.')
+  } else if (sleepHours < 7) {
+    score += 30
+    severity = 'medium'
+    factors.push(`Suboptimal sleep: ${sleepHours}h (target: 7-9h)`)
+    recommendations.push('Your sleep is below optimal. Trade with caution.')
+  }
+
+  // Rule 2: Loss + Low Sleep = FATIGUE ERROR
+  if (sleepHours < 6 && profitLoss < 0) {
+    hasFatigue = true
+    score += 40
+    factors.push(`Loss during fatigue: $${profitLoss}`)
+    recommendations.push('This loss is likely due to impaired decision-making from fatigue.')
+    recommendations.push('Review the trade - was it aligned with your plan?')
+    
+    if (score > 80) severity = 'critical'
+    else if (score > 60) severity = 'high'
+  }
+
+  // Rule 3: Low heart rate variability (stress/fatigue indicator)
+  if (heartRateVariability > 0 && heartRateVariability < 20) {
+    score += 20
+    factors.push(`Low HRV: ${heartRateVariability} (stress indicator)`)
+    recommendations.push('Your body shows signs of stress. Consider taking a break.')
+  }
+
+  score = Math.min(score, 100)
+
+  return {
+    hasFatigue,
+    severity,
+    score,
+    sleepHours,
+    factors,
+    recommendations,
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { userId, date, tradeId } = await request.json()
+    const { userId, tradeId, date, profitLoss } = await request.json()
 
     if (!userId || !date) {
       return NextResponse.json(
@@ -18,117 +94,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get health data for this date
-    const { data: healthData, error: healthError } = await supabase
-      .from('health_sync')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', date)
-      .order('synced_at', { ascending: false })
-      .limit(1)
+    // Analyze trade for fatigue correlation
+    const analysis = await analyzeFatigueError(userId, date, profitLoss || 0)
 
-    if (healthError || !healthData?.length) {
-      console.log('No health data for analysis')
-      return NextResponse.json({ message: 'No health data available' })
-    }
+    // If fatigue error detected, save it
+    if (analysis.hasFatigue) {
+      const { error: insertError } = await supabase
+        .from('fatigue_errors')
+        .insert({
+          user_id: userId,
+          trade_id: tradeId,
+          date,
+          sleep_hours: analysis.sleepHours,
+          loss_amount: profitLoss || 0,
+          fatigue_score: analysis.score,
+          severity: analysis.severity,
+          created_at: new Date().toISOString(),
+        })
 
-    const sleepHours = healthData[0].sleep_hours
-    const sleepQuality = healthData[0].sleep_quality
-
-    // Get trades for this date
-    const { data: trades, error: tradesError } = await supabase
-      .from('mt4_trades')
-      .select('*')
-      .eq('user_id', userId)
-      .gte('closed_at', `${date}T00:00:00Z`)
-      .lt('closed_at', `${date}T23:59:59Z`)
-
-    if (tradesError || !trades?.length) {
-      return NextResponse.json({ message: 'No trades for analysis' })
-    }
-
-    const correlations = []
-
-    for (const trade of trades) {
-      let errorType = null
-      let severity = 0
-      const errorFactors = []
-
-      // ============ FATIGUE DETECTION ============
-      
-      // Factor 1: Sleep deprivation
-      if (sleepHours < 6) {
-        severity += 40
-        errorFactors.push(`Low sleep: ${sleepHours.toFixed(1)}h (target: 7-9h)`)
-      } else if (sleepHours < 7) {
-        severity += 20
-        errorFactors.push(`Below optimal sleep: ${sleepHours.toFixed(1)}h`)
-      }
-
-      // Factor 2: Poor sleep quality
-      if (sleepQuality && sleepQuality < 0.6) {
-        severity += 30
-        errorFactors.push(`Poor sleep quality: ${(sleepQuality * 100).toFixed(0)}%`)
-      }
-
-      // Factor 3: Loss after bad sleep
-      if ((sleepHours < 6 || (sleepQuality && sleepQuality < 0.6)) && trade.profit_loss < 0) {
-        errorType = 'FATIGUE_ERROR'
-        severity += 30
-        errorFactors.push(`Loss during fatigue: ${trade.profit_loss.toFixed(2)} (${trade.pnl_percent?.toFixed(2)}%)`)
-      }
-
-      // Factor 4: Rapid trades during fatigue (revenge trading indicator)
-      if (errorType === 'FATIGUE_ERROR' && trade.duration_minutes && trade.duration_minutes < 15) {
-        severity += 20
-        errorFactors.push(`Rapid exit after loss: ${trade.duration_minutes}min`)
-      }
-
-      // Store correlation if detected
-      if (errorType && severity > 0) {
-        const { error: insertError } = await supabase
-          .from('fatigue_errors')
-          .insert({
-            user_id: userId,
-            trade_id: trade.id,
-            error_type: errorType,
-            severity: Math.min(100, severity),
-            error_factors: errorFactors,
-            sleep_hours: sleepHours,
-            sleep_quality: sleepQuality,
-            trade_details: {
-              symbol: trade.symbol,
-              profit_loss: trade.profit_loss,
-              pnl_percent: trade.pnl_percent,
-              duration_minutes: trade.duration_minutes
-            },
-            date,
-            detected_at: new Date().toISOString()
-          })
-
-        if (!insertError) {
-          correlations.push({
-            tradeId: trade.id,
-            errorType,
-            severity: Math.min(100, severity),
-            errorFactors
-          })
-        }
+      if (insertError) {
+        console.error('[v0] Error saving fatigue error:', insertError)
       }
     }
 
     return NextResponse.json({
       success: true,
-      sleepHours,
-      sleepQuality,
-      tradesAnalyzed: trades.length,
-      correlationsFound: correlations.length,
-      correlations
+      analysis,
+      fatigueDetected: analysis.hasFatigue,
+      severity: analysis.severity,
+      score: analysis.score,
     })
   } catch (error) {
-    console.error('Correlation analysis error:', error)
+    console.error('[v0] Correlation analysis error:', error)
     return NextResponse.json(
-      { error: 'Analysis failed' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
