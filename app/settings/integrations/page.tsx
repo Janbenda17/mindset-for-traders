@@ -4,26 +4,34 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Check, AlertCircle, Loader, X, Copy, Download } from 'lucide-react'
+import { ArrowRight, Check, AlertCircle, Loader, X } from 'lucide-react'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+const BROKERS = [
+  { id: 'mt5-demo', name: 'MetaTrader 5 Demo', logo: '📊', description: 'Demo trading account' },
+  { id: 'mt5-live', name: 'MetaTrader 5 Live', logo: '📊', description: 'Live trading account' },
+  { id: 'mt4-demo', name: 'MetaTrader 4 Demo', logo: '📈', description: 'Demo trading account' },
+  { id: 'mt4-live', name: 'MetaTrader 4 Live', logo: '📈', description: 'Live trading account' },
+]
+
 export default function IntegrationsPage() {
   const { user } = useAuth()
   const router = useRouter()
+  const [selectedBroker, setSelectedBroker] = useState<string | null>(null)
+  const [credentials, setCredentials] = useState({ login: '', password: '' })
   const [loading, setLoading] = useState(false)
-  const [connected, setConnected] = useState(false)
+  const [connected, setConnected] = useState<string | null>(null)
   const [healthConnected, setHealthConnected] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [checking, setChecking] = useState(true)
-  const [webhookToken, setWebhookToken] = useState<string | null>(null)
-  const [copiedToken, setCopiedToken] = useState(false)
 
   // Check integration status on mount
   useEffect(() => {
@@ -34,16 +42,15 @@ export default function IntegrationsPage() {
         setChecking(true)
         const { data } = await supabase
           .from('profiles')
-          .select('mt4_webhook_token, terra_id, sleep_sync_enabled')
+          .select('mt4_broker, terra_id, sleep_sync_enabled')
           .eq('user_id', user.id)
           .single()
 
         if (data) {
-          setConnected(!!data.mt4_webhook_token)
-          setHealthConnected(!!data.terra_id && data.sleep_sync_enabled)
-          if (data.mt4_webhook_token) {
-            setWebhookToken(data.mt4_webhook_token)
+          if (data.mt4_broker) {
+            setConnected(data.mt4_broker)
           }
+          setHealthConnected(!!data.terra_id && data.sleep_sync_enabled)
         }
       } catch (err) {
         console.error('[v0] Error checking integration status:', err)
@@ -81,162 +88,54 @@ export default function IntegrationsPage() {
     )
   }
 
-  const generateWebhookToken = async () => {
+  const handleBrokerConnect = async () => {
+    if (!selectedBroker || !credentials.login || !credentials.password) {
+      setError('Please fill in all fields')
+      setTimeout(() => setError(''), 3000)
+      return
+    }
+
     setLoading(true)
+    setError('')
+
     try {
-      console.log('[v0] Generating webhook token...')
+      console.log('[v0] Connecting to MetaTrader...')
 
-      const token = `${user.id.substring(0, 8)}-${Math.random().toString(36).substring(2, 10)}-mt4`
+      const response = await fetch('/api/brokers/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          broker: selectedBroker,
+          login: credentials.login,
+          password: credentials.password,
+        }),
+      })
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          mt4_webhook_token: token,
-          trades_sync_enabled: true,
-        })
-        .eq('user_id', user.id)
+      const data = await response.json()
 
-      if (updateError) throw updateError
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to connect to MetaTrader')
+      }
 
-      setWebhookToken(token)
-      setConnected(true)
-      setSuccess('Webhook token generated successfully!')
-      setTimeout(() => setSuccess(''), 3000)
-      console.log('[v0] Token generated:', token)
+      console.log('[v0] MetaTrader connected successfully')
+      setConnected(selectedBroker)
+      setCredentials({ login: '', password: '' })
+      setSelectedBroker(null)
+      setSuccess(`${BROKERS.find(b => b.id === selectedBroker)?.name} connected successfully! Trades are now syncing.`)
+      setTimeout(() => setSuccess(''), 5000)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to generate token'
+      const errorMessage = err instanceof Error ? err.message : 'Failed to connect'
       setError(errorMessage)
-      console.error('[v0] Generation error:', err)
+      console.error('[v0] Connection error:', err)
     } finally {
       setLoading(false)
     }
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedToken(true)
-    setTimeout(() => setCopiedToken(false), 2000)
-  }
+  const handleDisconnectBroker = async () => {
+    if (!connected) return
 
-  const downloadEAScript = () => {
-    const eaCode = `//+------------------------------------------------------------------+
-//| MindTrader Trade Monitor EA                                      |
-//| Automatically sends closed trades to MindTrader webhook          |
-//| No login/password needed - fully automated                       |
-//+------------------------------------------------------------------+
-
-#property strict
-#property description "MindTrader Trade Monitor EA"
-#property version   "1.0"
-
-// User inputs
-input string WebhookURL = "${process.env.NEXT_PUBLIC_APP_URL}/api/trades/webhook";
-input string UserToken = "${webhookToken || 'YOUR-TOKEN-HERE'}";
-input bool   EnableLogging = true;
-input int    CheckInterval = 5;
-
-// Global variables
-int lastTicket = 0;
-datetime lastCheck = 0;
-
-int OnInit()
-{
-    Print("MindTrader EA initialized");
-    Print("Webhook URL: ", WebhookURL);
-    Print("User Token: ", StringSubstr(UserToken, 0, 5), "...");
-    return INIT_SUCCEEDED;
-}
-
-void OnDeinit(const int reason)
-{
-    Print("MindTrader EA deinitialized. Reason: ", reason);
-}
-
-void OnTick()
-{
-    static datetime nextCheck = TimeCurrent();
-    
-    if (TimeCurrent() >= nextCheck)
-    {
-        CheckClosedTrades();
-        nextCheck = TimeCurrent() + CheckInterval;
-    }
-}
-
-void CheckClosedTrades()
-{
-    int totalOrders = OrdersHistoryTotal();
-    
-    for (int i = 0; i < totalOrders; i++)
-    {
-        if (!OrderSelect(i, SELECT_BY_POS, MODE_HISTORY))
-            continue;
-            
-        if (OrderType() > OP_SELL)
-            continue;
-            
-        if (OrderTicket() > lastTicket && OrderCloseTime() > 0)
-        {
-            SendTradeToWebhook(OrderTicket());
-            lastTicket = OrderTicket();
-        }
-    }
-}
-
-void SendTradeToWebhook(int ticket)
-{
-    if (!OrderSelect(ticket, SELECT_BY_TICKET))
-    {
-        if (EnableLogging)
-            Print("ERROR: Cannot select order #", ticket);
-        return;
-    }
-    
-    string json = "{";
-    json += "\\"token\\":\\"" + UserToken + "\\",";
-    json += "\\"ticket\\":" + IntegerToString(OrderTicket()) + ",";
-    json += "\\"symbol\\":\\"" + OrderSymbol() + "\\",";
-    json += "\\"type\\":" + IntegerToString(OrderType()) + ",";
-    json += "\\"openTime\\":" + IntegerToString((int)OrderOpenTime()) + ",";
-    json += "\\"closeTime\\":" + IntegerToString((int)OrderCloseTime()) + ",";
-    json += "\\"openPrice\\":" + DoubleToString(OrderOpenPrice(), 5) + ",";
-    json += "\\"closePrice\\":" + DoubleToString(OrderClosePrice(), 5) + ",";
-    json += "\\"volume\\":" + DoubleToString(OrderOpenPrice(), 5) + ",";
-    json += "\\"profit\\":" + DoubleToString(OrderProfit(), 2) + ",";
-    json += "\\"commission\\":" + DoubleToString(OrderCommission(), 2) + ",";
-    json += "\\"swap\\":" + DoubleToString(OrderSwap(), 2) + ",";
-    json += "\\"comment\\":\\"" + OrderComment() + "\\"";
-    json += "}";
-    
-    char data[];
-    char result[];
-    StringToCharArray(json, data);
-    
-    int response = WebRequest("POST", WebhookURL, "Content-Type: application/json\\r\\n", NULL, data, result);
-    
-    if (response == 200)
-    {
-        if (EnableLogging)
-            Print("Trade #", ticket, " sent successfully. Profit: ", OrderProfit());
-    }
-    else
-    {
-        if (EnableLogging)
-            Print("ERROR sending trade #", ticket, ". Response code: ", response);
-    }
-}
-`
-
-    const element = document.createElement('a')
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(eaCode))
-    element.setAttribute('download', 'MindTrader_EA.mq4')
-    element.style.display = 'none'
-    document.body.appendChild(element)
-    element.click()
-    document.body.removeChild(element)
-  }
-
-  const handleDisconnectMT4 = async () => {
     setLoading(true)
     try {
       console.log('[v0] Disconnecting MetaTrader...')
@@ -244,7 +143,9 @@ void SendTradeToWebhook(int ticket)
       const { error } = await supabase
         .from('profiles')
         .update({
-          mt4_webhook_token: null,
+          mt4_login: null,
+          mt4_password: null,
+          mt4_broker: null,
           trades_sync_enabled: false,
         })
         .eq('user_id', user.id)
@@ -252,8 +153,7 @@ void SendTradeToWebhook(int ticket)
       if (error) throw error
 
       console.log('[v0] MetaTrader disconnected')
-      setConnected(false)
-      setWebhookToken(null)
+      setConnected(null)
       setSuccess('MetaTrader disconnected')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
@@ -333,129 +233,126 @@ void SendTradeToWebhook(int ticket)
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-white mb-6">Trading Accounts</h2>
 
-          {connected && webhookToken ? (
-            <Card className="p-6 bg-slate-900/50 border border-emerald-600/50">
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3 text-emerald-300">
-                    <Check className="w-5 h-5" />
-                    <h3 className="font-semibold">MetaTrader Connected</h3>
+          {/* Connected Account */}
+          {connected && (
+            <div className="mb-6 p-4 bg-emerald-900/30 border border-emerald-600/50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-emerald-300">
+                  <Check className="w-5 h-5" />
+                  <div>
+                    <p className="font-semibold">Connected: {BROKERS.find(b => b.id === connected)?.name}</p>
+                    <p className="text-sm text-emerald-200/70">Your trades are syncing automatically</p>
                   </div>
-                  <Button
-                    onClick={handleDisconnectMT4}
-                    disabled={loading}
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-300 hover:text-red-400 hover:bg-red-900/20"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
                 </div>
-                <p className="text-sm text-emerald-200/70">Your trades are syncing automatically via EA script</p>
+                <Button
+                  onClick={handleDisconnectBroker}
+                  disabled={loading}
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-300 hover:text-red-400 hover:bg-red-900/20"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
+            </div>
+          )}
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-slate-300 mb-2">Your Webhook Token</label>
-                  <div className="flex items-center gap-2 bg-slate-800/50 rounded-lg p-3">
-                    <code className="text-sm text-slate-200 font-mono flex-1 truncate">{webhookToken}</code>
+          {/* Broker Selection */}
+          {!connected && (
+            <>
+              <div className="space-y-4 mb-8">
+                <p className="text-sm text-slate-400">Select your broker:</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {BROKERS.map((broker) => (
                     <button
-                      onClick={() => copyToClipboard(webhookToken)}
-                      className="p-2 hover:bg-slate-700 rounded transition-colors flex-shrink-0"
+                      key={broker.id}
+                      onClick={() => setSelectedBroker(broker.id)}
+                      className={`p-4 rounded-lg border-2 transition-all text-left ${
+                        selectedBroker === broker.id
+                          ? 'border-white bg-slate-800'
+                          : 'border-slate-700 bg-slate-900/50 hover:border-slate-600'
+                      }`}
                     >
-                      {copiedToken ? (
-                        <Check className="w-4 h-4 text-green-400" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-slate-400" />
-                      )}
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">{broker.logo}</span>
+                        <div>
+                          <p className="font-semibold text-white">{broker.name}</p>
+                          <p className="text-xs text-slate-400">{broker.description}</p>
+                        </div>
+                      </div>
                     </button>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-slate-800/30 rounded-lg text-sm text-slate-300">
-                  Your EA script is configured and actively collecting trades. No password needed - fully automated!
+                  ))}
                 </div>
               </div>
-            </Card>
-          ) : (
-            <Card className="p-6 bg-slate-900 border-slate-700">
-              <h3 className="text-lg font-bold text-white mb-4">Connect MetaTrader 4/5</h3>
-              <p className="text-slate-400 text-sm mb-6">
-                Install our EA script in your MetaTrader platform. It automatically collects all your closed trades without needing your login/password.
-              </p>
 
-              <div className="space-y-4">
-                {/* Step 1: Generate Token */}
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-300 mb-3">Step 1: Generate Your Webhook Token</h4>
-                  <Button
-                    onClick={generateWebhookToken}
-                    disabled={loading}
-                    className="w-full bg-white text-slate-900 hover:bg-slate-100 font-bold"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader className="w-4 h-4 animate-spin mr-2" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        Generate Token
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </div>
+              {/* Login Form */}
+              {selectedBroker && (
+                <Card className="p-6 bg-slate-900 border-slate-700 mb-6">
+                  <h3 className="text-lg font-bold text-white mb-4">
+                    Login to {BROKERS.find(b => b.id === selectedBroker)?.name}
+                  </h3>
 
-                {webhookToken && !connected && (
-                  <>
-                    {/* Step 2: Download EA */}
+                  <div className="space-y-4">
                     <div>
-                      <h4 className="text-sm font-semibold text-slate-300 mb-3">Step 2: Download EA Script</h4>
+                      <label className="block text-sm text-slate-300 mb-2">Trading Account Login</label>
+                      <Input
+                        type="text"
+                        placeholder="Your account login number"
+                        value={credentials.login}
+                        onChange={(e) => setCredentials({ ...credentials, login: e.target.value })}
+                        className="bg-slate-800 border-slate-700 text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-slate-300 mb-2">Password</label>
+                      <Input
+                        type="password"
+                        placeholder="Your trading account password"
+                        value={credentials.password}
+                        onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                        className="bg-slate-800 border-slate-700 text-white"
+                      />
+                    </div>
+
+                    <p className="text-xs text-slate-400">
+                      🔒 Your credentials are encrypted and secure. We automatically connect to MetaTrader to collect your trades.
+                    </p>
+
+                    <div className="flex gap-2">
                       <Button
-                        onClick={downloadEAScript}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                        onClick={handleBrokerConnect}
+                        disabled={loading}
+                        className="flex-1 bg-white text-slate-900 hover:bg-slate-100 font-bold"
                       >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download MindTrader_EA.mq4
+                        {loading ? (
+                          <>
+                            <Loader className="w-4 h-4 animate-spin mr-2" />
+                            Connecting...
+                          </>
+                        ) : (
+                          <>
+                            Connect Account
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setSelectedBroker(null)
+                          setCredentials({ login: '', password: '' })
+                        }}
+                        disabled={loading}
+                        variant="ghost"
+                        className="text-slate-400"
+                      >
+                        Cancel
                       </Button>
                     </div>
-
-                    {/* Step 3: Instructions */}
-                    <div className="p-4 bg-blue-900/20 border border-blue-600/30 rounded-lg">
-                      <h4 className="text-sm font-semibold text-blue-300 mb-3">Step 3: Install in MetaTrader</h4>
-                      <ol className="text-sm text-slate-300 space-y-2 list-decimal list-inside">
-                        <li>Open MetaTrader → File → Open Data Folder</li>
-                        <li>Go to: <code className="bg-slate-800 px-2 py-1 rounded text-xs">MQL4/Experts</code></li>
-                        <li>Paste <code className="bg-slate-800 px-2 py-1 rounded text-xs">MindTrader_EA.mq4</code> here</li>
-                        <li>Restart MetaTrader</li>
-                        <li>Attach the EA to your chart (drag from Navigator)</li>
-                        <li>Trades auto-sync when they close!</li>
-                      </ol>
-                    </div>
-
-                    {/* Token Display */}
-                    <div>
-                      <label className="block text-sm text-slate-300 mb-2">Your Webhook Token</label>
-                      <div className="flex items-center gap-2 bg-slate-800/50 rounded-lg p-3">
-                        <code className="text-sm text-slate-200 font-mono flex-1 truncate">{webhookToken}</code>
-                        <button
-                          onClick={() => copyToClipboard(webhookToken)}
-                          className="p-2 hover:bg-slate-700 rounded transition-colors flex-shrink-0"
-                        >
-                          {copiedToken ? (
-                            <Check className="w-4 h-4 text-green-400" />
-                          ) : (
-                            <Copy className="w-4 h-4 text-slate-400" />
-                          )}
-                        </button>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-2">This token is already in your downloaded EA script</p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </Card>
+                  </div>
+                </Card>
+              )}
+            </>
           )}
         </div>
 
