@@ -395,23 +395,28 @@ export default function IntegrationsPage() {
             </div>
 
             {!healthConnected && (
-              <Button
-                onClick={handleAppleHealthConnect}
-                disabled={loading}
-                className="w-full bg-white text-slate-900 hover:bg-slate-100 font-bold"
-              >
-                {loading ? (
-                  <>
-                    <Loader className="w-4 h-4 animate-spin mr-2" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    Connect Apple Health
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </>
-                )}
-              </Button>
+              <div className="space-y-4">
+                <p className="text-sm text-slate-300 bg-slate-800/50 p-3 rounded-lg">
+                  Click below to securely connect via Apple ID. You approve which data we can access - nothing is stored without your permission.
+                </p>
+                <Button
+                  onClick={handleAppleHealthConnect}
+                  disabled={loading}
+                  className="w-full bg-white text-slate-900 hover:bg-slate-100 font-bold"
+                >
+                  {loading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin mr-2" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      Sign in with Apple
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
           </Card>
         </div>
