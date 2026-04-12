@@ -46,6 +46,8 @@ import { useAuth } from "@/contexts/auth-context"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useToast } from "@/hooks/use-toast"
 import { getUserData, saveUserData, exportUserData } from "@/utils/storage-utils"
+import { useRouter } from "next/navigation"
+import { useLanguage } from "@/contexts/language-context"
 
 interface Integration {
   id: string
@@ -60,6 +62,9 @@ export default function SettingsPage() {
   const { user } = useAuth()
   const { subscription } = useSubscription()
   const { toast } = useToast()
+  const router = useRouter()
+  const { language } = useLanguage()
+  const isEn = language === "en"
 
   const [activeTab, setActiveTab] = useState("account")
   const [loading, setLoading] = useState(false)
@@ -649,6 +654,61 @@ export default function SettingsPage() {
 
           {/* ADVANCED TAB */}
           <TabsContent value="advanced" className="space-y-6">
+            {/* Integrations Card */}
+            <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  Integrations
+                </CardTitle>
+                <CardDescription className="text-gray-400">Connect your trading platforms and health apps</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* MetaTrader Integration */}
+                  <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-600 transition-all cursor-pointer">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">MetaTrader 5</h3>
+                        <p className="text-sm text-gray-400 mt-1">Connect your trading account</p>
+                      </div>
+                      <span className="text-2xl">📊</span>
+                    </div>
+                    <Button
+                      onClick={() => router.push('/settings/integrations')}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                      size="sm"
+                    >
+                      {isEn ? 'Connect' : 'Připojit'}
+                    </Button>
+                  </div>
+
+                  {/* Apple Health Integration */}
+                  <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-600 transition-all cursor-pointer">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Apple Health</h3>
+                        <p className="text-sm text-gray-400 mt-1">Sync sleep & health data</p>
+                      </div>
+                      <span className="text-2xl">🍎</span>
+                    </div>
+                    <Button
+                      onClick={() => router.push('/settings/integrations')}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-medium"
+                      size="sm"
+                    >
+                      {isEn ? 'Connect' : 'Připojit'}
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator className="bg-slate-700" />
+
+                <p className="text-sm text-gray-400">
+                  Need more detailed setup? Visit our <Button variant="link" className="p-0 h-auto text-purple-400">integration center</Button>
+                </p>
+              </CardContent>
+            </Card>
             {/* AI Settings */}
             <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-xl">
               <CardHeader>
