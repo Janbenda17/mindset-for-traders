@@ -33,16 +33,10 @@ export default function IntegrationsPage() {
   const [success, setSuccess] = useState('')
   const [checking, setChecking] = useState(true)
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Please log in first</p>
-      </div>
-    )
-  }
-
   // Check integration status on mount
   useEffect(() => {
+    if (!user?.id) return
+
     const checkIntegrationStatus = async () => {
       try {
         setChecking(true)
@@ -67,7 +61,7 @@ export default function IntegrationsPage() {
     }
 
     checkIntegrationStatus()
-  }, [user.id])
+  }, [user?.id])
 
   // Check for query parameters (success/error from oauth callback)
   useEffect(() => {
@@ -86,6 +80,14 @@ export default function IntegrationsPage() {
       setTimeout(() => setError(''), 5000)
     }
   }, [])
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Please log in first</p>
+      </div>
+    )
+  }
 
   const handleBrokerConnect = async () => {
     if (!selectedBroker || !credentials.login || !credentials.password) {
