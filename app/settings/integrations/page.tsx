@@ -28,6 +28,7 @@ export default function IntegrationsPage() {
   const [credentials, setCredentials] = useState({ login: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [connected, setConnected] = useState<string | null>(null)
+  const [appleHealthConnected, setAppleHealthConnected] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [checking, setChecking] = useState(true)
@@ -41,7 +42,7 @@ export default function IntegrationsPage() {
         setChecking(true)
         const { data } = await supabase
           .from('profiles')
-          .select('mt4_broker, terra_id, sleep_sync_enabled')
+          .select('mt4_broker, apple_health_connected')
           .eq('user_id', user.id)
           .single()
 
@@ -49,6 +50,7 @@ export default function IntegrationsPage() {
           if (data.mt4_broker) {
             setConnected(data.mt4_broker)
           }
+          setAppleHealthConnected(!!data.apple_health_connected)
         }
       } catch (err) {
         console.error('[v0] Error checking integration status:', err)
@@ -66,7 +68,12 @@ export default function IntegrationsPage() {
     const successParam = searchParams.get('success')
     const errorParam = searchParams.get('error')
 
-    if (errorParam) {
+    if (successParam === 'apple_health') {
+      setSuccess('Apple Health connected successfully!')
+      setAppleHealthConnected(true)
+      window.history.replaceState({}, '', '/settings/integrations')
+      setTimeout(() => setSuccess(''), 3000)
+    } else if (errorParam) {
       setError(`Connection failed: ${errorParam}`)
       window.history.replaceState({}, '', '/settings/integrations')
       setTimeout(() => setError(''), 5000)
@@ -157,44 +164,31 @@ export default function IntegrationsPage() {
     }
   }
 
-  const handleAppleHealthConnect = () => {
-    console.log('[v0] Initiating Apple Health OAuth flow...')
-    window.location.href = '/api/auth/apple-health'
-  }
-
-  const handleDisconnectAppleHealth = async () => {
+  const handleAppleHealthConnect = async () => {
+    console.log('[v0] Connecting Apple Health...')
     setLoading(true)
     try {
-      console.log('[v0] Disconnecting Apple Health...')
-
       const { error } = await supabase
         .from('profiles')
         .update({
-          terra_id: null,
-          terra_reference_id: null,
-          sleep_sync_enabled: false,
+          apple_health_connected: true,
         })
         .eq('user_id', user.id)
 
       if (error) throw error
 
-      console.log('[v0] Apple Health disconnected')
-      setHealthConnected(false)
-      setSuccess('Apple Health disconnected')
+      console.log('[v0] Apple Health connected')
+      setAppleHealthConnected(true)
+      setSuccess('Apple Health connected successfully!')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
-      setError('Failed to disconnect Apple Health')
-      console.error('[v0] Apple Health disconnection error:', err)
+      setError('Failed to connect Apple Health')
+      console.error('[v0] Connection error:', err)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleAppleHealthConnect = () => {
-    console.log('[v0] Initiating Apple Health OAuth flow...')
-    window.location.href = '/api/auth/apple-health'
-  }
-
   const handleDisconnectAppleHealth = async () => {
     setLoading(true)
     try {
@@ -203,21 +197,19 @@ export default function IntegrationsPage() {
       const { error } = await supabase
         .from('profiles')
         .update({
-          terra_id: null,
-          terra_reference_id: null,
-          sleep_sync_enabled: false,
+          apple_health_connected: false,
         })
         .eq('user_id', user.id)
 
       if (error) throw error
 
       console.log('[v0] Apple Health disconnected')
-      setHealthConnected(false)
+      setAppleHealthConnected(false)
       setSuccess('Apple Health disconnected')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
       setError('Failed to disconnect Apple Health')
-      console.error('[v0] Apple Health disconnection error:', err)
+      console.error('[v0] Disconnection error:', err)
     } finally {
       setLoading(false)
     }
@@ -237,7 +229,7 @@ export default function IntegrationsPage() {
         {/* Header */}
         <div className="mb-12">
           <h1 className="text-4xl font-black text-white mb-2">Integrations</h1>
-          <p className="text-slate-400">Connect your MetaTrader account to sync trades automatically</p>
+          <p className="text-slate-400">Connect your trading accounts and health data</p>
         </div>
 
         {/* Status Messages */}
@@ -380,6 +372,66 @@ export default function IntegrationsPage() {
               )}
             </>
           )}
+        </div>
+
+        {/* Apple Health Section */}
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-6">Health Data</h2>
+
+          {appleHealthConnected && (
+            <div className="mb-6 p-4 bg-emerald-900/30 border border-emerald-600/50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-emerald-300">
+                  <Check className="w-5 h-5" />
+                  <div>
+                    <p className="font-semibold">Apple Health Connected</p>
+                    <p className="text-sm text-emerald-200/70">Your health data is being tracked</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleDisconnectAppleHealth}
+                  disabled={loading}
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-300 hover:text-red-400 hover:bg-red-900/20"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <Card className="p-6 bg-slate-900 border-slate-700">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">Apple Health & Sleep Tracking</h3>
+                <p className="text-slate-400 text-sm mb-4">
+                  Connect your Apple Health to track sleep, heart rate, and recovery. We use this data to analyze your trading performance.
+                </p>
+              </div>
+              <span className="text-3xl">🍎</span>
+            </div>
+
+            {!appleHealthConnected && (
+              <Button
+                onClick={handleAppleHealthConnect}
+                disabled={loading}
+                className="w-full bg-white text-slate-900 hover:bg-slate-100 font-bold"
+              >
+                {loading ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin mr-2" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    Connect Apple Health
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            )}
+          </Card>
         </div>
       </div>
     </div>
