@@ -40,17 +40,28 @@ export default function IntegrationsPage() {
     const checkIntegrationStatus = async () => {
       try {
         setChecking(true)
-        const { data } = await supabase
+        console.log('[v0] Checking integration status for user:', user.id)
+        
+        // Use maybeSingle() instead of single() to handle case where profile doesn't exist
+        const { data, error } = await supabase
           .from('profiles')
           .select('mt4_broker, apple_health_connected')
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
+
+        if (error) {
+          console.error('[v0] Error checking profile:', error)
+          return
+        }
 
         if (data) {
+          console.log('[v0] Profile found:', data)
           if (data.mt4_broker) {
             setConnected(data.mt4_broker)
           }
           setAppleHealthConnected(!!data.apple_health_connected)
+        } else {
+          console.log('[v0] No profile found for user, will be created on first connection')
         }
       } catch (err) {
         console.error('[v0] Error checking integration status:', err)
@@ -168,21 +179,44 @@ export default function IntegrationsPage() {
     console.log('[v0] Connecting Apple Health...')
     setLoading(true)
     try {
-      const { error } = await supabase
+      // First ensure profile exists
+      const { data: profile } = await supabase
         .from('profiles')
-        .update({
-          apple_health_connected: true,
-        })
+        .select('user_id')
         .eq('user_id', user.id)
+        .maybeSingle()
 
-      if (error) throw error
+      if (!profile) {
+        console.log('[v0] Profile not found, creating one...')
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            apple_health_connected: true,
+          })
+        
+        if (insertError) {
+          throw new Error('Failed to create profile: ' + insertError.message)
+        }
+      } else {
+        // Profile exists, update it
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            apple_health_connected: true,
+          })
+          .eq('user_id', user.id)
+
+        if (updateError) throw updateError
+      }
 
       console.log('[v0] Apple Health connected')
       setAppleHealthConnected(true)
       setSuccess('Apple Health connected successfully!')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
-      setError('Failed to connect Apple Health')
+      const errorMsg = err instanceof Error ? err.message : 'Failed to connect Apple Health'
+      setError(errorMsg)
       console.error('[v0] Connection error:', err)
     } finally {
       setLoading(false)

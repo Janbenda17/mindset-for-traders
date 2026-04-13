@@ -52,18 +52,20 @@ export async function POST(request: NextRequest) {
 
     console.log('[v0] Saving encrypted credentials to profile')
 
-    // Save to profile with new columns
+    // Use upsert to handle case where profile doesn't exist yet
     const { error, data } = await supabase
       .from('profiles')
-      .update({
+      .upsert({
+        user_id: userId,
         mt4_broker: broker,
         mt4_login: login,
         mt4_password: encryptedPassword,
         trades_sync_enabled: true,
         last_trades_sync: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id'
       })
-      .eq('user_id', userId)
       .select()
 
     if (error) {
