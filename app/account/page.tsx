@@ -56,6 +56,7 @@ import {
   Target,
   Phone,
   Send,
+  Plug,
 } from "lucide-react"
 import {
   getUserData,
@@ -945,6 +946,13 @@ export default function AccountPage() {
             >
               <Crown className="w-4 h-4 mr-2" />
   Předplatné
+            </TabsTrigger>
+            <TabsTrigger
+              value="integrations"
+              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
+            >
+              <Plug className="w-4 h-4 mr-2" />
+  Integrace
             </TabsTrigger>
           </TabsList>
 
@@ -1944,6 +1952,84 @@ export default function AccountPage() {
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          {/* INTEGRATIONS TAB */}
+          <TabsContent value="integrations" className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Integrace</h2>
+                <p className="text-gray-400 text-sm mt-1">Připojte své obchodní účty a zdravotní data</p>
+              </div>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* MetaTrader Integration Card */}
+              <Card className="bg-gradient-to-br from-slate-900/90 to-slate-900/50 border-slate-700/50 backdrop-blur-xl hover:border-slate-600/50 transition-all">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Database className="w-5 h-5 text-blue-400" />
+                      MetaTrader
+                    </CardTitle>
+                  </div>
+                  <CardDescription>Automatické synchronizace obchodů</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Připojte svůj MetaTrader účet a automaticky synchronizujte všechny své obchody.
+                  </p>
+                  <Button
+                    onClick={() => router.push('/account/integrations')}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Plug className="w-4 h-4 mr-2" />
+                    Spravovat
+                    <ArrowRight className="w-4 h-4 ml-auto" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Apple Health Integration Card */}
+              <Card className="bg-gradient-to-br from-slate-900/90 to-slate-900/50 border-slate-700/50 backdrop-blur-xl hover:border-slate-600/50 transition-all">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Heart className="w-5 h-5 text-red-400" />
+                      Apple Health
+                    </CardTitle>
+                  </div>
+                  <CardDescription>Sledování zdraví a spánku</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Propojte Apple Health pro sledování vašeho spánku, srdečního rytmu a obnovy.
+                  </p>
+                  <Button
+                    onClick={() => router.push('/account/integrations')}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    <Plug className="w-4 h-4 mr-2" />
+                    Spravovat
+                    <ArrowRight className="w-4 h-4 ml-auto" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="bg-blue-900/20 border-blue-600/30 backdrop-blur-xl">
+              <CardContent className="pt-6">
+                <div className="flex gap-4">
+                  <Sparkles className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-blue-300 mb-1">Bezpečné propojení</h3>
+                    <p className="text-sm text-blue-200/80">
+                      Všechna vaše data jsou šifrovaná a zabezpečená. Vaše hesla se nikdy neukládají v čitelné podobě.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 
