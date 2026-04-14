@@ -189,29 +189,6 @@ export default function IntegrationsPage() {
       setLoading(false)
     }
   }
-      } else {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            apple_health_connected: true,
-          })
-          .eq('user_id', user.id)
-
-        if (updateError) throw updateError
-      }
-
-      console.log('[v0] Apple Health connected')
-      setAppleHealthConnected(true)
-      setSuccess('Apple Health connected successfully!')
-      setTimeout(() => setSuccess(''), 3000)
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to connect Apple Health'
-      setError(errorMsg)
-      console.error('[v0] Connection error:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleDisconnectAppleHealth = async () => {
     setLoading(true)
