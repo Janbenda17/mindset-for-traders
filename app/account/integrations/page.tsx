@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Check, AlertCircle, Loader, X, Plug } from 'lucide-react'
 import Link from 'next/link'
+import { ensureProfileExists, updateAppleHealth } from './actions'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -170,24 +171,24 @@ export default function IntegrationsPage() {
     console.log('[v0] Connecting Apple Health...')
     setLoading(true)
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .maybeSingle()
+      // First ensure profile exists using server action
+      await ensureProfileExists(user.id)
+      
+      // Then update Apple Health status
+      await updateAppleHealth(user.id, true)
 
-      if (!profile) {
-        console.log('[v0] Profile not found, creating one...')
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: user.id,
-            apple_health_connected: true,
-          })
-        
-        if (insertError) {
-          throw new Error('Failed to create profile: ' + insertError.message)
-        }
+      console.log('[v0] Apple Health connected')
+      setAppleHealthConnected(true)
+      setSuccess('Apple Health connected successfully!')
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to connect Apple Health'
+      setError(errorMsg)
+      console.error('[v0] Connection error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
       } else {
         const { error: updateError } = await supabase
           .from('profiles')
@@ -216,15 +217,7 @@ export default function IntegrationsPage() {
     setLoading(true)
     try {
       console.log('[v0] Disconnecting Apple Health...')
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          apple_health_connected: false,
-        })
-        .eq('user_id', user.id)
-
-      if (error) throw error
+      await updateAppleHealth(user.id, false)
 
       console.log('[v0] Apple Health disconnected')
       setAppleHealthConnected(false)
