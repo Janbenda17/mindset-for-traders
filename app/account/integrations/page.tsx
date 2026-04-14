@@ -247,7 +247,8 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="px-6 py-8 max-w-4xl mx-auto">
+      <div className="space-y-6">
       {/* Header with Back Link */}
       <div className="flex items-center gap-2">
         <Link href="/account" className="text-slate-400 hover:text-slate-300 transition-colors">
@@ -468,6 +469,7 @@ export default function IntegrationsPage() {
             </CardContent>
           </Card>
         )}
+      </div>
       </div>
     </div>
   )
