@@ -918,41 +918,51 @@ export default function AccountPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-slate-900/80 border border-slate-700/50 p-1 backdrop-blur-xl">
+          <TabsList className="bg-slate-900/80 border border-slate-700/50 p-1 backdrop-blur-xl w-full grid grid-cols-5 gap-1 h-auto">
             <TabsTrigger
               value="profile"
-              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600/30 data-[state=active]:to-blue-600/30 data-[state=active]:text-white data-[state=active]:border-purple-500/50 border border-transparent text-gray-400 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 transition-all"
             >
-              <User className="w-4 h-4 mr-2" />
-  Profil
+              <User className="w-4 h-4 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium">
+                {language === "cs" ? "Profil" : "Profile"}
+              </span>
             </TabsTrigger>
             <TabsTrigger
               value="notifications"
-              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600/30 data-[state=active]:to-blue-600/30 data-[state=active]:text-white data-[state=active]:border-purple-500/50 border border-transparent text-gray-400 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 transition-all"
             >
-              <Bell className="w-4 h-4 mr-2" />
-  Notifikace
+              <Bell className="w-4 h-4 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium">
+                {language === "cs" ? "Notifikace" : "Notifications"}
+              </span>
             </TabsTrigger>
             <TabsTrigger
               value="security"
-              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600/30 data-[state=active]:to-blue-600/30 data-[state=active]:text-white data-[state=active]:border-purple-500/50 border border-transparent text-gray-400 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 transition-all"
             >
-              <Shield className="w-4 h-4 mr-2" />
-  Zabezpečení
+              <Shield className="w-4 h-4 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium">
+                {language === "cs" ? "Zabezpečení" : "Security"}
+              </span>
             </TabsTrigger>
             <TabsTrigger
               value="subscription"
-              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600/30 data-[state=active]:to-blue-600/30 data-[state=active]:text-white data-[state=active]:border-purple-500/50 border border-transparent text-gray-400 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 transition-all"
             >
-              <Crown className="w-4 h-4 mr-2" />
-  Předplatné
+              <Crown className="w-4 h-4 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium">
+                {language === "cs" ? "Předplatné" : "Subscription"}
+              </span>
             </TabsTrigger>
             <TabsTrigger
               value="integrations"
-              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
+              className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600/30 data-[state=active]:to-blue-600/30 data-[state=active]:text-white data-[state=active]:border-purple-500/50 border border-transparent text-gray-400 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 transition-all"
             >
-              <Plug className="w-4 h-4 mr-2" />
-  Integrace
+              <Plug className="w-4 h-4 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium">
+                {language === "cs" ? "Integrace" : "Integrations"}
+              </span>
             </TabsTrigger>
           </TabsList>
 
