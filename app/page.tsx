@@ -156,6 +156,40 @@ export default function HomePage() {
                   </div>
                 </div>
               </motion.div>
+
+              {/* Broker + Wealth data connect teaser */}
+              <motion.div
+                className="max-w-3xl mx-auto mb-12"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+              >
+                <div className="flex items-center justify-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                      className="w-4 h-4 text-fuchsia-400"
+                    >
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                    <span className="text-xs sm:text-sm font-medium tracking-tight">
+                      {language === 'en' ? 'Broker + Wealth data connect' : 'Broker + Wealth data connect'}
+                    </span>
+                  </div>
+                  <span className="h-4 w-px bg-white/10" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-fuchsia-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse" />
+                    {language === 'en' ? 'Soon' : 'Brzy'}
+                  </span>
+                </div>
+              </motion.div>
             </motion.div>
           </div>
 
