@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { TopNavigation } from '@/components/top-navigation'
 import { Button } from '@/components/ui/button'
@@ -8,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
-import { ArrowRight, Sparkles, Zap, Brain, TrendingUp, Users } from 'lucide-react'
+import { ArrowRight, Zap, Brain, TrendingUp, Users } from 'lucide-react'
 
 export default function HomePage() {
   const router = useRouter()
@@ -24,66 +23,57 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-black overflow-hidden">
-      {/* Galaxy Background */}
-      <div className="fixed inset-0 w-full h-full">
-        {/* Animated stars background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
-          {/* Star field */}
-          <div className="absolute inset-0 opacity-50">
-            {[...Array(100)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-white rounded-full"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  boxShadow: `0 0 ${Math.random() * 3}px rgba(255,255,255,${Math.random()})`,
-                }}
-                animate={{
-                  opacity: [0.3, 1, 0.3],
-                }}
-                transition={{
-                  duration: Math.random() * 3 + 2,
-                  repeat: Infinity,
-                }}
-              />
-            ))}
-          </div>
+    <div className="min-h-screen bg-slate-950 overflow-hidden">
+      {/* Background */}
+      <div className="fixed inset-0 w-full h-full pointer-events-none">
+        {/* Base */}
+        <div className="absolute inset-0 bg-slate-950" />
 
-          {/* Nebula glow effects */}
-          <motion.div
-            className="absolute top-20 left-10 w-96 h-96 bg-purple-500 rounded-full blur-3xl opacity-10"
-            animate={{
-              x: [0, 30, 0],
-              y: [0, 20, 0],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-            }}
-          />
-          <motion.div
-            className="absolute top-40 right-20 w-80 h-80 bg-blue-500 rounded-full blur-3xl opacity-10"
-            animate={{
-              x: [0, -30, 0],
-              y: [0, -20, 0],
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-            }}
-          />
-          <motion.div
-            className="absolute -bottom-20 left-1/3 w-96 h-96 bg-cyan-500 rounded-full blur-3xl opacity-10"
-            animate={{
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 12,
-              repeat: Infinity,
-            }}
-          />
+        {/* Subtle grid */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)',
+            backgroundSize: '64px 64px',
+          }}
+        />
+
+        {/* Radial vignette */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.08), transparent 55%), radial-gradient(ellipse at 50% 100%, rgba(16, 185, 129, 0.05), transparent 50%)',
+          }}
+        />
+
+        {/* Soft emerald glow top */}
+        <motion.div
+          className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.12), transparent 60%)' }}
+          animate={{ opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 8, repeat: Infinity }}
+        />
+
+        {/* Sparse starfield */}
+        <div className="absolute inset-0 opacity-40">
+          {[...Array(40)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-px h-px bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{ opacity: [0.2, 0.8, 0.2] }}
+              transition={{
+                duration: Math.random() * 4 + 3,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
         </div>
       </div>
 
@@ -102,24 +92,33 @@ export default function HomePage() {
             >
               {/* Badge */}
               <motion.div
-                className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm"
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
+                className="inline-flex items-center gap-2 mb-8 px-3 py-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/5 backdrop-blur-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
               >
-                <span className="text-base leading-none">{'\u2B50'}</span>
-                <span className="text-sm text-white/80">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-emerald-300">
                   {language === 'en' ? '#1 Trading Psychology Platform' : '#1 Trading Psychology Platform'}
                 </span>
               </motion.div>
 
               {/* Main heading */}
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[1.05] mb-6 bg-gradient-to-b from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent text-balance">
-                {language === 'en'
-                  ? 'Your brain becomes your biggest advantage'
-                  : 'Tvůj mozek se stane tvojí největší výhodou'}
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[1.05] mb-6 text-white text-balance">
+                {language === 'en' ? (
+                  <>
+                    Your brain becomes your{' '}
+                    <span className="italic font-serif text-emerald-300">biggest advantage</span>
+                  </>
+                ) : (
+                  <>
+                    Tvůj mozek se stane tvojí{' '}
+                    <span className="italic font-serif text-emerald-300">největší výhodou</span>
+                  </>
+                )}
               </h1>
 
-              <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-10 leading-relaxed text-pretty font-semibold">
+              <p className="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed text-pretty font-medium">
                 {language === 'en'
                   ? '93% of traders fail because of psychology, not strategy.'
                   : '93% obchodníků padne kvůli psychice, ne kvůli strategii.'}
@@ -127,38 +126,36 @@ export default function HomePage() {
 
               {/* Stats */}
               <motion.div
-                className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto mb-12"
+                className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10 max-w-3xl mx-auto mb-12"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25, duration: 0.6 }}
               >
-                <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-6 py-5 text-center">
-                  <div className="text-3xl sm:text-4xl font-black bg-gradient-to-b from-white to-cyan-300 bg-clip-text text-transparent mb-1">
-                    9/10
+                <div className="bg-slate-950 px-6 py-8 text-center">
+                  <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight">
+                    9<span className="text-emerald-400">/</span>10
                   </div>
                   <div className="text-xs sm:text-sm text-slate-400 leading-snug">
                     {language === 'en' ? 'Traders struggle with psychology' : 'Obchodníků má psychické problémy'}
                   </div>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-6 py-5 text-center">
-                  <div className="text-3xl sm:text-4xl font-black bg-gradient-to-b from-white to-cyan-300 bg-clip-text text-transparent mb-1">
-                    {'\u2193'}42%
+                <div className="bg-slate-950 px-6 py-8 text-center">
+                  <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight">
+                    <span className="text-emerald-400">{'\u2193'}</span>42%
                   </div>
                   <div className="text-xs sm:text-sm text-slate-400 leading-snug">
                     {language === 'en' ? 'Less revenge trading' : 'Méně revenge tradingu'}
                   </div>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-6 py-5 text-center">
-                  <div className="text-3xl sm:text-4xl font-black bg-gradient-to-b from-white to-cyan-300 bg-clip-text text-transparent mb-1">
-                    24/7
+                <div className="bg-slate-950 px-6 py-8 text-center">
+                  <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight">
+                    24<span className="text-emerald-400">/</span>7
                   </div>
                   <div className="text-xs sm:text-sm text-slate-400 leading-snug">
                     {language === 'en' ? 'AI analysis of your mindset' : 'AI analýza tvého mindsetu'}
                   </div>
                 </div>
               </motion.div>
-
-
             </motion.div>
           </div>
 
@@ -267,24 +264,45 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="py-24 text-center"
+            className="py-24"
           >
-            <h2 className="text-4xl sm:text-5xl font-black text-white mb-6">
-              {language === 'en' ? 'Ready to Trade Better?' : 'Připraven obchodovat lépe?'}
-            </h2>
-            <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-8">
-              {language === 'en'
-                ? 'Start your free 14-day trial today. Full access to all features. No credit card required.'
-                : 'Začni svůj 14denní zdarma trial dnes. Plný přístup ke všem funkcím. Bez platební karty.'}
-            </p>
-            <Button
-              size="lg"
-              onClick={handlePricingClick}
-              className="bg-gradient-to-r from-cyan-400 to-purple-500 text-white hover:shadow-lg hover:shadow-cyan-400/50 font-bold text-base px-10 py-6 rounded-lg border border-cyan-300/20"
-            >
-              {language === 'en' ? 'Get Started Free' : 'Začít zdarma'} <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            <div className="relative rounded-2xl border border-white/10 bg-slate-950 overflow-hidden p-12 sm:p-16 text-center">
+              <div
+                className="absolute inset-0 opacity-60 pointer-events-none"
+                style={{
+                  background:
+                    'radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.18), transparent 60%)',
+                }}
+              />
+              <div className="relative">
+                <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-5 leading-[1.05] text-balance">
+                  {language === 'en' ? (
+                    <>
+                      Ready to <span className="italic font-serif text-emerald-300">trade better</span>?
+                    </>
+                  ) : (
+                    <>
+                      Připraven <span className="italic font-serif text-emerald-300">obchodovat lépe</span>?
+                    </>
+                  )}
+                </h2>
+                <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                  {language === 'en'
+                    ? 'Start your free 14-day trial today. Full access to all features. No credit card required.'
+                    : 'Začni svůj 14denní zdarma trial dnes. Plný přístup ke všem funkcím. Bez platební karty.'}
+                </p>
+                <Button
+                  size="lg"
+                  onClick={handlePricingClick}
+                  className="bg-emerald-400 text-slate-950 hover:bg-emerald-300 font-bold text-base px-8 py-6 rounded-lg shadow-lg shadow-emerald-500/20"
+                >
+                  {language === 'en' ? 'Get Started Free' : 'Začít zdarma'}{' '}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>
