@@ -181,22 +181,54 @@ export default function HomePage() {
 
                   <div className="relative flex items-center gap-4 sm:gap-5">
                     <div className="flex items-center -space-x-2">
-                      {/* MetaTrader logo */}
+                      {/* MetaTrader 5 logo */}
                       <div
-                        className="relative z-20 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border border-white/15 bg-slate-900 shadow-lg shadow-black/40"
-                        aria-label="MetaTrader"
-                        title="MetaTrader"
+                        className="relative z-20 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border border-white/15 shadow-lg shadow-black/40 overflow-hidden"
+                        style={{
+                          background:
+                            'linear-gradient(135deg, #0d2b4e 0%, #0a1f3a 100%)',
+                        }}
+                        aria-label="MetaTrader 5"
+                        title="MetaTrader 5"
                       >
                         <svg
                           viewBox="0 0 48 48"
                           fill="none"
                           aria-hidden="true"
-                          className="w-7 h-7 sm:w-8 sm:h-8"
+                          className="w-8 h-8 sm:w-9 sm:h-9"
                         >
-                          <path
-                            d="M6 42V6h8l10 14L34 6h8v36h-8V20L24 34 14 20v22H6z"
-                            fill="#1e88e5"
+                          {/* Red descending candle */}
+                          <rect x="10" y="14" width="5" height="18" rx="1" fill="#e53935" />
+                          <line
+                            x1="12.5"
+                            y1="10"
+                            x2="12.5"
+                            y2="36"
+                            stroke="#e53935"
+                            strokeWidth="1.3"
                           />
+                          {/* Green ascending candle */}
+                          <rect x="19" y="18" width="5" height="16" rx="1" fill="#43a047" />
+                          <line
+                            x1="21.5"
+                            y1="12"
+                            x2="21.5"
+                            y2="38"
+                            stroke="#43a047"
+                            strokeWidth="1.3"
+                          />
+                          {/* White "5" */}
+                          <text
+                            x="36"
+                            y="32"
+                            textAnchor="middle"
+                            fontFamily="Arial, Helvetica, sans-serif"
+                            fontWeight="900"
+                            fontSize="20"
+                            fill="#ffffff"
+                          >
+                            5
+                          </text>
                         </svg>
                       </div>
                       {/* Apple logo */}
