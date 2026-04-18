@@ -44,14 +44,14 @@ export default function HomePage() {
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.08), transparent 55%), radial-gradient(ellipse at 50% 100%, rgba(16, 185, 129, 0.05), transparent 50%)',
+              'radial-gradient(ellipse at 50% 0%, rgba(217, 70, 239, 0.1), transparent 55%), radial-gradient(ellipse at 50% 100%, rgba(236, 72, 153, 0.08), transparent 50%)',
           }}
         />
 
         {/* Soft emerald glow top */}
         <motion.div
           className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, rgba(16, 185, 129, 0.12), transparent 60%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(168, 85, 247, 0.18), transparent 60%)' }}
           animate={{ opacity: [0.6, 1, 0.6] }}
           transition={{ duration: 8, repeat: Infinity }}
         />
@@ -92,13 +92,13 @@ export default function HomePage() {
             >
               {/* Badge */}
               <motion.div
-                className="inline-flex items-center gap-2 mb-8 px-3 py-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/5 backdrop-blur-sm"
+                className="inline-flex items-center gap-2 mb-8 px-3 py-1.5 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/5 backdrop-blur-sm"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1 }}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-mono uppercase tracking-[0.2em] text-emerald-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-fuchsia-400">
                   {language === 'en' ? '#1 Trading Psychology Platform' : '#1 Trading Psychology Platform'}
                 </span>
               </motion.div>
@@ -108,12 +108,12 @@ export default function HomePage() {
                 {language === 'en' ? (
                   <>
                     Your brain becomes your{' '}
-                    <span className="italic font-serif text-emerald-300">biggest advantage</span>
+                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">biggest advantage</span>
                   </>
                 ) : (
                   <>
                     Tvůj mozek se stane tvojí{' '}
-                    <span className="italic font-serif text-emerald-300">největší výhodou</span>
+                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">největší výhodou</span>
                   </>
                 )}
               </h1>
@@ -133,7 +133,7 @@ export default function HomePage() {
               >
                 <div className="bg-slate-950 px-6 py-8 text-center">
                   <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight">
-                    9<span className="text-emerald-400">/</span>10
+                    9<span className="text-fuchsia-500">/</span>10
                   </div>
                   <div className="text-xs sm:text-sm text-slate-400 leading-snug">
                     {language === 'en' ? 'Traders struggle with psychology' : 'Obchodníků má psychické problémy'}
@@ -141,7 +141,7 @@ export default function HomePage() {
                 </div>
                 <div className="bg-slate-950 px-6 py-8 text-center">
                   <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight">
-                    <span className="text-emerald-400">{'\u2193'}</span>42%
+                    <span className="text-fuchsia-500">{'\u2193'}</span>42%
                   </div>
                   <div className="text-xs sm:text-sm text-slate-400 leading-snug">
                     {language === 'en' ? 'Less revenge trading' : 'Méně revenge tradingu'}
@@ -149,7 +149,7 @@ export default function HomePage() {
                 </div>
                 <div className="bg-slate-950 px-6 py-8 text-center">
                   <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight">
-                    24<span className="text-emerald-400">/</span>7
+                    24<span className="text-fuchsia-500">/</span>7
                   </div>
                   <div className="text-xs sm:text-sm text-slate-400 leading-snug">
                     {language === 'en' ? 'AI analysis of your mindset' : 'AI analýza tvého mindsetu'}
@@ -168,9 +168,9 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
               className="mb-20 max-w-3xl"
             >
-              <div className="inline-flex items-center gap-2 mb-5 px-3 py-1 rounded-full border border-emerald-400/30 bg-emerald-400/5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-mono uppercase tracking-[0.2em] text-emerald-300">
+              <div className="inline-flex items-center gap-2 mb-5 px-3 py-1 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/5">
+                <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-fuchsia-400">
                   {language === 'en' ? 'Built for traders' : 'Stvořené pro tradery'}
                 </span>
               </div>
@@ -178,12 +178,12 @@ export default function HomePage() {
                 {language === 'en' ? (
                   <>
                     Everything you need to{' '}
-                    <span className="italic font-serif text-emerald-300">trade better</span>
+                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">trade better</span>
                   </>
                 ) : (
                   <>
                     Vše co potřebuješ k{' '}
-                    <span className="italic font-serif text-emerald-300">lepšímu obchodování</span>
+                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">lepšímu obchodování</span>
                   </>
                 )}
               </h2>
@@ -240,10 +240,10 @@ export default function HomePage() {
                     className="group relative p-10 bg-slate-950 hover:bg-slate-900 transition-colors duration-300"
                   >
                     <div className="flex items-start justify-between mb-8">
-                      <div className="flex items-center justify-center w-12 h-12 rounded-lg border border-white/10 bg-white/5 text-emerald-300 group-hover:border-emerald-400/40 group-hover:text-emerald-400 transition-colors">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-lg border border-white/10 bg-white/5 text-fuchsia-400 group-hover:border-fuchsia-500/40 group-hover:text-fuchsia-500 transition-colors">
                         <Icon className="w-5 h-5" />
                       </div>
-                      <span className="font-mono text-xs tracking-widest text-slate-600 group-hover:text-emerald-400/60 transition-colors">
+                      <span className="font-mono text-xs tracking-widest text-slate-600 group-hover:text-fuchsia-500/60 transition-colors">
                         {feature.number}
                       </span>
                     </div>
@@ -253,7 +253,7 @@ export default function HomePage() {
                     <p className="text-base text-slate-400 leading-relaxed max-w-sm">
                       {feature.description}
                     </p>
-                    <div className="absolute bottom-0 left-0 h-px w-0 bg-emerald-400 group-hover:w-full transition-all duration-500" />
+                    <div className="absolute bottom-0 left-0 h-px w-0 bg-fuchsia-500 group-hover:w-full transition-all duration-500" />
                   </motion.div>
                 )
               })}
@@ -273,18 +273,18 @@ export default function HomePage() {
                 className="absolute inset-0 opacity-60 pointer-events-none"
                 style={{
                   background:
-                    'radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.18), transparent 60%)',
+                    'radial-gradient(ellipse at 50% 0%, rgba(217, 70, 239, 0.25), transparent 60%)',
                 }}
               />
               <div className="relative">
                 <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-5 leading-[1.05] text-balance">
                   {language === 'en' ? (
                     <>
-                      Ready to <span className="italic font-serif text-emerald-300">trade better</span>?
+                      Ready to <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">trade better</span>?
                     </>
                   ) : (
                     <>
-                      Připraven <span className="italic font-serif text-emerald-300">obchodovat lépe</span>?
+                      Připraven <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">obchodovat lépe</span>?
                     </>
                   )}
                 </h2>
@@ -296,7 +296,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   onClick={handlePricingClick}
-                  className="bg-emerald-400 text-slate-950 hover:bg-emerald-300 font-bold text-base px-8 py-6 rounded-lg shadow-lg shadow-emerald-500/20"
+                  className="bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white hover:from-fuchsia-400 hover:to-purple-500 font-bold text-base px-8 py-6 rounded-lg shadow-lg shadow-fuchsia-500/30 border border-white/10"
                 >
                   {language === 'en' ? 'Get Started Free' : 'Začít zdarma'}{' '}
                   <ArrowRight className="ml-2 h-5 w-5" />
