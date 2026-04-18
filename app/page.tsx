@@ -119,19 +119,52 @@ export default function HomePage() {
                   : 'Tvůj mozek se stane tvojí největší výhodou'}
               </h1>
 
-              <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-12 leading-relaxed text-pretty">
+              <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-10 leading-relaxed text-pretty">
                 {language === 'en' ? (
                   <>
-                    <span className="text-white font-semibold">93% of traders fail because of psychology, not strategy.</span>{' '}
+                    <span className="text-red-500 font-bold">93% of traders fail because of psychology, not strategy.</span>{' '}
                     MindTrader analyzes your emotions in real time, detects your weak points and stops you before you make a catastrophic mistake.
                   </>
                 ) : (
                   <>
-                    <span className="text-white font-semibold">93% obchodníků padne kvůli psychice, ne kvůli strategii.</span>{' '}
+                    <span className="text-red-500 font-bold">93% obchodníků padne kvůli psychice, ne kvůli strategii.</span>{' '}
                     MindTrader analyzuje tvoje emoce v reálném čase, detekuje tvá slabá místa a zastaví tě, než uděláš katastrofální chybu.
                   </>
                 )}
               </p>
+
+              {/* Stats */}
+              <motion.div
+                className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto mb-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25, duration: 0.6 }}
+              >
+                <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-6 py-5 text-center">
+                  <div className="text-3xl sm:text-4xl font-black bg-gradient-to-b from-white to-cyan-300 bg-clip-text text-transparent mb-1">
+                    9/10
+                  </div>
+                  <div className="text-xs sm:text-sm text-slate-400 leading-snug">
+                    {language === 'en' ? 'Traders struggle with psychology' : 'Obchodníků má psychické problémy'}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-6 py-5 text-center">
+                  <div className="text-3xl sm:text-4xl font-black bg-gradient-to-b from-white to-cyan-300 bg-clip-text text-transparent mb-1">
+                    {'\u2193'}42%
+                  </div>
+                  <div className="text-xs sm:text-sm text-slate-400 leading-snug">
+                    {language === 'en' ? 'Less revenge trading' : 'Méně revenge tradingu'}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm px-6 py-5 text-center">
+                  <div className="text-3xl sm:text-4xl font-black bg-gradient-to-b from-white to-cyan-300 bg-clip-text text-transparent mb-1">
+                    24/7
+                  </div>
+                  <div className="text-xs sm:text-sm text-slate-400 leading-snug">
+                    {language === 'en' ? 'AI analysis of your mindset' : 'AI analýza tvého mindsetu'}
+                  </div>
+                </div>
+              </motion.div>
 
               {/* CTA Buttons */}
               <motion.div
