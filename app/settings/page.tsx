@@ -63,8 +63,8 @@ export default function SettingsPage() {
   const { subscription } = useSubscription()
   const { toast } = useToast()
   const router = useRouter()
-  const { language } = useLanguage()
-  const isEn = language === "en"
+  const { language: uiLanguage } = useLanguage()
+  const isEn = uiLanguage === "en"
 
   const [activeTab, setActiveTab] = useState("account")
   const [loading, setLoading] = useState(false)
