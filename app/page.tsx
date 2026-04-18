@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
-import { ArrowRight, Zap, Brain, TrendingUp, Users } from 'lucide-react'
+import { ArrowRight, Zap, Brain, TrendingUp, Users, Check, Shield, Clock, Target } from 'lucide-react'
 
 export default function HomePage() {
   const router = useRouter()
@@ -199,37 +199,62 @@ export default function HomePage() {
                 {
                   icon: Brain,
                   number: '01',
+                  tag: language === 'en' ? 'Morning routine' : 'Ranní rutina',
+                  metric: language === 'en' ? '2 min / day' : '2 min / den',
+                  metricIcon: Clock,
                   title: language === 'en' ? 'Daily Tracker' : 'Denní Sledování',
                   description: language === 'en'
-                    ? 'Track your psychology each morning and understand your trading patterns'
-                    : 'Sleduj svou psychiku každé ráno a rozumí svým vzorům',
+                    ? 'Track your psychology each morning and understand your trading patterns before the market opens.'
+                    : 'Sleduj svou psychiku každé ráno a pochop své vzorce dřív, než otevře trh.',
+                  bullets: language === 'en'
+                    ? ['Mood & energy check-in', 'Pattern detection over time', 'Smart pre-market warnings']
+                    : ['Check-in nálady a energie', 'Detekce vzorců v čase', 'Chytrá varování před trhem'],
                 },
                 {
                   icon: Zap,
                   number: '02',
+                  tag: language === 'en' ? 'Live protection' : 'Live ochrana',
+                  metric: language === 'en' ? 'Real-time' : 'V reálném čase',
+                  metricIcon: Shield,
                   title: language === 'en' ? 'AI Coach' : 'AI Kouč',
                   description: language === 'en'
-                    ? 'Real-time AI stops emotional mistakes before they happen'
-                    : 'AI kouč v reálném čase zastaví emoční chyby',
+                    ? 'Real-time AI stops emotional mistakes before they cost you the account.'
+                    : 'AI v reálném čase zastaví emoční chyby dřív, než tě připraví o účet.',
+                  bullets: language === 'en'
+                    ? ['FOMO & revenge trade alerts', 'Instant intervention prompts', 'Trained on 10k+ trader journals']
+                    : ['Upozornění na FOMO a revenge trade', 'Okamžité intervenční hlášky', 'Trénováno na 10k+ denících traderů'],
                 },
                 {
                   icon: TrendingUp,
                   number: '03',
+                  tag: language === 'en' ? 'Friday ritual' : 'Páteční rituál',
+                  metric: language === 'en' ? 'Weekly insights' : 'Týdenní přehled',
+                  metricIcon: Target,
                   title: language === 'en' ? 'Weekly Review' : 'Týdenní Přezkum',
                   description: language === 'en'
-                    ? 'Every Friday: analyze losses and plan for next week'
-                    : 'Každý pátek: analyzuj ztráty a plánuj dál',
+                    ? 'Every Friday: analyze losses, extract lessons and plan a sharper next week.'
+                    : 'Každý pátek: analyzuj ztráty, vytěž lekce a naplánuj ostřejší týden.',
+                  bullets: language === 'en'
+                    ? ['Automated trade breakdowns', 'Mistake-pattern heatmap', 'Actionable weekly goals']
+                    : ['Automatický rozbor obchodů', 'Heatmapa chybových vzorců', 'Konkrétní týdenní cíle'],
                 },
                 {
                   icon: Users,
                   number: '04',
+                  tag: language === 'en' ? 'Accountability' : 'Zodpovědnost',
+                  metric: language === 'en' ? '2,400+ members' : '2 400+ členů',
+                  metricIcon: Users,
                   title: language === 'en' ? 'Team Club' : 'Tým Klub',
                   description: language === 'en'
-                    ? 'Join a community of serious traders and stay accountable'
-                    : 'Připoj se do komunity vážných traderů',
+                    ? 'Join a private community of serious traders and stay accountable when it matters most.'
+                    : 'Připoj se do soukromé komunity vážných traderů a zůstaň zodpovědný, když na tom záleží.',
+                  bullets: language === 'en'
+                    ? ['Private Discord & live rooms', 'Weekly mindset calls', 'Peer-to-peer trade reviews']
+                    : ['Soukromý Discord a live místnosti', 'Týdenní mindset cally', 'Vzájemné rozbory obchodů'],
                 },
               ].map((feature, i) => {
                 const Icon = feature.icon
+                const MetricIcon = feature.metricIcon
                 return (
                   <motion.div
                     key={i}
@@ -237,23 +262,48 @@ export default function HomePage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: i * 0.08 }}
-                    className="group relative p-10 bg-slate-950 hover:bg-slate-900 transition-colors duration-300"
+                    className="group relative p-8 sm:p-10 bg-slate-950 hover:bg-slate-900/80 transition-colors duration-300"
                   >
-                    <div className="flex items-start justify-between mb-8">
-                      <div className="flex items-center justify-center w-12 h-12 rounded-lg border border-white/10 bg-white/5 text-fuchsia-400 group-hover:border-fuchsia-500/40 group-hover:text-fuchsia-500 transition-colors">
-                        <Icon className="w-5 h-5" />
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-11 h-11 rounded-lg border border-white/10 bg-white/5 text-fuchsia-400 group-hover:border-fuchsia-500/40 group-hover:text-fuchsia-500 transition-colors">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-white/10 bg-white/5 font-mono text-[10px] uppercase tracking-[0.15em] text-slate-400">
+                          {feature.tag}
+                        </span>
                       </div>
                       <span className="font-mono text-xs tracking-widest text-slate-600 group-hover:text-fuchsia-500/60 transition-colors">
                         {feature.number}
                       </span>
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">
+
+                    <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 tracking-tight">
                       {feature.title}
                     </h3>
-                    <p className="text-base text-slate-400 leading-relaxed max-w-sm">
+                    <p className="text-base text-slate-400 leading-relaxed max-w-md mb-6">
                       {feature.description}
                     </p>
-                    <div className="absolute bottom-0 left-0 h-px w-0 bg-fuchsia-500 group-hover:w-full transition-all duration-500" />
+
+                    <ul className="space-y-2.5 mb-6">
+                      {feature.bullets.map((bullet, bi) => (
+                        <li key={bi} className="flex items-start gap-3 text-sm text-slate-300">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/30 flex-shrink-0 mt-0.5">
+                            <Check className="w-3 h-3 text-fuchsia-400" />
+                          </span>
+                          <span className="leading-snug">{bullet}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="flex items-center gap-2 pt-4 border-t border-white/5">
+                      <MetricIcon className="w-3.5 h-3.5 text-fuchsia-400" />
+                      <span className="font-mono text-xs uppercase tracking-widest text-slate-500">
+                        {feature.metric}
+                      </span>
+                    </div>
+
+                    <div className="absolute bottom-0 left-0 h-px w-0 bg-gradient-to-r from-fuchsia-500 to-purple-500 group-hover:w-full transition-all duration-500" />
                   </motion.div>
                 )
               })}
