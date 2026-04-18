@@ -126,7 +126,7 @@ export default function HomePage() {
 
               {/* Stats */}
               <motion.div
-                className="grid grid-cols-3 gap-px bg-white/10 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 max-w-3xl mx-auto mb-12"
+                className="grid grid-cols-3 gap-px bg-white/10 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 max-w-3xl mx-auto"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25, duration: 0.6 }}
@@ -156,21 +156,31 @@ export default function HomePage() {
                   </div>
                 </div>
               </motion.div>
+            </motion.div>
+          </div>
 
-              {/* Broker + Wealth data connect teaser */}
-              <motion.div
-                className="max-w-3xl mx-auto mb-12"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-              >
-                <div className="relative flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-6 sm:px-8 py-5 sm:py-6 rounded-2xl border border-fuchsia-500/20 bg-gradient-to-r from-fuchsia-500/[0.05] via-white/[0.03] to-purple-500/[0.05] backdrop-blur-sm overflow-hidden">
+          {/* Broker + Wealth data connect teaser — centered between hero and features */}
+          <div className="py-12 sm:py-16">
+            <motion.div
+              className="max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <div className="relative rounded-3xl border border-fuchsia-500/25 bg-gradient-to-br from-fuchsia-500/[0.08] via-slate-950 to-purple-600/[0.08] p-[1px] shadow-[0_0_60px_-15px_rgba(217,70,239,0.35)]">
+                <div className="relative flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-8 px-6 sm:px-10 py-6 sm:py-8 rounded-3xl bg-slate-950/80 backdrop-blur-sm overflow-hidden">
                   <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(217,70,239,0.08),transparent_70%)]"
+                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_left,rgba(217,70,239,0.12),transparent_60%)]"
                   />
-                  <div className="relative flex items-center gap-3 text-white">
-                    <div className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl border border-fuchsia-500/30 bg-fuchsia-500/10">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_right,rgba(168,85,247,0.1),transparent_60%)]"
+                  />
+
+                  <div className="relative flex items-center gap-4 sm:gap-5">
+                    <div className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border border-fuchsia-500/40 bg-gradient-to-br from-fuchsia-500/20 to-purple-600/20 shadow-lg shadow-fuchsia-500/20">
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -179,28 +189,38 @@ export default function HomePage() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         aria-hidden="true"
-                        className="w-5 h-5 text-fuchsia-400"
+                        className="w-6 h-6 sm:w-7 sm:h-7 text-fuchsia-300"
                       >
                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                       </svg>
                     </div>
-                    <span className="text-base sm:text-lg font-semibold tracking-tight text-white">
-                      {language === 'en' ? 'Broker + Wealth data connect' : 'Broker + Wealth data connect'}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.25em] text-fuchsia-400">
+                        {language === 'en' ? 'Next up' : 'Už brzy'}
+                      </span>
+                      <span className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight">
+                        {language === 'en'
+                          ? 'Broker + Wealth data connect'
+                          : 'Broker + Wealth data connect'}
+                      </span>
+                    </div>
                   </div>
-                  <span className="hidden sm:block h-8 w-px bg-white/10" aria-hidden="true" />
-                  <span className="relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 font-mono text-xs sm:text-sm uppercase tracking-[0.2em] text-fuchsia-300">
-                    <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse" />
+
+                  <span className="relative inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-fuchsia-500/40 bg-gradient-to-r from-fuchsia-500/15 to-purple-600/15 font-mono text-xs sm:text-sm uppercase tracking-[0.2em] text-fuchsia-200 shadow-lg shadow-fuchsia-500/10">
+                    <span className="relative flex w-2 h-2">
+                      <span className="absolute inline-flex w-full h-full rounded-full bg-fuchsia-400 opacity-75 animate-ping" />
+                      <span className="relative inline-flex w-2 h-2 rounded-full bg-fuchsia-400" />
+                    </span>
                     {language === 'en' ? 'Soon' : 'Brzy'}
                   </span>
                 </div>
-              </motion.div>
+              </div>
             </motion.div>
           </div>
 
           {/* Features Grid */}
-          <div className="py-24">
+          <div className="pb-24 pt-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
