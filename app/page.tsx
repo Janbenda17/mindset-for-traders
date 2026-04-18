@@ -126,32 +126,32 @@ export default function HomePage() {
 
               {/* Stats */}
               <motion.div
-                className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10 max-w-3xl mx-auto mb-12"
+                className="grid grid-cols-3 gap-px bg-white/10 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 max-w-3xl mx-auto mb-12"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25, duration: 0.6 }}
               >
-                <div className="bg-slate-950 px-6 py-8 text-center">
-                  <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight">
+                <div className="bg-slate-950 px-2 py-4 sm:px-6 sm:py-8 text-center">
+                  <div className="text-xl sm:text-5xl font-black text-white mb-1 sm:mb-2 tracking-tight">
                     9<span className="text-fuchsia-500">/</span>10
                   </div>
-                  <div className="text-xs sm:text-sm text-slate-400 leading-snug">
+                  <div className="text-[10px] leading-tight sm:text-sm sm:leading-snug text-slate-400">
                     {language === 'en' ? 'Traders struggle with psychology' : 'Obchodníků má psychické problémy'}
                   </div>
                 </div>
-                <div className="bg-slate-950 px-6 py-8 text-center">
-                  <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight">
+                <div className="bg-slate-950 px-2 py-4 sm:px-6 sm:py-8 text-center">
+                  <div className="text-xl sm:text-5xl font-black text-white mb-1 sm:mb-2 tracking-tight">
                     <span className="text-fuchsia-500">{'\u2193'}</span>42%
                   </div>
-                  <div className="text-xs sm:text-sm text-slate-400 leading-snug">
+                  <div className="text-[10px] leading-tight sm:text-sm sm:leading-snug text-slate-400">
                     {language === 'en' ? 'Less revenge trading' : 'Méně revenge tradingu'}
                   </div>
                 </div>
-                <div className="bg-slate-950 px-6 py-8 text-center">
-                  <div className="text-4xl sm:text-5xl font-black text-white mb-2 tracking-tight">
+                <div className="bg-slate-950 px-2 py-4 sm:px-6 sm:py-8 text-center">
+                  <div className="text-xl sm:text-5xl font-black text-white mb-1 sm:mb-2 tracking-tight">
                     24<span className="text-fuchsia-500">/</span>7
                   </div>
-                  <div className="text-xs sm:text-sm text-slate-400 leading-snug">
+                  <div className="text-[10px] leading-tight sm:text-sm sm:leading-snug text-slate-400">
                     {language === 'en' ? 'AI analysis of your mindset' : 'AI analýza tvého mindsetu'}
                   </div>
                 </div>
