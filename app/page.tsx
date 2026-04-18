@@ -180,20 +180,39 @@ export default function HomePage() {
                   />
 
                   <div className="relative flex items-center gap-4 sm:gap-5">
-                    <div className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border border-fuchsia-500/40 bg-gradient-to-br from-fuchsia-500/20 to-purple-600/20 shadow-lg shadow-fuchsia-500/20">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                        className="w-6 h-6 sm:w-7 sm:h-7 text-fuchsia-300"
+                    <div className="flex items-center -space-x-2">
+                      {/* MetaTrader logo */}
+                      <div
+                        className="relative z-20 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border border-white/15 bg-slate-900 shadow-lg shadow-black/40"
+                        aria-label="MetaTrader"
+                        title="MetaTrader"
                       >
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                      </svg>
+                        <svg
+                          viewBox="0 0 48 48"
+                          fill="none"
+                          aria-hidden="true"
+                          className="w-7 h-7 sm:w-8 sm:h-8"
+                        >
+                          <path
+                            d="M6 42V6h8l10 14L34 6h8v36h-8V20L24 34 14 20v22H6z"
+                            fill="#1e88e5"
+                          />
+                        </svg>
+                      </div>
+                      {/* Apple logo */}
+                      <div
+                        className="relative z-10 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border border-white/15 bg-slate-900 shadow-lg shadow-black/40"
+                        aria-label="Apple"
+                        title="Apple"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                          className="w-6 h-6 sm:w-7 sm:h-7 fill-white"
+                        >
+                          <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                        </svg>
+                      </div>
                     </div>
                     <div className="flex flex-col gap-1">
                       <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.25em] text-fuchsia-400">
