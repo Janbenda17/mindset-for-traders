@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { TopNavigation } from '@/components/top-navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BarChart3, Zap, Target, Calendar, MessageSquare, AlertCircle, TrendingUp, Crown, Sparkles } from 'lucide-react'
@@ -109,8 +110,10 @@ export default function Dashboard() {
         transition={{ duration: 12, repeat: Infinity, repeatType: 'reverse' }}
       />
 
+      <TopNavigation />
+      
       {/* Main Content */}
-      <div className="relative z-10 pt-8 px-4 sm:px-6 md:px-8 lg:px-12 pb-20 max-w-7xl mx-auto w-full">
+      <div className="relative z-10 pt-32 px-2 sm:px-4 md:px-8 lg:px-12 pb-20 max-w-7xl mx-auto w-full">
         {/* Dashboard Heading */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

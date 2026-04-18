@@ -57,27 +57,20 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const isEn = language === "en"
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isProductsOpen, setIsProductsOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSwitchingToLive, setIsSwitchingToLive] = useState(false)
 
-  // Primary nav - always visible on desktop
-  const primaryNavigation = [
-    { name: t('nav_home'), href: "/dashboard", icon: Home },
-    { name: t('nav_daily_tracker'), href: "/daily-tracker", icon: Calendar },
-    { name: t('nav_mindtrader'), href: "/mindtrader", icon: Brain, badge: "AI" },
-    { name: t('nav_journal'), href: "/journal", icon: TrendingUp },
-    { name: t('nav_analytics'), href: "/analytics", icon: BarChart3 },
-  ]
-
-  // Secondary nav - in "More" dropdown on desktop, full list on mobile
-  const secondaryNavigation = [
+  const mainNavigation = [
+    { name: t('nav_home'), href: "/dashboard", icon: Home, shortName: t('nav_home') },
+    { name: t('nav_daily_tracker'), href: "/daily-tracker", icon: Calendar, shortName: t('nav_daily_tracker') },
+    { name: t('nav_mindtrader'), href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
+    { name: t('nav_journal'), href: "/journal", icon: TrendingUp, shortName: t('nav_journal') },
+    { name: t('nav_analytics'), href: "/analytics", icon: BarChart3, shortName: t('nav_analytics') },
     { name: t('nav_weekly_review'), href: "/weekly-review", icon: Calendar },
     { name: t('nav_team_club'), href: "/team-club", icon: Users },
     { name: t('nav_bonus'), href: "/bonus", icon: Trophy, badge: t('nav_new') },
   ]
-
-  // Combined for mobile menu
-  const mainNavigation = [...primaryNavigation, ...secondaryNavigation]
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -230,175 +223,128 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
             </Link>
           </div>
 
-          {/* Main Navigation - Direct links (clean, flat hierarchy) */}
-          <div className="hidden lg:flex items-center gap-1 flex-1 justify-center">
-            {primaryNavigation.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <Link key={item.name} href={item.href}>
+          {/* Main Navigation */}
+          <div className="hidden md:flex items-center gap-1">
+            {/* Products dropdown */}
+            <DropdownMenu open={isProductsOpen} onOpenChange={setIsProductsOpen}>
+              <div
+                onMouseEnter={() => setIsProductsOpen(true)}
+                onMouseLeave={() => setIsProductsOpen(false)}
+                className="relative"
+              >
+                <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`relative px-3 h-10 text-sm font-medium transition-all rounded-lg flex items-center gap-2 ${
-                      isActive
-                        ? "text-white bg-purple-500/20 border border-purple-500/40"
-                        : "text-gray-300 hover:text-white hover:bg-slate-800/60 border border-transparent"
-                    }`}
+                    className="relative px-4 h-10 text-sm font-semibold text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 transition-all duration-300 group flex items-center gap-2 rounded-lg shadow-lg shadow-purple-500/20"
                   >
-                    <item.icon className="w-4 h-4" />
-                    <span>{item.name}</span>
-                    {item.badge && (
-                      <Badge className="ml-1 text-[10px] px-1.5 py-0 h-4 bg-purple-500/30 text-purple-200 border border-purple-500/40">
-                        {item.badge}
-                      </Badge>
-                    )}
+                    <span>{isEn ? 'Products' : 'Produkty'}</span>
+                    <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                   </Button>
-                </Link>
-              )
-            })}
-
-            {/* More dropdown for secondary navigation */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="px-3 h-10 text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800/60 rounded-lg flex items-center gap-2 border border-transparent"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                  <span>{isEn ? 'More' : 'Více'}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-slate-900/95 backdrop-blur-md border-slate-700 p-1" align="end">
-                {secondaryNavigation.map((item) => {
-                  const isActive = pathname === item.href
-                  return (
-                    <DropdownMenuItem key={item.name} asChild>
-                      <Link
-                        href={item.href}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer ${
-                          isActive ? "bg-purple-600/20 text-purple-300" : "text-gray-200 hover:bg-slate-800/50"
-                        }`}
-                      >
-                        <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                        <span className="flex-1 text-sm font-medium">{item.name}</span>
-                        {item.badge && (
-                          <Badge className="text-[10px] px-1.5 py-0 h-4 bg-green-500/20 text-green-300 border-green-500/30">
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </Link>
-                    </DropdownMenuItem>
-                  )
-                })}
-                <DropdownMenuSeparator className="bg-slate-700 my-1" />
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/intro"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer text-gray-200 hover:bg-slate-800/50"
-                  >
-                    <Sun className="w-4 h-4 text-gray-400" />
-                    <span className="flex-1 text-sm font-medium">{isEn ? 'About' : 'O nás'}</span>
-                  </Link>
-                </DropdownMenuItem>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6" align="center">
+                {/* Hlavní produkty - 8 vedle sebe, vycentrovaný */}
+                <div className="flex justify-center w-full">
+                  <div className="grid grid-cols-8 gap-3 w-fit">
+                    {mainNavigation.map((item) => {
+                      const isActive = pathname === item.href
+                      
+                      return (
+                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
+                          <div className={`flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all w-24 h-28 ${
+                            isActive 
+                              ? "bg-purple-600/30 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20" 
+                              : "hover:bg-slate-800/50 border-2 border-slate-700/50 hover:border-slate-600/50"
+                          }`}>
+                            <item.icon className={`w-6 h-6 ${isActive ? "text-purple-400" : "text-gray-300"}`} />
+                            <span className={`text-xs text-center font-medium line-clamp-2 ${isActive ? "text-purple-300" : "text-white"}`}>
+                              {item.name}
+                            </span>
+                            {item.badge && (
+                              <Badge className="text-xs px-1.5 py-0.5 h-5 bg-green-500/30 text-green-300 border border-green-500/50">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
               </DropdownMenuContent>
+              </div>
             </DropdownMenu>
-          </div>
 
-          {/* Pricing button - subtle, right-aligned accent */}
-          <div className="hidden lg:flex items-center">
+            {/* Pricing button */}
             <Link href="/upgrade">
               <Button
                 size="sm"
-                className={`relative px-4 h-9 text-sm font-semibold transition-all rounded-lg ${
+                className={`relative px-4 h-10 text-sm font-semibold transition-all duration-300 rounded-lg ${
                   pathname === "/upgrade"
-                    ? "text-white bg-gradient-to-r from-purple-600 to-pink-600"
-                    : "text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-md shadow-purple-500/20"
+                    ? "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 shadow-lg shadow-purple-500/20"
+                    : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
                 }`}
               >
-                <Crown className="w-4 h-4 mr-1.5" />
-                {isEn ? 'Upgrade' : 'Upgrade'}
+                {isEn ? 'Pricing' : 'Ceník'}
+              </Button>
+            </Link>
+
+            {/* About button */}
+            <Link href="/intro">
+              <Button
+                size="sm"
+                className={`relative px-4 h-10 text-sm font-semibold transition-all duration-300 rounded-lg ${
+                  pathname === "/intro"
+                    ? "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 shadow-lg shadow-purple-500/20"
+                    : "text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 shadow-lg shadow-purple-500/20"
+                }`}
+              >
+                {isEn ? 'About' : 'O nás'}
               </Button>
             </Link>
           </div>
 
           {/* Mobile Menu */}
-          <div className="flex lg:hidden items-center">
+          <div className="flex md:hidden items-center">
             <DropdownMenu open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-gray-300 hover:text-white hover:bg-slate-800/60">
-                  <Menu className="w-5 h-5" />
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Menu className="w-5 h-5 text-gray-300" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-72 bg-slate-900/95 backdrop-blur-md border-slate-700 p-2" align="end">
-                <p className="text-xs text-gray-500 px-3 py-2 font-semibold uppercase tracking-wider">{isEn ? 'Main' : 'Hlavní'}</p>
-                {primaryNavigation.map((item) => {
-                  const isActive = pathname === item.href
-                  return (
-                    <DropdownMenuItem key={item.name} asChild>
-                      <Link
-                        href={item.href}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer ${
-                          isActive ? "bg-purple-600/20 text-purple-300" : "text-gray-200 hover:bg-slate-800/50"
-                        }`}
-                      >
-                        <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                        <span className="flex-1 text-sm font-medium">{item.name}</span>
-                        {item.badge && (
-                          <Badge className="text-[10px] px-1.5 py-0 h-4 bg-purple-500/20 text-purple-300 border-purple-500/30">
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </Link>
-                    </DropdownMenuItem>
-                  )
-                })}
-                <DropdownMenuSeparator className="bg-slate-700 my-2" />
-                <p className="text-xs text-gray-500 px-3 py-2 font-semibold uppercase tracking-wider">{isEn ? 'More' : 'Více'}</p>
-                {secondaryNavigation.map((item) => {
-                  const isActive = pathname === item.href
-                  return (
-                    <DropdownMenuItem key={item.name} asChild>
-                      <Link
-                        href={item.href}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer ${
-                          isActive ? "bg-purple-600/20 text-purple-300" : "text-gray-200 hover:bg-slate-800/50"
-                        }`}
-                      >
-                        <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                        <span className="flex-1 text-sm font-medium">{item.name}</span>
-                        {item.badge && (
-                          <Badge className="text-[10px] px-1.5 py-0 h-4 bg-green-500/20 text-green-300 border-green-500/30">
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </Link>
-                    </DropdownMenuItem>
-                  )
-                })}
-                <DropdownMenuSeparator className="bg-slate-700 my-2" />
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/upgrade"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer bg-gradient-to-r from-purple-600/20 to-pink-600/20 text-white hover:from-purple-600/30 hover:to-pink-600/30"
-                  >
-                    <Crown className="w-4 h-4 text-purple-400" />
-                    <span className="flex-1 text-sm font-semibold">{isEn ? 'Upgrade to Premium' : 'Upgradovat na Premium'}</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="/intro"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer text-gray-200 hover:bg-slate-800/50"
-                  >
-                    <Sun className="w-4 h-4 text-gray-400" />
-                    <span className="flex-1 text-sm font-medium">{isEn ? 'About' : 'O nás'}</span>
-                  </Link>
-                </DropdownMenuItem>
+              <DropdownMenuContent className="w-64 bg-slate-900/95 backdrop-blur-md border-slate-700" align="end">
+                <div className="p-2">
+                  <p className="text-xs text-gray-400 px-3 py-2 font-semibold">{isEn ? 'MAIN MENU' : 'HLAVNÍ MENU'}</p>
+                  {mainNavigation.map((item) => {
+                    const isActive = pathname === item.href
+                    
+                    return (
+                      <DropdownMenuItem key={item.name} asChild>
+                        <Link
+                          href={item.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
+                            isActive ? "bg-purple-600/20" : ""
+                          }`}
+                        >
+                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
+                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                            {item.name}
+                          </span>
+                          {item.badge && (
+                            <Badge
+                              className={`text-xs px-1.5 py-0 h-5 ${
+                                item.badge === "AI" ? "bg-purple-500/20 text-purple-300 border-purple-500/30" : ""
+                              }`}
+                            >
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </Link>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -407,20 +353,21 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
           <div className="flex items-center space-x-1.5 md:space-x-2 flex-shrink-0">
             {/* Login and Get Started - only show if not authenticated */}
             {!isAuthenticated && (
-              <div className="hidden lg:flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-1.5">
                 <Link href="/login">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="px-3 h-9 text-sm font-medium text-gray-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                    className="relative px-4 h-10 text-sm font-semibold text-white hover:text-gray-200 transition-colors"
                   >
-                    {isEn ? 'Log in' : 'Přihlásit'}
+                  {isEn ? 'Profile' : 'Profil'}
+                    <ChevronDown className="w-4 h-4 ml-2 transition-transform group-data-[state=open]:rotate-180" />
                   </Button>
                 </Link>
                 <Link href="/signup">
                   <Button
                     size="sm"
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-9 px-4 text-sm font-semibold rounded-lg shadow-md shadow-purple-500/20"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-8 px-3 text-sm font-semibold"
                   >
                     {t('free_trial')}
                   </Button>
@@ -428,35 +375,32 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               </div>
             )}
 
-            {/* Get Started Button - Mobile only, show only if not authenticated */}
-            {!isAuthenticated && (
-              <Link href="/signup" className="lg:hidden">
-                <Button
-                  size="sm"
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold h-9 px-3 text-xs"
-                >
-                  {t('free_trial')}
-                </Button>
-              </Link>
-            )}
+            {/* Get Started Button - Mobile only */}
+            <Link href="/signup" className="md:hidden">
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
+              >
+                {t('free_trial')}
+              </Button>
+            </Link>
 
             {/* Virtual/Live Mode Toggle Button - show if authenticated, premium, and not in live mode */}
             {isAuthenticated && isPremium && !isLiveMode && (
               <Button
                 onClick={handleSwitchToLive}
                 disabled={isSwitchingToLive}
-                size="sm"
-                className="hidden md:flex bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white items-center gap-2 h-9 px-3 rounded-lg shadow-md shadow-blue-500/20"
+                className="mr-2 bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
               >
                 {isSwitchingToLive ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span className="text-xs font-semibold">{isEn ? 'Switching...' : 'Přepínaní...'}</span>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    {isEn ? 'Switching...' : 'Přepínaní...'}
                   </>
                 ) : (
                   <>
                     <Zap className="w-4 h-4" />
-                    <span className="text-xs font-semibold">{isEn ? 'Go Live' : 'Jít Live'}</span>
+                    {isEn ? 'Switch to Live Mode' : 'Přepnout do Live Mode'}
                   </>
                 )}
               </Button>
