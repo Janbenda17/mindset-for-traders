@@ -165,54 +165,71 @@ export default function HomePage() {
           {/* Features Grid */}
           <div className="py-24">
             <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="mb-16 text-center"
+              className="mb-20 max-w-3xl"
             >
-              <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">
-                {language === 'en' ? 'Everything You Need to Trade Better' : 'Vše co potřebuješ k lepšímu obchodování'}
+              <div className="inline-flex items-center gap-2 mb-5 px-3 py-1 rounded-full border border-emerald-400/30 bg-emerald-400/5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-emerald-300">
+                  {language === 'en' ? 'Built for traders' : 'Stvořené pro tradery'}
+                </span>
+              </div>
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-5 leading-[1.05] text-balance">
+                {language === 'en' ? (
+                  <>
+                    Everything you need to{' '}
+                    <span className="italic font-serif text-emerald-300">trade better</span>
+                  </>
+                ) : (
+                  <>
+                    Vše co potřebuješ k{' '}
+                    <span className="italic font-serif text-emerald-300">lepšímu obchodování</span>
+                  </>
+                )}
               </h2>
-              <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+              <p className="text-lg text-slate-400 leading-relaxed text-pretty">
                 {language === 'en'
-                  ? 'Comprehensive tools to analyze your psychology and improve your trading performance'
-                  : 'Komplexní nástroje pro analýzu tvé psychiky a zlepšení tvého obchodního výkonu'}
+                  ? 'Four pillars working together to rewire your trading mindset and hold you accountable every single day.'
+                  : 'Čtyři pilíře, které spolupracují na přenastavení tvého obchodního mindsetu a drží tě v disciplíně každý den.'}
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10">
               {[
                 {
                   icon: Brain,
+                  number: '01',
                   title: language === 'en' ? 'Daily Tracker' : 'Denní Sledování',
                   description: language === 'en'
                     ? 'Track your psychology each morning and understand your trading patterns'
                     : 'Sleduj svou psychiku každé ráno a rozumí svým vzorům',
-                  color: 'from-purple-500 to-pink-500',
                 },
                 {
                   icon: Zap,
+                  number: '02',
                   title: language === 'en' ? 'AI Coach' : 'AI Kouč',
                   description: language === 'en'
                     ? 'Real-time AI stops emotional mistakes before they happen'
                     : 'AI kouč v reálném čase zastaví emoční chyby',
-                  color: 'from-cyan-500 to-blue-500',
                 },
                 {
                   icon: TrendingUp,
+                  number: '03',
                   title: language === 'en' ? 'Weekly Review' : 'Týdenní Přezkum',
                   description: language === 'en'
                     ? 'Every Friday: analyze losses and plan for next week'
                     : 'Každý pátek: analyzuj ztráty a plánuj dál',
-                  color: 'from-amber-500 to-orange-500',
                 },
                 {
                   icon: Users,
+                  number: '04',
                   title: language === 'en' ? 'Team Club' : 'Tým Klub',
                   description: language === 'en'
                     ? 'Join a community of serious traders and stay accountable'
                     : 'Připoj se do komunity vážných traderů',
-                  color: 'from-green-500 to-emerald-500',
                 },
               ].map((feature, i) => {
                 const Icon = feature.icon
@@ -221,14 +238,25 @@ export default function HomePage() {
                     key={i}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: i * 0.1 }}
-                    className="group relative p-8 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 backdrop-blur-sm transition-all hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer"
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.08 }}
+                    className="group relative p-10 bg-slate-950 hover:bg-slate-900 transition-colors duration-300"
                   >
-                    <div className={`mb-4 inline-block p-3 rounded-lg bg-gradient-to-r ${feature.color} text-white`}>
-                      <Icon className="w-6 h-6" />
+                    <div className="flex items-start justify-between mb-8">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-lg border border-white/10 bg-white/5 text-emerald-300 group-hover:border-emerald-400/40 group-hover:text-emerald-400 transition-colors">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="font-mono text-xs tracking-widest text-slate-600 group-hover:text-emerald-400/60 transition-colors">
+                        {feature.number}
+                      </span>
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-                    <p className="text-sm text-slate-300">{feature.description}</p>
+                    <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">
+                      {feature.title}
+                    </h3>
+                    <p className="text-base text-slate-400 leading-relaxed max-w-sm">
+                      {feature.description}
+                    </p>
+                    <div className="absolute bottom-0 left-0 h-px w-0 bg-emerald-400 group-hover:w-full transition-all duration-500" />
                   </motion.div>
                 )
               })}
