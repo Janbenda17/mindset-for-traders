@@ -242,7 +242,7 @@ export default function HomePage() {
                   icon: Users,
                   number: '04',
                   tag: language === 'en' ? 'Accountability' : 'Zodpovědnost',
-                  metric: language === 'en' ? '2,400+ members' : '2 400+ členů',
+                  metric: language === 'en' ? 'Invite-only community' : 'Komunita pouze na pozvání',
                   metricIcon: Users,
                   title: language === 'en' ? 'Team Club' : 'Tým Klub',
                   description: language === 'en'
