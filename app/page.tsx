@@ -164,28 +164,34 @@ export default function HomePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
               >
-                <div className="flex items-center justify-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-sm">
-                  <div className="flex items-center gap-2 text-slate-300">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                      className="w-4 h-4 text-fuchsia-400"
-                    >
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                    </svg>
-                    <span className="text-xs sm:text-sm font-medium tracking-tight">
+                <div className="relative flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-6 sm:px-8 py-5 sm:py-6 rounded-2xl border border-fuchsia-500/20 bg-gradient-to-r from-fuchsia-500/[0.05] via-white/[0.03] to-purple-500/[0.05] backdrop-blur-sm overflow-hidden">
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(217,70,239,0.08),transparent_70%)]"
+                  />
+                  <div className="relative flex items-center gap-3 text-white">
+                    <div className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl border border-fuchsia-500/30 bg-fuchsia-500/10">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                        className="w-5 h-5 text-fuchsia-400"
+                      >
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                      </svg>
+                    </div>
+                    <span className="text-base sm:text-lg font-semibold tracking-tight text-white">
                       {language === 'en' ? 'Broker + Wealth data connect' : 'Broker + Wealth data connect'}
                     </span>
                   </div>
-                  <span className="h-4 w-px bg-white/10" aria-hidden="true" />
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-fuchsia-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse" />
+                  <span className="hidden sm:block h-8 w-px bg-white/10" aria-hidden="true" />
+                  <span className="relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 font-mono text-xs sm:text-sm uppercase tracking-[0.2em] text-fuchsia-300">
+                    <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse" />
                     {language === 'en' ? 'Soon' : 'Brzy'}
                   </span>
                 </div>
