@@ -119,18 +119,10 @@ export default function HomePage() {
                   : 'Tvůj mozek se stane tvojí největší výhodou'}
               </h1>
 
-              <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-10 leading-relaxed text-pretty">
-                {language === 'en' ? (
-                  <>
-                    <span className="text-red-500 font-bold">93% of traders fail because of psychology, not strategy.</span>{' '}
-                    MindTrader analyzes your emotions in real time, detects your weak points and stops you before you make a catastrophic mistake.
-                  </>
-                ) : (
-                  <>
-                    <span className="text-red-500 font-bold">93% obchodníků padne kvůli psychice, ne kvůli strategii.</span>{' '}
-                    MindTrader analyzuje tvoje emoce v reálném čase, detekuje tvá slabá místa a zastaví tě, než uděláš katastrofální chybu.
-                  </>
-                )}
+              <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto mb-10 leading-relaxed text-pretty font-semibold">
+                {language === 'en'
+                  ? '93% of traders fail because of psychology, not strategy.'
+                  : '93% obchodníků padne kvůli psychice, ne kvůli strategii.'}
               </p>
 
               {/* Stats */}
@@ -166,49 +158,7 @@ export default function HomePage() {
                 </div>
               </motion.div>
 
-              {/* CTA Buttons */}
-              <motion.div
-                className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Button
-                  size="lg"
-                  onClick={handlePricingClick}
-                  className="bg-gradient-to-r from-cyan-400 to-purple-500 text-white hover:shadow-lg hover:shadow-cyan-400/50 font-bold text-base px-8 py-6 rounded-lg border border-cyan-300/20"
-                >
-                  {language === 'en' ? 'Start Free Trial' : 'Začít zdarma'} <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10 font-bold text-base px-8 py-6 rounded-lg"
-                >
-                  {language === 'en' ? 'Watch Demo' : 'Podívej se demo'} <Zap className="ml-2 h-5 w-5" />
-                </Button>
-              </motion.div>
 
-              {/* Trust signals */}
-              <motion.div
-                className="flex flex-wrap justify-center gap-8 text-sm text-slate-300"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-cyan-400" />
-                  {language === 'en' ? '14 day free trial' : '14denní zdarma trial'}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-cyan-400" />
-                  {language === 'en' ? 'No credit card' : 'Bez platební karty'}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-cyan-400" />
-                  {language === 'en' ? 'Cancel anytime' : 'Zrušit kdykoliv'}
-                </div>
-              </motion.div>
             </motion.div>
           </div>
 
