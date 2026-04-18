@@ -83,7 +83,7 @@ export default function HomePage() {
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Section */}
-          <div className="min-h-screen pt-20 pb-20 flex items-center justify-center">
+          <div className="pt-24 sm:pt-32 pb-4 flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -160,7 +160,7 @@ export default function HomePage() {
           </div>
 
           {/* Broker + Wealth data connect teaser — centered between hero and features */}
-          <div className="py-12 sm:py-16">
+          <div className="pt-8 pb-12 sm:pt-10 sm:pb-16">
             <motion.div
               className="max-w-4xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
@@ -308,9 +308,7 @@ export default function HomePage() {
                   description: language === 'en'
                     ? 'Join a private community of serious traders and stay accountable when it matters most.'
                     : 'Připoj se do soukromé komunity vážných traderů a zůstaň zodpovědný, když na tom záleží.',
-                  bullets: language === 'en'
-                    ? ['Private Discord & live rooms', 'Weekly mindset calls', 'Peer-to-peer trade reviews']
-                    : ['Soukromý Discord a live místnosti', 'Týdenní mindset cally', 'Vzájemné rozbory obchodů'],
+                  bullets: [] as string[],
                 },
               ].map((feature, i) => {
                 const Icon = feature.icon
@@ -345,16 +343,18 @@ export default function HomePage() {
                       {feature.description}
                     </p>
 
-                    <ul className="space-y-2.5 mb-6">
-                      {feature.bullets.map((bullet, bi) => (
-                        <li key={bi} className="flex items-start gap-3 text-sm text-slate-300">
-                          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/30 flex-shrink-0 mt-0.5">
-                            <Check className="w-3 h-3 text-fuchsia-400" />
-                          </span>
-                          <span className="leading-snug">{bullet}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {feature.bullets.length > 0 && (
+                      <ul className="space-y-2.5 mb-6">
+                        {feature.bullets.map((bullet, bi) => (
+                          <li key={bi} className="flex items-start gap-3 text-sm text-slate-300">
+                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/30 flex-shrink-0 mt-0.5">
+                              <Check className="w-3 h-3 text-fuchsia-400" />
+                            </span>
+                            <span className="leading-snug">{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
 
                     <div className="flex items-center gap-2 pt-4 border-t border-white/5">
                       <MetricIcon className="w-3.5 h-3.5 text-fuchsia-400" />
