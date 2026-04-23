@@ -86,10 +86,22 @@ export async function updateSession(request: NextRequest) {
   // Create response first
   let supabaseResponse = NextResponse.next({ request })
 
+  // Gracefully skip Supabase auth handling if env vars are not configured
+  // (e.g. in local preview without the integration configured). This prevents
+  // the middleware from throwing and blocking the entire site.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn(
+      "[v0] Supabase env vars missing (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY). Skipping auth middleware.",
+    )
+    return supabaseResponse
+  }
+
   // Create Supabase client with cookie handlers
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
