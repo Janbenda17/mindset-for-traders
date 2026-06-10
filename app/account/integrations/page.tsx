@@ -218,8 +218,8 @@ export default function IntegrationsPage() {
   }
 
   const handleMetaApiConnect = async () => {
-    if (!metaApiLogin) {
-      setError('Please enter MetaApi Account ID')
+    if (!metaApiLogin || !metaApiPassword || !metaApiBroker) {
+      setError('Please fill in all MT5 fields')
       setTimeout(() => setError(''), 3000)
       return
     }
@@ -227,10 +227,16 @@ export default function IntegrationsPage() {
     setLoading(true)
     setError('')
     try {
-      console.log('[v0] Connecting to MetaApi with account ID:', metaApiLogin)
-      await connectMetaApi(user.id, metaApiLogin)
+      console.log('[v0] Connecting to MetaApi...')
+      await connectMetaApi(user.id, {
+        login: metaApiLogin,
+        password: metaApiPassword,
+        broker: metaApiBroker,
+      })
       setMetaApiConnected(true)
       setMetaApiLogin('')
+      setMetaApiPassword('')
+      setMetaApiBroker('')
       setSuccess('MetaApi connected! Trades will sync every 30 seconds.')
       setTimeout(() => setSuccess(''), 5000)
     } catch (err) {
@@ -529,27 +535,49 @@ export default function IntegrationsPage() {
           <Card className="bg-slate-900 border-slate-700">
             <CardContent className="pt-6 space-y-4">
               <div>
-                <h3 className="font-semibold text-white mb-2">MetaTrader 5 via MetaApi</h3>
+                <h3 className="font-semibold text-white mb-2">MetaTrader 5</h3>
                 <p className="text-xs text-slate-400 mb-4">
-                  Enter your MetaApi Account ID to connect your MT5 account. Get it from metaapi.cloud/dashboard.
+                  Enter your MT5 credentials. We connect securely via MetaApi — your password is encrypted.
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">MetaApi Account ID</label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">MT5 Login (Account Number)</label>
                 <Input
                   type="text"
-                  placeholder="e.g., 790da98e-3dba-41bb-b39d-a314d14ec5f2"
+                  placeholder="e.g., 123456789"
                   value={metaApiLogin}
                   onChange={(e) => setMetaApiLogin(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white font-mono text-xs"
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">MT5 Password</label>
+                <Input
+                  type="password"
+                  placeholder="Your MT5 password"
+                  value={metaApiPassword}
+                  onChange={(e) => setMetaApiPassword(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Broker</label>
+                <Input
+                  type="text"
+                  placeholder="e.g., IC Markets, Pepperstone, OANDA"
+                  value={metaApiBroker}
+                  onChange={(e) => setMetaApiBroker(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white"
                 />
               </div>
 
               <div className="flex gap-2 pt-2">
                 <Button
                   onClick={handleMetaApiConnect}
-                  disabled={loading || !metaApiLogin}
+                  disabled={loading || !metaApiLogin || !metaApiPassword || !metaApiBroker}
                   className="flex-1 bg-white text-slate-900 hover:bg-slate-100 font-medium"
                 >
                   {loading ? (

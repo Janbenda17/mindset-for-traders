@@ -303,6 +303,56 @@ export class MetaApiClient {
   }
 
   /**
+   * Authenticate with MT5 credentials (login, password, broker)
+   * Creates a MetaApi account for the user and returns account ID
+   */
+  async authenticateWithCredentials(credentials: {
+    login: string
+    password: string
+    broker: string
+  }): Promise<string> {
+    try {
+      console.log('[v0] Authenticating with MT5 credentials for broker:', credentials.broker)
+
+      // Create a MetaApi account using the provided MT5 credentials
+      const response = await fetch(`${this.baseUrl}/accounts`, {
+        method: 'POST',
+        headers: {
+          'X-API-Key': this.apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `MT5-${credentials.login}`,
+          type: 'mt5',
+          login: credentials.login,
+          password: credentials.password,
+          server: credentials.broker,
+          platformType: 'mt5',
+          tags: ['trader-mindset'],
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(`Failed to create MetaApi account: ${error}`)
+      }
+
+      const data = await response.json()
+      const accountId = data.id
+
+      if (!accountId) {
+        throw new Error('No account ID returned from MetaApi')
+      }
+
+      console.log('[v0] MetaApi account created:', accountId)
+      return accountId
+    } catch (error) {
+      console.error('[v0] MetaApi authentication with credentials failed:', error)
+      throw new Error('Failed to connect to MT5. Check your credentials and broker name.')
+    }
+  }
+
+  /**
    * Authenticate and connect user's MetaApi account via OAuth token
    */
   async authenticateAccount(accessToken: string, accountId: string): Promise<string> {
