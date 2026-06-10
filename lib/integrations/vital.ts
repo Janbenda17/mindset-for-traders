@@ -60,24 +60,46 @@ export class VitalClient {
 
   /**
    * Generate Vital OAuth URL for user to authenticate
+   * User will be redirected to Vital to connect their Apple Health
    */
   getOAuthUrl(userId?: string): string {
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/callbacks/vital`
-    const clientId = process.env.VITAL_CLIENT_ID || ''
     
-    if (!clientId) {
-      throw new Error('VITAL_CLIENT_ID is not configured')
-    }
-
+    // Vital OAuth endpoint - direct link to their OAuth authorize
     const params = new URLSearchParams({
-      client_id: clientId,
+      client_id: process.env.VITAL_CLIENT_ID || 'default',
       redirect_uri: redirectUri,
       response_type: 'code',
-      state: userId || '', // Pass user ID as state
-      scope: 'read',
+      state: userId || '',
+      scope: 'read sleep heart_rate activity',
     })
 
-    return `https://vital.co/oauth2/authorize?${params.toString()}`
+    return `https://vital.co/oauth/authorize?${params.toString()}`
+  }
+
+  /**
+   * Get user health data from Vital API
+   * Requires user ID from Vital after OAuth
+   */
+  async getUserHealthData(vitalUserId: string): Promise<VitalHealthData> {
+    try {
+      const response = await fetch(`${this.baseUrl}/users/${vitalUserId}/data`, {
+        method: 'GET',
+        headers: {
+          'X-API-Key': this.apiKey,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch health data: ${response.statusText}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error('[v0] Failed to fetch health data:', error)
+      throw error
+    }
   }
 
   /**

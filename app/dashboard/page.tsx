@@ -15,6 +15,7 @@ import { useGamification } from '@/contexts/gamification-context'
 import { CapitalSettingsDialog } from '@/components/capital-settings-dialog'
 import { useT } from '@/contexts/language-context'
 import { MT5AccountWidget } from '@/components/mt5-account-widget'
+import { HealthWidget } from '@/components/health-widget'
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
@@ -220,6 +221,19 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold text-white mb-6">MetaTrader 5 Live Account</h2>
             <div className="max-w-2xl">
               <MT5AccountWidget />
+            </div>
+          </motion.div>
+
+          {/* Apple Health Widget */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="mb-12"
+          >
+            <h2 className="text-2xl font-bold text-white mb-6">Health & Recovery Metrics</h2>
+            <div className="max-w-2xl">
+              <HealthWidget />
             </div>
           </motion.div>
 
