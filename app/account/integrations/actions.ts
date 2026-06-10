@@ -91,18 +91,35 @@ export async function connectVital(userId: string) {
   }
 }
 
-export async function connectMetaApi(userId: string) {
+export async function connectMetaApi(userId: string, accountId: string) {
   try {
-    console.log('[v0] Initiating MetaApi OAuth for user:', userId)
-    
-    // Generate MetaApi OAuth URL
-    const redirectUrl = metaApiClient.getOAuthUrl(userId)
-    
-    console.log('[v0] MetaApi OAuth URL generated')
-    return { redirectUrl }
+    console.log('[v0] Connecting MetaApi for user:', userId, 'with account ID:', accountId)
+
+    // Validate account ID format (basic UUID check)
+    if (!accountId || accountId.length < 10) {
+      throw new Error('Invalid MetaApi Account ID format')
+    }
+
+    // Save MetaApi connection
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        metaapi_account_id: accountId,
+        metaapi_token: process.env.METAAPI_API_KEY, // Store API key reference
+        trades_sync_enabled: true,
+      })
+      .eq('user_id', userId)
+
+    if (error) {
+      console.error('[v0] Error saving MetaApi account:', error)
+      throw error
+    }
+
+    console.log('[v0] MetaApi connected successfully')
+    return { success: true, accountId }
   } catch (err) {
     console.error('[v0] Error in connectMetaApi:', err)
-    throw new Error('Failed to initiate MetaApi connection')
+    throw new Error('Failed to connect MetaApi. Check the Account ID.')
   }
 }
 
@@ -113,9 +130,8 @@ export async function disconnectMetaApi(userId: string) {
     const { error } = await supabase
       .from('profiles')
       .update({
+        metaapi_account_id: null,
         metaapi_token: null,
-        metaapi_login: null,
-        metaapi_broker: null,
         trades_sync_enabled: false,
       })
       .eq('user_id', userId)

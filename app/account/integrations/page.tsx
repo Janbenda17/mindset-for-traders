@@ -218,21 +218,26 @@ export default function IntegrationsPage() {
   }
 
   const handleMetaApiConnect = async () => {
+    if (!metaApiLogin) {
+      setError('Please enter MetaApi Account ID')
+      setTimeout(() => setError(''), 3000)
+      return
+    }
+
     setLoading(true)
     setError('')
     try {
-      console.log('[v0] Initiating MetaApi OAuth...')
-      await ensureProfileExists(user.id)
-      
-      // Get MetaApi OAuth URL from server action
-      const result = await connectMetaApi(user.id)
-      if (result.redirectUrl) {
-        window.location.href = result.redirectUrl
-      }
+      console.log('[v0] Connecting to MetaApi with account ID:', metaApiLogin)
+      await connectMetaApi(user.id, metaApiLogin)
+      setMetaApiConnected(true)
+      setMetaApiLogin('')
+      setSuccess('MetaApi connected! Trades will sync every 30 seconds.')
+      setTimeout(() => setSuccess(''), 5000)
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to start MetaApi connection'
+      const errorMsg = err instanceof Error ? err.message : 'Failed to connect MetaApi'
       setError(errorMsg)
       console.error('[v0] MetaApi connection error:', err)
+    } finally {
       setLoading(false)
     }
   }
@@ -522,32 +527,43 @@ export default function IntegrationsPage() {
           </Card>
         ) : (
           <Card className="bg-slate-900 border-slate-700">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <span className="text-3xl">🚀</span>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-white mb-1">MetaTrader 5</h3>
-                  <p className="text-sm text-slate-400 mb-4">
-                    Connect your MetaTrader 5 account securely via MetaApi. Your credentials are never stored — handled directly by MetaApi.
-                  </p>
-                  <Button
-                    onClick={handleMetaApiConnect}
-                    disabled={loading}
-                    className="bg-white text-slate-900 hover:bg-slate-100 font-medium"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader className="w-4 h-4 animate-spin mr-2" />
-                        Redirecting to MetaApi...
-                      </>
-                    ) : (
-                      <>
-                        Connect via MetaApi.cloud
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </div>
+            <CardContent className="pt-6 space-y-4">
+              <div>
+                <h3 className="font-semibold text-white mb-2">MetaTrader 5 via MetaApi</h3>
+                <p className="text-xs text-slate-400 mb-4">
+                  Enter your MetaApi Account ID to connect your MT5 account. Get it from metaapi.cloud/dashboard.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">MetaApi Account ID</label>
+                <Input
+                  type="text"
+                  placeholder="e.g., 790da98e-3dba-41bb-b39d-a314d14ec5f2"
+                  value={metaApiLogin}
+                  onChange={(e) => setMetaApiLogin(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white font-mono text-xs"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={handleMetaApiConnect}
+                  disabled={loading || !metaApiLogin}
+                  className="flex-1 bg-white text-slate-900 hover:bg-slate-100 font-medium"
+                >
+                  {loading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin mr-2" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      Connect MetaApi
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
