@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Check, AlertCircle, Loader, X, Plug } from 'lucide-react'
 import Link from 'next/link'
-import { ensureProfileExists, updateAppleHealth } from './actions'
+import { ensureProfileExists, updateAppleHealth, connectVital, connectMetaApi, disconnectMetaApi } from './actions'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,6 +31,11 @@ export default function IntegrationsPage() {
   const [loading, setLoading] = useState(false)
   const [connected, setConnected] = useState<string | null>(null)
   const [appleHealthConnected, setAppleHealthConnected] = useState(false)
+  const [vitalConnected, setVitalConnected] = useState(false)
+  const [metaApiConnected, setMetaApiConnected] = useState(false)
+  const [metaApiLogin, setMetaApiLogin] = useState('')
+  const [metaApiPassword, setMetaApiPassword] = useState('')
+  const [metaApiBroker, setMetaApiBroker] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [checking, setChecking] = useState(true)
@@ -61,6 +66,8 @@ export default function IntegrationsPage() {
             setConnected(data.mt4_broker)
           }
           setAppleHealthConnected(!!data.apple_health_connected)
+          setVitalConnected(!!data.vital_id)
+          setMetaApiConnected(!!data.metaapi_token)
         }
       } catch (err) {
         console.error('[v0] Error checking integration status:', err)
@@ -167,42 +174,68 @@ export default function IntegrationsPage() {
     }
   }
 
-  const handleAppleHealthConnect = async () => {
-    console.log('[v0] Connecting Apple Health...')
+  const handleVitalConnect = async () => {
     setLoading(true)
+    setError('')
     try {
-      // First ensure profile exists using server action
+      console.log('[v0] Connecting to Vital (Apple Health)...')
       await ensureProfileExists(user.id)
       
-      // Then update Apple Health status
-      await updateAppleHealth(user.id, true)
-
-      console.log('[v0] Apple Health connected')
-      setAppleHealthConnected(true)
-      setSuccess('Apple Health connected successfully!')
-      setTimeout(() => setSuccess(''), 3000)
+      // Get Vital OAuth URL from server action
+      const result = await connectVital(user.id)
+      if (result.redirectUrl) {
+        window.location.href = result.redirectUrl
+      }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to connect Apple Health'
+      const errorMsg = err instanceof Error ? err.message : 'Failed to start Vital connection'
       setError(errorMsg)
-      console.error('[v0] Connection error:', err)
+      console.error('[v0] Vital connection error:', err)
+      setLoading(false)
+    }
+  }
+
+  const handleMetaApiConnect = async () => {
+    if (!metaApiLogin || !metaApiPassword || !metaApiBroker) {
+      setError('Please fill in all MetaApi fields')
+      setTimeout(() => setError(''), 3000)
+      return
+    }
+
+    setLoading(true)
+    setError('')
+    try {
+      console.log('[v0] Connecting to MetaApi...')
+      await connectMetaApi(user.id, {
+        login: metaApiLogin,
+        password: metaApiPassword,
+        broker: metaApiBroker,
+      })
+      setMetaApiConnected(true)
+      setMetaApiLogin('')
+      setMetaApiPassword('')
+      setMetaApiBroker('')
+      setSuccess('MetaApi connected! Trades will sync every 30 seconds.')
+      setTimeout(() => setSuccess(''), 5000)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to connect MetaApi'
+      setError(errorMsg)
+      console.error('[v0] MetaApi connection error:', err)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleDisconnectAppleHealth = async () => {
+  const handleMetaApiDisconnect = async () => {
     setLoading(true)
     try {
-      console.log('[v0] Disconnecting Apple Health...')
-      await updateAppleHealth(user.id, false)
-
-      console.log('[v0] Apple Health disconnected')
-      setAppleHealthConnected(false)
-      setSuccess('Apple Health disconnected')
+      console.log('[v0] Disconnecting MetaApi...')
+      await disconnectMetaApi(user.id)
+      setMetaApiConnected(false)
+      setSuccess('MetaApi disconnected')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
-      setError('Failed to disconnect Apple Health')
-      console.error('[v0] Disconnection error:', err)
+      setError('Failed to disconnect MetaApi')
+      console.error('[v0] Disconnect error:', err)
     } finally {
       setLoading(false)
     }
@@ -376,26 +409,29 @@ export default function IntegrationsPage() {
         )}
       </div>
 
-      {/* Apple Health Section */}
+      {/* Apple Health / Vital Section */}
       <div className="space-y-4">
         <div>
           <h2 className="text-xl font-bold text-white">Health & Sleep Tracking</h2>
-          <p className="text-sm text-slate-400 mt-1">Connect Apple Health to track your sleep and recovery</p>
+          <p className="text-sm text-slate-400 mt-1">Connect Apple Health via Vital to track sleep, heart rate, and stress</p>
         </div>
 
-        {appleHealthConnected ? (
+        {vitalConnected ? (
           <Card className="bg-slate-900/50 border-emerald-600/50">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Check className="w-5 h-5 text-emerald-300" />
                   <div>
-                    <p className="font-semibold text-white">Apple Health Connected</p>
-                    <p className="text-sm text-slate-400">Your health data is being tracked</p>
+                    <p className="font-semibold text-white">Vital Connected (Apple Health)</p>
+                    <p className="text-sm text-slate-400">Health data syncing in real-time</p>
                   </div>
                 </div>
                 <Button
-                  onClick={handleDisconnectAppleHealth}
+                  onClick={() => {
+                    setVitalConnected(false)
+                    setSuccess('Vital disconnected')
+                  }}
                   disabled={loading}
                   variant="ghost"
                   size="sm"
@@ -415,10 +451,10 @@ export default function IntegrationsPage() {
                 <div className="flex-1">
                   <h3 className="font-semibold text-white mb-1">Apple Health</h3>
                   <p className="text-sm text-slate-400 mb-4">
-                    Connect your Apple Health to track sleep quality, heart rate, and other health metrics that affect trading performance.
+                    Connect your Apple Health to track sleep quality, heart rate, HRV, and stress levels that affect trading performance.
                   </p>
                   <Button
-                    onClick={handleAppleHealthConnect}
+                    onClick={handleVitalConnect}
                     disabled={loading}
                     className="bg-white text-slate-900 hover:bg-slate-100 font-medium"
                   >
@@ -435,6 +471,104 @@ export default function IntegrationsPage() {
                     )}
                   </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* MetaApi Section */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-xl font-bold text-white">MetaApi - Live Trading</h2>
+          <p className="text-sm text-slate-400 mt-1">Connect MetaTrader 5 via MetaApi for real-time trade syncing</p>
+        </div>
+
+        {metaApiConnected ? (
+          <Card className="bg-slate-900/50 border-emerald-600/50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-emerald-300" />
+                  <div>
+                    <p className="font-semibold text-white">MetaApi Connected</p>
+                    <p className="text-sm text-slate-400">Trades syncing every 30 seconds</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleMetaApiDisconnect}
+                  disabled={loading}
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-300 hover:text-red-400 hover:bg-red-900/20"
+                >
+                  <X className="w-4 h-4" />
+                  Disconnect
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-slate-900 border-slate-700">
+            <CardContent className="pt-6 space-y-4">
+              <div>
+                <h3 className="font-semibold text-white mb-3">MetaTrader 5 Credentials</h3>
+                <p className="text-xs text-slate-400 mb-4">
+                  Your credentials are encrypted. MetaApi securely connects to your broker without storing sensitive data.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">MT5 Login (Account Number)</label>
+                <Input
+                  type="text"
+                  placeholder="e.g., 123456"
+                  value={metaApiLogin}
+                  onChange={(e) => setMetaApiLogin(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+                <Input
+                  type="password"
+                  placeholder="Your MT5 password"
+                  value={metaApiPassword}
+                  onChange={(e) => setMetaApiPassword(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Broker</label>
+                <Input
+                  type="text"
+                  placeholder="e.g., IC Markets, Pepperstone, OANDA"
+                  value={metaApiBroker}
+                  onChange={(e) => setMetaApiBroker(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={handleMetaApiConnect}
+                  disabled={loading || !metaApiLogin || !metaApiPassword || !metaApiBroker}
+                  className="flex-1 bg-white text-slate-900 hover:bg-slate-100 font-medium"
+                >
+                  {loading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin mr-2" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      Connect MetaApi
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>

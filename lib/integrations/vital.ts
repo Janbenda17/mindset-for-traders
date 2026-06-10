@@ -61,12 +61,19 @@ export class VitalClient {
   /**
    * Generate Vital OAuth URL for user to authenticate
    */
-  getOAuthUrl(redirectUri: string, userId: string): string {
+  getOAuthUrl(userId?: string): string {
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/callbacks/vital`
+    const clientId = process.env.VITAL_CLIENT_ID || ''
+    
+    if (!clientId) {
+      throw new Error('VITAL_CLIENT_ID is not configured')
+    }
+
     const params = new URLSearchParams({
-      client_id: process.env.VITAL_CLIENT_ID || '',
+      client_id: clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      state: userId, // Pass user ID as state
+      state: userId || '', // Pass user ID as state
       scope: 'read',
     })
 
@@ -152,3 +159,6 @@ export class VitalClient {
 }
 
 export default VitalClient
+
+// Export singleton instance
+export const vitalApi = new VitalClient()
