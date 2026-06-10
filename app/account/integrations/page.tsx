@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, Check, AlertCircle, Loader, X, Plug } from 'lucide-react'
 import Link from 'next/link'
 import { ensureProfileExists, updateAppleHealth, connectVital, connectMetaApi, disconnectMetaApi } from './actions'
+import { MetaApiConnectDialog } from '@/components/metaapi-connect-dialog'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,9 +34,7 @@ export default function IntegrationsPage() {
   const [appleHealthConnected, setAppleHealthConnected] = useState(false)
   const [vitalConnected, setVitalConnected] = useState(false)
   const [metaApiConnected, setMetaApiConnected] = useState(false)
-  const [metaApiLogin, setMetaApiLogin] = useState('')
-  const [metaApiPassword, setMetaApiPassword] = useState('')
-  const [metaApiBroker, setMetaApiBroker] = useState('')
+  const [metaApiDialogOpen, setMetaApiDialogOpen] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [checking, setChecking] = useState(true)
@@ -194,35 +193,8 @@ export default function IntegrationsPage() {
     }
   }
 
-  const handleMetaApiConnect = async () => {
-    if (!metaApiLogin || !metaApiPassword || !metaApiBroker) {
-      setError('Please fill in all MetaApi fields')
-      setTimeout(() => setError(''), 3000)
-      return
-    }
-
-    setLoading(true)
-    setError('')
-    try {
-      console.log('[v0] Connecting to MetaApi...')
-      await connectMetaApi(user.id, {
-        login: metaApiLogin,
-        password: metaApiPassword,
-        broker: metaApiBroker,
-      })
-      setMetaApiConnected(true)
-      setMetaApiLogin('')
-      setMetaApiPassword('')
-      setMetaApiBroker('')
-      setSuccess('MetaApi connected! Trades will sync every 30 seconds.')
-      setTimeout(() => setSuccess(''), 5000)
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to connect MetaApi'
-      setError(errorMsg)
-      console.error('[v0] MetaApi connection error:', err)
-    } finally {
-      setLoading(false)
-    }
+  const handleMetaApiConnect = () => {
+    setMetaApiDialogOpen(true)
   }
 
   const handleMetaApiDisconnect = async () => {
@@ -231,14 +203,20 @@ export default function IntegrationsPage() {
       console.log('[v0] Disconnecting MetaApi...')
       await disconnectMetaApi(user.id)
       setMetaApiConnected(false)
-      setSuccess('MetaApi disconnected')
+      setSuccess('MetaApi odpojen')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
-      setError('Failed to disconnect MetaApi')
+      setError('Chyba při odpojení MetaApi')
       console.error('[v0] Disconnect error:', err)
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleMetaApiSuccess = () => {
+    setMetaApiConnected(true)
+    setSuccess('MetaApi úspěšně připojen! Obchody se budou synchronizovat každých 30 sekund.')
+    setTimeout(() => setSuccess(''), 5000)
   }
 
   if (checking) {
@@ -512,67 +490,40 @@ export default function IntegrationsPage() {
           <Card className="bg-slate-900 border-slate-700">
             <CardContent className="pt-6 space-y-4">
               <div>
-                <h3 className="font-semibold text-white mb-3">MetaTrader 5 Credentials</h3>
+                <h3 className="font-semibold text-white mb-3">MetaTrader 5 Integrace</h3>
                 <p className="text-xs text-slate-400 mb-4">
-                  Your credentials are encrypted. MetaApi securely connects to your broker without storing sensitive data.
+                  Připoj své MT5 účty přes MetaApi a sleduj obchody v reálném čase.
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">MT5 Login (Account Number)</label>
-                <Input
-                  type="text"
-                  placeholder="e.g., 123456"
-                  value={metaApiLogin}
-                  onChange={(e) => setMetaApiLogin(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
-                <Input
-                  type="password"
-                  placeholder="Your MT5 password"
-                  value={metaApiPassword}
-                  onChange={(e) => setMetaApiPassword(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Broker</label>
-                <Input
-                  type="text"
-                  placeholder="e.g., IC Markets, Pepperstone, OANDA"
-                  value={metaApiBroker}
-                  onChange={(e) => setMetaApiBroker(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  onClick={handleMetaApiConnect}
-                  disabled={loading || !metaApiLogin || !metaApiPassword || !metaApiBroker}
-                  className="flex-1 bg-white text-slate-900 hover:bg-slate-100 font-medium"
-                >
-                  {loading ? (
-                    <>
-                      <Loader className="w-4 h-4 animate-spin mr-2" />
-                      Connecting...
-                    </>
-                  ) : (
-                    <>
-                      Connect MetaApi
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Button
+                onClick={handleMetaApiConnect}
+                disabled={loading}
+                className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-medium"
+              >
+                {loading ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-2 animate-spin" />
+                    Připojuji...
+                  </>
+                ) : (
+                  <>
+                    Připojit MetaApi
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
             </CardContent>
           </Card>
         )}
+
+        {/* MetaApi Dialog */}
+        <MetaApiConnectDialog
+          open={metaApiDialogOpen}
+          onOpenChange={setMetaApiDialogOpen}
+          userId={user.id}
+          onSuccess={handleMetaApiSuccess}
+        />
       </div>
       </div>
     </div>
