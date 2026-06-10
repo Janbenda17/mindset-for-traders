@@ -14,6 +14,7 @@ import { useAnalytics } from '@/contexts/analytics-context'
 import { useGamification } from '@/contexts/gamification-context'
 import { CapitalSettingsDialog } from '@/components/capital-settings-dialog'
 import { useT } from '@/contexts/language-context'
+import { MT5AccountWidget } from '@/components/mt5-account-widget'
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
@@ -207,6 +208,22 @@ export default function Dashboard() {
                 </p>
               </motion.div>
             ))}
+          </motion.div>
+
+          {/* MT5 Account Widget */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="mb-12"
+          >
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-fuchsia-400" />
+              Live Trading
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <MT5AccountWidget />
+            </div>
           </motion.div>
 
           {/* Features Grid - 2x2 */}

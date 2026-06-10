@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
-import MetaApiClient from '@/lib/integrations/metaapi'
+import { metaApiClient } from '@/lib/integrations/metaapi'
 
 /**
  * GET /api/cron/mt5-sync
@@ -30,9 +30,9 @@ export async function GET(request: NextRequest) {
     // Get all users with MT5 integration enabled
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id, mt4_api_key')
+      .select('id, user_id, metaapi_token, metaapi_broker')
       .eq('trades_sync_enabled', true)
-      .not('mt4_api_key', 'is', null)
+      .not('metaapi_token', 'is', null)
 
     if (profileError) {
       console.error('[v0] Failed to fetch profiles:', profileError)
@@ -58,23 +58,17 @@ export async function GET(request: NextRequest) {
     // Process each user's MT5 data
     for (const profile of profiles) {
       try {
-        const userId = profile.id
-        const metaApiKey = profile.mt4_api_key
-
-        // Decrypt API key if needed (assuming it's encrypted in Supabase)
-        // For now, assume it's the MetaApi account ID
-        const accountId = metaApiKey
-
-        const metaapi = new MetaApiClient()
+        const userId = profile.user_id || profile.id
+        const accountId = profile.metaapi_token
 
         // Fetch account info
-        const accountInfo = await metaapi.getAccountInfo(accountId)
+        const accountInfo = await metaApiClient.getAccountInfo(accountId)
 
         // Fetch trades
-        const trades = await metaapi.getTrades(accountId)
+        const trades = await metaApiClient.getTrades(accountId)
 
         // Fetch stats
-        const stats = await metaapi.getAccountStats(accountId)
+        const stats = await metaApiClient.getAccountStats(accountId)
 
         // Upsert account balance to trades table (or create separate account_stats)
         const { error: accountError } = await supabase
