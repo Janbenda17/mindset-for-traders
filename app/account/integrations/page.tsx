@@ -74,7 +74,7 @@ export default function IntegrationsPage() {
         
         const { data, error } = await supabase
           .from('profiles')
-          .select('mt4_broker, apple_health_connected')
+          .select('mt4_broker, apple_health_connected, vital_id, metaapi_token, metaapi_account_id')
           .eq('user_id', user.id)
           .maybeSingle()
 
