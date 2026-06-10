@@ -30,9 +30,10 @@ export async function GET(request: NextRequest) {
     // Get all users with MT5 integration enabled
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id, user_id, metaapi_token, metaapi_broker')
+      .select('id, user_id, metaapi_token, metaapi_account_id, metaapi_broker')
       .eq('trades_sync_enabled', true)
       .not('metaapi_token', 'is', null)
+      .not('metaapi_account_id', 'is', null)
 
     if (profileError) {
       console.error('[v0] Failed to fetch profiles:', profileError)
@@ -59,9 +60,10 @@ export async function GET(request: NextRequest) {
     for (const profile of profiles) {
       try {
         const userId = profile.user_id || profile.id
-        const accountId = profile.metaapi_token
+        const accessToken = profile.metaapi_token
+        const accountId = profile.metaapi_account_id
 
-        // Fetch account info
+        // Fetch account info using access token
         const accountInfo = await metaApiClient.getAccountInfo(accountId)
 
         // Fetch trades
