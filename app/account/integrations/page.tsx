@@ -10,7 +10,6 @@ import { useRouter } from 'next/navigation'
 import { ArrowRight, Check, AlertCircle, Loader, X, Plug } from 'lucide-react'
 import Link from 'next/link'
 import { ensureProfileExists, updateAppleHealth, connectVital, connectMetaApi, disconnectMetaApi } from './actions'
-import { MetaApiConnectDialog } from '@/components/metaapi-connect-dialog'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,7 +33,9 @@ export default function IntegrationsPage() {
   const [appleHealthConnected, setAppleHealthConnected] = useState(false)
   const [vitalConnected, setVitalConnected] = useState(false)
   const [metaApiConnected, setMetaApiConnected] = useState(false)
-  const [metaApiDialogOpen, setMetaApiDialogOpen] = useState(false)
+  const [metaApiLogin, setMetaApiLogin] = useState('')
+  const [metaApiPassword, setMetaApiPassword] = useState('')
+  const [metaApiBroker, setMetaApiBroker] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [checking, setChecking] = useState(true)
@@ -193,8 +194,24 @@ export default function IntegrationsPage() {
     }
   }
 
-  const handleMetaApiConnect = () => {
-    setMetaApiDialogOpen(true)
+  const handleMetaApiConnect = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      console.log('[v0] Initiating MetaApi OAuth...')
+      await ensureProfileExists(user.id)
+      
+      // Get MetaApi OAuth URL from server action
+      const result = await connectMetaApi(user.id)
+      if (result.redirectUrl) {
+        window.location.href = result.redirectUrl
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to start MetaApi connection'
+      setError(errorMsg)
+      console.error('[v0] MetaApi connection error:', err)
+      setLoading(false)
+    }
   }
 
   const handleMetaApiDisconnect = async () => {
@@ -203,20 +220,14 @@ export default function IntegrationsPage() {
       console.log('[v0] Disconnecting MetaApi...')
       await disconnectMetaApi(user.id)
       setMetaApiConnected(false)
-      setSuccess('MetaApi odpojen')
+      setSuccess('MetaApi disconnected')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
-      setError('Chyba při odpojení MetaApi')
+      setError('Failed to disconnect MetaApi')
       console.error('[v0] Disconnect error:', err)
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleMetaApiSuccess = () => {
-    setMetaApiConnected(true)
-    setSuccess('MetaApi úspěšně připojen! Obchody se budou synchronizovat každých 30 sekund.')
-    setTimeout(() => setSuccess(''), 5000)
   }
 
   if (checking) {
@@ -488,42 +499,36 @@ export default function IntegrationsPage() {
           </Card>
         ) : (
           <Card className="bg-slate-900 border-slate-700">
-            <CardContent className="pt-6 space-y-4">
-              <div>
-                <h3 className="font-semibold text-white mb-3">MetaTrader 5 Integrace</h3>
-                <p className="text-xs text-slate-400 mb-4">
-                  Připoj své MT5 účty přes MetaApi a sleduj obchody v reálném čase.
-                </p>
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <span className="text-3xl">🚀</span>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-white mb-1">MetaTrader 5</h3>
+                  <p className="text-sm text-slate-400 mb-4">
+                    Connect your MetaTrader 5 account securely via MetaApi. Your credentials are never stored — handled directly by MetaApi.
+                  </p>
+                  <Button
+                    onClick={handleMetaApiConnect}
+                    disabled={loading}
+                    className="bg-white text-slate-900 hover:bg-slate-100 font-medium"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin mr-2" />
+                        Redirecting to MetaApi...
+                      </>
+                    ) : (
+                      <>
+                        Connect via MetaApi.cloud
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
-
-              <Button
-                onClick={handleMetaApiConnect}
-                disabled={loading}
-                className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-medium"
-              >
-                {loading ? (
-                  <>
-                    <Loader className="w-4 h-4 mr-2 animate-spin" />
-                    Připojuji...
-                  </>
-                ) : (
-                  <>
-                    Připojit MetaApi
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </>
-                )}
-              </Button>
             </CardContent>
           </Card>
         )}
-
-        {/* MetaApi Dialog */}
-        <MetaApiConnectDialog
-          open={metaApiDialogOpen}
-          onOpenChange={setMetaApiDialogOpen}
-          userId={user.id}
-          onSuccess={handleMetaApiSuccess}
-        />
       </div>
       </div>
     </div>

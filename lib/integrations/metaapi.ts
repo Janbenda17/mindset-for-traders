@@ -37,12 +37,97 @@ interface MetaApiConnection {
 export class MetaApiClient {
   private apiKey: string
   private baseUrl = 'https://api-v1.metaapi.cloud'
+  private clientId: string
+  private clientSecret: string
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey || process.env.METAAPI_API_KEY || ''
+    this.clientId = process.env.METAAPI_CLIENT_ID || ''
+    this.clientSecret = process.env.METAAPI_CLIENT_SECRET || ''
     if (!this.apiKey) {
       throw new Error('METAAPI_API_KEY is not configured')
     }
+  }
+
+  /**
+   * Generate MetaApi OAuth2 authorization URL
+   * User will authenticate on MetaApi.cloud with their MT5 credentials
+   */
+  getOAuthUrl(userId: string): string {
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/callbacks/metaapi`
+    
+    // MetaApi OAuth2 endpoint
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      state: userId, // Pass user ID to verify in callback
+      scope: 'accounts:read trades:read',
+    })
+
+    return `https://auth.metaapi.cloud/oauth/authorize?${params.toString()}`
+  }
+
+  /**
+   * Exchange OAuth code for access token
+   */
+  async exchangeCodeForToken(code: string): Promise<{ access_token: string; account_id: string }> {
+    try {
+      const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/callbacks/metaapi`
+      
+      const response = await fetch('https://auth.metaapi.cloud/oauth/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          client_id: this.clientId,
+          client_secret: this.clientSecret,
+          redirect_uri: redirectUri,
+        }).toString(),
+      })
+
+      if (!response.ok) {
+        const error = await response.text()
+        throw new Error(`OAuth token exchange failed: ${error}`)
+      }
+
+      const data = await response.json()
+      
+      // Fetch the primary account ID from the token
+      const accountInfo = await this.getAccountsFromToken(data.access_token)
+      const primaryAccountId = accountInfo[0]?.id || ''
+
+      return {
+        access_token: data.access_token,
+        account_id: primaryAccountId,
+      }
+    } catch (error) {
+      console.error('[v0] OAuth token exchange failed:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get user's accounts from OAuth token
+   */
+  private async getAccountsFromToken(accessToken: string): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/accounts`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch accounts')
+    }
+
+    const data = await response.json()
+    return data.accounts || []
   }
 
   /**
@@ -203,37 +288,25 @@ export class MetaApiClient {
       throw error
     }
   /**
-   * Authenticate and connect user's MetaApi account
-   * Stores encrypted credentials and validates connection
+   * Authenticate and connect user's MetaApi account via OAuth token
    */
-  async authenticateAccount(credentials: {
-    login: string
-    password: string
-    broker: string
-  }): Promise<string> {
+  async authenticateAccount(accessToken: string, accountId: string): Promise<string> {
     try {
-      console.log('[v0] Authenticating MetaApi account:', credentials.login)
+      console.log('[v0] Authenticating MetaApi account with token')
 
-      // In production, you would create an account via MetaApi's account provisioning
-      // For now, we'll validate the account exists via a test connection
-      const response = await fetch(`${this.baseUrl}/accounts`, {
+      // Validate the token by fetching account info
+      const response = await fetch(`${this.baseUrl}/accounts/${accountId}`, {
         method: 'GET',
         headers: {
-          'X-API-Key': this.apiKey,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to authenticate with MetaApi: ${response.statusText}`)
+        throw new Error(`Failed to validate MetaApi account: ${response.statusText}`)
       }
 
-      const accounts = await response.json()
-      
-      // Return the first available account ID or generate one
-      // In a real scenario, you'd provision a new account or select existing one
-      const accountId = accounts.data?.[0]?.id || `account_${Date.now()}`
-      
       console.log('[v0] MetaApi account authenticated:', accountId)
       return accountId
     } catch (error) {

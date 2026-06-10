@@ -91,37 +91,18 @@ export async function connectVital(userId: string) {
   }
 }
 
-export async function connectMetaApi(
-  userId: string,
-  credentials: { login: string; password: string; broker: string }
-) {
+export async function connectMetaApi(userId: string) {
   try {
-    console.log('[v0] Connecting MetaApi for user:', userId)
-
-    // Test connection to MetaApi
-    const accountId = await metaApiClient.authenticateAccount(credentials)
+    console.log('[v0] Initiating MetaApi OAuth for user:', userId)
     
-    // Encrypt and store credentials
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        metaapi_token: accountId,
-        metaapi_login: credentials.login,
-        metaapi_broker: credentials.broker,
-        trades_sync_enabled: true,
-      })
-      .eq('user_id', userId)
-
-    if (error) {
-      console.error('[v0] Error saving MetaApi credentials:', error)
-      throw error
-    }
-
-    console.log('[v0] MetaApi connected successfully')
-    return { success: true, accountId }
+    // Generate MetaApi OAuth URL
+    const redirectUrl = metaApiClient.getOAuthUrl(userId)
+    
+    console.log('[v0] MetaApi OAuth URL generated')
+    return { redirectUrl }
   } catch (err) {
     console.error('[v0] Error in connectMetaApi:', err)
-    throw new Error('Failed to connect MetaApi. Check credentials.')
+    throw new Error('Failed to initiate MetaApi connection')
   }
 }
 
