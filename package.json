@@ -39,6 +39,7 @@
     "@vercel/analytics": "1.6.1",
     "ai": "^5.0.0",
     "antd": "5.27.6",
+    "axios": "1.17.0",
     "bufferutil": "latest",
     "canvas-confetti": "1.9.3",
     "class-variance-authority": "^0.7.1",
