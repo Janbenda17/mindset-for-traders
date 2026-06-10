@@ -214,14 +214,11 @@ export default function Dashboard() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
             className="mb-12"
           >
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-fuchsia-400" />
-              Live Trading
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <h2 className="text-2xl font-bold text-white mb-6">MetaTrader 5 Live Account</h2>
+            <div className="max-w-2xl">
               <MT5AccountWidget />
             </div>
           </motion.div>
