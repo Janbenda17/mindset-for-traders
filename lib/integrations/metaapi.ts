@@ -42,10 +42,14 @@ export class MetaApiClient {
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey || process.env.METAAPI_API_KEY || ''
-    this.clientId = process.env.METAAPI_CLIENT_ID || ''
+    this.clientId = process.env.METAAPI_CLIENT_ID || process.env.NEXT_PUBLIC_METAAPI_CLIENT_ID || ''
     this.clientSecret = process.env.METAAPI_CLIENT_SECRET || ''
+    
     if (!this.apiKey) {
-      throw new Error('METAAPI_API_KEY is not configured')
+      console.warn('[v0] METAAPI_API_KEY is not configured')
+    }
+    if (!this.clientId) {
+      console.warn('[v0] METAAPI_CLIENT_ID is not configured - OAuth will not work')
     }
   }
 
@@ -54,6 +58,10 @@ export class MetaApiClient {
    * User will authenticate on MetaApi.cloud with their MT5 credentials
    */
   getOAuthUrl(userId: string): string {
+    if (!this.clientId) {
+      throw new Error('MetaApi OAuth is not configured. Please set METAAPI_CLIENT_ID in environment variables.')
+    }
+
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/callbacks/metaapi`
     
     // MetaApi OAuth2 endpoint
@@ -61,7 +69,7 @@ export class MetaApiClient {
       client_id: this.clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      state: userId, // Pass user ID to verify in callback
+      state: userId,
       scope: 'accounts:read trades:read',
     })
 
@@ -114,20 +122,25 @@ export class MetaApiClient {
    * Get user's accounts from OAuth token
    */
   private async getAccountsFromToken(accessToken: string): Promise<any[]> {
-    const response = await fetch(`${this.baseUrl}/accounts`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    })
+    try {
+      const response = await fetch(`${this.baseUrl}/accounts`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch accounts')
+      if (!response.ok) {
+        throw new Error(`Failed to fetch accounts with token: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      return data.accounts || []
+    } catch (error) {
+      console.error('[v0] Failed to fetch accounts from token:', error)
+      return []
     }
-
-    const data = await response.json()
-    return data.accounts || []
   }
 
   /**
@@ -287,6 +300,8 @@ export class MetaApiClient {
       console.error('[v0] Failed to calculate account stats:', error)
       throw error
     }
+  }
+
   /**
    * Authenticate and connect user's MetaApi account via OAuth token
    */
@@ -311,7 +326,7 @@ export class MetaApiClient {
       return accountId
     } catch (error) {
       console.error('[v0] MetaApi authentication failed:', error)
-      throw new Error('Failed to authenticate MetaApi account. Check your credentials.')
+      throw new Error('Failed to authenticate MetaApi account.')
     }
   }
 }

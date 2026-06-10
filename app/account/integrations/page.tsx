@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/contexts/auth-context'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Check, AlertCircle, Loader, X, Plug } from 'lucide-react'
 import Link from 'next/link'
 import { ensureProfileExists, updateAppleHealth, connectVital, connectMetaApi, disconnectMetaApi } from './actions'
@@ -26,6 +26,7 @@ const BROKERS = [
 export default function IntegrationsPage() {
   const { user } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [selectedBroker, setSelectedBroker] = useState<string | null>(null)
   const [credentials, setCredentials] = useState({ login: '', password: '' })
   const [loading, setLoading] = useState(false)
@@ -39,6 +40,28 @@ export default function IntegrationsPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [checking, setChecking] = useState(true)
+
+  // Handle OAuth callback messages
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    const successParam = searchParams.get('success')
+    
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam))
+      setTimeout(() => setError(''), 5000)
+      // Clean up URL
+      router.replace('/account/integrations')
+    }
+    if (successParam) {
+      setSuccess(decodeURIComponent(successParam))
+      setTimeout(() => {
+        setSuccess('')
+        setMetaApiConnected(true)
+      }, 3000)
+      // Clean up URL
+      router.replace('/account/integrations')
+    }
+  }, [searchParams, router])
 
   // Check integration status on mount
   useEffect(() => {
@@ -67,7 +90,7 @@ export default function IntegrationsPage() {
           }
           setAppleHealthConnected(!!data.apple_health_connected)
           setVitalConnected(!!data.vital_id)
-          setMetaApiConnected(!!data.metaapi_token)
+          setMetaApiConnected(!!data.metaapi_token && !!data.metaapi_account_id)
         }
       } catch (err) {
         console.error('[v0] Error checking integration status:', err)
