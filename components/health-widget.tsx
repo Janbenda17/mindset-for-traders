@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { useAuth } from '@/contexts/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertCircle, Heart, Moon, Zap, Activity } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -21,22 +22,29 @@ interface HealthData {
 }
 
 export function HealthWidget() {
+  const { user } = useAuth()
   const [healthData, setHealthData] = useState<HealthData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!user?.id) {
+      setLoading(false)
+      return
+    }
+
     fetchHealthData()
 
     // Subscribe to real-time updates
     const channel = supabase
-      .channel('health_sync_changes')
+      .channel(`health_sync_${user.id}`)
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'health_sync',
+          filter: `user_id=eq.${user.id}`,
         },
         () => {
           fetchHealthData()
@@ -47,14 +55,17 @@ export function HealthWidget() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [user?.id])
 
   const fetchHealthData = async () => {
+    if (!user?.id) return
+
     try {
       setLoading(true)
       const { data, error } = await supabase
         .from('health_sync')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)
         .single()
