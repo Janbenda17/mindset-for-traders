@@ -28,6 +28,7 @@ import { format } from "date-fns"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { getUserStorageKey } from "@/utils/storage-namespace"
 import { useLanguage } from "@/contexts/language-context"
+import { TradingPlanAutoFill } from "@/components/trading-plan-autofill"
 
 interface TradingPlanData {
   date: string
@@ -260,6 +261,18 @@ export function TradingPlan() {
       </Alert>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Auto-fill from Broker */}
+        <TradingPlanAutoFill
+          onDataFill={(autofillData) => {
+            // Data will be available for user to see and edit
+            setFormData((prev) => ({
+              ...prev,
+              // Don't auto-fill text fields — user should fill them
+              // But we display the account info at the top
+            }))
+          }}
+        />
+
         {/* Section 1: Setup & Strategy */}
         <Card className="border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-500/10">
           <CardHeader>

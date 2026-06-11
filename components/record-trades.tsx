@@ -15,6 +15,7 @@ import { TrendingUp, DollarSign, BarChart3, Brain, Zap, ChevronDown, Trash2 } fr
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { RecordTradesAutoFill } from "@/components/record-trades-autofill"
 
 interface Trade {
   id: string
@@ -480,6 +481,19 @@ export function RecordTrades({ onComplete }: { onComplete?: () => void }) {
       </Card>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Auto-fill from Broker */}
+        <RecordTradesAutoFill
+          onSelectTrade={(tradeData) => {
+            setFormData((prev) => ({
+              ...prev,
+              pair: tradeData.pair || prev.pair,
+              direction: tradeData.direction === 'BUY' ? 'LONG' : 'SHORT',
+              positionSize: tradeData.volume || prev.positionSize,
+              pnl: tradeData.profit || prev.pnl,
+            }))
+          }}
+        />
+
         <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-700/50 backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300">
           <CardHeader className="pb-4 border-b border-slate-700/50">
             <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
