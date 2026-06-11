@@ -258,13 +258,13 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <span className="relative inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-fuchsia-500/40 bg-gradient-to-r from-fuchsia-500/15 to-purple-600/15 font-mono text-xs sm:text-sm uppercase tracking-[0.2em] text-fuchsia-200 shadow-lg shadow-fuchsia-500/10">
-                    <span className="relative flex w-2 h-2">
-                      <span className="absolute inline-flex w-full h-full rounded-full bg-fuchsia-400 opacity-75 animate-ping" />
-                      <span className="relative inline-flex w-2 h-2 rounded-full bg-fuchsia-400" />
-                    </span>
-                    {language === 'en' ? 'Soon' : 'Brzy'}
-                  </span>
+                  <Link 
+                    href={user ? '/account/integrations' : '/signup'}
+                    className="relative inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-fuchsia-500/40 bg-gradient-to-r from-fuchsia-500/15 to-purple-600/15 font-mono text-xs sm:text-sm uppercase tracking-[0.2em] text-fuchsia-200 shadow-lg shadow-fuchsia-500/10 hover:from-fuchsia-500/25 hover:to-purple-600/25 transition-all"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                    {language === 'en' ? 'Connect Now' : 'Připojit'}
+                  </Link>
                 </div>
               </div>
             </motion.div>
