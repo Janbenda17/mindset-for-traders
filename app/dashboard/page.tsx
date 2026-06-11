@@ -15,6 +15,7 @@ import { useGamification } from '@/contexts/gamification-context'
 import { CapitalSettingsDialog } from '@/components/capital-settings-dialog'
 import { useT } from '@/contexts/language-context'
 import { MT5AccountWidget } from '@/components/mt5-account-widget'
+import { TraderIdentityAnalysis } from '@/components/trader-identity-analysis'
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
@@ -220,6 +221,61 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold text-white mb-6">MetaTrader 5 Live Account</h2>
             <div className="max-w-2xl">
               <MT5AccountWidget />
+            </div>
+          </motion.div>
+
+          {/* Trader Identity & Weekly Review Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mb-12"
+          >
+            <h2 className="text-2xl font-bold text-white mb-6">AI-Powered Analytics</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Trader Identity Link */}
+              <Link href="/trader-identity">
+                <motion.div
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-gradient-to-br from-purple-900/40 to-slate-900/40 border border-purple-500/30 rounded-2xl p-6 cursor-pointer hover:border-purple-500/50 transition-all h-full"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <Crown className="w-8 h-8 text-purple-400" />
+                    <span className="text-xs bg-purple-600/20 px-3 py-1 rounded-full text-purple-300">AI Analyzed</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Your Trading Identity</h3>
+                  <p className="text-slate-400 text-sm mb-4">
+                    AI-powered analysis of your trading style, emotional patterns, strengths, and personalized goals
+                  </p>
+                  <div className="flex items-center gap-2 text-purple-400 font-semibold">
+                    <span>View Profile</span>
+                    <span>→</span>
+                  </div>
+                </motion.div>
+              </Link>
+
+              {/* Weekly Review Link */}
+              <Link href="/weekly-review">
+                <motion.div
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 border border-indigo-500/30 rounded-2xl p-6 cursor-pointer hover:border-indigo-500/50 transition-all h-full"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <TrendingUp className="w-8 h-8 text-indigo-400" />
+                    <span className="text-xs bg-indigo-600/20 px-3 py-1 rounded-full text-indigo-300">7-Day Review</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Weekly Review</h3>
+                  <p className="text-slate-400 text-sm mb-4">
+                    Comprehensive AI-generated insights from your trading performance, patterns, and next week focus areas
+                  </p>
+                  <div className="flex items-center gap-2 text-indigo-400 font-semibold">
+                    <span>View Review</span>
+                    <span>→</span>
+                  </div>
+                </motion.div>
+              </Link>
             </div>
           </motion.div>
 

@@ -1,119 +1,65 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  Target,
-  Brain,
-  Heart,
-  AlertTriangle,
-  CheckCircle2,
-  Lightbulb,
-  Save,
-  Zap,
-  Award,
-  BookOpen,
-  Sparkles,
-  ArrowUp,
-  ArrowDown,
-  BarChart3,
-  PenLine,
-  History,
-  Trophy,
-  Flame,
-  Shield,
-} from "lucide-react"
-import { useAuth } from "@/contexts/auth-context"
-import { getScoped, setScoped } from "@/lib/storage"
-import { useData } from "@/contexts/data-context"
-import { useAnalytics } from "@/contexts/analytics-context"
-import { useT, useLanguage } from "@/contexts/language-context"
-
-interface WeeklyReview {
-  id: string
-  weekStart: string
-  weekEnd: string
-  createdAt: string
-  variant: "manual" | "ai"
-  totalTrades: number
-  winningTrades: number
-  losingTrades: number
-  winRate: number
-  totalPnL: number
-  bestTrade: number
-  worstTrade: number
-  avgMood: number
-  avgReadiness: number
-  whatWorked: string
-  whatDidntWork: string
-  biggestWin: string
-  biggestLoss: string
-  emotionalPatterns: string
-  mistakesMade: string
-  lessonsLearned: string
-  weeklyGoals: string[]
-  focusAreas: string[]
-  tradingPlanAdjustments: string
-  riskManagementNotes: string
-  mindsetPreparation: string
-  actionPlan: { text: string; completed: boolean }[]
-  mindPointsGained: number
-  currentStreak: number
-  lossResets: number
-  revengeIncidents: number
-  dailyData: any[]
-  sleepData: any[]
-  aiInsights: any[]
-}
+import { TopNavigation } from '@/components/top-navigation'
+import { WeeklyReviewAnalysis } from '@/components/weekly-review-analysis'
+import { motion } from 'framer-motion'
+import { ArrowLeft, RefreshCw } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 export default function WeeklyReviewPage() {
-  const { isLiveMode, trades, morningChecks } = useData()
-  const { analytics } = useAnalytics()
-  const { user } = useAuth()
-  const t = useT()
-  const { language } = useLanguage()
-  const isEn = language === "en"
+  const [refreshing, setRefreshing] = useState(false)
 
-  const txt = {
-    weeklyReview: isEn ? "Weekly Review" : "Týdenní přezkum",
-    manualReview: isEn ? "Manual Review" : "Ruční přezkum",
-    aiReview: isEn ? "AI-Powered Review" : "Přezkum poháněný AI",
-    summary: isEn ? "Summary" : "Souhrn",
-    whatWorked: isEn ? "What Worked?" : "Co fungovalo?",
-    whatDidntWork: isEn ? "What Didn't Work?" : "Co nefungovalo?",
-    emotionalPatterns: isEn ? "Emotional Patterns" : "Emoční vzory",
-    mistakesMade: isEn ? "Mistakes Made" : "Udělaní chyby",
-    lessonsLearned: isEn ? "Lessons Learned" : "Naučené lekce",
-    actionPlan: isEn ? "Action Plan" : "Akční plán",
-    savedReviews: isEn ? "Saved Reviews" : "Uložené přezkumy",
+  const handleRefresh = () => {
+    setRefreshing(true)
+    window.location.reload()
   }
-  
-  const [currentWeekData, setCurrentWeekData] = useState<any>(null)
-  const [reviewVariant, setReviewVariant] = useState<"manual" | "ai">("manual")
-  const [review, setReview] = useState<Partial<WeeklyReview>>({
-    whatWorked: "",
-    whatDidntWork: "",
-    emotionalPatterns: "",
-    mistakesMade: "",
-    lessonsLearned: "",
-  })
-  const [savedReviews, setSavedReviews] = useState<any[]>([])
-  const [actionPlan, setActionPlan] = useState<{ text: string; completed: boolean }[]>([
-    { text: "", completed: false },
-    { text: "", completed: false },
-    { text: "", completed: false },
-  ])
-  const [activeTab, setActiveTab] = useState("current")
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
+      <TopNavigation />
+      
+      <main className="max-w-6xl mx-auto px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-8"
+        >
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Link>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">Weekly Trading Review</h1>
+              <p className="text-slate-400">
+                Your AI-generated insights from the past 7 days of trading
+              </p>
+            </div>
+            
+            <Button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              variant="outline"
+              className="gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
+        </motion.div>
+
+        <WeeklyReviewAnalysis />
+      </main>
+    </div>
+  )
+}
 
   // Helper function to round percentages
   const roundPercent = (value: number) => Math.round(value)
