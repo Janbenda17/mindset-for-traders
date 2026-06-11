@@ -1,7 +1,6 @@
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
-import { vitalApi } from '@/lib/integrations/vital'
 import { metaApiClient } from '@/lib/integrations/metaapi'
 
 const supabase = createClient(
@@ -36,7 +35,6 @@ export async function ensureProfileExists(userId: string) {
       .from('profiles')
       .insert({
         user_id: userId,
-        apple_health_connected: false,
       })
 
     if (insertError) {
@@ -52,42 +50,29 @@ export async function ensureProfileExists(userId: string) {
   }
 }
 
-export async function updateAppleHealth(userId: string, connected: boolean) {
+export async function disconnectMetaApi(userId: string) {
   try {
-    console.log('[v0] Updating Apple Health for user:', userId, 'connected:', connected)
+    console.log('[v0] Disconnecting MetaApi for user:', userId)
 
     const { error } = await supabase
       .from('profiles')
       .update({
-        apple_health_connected: connected,
+        metaapi_account_id: null,
+        metaapi_token: null,
+        trades_sync_enabled: false,
       })
       .eq('user_id', userId)
 
     if (error) {
-      console.error('[v0] Error updating Apple Health:', error)
+      console.error('[v0] Error disconnecting MetaApi:', error)
       throw error
     }
 
-    console.log('[v0] Apple Health updated successfully')
+    console.log('[v0] MetaApi disconnected successfully')
     return { success: true }
   } catch (err) {
-    console.error('[v0] Error in updateAppleHealth:', err)
+    console.error('[v0] Error in disconnectMetaApi:', err)
     throw err
-  }
-}
-
-export async function connectVital(userId: string) {
-  try {
-    console.log('[v0] Initiating Vital OAuth for user:', userId)
-    
-    // Generate Vital OAuth URL
-    const redirectUrl = vitalApi.getOAuthUrl(userId)
-    
-    console.log('[v0] Vital OAuth URL generated')
-    return { redirectUrl }
-  } catch (err) {
-    console.error('[v0] Error in connectVital:', err)
-    throw new Error('Failed to initiate Vital connection')
   }
 }
 
@@ -127,31 +112,5 @@ export async function connectMetaApi(
   } catch (err) {
     console.error('[v0] Error in connectMetaApi:', err)
     throw new Error('Failed to connect MetaApi. Check your credentials.')
-  }
-}
-
-export async function disconnectMetaApi(userId: string) {
-  try {
-    console.log('[v0] Disconnecting MetaApi for user:', userId)
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        metaapi_account_id: null,
-        metaapi_token: null,
-        trades_sync_enabled: false,
-      })
-      .eq('user_id', userId)
-
-    if (error) {
-      console.error('[v0] Error disconnecting MetaApi:', error)
-      throw error
-    }
-
-    console.log('[v0] MetaApi disconnected successfully')
-    return { success: true }
-  } catch (err) {
-    console.error('[v0] Error in disconnectMetaApi:', err)
-    throw err
   }
 }

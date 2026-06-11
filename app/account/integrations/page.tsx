@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Check, AlertCircle, Loader, X, Plug } from 'lucide-react'
 import Link from 'next/link'
-import { ensureProfileExists, updateAppleHealth, connectVital, connectMetaApi, disconnectMetaApi } from './actions'
+import { ensureProfileExists, connectMetaApi, disconnectMetaApi } from './actions'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,8 +31,6 @@ export default function IntegrationsPage() {
   const [credentials, setCredentials] = useState({ login: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [connected, setConnected] = useState<string | null>(null)
-  const [appleHealthConnected, setAppleHealthConnected] = useState(false)
-  const [vitalConnected, setVitalConnected] = useState(false)
   const [metaApiConnected, setMetaApiConnected] = useState(false)
   const [metaApiLogin, setMetaApiLogin] = useState('')
   const [metaApiPassword, setMetaApiPassword] = useState('')
@@ -74,7 +72,7 @@ export default function IntegrationsPage() {
         
         const { data, error } = await supabase
           .from('profiles')
-          .select('mt4_broker, apple_health_connected, vital_id, metaapi_token, metaapi_account_id')
+          .select('metaapi_token, metaapi_account_id')
           .eq('user_id', user.id)
           .maybeSingle()
 
@@ -88,8 +86,6 @@ export default function IntegrationsPage() {
           if (data.mt4_broker) {
             setConnected(data.mt4_broker)
           }
-          setAppleHealthConnected(!!data.apple_health_connected)
-          setVitalConnected(!!data.vital_id)
           setMetaApiConnected(!!data.metaapi_token && !!data.metaapi_account_id)
         }
       } catch (err) {
@@ -193,26 +189,6 @@ export default function IntegrationsPage() {
       setError('Failed to disconnect')
       console.error('[v0] Disconnection error:', err)
     } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleVitalConnect = async () => {
-    setLoading(true)
-    setError('')
-    try {
-      console.log('[v0] Connecting to Vital (Apple Health)...')
-      await ensureProfileExists(user.id)
-      
-      // Get Vital OAuth URL from server action
-      const result = await connectVital(user.id)
-      if (result.redirectUrl) {
-        window.location.href = result.redirectUrl
-      }
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to start Vital connection'
-      setError(errorMsg)
-      console.error('[v0] Vital connection error:', err)
       setLoading(false)
     }
   }
@@ -429,74 +405,6 @@ export default function IntegrationsPage() {
               </Card>
             )}
           </div>
-        )}
-      </div>
-
-      {/* Apple Health / Vital Section */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-xl font-bold text-white">Health & Sleep Tracking</h2>
-          <p className="text-sm text-slate-400 mt-1">Connect Apple Health via Vital to track sleep, heart rate, and stress</p>
-        </div>
-
-        {vitalConnected ? (
-          <Card className="bg-slate-900/50 border-emerald-600/50">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-300" />
-                  <div>
-                    <p className="font-semibold text-white">Vital Connected (Apple Health)</p>
-                    <p className="text-sm text-slate-400">Health data syncing in real-time</p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => {
-                    setVitalConnected(false)
-                    setSuccess('Vital disconnected')
-                  }}
-                  disabled={loading}
-                  variant="ghost"
-                  size="sm"
-                  className="text-red-300 hover:text-red-400 hover:bg-red-900/20"
-                >
-                  <X className="w-4 h-4" />
-                  Disconnect
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="bg-slate-900 border-slate-700">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <span className="text-3xl">🍎</span>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-white mb-1">Apple Health</h3>
-                  <p className="text-sm text-slate-400 mb-4">
-                    Connect your Apple Health to track sleep quality, heart rate, HRV, and stress levels that affect trading performance.
-                  </p>
-                  <Button
-                    onClick={handleVitalConnect}
-                    disabled={loading}
-                    className="bg-white text-slate-900 hover:bg-slate-100 font-medium"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader className="w-4 h-4 animate-spin mr-2" />
-                        Connecting...
-                      </>
-                    ) : (
-                      <>
-                        Connect Apple Health
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         )}
       </div>
 
