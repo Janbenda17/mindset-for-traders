@@ -35,7 +35,6 @@ import { useAnalytics } from "@/contexts/analytics-context" // Updated: useAnaly
 import { useLiveMode } from "@/contexts/live-mode-context" // CHANGE: get isLiveMode from useLiveMode hook instead
 import { useData } from "@/contexts/data-context" // Added for accessing trades and morningChecks
 import { MorningAssessment } from "@/components/morning-assessment"
-import { RecordTrades } from "@/components/record-trades"
 
 // Custom Tooltip with better formatting
 const CustomTooltip = ({ active, payload, label, type = "default" }: any) => {
@@ -1454,25 +1453,6 @@ export default function PsychologyAnalyticsPage() {
                       </>
                     ) : (
                       "Vyplnit Morning Check"
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => router.push("/record-trades")}
-                    disabled={(dailyStages?.completedToday?.length ?? 0) > 0 && dailyStages?.completedToday?.includes("record_trade")}
-                    variant="outline"
-                    className={`w-full ${
-                      (dailyStages?.completedToday?.length ?? 0) > 0 && dailyStages?.completedToday?.includes("record_trade")
-                        ? "border-green-500/50 text-green-400 hover:bg-green-500/10 cursor-not-allowed"
-                        : "border-purple-500/30 text-white hover:bg-purple-500/10"
-                    }`}
-                  >
-                    {(dailyStages?.completedToday?.length ?? 0) > 0 && dailyStages?.completedToday?.includes("record_trade") ? (
-                      <>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Splneno
-                      </>
-                    ) : (
-                      "Zaznamenat Trade"
                     )}
                   </Button>
                 </div>

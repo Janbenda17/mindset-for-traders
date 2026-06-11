@@ -162,11 +162,6 @@ export function DailyStageProvider({ children }: { children: React.ReactNode }) 
             locked = completed
             break
           case 4:
-            completed = data.record_trades_completed || false
-            completedAt = data.record_trades_completed_at
-            locked = completed
-            break
-          case 5:
             completed = data.daily_summary_completed || false
             completedAt = data.daily_summary_completed_at
             locked = completed

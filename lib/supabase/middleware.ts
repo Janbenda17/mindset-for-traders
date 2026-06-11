@@ -25,7 +25,6 @@ const PUBLIC_PATHS = [
   "/dashboard",
   "/account",
   "/trades",
-  "/record-trades",
   "/journal",
   "/challenges",
   "/rewards",

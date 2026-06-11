@@ -26,7 +26,6 @@ import {
 } from "lucide-react"
 import JournalCalendar from "@/components/journal-calendar"
 import JournalEntries from "@/components/journal-entries"
-import { RecordTrades } from "@/components/record-trades"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context" // Fixed import path from /context/ (singular) to /contexts/ (plural)

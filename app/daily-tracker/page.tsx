@@ -151,15 +151,6 @@ export default function DailyTrackerPage() {
       borderColor: "border-cyan-500/30",
     },
     {
-      id: 4,
-      name: isEn ? "Record Trades" : "Zaznamenat obchody",
-      icon: Clock,
-      href: "/record-trades",
-      color: "from-blue-500 to-indigo-500",
-      bgColor: "bg-gradient-to-br from-blue-500/20 to-indigo-500/20",
-      borderColor: "border-blue-500/30",
-    },
-    {
       id: 5,
       name: isEn ? "Daily Summary" : "Denní shrnutí",
       icon: Shield,
@@ -339,7 +330,7 @@ export default function DailyTrackerPage() {
             morning: stagesRecord.morning_check_completed,
             intention: stagesRecord.daily_intention_completed,
             plan: stagesRecord.trading_plan_completed,
-            trades: stagesRecord.record_trades_completed,
+            trades: 0, // Auto from broker
             summary: stagesRecord.daily_summary_completed
           })
         }
@@ -352,8 +343,7 @@ export default function DailyTrackerPage() {
             if (stagesRecord.morning_check_completed) stagesCompleted++
             if (stagesRecord.daily_intention_completed) stagesCompleted++
             if (stagesRecord.trading_plan_completed) stagesCompleted++
-            if (stagesRecord.record_trades_completed) stagesCompleted++
-            if (stagesRecord.daily_summary_completed) stagesCompleted++
+        if (stagesRecord.daily_summary_completed) stagesCompleted++
           } else {
             // Fallback: count based on available data (when stagesRecord doesn't exist)
             if (morningCheck) stagesCompleted++
@@ -833,35 +823,10 @@ export default function DailyTrackerPage() {
           console.log("[v0] Virtual mode: Trading plan data not saved to localStorage.")
         }
       } else if (stageNum === 4) {
-        // Stage 4 = Record Trades
-        if (isLiveMode) {
-          // This part is more complex as it involves an array of trades.
-          // We might need to fetch existing trades for the day and then update/add.
-          // For simplicity here, we'll assume 'data' contains an array of trades to be added.
-          // A more robust solution would involve fetching, merging, and then upserting.
-          const dailyTrades = (data.trades as Trade[]) || []
-          const date = new Date().toISOString().split("T")[0]
-
-          for (const trade of dailyTrades) {
-            const { error } = await localSupabase.from("trade_records").upsert({
-              // FIX: Used localSupabase here
-              user_id: user?.id,
-              date: date,
-              pair: trade.pair,
-              direction: trade.direction,
-              entry_price: trade.entryPrice,
-              exit_price: trade.exitPrice,
-              pnl: trade.pnl,
-              notes: trade.notes,
-            })
-            if (error) throw error
-          }
-          console.log("[v0] Trade records saved to Supabase for LIVE mode")
-          setRefreshTrigger((prev) => prev + 1)
-        } else {
-          console.log("[v0] Virtual mode: Trade records data not saved to localStorage.")
-        }
-      }
+        // Stage 4 = Daily Summary (Trades auto from broker)
+        // No manual data entry needed — trades sync from MetaApi
+        console.log("[v0] Daily Summary stage completed")
+        setRefreshTrigger((prev) => prev + 1)
     } catch (error) {
       console.error(`[v0] Error saving stage ${stageNum}:`, error)
       toast({ title: "Error", description: `Failed to save stage ${stageNum}` })
@@ -1666,8 +1631,7 @@ export default function DailyTrackerPage() {
                                 { stage: 1, name: "Ranní Kontrola", key: "morning_check_completed" },
                                 { stage: 2, name: "Záměr Dne", key: "daily_intention_completed" },
                                 { stage: 3, name: "Obchodní Plán", key: "trading_plan_completed" },
-                                { stage: 4, name: "Obchody", key: "record_trades_completed" },
-                                { stage: 5, name: "Shrnutí", key: "daily_summary_completed" },
+      { stage: 4, name: "Shrnutí", key: "daily_summary_completed" },
                               ].map(({ stage, name, key }) => {
                                 const isCompleted = entry.stagesCompleted >= stage
                                 return (
