@@ -816,7 +816,13 @@ export default function JournalPage() {
               </TabsList>
 
               <TabsContent value="new" className="mt-0">
-                <RecordTrades onTradeAdded={handleEntryAdded} />
+                <Card className="bg-slate-700/50 border-slate-600">
+                  <CardContent className="pt-6">
+                    <p className="text-slate-400 text-center py-12">
+                      {isEn ? "Trades sync automatically from your MetaTrader connection" : "Obchody se synchronizují automaticky z vašeho MetaTrader připojení"}
+                    </p>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="calendar" className="mt-0">
@@ -1126,14 +1132,18 @@ export default function JournalPage() {
 
       {/* Quick Add Dialog */}
       <Dialog open={showQuickAdd} onOpenChange={setShowQuickAdd}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-800 border-slate-600">
+        <DialogContent className="max-w-2xl bg-slate-800 border-slate-600">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
               <Plus className="w-6 h-6 text-purple-400" />
-              Rychlý záznam
+              {isEn ? "Quick Entry" : "Rychlý záznam"}
             </DialogTitle>
           </DialogHeader>
-          <RecordTrades onTradeAdded={handleEntryAdded} onClose={() => setShowQuickAdd(false)} />
+          <div className="py-12">
+            <p className="text-slate-400 text-center">
+              {isEn ? "Trades sync automatically from your MetaTrader connection" : "Obchody se synchronizují automaticky z vašeho MetaTrader připojení"}
+            </p>
+          </div>
         </DialogContent>
       </Dialog>
 
