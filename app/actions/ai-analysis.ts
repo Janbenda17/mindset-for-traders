@@ -157,11 +157,11 @@ Based on this data, provide a JSON response with EXACTLY this structure (no mark
   "adaptability": 78
 }`
 
-    const response = await fetch('https://api.vercel.ai/grok', {
+    const response = await fetch('https://api.vercel.ai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.AI_GATEWAY_API_KEY}`,
+        'Authorization': `Bearer ${process.env.AI_GATEWAY_API_KEY || ''}`,
       },
       body: JSON.stringify({
         model: 'grok-2-latest',

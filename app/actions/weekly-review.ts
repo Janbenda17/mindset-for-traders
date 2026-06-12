@@ -153,11 +153,11 @@ Provide a JSON response with EXACTLY this structure (no markdown):
   "riskAssessment": "Assessment of risk management this week"
 }`
 
-    const response = await fetch('https://api.vercel.ai/grok', {
+    const response = await fetch('https://api.vercel.ai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.AI_GATEWAY_API_KEY}`,
+        'Authorization': `Bearer ${process.env.AI_GATEWAY_API_KEY || ''}`,
       },
       body: JSON.stringify({
         model: 'grok-2-latest',
