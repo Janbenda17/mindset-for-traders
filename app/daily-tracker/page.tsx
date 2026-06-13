@@ -119,6 +119,13 @@ export default function DailyTrackerPage() {
             const Icon = stage.icon
             const isActive = activeStage === stage.id
 
+            const stageGradients: Record<number, string> = {
+              1: "bg-gradient-to-br from-orange-500 to-rose-500",
+              2: "bg-gradient-to-br from-blue-500 to-cyan-500",
+              3: "bg-gradient-to-br from-purple-500 to-pink-500",
+              4: "bg-gradient-to-br from-green-500 to-emerald-500"
+            }
+
             return (
               <div key={stage.id} className="group">
                 <button
@@ -127,7 +134,7 @@ export default function DailyTrackerPage() {
                   className={cn(
                     "w-full h-32 rounded-2xl border-2 transition-all duration-300",
                     "flex flex-col items-center justify-center gap-2 p-4",
-                    status === "completed" && `bg-gradient-to-br ${stage.color} border-white/20 shadow-lg shadow-primary/20`,
+                    status === "completed" && cn(stageGradients[stage.id], "border-white/20 shadow-lg shadow-primary/20"),
                     status === "unlocked" && "bg-card border-border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10",
                     status === "locked" && "bg-card/50 border-border/50 opacity-50 cursor-not-allowed",
                     isActive && "ring-2 ring-primary/50 scale-105"
