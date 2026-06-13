@@ -1519,7 +1519,7 @@ export default function DailyTrackerPage() {
                                     </div>
                                   )
                                 )
-                              })()}
+                              })()
 
                               {/* Morning Readiness Summary */}
                               <div>
