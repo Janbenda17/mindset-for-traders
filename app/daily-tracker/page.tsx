@@ -143,15 +143,6 @@ export default function DailyTrackerPage() {
     },
     {
       id: 3,
-      name: isEn ? "Trading Plan" : "Obchodní plán",
-      icon: BookOpen,
-      href: "/trading-plan",
-      color: "from-cyan-500 to-teal-500",
-      bgColor: "bg-gradient-to-br from-cyan-500/20 to-teal-500/20",
-      borderColor: "border-cyan-500/30",
-    },
-    {
-      id: 5,
       name: isEn ? "Daily Summary" : "Denní shrnutí",
       icon: Shield,
       href: "/daily-summary",
@@ -259,7 +250,7 @@ export default function DailyTrackerPage() {
           },
           trades,
           overallScore: randomScore,
-          stagesCompleted: 5,
+          stagesCompleted: 3,
         })
       }
       
@@ -342,13 +333,11 @@ export default function DailyTrackerPage() {
           if (stagesRecord) {
             if (stagesRecord.morning_check_completed) stagesCompleted++
             if (stagesRecord.daily_intention_completed) stagesCompleted++
-            if (stagesRecord.trading_plan_completed) stagesCompleted++
-        if (stagesRecord.daily_summary_completed) stagesCompleted++
+            if (stagesRecord.daily_summary_completed) stagesCompleted++
           } else {
             // Fallback: count based on available data (when stagesRecord doesn't exist)
             if (morningCheck) stagesCompleted++
             if (intention) stagesCompleted++
-            if (plan) stagesCompleted++
             if (dayTrades.length > 0) stagesCompleted++
           }
 
@@ -1624,14 +1613,13 @@ export default function DailyTrackerPage() {
                           <div>
                             <h4 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
                               <CheckCircle2 className="h-5 w-5 text-green-400" />
-                              Fáze Dne - Postup ({entry.stagesCompleted}/5)
+                              Fáze Dne - Postup ({entry.stagesCompleted}/3)
                             </h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                               {[
                                 { stage: 1, name: "Ranní Kontrola", key: "morning_check_completed" },
                                 { stage: 2, name: "Záměr Dne", key: "daily_intention_completed" },
-                                { stage: 3, name: "Obchodní Plán", key: "trading_plan_completed" },
-                                { stage: 4, name: "Shrnutí", key: "daily_summary_completed" },
+                                { stage: 3, name: "Shrnutí", key: "daily_summary_completed" },
                               ].map(({ stage, name, key }) => {
                                 const isCompleted = entry.stagesCompleted >= stage
                                 return (
@@ -1666,11 +1654,11 @@ export default function DailyTrackerPage() {
                             </div>
                           </div>
 
-                          {/* Show simplified view if Stage 5 not completed */}
-                          {entry.stagesCompleted < 5 && (
+                          {/* Show simplified view if Stage 3 not completed */}
+                          {entry.stagesCompleted < 3 && (
                             <div className="text-center py-6 text-muted-foreground border-t border-white/10 mt-6 pt-6">
                               <Moon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                              <p className="text-sm">Zbývající fáze k dokončení: {5 - entry.stagesCompleted}</p>
+                              <p className="text-sm">Zbývající fáze k dokončení: {3 - entry.stagesCompleted}</p>
                             </div>
                           )}
                         </div>
