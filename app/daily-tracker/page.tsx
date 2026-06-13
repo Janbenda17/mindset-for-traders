@@ -1631,7 +1631,7 @@ export default function DailyTrackerPage() {
                                 { stage: 1, name: "Ranní Kontrola", key: "morning_check_completed" },
                                 { stage: 2, name: "Záměr Dne", key: "daily_intention_completed" },
                                 { stage: 3, name: "Obchodní Plán", key: "trading_plan_completed" },
-      { stage: 4, name: "Shrnutí", key: "daily_summary_completed" },
+                                { stage: 4, name: "Shrnutí", key: "daily_summary_completed" },
                               ].map(({ stage, name, key }) => {
                                 const isCompleted = entry.stagesCompleted >= stage
                                 return (
