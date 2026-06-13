@@ -898,6 +898,47 @@ export default function DailyTrackerPage() {
         </TabsList>
 
         <TabsContent value="today" className="space-y-6 md:space-y-8">
+          {/* Daily Stage Progress - Always visible */}
+          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border border-white/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Target className="w-6 h-6 text-orange-400" />
+                Dnešní Etapy
+              </CardTitle>
+              <CardDescription>Postupuj skrz jednotlivé kroky pro produktivní den</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {stageData.map((stage) => {
+                  const stageCompleted = stages && stages[stage.id - 1]?.completed
+                  const stageLocked = stages && !stages[stage.id - 2]?.completed && stage.id > 1
+                  
+                  return (
+                    <Button
+                      key={stage.id}
+                      onClick={() => router.push(stage.href)}
+                      disabled={stageLocked}
+                      className={cn(
+                        "h-24 flex flex-col items-center justify-center rounded-xl transition-all relative",
+                        stageCompleted
+                          ? `bg-gradient-to-br ${stage.bgColor} border-2 ${stage.borderColor} text-white`
+                          : stageLocked
+                          ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                          : `bg-gradient-to-br from-slate-700/50 to-slate-600/50 text-white hover:${stage.bgColor}`
+                      )}
+                    >
+                      <stage.icon className="w-6 h-6 mb-1" />
+                      <span className="text-xs text-center font-medium">{stage.name}</span>
+                      {stageCompleted && <CheckCircle2 className="w-4 h-4 absolute top-2 right-2 text-green-400" />}
+                      {stageLocked && <Lock className="w-4 h-4 absolute top-2 right-2 text-slate-500" />}
+                    </Button>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Show today's readiness if completed, otherwise show stage progress */}
           {(todayEntry?.morningCheck || virtualData?.[0]?.morningCheck) && (
             <>
               {isMorningCheckCompleted && readinessScore !== null && (
@@ -1296,24 +1337,48 @@ export default function DailyTrackerPage() {
             </Card>
           )}
 
-          {!todayEntry && !virtualData && (
-            <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10">
-              <CardContent className="p-16 text-center">
-                <Sun className="h-24 w-24 mx-auto mb-6 text-orange-400" />
-                <h3 className="text-3xl font-black mb-4">Start Your Day!</h3>
-                <p className="text-xl text-muted-foreground mb-8">
-                  You haven't started today's Trading Day yet. Start with Morning Routine!
-                </p>
-                <Button
-                  onClick={() => router.push("/morning-check")}
-                  size="lg"
-                  className="h-16 px-12 text-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600"
-                >
-                  <Sun className="h-6 w-6 mr-2" />
-                  Start Morning Routine
-                </Button>
-              </CardContent>
-            </Card>
+          {/* Fallback: Show stage progress if no morning check yet */}
+          {!todayEntry?.morningCheck && !virtualData?.[0]?.morningCheck && (
+            <div className="space-y-4">
+              <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border border-white/10">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    Dnešní Etapy
+                  </CardTitle>
+                  <CardDescription>Postupuj skrz jednotlivé kroky pro produktivní den</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    {stageData.map((stage) => {
+                      const isCompleted = todayEntry?.stagesCompleted && stage.id <= Math.floor(todayEntry.stagesCompleted)
+                      const isLocked = stage.id > 1 && !isCompleted
+                      
+                      return (
+                        <Button
+                          key={stage.id}
+                          onClick={() => router.push(stage.href)}
+                          disabled={isLocked}
+                          className={cn(
+                            "h-24 flex flex-col items-center justify-center rounded-xl transition-all",
+                            isCompleted
+                              ? `${stage.color} text-white shadow-lg`
+                              : isLocked
+                              ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                              : "bg-slate-700/50 text-white hover:bg-slate-600/50"
+                          )}
+                        >
+                          <stage.icon className="w-6 h-6 mb-1" />
+                          <span className="text-xs text-center font-medium">{stage.name}</span>
+                          {isCompleted && <CheckCircle2 className="w-4 h-4 absolute top-2 right-2" />}
+                          {isLocked && <Lock className="w-4 h-4 absolute top-2 right-2" />}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </TabsContent>
 
