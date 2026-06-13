@@ -1253,21 +1253,30 @@ export default function DailyTrackerPage() {
           )}
 
           {/* Continue Button */}
-          {(!isLiveMode || (todayEntry && todayStages.filter((s) => s.completed).length < 5)) && (
+          {(!isLiveMode || (todayEntry && stageData.filter((s) => {
+            const key = s.id === 1 ? 'morning_check_completed' : s.id === 2 ? 'daily_intention_completed' : 'daily_summary_completed'
+            return todayEntry.stagesRecord?.[key]
+          }).length < 3)) && (
             <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-amber-500/10">
               <CardContent className="p-8 text-center">
                 <Target className="h-16 w-16 mx-auto mb-4 text-orange-400" />
               <h3 className="text-2xl font-black mb-2">Continue with Daily Flow!</h3>
               <p className="text-gray-300">
                 You completed{" "}
-                  {!isLiveMode ? virtualData?.[0]?.stagesCompleted : todayStages.filter((s) => s.completed).length} z 5
+                  {!isLiveMode ? virtualData?.[0]?.stagesCompleted : stageData.filter((s) => {
+                    const key = s.id === 1 ? 'morning_check_completed' : s.id === 2 ? 'daily_intention_completed' : 'daily_summary_completed'
+                    return todayEntry.stagesRecord?.[key]
+                  }).length} z 3
                   stages. Keep going!
                 </p>
                 <Button
                   onClick={() => {
                     const nextStageId = !isLiveMode
                       ? virtualData?.[0]?.nextStageId
-                      : todayStages.find((s) => !s.completed && s.unlocked)?.id
+                      : stageData.find((s) => {
+                        const key = s.id === 1 ? 'morning_check_completed' : s.id === 2 ? 'daily_intention_completed' : 'daily_summary_completed'
+                        return !todayEntry.stagesRecord?.[key]
+                      })?.id
                     if (nextStageId) {
                       const nextStage = stageData.find((sd) => sd.id === nextStageId)
                       if (nextStage) {
