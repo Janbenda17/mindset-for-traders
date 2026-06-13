@@ -919,12 +919,12 @@ export default function DailyTrackerPage() {
                       onClick={() => router.push(stage.href)}
                       disabled={stageLocked}
                       className={cn(
-                        "h-24 flex flex-col items-center justify-center rounded-xl transition-all relative",
+                        "h-24 flex flex-col items-center justify-center rounded-xl transition-all relative border-2",
                         stageCompleted
-                          ? `bg-gradient-to-br ${stage.bgColor} border-2 ${stage.borderColor} text-white`
+                          ? "bg-gradient-to-br from-orange-500/20 to-rose-500/20 border-orange-500/30 text-white"
                           : stageLocked
-                          ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-                          : `bg-gradient-to-br from-slate-700/50 to-slate-600/50 text-white hover:${stage.bgColor}`
+                          ? "bg-slate-700/50 border-slate-600/50 text-slate-500 cursor-not-allowed"
+                          : "bg-gradient-to-br from-slate-700/50 to-slate-600/50 border-slate-600/30 text-white hover:border-slate-500/50 hover:from-slate-600/50 hover:to-slate-500/50"
                       )}
                     >
                       <stage.icon className="w-6 h-6 mb-1" />
@@ -1234,12 +1234,11 @@ export default function DailyTrackerPage() {
                     key={stage.id}
                     className={cn(
                       "relative p-6 rounded-full cursor-pointer transition-all duration-300 flex flex-col items-center justify-center text-center",
-                      "border-2 backdrop-blur-sm",
-                      isCompleted && `${stage.borderColor} ${stage.bgColor} border-opacity-50`,
+                      "border-2 backdrop-blur-sm min-w-[140px] h-[140px] group",
+                      isCompleted && "bg-gradient-to-br from-orange-500/20 to-rose-500/20 border-orange-500/30",
                       isActive && "border-yellow-500 bg-yellow-500/20 animate-pulse shadow-lg shadow-yellow-500/50",
                       !isUnlocked && "border-slate-700/30 bg-slate-800/20 opacity-50 cursor-not-allowed",
-                      isUnlocked && !isCompleted && "border-slate-600/50 hover:border-slate-400/80 hover:bg-slate-700/30 hover:shadow-md",
-                      "min-w-[140px] h-[140px] group"
+                      isUnlocked && !isCompleted && "border-slate-600/50 hover:border-slate-400/80 hover:bg-slate-700/30 hover:shadow-md"
                     )}
                     onClick={() => {
                       if (isUnlocked && stage.href) {
@@ -1360,18 +1359,18 @@ export default function DailyTrackerPage() {
                           onClick={() => router.push(stage.href)}
                           disabled={isLocked}
                           className={cn(
-                            "h-24 flex flex-col items-center justify-center rounded-xl transition-all",
+                            "h-24 flex flex-col items-center justify-center rounded-xl transition-all relative border-2",
                             isCompleted
-                              ? `${stage.color} text-white shadow-lg`
+                              ? "bg-gradient-to-br from-orange-500/20 to-rose-500/20 border-orange-500/30 text-white shadow-lg"
                               : isLocked
-                              ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-                              : "bg-slate-700/50 text-white hover:bg-slate-600/50"
+                              ? "bg-slate-700/50 border-slate-600/50 text-slate-500 cursor-not-allowed"
+                              : "bg-gradient-to-br from-slate-700/50 to-slate-600/50 border-slate-600/30 text-white hover:border-slate-500/50 hover:from-slate-600/50 hover:to-slate-500/50"
                           )}
                         >
                           <stage.icon className="w-6 h-6 mb-1" />
                           <span className="text-xs text-center font-medium">{stage.name}</span>
-                          {isCompleted && <CheckCircle2 className="w-4 h-4 absolute top-2 right-2" />}
-                          {isLocked && <Lock className="w-4 h-4 absolute top-2 right-2" />}
+                          {isCompleted && <CheckCircle2 className="w-4 h-4 absolute top-2 right-2 text-green-400" />}
+                          {isLocked && <Lock className="w-4 h-4 absolute top-2 right-2 text-slate-500" />}
                         </Button>
                       )
                     })}
