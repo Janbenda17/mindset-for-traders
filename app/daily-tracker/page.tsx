@@ -898,7 +898,7 @@ export default function DailyTrackerPage() {
         </TabsList>
 
         <TabsContent value="today" className="space-y-6 md:space-y-8">
-          {(todayEntry?.morningCheck || virtualData?.[0]?.morningCheck) && (
+          {(todayEntry?.morningCheck || virtualData?.[0]?.morningCheck) ? (
             <>
               {isMorningCheckCompleted && readinessScore !== null && (
                 <div className="relative">
@@ -1291,6 +1291,25 @@ export default function DailyTrackerPage() {
                   <ArrowRight className="h-6 w-6 mr-2" />
                   Continue
                 </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-700/50">
+              <CardContent className="pt-12 pb-12">
+                <div className="flex flex-col items-center justify-center gap-6 text-center">
+                  <Sun className="w-16 h-16 text-orange-400/60" />
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold text-white">Začni svůj den</h3>
+                    <p className="text-slate-400">Vyplň Ranní Kontrolu pro dnesní sledování</p>
+                  </div>
+                  <Button
+                    onClick={() => router.push('/morning-check')}
+                    className="mt-4 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 gap-2"
+                  >
+                    <Sun className="w-5 h-5" />
+                    Začít s Ranní Kontrolou
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
