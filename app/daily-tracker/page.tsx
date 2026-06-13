@@ -1293,6 +1293,7 @@ export default function DailyTrackerPage() {
                 </Button>
               </CardContent>
             </Card>
+            </>
           ) : (
             <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-700/50">
               <CardContent className="pt-12 pb-12">
