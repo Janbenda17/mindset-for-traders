@@ -258,45 +258,6 @@ export function WeeklyReviewAnalysis() {
     </div>
   )
 }
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (error || !review) {
-    return (
-      <Card className="bg-red-900/20 border-red-700/30">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-2 text-red-400">
-            <AlertCircle className="w-4 h-4" />
-            <span>{error || 'Unable to generate review'}</span>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <Card className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 border-indigo-500/30">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-indigo-400" />
-              Weekly Trading Review
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            {/* Summary */}
-            <p className="text-slate-300 leading-relaxed">{review.summary}</p>
-
-            {/* Key Metrics */}
-            <div>
               <h3 className="text-sm font-semibold text-slate-300 mb-3">Key Metrics</h3>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {review.keyMetrics.map((metric, i) => (
