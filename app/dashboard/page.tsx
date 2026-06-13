@@ -50,21 +50,6 @@ export default function Dashboard() {
     }
   }
 
-  const features = [
-    {
-      title: t('daily_tracker_title'),
-      desc: t('feat_daily_desc'),
-      icon: Calendar,
-      href: '/daily-tracker'
-    },
-    {
-      title: t('mindtrader_title'),
-      desc: t('feat_mindtrader_desc'),
-      icon: Zap,
-      href: '/mindtrader'
-    }
-  ]
-
   if (!mounted) return null
 
   return (
@@ -212,76 +197,54 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          {/* Trader Identity, Weekly Review & Loss Reset Section */}
+          {/* Daily Tracker & MindTrader AI Section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mb-12"
           >
-            <h2 className="text-2xl font-bold text-white mb-6">AI-Powered Analytics</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Trader Identity Link */}
-              <Link href="/trader-identity">
+            <h2 className="text-2xl font-bold text-white mb-6">Essential Tools</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Daily Tracker Link */}
+              <Link href="/daily-tracker">
                 <motion.div
                   whileHover={{ y: -4 }}
                   whileTap={{ scale: 0.98 }}
-                  className="bg-gradient-to-br from-purple-900/40 to-slate-900/40 border border-purple-500/30 rounded-2xl p-6 cursor-pointer hover:border-purple-500/50 transition-all h-full"
+                  className="bg-gradient-to-br from-cyan-900/40 to-slate-900/40 border border-cyan-500/30 rounded-2xl p-8 cursor-pointer hover:border-cyan-500/50 transition-all h-full flex flex-col"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <Crown className="w-8 h-8 text-purple-400" />
-                    <span className="text-xs bg-purple-600/20 px-3 py-1 rounded-full text-purple-300">AI Analyzed</span>
+                    <Calendar className="w-10 h-10 text-cyan-400" />
+                    <span className="text-xs bg-cyan-600/20 px-3 py-1 rounded-full text-cyan-300">Daily</span>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">Your Trading Identity</h3>
-                  <p className="text-slate-400 text-sm mb-4">
-                    AI-powered analysis of your trading style, emotional patterns, strengths, and personalized goals
+                  <h3 className="text-2xl font-bold text-white mb-2">Daily Tracker</h3>
+                  <p className="text-slate-300 text-sm mb-6 flex-grow">
+                    Every morning record your psychological state in 30 seconds. AI detects your trading conditions. See patterns when you have edge and when you should sit out.
                   </p>
-                  <div className="flex items-center gap-2 text-purple-400 font-semibold">
-                    <span>View Profile</span>
+                  <div className="flex items-center gap-2 text-cyan-400 font-semibold">
+                    <span>Open</span>
                     <span>→</span>
                   </div>
                 </motion.div>
               </Link>
 
-              {/* Weekly Review Link */}
-              <Link href="/weekly-review">
+              {/* MindTrader AI Link */}
+              <Link href="/mindtrader">
                 <motion.div
                   whileHover={{ y: -4 }}
                   whileTap={{ scale: 0.98 }}
-                  className="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 border border-indigo-500/30 rounded-2xl p-6 cursor-pointer hover:border-indigo-500/50 transition-all h-full"
+                  className="bg-gradient-to-br from-pink-900/40 to-slate-900/40 border border-pink-500/30 rounded-2xl p-8 cursor-pointer hover:border-pink-500/50 transition-all h-full flex flex-col"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <TrendingUp className="w-8 h-8 text-indigo-400" />
-                    <span className="text-xs bg-indigo-600/20 px-3 py-1 rounded-full text-indigo-300">7-Day Review</span>
+                    <Zap className="w-10 h-10 text-pink-400" />
+                    <span className="text-xs bg-pink-600/20 px-3 py-1 rounded-full text-pink-300">24/7 Coach</span>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">Weekly Review</h3>
-                  <p className="text-slate-400 text-sm mb-4">
-                    Comprehensive AI-generated insights from your trading performance, patterns, and next week focus areas
+                  <h3 className="text-2xl font-bold text-white mb-2">MindTrader AI</h3>
+                  <p className="text-slate-300 text-sm mb-6 flex-grow">
+                    Your 24/7 personal trading coach. Got FOMO? Tempted by revenge trading? AI analyzes your state in real-time and gives you concrete advice.
                   </p>
-                  <div className="flex items-center gap-2 text-indigo-400 font-semibold">
-                    <span>View Review</span>
-                    <span>→</span>
-                  </div>
-                </motion.div>
-              </Link>
-
-              {/* Loss Reset Link */}
-              <Link href="/loss-reset">
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-gradient-to-br from-orange-900/40 to-slate-900/40 border border-orange-500/30 rounded-2xl p-6 cursor-pointer hover:border-orange-500/50 transition-all h-full"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <AlertCircle className="w-8 h-8 text-orange-400" />
-                    <span className="text-xs bg-orange-600/20 px-3 py-1 rounded-full text-orange-300">Quick Reset</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2">Loss Reset</h3>
-                  <p className="text-slate-400 text-sm mb-4">
-                    Quick reset after loss – get back in the game without revenge trading or emotional decisions
-                  </p>
-                  <div className="flex items-center gap-2 text-orange-400 font-semibold">
-                    <span>Start Reset</span>
+                  <div className="flex items-center gap-2 text-pink-400 font-semibold">
+                    <span>Open</span>
                     <span>→</span>
                   </div>
                 </motion.div>
@@ -289,50 +252,7 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          {/* Features Grid - 2 columns */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mb-12"
-          >
-            <h2 className="text-2xl font-bold text-white mb-6">{t('dashboard_tools')}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl">
-              {features.map((feature, i) => {
-                const colorScheme = [
-                  { bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: 'bg-purple-600 text-purple-100' },
-                  { bg: 'bg-blue-500/10', border: 'border-blue-500/20', icon: 'bg-blue-600 text-blue-100' },
-                  { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', icon: 'bg-emerald-600 text-emerald-100' },
-                  { bg: 'bg-orange-500/10', border: 'border-orange-500/20', icon: 'bg-orange-600 text-orange-100' }
-                ]
-                const scheme = colorScheme[i]
-                return (
-                  <Link key={i} href={feature.href}>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }}
-                      whileHover={{ y: -4 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`${scheme.bg} ${scheme.border} border rounded-2xl p-6 transition-all cursor-pointer hover:border-opacity-40 h-full flex flex-col`}
-                    >
-                      <div className={`w-12 h-12 rounded-lg ${scheme.icon} flex items-center justify-center mb-4`}>
-                        <feature.icon className="w-6 h-6" />
-                      </div>
 
-                      <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-                      <p className="text-slate-300 text-sm mb-6 flex-grow leading-relaxed">{feature.desc}</p>
-
-                      <div className="flex items-center gap-2 text-slate-400 text-sm font-semibold hover:text-white transition-colors">
-                        <span>{t('open')}</span>
-                        <span className="text-lg">→</span>
-                      </div>
-                    </motion.div>
-                  </Link>
-                )
-              })}
-            </div>
-          </motion.div>
         </div>
       </div>
     </div>
