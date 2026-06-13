@@ -11,15 +11,7 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
-      },
       colors: {
-        profit: "hsl(var(--profit))",
-        loss: "hsl(var(--loss))",
-        warning: "hsl(var(--warning))",
-        ai: "hsl(var(--ai))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
