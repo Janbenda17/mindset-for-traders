@@ -26,8 +26,6 @@ import { LiveModeProvider } from "@/contexts/live-mode-context"
 import { AnalyticsProvider } from "@/contexts/analytics-context"
 import { MilestoneCelebrationsProvider } from "@/contexts/milestone-celebrations-context"
 
-const inter = Inter({ subsets: ["latin"] })
-
 export const metadata: Metadata = {
   title: "MindTrader AI - Professional Trading Psychology Platform",
   description: "AI-powered trading psychology and performance tracking for professional traders",
