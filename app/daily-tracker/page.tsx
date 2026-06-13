@@ -827,6 +827,7 @@ export default function DailyTrackerPage() {
         // No manual data entry needed — trades sync from MetaApi
         console.log("[v0] Daily Summary stage completed")
         setRefreshTrigger((prev) => prev + 1)
+      }
     } catch (error) {
       console.error(`[v0] Error saving stage ${stageNum}:`, error)
       toast({ title: "Error", description: `Failed to save stage ${stageNum}` })
@@ -898,7 +899,7 @@ export default function DailyTrackerPage() {
         </TabsList>
 
         <TabsContent value="today" className="space-y-6 md:space-y-8">
-          {(todayEntry?.morningCheck || virtualData?.[0]?.morningCheck) ? (
+          {(todayEntry?.morningCheck || virtualData?.[0]?.morningCheck) && (
             <>
               {isMorningCheckCompleted && readinessScore !== null && (
                 <div className="relative">
@@ -1293,15 +1294,17 @@ export default function DailyTrackerPage() {
                 </Button>
               </CardContent>
             </Card>
-            </>
-          ) : (
-            <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-700/50">
+          )}
+
+          {/* No data CTA */}
+          {!entriesLoading && !todayEntry?.morningCheck && !virtualData?.[0]?.morningCheck && (
+            <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border border-white/10">
               <CardContent className="pt-12 pb-12">
                 <div className="flex flex-col items-center justify-center gap-6 text-center">
                   <Sun className="w-16 h-16 text-orange-400/60" />
                   <div className="space-y-2">
                     <h3 className="text-2xl font-bold text-white">Začni svůj den</h3>
-                    <p className="text-slate-400">Vyplň Ranní Kontrolu pro dnesní sledování</p>
+                    <p className="text-slate-400">Vyplň Ranní Kontrolu pro dnešní sledování</p>
                   </div>
                   <Button
                     onClick={() => router.push('/morning-check')}
