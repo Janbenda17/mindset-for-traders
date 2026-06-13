@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { TopNavigation } from '@/components/top-navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { BarChart3, Zap, Target, Calendar, MessageSquare, AlertCircle, TrendingUp, Crown, Sparkles } from 'lucide-react'
+import { BarChart3, Zap, Target, Calendar, MessageSquare, AlertCircle, TrendingUp, Crown, Sparkles, Shield } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/contexts/auth-context'
 import { useLiveMode } from '@/contexts/live-mode-context'
@@ -197,7 +197,7 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          {/* Daily Tracker & MindTrader AI Section */}
+          {/* Daily Tracker, MindTrader AI & Loss Reset Section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -205,7 +205,7 @@ export default function Dashboard() {
             className="mb-12"
           >
             <h2 className="text-2xl font-bold text-white mb-6">Essential Tools</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Daily Tracker Link */}
               <Link href="/daily-tracker">
                 <motion.div
@@ -245,6 +245,28 @@ export default function Dashboard() {
                   </p>
                   <div className="flex items-center gap-2 text-pink-400 font-semibold">
                     <span>Open</span>
+                    <span>→</span>
+                  </div>
+                </motion.div>
+              </Link>
+
+              {/* Loss Reset Link */}
+              <Link href="/loss-reset">
+                <motion.div
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-gradient-to-br from-orange-900/40 to-slate-900/40 border border-orange-500/30 rounded-2xl p-8 cursor-pointer hover:border-orange-500/50 transition-all h-full flex flex-col"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <Shield className="w-10 h-10 text-orange-400" />
+                    <span className="text-xs bg-orange-600/20 px-3 py-1 rounded-full text-orange-300">Quick Reset</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">Loss Reset</h3>
+                  <p className="text-slate-300 text-sm mb-6 flex-grow">
+                    Quick reset after loss – back in the game without revenge trading or emotional decisions. Regain your focus instantly.
+                  </p>
+                  <div className="flex items-center gap-2 text-orange-400 font-semibold">
+                    <span>Start</span>
                     <span>→</span>
                   </div>
                 </motion.div>
