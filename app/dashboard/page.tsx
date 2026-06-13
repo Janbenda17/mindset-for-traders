@@ -62,18 +62,6 @@ export default function Dashboard() {
       desc: t('feat_mindtrader_desc'),
       icon: Zap,
       href: '/mindtrader'
-    },
-    {
-      title: t('weekly_review_title'),
-      desc: t('feat_weekly_desc'),
-      icon: TrendingUp,
-      href: '/weekly-review'
-    },
-    {
-      title: 'Loss Reset',
-      desc: t('nav_home') === 'Dashboard' ? 'Quick reset after loss – back in the game without revenge' : 'Rychlý reset po ztrátě – zpět do hry bez revenge',
-      icon: Target,
-      href: '/loss-reset'
     }
   ]
 
@@ -224,7 +212,7 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          {/* Trader Identity & Weekly Review Section */}
+          {/* Trader Identity, Weekly Review & Loss Reset Section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -232,7 +220,7 @@ export default function Dashboard() {
             className="mb-12"
           >
             <h2 className="text-2xl font-bold text-white mb-6">AI-Powered Analytics</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Trader Identity Link */}
               <Link href="/trader-identity">
                 <motion.div
@@ -276,18 +264,40 @@ export default function Dashboard() {
                   </div>
                 </motion.div>
               </Link>
+
+              {/* Loss Reset Link */}
+              <Link href="/loss-reset">
+                <motion.div
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-gradient-to-br from-orange-900/40 to-slate-900/40 border border-orange-500/30 rounded-2xl p-6 cursor-pointer hover:border-orange-500/50 transition-all h-full"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <AlertCircle className="w-8 h-8 text-orange-400" />
+                    <span className="text-xs bg-orange-600/20 px-3 py-1 rounded-full text-orange-300">Quick Reset</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Loss Reset</h3>
+                  <p className="text-slate-400 text-sm mb-4">
+                    Quick reset after loss – get back in the game without revenge trading or emotional decisions
+                  </p>
+                  <div className="flex items-center gap-2 text-orange-400 font-semibold">
+                    <span>Start Reset</span>
+                    <span>→</span>
+                  </div>
+                </motion.div>
+              </Link>
             </div>
           </motion.div>
 
-          {/* Features Grid - 2x2 */}
+          {/* Features Grid - 2 columns */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
             className="mb-12"
           >
             <h2 className="text-2xl font-bold text-white mb-6">{t('dashboard_tools')}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl">
               {features.map((feature, i) => {
                 const colorScheme = [
                   { bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: 'bg-purple-600 text-purple-100' },
