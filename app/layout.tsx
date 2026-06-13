@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
+import { GeistSans } from "geist/font/sans"
+import { GeistMono } from "geist/font/mono"
 import Script from "next/script"
 import "./globals.css"
 import ClientLayout from "./ClientLayout"
@@ -28,8 +29,8 @@ import { MilestoneCelebrationsProvider } from "@/contexts/milestone-celebrations
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "MindTrader AI - Trading Psychology Platform",
-  description: "Advanced trading psychology and performance tracking platform",
+  title: "MindTrader AI - Professional Trading Psychology Platform",
+  description: "AI-powered trading psychology and performance tracking for professional traders",
     generator: 'v0.app'
 }
 
@@ -38,7 +39,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: "#0f172a",
+  themeColor: "#0a1628",
 }
 
 export default function RootLayout({
@@ -47,8 +48,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={inter.className}>
+    <html 
+      lang="en" 
+      className={`dark ${GeistSans.variable} ${GeistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="font-sans antialiased">
         {/* Google Analytics */}
         {process.env.NEXT_PUBLIC_GA_ID && (
           <>
