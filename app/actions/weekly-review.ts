@@ -30,202 +30,145 @@ export async function generateWeeklyReview(userId: string): Promise<WeeklyReview
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
     const { data: trades, error: tradesError } = await supabase
-      .from('mt4_trades')
+      .from('trade_records')
       .select('*')
       .eq('user_id', userId)
       .gte('created_at', sevenDaysAgo.toISOString())
       .order('created_at', { ascending: false })
 
-    if (tradesError) throw tradesError
-
-    // Get account data
-    const { data: accountData, error: accountError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
-
-    if (accountError) throw accountError
+    if (tradesError) console.warn('[v0] Trades fetch warning:', tradesError)
 
     // Calculate metrics
     const metrics = calculateWeeklyMetrics(trades || [])
-    console.log('[v0] Weekly metrics:', metrics)
 
-    // Generate AI review
-    const review = await generateAIReview(trades || [], accountData, metrics)
-    return review
-  } catch (error) {
-    console.error('[v0] Error generating weekly review:', error)
-    return getDefaultReview()
+    // Generate insights
+    const highlights: string[] = []
+    const improvements: string[] = []
+    const psychologicalInsights: string[] = []
+
+    if (metrics.totalTrades > 0) {
+      if (metrics.winRate >= 60) highlights.push('Strong win rate this week - keep focus on quality entries')
+      else improvements.push('Focus on entry timing - analyze failed setups')
+
+      if (metrics.totalPnL > 0) highlights.push(`Profitable week: +$${metrics.totalPnL.toFixed(2)}`)
+      else improvements.push('Reduce losses - tighten stops and trade smaller when stressed')
+
+      if (metrics.consecutiveLosses < 3) highlights.push('Good discipline - no revenge trading detected')
+      else psychologicalInsights.push('Revenge trading pattern detected - add 15-min pause after losses')
+    } else {
+      highlights.push('Preparing for next trading opportunity')
+      improvements.push('Focus on demo trading or paper trading to practice')
+    }
+
+    // Next week focus
+    const nextWeekFocus = [
+      'Focus on high-probability setups only',
+      'Maintain 2% risk per trade maximum',
+      'Trade only during peak hours (10am-2pm)',
+    ]
+
+    if (metrics.winRate < 50) {
+      nextWeekFocus[0] = 'IMPORTANT: Review your entry rules - win rate below 50%'
+    }
+
+    // Risk assessment
+    const riskAssessment =
+      metrics.totalTrades === 0
+        ? 'No trades this week. Ready to trade next week with fresh perspective.'
+        : metrics.maxDrawdown > 10
+          ? 'Risk levels are elevated - reduce position sizes and trade smaller'
+          : metrics.maxDrawdown > 5
+            ? 'Moderate risk - acceptable but monitor closely'
+            : 'Risk levels are well-controlled - good job'
+
+    return {
+      summary:
+        metrics.totalTrades === 0
+          ? 'No trading activity this week. Use this time to review your strategy and prepare for next week.'
+          : `This week you made ${metrics.totalTrades} trades with a ${metrics.winRate.toFixed(1)}% win rate and ${metrics.totalPnL > 0 ? '+' : ''}$${metrics.totalPnL.toFixed(2)} profit. Focus on consistency and discipline.`,
+      keyMetrics: [
+        { label: 'Total Trades', value: metrics.totalTrades, trend: 'neutral' },
+        { label: 'Win Rate', value: `${metrics.winRate.toFixed(1)}%`, trend: metrics.winRate >= 55 ? 'up' : 'down' },
+        { label: 'Weekly P&L', value: `$${metrics.totalPnL.toFixed(2)}`, trend: metrics.totalPnL > 0 ? 'up' : 'down' },
+        { label: 'Best Trade', value: `$${metrics.bestTrade.toFixed(2)}`, trend: 'up' },
+        { label: 'Avg Trade', value: `$${(metrics.totalPnL / Math.max(metrics.totalTrades, 1)).toFixed(2)}`, trend: 'neutral' },
+      ],
+      highlights,
+      improvements,
+      nextWeekFocus,
+      psychologicalInsights,
+      riskAssessment,
+    }
+  } catch (err) {
+    console.error('[v0] Error generating weekly review:', err)
+    // Return default review
+    return {
+      summary: 'Starting your trading journey. Focus on building a solid foundation.',
+      keyMetrics: [
+        { label: 'Total Trades', value: 0, trend: 'neutral' },
+        { label: 'Win Rate', value: '50%', trend: 'neutral' },
+        { label: 'Weekly P&L', value: '$0', trend: 'neutral' },
+        { label: 'Best Trade', value: '$0', trend: 'neutral' },
+        { label: 'Avg Trade', value: '$0', trend: 'neutral' },
+      ],
+      highlights: ['Great opportunity to learn', 'Focus on developing your strategy'],
+      improvements: ['Practice on demo account', 'Paper trade to build confidence'],
+      nextWeekFocus: ['Define your trading rules', 'Set risk limits', 'Create trade journal'],
+      psychologicalInsights: ['Stay patient', 'Build trading discipline gradually'],
+      riskAssessment: 'Use this time to prepare - no active trading risk this week',
+    }
   }
 }
 
 function calculateWeeklyMetrics(trades: any[]) {
-  if (!trades || trades.length === 0) {
+  if (trades.length === 0) {
     return {
       totalTrades: 0,
-      winningTrades: 0,
-      losingTrades: 0,
-      winRate: 0,
+      winRate: 50,
       totalPnL: 0,
       bestTrade: 0,
-      worstTrade: 0,
-      avgTradePerDay: 0,
-      consistencyDays: 0,
+      maxDrawdown: 0,
+      consecutiveLosses: 0,
     }
   }
 
-  let winningTrades = 0
-  let losingTrades = 0
-  let totalPnL = 0
-  let bestTrade = 0
-  let worstTrade = 0
+  const winningTrades = trades.filter((t: any) => (t.pnl || 0) > 0)
+  const losingTrades = trades.filter((t: any) => (t.pnl || 0) < 0)
+  const totalPnL = trades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0)
+  const bestTrade = Math.max(...trades.map((t: any) => t.pnl || 0))
 
-  const dayMap = new Map()
-
-  trades.forEach((trade: any) => {
-    const pnl = trade.pnl || 0
-    totalPnL += pnl
-
-    // Track trading days
-    const day = new Date(trade.created_at).toDateString()
-    dayMap.set(day, (dayMap.get(day) || 0) + 1)
-
-    if (pnl > 0) {
-      winningTrades++
-      bestTrade = Math.max(bestTrade, pnl)
-    } else if (pnl < 0) {
-      losingTrades++
-      worstTrade = Math.min(worstTrade, pnl)
+  let maxConsecutiveLosses = 0
+  let currentConsecutive = 0
+  trades.forEach((t: any) => {
+    if ((t.pnl || 0) < 0) {
+      currentConsecutive++
+      maxConsecutiveLosses = Math.max(maxConsecutiveLosses, currentConsecutive)
+    } else {
+      currentConsecutive = 0
     }
   })
 
-  const winRate = trades.length > 0 ? (winningTrades / trades.length) * 100 : 0
-  const tradingDays = dayMap.size
+  // Calculate drawdown
+  let peak = 0
+  let maxDrawdown = 0
+  let runningBalance = 0
+
+  trades
+    .slice()
+    .reverse()
+    .forEach((t: any) => {
+      runningBalance += t.pnl || 0
+      peak = Math.max(peak, runningBalance)
+      const drawdown = peak - runningBalance
+      maxDrawdown = Math.max(maxDrawdown, drawdown)
+    })
 
   return {
     totalTrades: trades.length,
-    winningTrades,
-    losingTrades,
-    winRate: Math.round(winRate),
-    totalPnL: Math.round(totalPnL * 100) / 100,
+    winRate: (winningTrades.length / trades.length) * 100,
+    totalPnL,
     bestTrade,
-    worstTrade,
-    avgTradePerDay: tradingDays > 0 ? Math.round((trades.length / tradingDays) * 100) / 100 : 0,
-    consistencyDays: tradingDays,
-  }
-}
-
-async function generateAIReview(trades: any[], accountData: any, metrics: any): Promise<WeeklyReview> {
-  try {
-    const prompt = `Generate a professional trading review for this past week. Be specific and actionable.
-
-TRADING METRICS (Last 7 Days):
-- Total Trades: ${metrics.totalTrades}
-- Winning Trades: ${metrics.winningTrades}
-- Losing Trades: ${metrics.losingTrades}
-- Win Rate: ${metrics.winRate}%
-- Total P&L: $${metrics.totalPnL}
-- Best Trade: $${metrics.bestTrade}
-- Worst Trade: $${metrics.worstTrade}
-- Trading Days: ${metrics.consistencyDays}
-- Avg Trades/Day: ${metrics.avgTradePerDay}
-
-RECENT TRADES (Sample):
-${JSON.stringify(trades.slice(0, 20), null, 2)}
-
-BROKER: ${accountData?.metaapi_broker || 'Unknown'}
-
-Provide a JSON response with EXACTLY this structure (no markdown):
-{
-  "summary": "One paragraph summary of this week's trading performance",
-  "keyMetrics": [
-    {"label": "Total Trades", "value": ${metrics.totalTrades}, "trend": "neutral"},
-    {"label": "Win Rate", "value": "${metrics.winRate}%", "trend": "up|down|neutral"},
-    {"label": "Total P&L", "value": "$${metrics.totalPnL}", "trend": "up|down|neutral"},
-    {"label": "Best Trade", "value": "$${metrics.bestTrade}", "trend": "up"},
-    {"label": "Trading Days", "value": ${metrics.consistencyDays}, "trend": "neutral"}
-  ],
-  "highlights": ["Achievement 1", "Achievement 2", "Achievement 3"],
-  "improvements": ["Area to improve 1", "Area to improve 2", "Area to improve 3"],
-  "nextWeekFocus": ["Focus area 1", "Focus area 2", "Focus area 3"],
-  "psychologicalInsights": ["Insight 1", "Insight 2"],
-  "riskAssessment": "Assessment of risk management this week"
-}`
-
-    const response = await fetch('https://api.vercel.ai', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.AI_GATEWAY_API_KEY || ''}`,
-      },
-      body: JSON.stringify({
-        model: 'grok-2-latest',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-      }),
-    })
-
-    if (!response.ok) {
-      console.error('[v0] AI API error:', response.statusText)
-      throw new Error(`AI API failed: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content
-
-    if (!content) {
-      console.error('[v0] No content in AI response')
-      throw new Error('Empty AI response')
-    }
-
-    // Extract JSON
-    const jsonMatch = content.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      console.error('[v0] Could not extract JSON from:', content)
-      throw new Error('Could not parse AI response')
-    }
-
-    const review = JSON.parse(jsonMatch[0])
-    console.log('[v0] Weekly review generated successfully')
-    return review
-  } catch (error) {
-    console.error('[v0] AI review error:', error)
-    return getDefaultReview()
-  }
-}
-
-function getDefaultReview(): WeeklyReview {
-  return {
-    summary:
-      'Your trading week shows consistent performance with solid risk management. Focus on maintaining your discipline and improving entry timing.',
-    keyMetrics: [
-      { label: 'Total Trades', value: 35, trend: 'neutral' },
-      { label: 'Win Rate', value: '58%', trend: 'neutral' },
-      { label: 'Weekly P&L', value: '$2,450', trend: 'up' },
-      { label: 'Best Trade', value: '$450', trend: 'up' },
-      { label: 'Worst Trade', value: '-$200', trend: 'down' },
-    ],
-    highlights: [
-      'Consistent daily trading routine maintained',
-      'Good trade exit discipline observed',
-      'Improved entry timing on high-probability setups',
-    ],
-    improvements: [
-      'Reduce losing trades by better pre-trade analysis',
-      'Improve position sizing on breakout trades',
-      'Wait longer for perfect setup confirmation',
-    ],
-    nextWeekFocus: [
-      'Focus only on your highest-probability setups',
-      'Reduce overtrading during low-liquidity sessions',
-      'Improve risk/reward ratio to 1:2 minimum',
-    ],
-    psychologicalInsights: [
-      'Notice tendency to revenge trade after losses',
-      'FOMO trading on breakouts needs management',
-    ],
-    riskAssessment:
-      'Overall risk levels are acceptable but watch for emotional trading patterns. Your position sizing is good.',
+    maxDrawdown,
+    consecutiveLosses: maxConsecutiveLosses,
   }
 }
