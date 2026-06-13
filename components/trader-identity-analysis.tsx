@@ -28,13 +28,14 @@ interface TraderProfile {
 export function TraderIdentityAnalysis() {
   const { user } = useAuth()
   const [profile, setProfile] = useState<TraderProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasStarted, setHasStarted] = useState(false)
 
   useEffect(() => {
-    if (!user?.id) return
+    if (!user?.id || !hasStarted) return
     analyzeTrader()
-  }, [user?.id])
+  }, [user?.id, hasStarted])
 
   const analyzeTrader = async () => {
     if (!user?.id) return
@@ -53,6 +54,30 @@ export function TraderIdentityAnalysis() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show empty state if not started
+  if (!hasStarted) {
+    return (
+      <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-700/50">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center gap-4 py-12">
+            <Crown className="w-12 h-12 text-purple-400" />
+            <div className="text-center space-y-2">
+              <h3 className="text-slate-200 font-semibold text-lg">Your Trading Identity</h3>
+              <p className="text-slate-400 text-sm">AI will analyze your trading behavior and reveal your unique trader profile</p>
+            </div>
+            <Button
+              onClick={() => setHasStarted(true)}
+              className="mt-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate My Profile
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   if (loading) {
@@ -77,13 +102,16 @@ export function TraderIdentityAnalysis() {
             <div className="flex-1">
               <h3 className="text-red-300 font-semibold mb-2">{error}</h3>
               <Button
-                onClick={analyzeTrader}
+                onClick={() => {
+                  setHasStarted(false)
+                  setError(null)
+                }}
                 variant="outline"
                 size="sm"
                 className="gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
-                Retry
+                Try Again
               </Button>
             </div>
           </div>

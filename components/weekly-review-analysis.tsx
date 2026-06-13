@@ -89,7 +89,21 @@ export function WeeklyReviewAnalysis() {
     )
   }
 
-  if (!review) return null
+  if (!review) {
+    return (
+      <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/30 border-slate-700/50">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center gap-4 py-12">
+            <Target className="w-12 h-12 text-indigo-400" />
+            <div className="text-center space-y-2">
+              <h3 className="text-slate-200 font-semibold text-lg">Weekly Review</h3>
+              <p className="text-slate-400 text-sm">Not enough data yet. Keep trading to get AI insights!</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <div className="space-y-6">
