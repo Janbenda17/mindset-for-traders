@@ -827,6 +827,7 @@ export default function DailyTrackerPage() {
         // No manual data entry needed — trades sync from MetaApi
         console.log("[v0] Daily Summary stage completed")
         setRefreshTrigger((prev) => prev + 1)
+      }
     } catch (error) {
       console.error(`[v0] Error saving stage ${stageNum}:`, error)
       toast({ title: "Error", description: `Failed to save stage ${stageNum}` })
