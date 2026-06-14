@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { motion } from 'framer-motion'
-import { Target, Shield, CheckCircle2, ArrowRight, Sparkles, Loader2 } from 'lucide-react'
+import { Target, TrendingUp, CheckCircle2, ArrowRight, Sparkles, Shield, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
@@ -29,7 +29,7 @@ export default function DailyTrackerPage() {
       focus: 'EUR/USD, GBP/USD',
       emotionalGoal: 'Patience a discipline',
       aiGenerated: true,
-      aiNotes: 'AI analyzovala včerajší data z brokera:\n• 2 prohraná trades (EUR/USD -150 due to breakout, GBP/USD -80 due to news)\n• Hlavní lesson: Brání si o 30min před zpravami\n• Doporučuji: Redukovat risk o 50% dnes, fokus na pull-backs'
+      aiNotes: 'Generováno AI z broker dat - AI detekovala 2 prohraná trades z včerejška s lessons'
     },
     trades: [
       { pair: 'EUR/USD', result: '+150', time: '10:30', loss: false },
@@ -45,42 +45,10 @@ export default function DailyTrackerPage() {
     stagesCompleted: 2
   }
 
-  // History entries - Only Daily Summary (bez intentions)
-  const historyData = [
-    {
-      date: '14.6.2026',
-      summary: {
-        totalResult: '+470',
-        winRate: '100%',
-        bestTrade: 'Gold +320',
-        lesson: 'Breakout strategie funguje perfektně na Gold, pokračuj v tomto'
-      }
-    },
-    {
-      date: '13.6.2026',
-      summary: {
-        totalResult: '+15',
-        winRate: '50%',
-        bestTrade: 'GBP/JPY +120',
-        lesson: 'Volatilita byla vysoká - měl jsem zmenšit lot size a být trpělivější s entry'
-      }
-    },
-    {
-      date: '12.6.2026',
-      summary: {
-        totalResult: '+320',
-        winRate: '67%',
-        bestTrade: 'EUR/USD +200',
-        lesson: 'Breakouty fungují - měl jsem udržet pozici v USD/JPY déle'
-      }
-    }
-  ]
-
   useEffect(() => {
     setIsLoading(false)
     setTodayEntry(demoData)
-    // History only shows Stage 2 (Daily Intentions), not Summary
-    setEntries(historyData)
+    setEntries([demoData])
   }, [])
 
   const handleGenerateAI = async () => {
@@ -112,17 +80,53 @@ export default function DailyTrackerPage() {
     }
   }
 
+  const handleArchiveToHistory = async () => {
+    if (!todayEntry) return
+    
+    try {
+      // Add today's entry to history
+      setEntries(prev => [todayEntry, ...prev])
+      
+      // Clear today's entry
+      setTodayEntry(null)
+      
+      toast({
+        title: 'Summary Archived',
+        description: 'Today\'s trading summary has been saved to history'
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to archive summary',
+        variant: 'destructive'
+      })
+    }
+  }
+
+  const handleClearToday = () => {
+    // Create confirmation dialog
+    if (window.confirm('Clear today\'s entry? This cannot be undone.')) {
+      setTodayEntry(null)
+      toast({
+        title: 'Today\'s Entry Cleared',
+        description: 'You can start fresh tomorrow'
+      })
+    }
+  }
+
   const stages = [
     {
       id: 2,
       name: 'Daily Intentions',
       icon: Target,
+      href: '/daily-intentions',
       completed: todayEntry?.stagesCompleted >= 1
     },
     {
       id: 3,
       name: 'Daily Summary',
       icon: Shield,
+      href: '/daily-summary',
       completed: todayEntry?.stagesCompleted >= 2
     }
   ]
@@ -152,8 +156,12 @@ export default function DailyTrackerPage() {
         {/* Tabs */}
         <Tabs defaultValue="today" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-900 border border-slate-800 p-1">
-            <TabsTrigger value="today">Today</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
+            <TabsTrigger value="today" className="text-sm">
+              Today
+            </TabsTrigger>
+            <TabsTrigger value="history" className="text-sm">
+              History
+            </TabsTrigger>
           </TabsList>
 
           {/* Today Tab */}
@@ -178,24 +186,25 @@ export default function DailyTrackerPage() {
                         {stages.map((stage) => {
                           const Icon = stage.icon
                           return (
-                            <motion.div
-                              key={stage.id}
-                              whileHover={{ y: -4 }}
-                              className={`p-4 rounded-xl transition-all border-2 ${
-                                stage.completed
-                                  ? 'bg-green-500/10 border-green-500/50'
-                                  : 'bg-slate-800/50 border-slate-700/50 hover:border-slate-600'
-                              }`}
-                            >
-                              <div className="flex items-start justify-between mb-3">
-                                <Icon className={`h-5 w-5 ${stage.completed ? 'text-green-400' : 'text-slate-400'}`} />
-                                {stage.completed && <CheckCircle2 className="h-5 w-5 text-green-400" />}
-                              </div>
-                              <h3 className="font-semibold text-white text-sm">{stage.name}</h3>
-                              <p className="text-xs text-slate-400 mt-1">
-                                {stage.completed ? 'Completed' : 'Pending'}
-                              </p>
-                            </motion.div>
+                            <Link key={stage.id} href={stage.href}>
+                              <motion.div
+                                whileHover={{ y: -4 }}
+                                className={`p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                                  stage.completed
+                                    ? 'bg-green-500/10 border-green-500/50'
+                                    : 'bg-slate-800/50 border-slate-700/50 hover:border-slate-600'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between mb-3">
+                                  <Icon className={`h-5 w-5 ${stage.completed ? 'text-green-400' : 'text-slate-400'}`} />
+                                  {stage.completed && <CheckCircle2 className="h-5 w-5 text-green-400" />}
+                                </div>
+                                <h3 className="font-semibold text-white text-sm">{stage.name}</h3>
+                                <p className="text-xs text-slate-400 mt-1">
+                                  {stage.completed ? 'Completed' : 'Pending'}
+                                </p>
+                              </motion.div>
+                            </Link>
                           )
                         })}
                       </div>
@@ -211,59 +220,66 @@ export default function DailyTrackerPage() {
                 >
                   <Card className="border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-slate-950">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-white">
-                        <Target className="h-5 w-5 text-cyan-400" />
-                        Daily Intentions
-                      </CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2 text-white">
+                          <Target className="h-5 w-5 text-cyan-400" />
+                          Daily Intentions
+                        </CardTitle>
+                        {!todayEntry.intentions?.aiGenerated && (
+                          <Button
+                            onClick={handleGenerateAI}
+                            disabled={aiGenerating}
+                            size="sm"
+                            className="bg-cyan-600 hover:bg-cyan-700"
+                          >
+                            {aiGenerating ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-4 w-4 mr-2" />
+                                Generate with AI
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs text-slate-400">Max Loss</p>
-                          <p className="text-lg font-bold text-cyan-400">{todayEntry?.intentions?.maxLoss}%</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-400">Target Trades</p>
-                          <p className="text-lg font-bold text-cyan-400">{todayEntry?.intentions?.targetTrades}</p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-slate-400 mb-2">Focus Areas</p>
-                        <p className="text-sm text-slate-300">{todayEntry?.intentions?.focus}</p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-slate-400 mb-2">Emotional Goal</p>
-                        <p className="text-sm text-slate-300">{todayEntry?.intentions?.emotionalGoal}</p>
-                      </div>
-
-                      {todayEntry?.intentions?.aiNotes && (
-                        <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
-                          <p className="text-xs text-cyan-300 font-bold mb-2">AI Analysis</p>
-                          <p className="text-xs text-cyan-200 whitespace-pre-wrap">{todayEntry.intentions.aiNotes}</p>
+                      {todayEntry.intentions?.aiGenerated && (
+                        <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-sm text-cyan-300 flex items-start gap-2">
+                          <Sparkles className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <span>{todayEntry.intentions.aiNotes}</span>
                         </div>
                       )}
 
-                      {!todayEntry?.intentions?.aiGenerated && (
-                        <Button 
-                          onClick={handleGenerateAI}
-                          disabled={aiGenerating}
-                          className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
-                        >
-                          {aiGenerating ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-4 h-4 mr-2" />
-                              Generate with AI
-                            </>
-                          )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs text-slate-400 uppercase">Max Loss</label>
+                          <p className="text-2xl font-bold text-white">{todayEntry.intentions?.maxLoss}%</p>
+                        </div>
+                        <div>
+                          <label className="text-xs text-slate-400 uppercase">Target Trades</label>
+                          <p className="text-2xl font-bold text-white">{todayEntry.intentions?.targetTrades}</p>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-xs text-slate-400 uppercase">Focus Areas</label>
+                          <p className="text-sm text-slate-300">{todayEntry.intentions?.focus}</p>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-xs text-slate-400 uppercase">Emotional Goal</label>
+                          <p className="text-sm text-slate-300">{todayEntry.intentions?.emotionalGoal}</p>
+                        </div>
+                      </div>
+
+                      <Link href="/daily-intentions">
+                        <Button className="w-full bg-cyan-600 hover:bg-cyan-700">
+                          Edit & Confirm
+                          <ArrowRight className="h-4 w-4 ml-2" />
                         </Button>
-                      )}
+                      </Link>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -278,50 +294,68 @@ export default function DailyTrackerPage() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-white">
                         <Shield className="h-5 w-5 text-green-400" />
-                        Daily Summary
+                        Today's Summary
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Trades List */}
-                      <div>
-                        <p className="text-xs text-slate-400 mb-2 font-bold">Today's Trades</p>
-                        <div className="space-y-2">
-                          {todayEntry?.trades?.map((trade, i) => (
-                            <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-slate-800/50">
-                              <div>
-                                <p className="text-sm font-semibold text-slate-300">{trade.pair}</p>
-                                <p className="text-xs text-slate-400">{trade.time}</p>
-                              </div>
-                              <p className={`text-sm font-bold ${trade.loss ? 'text-red-400' : 'text-green-400'}`}>
-                                {trade.result}
-                              </p>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                            <label className="text-xs text-slate-400">Total Result</label>
+                            <p className={`text-2xl font-bold ${todayEntry.summary?.totalResult.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                              {todayEntry.summary?.totalResult}
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                            <label className="text-xs text-slate-400">Win Rate</label>
+                            <p className="text-2xl font-bold text-white">{todayEntry.summary?.winRate}</p>
+                          </div>
+                        </div>
+
+                        <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                          <label className="text-xs text-slate-400">Best Trade</label>
+                          <p className="text-sm text-green-400 font-semibold">{todayEntry.summary?.bestTrade}</p>
+                        </div>
+
+                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                          <label className="text-xs text-amber-300">Key Lesson</label>
+                          <p className="text-sm text-amber-100 mt-1">{todayEntry.summary?.lesson}</p>
+                        </div>
+
+                        {todayEntry.trades?.length > 0 && (
+                          <div className="space-y-2">
+                            <label className="text-xs text-slate-400 uppercase">Trades</label>
+                            <div className="space-y-1">
+                              {todayEntry.trades.map((trade, i) => (
+                                <div key={i} className="flex justify-between items-center p-2 rounded bg-slate-800/30 border border-slate-700/30">
+                                  <span className="text-sm text-slate-300">{trade.pair} @ {trade.time}</span>
+                                  <span className={`text-sm font-semibold ${trade.loss ? 'text-red-400' : 'text-green-400'}`}>
+                                    {trade.result}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      </div>
+                          </div>
+                        )}
 
-                      {/* Summary Stats */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                          <label className="text-xs text-slate-400">Total Result</label>
-                          <p className={`text-2xl font-bold ${todayEntry.summary?.totalResult.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
-                            {todayEntry.summary?.totalResult}
-                          </p>
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 pt-4 border-t border-slate-700">
+                          <Button
+                            onClick={handleArchiveToHistory}
+                            className="flex-1 bg-cyan-600 hover:bg-cyan-700"
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                            Save to History
+                          </Button>
+                          <Button
+                            onClick={handleClearToday}
+                            variant="outline"
+                            className="flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10"
+                          >
+                            <ArrowRight className="h-4 w-4 mr-2" />
+                            Clear Entry
+                          </Button>
                         </div>
-                        <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                          <label className="text-xs text-slate-400">Win Rate</label>
-                          <p className="text-2xl font-bold text-white">{todayEntry.summary?.winRate}</p>
-                        </div>
-                      </div>
-
-                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                        <label className="text-xs text-slate-400">Best Trade</label>
-                        <p className="text-sm text-green-400 font-semibold">{todayEntry.summary?.bestTrade}</p>
-                      </div>
-
-                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                        <label className="text-xs text-amber-300 font-bold">Lesson Learned</label>
-                        <p className="text-sm text-amber-200 mt-1">{todayEntry.summary?.lesson}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -336,7 +370,7 @@ export default function DailyTrackerPage() {
             )}
           </TabsContent>
 
-          {/* History Tab - Complete Daily Summary with All Data */}
+          {/* History Tab */}
           <TabsContent value="history" className="space-y-4">
             {entries.length > 0 ? (
               entries.map((entry, i) => (
@@ -346,48 +380,18 @@ export default function DailyTrackerPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                 >
-                  <Card className="border border-slate-800 bg-slate-900/50 hover:border-slate-700 transition-all">
-                    <CardContent className="p-4 space-y-4">
-                      {/* Date & Result Header */}
-                      <div className="flex justify-between items-start pb-4 border-b border-slate-800">
+                  <Card className="border border-slate-800 bg-slate-900/50 cursor-pointer hover:border-slate-700 transition-all">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-sm text-slate-400 font-semibold">{entry.date}</p>
-                          <p className={`text-xl font-bold mt-1 ${entry.summary?.totalResult?.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                          <p className="text-sm text-slate-400">{entry.date}</p>
+                          <p className={`text-lg font-bold ${entry.summary?.totalResult?.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
                             {entry.summary?.totalResult}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-slate-400">Win Rate</p>
-                          <p className="text-lg font-bold text-cyan-400">{entry.summary?.winRate}</p>
-                        </div>
-                      </div>
-
-                      {/* Trades List */}
-                      {entry.trades?.length > 0 && (
-                        <div>
-                          <p className="text-xs text-slate-400 mb-2 font-bold">Trades ({entry.trades.length})</p>
-                          <div className="space-y-1">
-                            {entry.trades.map((trade, j) => (
-                              <div key={j} className="flex justify-between items-center p-2 rounded bg-slate-800/50">
-                                <span className="text-sm text-slate-300">{trade.pair} @ {trade.time}</span>
-                                <span className={`text-sm font-semibold ${trade.loss ? 'text-red-400' : 'text-green-400'}`}>
-                                  {trade.result}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Best Trade & Lesson */}
-                      <div className="grid grid-cols-1 gap-3">
-                        <div className="p-2 rounded bg-slate-800/50">
-                          <p className="text-xs text-slate-400">Best Trade</p>
-                          <p className="text-sm text-green-400 font-semibold">{entry.summary?.bestTrade}</p>
-                        </div>
-                        <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20">
-                          <p className="text-xs text-amber-300 font-bold">Lesson</p>
-                          <p className="text-xs text-amber-200 mt-1">{entry.summary?.lesson}</p>
+                          <p className="text-sm text-slate-400">Win Rate</p>
+                          <p className="text-lg font-semibold text-white">{entry.summary?.winRate}</p>
                         </div>
                       </div>
                     </CardContent>

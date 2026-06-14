@@ -31,6 +31,7 @@ export default function Dashboard() {
   // Calculate dynamic values from analytics
   const totalCapital = analytics?.summary.totalPnL ? Math.abs(analytics.summary.totalPnL) + userCapital : userCapital
   const monthlyPL = analytics?.summary.totalPnL ?? 3240
+  const readiness = analytics?.summary.avgReadiness ?? 78
   const xpValue = Math.max(0, gamification?.data?.xp ?? 0)
 
   useEffect(() => {
@@ -147,6 +148,13 @@ export default function Dashboard() {
                 color: 'text-blue-400',
                 borderColor: 'border-blue-500/20',
                 bgColor: 'bg-blue-500/5'
+              },
+              { 
+                label: t('dashboard_readiness'), 
+                value: `${Math.round(readiness)}%`, 
+                color: 'text-purple-400',
+                borderColor: 'border-purple-500/20',
+                bgColor: 'bg-purple-500/5'
               },
               { 
                 label: t('dashboard_xp'), 
