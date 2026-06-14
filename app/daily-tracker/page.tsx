@@ -55,6 +55,7 @@ export default function DailyTrackerPage() {
     // Load real data from Supabase
     const loadData = async () => {
       try {
+        const supabase = getBrowserSupabase()
         const today = new Date().toISOString().split('T')[0]
         const { data, error } = await supabase
           .from('daily_tracker')
