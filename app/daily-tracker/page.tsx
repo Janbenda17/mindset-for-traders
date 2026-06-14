@@ -3,299 +3,315 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
-import { getBrowserSupabase } from '@/lib/supabase/browser'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { motion } from 'framer-motion'
-import { Target, Calendar as CalendarIcon, TrendingUp, CheckCircle2, Moon, ArrowRight, Sparkles, Sun, Shield, Brain, Zap, AlertTriangle, Heart } from 'lucide-react'
+import { Target, TrendingUp, CheckCircle2, ArrowRight, Sparkles, Shield, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import Link from 'next/link'
 
 export default function DailyTrackerPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { toast } = useToast()
-  const [activeTab, setActiveTab] = useState('today')
-  const [isLiveMode, setIsLiveMode] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [todayEntry, setTodayEntry] = useState(null)
   const [entries, setEntries] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [aiGenerating, setAiGenerating] = useState(false)
 
   // Demo data
-  const virtualData = [
+  const demoData = {
+    date: new Date().toLocaleDateString('cs-CZ'),
+    intentions: {
+      maxLoss: 2,
+      targetTrades: 3,
+      focus: 'EUR/USD, GBP/USD',
+      emotionalGoal: 'Patience a discipline',
+      aiGenerated: true,
+      aiNotes: 'Generováno AI z broker dat - AI detekovala 2 prohraná trades z včerejška s lessons'
+    },
+    trades: [
+      { pair: 'EUR/USD', result: '+150', time: '10:30', loss: false },
+      { pair: 'GBP/USD', result: '+220', time: '14:15', loss: false },
+      { pair: 'USD/JPY', result: '-80', time: '16:45', loss: true }
+    ],
+    summary: {
+      totalResult: '+290',
+      winRate: '67%',
+      bestTrade: 'GBP/USD +220',
+      lesson: 'Příliš dlouho jsem setrvál v USD/JPY'
+    },
+    stagesCompleted: 2
+  }
+
+  useEffect(() => {
+    setIsLoading(false)
+    setTodayEntry(demoData)
+    setEntries([demoData])
+  }, [])
+
+  const handleGenerateAI = async () => {
+    setAiGenerating(true)
+    try {
+      // Simulate AI generation
+      await new Promise(r => setTimeout(r, 1500))
+      
+      const aiIntentions = {
+        maxLoss: 2,
+        targetTrades: 3,
+        focus: 'EUR/USD, GBP/USD',
+        emotionalGoal: 'Patience a discipline',
+        aiGenerated: true,
+        aiNotes: 'AI analyzovala včerajší data - 2 prohrané trades → redukuji risk o 50%'
+      }
+      
+      setTodayEntry(prev => ({
+        ...prev,
+        intentions: aiIntentions
+      }))
+      
+      toast({
+        title: 'AI Intentions Generated',
+        description: 'Your trading intentions are ready for today'
+      })
+    } finally {
+      setAiGenerating(false)
+    }
+  }
+
+  const stages = [
     {
-      date: new Date().toLocaleDateString('cs-CZ'),
-      morningCheck: {
-        sleepHours: 7.5,
-        sleepQuality: 8,
-        energyLevel: 8,
-        focus: 7,
-        stressLevel: 3,
-        emotionalState: 7
-      },
-      intention: {
-        goals: 'Focus na EUR/USD, max 2 trades',
-        maxRiskPercent: 2,
-        emotionalGoal: 'Disciplína a patience'
-      },
-      stagesCompleted: 3
+      id: 2,
+      name: 'Daily Intentions',
+      icon: Target,
+      href: '/daily-intentions',
+      completed: todayEntry?.stagesCompleted >= 1
+    },
+    {
+      id: 3,
+      name: 'Daily Summary',
+      icon: Shield,
+      href: '/daily-summary',
+      completed: todayEntry?.stagesCompleted >= 2
     }
   ]
 
-  useEffect(() => {
-    if (!user) {
-      setIsLiveMode(false)
-      setEntries(virtualData)
-      setTodayEntry(virtualData[0])
-      setIsLoading(false)
-      return
-    }
-
-    // Load real data from Supabase
-    const loadData = async () => {
-      try {
-        const supabase = getBrowserSupabase()
-        const today = new Date().toISOString().split('T')[0]
-        const { data, error } = await supabase
-          .from('daily_tracker')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: false })
-
-        if (error) throw error
-
-        setEntries(data || [])
-        const today_entry = data?.find((d) => d.date === today)
-        setTodayEntry(today_entry)
-      } catch (error) {
-        console.error('[v0] Error loading daily tracker:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadData()
-  }, [user])
-
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin mb-4">
-            <Moon className="h-12 w-12 text-cyan-400" />
-          </div>
-          <p className="text-white">Načítám tvůj denní tracking...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 to-slate-900">
+        <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
       </div>
     )
   }
 
-  const stageData = [
-    {
-      id: 1,
-      name: 'Ranní rutina',
-      icon: Sun,
-      href: '/morning-check'
-    },
-    {
-      id: 2,
-      name: 'Denní záměr',
-      icon: Target,
-      href: '/daily-intention'
-    },
-    {
-      id: 3,
-      name: 'Denní shrnutí',
-      icon: Shield,
-      href: '/daily-summary'
-    }
-  ]
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 pt-20 pb-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
-                Daily Tracker
-              </h1>
-              <p className="text-gray-400 mt-2">Sleduj svůj denní progress a výkonnost</p>
-            </div>
-            <Badge
-              className={`md:text-base text-sm md:px-6 px-4 md:py-2 py-1 rounded-full ${
-                isLiveMode
-                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                  : 'bg-sky-500/20 text-sky-400 border-sky-500/30'
-              }`}
-            >
-              {isLiveMode ? '🔴 Live' : '🎮 Virtual'}
-            </Badge>
-          </div>
+          <h1 className="text-4xl font-black text-white mb-2">Daily Tracker</h1>
+          <p className="text-slate-400">Your trading day at a glance</p>
         </motion.div>
 
-        {/* Virtual Mode Banner */}
-        {!isLiveMode && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-500/30 rounded-lg py-3 px-4 flex items-center gap-3 mb-6"
-          >
-            <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0" />
-            <span className="text-xs sm:text-sm text-amber-100">
-              <span className="font-bold text-white">Virtual Mode</span> – Demo data pro náhled
-            </span>
-          </motion.div>
-        )}
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-slate-900/50 border border-white/10 rounded-xl p-1">
-            <TabsTrigger value="today" className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-pink-500">
-              <Target className="h-4 w-4 mr-2" />
-              Dnes
+        {/* Tabs */}
+        <Tabs defaultValue="today" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-900 border border-slate-800 p-1">
+            <TabsTrigger value="today" className="text-sm">
+              Today
             </TabsTrigger>
-            <TabsTrigger value="history" className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-cyan-500">
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              Historie
+            <TabsTrigger value="history" className="text-sm">
+              History
             </TabsTrigger>
           </TabsList>
 
           {/* Today Tab */}
           <TabsContent value="today" className="space-y-6">
             {todayEntry ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                {/* Morning Check Card */}
-                {todayEntry.morningCheck && (
-                  <Card className="border-cyan-500/30 bg-gradient-to-br from-cyan-900/20 to-slate-900/50">
+              <>
+                {/* Stage Progress */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Sun className="h-5 w-5 text-cyan-400" />
-                        Ranní Kontrola
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <Sparkles className="h-5 w-5 text-cyan-400" />
+                        Today's Progress
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                          <div className="text-xs text-gray-400 mb-1">Spánek</div>
-                          <div className="text-2xl font-bold text-white">{todayEntry.morningCheck.sleepHours}h</div>
-                          <div className="text-xs text-gray-400 mt-1">kvalita {todayEntry.morningCheck.sleepQuality}/10</div>
-                        </div>
-                        <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                          <div className="text-xs text-gray-400 mb-1">Energie</div>
-                          <div className="text-2xl font-bold text-white">{todayEntry.morningCheck.energyLevel}/10</div>
-                        </div>
-                        <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                          <div className="text-xs text-gray-400 mb-1">Soustředění</div>
-                          <div className="text-2xl font-bold text-white">{todayEntry.morningCheck.focus}/10</div>
-                        </div>
-                        <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                          <div className="text-xs text-gray-400 mb-1">Stres</div>
-                          <div className="text-2xl font-bold text-white">{todayEntry.morningCheck.stressLevel}/10</div>
-                        </div>
-                        <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                          <div className="text-xs text-gray-400 mb-1">Nálada</div>
-                          <div className="text-2xl font-bold text-white">{todayEntry.morningCheck.emotionalState}/10</div>
-                        </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {stages.map((stage) => {
+                          const Icon = stage.icon
+                          return (
+                            <Link key={stage.id} href={stage.href}>
+                              <motion.div
+                                whileHover={{ y: -4 }}
+                                className={`p-4 rounded-xl cursor-pointer transition-all border-2 ${
+                                  stage.completed
+                                    ? 'bg-green-500/10 border-green-500/50'
+                                    : 'bg-slate-800/50 border-slate-700/50 hover:border-slate-600'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between mb-3">
+                                  <Icon className={`h-5 w-5 ${stage.completed ? 'text-green-400' : 'text-slate-400'}`} />
+                                  {stage.completed && <CheckCircle2 className="h-5 w-5 text-green-400" />}
+                                </div>
+                                <h3 className="font-semibold text-white text-sm">{stage.name}</h3>
+                                <p className="text-xs text-slate-400 mt-1">
+                                  {stage.completed ? 'Completed' : 'Pending'}
+                                </p>
+                              </motion.div>
+                            </Link>
+                          )
+                        })}
                       </div>
                     </CardContent>
                   </Card>
-                )}
+                </motion.div>
 
-                {/* Daily Intention Card */}
-                {todayEntry.intention && (
-                  <Card className="border-blue-500/30 bg-gradient-to-br from-blue-900/20 to-slate-900/50">
+                {/* Stage 2: Daily Intentions (AI Generated) */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <Card className="border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-slate-950">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Target className="h-5 w-5 text-blue-400" />
-                        Denní Cíle
-                      </CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2 text-white">
+                          <Target className="h-5 w-5 text-cyan-400" />
+                          Daily Intentions
+                        </CardTitle>
+                        {!todayEntry.intentions?.aiGenerated && (
+                          <Button
+                            onClick={handleGenerateAI}
+                            disabled={aiGenerating}
+                            size="sm"
+                            className="bg-cyan-600 hover:bg-cyan-700"
+                          >
+                            {aiGenerating ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-4 w-4 mr-2" />
+                                Generate with AI
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                        <div className="text-sm text-blue-300 font-semibold mb-1">Cíl</div>
-                        <div className="text-white">{todayEntry.intention.goals}</div>
+                      {todayEntry.intentions?.aiGenerated && (
+                        <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-sm text-cyan-300 flex items-start gap-2">
+                          <Sparkles className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <span>{todayEntry.intentions.aiNotes}</span>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs text-slate-400 uppercase">Max Loss</label>
+                          <p className="text-2xl font-bold text-white">{todayEntry.intentions?.maxLoss}%</p>
+                        </div>
+                        <div>
+                          <label className="text-xs text-slate-400 uppercase">Target Trades</label>
+                          <p className="text-2xl font-bold text-white">{todayEntry.intentions?.targetTrades}</p>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-xs text-slate-400 uppercase">Focus Areas</label>
+                          <p className="text-sm text-slate-300">{todayEntry.intentions?.focus}</p>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-xs text-slate-400 uppercase">Emotional Goal</label>
+                          <p className="text-sm text-slate-300">{todayEntry.intentions?.emotionalGoal}</p>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                          <div className="text-sm text-blue-300 font-semibold mb-1">Max Riziko</div>
-                          <div className="text-white text-lg font-bold">{todayEntry.intention.maxRiskPercent}%</div>
+
+                      <Link href="/daily-intentions">
+                        <Button className="w-full bg-cyan-600 hover:bg-cyan-700">
+                          Edit & Confirm
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Stage 3: Daily Summary */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <Card className="border border-green-500/30 bg-gradient-to-br from-green-500/10 to-slate-950">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <Shield className="h-5 w-5 text-green-400" />
+                        Today's Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                            <label className="text-xs text-slate-400">Total Result</label>
+                            <p className={`text-2xl font-bold ${todayEntry.summary?.totalResult.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                              {todayEntry.summary?.totalResult}
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                            <label className="text-xs text-slate-400">Win Rate</label>
+                            <p className="text-2xl font-bold text-white">{todayEntry.summary?.winRate}</p>
+                          </div>
                         </div>
-                        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                          <div className="text-sm text-blue-300 font-semibold mb-1">Emoční Cíl</div>
-                          <div className="text-white">{todayEntry.intention.emotionalGoal}</div>
+
+                        <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                          <label className="text-xs text-slate-400">Best Trade</label>
+                          <p className="text-sm text-green-400 font-semibold">{todayEntry.summary?.bestTrade}</p>
                         </div>
+
+                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                          <label className="text-xs text-amber-300">Key Lesson</label>
+                          <p className="text-sm text-amber-100 mt-1">{todayEntry.summary?.lesson}</p>
+                        </div>
+
+                        {todayEntry.trades?.length > 0 && (
+                          <div className="space-y-2">
+                            <label className="text-xs text-slate-400 uppercase">Trades</label>
+                            <div className="space-y-1">
+                              {todayEntry.trades.map((trade, i) => (
+                                <div key={i} className="flex justify-between items-center p-2 rounded bg-slate-800/30 border border-slate-700/30">
+                                  <span className="text-sm text-slate-300">{trade.pair} @ {trade.time}</span>
+                                  <span className={`text-sm font-semibold ${trade.loss ? 'text-red-400' : 'text-green-400'}`}>
+                                    {trade.result}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
-                )}
-
-                {/* Stages Progress */}
-                <Card className="border-green-500/30 bg-gradient-to-br from-green-900/20 to-slate-900/50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-green-400" />
-                      Fáze Dne ({todayEntry.stagesCompleted}/3)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {stageData.map((stage, index) => (
-                        <div
-                          key={stage.id}
-                          className={`p-4 rounded-lg border transition-all ${
-                            index < todayEntry.stagesCompleted
-                              ? 'bg-green-500/10 border-green-500/30'
-                              : 'bg-slate-700/20 border-slate-600/30'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-2">
-                            <div
-                              className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
-                                index < todayEntry.stagesCompleted
-                                  ? 'bg-green-500/20 border-green-500'
-                                  : 'border-slate-600'
-                              }`}
-                            >
-                              {index < todayEntry.stagesCompleted && (
-                                <div className="h-2 w-2 bg-green-400 rounded-full" />
-                              )}
-                            </div>
-                            <span className="text-sm font-bold text-white">Fáze {stage.id}</span>
-                          </div>
-                          <div className="text-sm font-medium text-gray-300 mb-3">{stage.name}</div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => router.push(stage.href)}
-                            className="w-full"
-                          >
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                </motion.div>
+              </>
             ) : (
-              <Card className="border-slate-700/50 bg-slate-800/30">
-                <CardContent className="p-16 text-center">
-                  <CalendarIcon className="h-24 w-24 mx-auto mb-6 text-slate-600" />
-                  <h3 className="text-2xl font-bold text-slate-400 mb-2">Zatím nic</h3>
-                  <p className="text-gray-400 mb-6">Začni vyplněním Ranní Kontroly</p>
-                  <Button onClick={() => router.push('/morning-check')} size="lg">
-                    Začít
-                  </Button>
+              <Card className="border border-slate-800 bg-slate-900">
+                <CardContent className="p-8 text-center">
+                  <p className="text-slate-400">No entry for today yet</p>
                 </CardContent>
               </Card>
             )}
@@ -303,43 +319,36 @@ export default function DailyTrackerPage() {
 
           {/* History Tab */}
           <TabsContent value="history" className="space-y-4">
-            {entries && entries.length > 0 ? (
-              <div className="space-y-4">
-                {entries.map((entry, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Card className="border-slate-700/30 hover:border-slate-600/50 transition-all cursor-pointer"
-                      onClick={() => setActiveTab('today')}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <CalendarIcon className="h-5 w-5 text-gray-400" />
-                            <div>
-                              <div className="font-semibold text-white">{entry.date}</div>
-                              <div className="text-sm text-gray-400">{entry.stagesCompleted}/3 fází hotovo</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-5 w-5 text-green-400" />
-                            <span className="text-sm text-green-400">Hotovo</span>
-                          </div>
+            {entries.length > 0 ? (
+              entries.map((entry, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                >
+                  <Card className="border border-slate-800 bg-slate-900/50 cursor-pointer hover:border-slate-700 transition-all">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm text-slate-400">{entry.date}</p>
+                          <p className={`text-lg font-bold ${entry.summary?.totalResult?.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                            {entry.summary?.totalResult}
+                          </p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
+                        <div className="text-right">
+                          <p className="text-sm text-slate-400">Win Rate</p>
+                          <p className="text-lg font-semibold text-white">{entry.summary?.winRate}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))
             ) : (
-              <Card className="border-slate-700/50 bg-slate-800/30">
-                <CardContent className="p-16 text-center">
-                  <Moon className="h-24 w-24 mx-auto mb-6 text-slate-600" />
-                  <h3 className="text-2xl font-bold text-slate-400 mb-2">Žádná data</h3>
-                  <p className="text-gray-400">Tvoje historii zde uvidíš později</p>
+              <Card className="border border-slate-800 bg-slate-900">
+                <CardContent className="p-8 text-center">
+                  <p className="text-slate-400">No history yet</p>
                 </CardContent>
               </Card>
             )}
