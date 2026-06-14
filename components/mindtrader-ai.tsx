@@ -317,8 +317,8 @@ const MindTraderAI = () => {
   useEffect(() => {
     if (messages.length === 0) {
       const welcomeMessage = isEn
-        ? `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Complete morning check"}\n\nWhat's bothering you? How can I help?`
-        : `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nVidím tvá data a jsem tady abych ti pomohl s psychologií tradingu.\n\nTvoje aktuální readiness skóre: ${currentReadiness !== null ? currentReadiness + "%" : "Vyplň ranní kontrolu"}\n\nCo tě trápí? Jak ti mohu pomoci?`
+        ? `Hi! I'm your MindTrader AI coach. 🧠\n\nI'm here to help you with trading psychology and decision-making.\n\nWhat's on your mind? How can I help?`
+        : `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nJsem tady abych ti pomohl s psychologií tradingu a rozhodováním.\n\nCo tě trápí? Jak ti mohu pomoci?`
 
       setMessages([
         {
@@ -329,7 +329,7 @@ const MindTraderAI = () => {
         },
       ])
     }
-  }, [currentReadiness, isEn])
+  }, [isEn])
 
   const triggerRecoveryMode = () => {
     const recoveryMessage = isEn
@@ -411,7 +411,6 @@ const MindTraderAI = () => {
             mood: currentMorningCheck?.sleep_quality || 5,
             stress: currentMorningCheck?.stress_level || 5,
             confidence: 5,
-            readiness: currentReadiness || 50,
             sleep: currentMorningCheck?.sleep_hours || 7,
             energy: currentMorningCheck?.energy_level || 5,
           },
@@ -559,8 +558,8 @@ const MindTraderAI = () => {
     try {
       const insightMessage =
         language === "cs"
-          ? `📊 AI INSIGHTS - POSLEDNÍ TÝDEN\n\n🧠 Co se děje:\n- Tvůj průměrný readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Není dostupné"}\n- Spánek: ${currentMorningCheck?.sleep_quality || 5}/10\n- Stres: ${currentMorningCheck?.stress_level || 5}/10\n- Nálada: ${currentMorningCheck?.mood || 5}/10\n\n💡 Proč se to děje:\n${currentMorningCheck?.sleep_quality < 7 ? "- Nedostatečný spánek ovlivňuje výkon\n" : ""}${currentMorningCheck?.stress_level > 6 ? "- Vysoký stres snižuje koncentraci\n" : ""}${trades.length === 0 ? "- Zatím nemám dostatek dat z obchodů\n" : ""}\n\n🎯 Co udělat dál:\n1. ${currentMorningCheck?.sleep_quality < 7 ? "Zlepši kvalitu spánku (cíl 7-9h)" : "Udržuj dobré spánkové návyky"}\n2. ${currentMorningCheck?.stress_level > 6 ? "Sniž stres (meditace, procházky)" : "Pokračuj v dobrém managementu stresu"}\n3. Pravidelně zapisuj do journalu\n\nDisciplína = dlouhodobý úspěch! 💪`
-          : `📊 AI INSIGHTS - LAST WEEK\n\n🧠 What's happening:\n- Your average readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Not available"}\n- Sleep: ${currentMorningCheck?.sleep_quality || 5}/10\n- Stress: ${currentMorningCheck?.stress_level || 5}/10\n- Mood: ${currentMorningCheck?.mood || 5}/10\n\n💡 Why it's happening:\n${currentMorningCheck?.sleep_quality < 7 ? "- Insufficient sleep affects performance\n" : ""}${currentMorningCheck?.stress_level > 6 ? "- High stress reduces concentration\n" : ""}${trades.length === 0 ? "- Not enough trading data yet\n" : ""}\n\n🎯 What to do next:\n1. ${currentMorningCheck?.sleep_quality < 7 ? "Improve sleep quality (target 7-9h)" : "Maintain good sleep habits"}\n2. ${currentMorningCheck?.stress_level > 6 ? "Reduce stress (meditation, walks)" : "Continue good stress management"}\n3. Journal regularly\n\nDisciplína = long-term success! 💪`
+          ? `📊 AI INSIGHTS - POSLEDNÍ TÝDEN\n\n🧠 Co se děje:\n- Spánek: ${currentMorningCheck?.sleep_quality || 5}/10\n- Stres: ${currentMorningCheck?.stress_level || 5}/10\n- Nálada: ${currentMorningCheck?.mood || 5}/10\n\n💡 Proč se to děje:\n${currentMorningCheck?.sleep_quality < 7 ? "- Nedostatečný spánek ovlivňuje výkon\n" : ""}${currentMorningCheck?.stress_level > 6 ? "- Vysoký stres snižuje koncentraci\n" : ""}${trades.length === 0 ? "- Zatím nemám dostatek dat z obchodů\n" : ""}\n\n🎯 Co udělat dál:\n1. ${currentMorningCheck?.sleep_quality < 7 ? "Zlepši kvalitu spánku (cíl 7-9h)" : "Udržuj dobré spánkové návyky"}\n2. ${currentMorningCheck?.stress_level > 6 ? "Sniž stres (meditace, procházky)" : "Pokračuj v dobrém managementu stresu"}\n3. Pravidelně zapisuj do journalu\n\nDisciplína = dlouhodobý úspěch! 💪`
+          : `📊 AI INSIGHTS - LAST WEEK\n\n🧠 What's happening:\n- Sleep: ${currentMorningCheck?.sleep_quality || 5}/10\n- Stress: ${currentMorningCheck?.stress_level || 5}/10\n- Mood: ${currentMorningCheck?.mood || 5}/10\n\n💡 Why it's happening:\n${currentMorningCheck?.sleep_quality < 7 ? "- Insufficient sleep affects performance\n" : ""}${currentMorningCheck?.stress_level > 6 ? "- High stress reduces concentration\n" : ""}${trades.length === 0 ? "- Not enough trading data yet\n" : ""}\n\n🎯 What to do next:\n1. ${currentMorningCheck?.sleep_quality < 7 ? "Improve sleep quality (target 7-9h)" : "Maintain good sleep habits"}\n2. ${currentMorningCheck?.stress_level > 6 ? "Reduce stress (meditation, walks)" : "Continue good stress management"}\n3. Journal regularly\n\nDisciplína = long-term success! 💪`
 
       const insightMsg = {
         role: "assistant",
@@ -589,8 +588,8 @@ const MindTraderAI = () => {
 
     const reportContent =
       language === "cs"
-        ? `# MindTrader AI Report\n\n**Datum:** ${new Date().toLocaleDateString("cs-CZ")}\n**Readiness Score:** ${currentReadiness !== null ? currentReadiness + "%" : "Není dostupné"}\n\n## 📊 Přehled výkonu\n\n- Celkový počet obchodů: ${trades.length}\n- Průměrná nálada: ${currentMorningCheck?.mood || 5}/10\n- Úroveň stresu: ${currentMorningCheck?.stress_level || 5}/10\n\n## 🧠 Psychologické poznatky\n\n${currentMorningCheck?.stress_level > 6 ? "⚠️ Vysoký stres může ovlivňovat rozhodování\n" : "✅ Stres je pod kontrolou\n"}${currentMorningCheck?.sleep_quality < 7 ? "⚠️ Nedostatečný spánek snižuje výkon\n" : "✅ Kvalita spánku je dobrá\n"}\n## 🎯 Doporučení\n\n1. Pokračuj v pravidelném journalingu\n2. Sleduj své readiness score před obchodováním\n3. Respektuj své mentální limity\n\n---\n\n*Vygenerováno MindTrader AI*`
-        : `# MindTrader AI Report\n\n**Date:** ${new Date().toLocaleDateString("en-US")}\n**Readiness Score:** ${currentReadiness !== null ? currentReadiness + "%" : "Not available"}\n\n## 📊 Performance Overview\n\n- Total trades: ${trades.length}\n- Average mood: ${currentMorningCheck?.mood || 5}/10\n- Stress level: ${currentMorningCheck?.stress_level || 5}/10\n\n## 🧠 Psychological Insights\n\n${currentMorningCheck?.stress_level > 6 ? "⚠️ High stress may affect decision-making\n" : "✅ Stress is under control\n"}${currentMorningCheck?.sleep_quality < 7 ? "⚠️ Insufficient sleep reduces performance\n" : "✅ Sleep quality is good\n"}\n## 🎯 Recommendations\n\n1. Continue regular journaling\n2. Monitor readiness score before trading\n3. Respect your mental limits\n\n---\n\n*Generated by MindTrader AI*`
+        ? `# MindTrader AI Report\n\n**Datum:** ${new Date().toLocaleDateString("cs-CZ")}\n\n## 📊 Přehled výkonu\n\n- Celkový počet obchodů: ${trades.length}\n- Průměrná nálada: ${currentMorningCheck?.mood || 5}/10\n- Úroveň stresu: ${currentMorningCheck?.stress_level || 5}/10\n\n## 🧠 Psychologické poznatky\n\n${currentMorningCheck?.stress_level > 6 ? "⚠️ Vysoký stres může ovlivňovat rozhodování\n" : "✅ Stres je pod kontrolou\n"}${currentMorningCheck?.sleep_quality < 7 ? "⚠️ Nedostatečný spánek snižuje výkon\n" : "✅ Kvalita spánku je dobrá\n"}\n## 🎯 Doporučení\n\n1. Pokračuj v pravidelném journalingu\n2. Sleduj svůj stav před obchodováním\n3. Respektuj své mentální limity\n\n---\n\n*Vygenerováno MindTrader AI*`
+        : `# MindTrader AI Report\n\n**Date:** ${new Date().toLocaleDateString("en-US")}\n\n## 📊 Performance Overview\n\n- Total trades: ${trades.length}\n- Average mood: ${currentMorningCheck?.mood || 5}/10\n- Stress level: ${currentMorningCheck?.stress_level || 5}/10\n\n## 🧠 Psychological Insights\n\n${currentMorningCheck?.stress_level > 6 ? "⚠️ High stress may affect decision-making\n" : "✅ Stress is under control\n"}${currentMorningCheck?.sleep_quality < 7 ? "⚠️ Insufficient sleep reduces performance\n" : "✅ Sleep quality is good\n"}\n## 🎯 Recommendations\n\n1. Continue regular journaling\n2. Monitor your state before trading\n3. Respect your mental limits\n\n---\n\n*Generated by MindTrader AI*`
 
     const blob = new Blob([reportContent], { type: "text/markdown" })
     const url = URL.createObjectURL(blob)
@@ -606,12 +605,7 @@ const MindTraderAI = () => {
     })
   }
 
-  const getReadinessColor = (score) => {
-    if (score === null) return "text-gray-500"
-    if (score >= 75) return "text-green-500"
-    if (score >= 60) return "text-yellow-500"
-    return "text-red-500"
-  }
+
 
   const getReadinessStatus = (score) => {
     if (score === null) return isEn ? "Not available" : "Není dostupné"
