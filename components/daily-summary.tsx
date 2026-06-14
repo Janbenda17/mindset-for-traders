@@ -416,7 +416,6 @@ export function DailySummary() {
           totalPnl,
           winRate,
           tradesCount: todayTrades.length,
-          readinessScore: readinessScore,
           mood: morningCheck?.emotionalState || 5,
           aiInsights,
           morningCheck,
@@ -454,37 +453,6 @@ export function DailySummary() {
   const winningTrades = todayTrades.filter((t) => t.pnl > 0).length
   const losingTrades = todayTrades.filter((t) => t.pnl < 0).length
   const winRate = todayTrades.length > 0 ? Math.round((winningTrades / todayTrades.length) * 100) : 0
-
-  // Calculate comprehensive readiness score from morning check and system data
-  const calculateReadinessScore = (): number => {
-    if (!morningCheck) return 0
-
-    // Base score from morning check
-    const sleepFactor = (morningCheck.sleepHours / 8) * 20 // 0-20 points (ideal is 8 hours)
-    const sleepQuality = morningCheck.sleepQuality * 2 // 0-20 points
-    const energyLevel = morningCheck.energyLevel * 2 // 0-20 points
-    const stressFactor = (10 - morningCheck.stressLevel) * 2 // 0-20 points (inverse: lower stress is better)
-    const focusFactor = morningCheck.focus * 2 // 0-20 points
-
-    let totalScore =
-      Math.min(sleepFactor, 20) +
-      sleepQuality +
-      energyLevel +
-      stressFactor +
-      focusFactor
-
-    // Adjust based on trading performance today
-    if (todayTrades.length > 0) {
-      // Winning days improve readiness confidence
-      if (winRate >= 70) totalScore = Math.min(totalScore + 10, 100)
-      // But large losing days reduce confidence
-      else if (winRate <= 30 && totalPnL < 0) totalScore = Math.max(totalScore - 10, 0)
-    }
-
-    return Math.round(Math.min(Math.max(totalScore, 0), 100))
-  }
-
-  const readinessScore = calculateReadinessScore()
 
   return (
     <div className="min-h-screen bg-black text-white p-6 space-y-8 font-sans">
@@ -621,23 +589,6 @@ export function DailySummary() {
               <span className="text-emerald-400">{winningTrades} Winning</span>
               <span className="text-zinc-600">•</span>
               <span className="text-rose-400">{losingTrades} Losing</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-zinc-900/50 border-white/10">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Readiness Score</p>
-                <h3 className="text-2xl font-bold mt-1 text-purple-400">{morningCheck?.score || 0}/100</h3>
-              </div>
-              <div className="p-2 rounded-lg bg-purple-500/10">
-                <Brain className="w-5 h-5 text-purple-400" />
-              </div>
-            </div>
-            <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-              <div className="h-full bg-purple-500 rounded-full" style={{ width: `${morningCheck?.score || 0}%` }} />
             </div>
           </CardContent>
         </Card>

@@ -187,16 +187,9 @@ function prepareDataSummary(journalEntries: any[], dailyTrackerEntries: any[], m
     avgMood: recentTracker.reduce((sum, e) => sum + (e.mood || 0), 0) / recentTracker.length || 0,
   }
 
-  const readinessStats = {
-    avgReadiness: recentMorning.reduce((sum, e) => sum + (e.readinessScore || 0), 0) / recentMorning.length || 0,
-    daysReady: recentMorning.filter((e) => (e.readinessScore || 0) >= 70).length,
-    daysNotReady: recentMorning.filter((e) => (e.readinessScore || 0) < 70).length,
-  }
-
   return {
     tradeStats,
     wellbeingStats,
-    readinessStats,
     recentJournal: recentJournal.map((e) => ({
       date: e.date,
       type: e.type,
@@ -250,12 +243,9 @@ WELLBEING:
 Prumerny spanek: ${dataSummary.wellbeingStats.avgSleep.toFixed(1)} hodin
 Prumerny stres: ${dataSummary.wellbeingStats.avgStress.toFixed(1)}/10
 Prumerna energie: ${dataSummary.wellbeingStats.avgEnergy.toFixed(1)}/10
-Prumerna nalada: ${dataSummary.wellbeingStats.avgMood.toFixed(1)}/10
-Prumerna pripravenost: ${dataSummary.readinessStats.avgReadiness.toFixed(1)}%
-Dny pripraveny (70%+): ${dataSummary.readinessStats.daysReady}
-Dny nepripraveny: ${dataSummary.readinessStats.daysNotReady}
-
-METRIKY:
+  Prumerna nalada: ${dataSummary.wellbeingStats.avgMood.toFixed(1)}/10
+  
+  METRIKY:
 Risk Management: ${advancedMetrics.riskManagementScore.toFixed(1)}/100
 Disciplina Index: ${advancedMetrics.disciplineIndex.toFixed(1)}/100
 Predikcni outlook: ${advancedMetrics.predictedNextWeekPerformance}

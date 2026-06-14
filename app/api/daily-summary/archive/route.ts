@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
       totalPnl,
       winRate,
       tradesCount,
-      readinessScore,
       mood,
       aiInsights,
       morningCheck,
@@ -46,7 +45,6 @@ export async function POST(req: NextRequest) {
         trades_count: tradesCount,
         winning_trades: Math.round((tradesCount * winRate) / 100),
         losing_trades: Math.round(tradesCount * (1 - winRate / 100)),
-        readiness: readinessScore,
         mood: mood,
         notes: JSON.stringify({
           aiInsights,
