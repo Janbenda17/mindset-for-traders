@@ -318,60 +318,6 @@ export default function DailyTrackerPage() {
                     )}
                   </Card>
                 </motion.div>
-                            size="sm"
-                            className="bg-cyan-600 hover:bg-cyan-700"
-                          >
-                            {aiGenerating ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Generating...
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="h-4 w-4 mr-2" />
-                                Generate with AI
-                              </>
-                            )}
-                          </Button>
-                        )}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {todayEntry.intentions?.aiGenerated && (
-                        <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-sm text-cyan-300 flex items-start gap-2">
-                          <Sparkles className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <span>{todayEntry.intentions.aiNotes}</span>
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-xs text-slate-400 uppercase">Max Loss</label>
-                          <p className="text-2xl font-bold text-white">{todayEntry.intentions?.maxLoss}%</p>
-                        </div>
-                        <div>
-                          <label className="text-xs text-slate-400 uppercase">Target Trades</label>
-                          <p className="text-2xl font-bold text-white">{todayEntry.intentions?.targetTrades}</p>
-                        </div>
-                        <div className="sm:col-span-2">
-                          <label className="text-xs text-slate-400 uppercase">Focus Areas</label>
-                          <p className="text-sm text-slate-300">{todayEntry.intentions?.focus}</p>
-                        </div>
-                        <div className="sm:col-span-2">
-                          <label className="text-xs text-slate-400 uppercase">Emotional Goal</label>
-                          <p className="text-sm text-slate-300">{todayEntry.intentions?.emotionalGoal}</p>
-                        </div>
-                      </div>
-
-                      <Link href="/daily-intentions">
-                        <Button className="w-full bg-cyan-600 hover:bg-cyan-700">
-                          Edit & Confirm
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                </motion.div>
 
                 {/* Stage 3: Daily Summary - Expandable */}
                 <motion.div
