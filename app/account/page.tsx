@@ -1989,32 +1989,6 @@ export default function AccountPage() {
                   </Button>
                 </CardContent>
               </Card>
-
-              {/* Apple Health Integration Card */}
-              <Card className="bg-gradient-to-br from-slate-900/90 to-slate-900/50 border-slate-700/50 backdrop-blur-xl hover:border-slate-600/50 transition-all">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <Heart className="w-5 h-5 text-red-400" />
-                      Apple Health
-                    </CardTitle>
-                  </div>
-                  <CardDescription>Sledování zdraví a spánku</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-300 mb-4">
-                    Propojte Apple Health pro sledování vašeho spánku, srdečního rytmu a obnovy.
-                  </p>
-                  <Button
-                    onClick={() => router.push('/account/integrations')}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    <Plug className="w-4 h-4 mr-2" />
-                    Spravovat
-                    <ArrowRight className="w-4 h-4 ml-auto" />
-                  </Button>
-                </CardContent>
-              </Card>
             </div>
 
             <Card className="bg-blue-900/20 border-blue-600/30 backdrop-blur-xl">

@@ -682,24 +682,6 @@ export default function SettingsPage() {
                       {isEn ? 'Connect' : 'Připojit'}
                     </Button>
                   </div>
-
-                  {/* Apple Health Integration */}
-                  <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-600 transition-all cursor-pointer">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="text-lg font-semibold text-white">Apple Health</h3>
-                        <p className="text-sm text-gray-400 mt-1">Sync sleep & health data</p>
-                      </div>
-                      <span className="text-2xl">🍎</span>
-                    </div>
-                    <Button
-                      onClick={() => router.push('/settings/integrations')}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white font-medium"
-                      size="sm"
-                    >
-                      {isEn ? 'Connect' : 'Připojit'}
-                    </Button>
-                  </div>
                 </div>
 
                 <Separator className="bg-slate-700" />
@@ -882,7 +864,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
                   <div>
                     <p className="font-medium text-white">Automatické sledování spánku</p>
-                    <p className="text-sm text-gray-400">Apple Health, Fitbit, Oura</p>
+                    <p className="text-sm text-gray-400">Fitbit, Oura</p>
                   </div>
                   <Switch checked={autoSleepTracking} onCheckedChange={setAutoSleepTracking} />
                 </div>

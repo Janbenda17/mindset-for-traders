@@ -161,50 +161,6 @@ export default function IntegrationSetupPage() {
             )}
           </div>
 
-          {/* Apple Health Setup */}
-          <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-xl">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="p-3 bg-green-500/20 rounded-lg">
-                <Apple className="w-6 h-6 text-green-400" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white mb-1">Apple Health Integration</h2>
-                <p className="text-slate-400">Sleep data syncs automatically every morning</p>
-                {healthConnected && (
-                  <div className="flex items-center gap-2 mt-2 text-green-400">
-                    <Check className="w-4 h-4" />
-                    <span className="text-sm">Connected</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {!healthConnected ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-green-900/20 border border-green-600/30 rounded-lg">
-                  <h4 className="text-sm font-semibold text-green-300 mb-3">Connect Apple Health:</h4>
-                  <ol className="text-sm text-slate-300 space-y-2 list-decimal list-inside">
-                    <li>Click the button below to authorize Apple Health</li>
-                    <li>Your sleep and health data will sync daily</li>
-                    <li>We&apos;ll correlate it with your trading performance</li>
-                  </ol>
-                </div>
-
-                <Button
-                  onClick={handleOpenIntegrations}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
-                >
-                  Open Integration Center
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            ) : (
-              <div className="p-4 bg-green-900/20 border border-green-600/30 rounded-lg">
-                <p className="text-green-300 text-sm">Your Apple Health is connected and syncing daily.</p>
-              </div>
-            )}
-          </div>
-
           {/* Info Box */}
           <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-lg">
             <h3 className="text-sm font-semibold text-slate-300 mb-3">How it works:</h3>
@@ -215,11 +171,7 @@ export default function IntegrationSetupPage() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-slate-500 mt-1">→</span>
-                <span>Every morning, Apple Health sleep data syncs to your dashboard</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-slate-500 mt-1">→</span>
-                <span>Our AI analyzes the correlation and detects Fatigue Errors automatically</span>
+                <span>Our AI analyzes your trading performance and detects patterns automatically</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-slate-500 mt-1">→</span>
