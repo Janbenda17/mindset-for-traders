@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { motion } from 'framer-motion'
-import { Target, Shield, CheckCircle2, ArrowRight, Sparkles, Loader2, ChevronDown } from 'lucide-react'
+import { Target, Shield, CheckCircle2, ArrowRight, Sparkles, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
@@ -19,7 +19,6 @@ export default function DailyTrackerPage() {
   const [todayEntry, setTodayEntry] = useState(null)
   const [entries, setEntries] = useState([])
   const [aiGenerating, setAiGenerating] = useState(false)
-  const [expandedStage, setExpandedStage] = useState('stage2')
 
   // Demo data
   const demoData = {
@@ -46,21 +45,10 @@ export default function DailyTrackerPage() {
     stagesCompleted: 2
   }
 
-  // History entries - Complete Daily Summary with Intentions
+  // History entries - Only Daily Summary (bez intentions)
   const historyData = [
     {
       date: '14.6.2026',
-      intentions: {
-        maxLoss: 2.5,
-        targetTrades: 2,
-        focus: 'Gold, SPX',
-        emotionalGoal: 'Focus na quality over quantity',
-        aiNotes: 'AI detekovala: Včerejší zisk +320 z Gold - dnes sniž risk, provedení bylo pomalé (entry timing)'
-      },
-      trades: [
-        { pair: 'Gold', result: '+320', time: '09:15', loss: false },
-        { pair: 'SPX', result: '+150', time: '14:30', loss: false }
-      ],
       summary: {
         totalResult: '+470',
         winRate: '100%',
@@ -70,19 +58,6 @@ export default function DailyTrackerPage() {
     },
     {
       date: '13.6.2026',
-      intentions: {
-        maxLoss: 2,
-        targetTrades: 4,
-        focus: 'EUR/USD, GBP/JPY',
-        emotionalGoal: 'Trpělivost, obrana ceny',
-        aiNotes: 'AI detekovala: 3 ztráty z volatility, pattern matching selhalo 2x - zvýš threshold filtrů'
-      },
-      trades: [
-        { pair: 'EUR/USD', result: '-80', time: '10:00', loss: true },
-        { pair: 'GBP/JPY', result: '+120', time: '11:45', loss: false },
-        { pair: 'EUR/USD', result: '-110', time: '13:20', loss: true },
-        { pair: 'GBP/JPY', result: '+85', time: '15:30', loss: false }
-      ],
       summary: {
         totalResult: '+15',
         winRate: '50%',
@@ -92,18 +67,6 @@ export default function DailyTrackerPage() {
     },
     {
       date: '12.6.2026',
-      intentions: {
-        maxLoss: 1.5,
-        targetTrades: 3,
-        focus: 'Breakouts',
-        emotionalGoal: 'Disciplína v entry rules',
-        aiNotes: 'AI detekovala: Win rate 80% - breakout strategie funguje, pokračuj v tomto přístupu'
-      },
-      trades: [
-        { pair: 'EUR/USD', result: '+200', time: '08:30', loss: false },
-        { pair: 'GBP/USD', result: '+180', time: '10:15', loss: false },
-        { pair: 'USD/JPY', result: '-60', time: '12:00', loss: true }
-      ],
       summary: {
         totalResult: '+320',
         winRate: '67%',
@@ -240,152 +203,127 @@ export default function DailyTrackerPage() {
                   </Card>
                 </motion.div>
 
-                {/* Stage 2: Daily Intentions (AI Generated) - Expandable */}
+                {/* Stage 2: Daily Intentions (AI Generated) */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
                 >
-                  <Card 
-                    className="border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-slate-950 cursor-pointer hover:border-cyan-500/50 transition-all"
-                    onClick={() => setExpandedStage(expandedStage === 'stage2' ? null : 'stage2')}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2 text-white">
-                          <Target className="h-5 w-5 text-cyan-400" />
-                          Daily Intentions
-                        </CardTitle>
-                        <ChevronDown 
-                          className={`h-5 w-5 text-cyan-400 transition-transform ${expandedStage === 'stage2' ? 'rotate-180' : ''}`}
-                        />
-                      </div>
+                  <Card className="border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-slate-950">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <Target className="h-5 w-5 text-cyan-400" />
+                        Daily Intentions
+                      </CardTitle>
                     </CardHeader>
-
-                    {expandedStage === 'stage2' && (
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xs text-slate-400">Max Loss</p>
-                            <p className="text-lg font-bold text-cyan-400">{todayEntry?.intentions?.maxLoss}%</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-400">Target Trades</p>
-                            <p className="text-lg font-bold text-cyan-400">{todayEntry?.intentions?.targetTrades}</p>
-                          </div>
-                        </div>
-
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <p className="text-xs text-slate-400 mb-2">Focus Areas</p>
-                          <p className="text-sm text-slate-300">{todayEntry?.intentions?.focus}</p>
+                          <p className="text-xs text-slate-400">Max Loss</p>
+                          <p className="text-lg font-bold text-cyan-400">{todayEntry?.intentions?.maxLoss}%</p>
                         </div>
-
                         <div>
-                          <p className="text-xs text-slate-400 mb-2">Emotional Goal</p>
-                          <p className="text-sm text-slate-300">{todayEntry?.intentions?.emotionalGoal}</p>
+                          <p className="text-xs text-slate-400">Target Trades</p>
+                          <p className="text-lg font-bold text-cyan-400">{todayEntry?.intentions?.targetTrades}</p>
                         </div>
+                      </div>
 
-                        {todayEntry?.intentions?.aiNotes && (
-                          <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
-                            <p className="text-xs text-cyan-300 font-bold mb-2">AI Analysis</p>
-                            <p className="text-xs text-cyan-200 whitespace-pre-wrap">{todayEntry.intentions.aiNotes}</p>
-                          </div>
-                        )}
+                      <div>
+                        <p className="text-xs text-slate-400 mb-2">Focus Areas</p>
+                        <p className="text-sm text-slate-300">{todayEntry?.intentions?.focus}</p>
+                      </div>
 
-                        {!todayEntry?.intentions?.aiGenerated && (
-                          <Button 
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleGenerateAI()
-                            }}
-                            disabled={aiGenerating}
-                            className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
-                          >
-                            {aiGenerating ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Generating...
-                              </>
-                            ) : (
-                              <>
-                                <Sparkles className="w-4 h-4 mr-2" />
-                                Generate with AI
-                              </>
-                            )}
-                          </Button>
-                        )}
-                      </CardContent>
-                    )}
+                      <div>
+                        <p className="text-xs text-slate-400 mb-2">Emotional Goal</p>
+                        <p className="text-sm text-slate-300">{todayEntry?.intentions?.emotionalGoal}</p>
+                      </div>
+
+                      {todayEntry?.intentions?.aiNotes && (
+                        <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
+                          <p className="text-xs text-cyan-300 font-bold mb-2">AI Analysis</p>
+                          <p className="text-xs text-cyan-200 whitespace-pre-wrap">{todayEntry.intentions.aiNotes}</p>
+                        </div>
+                      )}
+
+                      {!todayEntry?.intentions?.aiGenerated && (
+                        <Button 
+                          onClick={handleGenerateAI}
+                          disabled={aiGenerating}
+                          className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                        >
+                          {aiGenerating ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2" />
+                              Generate with AI
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </CardContent>
                   </Card>
                 </motion.div>
 
-                {/* Stage 3: Daily Summary - Expandable */}
+                {/* Stage 3: Daily Summary */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
                 >
-                  <Card 
-                    className="border border-green-500/30 bg-gradient-to-br from-green-500/10 to-slate-950 cursor-pointer hover:border-green-500/50 transition-all"
-                    onClick={() => setExpandedStage(expandedStage === 'stage3' ? null : 'stage3')}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2 text-white">
-                          <Shield className="h-5 w-5 text-green-400" />
-                          Daily Summary
-                        </CardTitle>
-                        <ChevronDown 
-                          className={`h-5 w-5 text-green-400 transition-transform ${expandedStage === 'stage3' ? 'rotate-180' : ''}`}
-                        />
-                      </div>
+                  <Card className="border border-green-500/30 bg-gradient-to-br from-green-500/10 to-slate-950">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <Shield className="h-5 w-5 text-green-400" />
+                        Daily Summary
+                      </CardTitle>
                     </CardHeader>
-
-                    {expandedStage === 'stage3' && (
-                      <CardContent className="space-y-4">
-                        {/* Trades List */}
-                        <div>
-                          <p className="text-xs text-slate-400 mb-2 font-bold">Today's Trades</p>
-                          <div className="space-y-2">
-                            {todayEntry?.trades?.map((trade, i) => (
-                              <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-slate-800/50">
-                                <div>
-                                  <p className="text-sm font-semibold text-slate-300">{trade.pair}</p>
-                                  <p className="text-xs text-slate-400">{trade.time}</p>
-                                </div>
-                                <p className={`text-sm font-bold ${trade.loss ? 'text-red-400' : 'text-green-400'}`}>
-                                  {trade.result}
-                                </p>
+                    <CardContent className="space-y-4">
+                      {/* Trades List */}
+                      <div>
+                        <p className="text-xs text-slate-400 mb-2 font-bold">Today's Trades</p>
+                        <div className="space-y-2">
+                          {todayEntry?.trades?.map((trade, i) => (
+                            <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-slate-800/50">
+                              <div>
+                                <p className="text-sm font-semibold text-slate-300">{trade.pair}</p>
+                                <p className="text-xs text-slate-400">{trade.time}</p>
                               </div>
-                            ))}
-                          </div>
+                              <p className={`text-sm font-bold ${trade.loss ? 'text-red-400' : 'text-green-400'}`}>
+                                {trade.result}
+                              </p>
+                            </div>
+                          ))}
                         </div>
+                      </div>
 
-                        {/* Summary Stats */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                            <label className="text-xs text-slate-400">Total Result</label>
-                            <p className={`text-2xl font-bold ${todayEntry.summary?.totalResult.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
-                              {todayEntry.summary?.totalResult}
-                            </p>
-                          </div>
-                          <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                            <label className="text-xs text-slate-400">Win Rate</label>
-                            <p className="text-2xl font-bold text-white">{todayEntry.summary?.winRate}</p>
-                          </div>
-                        </div>
-
+                      {/* Summary Stats */}
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                          <label className="text-xs text-slate-400">Best Trade</label>
-                          <p className="text-sm text-green-400 font-semibold">{todayEntry.summary?.bestTrade}</p>
+                          <label className="text-xs text-slate-400">Total Result</label>
+                          <p className={`text-2xl font-bold ${todayEntry.summary?.totalResult.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                            {todayEntry.summary?.totalResult}
+                          </p>
                         </div>
+                        <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                          <label className="text-xs text-slate-400">Win Rate</label>
+                          <p className="text-2xl font-bold text-white">{todayEntry.summary?.winRate}</p>
+                        </div>
+                      </div>
 
-                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                          <label className="text-xs text-amber-300 font-bold">Lesson Learned</label>
-                          <p className="text-sm text-amber-200 mt-1">{todayEntry.summary?.lesson}</p>
-                        </div>
-                      </CardContent>
-                    )}
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                        <label className="text-xs text-slate-400">Best Trade</label>
+                        <p className="text-sm text-green-400 font-semibold">{todayEntry.summary?.bestTrade}</p>
+                      </div>
+
+                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                        <label className="text-xs text-amber-300 font-bold">Lesson Learned</label>
+                        <p className="text-sm text-amber-200 mt-1">{todayEntry.summary?.lesson}</p>
+                      </div>
+                    </CardContent>
                   </Card>
                 </motion.div>
               </>
@@ -452,21 +390,6 @@ export default function DailyTrackerPage() {
                           <p className="text-xs text-amber-200 mt-1">{entry.summary?.lesson}</p>
                         </div>
                       </div>
-
-                      {/* Intentions Summary */}
-                      {entry.intentions && (
-                        <div className="p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
-                          <p className="text-xs text-cyan-300 font-bold mb-2">Daily Intentions</p>
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div>
-                              <p className="text-slate-400">Max Loss: <span className="text-cyan-300 font-semibold">{entry.intentions.maxLoss}%</span></p>
-                            </div>
-                            <div>
-                              <p className="text-slate-400">Trades: <span className="text-cyan-300 font-semibold">{entry.intentions.targetTrades}</span></p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
