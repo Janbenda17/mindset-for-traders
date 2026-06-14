@@ -29,7 +29,7 @@ export default function DailyTrackerPage() {
       focus: 'EUR/USD, GBP/USD',
       emotionalGoal: 'Patience a discipline',
       aiGenerated: true,
-      aiNotes: 'Generováno AI z broker dat - AI detekovala 2 prohraná trades z včerejška s lessons'
+      aiNotes: 'AI analyzovala včerajší data z brokera:\n• 2 prohraná trades (EUR/USD -150 due to breakout, GBP/USD -80 due to news)\n• Hlavní lesson: Brání si o 30min před zpravami\n• Doporučuji: Redukovat risk o 50% dnes, fokus na pull-backs'
     },
     trades: [
       { pair: 'EUR/USD', result: '+150', time: '10:30', loss: false },
@@ -45,10 +45,45 @@ export default function DailyTrackerPage() {
     stagesCompleted: 2
   }
 
+  // History entries - only Stage 2 (Daily Intentions)
+  const historyData = [
+    {
+      date: '14.6.2026',
+      intentions: {
+        maxLoss: 2.5,
+        targetTrades: 2,
+        focus: 'Gold, SPX',
+        emotionalGoal: 'Focus na quality over quantity',
+        aiNotes: 'AI detekovala: Včerejší zisk +320 z Gold - dnes sniž risk, provedení bylo pomalé (entry timing)'
+      }
+    },
+    {
+      date: '13.6.2026',
+      intentions: {
+        maxLoss: 2,
+        targetTrades: 4,
+        focus: 'EUR/USD, GBP/JPY',
+        emotionalGoal: 'Trpělivost, obrana ceny',
+        aiNotes: 'AI detekovala: 3 ztráty z volatility, pattern matching selhalo 2x - zvýš threshold filtrů'
+      }
+    },
+    {
+      date: '12.6.2026',
+      intentions: {
+        maxLoss: 1.5,
+        targetTrades: 3,
+        focus: 'Breakouts',
+        emotionalGoal: 'Disciplína v entry rules',
+        aiNotes: 'AI detekovala: Win rate 80% - breakout strategie funguje, pokračuj v tomto přístupu'
+      }
+    }
+  ]
+
   useEffect(() => {
     setIsLoading(false)
     setTodayEntry(demoData)
-    setEntries([demoData])
+    // History only shows Stage 2 (Daily Intentions), not Summary
+    setEntries(historyData)
   }, [])
 
   const handleGenerateAI = async () => {
@@ -310,7 +345,7 @@ export default function DailyTrackerPage() {
             )}
           </TabsContent>
 
-          {/* History Tab - Only Daily Summary */}
+          {/* History Tab - Only Daily Intentions (Stage 2) */}
           <TabsContent value="history" className="space-y-4">
             {entries.length > 0 ? (
               entries.map((entry, i) => (
@@ -320,19 +355,36 @@ export default function DailyTrackerPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                 >
-                  <Card className="border border-slate-800 bg-slate-900/50 hover:border-slate-700 transition-all">
+                  <Card className="border border-cyan-500/20 bg-slate-900/50 hover:border-cyan-500/40 transition-all">
                     <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
+                      <div className="space-y-3">
+                        {/* Date & Quick Stats */}
+                        <div className="flex justify-between items-start">
+                          <p className="text-sm text-slate-400 font-semibold">{entry.date}</p>
+                          <div className="flex gap-4 text-right text-xs">
+                            <div>
+                              <p className="text-slate-400">Max Loss</p>
+                              <p className="text-cyan-400 font-bold">{entry.intentions?.maxLoss}%</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-400">Trades</p>
+                              <p className="text-cyan-400 font-bold">{entry.intentions?.targetTrades}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Focus Areas */}
                         <div>
-                          <p className="text-sm text-slate-400">{entry.date}</p>
-                          <p className={`text-lg font-bold ${entry.summary?.totalResult?.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
-                            {entry.summary?.totalResult}
-                          </p>
+                          <p className="text-xs text-slate-400">Focus</p>
+                          <p className="text-sm text-slate-300">{entry.intentions?.focus}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm text-slate-400">Win Rate</p>
-                          <p className="text-lg font-semibold text-white">{entry.summary?.winRate}</p>
-                        </div>
+
+                        {/* AI Notes */}
+                        {entry.intentions?.aiNotes && (
+                          <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-xs text-cyan-300 whitespace-pre-wrap">
+                            {entry.intentions.aiNotes}
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
