@@ -39,7 +39,7 @@ export default function DailyTrackerPage() {
         maxRiskPercent: 2,
         emotionalGoal: 'Disciplína a patience'
       },
-      stagesCompleted: 2
+      stagesCompleted: 3
     }
   ]
 
