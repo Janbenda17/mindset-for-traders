@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { motion } from 'framer-motion'
-import { Target, TrendingUp, CheckCircle2, ArrowRight, Sparkles, Shield, Loader2 } from 'lucide-react'
+import { Target, Shield, CheckCircle2, ArrowRight, Sparkles, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
@@ -85,14 +85,12 @@ export default function DailyTrackerPage() {
       id: 2,
       name: 'Daily Intentions',
       icon: Target,
-      href: '/daily-intentions',
       completed: todayEntry?.stagesCompleted >= 1
     },
     {
       id: 3,
       name: 'Daily Summary',
       icon: Shield,
-      href: '/daily-summary',
       completed: todayEntry?.stagesCompleted >= 2
     }
   ]
@@ -122,12 +120,8 @@ export default function DailyTrackerPage() {
         {/* Tabs */}
         <Tabs defaultValue="today" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-900 border border-slate-800 p-1">
-            <TabsTrigger value="today" className="text-sm">
-              Today
-            </TabsTrigger>
-            <TabsTrigger value="history" className="text-sm">
-              History
-            </TabsTrigger>
+            <TabsTrigger value="today">Today</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
           {/* Today Tab */}
@@ -152,25 +146,24 @@ export default function DailyTrackerPage() {
                         {stages.map((stage) => {
                           const Icon = stage.icon
                           return (
-                            <Link key={stage.id} href={stage.href}>
-                              <motion.div
-                                whileHover={{ y: -4 }}
-                                className={`p-4 rounded-xl cursor-pointer transition-all border-2 ${
-                                  stage.completed
-                                    ? 'bg-green-500/10 border-green-500/50'
-                                    : 'bg-slate-800/50 border-slate-700/50 hover:border-slate-600'
-                                }`}
-                              >
-                                <div className="flex items-start justify-between mb-3">
-                                  <Icon className={`h-5 w-5 ${stage.completed ? 'text-green-400' : 'text-slate-400'}`} />
-                                  {stage.completed && <CheckCircle2 className="h-5 w-5 text-green-400" />}
-                                </div>
-                                <h3 className="font-semibold text-white text-sm">{stage.name}</h3>
-                                <p className="text-xs text-slate-400 mt-1">
-                                  {stage.completed ? 'Completed' : 'Pending'}
-                                </p>
-                              </motion.div>
-                            </Link>
+                            <motion.div
+                              key={stage.id}
+                              whileHover={{ y: -4 }}
+                              className={`p-4 rounded-xl transition-all border-2 ${
+                                stage.completed
+                                  ? 'bg-green-500/10 border-green-500/50'
+                                  : 'bg-slate-800/50 border-slate-700/50 hover:border-slate-600'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between mb-3">
+                                <Icon className={`h-5 w-5 ${stage.completed ? 'text-green-400' : 'text-slate-400'}`} />
+                                {stage.completed && <CheckCircle2 className="h-5 w-5 text-green-400" />}
+                              </div>
+                              <h3 className="font-semibold text-white text-sm">{stage.name}</h3>
+                              <p className="text-xs text-slate-400 mt-1">
+                                {stage.completed ? 'Completed' : 'Pending'}
+                              </p>
+                            </motion.div>
                           )
                         })}
                       </div>
@@ -189,7 +182,7 @@ export default function DailyTrackerPage() {
                       <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center gap-2 text-white">
                           <Target className="h-5 w-5 text-cyan-400" />
-                          Daily Intentions
+                          Daily Intentions (AI Generated)
                         </CardTitle>
                         {!todayEntry.intentions?.aiGenerated && (
                           <Button
@@ -317,7 +310,7 @@ export default function DailyTrackerPage() {
             )}
           </TabsContent>
 
-          {/* History Tab */}
+          {/* History Tab - Only Daily Summary */}
           <TabsContent value="history" className="space-y-4">
             {entries.length > 0 ? (
               entries.map((entry, i) => (
@@ -327,7 +320,7 @@ export default function DailyTrackerPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                 >
-                  <Card className="border border-slate-800 bg-slate-900/50 cursor-pointer hover:border-slate-700 transition-all">
+                  <Card className="border border-slate-800 bg-slate-900/50 hover:border-slate-700 transition-all">
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start">
                         <div>
@@ -347,12 +340,6 @@ export default function DailyTrackerPage() {
               ))
             ) : (
               <Card className="border border-slate-800 bg-slate-900">
-                <CardContent className="p-8 text-center">
-                  <p className="text-slate-400">No history yet</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
                 <CardContent className="p-8 text-center">
                   <p className="text-slate-400">No history yet</p>
                 </CardContent>
