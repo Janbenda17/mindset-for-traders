@@ -353,6 +353,12 @@ export default function DailyTrackerPage() {
               </Card>
             )}
           </TabsContent>
+                <CardContent className="p-8 text-center">
+                  <p className="text-slate-400">No history yet</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
     </div>
