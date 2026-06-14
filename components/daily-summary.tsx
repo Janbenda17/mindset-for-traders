@@ -131,6 +131,7 @@ export function DailySummary() {
     riskAssessment: "",
     performancePrediction: "",
   })
+  const [isArchiving, setIsArchiving] = useState(false)
 
   useEffect(() => {
     const today = format(new Date(), "yyyy-MM-dd")
@@ -402,7 +403,53 @@ export function DailySummary() {
     router.push("/daily-tracker")
   }
 
-  // Calculate statistics
+  const handleArchiveToHistory = async () => {
+    setIsArchiving(true)
+    try {
+      const today = format(new Date(), "yyyy-MM-dd")
+      
+      const response = await fetch('/api/daily-summary/archive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: today,
+          totalPnl,
+          winRate,
+          tradesCount: todayTrades.length,
+          readinessScore: 0, // You can get this from context if available
+          mood: 5,
+          aiInsights,
+          morningCheck,
+          tradingPlan: plan,
+          dailyIntention: intention,
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to archive summary')
+      }
+
+      toast({
+        title: "Souhrn uložen",
+        description: "Dnešní shrnutí bylo uloženo do historie a tracker vymazán.",
+        variant: "default",
+        duration: 3000,
+      })
+
+      // Refresh the page to show cleared state
+      setTimeout(() => window.location.reload(), 1500)
+    } catch (error) {
+      console.error('Archive error:', error)
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se uložit shrnutí do historie.",
+        variant: "destructive",
+        duration: 3000,
+      })
+    } finally {
+      setIsArchiving(false)
+    }
+  }
   const totalPnL = todayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
   const winningTrades = todayTrades.filter((t) => t.pnl > 0).length
   const losingTrades = todayTrades.filter((t) => t.pnl < 0).length
@@ -440,6 +487,26 @@ export function DailySummary() {
           <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white">
             <Activity className="w-4 h-4 mr-2" />
             Export Report
+          </Button>
+          <Button
+            onClick={handleArchiveToHistory}
+            disabled={isArchiving || isStage5Locked}
+            className={cn(
+              "font-medium flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white",
+              isArchiving && "opacity-75 cursor-wait"
+            )}
+          >
+            {isArchiving ? (
+              <>
+                <Activity className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Archive to History
+              </>
+            )}
           </Button>
           <Button
             onClick={handleComplete}

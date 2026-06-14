@@ -80,40 +80,6 @@ export default function DailyTrackerPage() {
     }
   }
 
-  const handleArchiveToHistory = async () => {
-    if (!todayEntry) return
-    
-    try {
-      // Add today's entry to history
-      setEntries(prev => [todayEntry, ...prev])
-      
-      // Clear today's entry
-      setTodayEntry(null)
-      
-      toast({
-        title: 'Summary Archived',
-        description: 'Today\'s trading summary has been saved to history'
-      })
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to archive summary',
-        variant: 'destructive'
-      })
-    }
-  }
-
-  const handleClearToday = () => {
-    // Create confirmation dialog
-    if (window.confirm('Clear today\'s entry? This cannot be undone.')) {
-      setTodayEntry(null)
-      toast({
-        title: 'Today\'s Entry Cleared',
-        description: 'You can start fresh tomorrow'
-      })
-    }
-  }
-
   const stages = [
     {
       id: 2,
@@ -337,25 +303,6 @@ export default function DailyTrackerPage() {
                             </div>
                           </div>
                         )}
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-3 pt-4 border-t border-slate-700">
-                          <Button
-                            onClick={handleArchiveToHistory}
-                            className="flex-1 bg-cyan-600 hover:bg-cyan-700"
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Save to History
-                          </Button>
-                          <Button
-                            onClick={handleClearToday}
-                            variant="outline"
-                            className="flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10"
-                          >
-                            <ArrowRight className="h-4 w-4 mr-2" />
-                            Clear Entry
-                          </Button>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
