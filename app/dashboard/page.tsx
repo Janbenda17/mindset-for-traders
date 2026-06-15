@@ -127,12 +127,12 @@ export default function Dashboard() {
 
         {/* Adjust top padding when banner is visible */}
         <div className={isLiveMode ? "" : "pt-16"}>
-          {/* Key Metrics Row - 4 columns */}
+          {/* Key Metrics Row - 3 columns */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-10"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-10"
           >
             {[
               { 
@@ -148,13 +148,6 @@ export default function Dashboard() {
                 color: 'text-blue-400',
                 borderColor: 'border-blue-500/20',
                 bgColor: 'bg-blue-500/5'
-              },
-              { 
-                label: t('dashboard_readiness'), 
-                value: `${Math.round(readiness)}%`, 
-                color: 'text-purple-400',
-                borderColor: 'border-purple-500/20',
-                bgColor: 'bg-purple-500/5'
               },
               { 
                 label: t('dashboard_xp'), 
