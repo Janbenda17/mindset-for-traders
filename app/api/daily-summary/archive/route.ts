@@ -13,15 +13,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(req: NextRequest) {
   try {
-    // Get user from cookie/session
-    const cookieHeader = req.headers.get("cookie")
-    const userIdMatch = cookieHeader?.match(/mt_user_id=([^;]+)/)
-    const userId = userIdMatch?.[1]
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
     const body = await req.json()
     const {
       date,
@@ -32,8 +23,24 @@ export async function POST(req: NextRequest) {
       aiInsights,
       morningCheck,
       tradingPlan,
-      dailyIntention
+      dailyIntention,
+      userId: bodyUserId // Allow userId to be passed in body
     } = body
+
+    // Get user from cookie/session or use provided userId
+    let userId = bodyUserId
+    
+    if (!userId) {
+      const cookieHeader = req.headers.get("cookie")
+      const userIdMatch = cookieHeader?.match(/mt_user_id=([^;]+)/)
+      userId = userIdMatch?.[1]
+    }
+
+    // In demo mode, use a demo userId
+    if (!userId) {
+      userId = "demo_user_" + date
+      console.log("[v0] Demo mode - using temporary userId:", userId)
+    }
 
     // Save to daily_tracker_entries (existing table)
     const { data, error } = await supabase
@@ -49,16 +56,21 @@ export async function POST(req: NextRequest) {
         notes: JSON.stringify({
           aiInsights,
           archived: true,
-          archivedAt: formatISO(new Date())
+          archivedAt: formatISO(new Date()),
+          morningCheck,
+          tradingPlan,
+          dailyIntention
         })
       },
       { onConflict: "date,user_id" }
     )
 
     if (error) {
-      console.error("Error archiving summary:", error)
+      console.error("[v0] Error archiving summary:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    console.log("[v0] Summary archived successfully for user:", userId, "date:", date)
 
     return NextResponse.json({
       success: true,
@@ -66,7 +78,9 @@ export async function POST(req: NextRequest) {
       data
     })
   } catch (error) {
-    console.error("Archive error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("[v0] Archive error:", error)
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : "Internal server error" 
+    }, { status: 500 })
   }
 }

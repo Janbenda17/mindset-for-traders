@@ -52,6 +52,11 @@ export async function autofillDailyIntentions(
     return null
   }
 }
+
+/**
+ * Generate daily intentions based on morning psychological state and trading profile
+ */
+export async function generateDailyIntentions(
   userId: string,
   morningPsychState: string,
   trainingIdentity?: any
