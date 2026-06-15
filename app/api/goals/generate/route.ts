@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateText } from 'ai'
-import { xai } from '@ai-sdk/xai'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +16,7 @@ export async function POST(request: NextRequest) {
     const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0)
 
     const result = await generateText({
-      model: xai('grok-2'),
+      model: 'openai/gpt-4o-mini',
       system: `Jsi elitní trading coach a psycholog se 20 lety zkušeností. 
 Specializuješ se na mentální odolnost, disciplínu a systematické obchodování. 
 Tvoříš konkrétní, inspirující a dosažitelné cíle které skutečně mění obchodníky.
