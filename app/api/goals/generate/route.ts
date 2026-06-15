@@ -4,6 +4,8 @@ import { grok } from '@ai-sdk/grok'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[v0] Goals generate API called')
+    
     const today = new Date()
     const weekStart = new Date(today)
     weekStart.setDate(today.getDate() - today.getDay())
@@ -34,15 +36,20 @@ export async function POST(request: NextRequest) {
     
     Make goals SMART and focused on trading psychology, discipline, or profit targets. Goals should be in Czech language.`
 
+    console.log('[v0] Calling Grok AI for goal generation...')
+    
     const result = await generateText({
       model: grok('grok-2-1212'),
       prompt
     })
 
+    console.log('[v0] AI response received:', result.text.substring(0, 100))
+
     let parsed
     try {
       parsed = JSON.parse(result.text)
     } catch (e) {
+      console.log('[v0] First JSON parse failed, trying regex extraction')
       const jsonMatch = result.text.match(/\{[\s\S]*\}/)
       parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null
     }
@@ -76,14 +83,22 @@ export async function POST(request: NextRequest) {
       }
     ]
 
+    console.log('[v0] Goals generated successfully')
+
     return NextResponse.json({
       success: true,
       goals
     })
   } catch (error) {
-    console.error('[v0] Error generating goals:', error)
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('[v0] Error generating goals:', errorMsg, error)
+    
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { 
+        success: false,
+        error: errorMsg,
+        details: error instanceof Error ? error.stack : null
+      },
       { status: 500 }
     )
   }

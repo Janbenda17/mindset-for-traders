@@ -47,10 +47,25 @@ export default function TradingGoalsPage() {
   const generateGoalsWithAI = async () => {
     try {
       setGenerating(true)
+      console.log('[v0] Starting goal generation...')
+      
       const response = await fetch('/api/goals/generate', {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
+
+      console.log('[v0] API response status:', response.status)
+      
+      if (!response.ok) {
+        const text = await response.text()
+        console.error('[v0] API error response:', text)
+        throw new Error(`API error: ${response.status}`)
+      }
+
       const data = await response.json()
+      console.log('[v0] API data received:', data)
 
       if (data.success && data.goals) {
         setGoals(data.goals)
@@ -59,12 +74,16 @@ export default function TradingGoalsPage() {
           title: 'Hotovo!',
           description: 'Týdenní a měsíční cíle byly vygenerovány AI'
         })
+      } else if (data.error) {
+        throw new Error(data.error)
+      } else {
+        throw new Error('Unexpected response format')
       }
     } catch (error) {
       console.error('[v0] Error generating goals:', error)
       toast({
         title: 'Chyba',
-        description: 'Nepodařilo se vygenerovat cíle',
+        description: error instanceof Error ? error.message : 'Nepodařilo se vygenerovat cíle. Zkuste znovu.',
         variant: 'destructive'
       })
     } finally {

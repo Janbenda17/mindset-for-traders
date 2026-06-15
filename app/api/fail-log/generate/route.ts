@@ -4,6 +4,8 @@ import { grok } from '@ai-sdk/grok'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[v0] Fail log generate API called')
+    
     // Demo fail logs - ve skutečné aplikaci by se načítaly z databáze z MT4 trades
     const demoFailLogs = [
       {
@@ -46,15 +48,20 @@ Respond ONLY with valid JSON (no markdown):
   ]
 }`
 
+    console.log('[v0] Calling Grok AI for fail log analysis...')
+
     const result = await generateText({
       model: grok('grok-2-1212'),
       prompt
     })
 
+    console.log('[v0] AI response received:', result.text.substring(0, 100))
+
     let parsed
     try {
       parsed = JSON.parse(result.text)
     } catch (e) {
+      console.log('[v0] First JSON parse failed, trying regex extraction')
       const jsonMatch = result.text.match(/\{[\s\S]*\}/)
       parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null
     }
@@ -75,14 +82,21 @@ Respond ONLY with valid JSON (no markdown):
       aiGenerated: true
     }))
 
+    console.log('[v0] Fail logs generated successfully')
+
     return NextResponse.json({
       success: true,
       logs
     })
   } catch (error) {
-    console.error('[v0] Error generating fail logs:', error)
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('[v0] Error generating fail logs:', errorMsg, error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { 
+        success: false,
+        error: errorMsg,
+        details: error instanceof Error ? error.stack : null
+      },
       { status: 500 }
     )
   }

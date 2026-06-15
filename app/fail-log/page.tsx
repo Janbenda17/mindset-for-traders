@@ -51,10 +51,25 @@ export default function FailLogPage() {
   const generateFailLogsWithAI = async () => {
     try {
       setGenerating(true)
+      console.log('[v0] Starting fail log generation...')
+      
       const response = await fetch('/api/fail-log/generate', {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
+
+      console.log('[v0] API response status:', response.status)
+
+      if (!response.ok) {
+        const text = await response.text()
+        console.error('[v0] API error response:', text)
+        throw new Error(`API error: ${response.status}`)
+      }
+
       const data = await response.json()
+      console.log('[v0] API data received:', data)
 
       if (data.success && data.logs) {
         setFailLogs(data.logs)
@@ -63,12 +78,16 @@ export default function FailLogPage() {
           title: 'Hotovo!',
           description: 'Fail logy byly analyzovány AI'
         })
+      } else if (data.error) {
+        throw new Error(data.error)
+      } else {
+        throw new Error('Unexpected response format')
       }
     } catch (error) {
       console.error('[v0] Error generating fail logs:', error)
       toast({
         title: 'Chyba',
-        description: 'Nepodařilo se analyzovat fail logy',
+        description: error instanceof Error ? error.message : 'Nepodařilo se analyzovat fail logy. Zkuste znovu.',
         variant: 'destructive'
       })
     } finally {
