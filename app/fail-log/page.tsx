@@ -13,15 +13,24 @@ interface FailLog {
   date: string
   title: string
   rootCause: string
+  category: string
   actionPlan: string
   lessonLearned: string
+  severity: 'high' | 'medium' | 'low'
   trade?: {
     symbol: string
     entry: number
     exit: number
     loss: number
+    timeInTrade?: string
   }
   aiGenerated: boolean
+}
+
+const severityColors: Record<string, string> = {
+  high: 'bg-red-500/20 text-red-300 border-red-500/30',
+  medium: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+  low: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
 }
 
 export default function FailLogPage() {
@@ -156,45 +165,49 @@ export default function FailLogPage() {
 
                 <div className="grid gap-4">
                   {groupedByDate[date].map(log => (
-                    <Card key={log.id} className="bg-red-900/20 border-red-600/30 hover:border-red-500/50 transition-all">
-                      <CardHeader>
-                        <CardTitle className="text-red-300 flex items-start justify-between">
-                          <span className="flex items-center gap-2">
-                            <TrendingDown className="w-5 h-5" />
+                    <Card key={log.id} className="bg-slate-900 border-slate-700 hover:border-red-500/40 transition-all">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <CardTitle className="text-white flex items-center gap-2 text-base">
+                            <TrendingDown className="w-5 h-5 text-red-400 shrink-0" />
                             {log.title}
-                          </span>
-                          {log.aiGenerated && (
-                            <Badge className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1">
-                              AI analýza
-                            </Badge>
-                          )}
-                        </CardTitle>
+                          </CardTitle>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {log.severity && (
+                              <Badge className={`text-xs border ${severityColors[log.severity] ?? ''}`}>
+                                {log.severity === 'high' ? 'Vysoká' : log.severity === 'medium' ? 'Střední' : 'Nízká'}
+                              </Badge>
+                            )}
+                            {log.category && (
+                              <Badge className="text-xs bg-slate-700 text-slate-300 border-slate-600">
+                                {log.category}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <div>
-                          <p className="text-xs text-slate-400 mb-1">Příčina:</p>
-                          <p className="text-sm text-red-300">{log.rootCause}</p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs text-slate-400 mb-1">Co se naučit:</p>
-                          <p className="text-sm text-slate-300">{log.lessonLearned}</p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs text-slate-400 mb-1">Jak tomu zabránit:</p>
-                          <p className="text-sm text-slate-300">{log.actionPlan}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="p-3 rounded-lg bg-red-950/40 border border-red-800/30">
+                            <p className="text-xs font-semibold text-red-400 mb-1 uppercase tracking-wide">Kořenová příčina</p>
+                            <p className="text-sm text-slate-200">{log.rootCause}</p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-800/30">
+                            <p className="text-xs font-semibold text-amber-400 mb-1 uppercase tracking-wide">Klíčová lekce</p>
+                            <p className="text-sm text-slate-200">{log.lessonLearned}</p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-emerald-950/30 border border-emerald-800/30">
+                            <p className="text-xs font-semibold text-emerald-400 mb-1 uppercase tracking-wide">Akční plán</p>
+                            <p className="text-sm text-slate-200">{log.actionPlan}</p>
+                          </div>
                         </div>
 
                         {log.trade && (
-                          <div className="bg-slate-800/50 p-3 rounded border border-slate-700">
-                            <p className="text-xs text-slate-400 mb-2">Trade Details:</p>
-                            <div className="grid grid-cols-2 gap-2 text-xs text-slate-300">
-                              <span>{log.trade.symbol}</span>
-                              <span className="text-right">Ztráta: ${log.trade.loss.toFixed(2)}</span>
-                              <span>Entry: ${log.trade.entry.toFixed(2)}</span>
-                              <span className="text-right">Exit: ${log.trade.exit.toFixed(2)}</span>
-                            </div>
+                          <div className="flex items-center gap-6 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                            <span className="font-bold text-white">{log.trade.symbol}</span>
+                            <span className="text-slate-400 text-sm">Entry: <span className="text-white">{log.trade.entry}</span></span>
+                            <span className="text-slate-400 text-sm">Exit: <span className="text-white">{log.trade.exit}</span></span>
+                            <span className="text-red-400 font-semibold ml-auto">-${log.trade.loss.toFixed(2)}</span>
                           </div>
                         )}
                       </CardContent>

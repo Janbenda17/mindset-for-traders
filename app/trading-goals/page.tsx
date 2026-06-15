@@ -12,10 +12,11 @@ interface Goal {
   id: string
   period: 'weekly' | 'monthly'
   goal: string
+  focusArea?: string
+  why?: string
   startDate: string
   endDate: string
   milestones: string[]
-  metrics: Record<string, any>
   aiGenerated: boolean
   createdAt: string
 }
@@ -129,24 +130,34 @@ export default function TradingGoalsPage() {
 
         {/* Weekly Goals */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-4">Týdenní Cíle</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Tydenni Cil</h2>
           <div className="grid gap-4">
             {weeklyGoals.length > 0 ? (
               weeklyGoals.map(goal => (
-                <Card key={goal.id} className="bg-slate-800/50 border-slate-700 hover:border-blue-600/50 transition-all">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <h3 className="text-xl font-bold text-white flex-1">{goal.goal}</h3>
-                      <Badge className="bg-blue-500/20 text-blue-300">
-                        {new Date(goal.startDate).toLocaleDateString('cs-CZ')}
-                      </Badge>
+                <Card key={goal.id} className="bg-slate-900 border-slate-700 hover:border-blue-500/50 transition-all">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-xl font-bold text-white leading-snug flex-1">{goal.goal}</h3>
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        {goal.focusArea && (
+                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 border text-xs">
+                            {goal.focusArea}
+                          </Badge>
+                        )}
+                        <span className="text-xs text-slate-500">
+                          {new Date(goal.startDate).toLocaleDateString('cs-CZ')} – {new Date(goal.endDate).toLocaleDateString('cs-CZ')}
+                        </span>
+                      </div>
                     </div>
+                    {goal.why && (
+                      <p className="text-sm text-slate-400 italic border-l-2 border-blue-500/40 pl-3">{goal.why}</p>
+                    )}
                     <div>
-                      <p className="text-xs text-slate-400 mb-2">Milestones:</p>
-                      <ul className="space-y-1">
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Jak to dosáhnout</p>
+                      <ul className="space-y-2">
                         {goal.milestones.map((m, i) => (
                           <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
-                            <span className="text-blue-400">•</span>
+                            <span className="text-blue-400 font-bold shrink-0">{i + 1}.</span>
                             {m}
                           </li>
                         ))}
@@ -165,24 +176,34 @@ export default function TradingGoalsPage() {
 
         {/* Monthly Goals */}
         <div>
-          <h2 className="text-2xl font-bold text-white mb-4">Měsíční Cíle</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Mesicni Cil</h2>
           <div className="grid gap-4">
             {monthlyGoals.length > 0 ? (
               monthlyGoals.map(goal => (
-                <Card key={goal.id} className="bg-slate-800/50 border-slate-700 hover:border-green-600/50 transition-all">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <h3 className="text-xl font-bold text-white flex-1">{goal.goal}</h3>
-                      <Badge className="bg-green-500/20 text-green-300">
-                        {new Date(goal.startDate).toLocaleDateString('cs-CZ')}
-                      </Badge>
+                <Card key={goal.id} className="bg-slate-900 border-slate-700 hover:border-green-500/50 transition-all">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-xl font-bold text-white leading-snug flex-1">{goal.goal}</h3>
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        {goal.focusArea && (
+                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30 border text-xs">
+                            {goal.focusArea}
+                          </Badge>
+                        )}
+                        <span className="text-xs text-slate-500">
+                          {new Date(goal.startDate).toLocaleDateString('cs-CZ')} – {new Date(goal.endDate).toLocaleDateString('cs-CZ')}
+                        </span>
+                      </div>
                     </div>
+                    {goal.why && (
+                      <p className="text-sm text-slate-400 italic border-l-2 border-green-500/40 pl-3">{goal.why}</p>
+                    )}
                     <div>
-                      <p className="text-xs text-slate-400 mb-2">Milestones:</p>
-                      <ul className="space-y-1">
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Jak to dosáhnout</p>
+                      <ul className="space-y-2">
                         {goal.milestones.map((m, i) => (
                           <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
-                            <span className="text-green-400">•</span>
+                            <span className="text-green-400 font-bold shrink-0">{i + 1}.</span>
                             {m}
                           </li>
                         ))}
