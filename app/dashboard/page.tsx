@@ -12,14 +12,13 @@ import { useAuth } from '@/contexts/auth-context'
 import { useLiveMode } from '@/contexts/live-mode-context'
 import { useAnalytics } from '@/contexts/analytics-context'
 import { useGamification } from '@/contexts/gamification-context'
-import { CapitalSettingsDialog } from '@/components/capital-settings-dialog'
 import { useT } from '@/contexts/language-context'
 import { MT5AccountWidget } from '@/components/mt5-account-widget'
 import { TraderIdentityAnalysis } from '@/components/trader-identity-analysis'
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
-  const [userCapital, setUserCapital] = useState(50000)
+  const [mt5Data, setMt5Data] = useState<any>(null)
   const router = useRouter()
   const { user } = useAuth()
   const { isLiveMode } = useLiveMode()
@@ -28,10 +27,9 @@ export default function Dashboard() {
   const gamificationLoading = !gamification?.data
   const t = useT()
 
-  // Calculate dynamic values from analytics
-  const totalCapital = analytics?.summary.totalPnL ? Math.abs(analytics.summary.totalPnL) + userCapital : userCapital
-  const monthlyPL = analytics?.summary.totalPnL ?? 3240
-  const readiness = analytics?.summary.avgReadiness ?? 78
+  // Get Total Capital and Monthly P/L from MT5 or analytics
+  const totalCapital = mt5Data?.balance || analytics?.summary.balance || 50000
+  const monthlyPL = mt5Data?.monthlyProfit || analytics?.summary.totalPnL || 3240
   const xpValue = Math.max(0, gamification?.data?.xp ?? 0)
 
   useEffect(() => {
@@ -102,10 +100,6 @@ export default function Dashboard() {
             </h1>
             <p className="text-sm sm:text-base md:text-lg text-purple-200">{t('nav_home') === 'Dashboard' ? 'Track your trading progress and optimize your mindset' : 'Sleduj svůj trading progres a optimalizuj svůj mindset'}</p>
           </div>
-          <CapitalSettingsDialog 
-            currentCapital={userCapital}
-            onCapitalUpdated={setUserCapital}
-          />
         </motion.div>
 
         {/* Live Mode Banner */}
