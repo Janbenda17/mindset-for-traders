@@ -19,6 +19,7 @@ export default function DailyTrackerPage() {
   const [todayEntry, setTodayEntry] = useState(null)
   const [entries, setEntries] = useState([])
   const [aiGenerating, setAiGenerating] = useState(false)
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   // Demo data
   const demoData = {
@@ -45,10 +46,32 @@ export default function DailyTrackerPage() {
     stagesCompleted: 2
   }
 
+  // Load today's data and history
   useEffect(() => {
-    setIsLoading(false)
-    setTodayEntry(demoData)
-    setEntries([demoData])
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        setTodayEntry(demoData)
+        
+        // Load history from API
+        setHistoryLoading(true)
+        const historyResponse = await fetch('/api/daily-summary/history')
+        if (historyResponse.ok) {
+          const historyData = await historyResponse.json()
+          setEntries(historyData.summaries || [demoData])
+        } else {
+          setEntries([demoData])
+        }
+      } catch (error) {
+        console.error('Error loading daily tracker data:', error)
+        setEntries([demoData])
+      } finally {
+        setIsLoading(false)
+        setHistoryLoading(false)
+      }
+    }
+    
+    loadData()
   }, [])
 
   const handleGenerateAI = async () => {
@@ -319,7 +342,13 @@ export default function DailyTrackerPage() {
 
           {/* History Tab */}
           <TabsContent value="history" className="space-y-4">
-            {entries.length > 0 ? (
+            {historyLoading ? (
+              <Card className="border border-slate-800 bg-slate-900">
+                <CardContent className="p-8 flex justify-center items-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+                </CardContent>
+              </Card>
+            ) : entries.length > 0 ? (
               entries.map((entry, i) => (
                 <motion.div
                   key={i}
