@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0)
 
     const result = await generateText({
-      model: xai('grok-4'),
+      model: xai('grok-2'),
       system: `Jsi elitní trading coach a psycholog se 20 lety zkušeností. 
 Specializuješ se na mentální odolnost, disciplínu a systematické obchodování. 
 Tvoříš konkrétní, inspirující a dosažitelné cíle které skutečně mění obchodníky.

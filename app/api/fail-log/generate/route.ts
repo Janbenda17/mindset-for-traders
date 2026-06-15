@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const today = new Date().toISOString().split('T')[0]
 
     const result = await generateText({
-      model: xai('grok-4'),
+      model: xai('grok-2'),
       system: `Jsi trading psycholog a analytik se specializací na analýzu chyb v obchodování.
 Tvé analýzy jsou důkladné, konkrétní a vedou k reálnému zlepšení.
 Vždy hledáš opravdovou příčinu, ne jen povrchní symptomy.
