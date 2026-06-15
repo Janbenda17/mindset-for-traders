@@ -485,6 +485,14 @@ export function DailySummary() {
           <h1 className="text-3xl font-bold tracking-tight">Daily Trading Summary</h1>
         </div>
         <div className="flex items-center gap-3">
+          <Button 
+            onClick={() => router.push('/daily-summary-history')}
+            variant="outline" 
+            className="border-white/10 bg-white/5 hover:bg-white/10 text-white"
+          >
+            <BarChart2 className="w-4 h-4 mr-2" />
+            View History
+          </Button>
           <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white">
             <Activity className="w-4 h-4 mr-2" />
             Export Report
