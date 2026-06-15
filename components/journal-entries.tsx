@@ -428,7 +428,6 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                           entry.emotionDuring ||
                           entry.emotionAfter ||
                           entry.stressLevel !== undefined ||
-                          entry.mood !== undefined ||
                           entry.confidenceBefore !== undefined) && (
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 p-4 bg-black/30 rounded-lg border border-white/10">
                             {entry.emotionBefore && (
@@ -492,20 +491,6 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                                 </div>
                               </div>
                             )}
-                            {entry.mood !== undefined && ( // This is for the overall mood in the entry, distinct from moodBefore/During/After
-                              <div className="space-y-1">
-                                <p className="text-xs text-gray-300 font-medium">Nálada</p>
-                                <div className="flex items-center gap-2">
-                                  <div className="text-sm font-semibold text-white">{entry.mood}/10</div>
-                                  <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-emerald-500 transition-all"
-                                      style={{ width: `${(entry.mood / 10) * 100}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
                           </div>
                         )}
 
@@ -526,11 +511,6 @@ export function JournalEntries({ selectedDate }: JournalEntriesProps) {
                                 )}
                               >
                                 {entry.tradeType === "long" ? "↗️ Long" : "↘️ Short"}
-                              </Badge>
-                            )}
-                            {entry.mood !== undefined && ( // This is for the overall mood in the entry, distinct from moodBefore/During/After
-                              <Badge className="text-xs font-semibold bg-orange-500 text-white border-orange-400">
-                                😊 {entry.mood}/10
                               </Badge>
                             )}
                             {entry.confidence !== undefined && ( // This is for the overall confidence in the entry, distinct from confidenceBefore

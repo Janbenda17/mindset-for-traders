@@ -81,7 +81,6 @@ const MindTraderAI = () => {
     getAllJournalEntries,
     getTraderProfile,
     currentMorningCheck,
-    currentReadiness,
     morningChecks,
   } = useData()
   const { plan, isActive } = useSubscription()
@@ -318,8 +317,8 @@ const MindTraderAI = () => {
   useEffect(() => {
     if (messages.length === 0) {
       const welcomeMessage = isEn
-        ? `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nYour current readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Complete morning check"}\n\nWhat's bothering you? How can I help?`
-        : `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nVidím tvá data a jsem tady abych ti pomohl s psychologií tradingu.\n\nTvoje aktuální readiness skóre: ${currentReadiness !== null ? currentReadiness + "%" : "Vyplň ranní kontrolu"}\n\nCo tě trápí? Jak ti mohu pomoci?`
+        ? `Hi! I'm your MindTrader AI coach. 🧠\n\nI've seen your data and I'm here to help you with trading psychology.\n\nWhat's bothering you? How can I help?`
+        : `Ahoj! Jsem tvůj MindTrader AI kouč. 🧠\n\nVidím tvá data a jsem tady abych ti pomohl s psychologií tradingu.\n\nCo tě trápí? Jak ti mohu pomoci?`
 
       setMessages([
         {
@@ -330,12 +329,12 @@ const MindTraderAI = () => {
         },
       ])
     }
-  }, [currentReadiness, isEn])
+  }, [isEn])
 
   const triggerRecoveryMode = () => {
     const recoveryMessage = isEn
-      ? `🚨 Recovery Mode active - AI detected a difficult day. Follow recommendations below.\n\n1. **Breathing** - 4-7-8 technique (4s inhale, 7s hold, 8s exhale)\n2. **Journal** - What are you feeling right now?\n3. **Rest** - Minimum 2 hours break\n4. **Return** - When readiness >70%\n\nBest trade = no trade. 💪`
-      : `🚨 Recovery Mode aktivní - AI detekovalo těžký den. Postupuj podle doporučení níže.\n\n1. **Dýchání** - technika 4-7-8 (nadech 4s, držení 7s, výdech 8s)\n2. **Deník** - Co teď cítíš?\n3. **Odpočinek** - Minimálně 2 hodiny pauza\n4. **Návrat** - Až bude readiness >70%\n\nNejlepší trade = žádný trade. 💪`
+      ? `🚨 Recovery Mode active - AI detected a difficult day. Follow recommendations below.\n\n1. **Breathing** - 4-7-8 technique (4s inhale, 7s hold, 8s exhale)\n2. **Journal** - What are you feeling right now?\n3. **Rest** - Minimum 2 hours break\n4. **Return** - Come back when you're ready\n\nBest trade = no trade. 💪`
+      : `🚨 Recovery Mode aktivní - AI detekovalo těžký den. Postupuj podle doporučení níže.\n\n1. **Dýchání** - technika 4-7-8 (nadech 4s, držení 7s, výdech 8s)\n2. **Deník** - Co teď cítíš?\n3. **Odpočinek** - Minimálně 2 hodiny pauza\n4. **Návrat** - Vraťse, až budeš připraven\n\nNejlepší trade = žádný trade. 💪`
 
     const recoveryMsg = {
       role: "assistant",
@@ -412,7 +411,6 @@ const MindTraderAI = () => {
             mood: currentMorningCheck?.sleep_quality || 5,
             stress: currentMorningCheck?.stress_level || 5,
             confidence: 5,
-            readiness: currentReadiness || 50,
             sleep: currentMorningCheck?.sleep_hours || 7,
             energy: currentMorningCheck?.energy_level || 5,
           },
@@ -607,67 +605,24 @@ const MindTraderAI = () => {
     })
   }
 
-  const getReadinessColor = (score) => {
-    if (score === null) return "text-gray-500"
-    if (score >= 75) return "text-green-500"
-    if (score >= 60) return "text-yellow-500"
-    return "text-red-500"
-  }
-
-  const getReadinessStatus = (score) => {
-    if (score === null) return isEn ? "Not available" : "Není dostupné"
-    if (score >= 75) return isEn ? "Good conditions ✅" : "Dobré podmínky ✅"
-    if (score >= 60) return isEn ? "Be cautious ⚠️" : "Buď opatrný ⚠️"
-    return isEn ? "Don't trade 🛑" : "Neobchoduj 🛑"
-  }
-
-  const readinessDisplay = () => {
-    if (currentReadiness === null || currentReadiness === undefined) {
-      // In virtual mode, show a demo readiness score (70-90%)
-      if (!isLiveMode) {
-        const demoScore = Math.floor(Math.random() * 21) + 70 // Random between 70-90
-        return <div className="text-lg font-bold text-green-400">{demoScore}% (Demo)</div>
-      }
-      return <div className="text-sm text-slate-400">{isEn ? "Complete morning check" : "Complete morning check"}</div>
-    }
-    return <div className="text-lg font-bold text-blue-400">{Math.round(currentReadiness)}%</div>
-  }
-
   return (
     <div className="relative w-full min-h-screen bg-gradient-to-br from-slate-950 via-purple-900 to-slate-950 overflow-hidden">
       <GalaxyBackground />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-950/40 pointer-events-none" />
 
       <div className="relative z-10 w-full min-h-screen flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 p-2 sm:p-4 lg:p-6">
-        {/* Left Sidebar - Readiness & AI Modes */}
+        {/* Left Sidebar - AI Modes */}
         <div className="w-full lg:w-96 lg:h-screen flex-shrink-0">
           <Card className="bg-gradient-to-b from-slate-900/90 to-slate-950/80 border-2 border-purple-500/30 backdrop-blur-xl lg:h-full shadow-2xl">
             <CardHeader className="pb-3 sm:pb-4 border-b border-purple-500/20 bg-gradient-to-r from-purple-900/40 to-transparent p-3 sm:p-4 lg:p-6">
               <div className="flex items-center gap-2">
                 <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                 <CardTitle className="text-base sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-purple-200 to-cyan-200 bg-clip-text text-transparent">
-                  {isEn ? "Your Readiness" : "Your Readiness"}
+                  {isEn ? "AI Assistant" : "AI Assistant"}
                 </CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-4 sm:space-y-6 lg:h-[calc(100%-100px)] flex flex-col lg:overflow-y-auto p-3 sm:p-4 lg:p-6">
-              {/* Readiness Score - Enhanced */}
-              <div className="space-y-2 sm:space-y-3 pb-4 sm:pb-6 border-b border-purple-500/20">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-cyan-600 rounded-xl sm:rounded-2xl blur-xl opacity-30" />
-                  <div className="relative bg-slate-900/80 border border-purple-400/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center">
-                    {readinessDisplay()}
-                    <p className="text-xs sm:text-sm text-slate-300 mt-2 sm:mt-3 font-semibold">{getReadinessStatus(currentReadiness)}</p>
-                    <div className="w-full h-1 bg-slate-700 rounded-full mt-2 sm:mt-3 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${getReadinessColor(currentReadiness)}`}
-                        style={{ width: `${currentReadiness}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* AI Modes - Enhanced with better spacing */}
               <div className="flex-1 space-y-4">
                 <div className="space-y-1">

@@ -403,6 +403,12 @@ export function DailySummary() {
     router.push("/daily-tracker")
   }
 
+  // Calculate statistics BEFORE using them
+  const totalPnL = todayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
+  const winningTrades = todayTrades.filter((t) => t.pnl > 0).length
+  const losingTrades = todayTrades.filter((t) => t.pnl < 0).length
+  const winRate = todayTrades.length > 0 ? Math.round((winningTrades / todayTrades.length) * 100) : 0
+
   const handleArchiveToHistory = async () => {
     setIsArchiving(true)
     try {
@@ -449,10 +455,6 @@ export function DailySummary() {
       setIsArchiving(false)
     }
   }
-  const totalPnL = todayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
-  const winningTrades = todayTrades.filter((t) => t.pnl > 0).length
-  const losingTrades = todayTrades.filter((t) => t.pnl < 0).length
-  const winRate = todayTrades.length > 0 ? Math.round((winningTrades / todayTrades.length) * 100) : 0
 
   return (
     <div className="min-h-screen bg-black text-white p-6 space-y-8 font-sans">
