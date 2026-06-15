@@ -14,9 +14,44 @@ export interface DailyIntention {
 }
 
 /**
- * Generate daily intentions based on morning psychological state and trading profile
+ * Autofill daily intentions using AI analysis
+ * This is an alias for generateDailyIntentions with database saving
  */
-export async function generateDailyIntentions(
+export async function autofillDailyIntentions(
+  userId: string,
+  date: string
+): Promise<DailyIntention | null> {
+  try {
+    console.log('[v0] Autofilling daily intentions for user:', userId, 'date:', date)
+
+    // Get morning check for psychological state
+    const { data: morningCheck } = await supabase
+      .from('morning_checks')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('date', date)
+      .maybeSingle()
+
+    // Generate intentions based on morning state
+    const intentions = await generateDailyIntentions(
+      userId,
+      morningCheck?.emotionalState || 'neutral'
+    )
+
+    // Save to database
+    const saved = await saveIntentions(userId, intentions)
+
+    if (saved) {
+      console.log('[v0] Daily intentions autofilled and saved')
+      return intentions
+    }
+
+    return null
+  } catch (error) {
+    console.error('[v0] Autofill daily intentions error:', error)
+    return null
+  }
+}
   userId: string,
   morningPsychState: string,
   trainingIdentity?: any

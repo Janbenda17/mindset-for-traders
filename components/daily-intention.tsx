@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useData } from "@/contexts/data-context"
 import { useLanguage } from "@/contexts/language-context"
-import { Target, Shield, Brain, TrendingUp, CheckCircle } from 'lucide-react'
+import { Target, Shield, Brain, TrendingUp, CheckCircle, Sparkles, Loader } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
 interface DailyIntentionData {
@@ -77,6 +77,8 @@ export function DailyIntention() {
     emotionalGoal: "calm",
     strategy: "",
   })
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [aiSuggestion, setAiSuggestion] = useState<any>(null)
 
   // Check if stage 2 is locked
   const stage2 = stages.find((s) => s.id === 2)
@@ -84,7 +86,56 @@ export function DailyIntention() {
 
   const maxRiskDollars = (portfolioValue * intention.maxRiskPercent) / 100
 
-  const saveIntention = () => {
+  const generateWithAI = async () => {
+    try {
+      setIsGenerating(true)
+      
+      const todayDate = new Date().toISOString().split("T")[0]
+      
+      const response = await fetch('/api/autofill/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: 'current_user', // Will be set from auth context
+          date: todayDate,
+          types: ['daily_intentions']
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.results.daily_intentions) {
+        const ai = data.results.daily_intentions
+        
+        setAiSuggestion(ai)
+        setIntention({
+          ...intention,
+          goals: ai.mainGoal,
+          maxRiskPercent: ai.maxRiskPercent,
+          emotionalGoal: ai.emotionalFocus,
+          strategy: ai.strategyNote,
+        })
+
+        toast({
+          title: isEn ? "✨ AI Analysis Complete" : "✨ Analýza AI hotova",
+          description: isEn ? "Your daily intentions have been generated" : "Tvé denní záměry byly vytvořeny",
+          duration: 3000,
+        })
+      } else {
+        throw new Error('Failed to generate')
+      }
+    } catch (error) {
+      console.error('[v0] AI generation error:', error)
+      toast({
+        title: isEn ? "AI Generation Failed" : "Chyba generování AI",
+        description: isEn ? "Please fill in your intentions manually" : "Vyplň si prosím své záměry ručně",
+        variant: "destructive",
+        duration: 3000,
+      })
+    } finally {
+      setIsGenerating(false)
+    }
+  }
     // Check if stage is locked
     if (isStage2Locked) {
       toast({
@@ -297,6 +348,43 @@ export function DailyIntention() {
           </p>
         </div>
       </div>
+
+      {/* AI Generation Button */}
+      <Button
+        onClick={generateWithAI}
+        disabled={isGenerating || isStage2Locked || !isLiveMode}
+        className="w-full h-14 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-xl flex items-center justify-center gap-2"
+      >
+        {isGenerating ? (
+          <>
+            <Loader className="w-5 h-5 animate-spin" />
+            {isEn ? "Generating with AI..." : "Generuji AI..."}
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-5 h-5" />
+            {isEn ? "✨ Generate with AI" : "✨ Vygenerovat AI"}
+          </>
+        )}
+      </Button>
+
+      {/* AI Suggestion Display */}
+      {aiSuggestion && (
+        <Card className="bg-purple-900/20 border-purple-500/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-purple-400">
+              <Sparkles className="w-5 h-5" />
+              {isEn ? "AI Suggestions" : "Návrhy AI"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">{isEn ? "Focus Areas" : "Oblasti zaměření"}:</p>
+              <p className="text-sm text-purple-300">{aiSuggestion.focusAreas?.join(", ") || "N/A"}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Save Button */}
       <Button

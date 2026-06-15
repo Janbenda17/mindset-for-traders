@@ -1,4 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
+import { generateObject, generateText } from 'ai'
+import { grok } from '@ai-sdk/grok'
+import { z } from 'zod'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -6,12 +9,16 @@ const supabase = createClient(
 )
 
 export interface LosingTrade {
+  id?: string
   symbol: string
   entry: number
   exit: number
   loss: number
   duration: string
   reason?: string
+  entry_time?: string
+  exit_time?: string
+  volume?: number
 }
 
 export interface FailLogSuggestion {
@@ -19,32 +26,58 @@ export interface FailLogSuggestion {
   rootCauses: string[]
   lessons: string[]
   preventionSteps: string[]
+  aiAnalysis?: string
 }
+
+export interface AutofillFailureLog {
+  id?: string
+  user_id: string
+  date: string
+  type: 'fail_logs' | 'daily_intentions' | 'both'
+  status: 'started' | 'completed' | 'error' | 'partial'
+  items_attempted: number
+  items_succeeded: number
+  error_message?: string
+  created_at: string
+}
+
+const FailLogAnalysisSchema = z.object({
+  title: z.string().describe('Concise title of what went wrong'),
+  rootCause: z.string().describe('Root cause analysis of the failure'),
+  actionPlan: z.string().describe('Specific action to prevent this in future'),
+  category: z.enum(['entry_error', 'exit_error', 'risk_management', 'emotional', 'technical', 'other']).describe('Category of failure'),
+  lesson: z.string().describe('Key lesson learned'),
+})
 
 /**
  * Fetch today's losing trades from MT4 data
  */
-export async function getLosingTradesToday(): Promise<LosingTrade[]> {
+export async function getLosingTradesToday(userId: string, date?: string): Promise<LosingTrade[]> {
   try {
-    const today = new Date().toISOString().split('T')[0]
+    const targetDate = date || new Date().toISOString().split('T')[0]
     
     const { data, error } = await supabase
       .from('mt4_trades')
       .select('*')
-      .gte('close_time', `${today}T00:00:00`)
-      .lt('close_time', `${today}T23:59:59`)
-      .lt('profit', 0)
-      .order('close_time', { ascending: false })
+      .eq('user_id', userId)
+      .gte('entry_time', `${targetDate}T00:00:00`)
+      .lt('entry_time', `${targetDate}T23:59:59`)
+      .lt('profit_loss', 0)
+      .order('entry_time', { ascending: false })
 
     if (error) throw error
 
     return (data || []).map((trade) => ({
+      id: trade.id,
       symbol: trade.symbol,
-      entry: trade.open_price,
-      exit: trade.close_price,
-      loss: Math.abs(trade.profit),
-      duration: calculateDuration(trade.open_time, trade.close_time),
-      reason: trade.notes || undefined
+      entry: trade.entry_price,
+      exit: trade.exit_price,
+      loss: Math.abs(trade.profit_loss),
+      duration: calculateDuration(trade.entry_time, trade.exit_time),
+      reason: trade.notes || undefined,
+      entry_time: trade.entry_time,
+      exit_time: trade.exit_time,
+      volume: trade.volume
     }))
   } catch (error) {
     console.error('[v0] Error fetching losing trades:', error)
@@ -65,29 +98,45 @@ export async function generateFailLogSuggestions(
       trades: [],
       rootCauses: [],
       lessons: [],
-      preventionSteps: []
+      preventionSteps: [],
+      aiAnalysis: 'No losing trades to analyze.'
     }
   }
 
-  // Analyze patterns in losing trades
-  const symbols = [...new Set(losingTrades.map(t => t.symbol))]
-  const totalLoss = losingTrades.reduce((sum, t) => sum + t.loss, 0)
-  const avgLoss = totalLoss / losingTrades.length
+  try {
+    // Analyze patterns in losing trades
+    const symbols = [...new Set(losingTrades.map(t => t.symbol))]
+    const totalLoss = losingTrades.reduce((sum, t) => sum + t.loss, 0)
+    const avgLoss = totalLoss / losingTrades.length
 
-  // Generate intelligent root causes based on trade patterns and psychological state
-  const rootCauses = generateRootCauses(losingTrades, morningPsychState, tradingIdentity)
-  
-  // Generate lessons learned
-  const lessons = generateLessons(losingTrades, rootCauses)
-  
-  // Generate prevention steps
-  const preventionSteps = generatePreventionSteps(rootCauses, tradingIdentity)
+    // Generate intelligent root causes based on trade patterns and psychological state
+    const rootCauses = generateRootCauses(losingTrades, morningPsychState, tradingIdentity)
+    
+    // Generate lessons learned
+    const lessons = generateLessons(losingTrades, rootCauses)
+    
+    // Generate prevention steps
+    const preventionSteps = generatePreventionSteps(rootCauses, tradingIdentity)
 
-  return {
-    trades: losingTrades,
-    rootCauses,
-    lessons,
-    preventionSteps
+    // Get AI analysis
+    const aiAnalysis = await getAIFailAnalysis(losingTrades, morningPsychState, rootCauses)
+
+    return {
+      trades: losingTrades,
+      rootCauses,
+      lessons,
+      preventionSteps,
+      aiAnalysis
+    }
+  } catch (error) {
+    console.error('[v0] Error generating fail log suggestions:', error)
+    return {
+      trades: losingTrades,
+      rootCauses: ['Unable to analyze - please review trades manually'],
+      lessons: [],
+      preventionSteps: [],
+      aiAnalysis: 'AI analysis failed - manual review recommended'
+    }
   }
 }
 
@@ -185,31 +234,157 @@ function calculateDuration(openTime: string, closeTime: string): string {
 }
 
 /**
- * Save generated fail log to database
+ * Get AI-powered analysis of failed trades
+ */
+async function getAIFailAnalysis(
+  trades: LosingTrade[],
+  morningState: string,
+  rootCauses: string[]
+): Promise<string> {
+  try {
+    const tradesSummary = trades.map(t => `${t.symbol}: Lost ${t.loss.toFixed(2)} (${t.duration})`).join('\n')
+
+    const result = await generateText({
+      model: grok('grok-2-1212'),
+      prompt: `
+      Analyze these losing trades and provide insights:
+
+      Morning Psychological State: ${morningState}
+      
+      Losing Trades:
+      ${tradesSummary}
+
+      Identified Root Causes:
+      ${rootCauses.join('\n')}
+
+      Provide a brief, actionable analysis (2-3 sentences) that helps the trader prevent similar losses. Focus on the specific pattern you see.
+      `
+    })
+
+    return result.text
+  } catch (error) {
+    console.error('[v0] Error getting AI analysis:', error)
+    return 'AI analysis unavailable - manual review recommended'
+  }
+}
+
+/**
+ * Log autofill attempt for tracking and debugging
+ */
+export async function logAutofillAttempt(
+  userId: string,
+  date: string,
+  type: 'fail_logs' | 'daily_intentions' | 'both',
+  status: 'started' | 'completed' | 'error' | 'partial',
+  itemsSucceeded: number,
+  errorMessage?: string
+): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('autofill_logs')
+      .insert({
+        user_id: userId,
+        date,
+        type,
+        status,
+        items_attempted: itemsSucceeded,
+        items_succeeded: status === 'completed' ? itemsSucceeded : 0,
+        error_message: errorMessage,
+        created_at: new Date().toISOString(),
+      })
+
+    if (error) {
+      console.error('[v0] Error logging autofill attempt:', error)
+    } else {
+      console.log('[v0] Autofill log recorded:', { type, status, itemsSucceeded })
+    }
+  } catch (error) {
+    console.error('[v0] Error in logAutofillAttempt:', error)
+  }
+}
+
+/**
+ * Get autofill failure logs for monitoring
+ */
+export async function getAutofillFailureLogs(
+  userId: string,
+  limit: number = 50
+): Promise<AutofillFailureLog[]> {
+  try {
+    const { data, error } = await supabase
+      .from('autofill_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (error) {
+      console.error('[v0] Error fetching autofill logs:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('[v0] Error getting autofill logs:', error)
+    return []
+  }
+}
+
+/**
+ * Save generated fail log to database with autofill tracking
  */
 export async function saveFailLog(
   userId: string,
+  date: string,
   suggestion: FailLogSuggestion
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('fail_log')
-      .insert({
-        user_id: userId,
-        date: new Date().toISOString().split('T')[0],
-        trade_count: suggestion.trades.length,
-        total_loss: suggestion.trades.reduce((sum, t) => sum + t.loss, 0),
-        root_causes: suggestion.rootCauses,
-        lessons_learned: suggestion.lessons,
-        prevention_steps: suggestion.preventionSteps,
-        trades_data: suggestion.trades,
-        ai_generated: true
-      })
+    // Start logging attempt
+    await logAutofillAttempt(userId, date, 'fail_logs', 'started', suggestion.trades.length)
 
-    if (error) throw error
-    return true
+    if (suggestion.trades.length === 0) {
+      await logAutofillAttempt(userId, date, 'fail_logs', 'completed', 0)
+      return true
+    }
+
+    let successCount = 0
+
+    // Save individual fail logs for each trade
+    for (const trade of suggestion.trades) {
+      try {
+        const { error } = await supabase
+          .from('fail_log')
+          .insert({
+            user_id: userId,
+            date: date,
+            title: `${trade.symbol} loss: ${trade.loss.toFixed(2)}`,
+            description: suggestion.rootCauses.join(' | '),
+            root_cause: suggestion.rootCauses.join(' | '),
+            action_plan: suggestion.preventionSteps.join('\n'),
+            lesson_learned: suggestion.lessons.join(' | '),
+            trade_id: trade.id,
+            ai_generated: true,
+            created_at: new Date().toISOString(),
+          })
+
+        if (!error) {
+          successCount++
+        } else {
+          console.error('[v0] Error saving individual fail log:', error)
+          await logAutofillAttempt(userId, date, 'fail_logs', 'error', 1, error.message)
+        }
+      } catch (error) {
+        console.error('[v0] Error in trade analysis:', error)
+      }
+    }
+
+    // Log completion
+    await logAutofillAttempt(userId, date, 'fail_logs', successCount === suggestion.trades.length ? 'completed' : 'partial', successCount)
+    
+    return successCount > 0
   } catch (error) {
     console.error('[v0] Error saving fail log:', error)
+    await logAutofillAttempt(userId, date, 'fail_logs', 'error', 0, String(error))
     return false
   }
 }
