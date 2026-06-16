@@ -22,7 +22,16 @@ export async function GET(req: NextRequest) {
 
     console.log("[v0] Fetching history for user:", userId)
 
-    // Fetch all daily tracker entries (archived summaries)
+    // For demo_user, return empty array (no archival needed in demo mode)
+    if (userId === "demo_user") {
+      return NextResponse.json({
+        success: true,
+        entries: [],
+        count: 0,
+      })
+    }
+
+    // Fetch all daily tracker entries (archived summaries) for real users
     const { data, error } = await supabase
       .from("daily_tracker_entries")
       .select("*")
