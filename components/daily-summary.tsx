@@ -286,17 +286,17 @@ export function DailySummary() {
       strengths.push("😊 Positive mood supported confidence and discipline")
     }
 
-    // Analyze Trading Performance
-    const winRate = trades.length > 0 ? (trades.filter((t) => t.pnl > 0).length / trades.length) * 100 : 0
-    const totalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0)
+    // Analyze Trading Performance - use local calculation
+    const tradeWinRate = trades.length > 0 ? (trades.filter((t) => t.pnl > 0).length / trades.length) * 100 : 0
+    const tradeTotalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0)
     const avgMood = trades.length > 0 ? trades.reduce((sum, t) => sum + (t.mood || 0), 0) / trades.length : 0
 
-    if (totalPnL > 0) {
-      strengths.push(`💰 Profitable day: +${totalPnL.toFixed(2)}$ with Win Rate ${Math.round(winRate)}%`)
-      performancePrediction = `Based on today's performance (Win Rate ${Math.round(winRate)}%, P&L +${totalPnL.toFixed(2)}$) and mental state (${check?.score || 0}/100), I predict a 75% chance of a profitable tomorrow if you maintain the same routine and discipline.`
-    } else if (totalPnL < 0) {
-      weaknesses.push(`📉 Loss day: ${totalPnL.toFixed(2)}$ - analysis of causes needed`)
-      performancePrediction = `Today's loss (${totalPnL.toFixed(2)}$) requires a reset. I recommend starting tomorrow with half the risk and focus on quality, not quantity. Recovery chance: 60% if you stick to the plan.`
+    if (tradeTotalPnL > 0) {
+      strengths.push(`💰 Profitable day: +${tradeTotalPnL.toFixed(2)}$ with Win Rate ${Math.round(tradeWinRate)}%`)
+      performancePrediction = `Based on today's performance (Win Rate ${Math.round(tradeWinRate)}%, P&L +${tradeTotalPnL.toFixed(2)}$) and mental state (${check?.score || 0}/100), I predict a 75% chance of a profitable tomorrow if you maintain the same routine and discipline.`
+    } else if (tradeTotalPnL < 0) {
+      weaknesses.push(`📉 Loss day: ${tradeTotalPnL.toFixed(2)}$ - analysis of causes needed`)
+      performancePrediction = `Today's loss (${tradeTotalPnL.toFixed(2)}$) requires a reset. I recommend starting tomorrow with half the risk and focus on quality, not quantity. Recovery chance: 60% if you stick to the plan.`
       patternRecognition.push("Pattern: Loss → Frustration → Revenge trading (CAUTION!)")
     }
 
@@ -340,10 +340,10 @@ export function DailySummary() {
     }
 
     // Generate Tomorrow Plan based on today
-    if (totalPnL > 0 && check && check.score >= 75) {
+    if (tradeTotalPnL > 0 && check && check.score >= 75) {
       tomorrowPlan.push("✅ Continue with the same routine - it's working!")
       tomorrowPlan.push("Maintain the same position size and risk management")
-    } else if (totalPnL < 0) {
+    } else if (tradeTotalPnL < 0) {
       tomorrowPlan.push("🔄 Reset: Start with half the risk to restore confidence")
       tomorrowPlan.push("Focus on 1-2 quality setups instead of quantity")
     }
@@ -403,7 +403,7 @@ export function DailySummary() {
     router.push("/daily-tracker")
   }
 
-  // Calculate statistics BEFORE using them
+  // Calculate statistics at component level (for use in both render and functions)
   const totalPnL = todayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
   const winningTrades = todayTrades.filter((t) => t.pnl > 0).length
   const losingTrades = todayTrades.filter((t) => t.pnl < 0).length
