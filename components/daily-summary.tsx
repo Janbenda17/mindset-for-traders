@@ -227,142 +227,109 @@ export function DailySummary() {
     let riskAssessment = ""
     let performancePrediction = ""
 
-    // Analyze Morning Routine & Mental State
-    if (check) {
-      psychologicalAnalysis = `Your psychological profile today: Mood ${check.emotionalState}/10, Stress ${check.stressLevel}/10, Focus ${check.focus}/10. `
-
-      if (check.stressLevel >= 8) {
-        psychologicalAnalysis += `High stress is your biggest obstacle. Your amygdala (emotional brain) is now dominant, reducing logical decision-making. I recommend: Take a break, do 4-7-8 breathing 5 times. Without reducing stress, you risk revenge trading and poor execution.`
-      } else if (check.stressLevel <= 3) {
-        psychologicalAnalysis += `Low stress is your strong point. Your prefrontal cortex (logic) dominates, leading to better decisions. Keep this state - it's the ideal condition for trading.`
-      } else {
-        psychologicalAnalysis += `Stress at normal levels. Be careful about escalation - many traders don't realize their stress has crossed the safe threshold until it's too late.`
-      }
-
-      if (check.focus < 5) {
-        psychologicalAnalysis += ` Your focus is weak - this means missing signals and low execution quality. Try the Pomodoro technique: 25 min intense focus, then 5 min break.`
-      } else if (check.focus >= 8) {
-        psychologicalAnalysis += ` Your focus is excellent - it's a super-power for trading. Use this "flow state" window - it's when the best traders spend their months.`
-      }
-
-      if (check.emotionalState >= 8) {
-        psychologicalAnalysis += ` Positive emotional state supports confidence, but be careful of overconfidence. Right now the biggest risk is taking bigger positions than is rational.`
-      } else if (check.emotionalState <= 4) {
-        psychologicalAnalysis += ` Negative emotions are a signal to be cautious. When mood is low, the probability of losses increases by 40%. Consider a shorter session or smaller positions.`
-      }
-    } else {
-      psychologicalAnalysis = "Missing Morning Check data. Without it, I can't assess your psychological state. Complete Morning Check for detailed analysis."
-    }
-
-    // Specific metric analysis
-    if (check && (check.sleepQuality < 6 || check.sleepHours < 6.5)) {
-      weaknesses.push("😴 Insufficient sleep reduced cognitive function by 30-40%")
-      tomorrowPlan.push("Go to bed 1-2 hours earlier, target: 7-8 hours of quality sleep")
-      patternRecognition.push("Pattern: Poor sleep → Reduced patience → Premature entries")
-    } else if (check && check.sleepQuality >= 8) {
-      strengths.push("💤 Excellent sleep provided mental sharpness and clarity")
-    }
-
-    if (check && check.stressLevel > 7) {
-      weaknesses.push("😰 High stress increased risk of emotional trading by 60%")
-      tomorrowPlan.push("Add 15-20 min meditation or breathing exercises before trading")
-      patternRecognition.push("Pattern: High stress → Revenge trading → Increased losses")
-    } else if (check && check.stressLevel <= 3) {
-      strengths.push("😌 Low stress enabled calm and rational decision-making")
-    }
-
-    if (check && check.focus < 6) {
-      weaknesses.push("🎯 Low focus led to missing important signals")
-      tomorrowPlan.push("Try Pomodoro technique: 25 min focus + 5 min break")
-      patternRecognition.push("Pattern: Low focus → Missed opportunities → Frustration")
-    } else if (check && check.focus >= 8) {
-      strengths.push("🔍 High focus enabled capturing all key signals")
-    }
-
-    if (check && check.emotionalState < 6) {
-      weaknesses.push("😔 Negative emotional state affected objectivity")
-      tomorrowPlan.push("Journaling: Write down emotions before trading for better self-awareness")
-    } else if (check && check.emotionalState >= 8) {
-      strengths.push("😊 Positive mood supported confidence and discipline")
-    }
-
-    // Analyze Trading Performance - use local calculation
+    // Data from MetaTrader - only trading performance and mood
     const tradeWinRate = trades.length > 0 ? (trades.filter((t) => t.pnl > 0).length / trades.length) * 100 : 0
     const tradeTotalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0)
     const avgMood = trades.length > 0 ? trades.reduce((sum, t) => sum + (t.mood || 0), 0) / trades.length : 0
+    const maxLoss = trades.length > 0 ? Math.min(...trades.map((t) => t.pnl || 0)) : 0
+    const maxWin = trades.length > 0 ? Math.max(...trades.map((t) => t.pnl || 0)) : 0
+    const riskReward = maxLoss !== 0 ? Math.abs(maxWin / maxLoss) : 0
 
-    if (tradeTotalPnL > 0) {
-      strengths.push(`💰 Profitable day: +${tradeTotalPnL.toFixed(2)}$ with Win Rate ${Math.round(tradeWinRate)}%`)
-      performancePrediction = `Based on today's performance (Win Rate ${Math.round(tradeWinRate)}%, P&L +${tradeTotalPnL.toFixed(2)}$) and mental state (${check?.score || 0}/100), I predict a 75% chance of a profitable tomorrow if you maintain the same routine and discipline.`
-    } else if (tradeTotalPnL < 0) {
-      weaknesses.push(`📉 Loss day: ${tradeTotalPnL.toFixed(2)}$ - analysis of causes needed`)
-      performancePrediction = `Today's loss (${tradeTotalPnL.toFixed(2)}$) requires a reset. I recommend starting tomorrow with half the risk and focus on quality, not quantity. Recovery chance: 60% if you stick to the plan.`
-      patternRecognition.push("Pattern: Loss → Frustration → Revenge trading (CAUTION!)")
-    }
-
+    // Psychological Analysis - based on mood from trades only
     if (trades.length > 0) {
-      weaknesses.push("⚡ Overtrading: Too much activity reduces decision quality")
-      tomorrowPlan.push("Limit: Focus only on A+ setups, quality > quantity")
-      patternRecognition.push("Pattern: Overtrading → Fatigue → Execution errors")
-    } else if (trades.length === 0) {
-      if (check && check.score < 70) {
-        strengths.push("🛡️ Discipline: You correctly avoided trading with low readiness")
+      if (avgMood >= 8) {
+        psychologicalAnalysis = `Your trading mood was excellent today (${avgMood.toFixed(1)}/10). High confidence and discipline were evident in your execution. This emotional stability is a key driver of profitable trading.`
+        strengths.push("😊 Excellent trading mood maintained discipline")
+      } else if (avgMood >= 6) {
+        psychologicalAnalysis = `Your trading mood was balanced today (${avgMood.toFixed(1)}/10). You managed emotions reasonably well, though there's room for consistency improvement.`
+        strengths.push("😐 Stable mood during trading session")
+      } else if (avgMood >= 4) {
+        psychologicalAnalysis = `Your trading mood was below average (${avgMood.toFixed(1)}/10). Low confidence likely affected decision-making quality. Consider shorter sessions when mood is low.`
+        weaknesses.push("😔 Low mood during trading affected objectivity")
+        tomorrowPlan.push("Start with a short session to build confidence before scaling up")
       } else {
-        weaknesses.push("👀 No trades: Maybe you missed opportunities or were too cautious")
-      }
-    }
-
-    // Risk Assessment
-    if (trades.length > 0) {
-      const maxLoss = Math.min(...trades.map((t) => t.pnl || 0))
-      const maxWin = Math.max(...trades.map((t) => t.pnl || 0))
-      const riskReward = maxLoss !== 0 ? Math.abs(maxWin / maxLoss) : 0
-
-      if (riskReward >= 2) {
-        riskAssessment = `✅ Excellent Risk/Reward ratio: ${riskReward.toFixed(2)}:1. Your risk management is on a high level. Biggest win: +${maxWin}$, biggest loss: ${maxLoss}$.`
-      } else if (riskReward >= 1) {
-        riskAssessment = `⚠️ Average Risk/Reward ratio: ${riskReward.toFixed(2)}:1. You can improve by letting winners run longer. Biggest win: +${maxWin}$, biggest loss: ${maxLoss}$.`
-      } else {
-        riskAssessment = `🚨 Weak Risk/Reward ratio: ${riskReward.toFixed(2)}:1. CRITICAL: Your losses are bigger than wins. Reconsider stop loss and take profit strategy. Biggest win: +${maxWin}$, biggest loss: ${maxLoss}$.`
-        weaknesses.push("🚨 Insufficient risk management - losses exceed wins")
-        tomorrowPlan.push("PRIORITY: Reconsider stop loss placement and profit targets")
+        psychologicalAnalysis = `Your trading mood was very low today (${avgMood.toFixed(1)}/10). This emotional state significantly impaired decision-making. Rest and reset are needed.`
+        weaknesses.push("😔 Very low mood - poor emotional state for trading")
+        tomorrowPlan.push("Take tomorrow off or trade with minimal risk to allow emotional recovery")
       }
     } else {
-      riskAssessment = "No trades today - risk management cannot be assessed."
+      psychologicalAnalysis = "No trades today - unable to assess trading mood and psychological state."
+    }
+
+    // Analyze Trading Performance
+    if (tradeTotalPnL > 0) {
+      strengths.push(`💰 Profitable day: +${tradeTotalPnL.toFixed(2)}$ with Win Rate ${Math.round(tradeWinRate)}%`)
+      performancePrediction = `Based on today's profitability (+${tradeTotalPnL.toFixed(2)}$, Win Rate ${Math.round(tradeWinRate)}%), I predict a 75% chance of profitable trading tomorrow if you maintain the same discipline and position sizing.`
+    } else if (tradeTotalPnL < 0) {
+      weaknesses.push(`📉 Loss day: ${tradeTotalPnL.toFixed(2)}$ - review trade setup execution`)
+      performancePrediction = `Today's loss (${tradeTotalPnL.toFixed(2)}$) requires reset. Start tomorrow with 50% position size and focus on A+ setups only. Recovery probability: 65%.`
+      patternRecognition.push("Pattern: Losses → Potential confidence dip → Risk of emotional trading tomorrow")
+    } else {
+      psychologicalAnalysis += " Zero profit indicates neutral or mechanical execution."
+    }
+
+    // Trade Count Analysis
+    if (trades.length >= 5) {
+      weaknesses.push(`⚡ High trade frequency (${trades.length} trades): Quality may suffer from fatigue`)
+      patternRecognition.push("Pattern: Overtrading → Execution errors → Increased losses")
+      tomorrowPlan.push("Limit to maximum 3-4 high-quality setups instead of quantity")
+    } else if (trades.length > 0 && trades.length <= 3) {
+      strengths.push(`✅ Selective trading: ${trades.length} trades shows discipline and quality focus`)
+    }
+
+    // Risk/Reward Analysis
+    if (trades.length > 0) {
+      if (riskReward >= 2) {
+        riskAssessment = `✅ Excellent Risk/Reward ratio: ${riskReward.toFixed(2)}:1. Your risk management is strong. Best trade: +${maxWin}$, worst: ${maxLoss}$.`
+        strengths.push("✅ Strong risk/reward positioning")
+      } else if (riskReward >= 1) {
+        riskAssessment = `⚠️ Average Risk/Reward ratio: ${riskReward.toFixed(2)}:1. You can improve by holding winners longer. Best: +${maxWin}$, worst: ${maxLoss}$.`
+        tomorrowPlan.push("Let winning trades run longer to improve R:R ratio")
+      } else if (riskReward > 0) {
+        riskAssessment = `🚨 Poor Risk/Reward ratio: ${riskReward.toFixed(2)}:1. Losses exceed wins - this is unsustainable. Best: +${maxWin}$, worst: ${maxLoss}$.`
+        weaknesses.push("🚨 Losses exceed wins - critical risk management issue")
+        tomorrowPlan.push("PRIORITY: Widen stop losses or reduce position sizes immediately")
+      }
+    } else {
+      riskAssessment = "No trading data - risk assessment unavailable."
     }
 
     // Mood-Performance Correlation
-    if (trades.length > 0 && avgMood < 6) {
-      patternRecognition.push("Pattern: Low mood during trading → Worse results")
-      tomorrowPlan.push("Before trading: 5 min mindfulness to improve mood")
-    } else if (avgMood >= 8) {
-      strengths.push("😊 High mood during trading correlates with better results")
+    if (trades.length > 0) {
+      const moodTradeCorrelation = trades
+        .filter((t) => t.mood >= 8)
+        .reduce((sum, t) => sum + (t.pnl || 0), 0)
+      const totalPositiveMood = trades.filter((t) => t.mood >= 8).length
+
+      if (totalPositiveMood > 0 && moodTradeCorrelation > 0) {
+        patternRecognition.push(`Pattern: High mood trades (+${moodTradeCorrelation.toFixed(0)}$) outperformed low mood trades`)
+        tomorrowPlan.push("Maintain high confidence state during trading - it correlates with profits")
+      }
     }
 
-    // Generate Tomorrow Plan based on today
-    if (tradeTotalPnL > 0 && check && check.score >= 75) {
-      tomorrowPlan.push("✅ Continue with the same routine - it's working!")
-      tomorrowPlan.push("Maintain the same position size and risk management")
+    // Generate Tomorrow Plan
+    if (tradeTotalPnL > 0 && tradeWinRate >= 50) {
+      tomorrowPlan.push("✅ Continue with current strategy - results speak for themselves")
+      tomorrowPlan.push("Maintain the same position sizing and risk parameters")
     } else if (tradeTotalPnL < 0) {
-      tomorrowPlan.push("🔄 Reset: Start with half the risk to restore confidence")
-      tomorrowPlan.push("Focus on 1-2 quality setups instead of quantity")
+      tomorrowPlan.push("🔄 Reset: Trade with 50% position size tomorrow")
+      tomorrowPlan.push("Focus on 1-2 A+ setups instead of looking for volume")
     }
 
     if (!tomorrowPlan.length) {
-      tomorrowPlan.push("Continue with disciplined approach")
-      tomorrowPlan.push("Monitor emotions and write in journal")
+      tomorrowPlan.push("Continue disciplined approach")
+      tomorrowPlan.push("Monitor mood-to-performance correlation")
     }
 
-    // Default messages if no data
+    // Set insights
     if (!psychologicalAnalysis) {
-      psychologicalAnalysis =
-        "Insufficient data for psychological analysis. Complete Morning Check for detailed insights."
+      psychologicalAnalysis = "Insufficient trade data for detailed psychological analysis."
     }
     if (!performancePrediction) {
-      performancePrediction = "Nedostatek dat pro predikci. Zaznamenejte trades pro AI predikce budoucího výkonu."
+      performancePrediction = "Perform trades to enable AI performance predictions."
     }
     if (!riskAssessment) {
-      riskAssessment = "Nedostatek dat pro risk assessment. Zaznamenejte trades pro analýzu risk managementu."
+      riskAssessment = "Perform trades to enable risk assessment analysis."
     }
 
     setAiInsights({
