@@ -114,6 +114,7 @@ export function DailySummary() {
   const [intention, setIntention] = useState<DailyIntentionData | null>(null)
   const [plan, setTradingPlan] = useState<TradingPlanData | null>(null)
   const [todayTrades, setTodayTrades] = useState<Trade[]>([])
+  const [archivedEntries, setArchivedEntries] = useState<any[]>([])
   const [aiInsights, setAiInsights] = useState<{
     strengths: string[]
     weaknesses: string[]
@@ -381,34 +382,35 @@ export function DailySummary() {
     try {
       const today = format(new Date(), "yyyy-MM-dd")
       
-      const response = await fetch('/api/daily-summary/archive', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: today,
-          totalPnl,
-          winRate,
-          tradesCount: todayTrades.length,
-          mood: morningCheck?.emotionalState || 5,
-          aiInsights,
-          morningCheck,
-          tradingPlan: plan,
-          dailyIntention: intention,
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to archive summary')
+      // Save to local history state
+      const newEntry = {
+        id: `${today}-${Date.now()}`,
+        date: today,
+        totalPnl,
+        winRate,
+        tradesCount: todayTrades.length,
+        trades: todayTrades,
+        mood: todayTrades.length > 0 ? todayTrades.reduce((sum, t) => sum + (t.mood || 0), 0) / todayTrades.length : 0,
+        aiInsights,
+        morningCheck,
+        tradingPlan: plan,
+        dailyIntention: intention,
       }
+      
+      // Add to archived entries
+      setArchivedEntries(prev => [newEntry, ...prev])
 
       toast({
         title: "Souhrn uložen",
-        description: "Dnešní shrnutí bylo uloženo do historie a tracker vymazán.",
+        description: "Dnešní shrnutí bylo uloženo do historie.",
         variant: "default",
         duration: 3000,
       })
 
-      // Refresh the page to show cleared state
+      // Reset trades and clear the summary
+      setTodayTrades([])
+      
+      // Refresh to show cleared state
       setTimeout(() => window.location.reload(), 1500)
     } catch (error) {
       console.error('Archive error:', error)
@@ -452,18 +454,6 @@ export function DailySummary() {
           <h1 className="text-3xl font-bold tracking-tight">Daily Trading Summary</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button 
-            onClick={() => router.push('/daily-summary-history')}
-            variant="outline" 
-            className="border-white/10 bg-white/5 hover:bg-white/10 text-white"
-          >
-            <BarChart2 className="w-4 h-4 mr-2" />
-            View History
-          </Button>
-          <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white">
-            <Activity className="w-4 h-4 mr-2" />
-            Export Report
-          </Button>
           <Button
             onClick={handleArchiveToHistory}
             disabled={isArchiving || isStage5Locked}
@@ -566,233 +556,52 @@ export function DailySummary() {
               <span className="text-emerald-400">{winningTrades} Winning</span>
               <span className="text-zinc-600">•</span>
               <span className="text-rose-400">{losingTrades} Losing</span>
-            </div>
-          </CardContent>
+          </div>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Trade History Section */}
-        <Card className="lg:col-span-2 bg-zinc-900/50 border-white/10">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-medium">{txt.tradeHistory}</CardTitle>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white">
-              {txt.viewAll} <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {todayTrades.length > 0 ? (
-              <div className="space-y-1">
-                {todayTrades.map((trade, i) => (
-                  <div
-                    key={i}
-                    className="group flex items-center justify-between p-3 hover:bg-white/5 rounded-lg transition-colors border border-transparent hover:border-white/5"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={cn("w-2 h-2 rounded-full", trade.pnl > 0 ? "bg-emerald-500" : "bg-rose-500")} />
-                      <div>
-                        <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                          <Eye className="w-3 h-3" /> {txt.recognized}
-                        </h4>
-                        <div className="space-y-2">
-                          {aiInsights.patternRecognition.length > 0 ? (
-                            aiInsights.patternRecognition.map((pattern, i) => (
-                              <div key={i} className="p-2 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
-                                <p className="text-sm text-zinc-300">{pattern}</p>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-sm text-muted-foreground">{txt.noPatterns}</p>
-                          )}
+      {/* History Section */}
+      {archivedEntries.length > 0 && (
+        <div className="border-t border-white/10 pt-8">
+          <h2 className="text-2xl font-bold mb-6">Daily Summary History</h2>
+          <div className="grid gap-4">
+            {archivedEntries.map((entry) => (
+              <Card key={entry.id} className="bg-zinc-900/50 border-white/10 hover:border-white/20 transition-all">
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{entry.date}</p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Total P&L</p>
+                          <p className={cn("text-lg font-bold", entry.totalPnl >= 0 ? "text-emerald-400" : "text-rose-400")}>
+                            {entry.totalPnl > 0 ? "+" : ""}{entry.totalPnl.toFixed(2)}$
+                          </p>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-white">{trade.pair}</span>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-[10px] px-1.5 py-0 h-5 border-0",
-                            trade.direction === "Long"
-                              ? "bg-emerald-500/10 text-emerald-400"
-                              : "bg-rose-500/10 text-rose-400",
-                          )}
-                        >
-                          {trade.direction.toUpperCase()}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {trade.size} lot • {trade.entry} → {trade.exit}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span
-                        className={cn(
-                          "font-mono font-medium block",
-                          trade.pnl > 0 ? "text-emerald-400" : "text-rose-500",
+                        <div>
+                          <p className="text-xs text-muted-foreground">Win Rate</p>
+                          <p className="text-lg font-bold text-white">{entry.winRate}%</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Trades</p>
+                          <p className="text-lg font-bold text-white">{entry.tradesCount}</p>
+                        </div>
+                        {entry.mood > 0 && (
+                          <div>
+                            <p className="text-xs text-muted-foreground">Mood</p>
+                            <p className="text-lg font-bold text-white">{entry.mood.toFixed(1)}/10</p>
+                          </div>
                         )}
-                      >
-                        {trade.pnl > 0 ? "+" : ""}
-                        {trade.pnl.toFixed(2)} $
-                      </span>
-                      <span className="text-xs text-muted-foreground">{txt.mood}: {trade.mood}/10</span>
+                      </div>
                     </div>
+                    <Badge className="bg-white/10 text-white">Archived</Badge>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
-                  <Activity className="w-6 h-6 opacity-50" />
-                </div>
-                <p>{txt.noTrades}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* AI Insights & Plan */}
-        <div className="space-y-6">
-          <Card className="bg-zinc-900/50 border-white/10 overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Sparkles className="w-5 h-5 text-purple-400" />
-                {txt.aiAnalysis}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <CheckCircle className="w-3 h-3" /> {txt.whatWentWell}
-                </h4>
-                <ul className="space-y-2">
-                  {aiInsights.strengths.length > 0 ? (
-                    aiInsights.strengths.map((item, i) => (
-                      <li key={i} className="text-sm text-zinc-300 flex items-start gap-2">
-                        <span className="w-1 h-1 rounded-full bg-emerald-500 mt-2" />
-                        {item}
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-sm text-muted-foreground">Žádná data k analýze</li>
-                  )}
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-xs font-semibold text-rose-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <AlertTriangle className="w-3 h-3" /> {txt.areasImprovement}
-                </h4>
-                <ul className="space-y-2">
-                  {aiInsights.weaknesses.length > 0 ? (
-                    aiInsights.weaknesses.map((item, i) => (
-                      <li key={i} className="text-sm text-zinc-300 flex items-start gap-2">
-                        <span className="w-1 h-1 rounded-full bg-rose-500 mt-2" />
-                        {item}
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-sm text-muted-foreground">Žádné kritické chyby nenalezeny</li>
-                  )}
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border-indigo-500/30 overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Brain className="w-5 h-5 text-indigo-400" />
-                {txt.psychAnalysis}
-              </CardTitle>
-              <p className="text-xs text-gray-400 mt-2 font-normal">{txt.deeperLook}</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                <p className="text-sm text-zinc-300 leading-relaxed">
-                  <span className="font-semibold text-indigo-300">Aktuální stav: </span>
-                  {aiInsights.psychologicalAnalysis}
-                </p>
-              </div>
-              
-              {/* Quick Mental Metrics */}
-              <div className="grid grid-cols-3 gap-2">
-                {morningCheck && (
-                  <>
-                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
-                      <p className="text-xs text-gray-400 mb-1">Nálada</p>
-                      <p className="text-lg font-bold text-yellow-400">{morningCheck.emotionalState}/10</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
-                      <p className="text-xs text-gray-400 mb-1">Stres</p>
-                      <p className="text-lg font-bold text-orange-400">{morningCheck.stressLevel}/10</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
-                      <p className="text-xs text-gray-400 mb-1">Focus</p>
-                      <p className="text-lg font-bold text-blue-400">{morningCheck.focus}/10</p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-zinc-900/50 border-white/10">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Shield className="w-5 h-5 text-amber-400" />
-                Risk Assessment & Risk Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <p className="text-sm text-zinc-300 leading-relaxed">{aiInsights.riskAssessment}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-zinc-900/50 border-white/10">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <TrendingUp className="w-5 h-5 text-green-400" />
-                Performance Prediction & Success Rate
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                <p className="text-sm text-zinc-300 leading-relaxed font-medium">{aiInsights.performancePrediction}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Plan for Tomorrow - Action Steps */}
-          <Card className="bg-gradient-to-br from-blue-900/20 to-indigo-900/20 border-blue-500/30 overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Zap className="w-5 h-5 text-blue-400" />
-                Action Items for Tomorrow
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {aiInsights.tomorrowPlan.map((item, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-blue-500/10 border-l-4 border-blue-500/50"
-                  >
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0 font-bold text-xs text-white">
-                      {i + 1}
-                    </div>
-                    <p className="text-sm text-zinc-200 font-medium">{item}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
