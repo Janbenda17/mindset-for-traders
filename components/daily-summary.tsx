@@ -228,105 +228,132 @@ export function DailySummary() {
     let riskAssessment = ""
     let performancePrediction = ""
 
-    // Data from MetaTrader - only trading performance and mood
-    const tradeWinRate = trades.length > 0 ? (trades.filter((t) => t.pnl > 0).length / trades.length) * 100 : 0
+    // Data from MetaTrader only
     const tradeTotalPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0)
-    const avgMood = trades.length > 0 ? trades.reduce((sum, t) => sum + (t.mood || 0), 0) / trades.length : 0
+    const tradeWinRate = trades.length > 0 ? (trades.filter((t) => t.pnl > 0).length / trades.length) * 100 : 0
     const maxLoss = trades.length > 0 ? Math.min(...trades.map((t) => t.pnl || 0)) : 0
     const maxWin = trades.length > 0 ? Math.max(...trades.map((t) => t.pnl || 0)) : 0
     const riskReward = maxLoss !== 0 ? Math.abs(maxWin / maxLoss) : 0
 
-    // Psychological Analysis - based on mood from trades only
-    if (trades.length > 0) {
-      if (avgMood >= 8) {
-        psychologicalAnalysis = `Your trading mood was excellent today (${avgMood.toFixed(1)}/10). High confidence and discipline were evident in your execution. This emotional stability is a key driver of profitable trading.`
-        strengths.push("😊 Excellent trading mood maintained discipline")
-      } else if (avgMood >= 6) {
-        psychologicalAnalysis = `Your trading mood was balanced today (${avgMood.toFixed(1)}/10). You managed emotions reasonably well, though there's room for consistency improvement.`
-        strengths.push("😐 Stable mood during trading session")
-      } else if (avgMood >= 4) {
-        psychologicalAnalysis = `Your trading mood was below average (${avgMood.toFixed(1)}/10). Low confidence likely affected decision-making quality. Consider shorter sessions when mood is low.`
-        weaknesses.push("😔 Low mood during trading affected objectivity")
-        tomorrowPlan.push("Start with a short session to build confidence before scaling up")
-      } else {
-        psychologicalAnalysis = `Your trading mood was very low today (${avgMood.toFixed(1)}/10). This emotional state significantly impaired decision-making. Rest and reset are needed.`
-        weaknesses.push("😔 Very low mood - poor emotional state for trading")
-        tomorrowPlan.push("Take tomorrow off or trade with minimal risk to allow emotional recovery")
+    // Detect revenge trades (consecutive losses or increasing loss size)
+    const revengeTradePattern: string[] = []
+    if (trades.length >= 2) {
+      for (let i = 1; i < trades.length; i++) {
+        const prevTrade = trades[i - 1]
+        const currTrade = trades[i]
+        
+        // If previous was loss and current is larger loss
+        if (prevTrade.pnl < 0 && currTrade.pnl < 0 && Math.abs(currTrade.pnl) > Math.abs(prevTrade.pnl)) {
+          revengeTradePattern.push(`Trade ${i}: ${currTrade.pair} - Loss after loss with increased size (${prevTrade.pnl.toFixed(2)}$ → ${currTrade.pnl.toFixed(2)}$)`)
+          weaknesses.push(`🚨 Revenge trade detected: ${currTrade.pair} (${currTrade.pnl.toFixed(2)}$) - Loss after previous loss`)
+        }
       }
-    } else {
-      psychologicalAnalysis = "No trades today - unable to assess trading mood and psychological state."
     }
 
-    // Analyze Trading Performance
+    // Analyze individual trade quality
+    let goodSetups = 0
+    let badSetups = 0
+    const tradeAnalysis: string[] = []
+
+    trades.forEach((trade, idx) => {
+      if (trade.pnl > 0) {
+        goodSetups++
+        if (trade.pnl > maxWin * 0.7) {
+          tradeAnalysis.push(`✅ Trade ${idx + 1} (${trade.pair}): Excellent execution - +${trade.pnl.toFixed(2)}$`)
+          strengths.push(`${trade.pair}: Strong setup execution`)
+        }
+      } else {
+        badSetups++
+        if (Math.abs(trade.pnl) > Math.abs(maxLoss) * 0.8) {
+          tradeAnalysis.push(`⚠️ Trade ${idx + 1} (${trade.pair}): Poor execution or bad setup - ${trade.pnl.toFixed(2)}$`)
+          weaknesses.push(`${trade.pair}: Bad setup or entry timing`)
+        }
+      }
+    })
+
+    // Trading Performance Summary
     if (tradeTotalPnL > 0) {
-      strengths.push(`💰 Profitable day: +${tradeTotalPnL.toFixed(2)}$ with Win Rate ${Math.round(tradeWinRate)}%`)
-      performancePrediction = `Based on today's profitability (+${tradeTotalPnL.toFixed(2)}$, Win Rate ${Math.round(tradeWinRate)}%), I predict a 75% chance of profitable trading tomorrow if you maintain the same discipline and position sizing.`
+      psychologicalAnalysis = `Profitable day: +${tradeTotalPnL.toFixed(2)}$ with ${Math.round(tradeWinRate)}% win rate. You executed ${goodSetups} winning trades out of ${trades.length}. This shows discipline in following your trading plan.`
+      performancePrediction = `Based on today's execution quality and win rate, there's a 70% probability of profitable trading tomorrow if you maintain the same setup criteria and stick to your plan.`
     } else if (tradeTotalPnL < 0) {
-      weaknesses.push(`📉 Loss day: ${tradeTotalPnL.toFixed(2)}$ - review trade setup execution`)
-      performancePrediction = `Today's loss (${tradeTotalPnL.toFixed(2)}$) requires reset. Start tomorrow with 50% position size and focus on A+ setups only. Recovery probability: 65%.`
-      patternRecognition.push("Pattern: Losses → Potential confidence dip → Risk of emotional trading tomorrow")
+      psychologicalAnalysis = `Loss day: ${tradeTotalPnL.toFixed(2)}$ with ${Math.round(tradeWinRate)}% win rate. You had ${badSetups} losing trades. Analysis shows ${revengeTradePattern.length > 0 ? 'revenge trading and' : ''} possible setup or entry timing issues.`
+      performancePrediction = `Recovery potential: 60%. Key: Tomorrow focus ONLY on A+ setups from your playbook. Avoid averaging down or increasing size after losses.`
     } else {
-      psychologicalAnalysis += " Zero profit indicates neutral or mechanical execution."
+      psychologicalAnalysis = `Break-even day. You closed ${trades.length} trades with balanced results. Use this as opportunity to review your entry and exit criteria.`
     }
 
-    // Trade Count Analysis
-    if (trades.length >= 5) {
-      weaknesses.push(`⚡ High trade frequency (${trades.length} trades): Quality may suffer from fatigue`)
-      patternRecognition.push("Pattern: Overtrading → Execution errors → Increased losses")
-      tomorrowPlan.push("Limit to maximum 3-4 high-quality setups instead of quantity")
-    } else if (trades.length > 0 && trades.length <= 3) {
-      strengths.push(`✅ Selective trading: ${trades.length} trades shows discipline and quality focus`)
-    }
-
-    // Risk/Reward Analysis
+    // Risk/Reward Assessment
     if (trades.length > 0) {
       if (riskReward >= 2) {
-        riskAssessment = `✅ Excellent Risk/Reward ratio: ${riskReward.toFixed(2)}:1. Your risk management is strong. Best trade: +${maxWin}$, worst: ${maxLoss}$.`
-        strengths.push("✅ Strong risk/reward positioning")
+        riskAssessment = `✅ Excellent Risk/Reward: ${riskReward.toFixed(2)}:1. Best trade: +${maxWin}$, worst: ${maxLoss}$. Your stop losses are properly placed.`
+        strengths.push("✅ Strong risk management")
       } else if (riskReward >= 1) {
-        riskAssessment = `⚠️ Average Risk/Reward ratio: ${riskReward.toFixed(2)}:1. You can improve by holding winners longer. Best: +${maxWin}$, worst: ${maxLoss}$.`
-        tomorrowPlan.push("Let winning trades run longer to improve R:R ratio")
+        riskAssessment = `⚠️ Average Risk/Reward: ${riskReward.toFixed(2)}:1. Best: +${maxWin}$, worst: ${maxLoss}$. Need tighter stop losses or better entry timing.`
+        weaknesses.push("⚠️ Risk/Reward ratio could be improved")
+        tomorrowPlan.push("Tighten stops or wait for higher probability setups")
       } else if (riskReward > 0) {
-        riskAssessment = `🚨 Poor Risk/Reward ratio: ${riskReward.toFixed(2)}:1. Losses exceed wins - this is unsustainable. Best: +${maxWin}$, worst: ${maxLoss}$.`
-        weaknesses.push("🚨 Losses exceed wins - critical risk management issue")
-        tomorrowPlan.push("PRIORITY: Widen stop losses or reduce position sizes immediately")
+        riskAssessment = `🚨 Critical Risk/Reward: ${riskReward.toFixed(2)}:1. Your losses (${maxLoss}$) are much larger than wins (+${maxWin}$). IMMEDIATE FIX: Reduce position size or use tighter stops.`
+        weaknesses.push("🚨 Losses exceed wins significantly")
+        tomorrowPlan.push("PRIORITY: Cut position size in half OR place stops 20% tighter")
       }
     } else {
-      riskAssessment = "No trading data - risk assessment unavailable."
+      riskAssessment = "No trades executed."
     }
 
-    // Mood-Performance Correlation
-    if (trades.length > 0) {
-      const moodTradeCorrelation = trades
-        .filter((t) => t.mood >= 8)
-        .reduce((sum, t) => sum + (t.pnl || 0), 0)
-      const totalPositiveMood = trades.filter((t) => t.mood >= 8).length
-
-      if (totalPositiveMood > 0 && moodTradeCorrelation > 0) {
-        patternRecognition.push(`Pattern: High mood trades (+${moodTradeCorrelation.toFixed(0)}$) outperformed low mood trades`)
-        tomorrowPlan.push("Maintain high confidence state during trading - it correlates with profits")
-      }
+    // Trade Frequency Analysis
+    if (trades.length > 5) {
+      weaknesses.push(`⚡ Overtrading: ${trades.length} trades - High frequency often leads to execution errors`)
+      patternRecognition.push("Pattern: Overtrading → Fatigue → Worse setups → Losses")
+      tomorrowPlan.push("Limit to maximum 3 trades tomorrow - quality over quantity")
+    } else if (trades.length > 0 && trades.length <= 3) {
+      strengths.push(`✅ Selective trading: ${trades.length} trades shows discipline`)
+      tomorrowPlan.push("Maintain this selective approach")
     }
 
-    // Generate Tomorrow Plan
-    if (tradeTotalPnL > 0 && tradeWinRate >= 50) {
-      tomorrowPlan.push("✅ Continue with current strategy - results speak for themselves")
-      tomorrowPlan.push("Maintain the same position sizing and risk parameters")
+    // Revenge Trade Detection Summary
+    if (revengeTradePattern.length > 0) {
+      patternRecognition.push(`🚨 REVENGE TRADING DETECTED (${revengeTradePattern.length} instances): After each loss, you increased position size or took another trade immediately.`)
+      weaknesses.push("🚨 Revenge trading pattern detected")
+      tomorrowPlan.push("After ANY loss: Take 5-minute break before next trade")
+      tomorrowPlan.push("If loss > 2% of account, stop trading for the day")
+    }
+
+    // Tomorrow Plan
+    if (tradeTotalPnL > 0 && tradeWinRate >= 60) {
+      tomorrowPlan.push("✅ Continue current strategy - it's working")
+      tomorrowPlan.push("Use same position size and risk parameters")
     } else if (tradeTotalPnL < 0) {
-      tomorrowPlan.push("🔄 Reset: Trade with 50% position size tomorrow")
-      tomorrowPlan.push("Focus on 1-2 A+ setups instead of looking for volume")
+      tomorrowPlan.push("🔄 Reset: Start with HALF your normal position size")
+      tomorrowPlan.push("Take only A+ setups from your playbook")
+      tomorrowPlan.push("Stop trading if you hit 3 consecutive losses")
     }
 
     if (!tomorrowPlan.length) {
-      tomorrowPlan.push("Continue disciplined approach")
-      tomorrowPlan.push("Monitor mood-to-performance correlation")
+      tomorrowPlan.push("Review your setup criteria before tomorrow's session")
+      tomorrowPlan.push("Trade with intention, not emotion")
     }
 
     // Set insights
     if (!psychologicalAnalysis) {
-      psychologicalAnalysis = "Insufficient trade data for detailed psychological analysis."
+      psychologicalAnalysis = "No trades today."
     }
     if (!performancePrediction) {
+      performancePrediction = "Perform trades to get AI predictions."
+    }
+    if (!riskAssessment) {
+      riskAssessment = "Trade data needed for risk assessment."
+    }
+
+    setAiInsights({
+      strengths,
+      weaknesses,
+      tomorrowPlan,
+      psychologicalAnalysis,
+      patternRecognition,
+      riskAssessment,
+      performancePrediction,
+    })
+  }
       performancePrediction = "Perform trades to enable AI performance predictions."
     }
     if (!riskAssessment) {
