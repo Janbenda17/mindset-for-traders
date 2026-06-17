@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateText } from "ai"
+import Anthropic from "@anthropic-ai/sdk"
+
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+})
 
 const MODE_PROMPTS_CS = {
   mind: `Jsi MIND AI – elitní trading psycholog. Pomáháš traderům s mentálními výzvami.
@@ -651,17 +655,17 @@ KRITICKA PRAVIDLA (PORUSENI = FAIL):
 8. ZAKAZANO: vymyslene procenta, vymyslene korelace, vymyslene dolary`
 
     try {
-      const result = await generateText({
-        model: "openai/gpt-4o-mini",
+      const message = await client.messages.create({
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 500,
+        temperature: 0.35,
+        system: MODE_PROMPTS[mode] + personalityInstructions[personality],
         messages: [
-          { role: "system", content: MODE_PROMPTS[mode] + personalityInstructions[personality] },
           { role: "user", content: dataSummary },
         ],
-        temperature: 0.35,
-        maxTokens: 500,
       })
 
-      const aiResponse = result.text || "Error generating response"
+      const aiResponse = message.content[0].type === "text" ? message.content[0].text : "Error generating response"
 
       return NextResponse.json({
         response: aiResponse,
@@ -669,7 +673,7 @@ KRITICKA PRAVIDLA (PORUSENI = FAIL):
         usingMockAI: false,
       })
     } catch (openaiError: any) {
-      console.error("❌ OpenAI API Error:", openaiError)
+      console.error("❌ Claude API Error:", openaiError)
 
       const mockResponse = generateEnhancedMockResponse(body)
 
