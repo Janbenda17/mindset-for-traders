@@ -560,6 +560,127 @@ export function DailySummary() {
         </Card>
       </div>
 
+      {/* AI Insights Section */}
+      {aiInsights.psychologicalAnalysis && (
+        <div className="border-t border-white/10 pt-8 space-y-6">
+          <div>
+            <h2 className="text-2xl font-bold mb-4">AI Trading Analysis</h2>
+            
+            {/* Psychological Analysis */}
+            <Card className="bg-zinc-900/50 border-white/10 mb-4">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-purple-400" />
+                  Psychological Analysis
+                </h3>
+                <p className="text-white/80 leading-relaxed">{aiInsights.psychologicalAnalysis}</p>
+              </CardContent>
+            </Card>
+
+            {/* Performance Prediction */}
+            <Card className="bg-zinc-900/50 border-white/10 mb-4">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-blue-400" />
+                  Performance Prediction
+                </h3>
+                <p className="text-white/80 leading-relaxed">{aiInsights.performancePrediction}</p>
+              </CardContent>
+            </Card>
+
+            {/* Risk Assessment */}
+            {aiInsights.riskAssessment && (
+              <Card className="bg-zinc-900/50 border-white/10 mb-4">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-amber-400" />
+                    Risk Assessment
+                  </h3>
+                  <p className="text-white/80 leading-relaxed">{aiInsights.riskAssessment}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Strengths */}
+            {aiInsights.strengths.length > 0 && (
+              <Card className="bg-zinc-900/50 border-white/10 mb-4">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-emerald-400" />
+                    Your Strengths
+                  </h3>
+                  <ul className="space-y-2">
+                    {aiInsights.strengths.map((strength, i) => (
+                      <li key={i} className="text-white/80 flex gap-2">
+                        <span className="text-emerald-400">✓</span>
+                        <span>{strength}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Weaknesses */}
+            {aiInsights.weaknesses.length > 0 && (
+              <Card className="bg-zinc-900/50 border-white/10 mb-4">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-rose-400" />
+                    Areas to Improve
+                  </h3>
+                  <ul className="space-y-2">
+                    {aiInsights.weaknesses.map((weakness, i) => (
+                      <li key={i} className="text-white/80 flex gap-2">
+                        <span className="text-rose-400">•</span>
+                        <span>{weakness}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Tomorrow Plan */}
+            {aiInsights.tomorrowPlan.length > 0 && (
+              <Card className="bg-zinc-900/50 border-white/10 mb-4">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-blue-400" />
+                    Tomorrow's Plan
+                  </h3>
+                  <ol className="space-y-2 list-decimal list-inside">
+                    {aiInsights.tomorrowPlan.map((plan, i) => (
+                      <li key={i} className="text-white/80">{plan}</li>
+                    ))}
+                  </ol>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Pattern Recognition */}
+            {aiInsights.patternRecognition.length > 0 && (
+              <Card className="bg-zinc-900/50 border-white/10">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-yellow-400" />
+                    Pattern Recognition
+                  </h3>
+                  <ul className="space-y-2">
+                    {aiInsights.patternRecognition.map((pattern, i) => (
+                      <li key={i} className="text-white/80 flex gap-2">
+                        <span className="text-yellow-400">→</span>
+                        <span>{pattern}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* History Section */}
       {archivedEntries.length > 0 && (
         <div className="border-t border-white/10 pt-8">
