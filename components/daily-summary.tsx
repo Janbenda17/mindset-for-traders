@@ -382,12 +382,17 @@ export function DailySummary() {
     try {
       const today = format(new Date(), "yyyy-MM-dd")
       
+      // Calculate statistics locally
+      const localTotalPnL = todayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
+      const winningTrades = todayTrades.filter((t) => t.pnl > 0).length
+      const localWinRate = todayTrades.length > 0 ? Math.round((winningTrades / todayTrades.length) * 100) : 0
+      
       // Save to local history state
       const newEntry = {
         id: `${today}-${Date.now()}`,
         date: today,
-        totalPnl,
-        winRate,
+        totalPnl: localTotalPnL,
+        winRate: localWinRate,
         tradesCount: todayTrades.length,
         trades: todayTrades,
         mood: todayTrades.length > 0 ? todayTrades.reduce((sum, t) => sum + (t.mood || 0), 0) / todayTrades.length : 0,
