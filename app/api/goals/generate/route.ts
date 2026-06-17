@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateText } from 'ai'
+import Anthropic from "@anthropic-ai/sdk"
+
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,13 +19,17 @@ export async function POST(request: NextRequest) {
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
     const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0)
 
-    const result = await generateText({
-      model: 'openai/gpt-4o-mini',
+    const message = await client.messages.create({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 2000,
       system: `Jsi elitní trading coach a psycholog se 20 lety zkušeností. 
 Specializuješ se na mentální odolnost, disciplínu a systematické obchodování. 
 Tvoříš konkrétní, inspirující a dosažitelné cíle které skutečně mění obchodníky.
 Odpovídáš VŽDY pouze čistým JSON bez jakéhokoli markdown nebo textu navíc.`,
-      prompt: `Vygeneruj jeden silný týdenní a jeden ambiciózní měsíční trading goal.
+      messages: [
+        {
+          role: "user",
+          content: `Vygeneruj jeden silný týdenní a jeden ambiciózní měsíční trading goal.
 
 Aktuální týden: ${weekStart.toLocaleDateString('cs-CZ')} – ${weekEnd.toLocaleDateString('cs-CZ')}
 Aktuální měsíc: ${monthStart.toLocaleDateString('cs-CZ')} – ${monthEnd.toLocaleDateString('cs-CZ')}
@@ -56,13 +64,17 @@ Odpověz POUZE tímto JSON:
     "endDate": "${monthEnd.toISOString().split('T')[0]}"
   }
 }`
+        }
+      ]
     })
+
+    const result = message.content[0].type === "text" ? message.content[0].text : ""
 
     let parsed: any
     try {
-      parsed = JSON.parse(result.text.trim())
+      parsed = JSON.parse(result.trim())
     } catch {
-      const jsonMatch = result.text.match(/\{[\s\S]*\}/)
+      const jsonMatch = result.match(/\{[\s\S]*\}/)
       if (!jsonMatch) throw new Error('AI nevrátilo validní JSON')
       parsed = JSON.parse(jsonMatch[0])
     }

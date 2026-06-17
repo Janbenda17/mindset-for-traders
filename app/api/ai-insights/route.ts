@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateText } from "ai"
+import Anthropic from "@anthropic-ai/sdk"
+
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,12 +28,18 @@ export async function POST(request: NextRequest) {
 
     const prompt = buildEnhancedAnalysisPrompt(dataSummary, psychPatterns, advancedMetrics, type)
 
-    const { text } = await generateText({
-      model: "openai/gpt-4o",
-      prompt,
-      temperature: 0.3,
-      maxTokens: 3000,
+    const message = await client.messages.create({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 3000,
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
     })
+
+    const text = message.content[0].type === "text" ? message.content[0].text : ""
 
     console.log("[v0] AI Insights - Raw response received, parsing...")
 

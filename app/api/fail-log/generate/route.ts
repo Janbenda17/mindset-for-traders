@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateText } from 'ai'
+import Anthropic from "@anthropic-ai/sdk"
+
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,13 +31,17 @@ export async function POST(request: NextRequest) {
 
     const today = new Date().toISOString().split('T')[0]
 
-    const result = await generateText({
-      model: 'openai/gpt-4o-mini',
+    const message = await client.messages.create({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 2000,
       system: `Jsi trading psycholog a analytik se specializací na analýzu chyb v obchodování.
 Tvé analýzy jsou důkladné, konkrétní a vedou k reálnému zlepšení.
 Vždy hledáš opravdovou příčinu, ne jen povrchní symptomy.
 Odpovídáš POUZE čistým JSON bez markdown.`,
-      prompt: `Analyzuj tyto neúspěšné trades dnešního dne a vytvoř hlubokou analýzu pro každý:
+      messages: [
+        {
+          role: "user",
+          content: `Analyzuj tyto neúspěšné trades dnešního dne a vytvoř hlubokou analýzu pro každý:
 
 Datum: ${new Date(today).toLocaleDateString('cs-CZ')}
 
@@ -68,13 +76,17 @@ Odpověz POUZE tímto JSON:
 }
 
 Každý fail log musí být unikátní analýza konkrétního tradu, ne obecné fráze.`
+        }
+      ]
     })
+
+    const result = message.content[0].type === "text" ? message.content[0].text : ""
 
     let parsed: any
     try {
-      parsed = JSON.parse(result.text.trim())
+      parsed = JSON.parse(result.trim())
     } catch {
-      const jsonMatch = result.text.match(/\{[\s\S]*\}/)
+      const jsonMatch = result.match(/\{[\s\S]*\}/)
       if (!jsonMatch) throw new Error('AI nevrátilo validní JSON')
       parsed = JSON.parse(jsonMatch[0])
     }

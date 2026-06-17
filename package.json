@@ -12,6 +12,7 @@
     "@ai-sdk/grok": "latest",
     "@ai-sdk/openai": "^1.0.0",
     "@ai-sdk/xai": "3.0.95",
+    "@anthropic-ai/sdk": "0.104.2",
     "@emotion/is-prop-valid": "latest",
     "@radix-ui/react-accordion": "^1.1.0",
     "@radix-ui/react-alert-dialog": "^1.1.15",
