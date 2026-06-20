@@ -227,11 +227,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
           <div className="hidden md:flex items-center gap-1">
             {/* Products dropdown */}
             <DropdownMenu open={isProductsOpen} onOpenChange={setIsProductsOpen}>
-              <div
-                onMouseEnter={() => setIsProductsOpen(true)}
-                onMouseLeave={() => setIsProductsOpen(false)}
-                className="relative"
-              >
+              <div className="relative">
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
