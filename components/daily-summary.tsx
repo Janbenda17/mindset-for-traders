@@ -30,6 +30,7 @@ import { useDailyStage } from "@/contexts/daily-stage-context"
 import { useLanguage } from "@/contexts/language-context"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
+import { useAuth } from "@/contexts/auth-context"
 
 interface MorningCheckData {
   date: string
@@ -74,6 +75,7 @@ export function DailySummary() {
   const router = useRouter()
   const { completeStage, stages } = useDailyStage()
   const { getAllTrades, isLiveMode, morningChecks, dailyIntentions, tradingPlans } = useData()
+  const { user } = useAuth()
   const { language } = useLanguage()
   const isEn = language === "en"
 
@@ -391,13 +393,40 @@ export function DailySummary() {
     setIsArchiving(true)
     try {
       const today = format(new Date(), "yyyy-MM-dd")
-      
+
       // Calculate statistics locally
       const localTotalPnL = todayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0)
-      const winningTrades = todayTrades.filter((t) => t.pnl > 0).length
-      const localWinRate = todayTrades.length > 0 ? Math.round((winningTrades / todayTrades.length) * 100) : 0
-      
-      // Save to local history state
+      const winningTradesCount = todayTrades.filter((t) => t.pnl > 0).length
+      const localWinRate = todayTrades.length > 0 ? Math.round((winningTradesCount / todayTrades.length) * 100) : 0
+      const localMood = todayTrades.length > 0
+        ? todayTrades.reduce((sum, t) => sum + (t.mood || 0), 0) / todayTrades.length
+        : 0
+
+      // Persist to backend (Supabase) so it survives reload and shows up in
+      // /daily-summary-history via GET /api/daily-summary/history
+      const response = await fetch('/api/daily-summary/archive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          date: today,
+          totalPnl: localTotalPnL,
+          winRate: localWinRate,
+          tradesCount: todayTrades.length,
+          mood: localMood,
+          aiInsights,
+          morningCheck,
+          tradingPlan: plan,
+          dailyIntention: intention,
+        }),
+      })
+
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}))
+        throw new Error(errBody.error || 'Failed to archive summary')
+      }
+
+      // Reflect immediately in the in-memory list shown on this page
       const newEntry = {
         id: `${today}-${Date.now()}`,
         date: today,
@@ -405,14 +434,12 @@ export function DailySummary() {
         winRate: localWinRate,
         tradesCount: todayTrades.length,
         trades: todayTrades,
-        mood: todayTrades.length > 0 ? todayTrades.reduce((sum, t) => sum + (t.mood || 0), 0) / todayTrades.length : 0,
+        mood: localMood,
         aiInsights,
         morningCheck,
         tradingPlan: plan,
         dailyIntention: intention,
       }
-      
-      // Add to archived entries
       setArchivedEntries(prev => [newEntry, ...prev])
 
       toast({
@@ -424,11 +451,11 @@ export function DailySummary() {
 
       // Reset trades and clear the summary
       setTodayTrades([])
-      
-      // Refresh to show cleared state
+
+      // Refresh to show cleared state (data is now safely persisted server-side)
       setTimeout(() => window.location.reload(), 1500)
     } catch (error) {
-      console.error('Archive error:', error)
+      console.error('[v0] Archive error:', error)
       toast({
         title: "Chyba",
         description: "Nepodařilo se uložit shrnutí do historie.",
