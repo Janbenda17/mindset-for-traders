@@ -136,6 +136,8 @@ export function DailyIntention() {
       setIsGenerating(false)
     }
   }
+
+  const saveIntention = async () => {
     // Check if stage is locked
     if (isStage2Locked) {
       toast({

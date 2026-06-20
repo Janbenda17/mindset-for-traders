@@ -354,23 +354,6 @@ export function DailySummary() {
       performancePrediction,
     })
   }
-      performancePrediction = "Perform trades to enable AI performance predictions."
-    }
-    if (!riskAssessment) {
-      riskAssessment = "Perform trades to enable risk assessment analysis."
-    }
-
-    setAiInsights({
-      strengths,
-      weaknesses,
-      tomorrowPlan,
-      psychologicalAnalysis,
-      patternRecognition,
-      riskAssessment,
-      performancePrediction,
-    })
-  }
-
   const handleComplete = () => {
     // Check if stage is already locked
     if (isStage5Locked) {
@@ -588,7 +571,8 @@ export function DailySummary() {
               <span className="text-emerald-400">{winningTrades} Winning</span>
               <span className="text-zinc-600">•</span>
               <span className="text-rose-400">{losingTrades} Losing</span>
-          </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
 

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { generateObject, generateText } from 'ai'
-import { grok } from '@ai-sdk/grok'
+import { xai } from '@ai-sdk/xai'
 import { z } from 'zod'
 
 const supabase = createClient(
@@ -245,7 +245,7 @@ async function getAIFailAnalysis(
     const tradesSummary = trades.map(t => `${t.symbol}: Lost ${t.loss.toFixed(2)} (${t.duration})`).join('\n')
 
     const result = await generateText({
-      model: grok('grok-2-1212'),
+      model: xai('grok-2-1212'),
       prompt: `
       Analyze these losing trades and provide insights:
 
