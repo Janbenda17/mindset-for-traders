@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -58,28 +58,19 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProductsOpen, setIsProductsOpen] = useState(false)
-  const productsCloseTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Hover-intent open/close for the Products dropdown: opens immediately on
-  // hover, but closing is delayed so moving the mouse from the trigger button
-  // to the (portaled) dropdown content doesn't register as "leaving" and
-  // immediately re-trigger an open/close flicker loop.
-  const openProductsMenu = () => {
-    if (productsCloseTimeout.current) {
-      clearTimeout(productsCloseTimeout.current)
-      productsCloseTimeout.current = null
-    }
-    setIsProductsOpen(true)
-  }
-
-  const scheduleCloseProductsMenu = () => {
-    if (productsCloseTimeout.current) {
-      clearTimeout(productsCloseTimeout.current)
-    }
-    productsCloseTimeout.current = setTimeout(() => {
-      setIsProductsOpen(false)
-    }, 200)
-  }
+  // Products menu opens on hover and closes on leave. It is intentionally NOT
+  // built with Radix's DropdownMenu/DropdownMenuContent here, because that
+  // content renders through a React Portal (appended elsewhere in the DOM),
+  // which kept causing the open state to flicker as the mouse crossed the
+  // visual gap between the button and the portaled panel. Using a plain
+  // absolutely-positioned panel as a direct sibling inside the same hover
+  // container removes that gap entirely - one element, one set of handlers,
+  // hovering anywhere over the button+panel area keeps it open, leaving it
+  // closes it. No delay/timeout needed since there's no portal boundary to
+  // cross.
+  const openProductsMenu = () => setIsProductsOpen(true)
+  const closeProductsMenu = () => setIsProductsOpen(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSwitchingToLive, setIsSwitchingToLive] = useState(false)
 
@@ -248,59 +239,57 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
           {/* Main Navigation */}
           <div className="hidden md:flex items-center gap-1">
             {/* Products dropdown */}
-            <DropdownMenu open={isProductsOpen} onOpenChange={setIsProductsOpen}>
-              <div
-                className="relative"
-                onMouseEnter={openProductsMenu}
-                onMouseLeave={scheduleCloseProductsMenu}
+            <div
+              className="relative"
+              onMouseEnter={openProductsMenu}
+              onMouseLeave={closeProductsMenu}
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                className="relative px-4 h-10 text-sm font-semibold text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 transition-all duration-300 group flex items-center gap-2 rounded-lg shadow-lg shadow-purple-500/20"
+                aria-expanded={isProductsOpen}
               >
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="relative px-4 h-10 text-sm font-semibold text-white bg-gradient-to-r from-purple-500/70 to-pink-500/70 hover:from-purple-500/90 hover:to-pink-500/90 transition-all duration-300 group flex items-center gap-2 rounded-lg shadow-lg shadow-purple-500/20"
-                  >
-                    <span>{isEn ? 'Products' : 'Produkty'}</span>
-                    <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6"
-                  align="center"
-                  onMouseEnter={openProductsMenu}
-                  onMouseLeave={scheduleCloseProductsMenu}
+                <span>{isEn ? 'Products' : 'Produkty'}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isProductsOpen ? 'rotate-180' : ''}`} />
+              </Button>
+              {isProductsOpen && (
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 top-full pt-2 w-full min-w-max z-50"
                 >
-                {/* Hlavní produkty - 8 vedle sebe, vycentrovaný */}
-                <div className="flex justify-center w-full">
-                  <div className="grid grid-cols-8 gap-3 w-fit">
-                    {mainNavigation.map((item) => {
-                      const isActive = pathname === item.href
-                      
-                      return (
-                        <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
-                          <div className={`flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all w-24 h-28 ${
-                            isActive 
-                              ? "bg-purple-600/30 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20" 
-                              : "hover:bg-slate-800/50 border-2 border-slate-700/50 hover:border-slate-600/50"
-                          }`}>
-                            <item.icon className={`w-6 h-6 ${isActive ? "text-purple-400" : "text-gray-300"}`} />
-                            <span className={`text-xs text-center font-medium line-clamp-2 ${isActive ? "text-purple-300" : "text-white"}`}>
-                              {item.name}
-                            </span>
-                            {item.badge && (
-                              <Badge className="text-xs px-1.5 py-0.5 h-5 bg-green-500/30 text-green-300 border border-green-500/50">
-                                {item.badge}
-                              </Badge>
-                            )}
-                          </div>
-                        </Link>
-                      )
-                    })}
+                  <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-lg p-6 shadow-xl">
+                    {/* Hlavní produkty - 8 vedle sebe, vycentrovaný */}
+                    <div className="flex justify-center w-full">
+                      <div className="grid grid-cols-8 gap-3 w-fit">
+                        {mainNavigation.map((item) => {
+                          const isActive = pathname === item.href
+
+                          return (
+                            <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
+                              <div className={`flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all w-24 h-28 ${
+                                isActive
+                                  ? "bg-purple-600/30 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20"
+                                  : "hover:bg-slate-800/50 border-2 border-slate-700/50 hover:border-slate-600/50"
+                              }`}>
+                                <item.icon className={`w-6 h-6 ${isActive ? "text-purple-400" : "text-gray-300"}`} />
+                                <span className={`text-xs text-center font-medium line-clamp-2 ${isActive ? "text-purple-300" : "text-white"}`}>
+                                  {item.name}
+                                </span>
+                                {item.badge && (
+                                  <Badge className="text-xs px-1.5 py-0.5 h-5 bg-green-500/30 text-green-300 border border-green-500/50">
+                                    {item.badge}
+                                  </Badge>
+                                )}
+                              </div>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </DropdownMenuContent>
-              </div>
-            </DropdownMenu>
+              )}
+            </div>
 
             {/* Pricing button */}
             <Link href="/upgrade">
