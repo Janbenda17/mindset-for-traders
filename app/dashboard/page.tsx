@@ -180,7 +180,7 @@ export default function Dashboard() {
           >
             <h2 className="text-2xl font-bold text-white mb-6">MetaTrader 5 Live Account</h2>
             <div className="max-w-2xl">
-              <MT5AccountWidget />
+              <MT5AccountWidget onData={setMt5Data} />
             </div>
           </motion.div>
 

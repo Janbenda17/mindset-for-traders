@@ -15,7 +15,7 @@ interface MT5AccountData {
   open_trades: number
 }
 
-export function MT5AccountWidget() {
+export function MT5AccountWidget({ onData }: { onData?: (data: { balance: number; monthlyProfit: number } | null) => void } = {}) {
   const [data, setData] = useState<MT5AccountData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -39,6 +39,7 @@ export function MT5AccountWidget() {
 
         if (!user) {
           setError('Not authenticated')
+          onData?.(null)
           return
         }
 
@@ -58,6 +59,7 @@ export function MT5AccountWidget() {
         if (!trades || trades.length === 0) {
           setError('No MT5 account connected')
           setLoading(false)
+          onData?.(null)
           return
         }
 
@@ -75,14 +77,17 @@ export function MT5AccountWidget() {
           console.error('[v0] Error fetching open trades:', openError)
         }
 
-        setData({
+        const nextData = {
           balance: trade.entry_price || 0,
           equity: trade.exit_price || 0,
           profit: trade.profit_loss || 0,
           margin_level: 0,
           free_margin: 0,
           open_trades: openTradesCount || 0,
-        })
+        }
+
+        setData(nextData)
+        onData?.({ balance: nextData.balance, monthlyProfit: nextData.profit })
 
         setLastUpdated(new Date())
       } catch (err) {
