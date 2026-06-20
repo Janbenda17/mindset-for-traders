@@ -44,6 +44,7 @@ interface DailyXPLog {
   journalCompleted: boolean
   lossResetCompleted: boolean
   aiReflectionCompleted: boolean
+  tradeSyncCompleted: boolean
   xpEarned: number
 }
 
@@ -82,6 +83,7 @@ interface GamificationContextType {
   awardJournalXP: () => boolean
   awardLossResetXP: () => boolean
   awardAIReflectionXP: (messageLength: number) => boolean
+  awardTradeActivityXP: (closedTradesToday: number) => boolean
   getTodayXPLog: () => DailyXPLog | null
   calculateDailyXP: (factors: {
     readiness: number
@@ -136,6 +138,7 @@ const XP_REWARDS = {
   journalEntry: 15, // +15 XP za záznam v deníku
   lossReset: 10, // +10 XP za kompletní Loss Reset
   aiReflection: 5, // +5 XP za použití MindTrader AI
+  tradeLogged: 8, // +8 XP za každý obchod synchronizovaný z MetaTraderu (max 5/den)
   challengeEasy: 60, // +60 XP (bylo 30)
   challengeMedium: 120, // +120 XP (bylo 60)
   challengeHard: 240, // +240 XP (bylo 120)
@@ -508,6 +511,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       journalCompleted: false,
       lossResetCompleted: false,
       aiReflectionCompleted: false,
+      tradeSyncCompleted: false,
       xpEarned: 0,
     }
   }
@@ -697,6 +701,59 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       setTimeout(() => {
         const event = new CustomEvent("xp-gained", {
           detail: { amount: xpToAdd, reason: "MindTrader AI reflexe" },
+        })
+        window.dispatchEvent(event)
+      }, 0)
+    }
+
+    return true
+  }
+
+  const awardTradeActivityXP = (closedTradesToday: number): boolean => {
+    const todayLog = getOrCreateTodayLog()
+
+    if (todayLog.tradeSyncCompleted) {
+      return false
+    }
+
+    if (!closedTradesToday || closedTradesToday <= 0) {
+      return false
+    }
+
+    // Max 5 obchodu / den se pocita do XP, aby se zabranilo "farmeni" XP overtradingem
+    const countedTrades = Math.min(closedTradesToday, 5)
+    const xpToAdd = XP_REWARDS.tradeLogged * countedTrades
+
+    setData((prev) => {
+      const today = getTodayString()
+      const updatedLog = prev.dailyXPLog.filter((log) => log.date !== today)
+
+      const newLog: DailyXPLog = {
+        ...todayLog,
+        tradeSyncCompleted: true,
+        xpEarned: todayLog.xpEarned + xpToAdd,
+      }
+
+      const newXP = prev.xp + xpToAdd
+      const newLevel = calculateLevel(newXP)
+
+      return {
+        ...prev,
+        xp: newXP,
+        level: newLevel,
+        dailyXPLog: [...updatedLog, newLog],
+        lastActivityDate: new Date().toISOString(),
+        stats: {
+          ...prev.stats,
+          totalTrades: prev.stats.totalTrades + closedTradesToday,
+        },
+      }
+    })
+
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        const event = new CustomEvent("xp-gained", {
+          detail: { amount: xpToAdd, reason: "Obchody synchronizovany z MetaTraderu" },
         })
         window.dispatchEvent(event)
       }, 0)
@@ -959,6 +1016,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
         awardJournalXP,
         awardLossResetXP,
         awardAIReflectionXP,
+        awardTradeActivityXP,
         getTodayXPLog,
         calculateDailyXP,
         unlockAchievement,
@@ -1021,6 +1079,7 @@ export function useGamification() {
         awardJournalXP: () => false,
         awardLossResetXP: () => false,
         awardAIReflectionXP: () => false,
+        awardTradeActivityXP: () => false,
         getTodayXPLog: () => null,
         calculateDailyXP: () => 0,
         unlockAchievement: () => {},

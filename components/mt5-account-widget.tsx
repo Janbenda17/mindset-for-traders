@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TrendingUp, TrendingDown, AlertCircle, Loader } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { createClient } from '@supabase/supabase-js'
+import { useGamification } from '@/contexts/gamification-context'
 
 interface MT5AccountData {
   balance: number
@@ -20,6 +21,7 @@ export function MT5AccountWidget({ onData }: { onData?: (data: { balance: number
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const { awardTradeActivityXP } = useGamification()
 
   useEffect(() => {
     const supabase = createClient(
@@ -75,6 +77,26 @@ export function MT5AccountWidget({ onData }: { onData?: (data: { balance: number
 
         if (openError) {
           console.error('[v0] Error fetching open trades:', openError)
+        }
+
+        // Get trades closed today (real MetaTrader activity) to award XP for
+        const startOfDay = new Date()
+        startOfDay.setHours(0, 0, 0, 0)
+        const endOfDay = new Date(startOfDay)
+        endOfDay.setDate(endOfDay.getDate() + 1)
+
+        const { count: closedTodayCount, error: closedTodayError } = await supabase
+          .from('mt4_trades')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .neq('symbol', '_ACCOUNT_')
+          .gte('exit_time', startOfDay.toISOString())
+          .lt('exit_time', endOfDay.toISOString())
+
+        if (closedTodayError) {
+          console.error('[v0] Error fetching closed trades for XP:', closedTodayError)
+        } else if (closedTodayCount && closedTodayCount > 0) {
+          awardTradeActivityXP(closedTodayCount)
         }
 
         const nextData = {

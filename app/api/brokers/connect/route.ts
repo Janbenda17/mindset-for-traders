@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { metaApiClient } from '@/lib/integrations/metaapi'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,10 +48,18 @@ export async function POST(request: NextRequest) {
 
     console.log('[v0] Connecting to MetaTrader broker:', broker)
 
-    // Encrypt credentials
+    // Encrypt credentials (kept as backup/reference, not used for live sync)
     const encryptedPassword = encryptCredentials(login, password, encryptionKey)
 
-    console.log('[v0] Saving encrypted credentials to profile')
+    // Actually register the account with MetaApi.cloud so the cron sync
+    // (api/cron/mt5-sync.ts) has a real metaapi_account_id to pull data from.
+    // Without this step, credentials were saved but never linked to MetaApi,
+    // so trades/balance never synced and "Your XP" / dashboard stats never
+    // received real trading data.
+    console.log('[v0] Authenticating with MetaApi for broker:', broker)
+    const accountId = await metaApiClient.authenticateWithCredentials({ login, password, broker })
+
+    console.log('[v0] Saving credentials and MetaApi account link to profile')
 
     // Use upsert to handle case where profile doesn't exist yet
     const { error, data } = await supabase
@@ -60,6 +69,9 @@ export async function POST(request: NextRequest) {
         mt4_broker: broker,
         mt4_login: login,
         mt4_password: encryptedPassword,
+        metaapi_account_id: accountId,
+        metaapi_token: process.env.METAAPI_API_KEY,
+        metaapi_broker: broker,
         trades_sync_enabled: true,
         last_trades_sync: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -73,12 +85,13 @@ export async function POST(request: NextRequest) {
       throw error
     }
 
-    console.log('[v0] MetaTrader credentials saved successfully for broker:', broker)
+    console.log('[v0] MetaTrader account connected and linked to MetaApi:', accountId)
 
     return NextResponse.json({
       success: true,
       message: 'MetaTrader account connected successfully',
       broker,
+      accountId,
     })
   } catch (error) {
     console.error('[v0] Connection error:', error)

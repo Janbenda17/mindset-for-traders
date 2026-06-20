@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('id, user_id, metaapi_token, metaapi_account_id, metaapi_broker')
       .eq('trades_sync_enabled', true)
-      .not('metaapi_token', 'is', null)
       .not('metaapi_account_id', 'is', null)
 
     if (profileError) {
@@ -73,22 +72,28 @@ export async function GET(request: NextRequest) {
         const stats = await metaApiClient.getAccountStats(accountId)
 
         // Upsert account balance to trades table (or create separate account_stats)
+        const nowIso = new Date().toISOString()
         const { error: accountError } = await supabase
           .from('mt4_trades')
           .upsert(
             {
               user_id: userId,
+              trade_id: '_ACCOUNT_',
               symbol: '_ACCOUNT_',
               trade_type: 'ACCOUNT',
+              volume: 0,
               entry_price: accountInfo.balance,
               exit_price: accountInfo.equity,
+              entry_time: nowIso,
+              exit_time: nowIso,
+              date: nowIso.slice(0, 10),
               profit_loss: accountInfo.profit,
               duration_seconds: 0,
               source: 'metaapi',
-              created_at: new Date().toISOString(),
+              created_at: nowIso,
             },
             {
-              onConflict: 'user_id,symbol,trade_type',
+              onConflict: 'user_id,trade_id',
             },
           )
 
@@ -107,13 +112,16 @@ export async function GET(request: NextRequest) {
           .upsert(
             trades.map((trade) => ({
               user_id: userId,
+              trade_id: trade.id,
               symbol: trade.symbol,
               trade_type: trade.type,
               volume: trade.volume,
               entry_price: trade.entry_price,
               exit_price: trade.current_price,
               entry_time: trade.entry_time,
-              exit_time: trade.exit_time,
+              exit_time: trade.exit_time ?? null,
+              date: (trade.entry_time || new Date().toISOString()).slice(0, 10),
+              status: trade.status,
               profit_loss: trade.profit,
               profit_loss_pips: trade.profit_pips,
               duration_seconds: trade.exit_time
@@ -127,7 +135,7 @@ export async function GET(request: NextRequest) {
               created_at: new Date().toISOString(),
             })),
             {
-              onConflict: 'user_id,symbol,entry_time',
+              onConflict: 'user_id,trade_id',
             },
           )
 
