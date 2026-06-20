@@ -108,7 +108,7 @@ export default function DailyTrackerPage() {
       id: 2,
       name: 'Daily Intentions',
       icon: Target,
-      href: '/daily-intentions',
+      href: '/daily-intention',
       completed: todayEntry?.stagesCompleted >= 1
     },
     {
@@ -263,7 +263,7 @@ export default function DailyTrackerPage() {
                         </div>
                       </div>
 
-                      <Link href="/daily-intentions">
+                      <Link href="/daily-intention">
                         <Button className="w-full bg-cyan-600 hover:bg-cyan-700">
                           Edit & Confirm
                           <ArrowRight className="h-4 w-4 ml-2" />

@@ -15,6 +15,7 @@ import {
   Calendar,
   Clock,
   AlertTriangle,
+  AlertCircle,
   BarChart2,
   Activity,
   Shield,
