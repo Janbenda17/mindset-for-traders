@@ -222,11 +222,10 @@ interface ChatRequest {
 function generateEnhancedMockResponse(request: ChatRequest): string {
   const { message, personality, mode, context, userData, traderProfile, isVirtualMode, language } = request
   const isEn = language === "en"
-  const { mood, stress, readiness, sleep, energy } = context
-  const { stats, patterns, morningCheck } = userData
+  const { stats, patterns } = userData
 
   // Add virtual mode disclaimer
-  const virtualPrefix = isVirtualMode ? (isEn ? "Your stress is at 5/10. " : "Máš stres na 5/10. ") : ""
+  const virtualPrefix = ""
 
   // VIRTUAL MODE: Respond naturally with concrete techniques
   if (isVirtualMode) {
@@ -326,41 +325,27 @@ function generateEnhancedMockResponse(request: ChatRequest): string {
 
   if (mode === "mind") {
     const consecutiveLosses = stats.consecutiveLosses
-    const highStress = stress >= 7
-    const lowSleep = morningCheck && morningCheck.sleepHours < 6
 
-    if (consecutiveLosses >= 3 && highStress) {
+    if (consecutiveLosses >= 3) {
       const responses = isEn ? [
-        `${consecutiveLosses} losses in a row + stress ${stress}/10 = your brain is in "win it back" mode. This is NOT logical thinking. Close the platform for minimum 2 hours. Box breathing: 4s inhale, 4s hold, 4s exhale, 4s pause. 10 repetitions. Then analyze losses WITHOUT emotion.`,
-        `STOP. ${consecutiveLosses} consecutive losses with stress ${stress}/10 = 80%+ probability of another mistake. Immediately: Close all positions. Go outside for 30 minutes. Breathe 4-7-8 technique. Return only when you can describe the last 3 losses without emotion.`,
-        `A series of ${consecutiveLosses} losses activated your "fight" mode. Stress ${stress}/10 confirms amygdala is dominant. Only correct action: Step away from screens MINIMUM 90 minutes. Physical activity (walk, exercise). Return only with a written analysis of each loss.`,
+        `${consecutiveLosses} losses in a row = your brain is in "win it back" mode. This is NOT logical thinking. Close the platform for minimum 2 hours. Box breathing: 4s inhale, 4s hold, 4s exhale, 4s pause. 10 repetitions. Then analyze losses WITHOUT emotion.`,
+        `STOP. ${consecutiveLosses} consecutive losses = 80%+ probability of another mistake. Immediately: Close all positions. Go outside for 30 minutes. Breathe 4-7-8 technique. Return only when you can describe the last 3 losses without emotion.`,
+        `A series of ${consecutiveLosses} losses activated your "fight" mode. Only correct action: Step away from screens MINIMUM 90 minutes. Physical activity (walk, exercise). Return only with a written analysis of each loss.`,
       ] : [
-        `${consecutiveLosses} ztrat v rade + stres ${stress}/10 = tvuj mozek je v rezimu "vyhraj zpatky". Tohle NENI logicke rozhodovani. Zavri platformu na minimum 2 hodiny. Box breathing: 4s nadech, 4s drzeni, 4s vydech, 4s pauza. 10 opakovani. Pak analyzuj ztráty BEZ emoci.`,
-        `STOP. ${consecutiveLosses} po sobe jdoucich ztrat pri stresu ${stress}/10 = 80%+ pravdepodobnost dalsi chyby. Okamzite: Zavri vsechny pozice. Jdi ven na 30 minut. Dychej 4-7-8 techniku. Vrat se az kdyz dokazes popsat posledni 3 ztráty bez emoci.`,
-        `Serie ${consecutiveLosses} ztrat aktivovala tvuj "fight" rezim. Stres ${stress}/10 potvrzuje ze amygdala je dominantni. Jedina spravna akce: Odstup od obrazovek MINIMUM 90 minut. Fyzicka aktivita (chůze, cviceni). Navrat pouze s napsanou analyzou kazde z ${consecutiveLosses} ztrat.`,
-      ]
-      response = responses[Math.floor(randomFactor * responses.length)]
-    } else if (lowSleep) {
-      const sleepHours = morningCheck!.sleepHours
-      const responses = isEn ? [
-        `${sleepHours}h sleep = your prefrontal cortex (logical decisions) is weakened, amygdala (emotions) is hyperactive. Concretely: Reaction time +15%, error rate +30%. If trading: Half positions, A+ setups only, max 2h session. Better: skip today entirely.`,
-        `Sleep ${sleepHours}h is below minimum for quality decision-making. Your impulsivity is higher, self-control lower. Defensive mode: 50% of normal position size, strict stop losses, NO plan violations. After 2 hours stop regardless of results.`,
-        `${sleepHours}h sleep reduces decision quality by 30-40%. Today: Either don't trade (best option), or: max 3 trades, half positions, no new strategies. Tonight go to bed an hour earlier - investment in tomorrow's performance.`,
-      ] : [
-        `${sleepHours}h spanku = tvoje prefrontalni kůra (logicke rozhodovani) je oslabena, amygdala (emoce) je hyperaktivni. Konkretne: Reakcni cas +15%, chybovost +30%. Pokud trades: Polovicni pozice, jen A+ setupy, max 2h session. Nebo lepe: vynech dnes uplne.`,
-        `Spanek ${sleepHours}h je pod minimem pro kvalitni rozhodovani. Tvoje impulzivita je vyssi, sebekontrola nizsi. Defensive mod: 50% bezne velikosti pozice, striktni stop lossy, ZADNE prekracovani planu. Po 2 hodinach konec bez ohledu na vysledky.`,
-        `${sleepHours}h spanku snizuje kvalitu rozhodnuti o 30-40%. Dnes: Bud netraduj (nejlepsi volba), nebo: max 3 obchody, polovicni pozice, zadne nové strategie. Dnes vecer jdi spat o hodinu drive - investice do zitrejsiho vykonu.`,
+        `${consecutiveLosses} ztrat v rade = tvuj mozek je v rezimu "vyhraj zpatky". Tohle NENI logicke rozhodovani. Zavri platformu na minimum 2 hodiny. Box breathing: 4s nadech, 4s drzeni, 4s vydech, 4s pauza. 10 opakovani. Pak analyzuj ztráty BEZ emoci.`,
+        `STOP. ${consecutiveLosses} po sobe jdoucich ztrat = 80%+ pravdepodobnost dalsi chyby. Okamzite: Zavri vsechny pozice. Jdi ven na 30 minut. Dychej 4-7-8 techniku. Vrat se az kdyz dokazes popsat posledni 3 ztráty bez emoci.`,
+        `Serie ${consecutiveLosses} ztrat aktivovala tvuj "fight" rezim. Jedina spravna akce: Odstup od obrazovek MINIMUM 90 minut. Fyzicka aktivita (chůze, cviceni). Navrat pouze s napsanou analyzou kazde z ${consecutiveLosses} ztrat.`,
       ]
       response = responses[Math.floor(randomFactor * responses.length)]
     } else {
       const responses = isEn ? [
-        `Your state is stable (stress ${stress}/10, mood ${mood}/10). Focus today: Before each trade say out loud the setup, entry, stop loss and target. This ritual activates the logical part of the brain and reduces impulsive entries.`,
-        `Conditions for trading are good. Your only goal today: 100% compliance with the plan. Not P&L, not trade count. Only: "Did I follow every point of the plan?" Record a score 1-10 after each trade.`,
-        `You are mentally ready. Technique for today: After each trade (win or loss) take a 5min break. Write: What did I do well? What can I improve? This micro-reflection is the fastest path to consistent improvement.`,
+        `Conditions for trading are good. Focus today: Before each trade say out loud the setup, entry, stop loss and target. This ritual activates the logical part of the brain and reduces impulsive entries.`,
+        `Your only goal today: 100% compliance with the plan. Not P&L, not trade count. Only: "Did I follow every point of the plan?" Record a score 1-10 after each trade.`,
+        `Technique for today: After each trade (win or loss) take a 5min break. Write: What did I do well? What can I improve? This micro-reflection is the fastest path to consistent improvement.`,
       ] : [
-        `Tvuj stav je stabilni (stres ${stress}/10, nalada ${mood}/10). Fokus dnes: Pred kazdym obchodem nahlas pojmenuj setup, entry, stop loss a target. Tento ritual aktivuje logickou cast mozku a snizuje impulzivni vstupy.`,
-        `Podmínky pro trading jsou dobre. Tvuj jediny cil dnes: 100% compliance s planem. Ne P&L, ne pocet obchodu. Pouze: "Dodržel jsem kazdy bod planu?" Zaznamenej si score 1-10 po kazdem obchodu.`,
-        `Jsi mentalne pripraveny. Technika pro dnesek: Po kazdem obchodu (win i loss) si dej 5min pauzu. Zapiš: Co jsem udelal dobre? Co mohu zlepsit? Tato mikro-reflexe je nejrychlejsi cesta ke konzistentnímu zlepsovani.`,
+        `Podmínky pro trading jsou dobre. Fokus dnes: Pred kazdym obchodem nahlas pojmenuj setup, entry, stop loss a target. Tento ritual aktivuje logickou cast mozku a snizuje impulzivni vstupy.`,
+        `Tvuj jediny cil dnes: 100% compliance s planem. Ne P&L, ne pocet obchodu. Pouze: "Dodržel jsem kazdy bod planu?" Zaznamenej si score 1-10 po kazdem obchodu.`,
+        `Technika pro dnesek: Po kazdem obchodu (win i loss) si dej 5min pauzu. Zapiš: Co jsem udelal dobre? Co mohu zlepsit? Tato mikro-reflexe je nejrychlejsi cesta ke konzistentnímu zlepsovani.`,
       ]
       response = responses[Math.floor(randomFactor * responses.length)]
     }
@@ -382,17 +367,6 @@ function generateEnhancedMockResponse(request: ChatRequest): string {
         `Data: ${revengeTrades} revenge obchodu z ${stats.totalTrades} celkovych (${revengeRate.toFixed(0)}%). Prum. ztrata na revenge: $${(Math.abs(Number.parseFloat(String(avgLoss))) * 1.5).toFixed(0)} vs bezny $${Math.abs(Number.parseFloat(String(avgLoss))).toFixed(0)}. Aktualne ${stats.consecutiveLosses} ztrat v rade = vysoké riziko dalsiho revenge. Reseni: Pravidlo "2 ztraty = konec dne" by eliminovalo ${revengeTrades} revenge obchodu.`,
         `Revenge rate ${revengeRate.toFixed(0)}% je tvuj nejvetsi leak. Z ${stats.totalTrades} obchodu bylo ${revengeTrades} revenge - tyto maji o 50% horsi uspesnost nez planovane vstupy. Pri ${stats.consecutiveLosses} ztratach v rade: ZASTAV trading. Kazdy dalsi trade ma teď statisticky negativni ocekavanou hodnotu.`,
         `Analyza: ${stats.consecutiveLosses} ztrat aktivuje revenge pattern (${revengeRate.toFixed(0)}% tvych obchodu). Prumerny revenge trade ztrata: $${(Math.abs(Number.parseFloat(String(avgLoss))) * 1.5).toFixed(0)}. Pokud zavedis pravidlo "po 2 ztratach stop" a dodrzis ho 30 dni, eliminujes ${revengeTrades} revenge obchodu.`,
-      ]
-      response = responses[Math.floor(randomFactor * responses.length)]
-    } else if (morningCheck && morningCheck.sleepHours < 6) {
-      const responses = isEn ? [
-        `Sleep ${morningCheck.sleepHours}h. From your ${stats.totalTrades} trades: Days with sleep under 6h have demonstrably lower decision quality. Recommendation: Today max 2 trades, half position size. Tonight: Sleep before 10pm. Track how your performance changes after 7+ hours of sleep.`,
-        `Data: ${morningCheck.sleepHours}h sleep. Your win rate ${winRate.toFixed(1)}% is an aggregate number - on nights with under 6h sleep it's typically 15-25% lower. Today: Defensive mode (max 2 trades, A+ setups). Record: hours slept vs today's P&L. Build your correlation dataset.`,
-        `Sleep ${morningCheck.sleepHours}h is below minimum. From ${stats.totalTrades} trades: Avg win $${avgWin}, avg loss $${avgLoss}. With insufficient sleep avg loss typically increases. Today's strategy: Half position size, strict stop losses, max 2h session.`,
-      ] : [
-        `Spanek ${morningCheck.sleepHours}h. Z tvych ${stats.totalTrades} obchodu: Dny se spankem pod 6h maji prokazatelne nizsi kvalitu rozhodovani. Doporuceni: Dnes max 2 obchody, polovicni pozice. Dnes vecer: Spanek pred 22:00.`,
-        `Data: ${morningCheck.sleepHours}h spanku. Tvuj win rate ${winRate.toFixed(1)}% je agregatni cislo - po nocich se spankem pod 6h je typicky o 15-25% nizsi. Dnes: Defensive mod (max 2 obchody, A+ setupy).`,
-        `Spanek ${morningCheck.sleepHours}h je pod minimem. Z ${stats.totalTrades} obchodu: Prumer win $${avgWin}, prumer loss $${avgLoss}. Pri nedostatku spanku se prumer loss typicky zvysuje.`,
       ]
       response = responses[Math.floor(randomFactor * responses.length)]
     } else {
@@ -507,7 +481,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const { trades, journals, moodHistory, stats, patterns, morningCheck, morningChecks } = userData
+    const { trades, journals, stats, patterns } = userData
 
     const isAnalyticsMode = mode === "analytics"
 
@@ -526,12 +500,6 @@ export async function POST(req: NextRequest) {
 ═══════════════════════════════════════════════════════════
 🚨 CURRENT STATE (RIGHT NOW):
 ═══════════════════════════════════════════════════════════
-- Mood: ${context.mood}/10 ${context.mood <= 4 ? "⚠️ LOW" : context.mood >= 8 ? "✅ GOOD" : ""}
-- Stress: ${context.stress}/10 ${context.stress >= 7 ? "🔴 HIGH RISK" : context.stress >= 5 ? "⚠️ ELEVATED" : "✅ OK"}
-- Confidence: ${context.confidence}/10
-- Readiness: ${context.readiness}%
-${context.sleep ? `- Sleep Last Night: ${context.sleep}h ${context.sleep < 6 ? "🔴 POOR" : context.sleep < 7 ? "⚠️ SUBOPTIMAL" : "✅ GOOD"}` : ""}
-${context.energy ? `- Energy: ${context.energy}/10 ${context.energy < 5 ? "⚠️ LOW" : ""}` : ""}
 ${consecutiveLossStreak > 0 ? `\n🚨 ALERT: ${consecutiveLossStreak} CONSECUTIVE LOSSES ACTIVE` : ""}
 ${stats.consecutiveWins > 0 ? `\n✅ STREAK: ${stats.consecutiveWins} consecutive wins` : ""}
 
@@ -549,13 +517,6 @@ PERFORMANCE:
 - Consecutive Losses: ${traderProfile.performance.consecutiveLosses}
 - Average Win: $${traderProfile.performance.averageWin}
 - Average Loss: $${traderProfile.performance.averageLoss}
-
-PSYCHOLOGY:
-- Average Mood: ${traderProfile.psychology.averageMood}/10
-- Average Stress: ${traderProfile.psychology.averageStress}/10
-- Average Readiness: ${traderProfile.psychology.averageReadiness}%
-- Morning Checks Completed: ${traderProfile.psychology.morningChecksCompleted}
-- Morning Check Rate: ${traderProfile.psychology.morningCheckRate}%
 
 BEHAVIORAL PATTERNS:
 - Revenge Trade Rate: ${traderProfile.patterns.revengeTradeRate}%
@@ -599,18 +560,6 @@ ${trades
 
     if (isAnalyticsMode) {
       dataSummary += `
-
-REAL DATA FROM MORNING CHECKS (LAST 7 DAYS):
-${
-  morningChecks && morningChecks.length > 0
-    ? morningChecks
-        .map(
-          (m, i) =>
-            `${i + 1}. ${m.date}: Sleep ${m.sleepHours}h (Q:${m.sleepQuality}/10), Energy ${m.energy}/10, Stress ${m.stress}/10, Readiness ${m.readiness}%`,
-        )
-        .join("\n")
-    : "- No morning check data available"
-}
 
 EMOTIONAL PATTERNS FROM ANALYTICS:
 ${

@@ -408,11 +408,7 @@ const MindTraderAI = () => {
           language: language,
           isVirtualMode: !isLiveMode,
           context: {
-            mood: currentMorningCheck?.sleep_quality || 5,
-            stress: currentMorningCheck?.stress_level || 5,
             confidence: 5,
-            sleep: currentMorningCheck?.sleep_hours || 7,
-            energy: currentMorningCheck?.energy_level || 5,
           },
           traderProfile: traderProfile || {
             performance: {
@@ -462,14 +458,6 @@ const MindTraderAI = () => {
                 tags: j.tags,
               }),
             })),
-            morningChecks: morningChecks.slice(0, 7).map((m) => ({
-              date: m.date,
-              sleepQuality: m.sleep_quality,
-              sleepHours: m.sleep_hours,
-              stress: m.stress_level,
-              energy: m.energy_level,
-              readiness: m.score,
-            })),
             moodHistory: [],
             patterns: isAnalyticsMode
               ? {
@@ -479,7 +467,6 @@ const MindTraderAI = () => {
                   fearRate: "0",
                 }
               : null,
-            morningCheck: currentMorningCheck,
             stats: {
               totalPnL: Number(traderProfile?.performance?.totalPnL || 0),
               winRate: Number.parseFloat(String(traderProfile?.performance?.winRate || "0")),
@@ -556,10 +543,14 @@ const MindTraderAI = () => {
   const generateInsights = async () => {
     setIsLoading(true)
     try {
+      const winningTrades = trades.filter((t) => (t.pnl || 0) > 0).length
+      const winRate = trades.length > 0 ? (winningTrades / trades.length) * 100 : 0
+      const revengeTrades = trades.filter((t) => t.isRevengeTrade).length
+
       const insightMessage =
         language === "cs"
-          ? `📊 AI INSIGHTS - POSLEDNÍ TÝDEN\n\n🧠 Co se děje:\n- Tvůj průměrný readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Není dostupné"}\n- Spánek: ${currentMorningCheck?.sleep_quality || 5}/10\n- Stres: ${currentMorningCheck?.stress_level || 5}/10\n- Nálada: ${currentMorningCheck?.mood || 5}/10\n\n💡 Proč se to děje:\n${currentMorningCheck?.sleep_quality < 7 ? "- Nedostatečný spánek ovlivňuje výkon\n" : ""}${currentMorningCheck?.stress_level > 6 ? "- Vysoký stres snižuje koncentraci\n" : ""}${trades.length === 0 ? "- Zatím nemám dostatek dat z obchodů\n" : ""}\n\n🎯 Co udělat dál:\n1. ${currentMorningCheck?.sleep_quality < 7 ? "Zlepši kvalitu spánku (cíl 7-9h)" : "Udržuj dobré spánkové návyky"}\n2. ${currentMorningCheck?.stress_level > 6 ? "Sniž stres (meditace, procházky)" : "Pokračuj v dobrém managementu stresu"}\n3. Pravidelně zapisuj do journalu\n\nDisciplína = dlouhodobý úspěch! 💪`
-          : `📊 AI INSIGHTS - LAST WEEK\n\n🧠 What's happening:\n- Your average readiness score: ${currentReadiness !== null ? currentReadiness + "%" : "Not available"}\n- Sleep: ${currentMorningCheck?.sleep_quality || 5}/10\n- Stress: ${currentMorningCheck?.stress_level || 5}/10\n- Mood: ${currentMorningCheck?.mood || 5}/10\n\n💡 Why it's happening:\n${currentMorningCheck?.sleep_quality < 7 ? "- Insufficient sleep affects performance\n" : ""}${currentMorningCheck?.stress_level > 6 ? "- High stress reduces concentration\n" : ""}${trades.length === 0 ? "- Not enough trading data yet\n" : ""}\n\n🎯 What to do next:\n1. ${currentMorningCheck?.sleep_quality < 7 ? "Improve sleep quality (target 7-9h)" : "Maintain good sleep habits"}\n2. ${currentMorningCheck?.stress_level > 6 ? "Reduce stress (meditation, walks)" : "Continue good stress management"}\n3. Journal regularly\n\nDisciplína = long-term success! 💪`
+          ? `📊 AI INSIGHTS - POSLEDNÍ TÝDEN\n\n🧠 Co se děje:\n- Počet obchodů: ${trades.length}\n- Win rate: ${winRate.toFixed(1)}%\n- Revenge obchody: ${revengeTrades}\n\n💡 Proč se to děje:\n${revengeTrades > 0 ? "- Revenge trading snižuje tvoji ziskovost\n" : ""}${trades.length === 0 ? "- Zatím nemám dostatek dat z obchodů\n" : ""}${winRate >= 50 ? "- Tvůj win rate je solidní, udržuj současný přístup\n" : ""}\n\n🎯 Co udělat dál:\n1. ${revengeTrades > 0 ? "Zaveď pravidlo '2 ztráty = konec dne'" : "Pokračuj v disciplinovaném přístupu"}\n2. Pravidelně zapisuj do journalu\n3. Sleduj setupy, které ti nejvíc vydělávají\n\nDisciplína = dlouhodobý úspěch! 💪`
+          : `📊 AI INSIGHTS - LAST WEEK\n\n🧠 What's happening:\n- Trades: ${trades.length}\n- Win rate: ${winRate.toFixed(1)}%\n- Revenge trades: ${revengeTrades}\n\n💡 Why it's happening:\n${revengeTrades > 0 ? "- Revenge trading is reducing your profitability\n" : ""}${trades.length === 0 ? "- Not enough trading data yet\n" : ""}${winRate >= 50 ? "- Your win rate is solid, keep your current approach\n" : ""}\n\n🎯 What to do next:\n1. ${revengeTrades > 0 ? "Set a rule: '2 losses = end of day'" : "Keep up the disciplined approach"}\n2. Journal regularly\n3. Track which setups perform best\n\nDiscipline = long-term success! 💪`
 
       const insightMsg = {
         role: "assistant",
@@ -586,10 +577,15 @@ const MindTraderAI = () => {
       return
     }
 
+    const reportWinningTrades = trades.filter((t) => (t.pnl || 0) > 0).length
+    const reportWinRate = trades.length > 0 ? (reportWinningTrades / trades.length) * 100 : 0
+    const reportRevengeTrades = trades.filter((t) => t.isRevengeTrade).length
+    const reportPnL = trades.reduce((sum, t) => sum + (t.pnl || 0), 0)
+
     const reportContent =
       language === "cs"
-        ? `# MindTrader AI Report\n\n**Datum:** ${new Date().toLocaleDateString("cs-CZ")}\n**Readiness Score:** ${currentReadiness !== null ? currentReadiness + "%" : "Není dostupné"}\n\n## 📊 Přehled výkonu\n\n- Celkový počet obchodů: ${trades.length}\n- Průměrná nálada: ${currentMorningCheck?.mood || 5}/10\n- Úroveň stresu: ${currentMorningCheck?.stress_level || 5}/10\n\n## 🧠 Psychologické poznatky\n\n${currentMorningCheck?.stress_level > 6 ? "⚠️ Vysoký stres může ovlivňovat rozhodování\n" : "✅ Stres je pod kontrolou\n"}${currentMorningCheck?.sleep_quality < 7 ? "⚠️ Nedostatečný spánek snižuje výkon\n" : "✅ Kvalita spánku je dobrá\n"}\n## 🎯 Doporučení\n\n1. Pokračuj v pravidelném journalingu\n2. Sleduj své readiness score před obchodováním\n3. Respektuj své mentální limity\n\n---\n\n*Vygenerováno MindTrader AI*`
-        : `# MindTrader AI Report\n\n**Date:** ${new Date().toLocaleDateString("en-US")}\n**Readiness Score:** ${currentReadiness !== null ? currentReadiness + "%" : "Not available"}\n\n## 📊 Performance Overview\n\n- Total trades: ${trades.length}\n- Average mood: ${currentMorningCheck?.mood || 5}/10\n- Stress level: ${currentMorningCheck?.stress_level || 5}/10\n\n## 🧠 Psychological Insights\n\n${currentMorningCheck?.stress_level > 6 ? "⚠️ High stress may affect decision-making\n" : "✅ Stress is under control\n"}${currentMorningCheck?.sleep_quality < 7 ? "⚠️ Insufficient sleep reduces performance\n" : "✅ Sleep quality is good\n"}\n## 🎯 Recommendations\n\n1. Continue regular journaling\n2. Monitor readiness score before trading\n3. Respect your mental limits\n\n---\n\n*Generated by MindTrader AI*`
+        ? `# MindTrader AI Report\n\n**Datum:** ${new Date().toLocaleDateString("cs-CZ")}\n\n## 📊 Přehled výkonu\n\n- Celkový počet obchodů: ${trades.length}\n- Win rate: ${reportWinRate.toFixed(1)}%\n- Celkové P&L: $${reportPnL.toFixed(0)}\n\n## 🧠 Chování a vzorce\n\n${reportRevengeTrades > 0 ? `⚠️ ${reportRevengeTrades} obchodů identifikováno jako revenge trading\n` : "✅ Žádné revenge obchody detekovány\n"}\n## 🎯 Doporučení\n\n1. Pokračuj v pravidelném journalingu\n2. Sleduj setupy s nejvyšší úspěšností\n3. Respektuj svůj trading plán\n\n---\n\n*Vygenerováno MindTrader AI*`
+        : `# MindTrader AI Report\n\n**Date:** ${new Date().toLocaleDateString("en-US")}\n\n## 📊 Performance Overview\n\n- Total trades: ${trades.length}\n- Win rate: ${reportWinRate.toFixed(1)}%\n- Total P&L: $${reportPnL.toFixed(0)}\n\n## 🧠 Behavior & Patterns\n\n${reportRevengeTrades > 0 ? `⚠️ ${reportRevengeTrades} trades flagged as revenge trading\n` : "✅ No revenge trades detected\n"}\n## 🎯 Recommendations\n\n1. Continue regular journaling\n2. Track which setups perform best\n3. Respect your trading plan\n\n---\n\n*Generated by MindTrader AI*`
 
     const blob = new Blob([reportContent], { type: "text/markdown" })
     const url = URL.createObjectURL(blob)
@@ -622,9 +618,9 @@ const MindTraderAI = () => {
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4 sm:space-y-6 lg:h-[calc(100%-100px)] flex flex-col lg:overflow-y-auto p-3 sm:p-4 lg:p-6">
+            <CardContent className="space-y-4 sm:space-y-6 lg:overflow-y-auto p-3 sm:p-4 lg:p-6">
               {/* AI Modes - Enhanced with better spacing */}
-              <div className="flex-1 space-y-4">
+              <div className="space-y-4">
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-purple-300 uppercase tracking-widest">
                     {isEn ? "🤖 AI Modes" : "🤖 AI Modes"}
@@ -736,7 +732,7 @@ const MindTraderAI = () => {
               </ScrollArea>
 
               {/* Quick Prompts and Input - Enhanced */}
-              <div className="border-t border-purple-500/20 bg-gradient-to-t from-slate-950/80 to-slate-950/40 p-6 space-y-4">
+              <div className="border-t border-purple-500/20 bg-gradient-to-t from-slate-950/80 to-slate-950/40 p-3 sm:p-4 space-y-2 sm:space-y-3">
                 {messages.length < 3 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {quickPrompts.slice(0, 4).map((prompt, index) => (
@@ -786,7 +782,7 @@ const MindTraderAI = () => {
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Type your message..."
                         disabled={!isLiveMode}
-                        className="bg-slate-800 border-2 border-purple-400/30 focus:border-purple-400/60 text-white placeholder-slate-500 resize-none h-12 rounded-lg flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-slate-800 border-2 border-purple-400/30 focus:border-purple-400/60 text-white placeholder-slate-500 resize-none h-10 min-h-10 rounded-lg flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey && isLiveMode) {
                             e.preventDefault()

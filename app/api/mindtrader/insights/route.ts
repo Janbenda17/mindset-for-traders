@@ -29,11 +29,6 @@ function generateInsights(trades: any[], journals: any[], moodHistory: any[], re
   // High stress trades
   const highStressTrades = trades?.filter((t: any) => (t.stress || 0) >= 7).length || 0
 
-  // Mood analysis
-  const avgMood = moodHistory?.length > 0
-    ? moodHistory.reduce((sum: number, m: any) => sum + (m.mood || 0), 0) / moodHistory.length
-    : 0
-
   // ---- CO SE DEJE ----
   insights.push(`Co se deje:`)
   if (totalTrades === 0) {
@@ -52,23 +47,6 @@ function generateInsights(trades: any[], journals: any[], moodHistory: any[], re
 
     if (highStressTrades > 0) {
       insights.push(`${highStressTrades} obchodu bylo otevreno pri stresu 7+/10. Vysoko-stresove obchody maji statisticky nizsi win rate.`)
-    }
-
-    if (avgMood > 0 && avgMood < 6) {
-      insights.push(`Prumerna nalada ${avgMood.toFixed(1)}/10 naznacuje emocionalni zatez ktera snizuje kvalitu rozhodovani.`)
-    }
-  }
-
-  // ---- SPANEK A PRIPRAVENOST ----
-  if (readinessFactors) {
-    if (readinessFactors.sleep && readinessFactors.sleep < 6) {
-      insights.push(`\nDopad spanku:`)
-      insights.push(`Tvuj spanek je ${readinessFactors.sleep}/10. Nedostatecny spanek prokazane snizuje rozhodovaci schopnosti o 30-40%. Prioritizuj spanek - jdi dnes o hodinu drive.`)
-    }
-
-    if (readinessFactors.stress && readinessFactors.stress > 7) {
-      insights.push(`\nUpozorneni na stres:`)
-      insights.push(`Tvuj stres je ${readinessFactors.stress}/10. Vysoky stres koreluje s impulzivnimi vstupy. Pred tradingem: 5 minut 4-7-8 dychani (nadech 4s, drzeni 7s, vydech 8s).`)
     }
   }
 

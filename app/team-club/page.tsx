@@ -115,17 +115,6 @@ interface TradingRoom {
   status: "live" | "scheduled" | "ended"
 }
 
-interface MentorQA {
-  id: string
-  question: string
-  askedBy: string
-  answer?: string
-  answeredBy?: string
-  likes: number
-  timestamp: string
-  status: "answered" | "pending"
-}
-
 interface SuccessStory {
   id: string
   author: string
@@ -397,58 +386,6 @@ const DEMO_TRADING_ROOMS: TradingRoom[] = [
     duration: "1h",
     type: "q&a",
     status: "scheduled",
-  },
-]
-
-const DEMO_MENTOR_QA: MentorQA[] = [
-  {
-    id: "1",
-    question: "How do I know if I'm in revenge trading mode?",
-    askedBy: "Martin N.",
-    answer:
-      "Great question! Revenge trading has 3 clear signals: 1) Trading right after a loss without a break, 2) Increasing position size, 3) Ignoring your setup criteria. The best defense is having a rule: At least 30 min break after every loss.",
-    answeredBy: "Mentor Jana",
-    likes: 124,
-    timestamp: "5h ago",
-    status: "answered",
-  },
-  {
-    id: "2",
-    question: "Is it better to trade in the morning or afternoon?",
-    askedBy: "Petra K.",
-    answer:
-      "It depends on you! London session (8-12h) has highest volatility but requires quick decisions. US session (14-20h) is calmer. Experiment and track when you get your best results.",
-    answeredBy: "Mentor Jan",
-    likes: 89,
-    timestamp: "1 day ago",
-    status: "answered",
-  },
-  {
-    id: "3",
-    question: "Is 50% win rate enough to be profitable?",
-    askedBy: "Tomáš D.",
-    answer:
-      "Absolutely! With good risk/reward ratio (min 1:2) you can be profitable even with 40% win rate. More important than win rate is consistency and risk management.",
-    answeredBy: "Mentor Jana",
-    likes: 67,
-    timestamp: "2 days ago",
-    status: "answered",
-  },
-  {
-    id: "4",
-    question: "How do I avoid overtrading?",
-    askedBy: "Jan P.",
-    timestamp: "3h ago",
-    likes: 12,
-    status: "pending",
-  },
-  {
-    id: "5",
-    question: "Can I be profitable without technical analysis?",
-    askedBy: "Lucie M.",
-    timestamp: "5h ago",
-    likes: 8,
-    status: "pending",
   },
 ]
 
@@ -832,7 +769,6 @@ function StudentTeamClubView({
   const [buddies, setBuddies] = useState<StudyBuddy[]>([])
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [rooms, setRooms] = useState<TradingRoom[]>([])
-  const [mentorQA, setMentorQA] = useState<MentorQA[]>([])
   const [successStories, setSuccessStories] = useState<SuccessStory[]>([])
   const [newPost, setNewPost] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
@@ -845,14 +781,11 @@ function StudentTeamClubView({
 
   const [dailyLimits, setDailyLimits] = useState<{
     feed: { date: string; count: number }
-    qa: { date: string; count: number }
     success: { date: string; count: number }
   }>({
     feed: { date: "", count: 0 },
-    qa: { date: "", count: 0 },
     success: { date: "", count: 0 },
   })
-  const [newQuestion, setNewQuestion] = useState("")
   const [newStoryTitle, setNewStoryTitle] = useState("")
   const [newStoryContent, setNewStoryContent] = useState("")
   // ADD: Month selection state for success stories
@@ -980,13 +913,11 @@ function StudentTeamClubView({
       // Load SHARED data from localStorage (NOT scoped to user)
       // This ensures ALL users see the SAME team club data
       const savedPosts = localStorage.getItem("team-club-posts")
-      const savedQA = localStorage.getItem("team-club-qa")
       const savedStories = localStorage.getItem("team-club-stories")
       const savedBuddies = localStorage.getItem("team-club-buddies")
       const savedChallenges = localStorage.getItem("team-club-challenges")
 
       if (savedPosts && posts.length === 0) setPosts(JSON.parse(savedPosts))
-      if (savedQA && mentorQA.length === 0) setMentorQA(JSON.parse(savedQA))
       if (savedStories && successStories.length === 0) setSuccessStories(JSON.parse(savedStories))
       if (savedBuddies && buddies.length === 0) setBuddies(JSON.parse(savedBuddies))
       if (savedChallenges && challenges.length === 0) {
@@ -1004,22 +935,20 @@ function StudentTeamClubView({
       setBuddies(DEMO_BUDDIES)
       setChallenges(DEMO_CHALLENGES)
       setRooms(DEMO_TRADING_ROOMS)
-      setMentorQA(DEMO_MENTOR_QA)
       setSuccessStories(DEMO_SUCCESS_STORIES)
     }
-  }, [isLiveMode, posts.length, mentorQA.length, successStories.length, buddies.length, challenges.length]) // Removed user?.id to ensure shared data
+  }, [isLiveMode, posts.length, successStories.length, buddies.length, challenges.length]) // Removed user?.id to ensure shared data
 
   useEffect(() => {
     if (isLiveMode) {
       // Save SHARED data to localStorage (NOT scoped to user)
       // This ensures ALL users save to the SAME shared data store
       if (posts.length > 0) localStorage.setItem("team-club-posts", JSON.stringify(posts))
-      if (mentorQA.length > 0) localStorage.setItem("team-club-qa", JSON.stringify(mentorQA))
       if (successStories.length > 0) localStorage.setItem("team-club-stories", JSON.stringify(successStories))
       if (buddies.length > 0) localStorage.setItem("team-club-buddies", JSON.stringify(buddies))
       if (challenges.length > 0) localStorage.setItem("team-club-challenges", JSON.stringify(challenges))
     }
-  }, [posts, mentorQA, successStories, buddies, isLiveMode, challenges]) // Removed user?.id to ensure shared data
+  }, [posts, successStories, buddies, isLiveMode, challenges]) // Removed user?.id to ensure shared data
 
   useEffect(() => {
     const savedLimits = localStorage.getItem("teamclub-daily-limits")
@@ -1124,8 +1053,8 @@ function StudentTeamClubView({
     )
   }
 
-  const handleLikeQA = (qaId: string) => {
-    setMentorQA(mentorQA.map((qa) => (qa.id === qaId ? { ...qa, likes: qa.likes + 1 } : qa)))
+  const handleDeletePost = (postId: string) => {
+    setPosts(posts.filter((post) => post.id !== postId))
   }
 
   const handleLikeStory = (storyId: string) => {
@@ -1357,14 +1286,14 @@ function StudentTeamClubView({
     return new Date().toISOString().split("T")[0]
   }
 
-  const canPostToday = (type: "feed" | "qa" | "success"): boolean => {
+  const canPostToday = (type: "feed" | "success"): boolean => {
     const today = getTodayString()
     const limit = dailyLimits[type]
     if (!limit || limit.date !== today) return true
     return limit.count < 1
   }
 
-  const updateDailyLimit = (type: "feed" | "qa" | "success") => {
+  const updateDailyLimit = (type: "feed" | "success") => {
     const today = getTodayString()
     const currentLimit = dailyLimits[type]
     const newLimits = {
@@ -1408,35 +1337,6 @@ function StudentTeamClubView({
     setPosts([post, ...posts])
     setNewPost("")
     updateDailyLimit("feed")
-  }
-
-  const handleAddQuestion = () => {
-    setPostError("")
-
-    if (!canPostToday("qa")) {
-      setPostError("Dosáhl jsi denního limitu. Můžeš položit max 1 otázku denně.")
-      return
-    }
-
-    if (containsVulgarWords(newQuestion)) {
-      setPostError("Tvůj dotaz obsahuje nevhodná slova. Uprav ho prosím.")
-      return
-    }
-
-    if (!newQuestion.trim()) return
-
-    const qa: MentorQA = {
-      id: Date.now().toString(),
-      question: newQuestion,
-      askedBy: "Já",
-      likes: 0,
-      timestamp: "Právě teď",
-      status: "pending",
-    }
-
-    setMentorQA([qa, ...mentorQA])
-    setNewQuestion("")
-    updateDailyLimit("qa")
   }
 
   // ADD: Updated handleAddStory with month selection
@@ -1692,7 +1592,7 @@ function StudentTeamClubView({
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-slate-800/80 backdrop-blur-xl border border-slate-600 p-1.5 flex lg:grid lg:grid-cols-7 overflow-x-auto scrollbar-hide">
+          <TabsList className="bg-slate-800/80 backdrop-blur-xl border border-slate-600 p-1.5 flex lg:grid lg:grid-cols-6 overflow-x-auto scrollbar-hide">
             <TabsTrigger
               value="overview"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
@@ -1730,13 +1630,6 @@ function StudentTeamClubView({
             >
               <Trophy className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
               Top
-            </TabsTrigger>
-            <TabsTrigger
-              value="mentor-qa"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
-            >
-              <MessageSquare className="w-3 h-3 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
-              Q&A
             </TabsTrigger>
             <TabsTrigger
               value="success"
@@ -1983,9 +1876,9 @@ function StudentTeamClubView({
 
           {/* COMMUNITY FEED TAB */}
           <TabsContent value="community" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className={`grid grid-cols-1 gap-6 ${!isLiveMode ? "lg:grid-cols-3" : ""}`}>
               {/* Hlavní Feed */}
-              <div className="lg:col-span-2 space-y-4">
+              <div className={`space-y-4 ${!isLiveMode ? "lg:col-span-2" : ""}`}>
                 {/* Create Post */}
                 <Card className="psyche-card">
                   <CardContent className="p-5">
@@ -2175,18 +2068,30 @@ function StudentTeamClubView({
                           <Share2 className="h-3.5 w-3.5 mr-1.5" />
                           Sdílet
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleReport(post.id, "feed")}
-                          disabled={reportedPosts.includes(post.id)}
-                          className={`ml-auto rounded-xl text-xs h-8 ${
-                            reportedPosts.includes(post.id) ? "text-amber-400" : "text-slate-500 hover:text-red-400"
-                          }`}
-                        >
-                          <Flag className="h-3.5 w-3.5 mr-1.5" />
-                          {reportedPosts.includes(post.id) ? "Nahlášeno" : "Nahlásit"}
-                        </Button>
+                        {post.author === "Já" ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeletePost(post.id)}
+                            className="ml-auto rounded-xl text-xs h-8 text-slate-500 hover:text-red-400"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                            Smazat
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleReport(post.id, "feed")}
+                            disabled={reportedPosts.includes(post.id)}
+                            className={`ml-auto rounded-xl text-xs h-8 ${
+                              reportedPosts.includes(post.id) ? "text-amber-400" : "text-slate-500 hover:text-red-400"
+                            }`}
+                          >
+                            <Flag className="h-3.5 w-3.5 mr-1.5" />
+                            {reportedPosts.includes(post.id) ? "Nahlášeno" : "Nahlásit"}
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -2194,6 +2099,7 @@ function StudentTeamClubView({
               </div>
 
               {/* Sidebar */}
+              {!isLiveMode && (
               <div className="space-y-4">
                 {!isLiveMode && (
                   <Card className="psyche-card">
@@ -2269,6 +2175,7 @@ function StudentTeamClubView({
                   </Card>
                 )}
               </div>
+              )}
             </div>
           </TabsContent>
 
@@ -3031,176 +2938,6 @@ function StudentTeamClubView({
             </Card>
           </TabsContent>
 
-          {/* MENTOR Q&A TAB */}
-          <TabsContent value="mentor-qa" className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-1">Mentor Q&A</h2>
-                <p className="text-slate-400 text-sm">
-                  {mentorQA.filter((q) => q.status === "pending").length} čekajících otázek · Ptej se anything!
-                </p>
-              </div>
-              {/* Moved "Položit otázku" button to be part of the input section */}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-4">
-                <Card className="psyche-card">
-                  <CardContent className="p-5">
-                    {postError && (
-                      <Alert className="mb-4 bg-red-500/10 border-red-500/30">
-                        <AlertCircle className="h-4 w-4 text-red-400" />
-                        <AlertDescription className="text-red-400">{postError}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    {!canPostToday("qa") && (
-                      <Alert className="mb-4 bg-amber-500/10 border-amber-500/30">
-                        <Clock className="h-4 w-4 text-amber-400" />
-                        <AlertDescription className="text-amber-400">
-                          Dnes jsi již položil otázku. Další můžeš položit zítra.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    <div className="flex gap-3">
-                      <Textarea
-                        placeholder="Polož otázku komunitě nebo mentorům..."
-                        value={newQuestion}
-                        onChange={(e) => setNewQuestion(e.target.value)}
-                        disabled={!canPostToday("qa")}
-                        className="bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-500 rounded-xl min-h-[80px] resize-none disabled:opacity-50 flex-1"
-                      />
-                      <Button
-                        onClick={handleAddQuestion}
-                        disabled={!newQuestion.trim() || !canPostToday("qa")}
-                        className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-xl disabled:opacity-50"
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {mentorQA.map((qa) => (
-                  <Card
-                    key={qa.id}
-                    className={`backdrop-blur-xl border rounded-2xl overflow-hidden ${
-                      qa.status === "answered"
-                        ? "bg-slate-800/50 border-slate-700/50"
-                        : "bg-amber-500/10 border-amber-500/30"
-                    }`}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-3 mb-4">
-                        <div className="p-2 bg-purple-500/10 rounded-lg">
-                          <MessageSquare className="h-5 w-5 text-purple-400" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="text-white font-semibold text-sm">{qa.askedBy}</h4>
-                            <span className="text-slate-500 text-xs">{qa.timestamp}</span>
-                            <Badge
-                              className={
-                                qa.status === "answered"
-                                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                                  : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                              }
-                            >
-                              {qa.status === "answered" ? "Answered" : "Pending"}
-                            </Badge>
-                          </div>
-                          <p className="text-white text-sm leading-relaxed mb-3">{qa.question}</p>
-
-                          {qa.answer && (
-                            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mt-3">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Avatar className="w-6 h-6">
-                                  <AvatarImage src="/trader-avatar.png" />
-                                  <AvatarFallback>{qa.answeredBy?.[0]}</AvatarFallback>
-                                </Avatar>
-                                <p className="text-blue-400 font-semibold text-xs">{qa.answeredBy}</p>
-                              </div>
-                              <p className="text-slate-300 text-sm leading-relaxed">{qa.answer}</p>
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-700/50">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleLikeQA(qa.id)}
-                              className="text-slate-400 rounded-xl text-xs h-8"
-                            >
-                              <ThumbsUp className="h-3.5 w-3.5 mr-1.5" />
-                              {qa.likes}
-                            </Button>
-                            <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-8">
-                              <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
-                              Diskuze
-                            </Button>
-                            <Button size="sm" variant="ghost" className="text-slate-400 rounded-xl text-xs h-8">
-                              <Share2 className="h-3.5 w-3.5 mr-1.5" />
-                              Sdílet
-                            </Button>
-                            {/* Report button for Q&A */}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleReport(qa.id, "qa")}
-                              disabled={reportedPosts.includes(qa.id)}
-                              className={`ml-auto rounded-xl text-xs h-8 ${
-                                reportedPosts.includes(qa.id) ? "text-amber-400" : "text-slate-500 hover:text-red-400"
-                              }`}
-                            >
-                              <Flag className="h-3.5 w-3.5 mr-1.5" />
-                              {reportedPosts.includes(qa.id) ? "Nahlášeno" : "Nahlásit"}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-4">
-                <Card className="psyche-card">
-                  <CardHeader>
-                    <CardTitle className="text-white text-sm">Jak to funguje?</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-slate-300 text-xs leading-relaxed">
-                    <p>1️⃣ Polož otázku (cokoliv o tradingu, psychologii, strategii)</p>
-                    <p>2️⃣ AI analyzuje a přiřadí nejlepšího mentora</p>
-                    <p>3️⃣ Mentor odpoví (většinou do 24h)</p>
-                    <p>4️⃣ Komunita může diskutovat a lajkovat</p>
-                    <p className="pt-2 border-t border-slate-700">
-                      💡 Nejlepší otázky jsou konkrétní a obsahují kontext!
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-amber-600/20 via-amber-700/20 to-amber-600/20 border-amber-500/30 rounded-2xl overflow-hidden backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white text-sm">Nejlepší otázky tento týden</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {[
-                      { question: "Jak poznat revenge trading?", likes: 124 },
-                      { question: "Lepší ráno nebo odpoledne?", likes: 89 },
-                      { question: "50% win rate je dost?", likes: 67 },
-                    ].map((q, index) => (
-                      <div key={index} className="p-2 hover:bg-slate-700/30 rounded-lg cursor-pointer transition-all">
-                        <p className="text-white text-xs mb-1">{q.question}</p>
-                        <span className="text-amber-400 text-xs font-bold">{q.likes} likes</span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
 
           {/* SUCCESS STORIES TAB */}
           <TabsContent value="success" className="space-y-6">
