@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -58,6 +58,28 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isProductsOpen, setIsProductsOpen] = useState(false)
+  const productsCloseTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Hover-intent open/close for the Products dropdown: opens immediately on
+  // hover, but closing is delayed so moving the mouse from the trigger button
+  // to the (portaled) dropdown content doesn't register as "leaving" and
+  // immediately re-trigger an open/close flicker loop.
+  const openProductsMenu = () => {
+    if (productsCloseTimeout.current) {
+      clearTimeout(productsCloseTimeout.current)
+      productsCloseTimeout.current = null
+    }
+    setIsProductsOpen(true)
+  }
+
+  const scheduleCloseProductsMenu = () => {
+    if (productsCloseTimeout.current) {
+      clearTimeout(productsCloseTimeout.current)
+    }
+    productsCloseTimeout.current = setTimeout(() => {
+      setIsProductsOpen(false)
+    }, 200)
+  }
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSwitchingToLive, setIsSwitchingToLive] = useState(false)
 
@@ -227,7 +249,11 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
           <div className="hidden md:flex items-center gap-1">
             {/* Products dropdown */}
             <DropdownMenu open={isProductsOpen} onOpenChange={setIsProductsOpen}>
-              <div className="relative">
+              <div
+                className="relative"
+                onMouseEnter={openProductsMenu}
+                onMouseLeave={scheduleCloseProductsMenu}
+              >
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
@@ -238,7 +264,12 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6" align="center">
+                <DropdownMenuContent
+                  className="w-full min-w-max bg-slate-900/95 backdrop-blur-md border-slate-700 p-6"
+                  align="center"
+                  onMouseEnter={openProductsMenu}
+                  onMouseLeave={scheduleCloseProductsMenu}
+                >
                 {/* Hlavní produkty - 8 vedle sebe, vycentrovaný */}
                 <div className="flex justify-center w-full">
                   <div className="grid grid-cols-8 gap-3 w-fit">
