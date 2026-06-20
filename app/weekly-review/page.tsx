@@ -20,7 +20,7 @@ export default function WeeklyReviewPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
       <TopNavigation />
       
-      <main className="max-w-6xl mx-auto px-4 py-12">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

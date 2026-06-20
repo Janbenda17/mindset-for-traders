@@ -27,9 +27,11 @@ export default function Dashboard() {
   const gamificationLoading = !gamification?.data
   const t = useT()
 
-  // Get Total Capital and Monthly P/L from MT5 or analytics
-  const totalCapital = mt5Data?.balance || analytics?.summary.balance || 50000
-  const monthlyPL = mt5Data?.monthlyProfit || analytics?.summary.totalPnL || 3240
+  // Total Capital and Monthly P/L come exclusively from a connected MetaTrader
+  // account. No MetaTrader account linked (mt5Data === null) -> show 0 instead
+  // of a hardcoded/demo fallback value.
+  const totalCapital = mt5Data?.balance ?? 0
+  const monthlyPL = mt5Data?.monthlyProfit ?? 0
   const xpValue = Math.max(0, gamification?.data?.xp ?? 0)
 
   useEffect(() => {
@@ -86,7 +88,7 @@ export default function Dashboard() {
       <TopNavigation />
       
       {/* Main Content */}
-      <div className="relative z-10 pt-32 px-2 sm:px-4 md:px-8 lg:px-12 pb-20 max-w-7xl mx-auto w-full">
+      <div className="relative z-10 pt-32 px-4 sm:px-6 md:px-8 lg:px-12 pb-20 w-full">
         {/* Dashboard Heading */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
