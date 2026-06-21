@@ -363,6 +363,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log(`[v0] ✓ LIVE MODE ACTIVE - Loading ONLY from Supabase for user ${user.id}`)
 
     try {
+      const task0 = (async () => {
       try {
         console.log("[v0] [LiveMode] Attempting to load trades from Supabase...")
         const { data: journalData, error: tradesError } = await supabase
@@ -429,6 +430,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SET_TRADES", payload: [] })
       }
 
+      })()
+      const task1 = (async () => {
       try {
         const { data: morningChecks, error: morningError } = await supabase
           .from("morning_checks")
@@ -465,6 +468,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SET_MORNING_CHECKS", payload: [] })
       }
 
+      })()
+      const task2 = (async () => {
       try {
         const { data: journalEntries, error: journalError } = await supabase
           .from("journal_entries")
@@ -493,6 +498,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SET_JOURNAL_ENTRIES", payload: [] })
       }
 
+      })()
+      const task3 = (async () => {
       try {
         const { data: weeklyReviews, error: weeklyError } = await supabase
           .from("weekly_reviews")
@@ -515,6 +522,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Load trading plans from trading_plans table
+      })()
+      const task4 = (async () => {
       try {
         const { data: plans, error: plansError } = await supabase
           .from("trading_plans")
@@ -547,6 +556,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Load daily intentions from daily_intentions table
+      })()
+      const task5 = (async () => {
       try {
         const { data: intentions, error: intentionsError } = await supabase
           .from("daily_intentions")
@@ -577,6 +588,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dispatch({ type: "SET_DAILY_INTENTIONS", payload: [] })
       }
 
+      })()
+
+      await Promise.all([task0, task1, task2, task3, task4, task5])
       dispatch({ type: "SET_DATA_OWNER", payload: user.id })
       dispatch({ type: "SET_DATA_LOADED", payload: true })
     } catch (error: any) {
