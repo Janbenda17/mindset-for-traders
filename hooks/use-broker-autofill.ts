@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { supabase } from '@/lib/supabase/browser'
 import { metaApiClient } from '@/lib/integrations/metaapi'
@@ -33,6 +33,20 @@ export function useBrokerAutoFill() {
   const [brokerData, setBrokerData] = useState<BrokerData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const isFirstLoadRef = useRef(true)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+
+  const stopPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current)
+      channelRef.current = null
+    }
+  }
 
   // Fetch broker data on mount
   useEffect(() => {
@@ -43,29 +57,8 @@ export function useBrokerAutoFill() {
 
     fetchBrokerData()
 
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchBrokerData, 30000)
-
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel(`broker_data_${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'mt4_trades',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          fetchBrokerData()
-        }
-      )
-      .subscribe()
-
     return () => {
-      clearInterval(interval)
-      supabase.removeChannel(channel)
+      stopPolling()
     }
   }, [user?.id])
 
@@ -73,7 +66,7 @@ export function useBrokerAutoFill() {
     if (!user?.id) return
 
     try {
-      setLoading(true)
+      if (isFirstLoadRef.current) setLoading(true)
 
       // Get user's MetaApi credentials
       const { data: profile, error: profileError } = await supabase
@@ -85,7 +78,31 @@ export function useBrokerAutoFill() {
       if (profileError || !profile?.metaapi_account_id) {
         setError('MetaApi not connected')
         setLoading(false)
+        // Not connected - nothing to poll for, stop hitting Supabase every
+        // 30s until the user actually links a MetaTrader account.
+        stopPolling()
         return
+      }
+
+      // Connected - make sure polling + realtime subscription are running
+      // (only set up once, the first time we see a connected account).
+      if (!pollRef.current && !channelRef.current) {
+        pollRef.current = setInterval(fetchBrokerData, 30000)
+        channelRef.current = supabase
+          .channel(`broker_data_${user.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'mt4_trades',
+              filter: `user_id=eq.${user.id}`,
+            },
+            () => {
+              fetchBrokerData()
+            }
+          )
+          .subscribe()
       }
 
       // Fetch account info from MetaApi
@@ -139,6 +156,7 @@ export function useBrokerAutoFill() {
       setError('Failed to fetch broker data')
     } finally {
       setLoading(false)
+      isFirstLoadRef.current = false
     }
   }
 

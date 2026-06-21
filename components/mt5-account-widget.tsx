@@ -29,9 +29,25 @@ export function MT5AccountWidget({ onData }: { onData?: (data: { balance: number
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
+    let isFirstLoad = true
+    let isMounted = true
+    let pollInterval: ReturnType<typeof setInterval> | null = null
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const stopPolling = () => {
+      if (pollInterval) {
+        clearInterval(pollInterval)
+        pollInterval = null
+      }
+      if (channel) {
+        supabase.removeChannel(channel)
+        channel = null
+      }
+    }
+
     const fetchMT5Data = async () => {
       try {
-        setLoading(true)
+        if (isFirstLoad) setLoading(true)
         setError(null)
 
         // Get current user
@@ -40,7 +56,7 @@ export function MT5AccountWidget({ onData }: { onData?: (data: { balance: number
         } = await supabase.auth.getUser()
 
         if (!user) {
-          setError('Not authenticated')
+          if (isMounted) setError('Not authenticated')
           onData?.(null)
           return
         }
@@ -59,9 +75,14 @@ export function MT5AccountWidget({ onData }: { onData?: (data: { balance: number
         }
 
         if (!trades || trades.length === 0) {
-          setError('No MT5 account connected')
-          setLoading(false)
+          if (isMounted) {
+            setError('No MT5 account connected')
+            setLoading(false)
+          }
           onData?.(null)
+          // No account linked - stop polling/subscribing, nothing will ever
+          // show up until the user connects MetaTrader from settings.
+          stopPolling()
           return
         }
 
@@ -108,41 +129,45 @@ export function MT5AccountWidget({ onData }: { onData?: (data: { balance: number
           open_trades: openTradesCount || 0,
         }
 
-        setData(nextData)
+        if (isMounted) {
+          setData(nextData)
+          setLastUpdated(new Date())
+        }
         onData?.({ balance: nextData.balance, monthlyProfit: nextData.profit })
 
-        setLastUpdated(new Date())
+        // Account is connected - keep the realtime subscription + polling
+        // alive (only set up once, on the first successful connected fetch).
+        if (isMounted && !channel && !pollInterval) {
+          channel = supabase
+            .channel('mt4_trades')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'mt4_trades', filter: `user_id=eq.${user.id}` },
+              () => {
+                fetchMT5Data()
+              }
+            )
+            .subscribe()
+
+          // Poll every 30 seconds for updates
+          pollInterval = setInterval(() => {
+            fetchMT5Data()
+          }, 30000)
+        }
       } catch (err) {
         console.error('[v0] Error fetching MT5 data:', err)
-        setError('Failed to load MT5 data')
+        if (isMounted) setError('Failed to load MT5 data')
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
+        isFirstLoad = false
       }
     }
 
     fetchMT5Data()
 
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('mt4_trades')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'mt4_trades' },
-        () => {
-          console.log('[v0] MT5 data updated, refreshing...')
-          fetchMT5Data()
-        }
-      )
-      .subscribe()
-
-    // Poll every 30 seconds for updates
-    const interval = setInterval(() => {
-      fetchMT5Data()
-    }, 30000)
-
     return () => {
-      clearInterval(interval)
-      supabase.removeChannel(channel)
+      isMounted = false
+      stopPolling()
     }
   }, [])
 
