@@ -74,7 +74,7 @@ export default function BonusPage() {
       <TopNavigation />
       
       <main className="pt-24 pb-16 px-4">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-12 text-center">
             <div className="inline-flex items-center gap-2 mb-4">

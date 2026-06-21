@@ -88,7 +88,7 @@ export default function Dashboard() {
       <TopNavigation />
       
       {/* Main Content */}
-      <div className="relative z-10 pt-32 px-4 sm:px-6 md:px-8 lg:px-12 pb-20 w-full">
+      <div className="relative z-10 pt-32 px-4 sm:px-6 md:px-8 lg:px-12 pb-20 max-w-5xl mx-auto">
         {/* Dashboard Heading */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
