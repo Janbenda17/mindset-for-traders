@@ -606,9 +606,9 @@ const MindTraderAI = () => {
       <GalaxyBackground />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-950/40 pointer-events-none" />
 
-      <div className="relative z-10 w-full min-h-screen flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 p-2 sm:p-4 lg:p-6">
+      <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 p-2 sm:p-4 lg:p-6">
         {/* Left Sidebar - AI Modes */}
-        <div className="w-full lg:w-96 lg:h-screen flex-shrink-0">
+        <div className="w-full lg:w-96 lg:h-[78vh] flex-shrink-0">
           <Card className="bg-gradient-to-b from-slate-900/90 to-slate-950/80 border-2 border-purple-500/30 backdrop-blur-xl lg:h-full shadow-2xl">
             <CardHeader className="pb-3 sm:pb-4 border-b border-purple-500/20 bg-gradient-to-r from-purple-900/40 to-transparent p-3 sm:p-4 lg:p-6">
               <div className="flex items-center gap-2">
@@ -660,7 +660,7 @@ const MindTraderAI = () => {
         </div>
 
         {/* Right Chat Area - Enhanced */}
-        <div className="flex-1 order-2 lg:order-2 flex flex-col min-h-0">
+        <div className="flex-1 order-2 lg:order-2 flex flex-col lg:h-[78vh] min-h-0">
           <Card className="bg-gradient-to-br from-slate-900/80 to-slate-950/80 border-2 border-purple-500/30 backdrop-blur-xl flex-1 flex flex-col shadow-2xl min-h-0">
             <CardContent className="p-0 flex-1 flex flex-col min-h-0">
               {/* Messages Area - Enhanced with better spacing */}
