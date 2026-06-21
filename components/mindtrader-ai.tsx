@@ -606,7 +606,7 @@ const MindTraderAI = () => {
       <GalaxyBackground />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-950/40 pointer-events-none" />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 p-2 sm:p-4 lg:p-6">
+      <div className="relative z-10 w-full flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 px-3 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6">
         {/* Left Sidebar - AI Modes */}
         <div className="w-full lg:w-96 lg:h-[78vh] flex-shrink-0">
           <Card className="bg-gradient-to-b from-slate-900/90 to-slate-950/80 border-2 border-purple-500/30 backdrop-blur-xl lg:h-full shadow-2xl">
