@@ -72,7 +72,7 @@ export default function IntegrationsPage() {
         
         const { data, error } = await supabase
           .from('profiles')
-          .select('metaapi_token, metaapi_account_id')
+          .select('metaapi_token, metaapi_account_id, mt4_broker')
           .eq('user_id', user.id)
           .maybeSingle()
 
@@ -204,11 +204,18 @@ export default function IntegrationsPage() {
     setError('')
     try {
       console.log('[v0] Connecting to MetaApi...')
-      await connectMetaApi(user.id, {
+      const result = await connectMetaApi(user.id, {
         login: metaApiLogin,
         password: metaApiPassword,
         broker: metaApiBroker,
       })
+
+      if (!result?.success) {
+        setError(result?.error || 'Failed to connect MetaApi')
+        setTimeout(() => setError(''), 6000)
+        return
+      }
+
       setMetaApiConnected(true)
       setMetaApiLogin('')
       setMetaApiPassword('')
@@ -228,7 +235,12 @@ export default function IntegrationsPage() {
     setLoading(true)
     try {
       console.log('[v0] Disconnecting MetaApi...')
-      await disconnectMetaApi(user.id)
+      const result = await disconnectMetaApi(user.id)
+      if (!result?.success) {
+        setError(result?.error || 'Failed to disconnect MetaApi')
+        setTimeout(() => setError(''), 6000)
+        return
+      }
       setMetaApiConnected(false)
       setSuccess('MetaApi disconnected')
       setTimeout(() => setSuccess(''), 3000)

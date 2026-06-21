@@ -12,7 +12,6 @@ export async function ensureProfileExists(userId: string) {
   try {
     console.log('[v0] Ensuring profile exists for user:', userId)
 
-    // Check if profile exists
     const { data: profile, error: selectError } = await supabase
       .from('profiles')
       .select('user_id')
@@ -21,7 +20,7 @@ export async function ensureProfileExists(userId: string) {
 
     if (selectError) {
       console.error('[v0] Error checking profile:', selectError)
-      throw selectError
+      return { success: false, error: selectError.message || 'Failed to check profile' }
     }
 
     if (profile) {
@@ -29,7 +28,6 @@ export async function ensureProfileExists(userId: string) {
       return { success: true, created: false }
     }
 
-    // Create profile with service role key (bypasses RLS)
     console.log('[v0] Creating new profile for user:', userId)
     const { error: insertError } = await supabase
       .from('profiles')
@@ -39,14 +37,14 @@ export async function ensureProfileExists(userId: string) {
 
     if (insertError) {
       console.error('[v0] Error creating profile:', insertError)
-      throw insertError
+      return { success: false, error: insertError.message || 'Failed to create profile' }
     }
 
     console.log('[v0] Profile created successfully')
     return { success: true, created: true }
   } catch (err) {
     console.error('[v0] Error in ensureProfileExists:', err)
-    throw err
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to ensure profile exists' }
   }
 }
 
@@ -65,14 +63,14 @@ export async function disconnectMetaApi(userId: string) {
 
     if (error) {
       console.error('[v0] Error disconnecting MetaApi:', error)
-      throw error
+      return { success: false, error: error.message || 'Failed to disconnect MetaApi' }
     }
 
     console.log('[v0] MetaApi disconnected successfully')
     return { success: true }
   } catch (err) {
     console.error('[v0] Error in disconnectMetaApi:', err)
-    throw err
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to disconnect MetaApi' }
   }
 }
 
@@ -83,15 +81,26 @@ export async function connectMetaApi(
   try {
     console.log('[v0] Connecting MetaApi for user:', userId, 'broker:', credentials.broker)
 
-    // Validate credentials
     if (!credentials.login || !credentials.password || !credentials.broker) {
-      throw new Error('Missing MT5 credentials')
+      return { success: false, error: 'Missing MT5 credentials' }
     }
 
-    // Authenticate with MetaApi using credentials
-    const accountId = await metaApiClient.authenticateWithCredentials(credentials)
+    if (!process.env.METAAPI_API_KEY) {
+      console.error('[v0] METAAPI_API_KEY is not configured')
+      return { success: false, error: 'MetaApi is not configured on the server (missing API key). Please contact support.' }
+    }
 
-    // Save MetaApi connection
+    let accountId: string
+    try {
+      accountId = await metaApiClient.authenticateWithCredentials(credentials)
+    } catch (authErr) {
+      console.error('[v0] MetaApi authentication failed:', authErr)
+      return {
+        success: false,
+        error: authErr instanceof Error ? authErr.message : 'Failed to connect to MT5. Check your credentials and broker name.',
+      }
+    }
+
     const { error } = await supabase
       .from('profiles')
       .update({
@@ -104,13 +113,13 @@ export async function connectMetaApi(
 
     if (error) {
       console.error('[v0] Error saving MetaApi account:', error)
-      throw error
+      return { success: false, error: error.message || 'Failed to save MetaApi connection' }
     }
 
     console.log('[v0] MetaApi connected successfully with account:', accountId)
     return { success: true, accountId }
   } catch (err) {
     console.error('[v0] Error in connectMetaApi:', err)
-    throw new Error('Failed to connect MetaApi. Check your credentials.')
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to connect MetaApi. Check your credentials.' }
   }
 }
