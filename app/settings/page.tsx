@@ -675,7 +675,7 @@ export default function SettingsPage() {
                       <span className="text-2xl">📊</span>
                     </div>
                     <Button
-                      onClick={() => router.push('/settings/integrations')}
+                      onClick={() => router.push('/account/integrations')}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
                       size="sm"
                     >

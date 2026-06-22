@@ -57,6 +57,10 @@ export async function disconnectMetaApi(userId: string) {
       .update({
         metaapi_account_id: null,
         metaapi_token: null,
+        metaapi_broker: null,
+        mt4_broker: null,
+        mt4_login: null,
+        mt4_password: null,
         trades_sync_enabled: false,
       })
       .eq('user_id', userId)
@@ -76,7 +80,7 @@ export async function disconnectMetaApi(userId: string) {
 
 export async function connectMetaApi(
   userId: string,
-  credentials: { login: string; password: string; broker: string }
+  credentials: { login: string; password: string; broker: string; platform?: 'mt4' | 'mt5' }
 ) {
   try {
     console.log('[v0] Connecting MetaApi for user:', userId, 'broker:', credentials.broker)

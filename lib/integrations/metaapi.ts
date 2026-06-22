@@ -2,6 +2,15 @@
  * MetaApi Client
  * Universal proxy for MT4/MT5 trading terminals
  * Handles account connection, live trades, and equity tracking
+ *
+ * Endpoints below match the real MetaApi.cloud REST API:
+ * https://metaapi.cloud/docs/provisioning/  (provisioning profiles + accounts)
+ * https://metaapi.cloud/docs/client/        (live account state)
+ *
+ * The previous version of this file pointed every call at
+ * 'https://api-v1.metaapi.cloud', which is not a real MetaApi host and used an
+ * 'X-API-Key' header instead of the 'auth-token' header MetaApi actually
+ * expects - every request silently/loudly failed regardless of credentials.
  */
 
 export interface MetaApiAccountInfo {
@@ -36,7 +45,10 @@ interface MetaApiConnection {
 
 export class MetaApiClient {
   private apiKey: string
-  private baseUrl = 'https://api-v1.metaapi.cloud'
+  // Provisioning API: create/read accounts + provisioning profiles.
+  private provisioningBaseUrl = 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai'
+  // Client API: read live account info / trading state for a deployed account.
+  private clientBaseUrl = 'https://mt-client-api-v1.agiliumtrade.agiliumtrade.ai'
   private clientId: string
   private clientSecret: string
 
@@ -44,120 +56,114 @@ export class MetaApiClient {
     this.apiKey = apiKey || process.env.METAAPI_API_KEY || ''
     this.clientId = process.env.METAAPI_CLIENT_ID || process.env.NEXT_PUBLIC_METAAPI_CLIENT_ID || ''
     this.clientSecret = process.env.METAAPI_CLIENT_SECRET || ''
-    
+
     if (!this.apiKey) {
       console.warn('[v0] METAAPI_API_KEY is not configured')
     }
-    if (!this.clientId) {
-      console.warn('[v0] METAAPI_CLIENT_ID is not configured - OAuth will not work')
+  }
+
+  private authHeaders() {
+    return {
+      'auth-token': this.apiKey,
+      'Content-Type': 'application/json',
     }
   }
 
   /**
-   * Generate MetaApi OAuth2 authorization URL
-   * User will authenticate on MetaApi.cloud with their MT5 credentials
+   * Create a provisioning profile for a broker server, then create the
+   * MetaTrader account itself using that profile. This is the real two-step
+   * flow MetaApi requires - the old code tried to create an account directly
+   * with no profile and against a host that doesn't exist.
+   *
+   * version 5 = MetaTrader 5, version 4 = MetaTrader 4.
    */
-  getOAuthUrl(userId: string): string {
-    if (!this.clientId) {
-      throw new Error('MetaApi OAuth is not configured. Please set METAAPI_CLIENT_ID in environment variables.')
+  async authenticateWithCredentials(credentials: {
+    login: string
+    password: string
+    broker: string
+    platform?: 'mt4' | 'mt5'
+  }): Promise<string> {
+    if (!this.apiKey) {
+      throw new Error('MetaApi is not configured on the server (missing METAAPI_API_KEY).')
     }
 
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/callbacks/metaapi`
-    
-    // MetaApi OAuth2 endpoint
-    const params = new URLSearchParams({
-      client_id: this.clientId,
-      redirect_uri: redirectUri,
-      response_type: 'code',
-      state: userId,
-      scope: 'accounts:read trades:read',
-    })
+    const version = credentials.platform === 'mt4' ? 4 : 5
 
-    return `https://auth.metaapi.cloud/oauth/authorize?${params.toString()}`
-  }
-
-  /**
-   * Exchange OAuth code for access token
-   */
-  async exchangeCodeForToken(code: string): Promise<{ access_token: string; account_id: string }> {
     try {
-      const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/callbacks/metaapi`
-      
-      const response = await fetch('https://auth.metaapi.cloud/oauth/token', {
+      console.log('[v0] Creating MetaApi provisioning profile for broker:', credentials.broker)
+
+      const profileResponse = await fetch(`${this.provisioningBaseUrl}/users/current/provisioning-profiles`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          code,
-          client_id: this.clientId,
-          client_secret: this.clientSecret,
-          redirect_uri: redirectUri,
-        }).toString(),
+        headers: this.authHeaders(),
+        body: JSON.stringify({
+          name: `profile-${credentials.login}-${Date.now()}`,
+          version,
+          brokerTimezone: 'EET',
+          brokerDSTSwitchTimezone: 'EET',
+        }),
       })
 
-      if (!response.ok) {
-        const error = await response.text()
-        throw new Error(`OAuth token exchange failed: ${error}`)
+      if (!profileResponse.ok) {
+        const errorText = await profileResponse.text()
+        console.error('[v0] Failed to create provisioning profile:', profileResponse.status, errorText)
+        throw new Error(`MetaApi rejected the provisioning profile (${profileResponse.status}): ${errorText}`)
       }
 
-      const data = await response.json()
-      
-      // Fetch the primary account ID from the token
-      const accountInfo = await this.getAccountsFromToken(data.access_token)
-      const primaryAccountId = accountInfo[0]?.id || ''
+      const profile = await profileResponse.json()
+      const provisioningProfileId = profile.id
 
-      return {
-        access_token: data.access_token,
-        account_id: primaryAccountId,
+      if (!provisioningProfileId) {
+        throw new Error('MetaApi did not return a provisioning profile id')
       }
+
+      console.log('[v0] Creating MetaApi account for login:', credentials.login)
+
+      const accountResponse = await fetch(`${this.provisioningBaseUrl}/users/current/accounts`, {
+        method: 'POST',
+        headers: this.authHeaders(),
+        body: JSON.stringify({
+          login: credentials.login,
+          password: credentials.password,
+          name: `MT-${credentials.login}`,
+          server: credentials.broker,
+          provisioningProfileId,
+          magic: Math.floor(Math.random() * 900000) + 100000,
+          application: 'MetaApi',
+          type: 'cloud-g2',
+        }),
+      })
+
+      if (!accountResponse.ok) {
+        const errorText = await accountResponse.text()
+        console.error('[v0] Failed to create MetaApi account:', accountResponse.status, errorText)
+        throw new Error(`MetaApi rejected the account (${accountResponse.status}): ${errorText}`)
+      }
+
+      const account = await accountResponse.json()
+      const accountId = account.id
+
+      if (!accountId) {
+        throw new Error('No account ID returned from MetaApi')
+      }
+
+      console.log('[v0] MetaApi account created:', accountId)
+      return accountId
     } catch (error) {
-      console.error('[v0] OAuth token exchange failed:', error)
-      throw error
+      console.error('[v0] MetaApi authentication with credentials failed:', error)
+      throw error instanceof Error
+        ? error
+        : new Error('Failed to connect to MT5. Check your credentials and broker name.')
     }
   }
 
   /**
-   * Get user's accounts from OAuth token
+   * Connect to a MetaTrader account via MetaApi (re-checks deployment status)
    */
-  private async getAccountsFromToken(accessToken: string): Promise<any[]> {
+  async connectAccount(accountId: string, brokerName: string): Promise<MetaApiConnection> {
     try {
-      const response = await fetch(`${this.baseUrl}/accounts`, {
+      const response = await fetch(`${this.provisioningBaseUrl}/users/current/accounts/${accountId}`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch accounts with token: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      return data.accounts || []
-    } catch (error) {
-      console.error('[v0] Failed to fetch accounts from token:', error)
-      return []
-    }
-  }
-
-  /**
-   * Connect to a MetaTrader account via MetaApi
-   * User must provide MetaApi account ID and API key
-   */
-  async connectAccount(
-    accountId: string,
-    brokerName: string,
-  ): Promise<MetaApiConnection> {
-    try {
-      const response = await fetch(`${this.baseUrl}/accounts/${accountId}`, {
-        method: 'GET',
-        headers: {
-          'X-API-Key': this.apiKey,
-          'Content-Type': 'application/json',
-        },
+        headers: this.authHeaders(),
       })
 
       if (!response.ok) {
@@ -184,20 +190,15 @@ export class MetaApiClient {
   async getAccountInfo(accountId: string): Promise<MetaApiAccountInfo> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/accounts/${accountId}/account-information`,
+        `${this.clientBaseUrl}/users/current/accounts/${accountId}/account-information`,
         {
           method: 'GET',
-          headers: {
-            'X-API-Key': this.apiKey,
-            'Content-Type': 'application/json',
-          },
+          headers: this.authHeaders(),
         },
       )
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch account info: ${response.statusText}`,
-        )
+        throw new Error(`Failed to fetch account info: ${response.statusText}`)
       }
 
       const data = await response.json()
@@ -217,18 +218,19 @@ export class MetaApiClient {
   }
 
   /**
-   * Fetch open and recently closed trades
+   * Fetch open positions for an account.
+   * NOTE: not currently called from any route/component in this app - kept
+   * for future use. MetaApi's real history (closed trades) lives behind a
+   * separate "deals by time range" endpoint, not a single /trades list; if
+   * this is wired up later it needs both open-positions and deals calls.
    */
   async getTrades(accountId: string, limit = 50): Promise<MetaApiTrade[]> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/accounts/${accountId}/trades?limit=${limit}`,
+        `${this.clientBaseUrl}/users/current/accounts/${accountId}/positions`,
         {
           method: 'GET',
-          headers: {
-            'X-API-Key': this.apiKey,
-            'Content-Type': 'application/json',
-          },
+          headers: this.authHeaders(),
         },
       )
 
@@ -237,23 +239,21 @@ export class MetaApiClient {
       }
 
       const data = await response.json()
+      const positions = Array.isArray(data) ? data : []
 
-      // Transform MetaApi trade format to ours
-      return (data.trades || []).map(
+      return positions.slice(0, limit).map(
         (trade: Record<string, any>): MetaApiTrade => ({
           id: trade.id || trade.ticket?.toString() || '',
           symbol: trade.symbol || '',
-          type: trade.type === 0 ? 'BUY' : 'SELL',
+          type: trade.type === 'POSITION_TYPE_BUY' ? 'BUY' : 'SELL',
           volume: trade.volume || 0,
           entry_price: trade.openPrice || 0,
-          current_price: trade.currentPrice || trade.closePrice || 0,
+          current_price: trade.currentPrice || 0,
           profit: trade.profit || 0,
           profit_pips: trade.profitInPips || 0,
-          entry_time: new Date(trade.openTime).toISOString(),
-          exit_time: trade.closeTime
-            ? new Date(trade.closeTime).toISOString()
-            : undefined,
-          status: trade.state === 'CLOSED' ? 'CLOSED' : 'OPEN',
+          entry_time: trade.time ? new Date(trade.time).toISOString() : new Date().toISOString(),
+          exit_time: undefined,
+          status: 'OPEN',
         }),
       )
     } catch (error) {
@@ -264,6 +264,7 @@ export class MetaApiClient {
 
   /**
    * Get account history stats (daily P&L, win rate, etc.)
+   * NOTE: not currently called from any route/component in this app.
    */
   async getAccountStats(accountId: string): Promise<{
     daily_pnl: number
@@ -276,12 +277,7 @@ export class MetaApiClient {
       const trades = await this.getTrades(accountId)
       const today = new Date().toISOString().split('T')[0]
 
-      // Filter trades from today
-      const todaysTrades = trades.filter((t) =>
-        t.entry_time.startsWith(today),
-      )
-
-      // Calculate stats
+      const todaysTrades = trades.filter((t) => t.entry_time.startsWith(today))
       const closedTrades = todaysTrades.filter((t) => t.status === 'CLOSED')
       const winningTrades = closedTrades.filter((t) => t.profit > 0)
       const losingTrades = closedTrades.filter((t) => t.profit <= 0)
@@ -291,92 +287,11 @@ export class MetaApiClient {
         total_trades_today: todaysTrades.length,
         winning_trades: winningTrades.length,
         losing_trades: losingTrades.length,
-        win_rate:
-          closedTrades.length > 0
-            ? (winningTrades.length / closedTrades.length) * 100
-            : 0,
+        win_rate: closedTrades.length > 0 ? (winningTrades.length / closedTrades.length) * 100 : 0,
       }
     } catch (error) {
       console.error('[v0] Failed to calculate account stats:', error)
       throw error
-    }
-  }
-
-  /**
-   * Authenticate with MT5 credentials (login, password, broker)
-   * Creates a MetaApi account for the user and returns account ID
-   */
-  async authenticateWithCredentials(credentials: {
-    login: string
-    password: string
-    broker: string
-  }): Promise<string> {
-    try {
-      console.log('[v0] Authenticating with MT5 credentials for broker:', credentials.broker)
-
-      // Create a MetaApi account using the provided MT5 credentials
-      const response = await fetch(`${this.baseUrl}/accounts`, {
-        method: 'POST',
-        headers: {
-          'X-API-Key': this.apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: `MT5-${credentials.login}`,
-          type: 'mt5',
-          login: credentials.login,
-          password: credentials.password,
-          server: credentials.broker,
-          platformType: 'mt5',
-          tags: ['trader-mindset'],
-        }),
-      })
-
-      if (!response.ok) {
-        const error = await response.text()
-        throw new Error(`Failed to create MetaApi account: ${error}`)
-      }
-
-      const data = await response.json()
-      const accountId = data.id
-
-      if (!accountId) {
-        throw new Error('No account ID returned from MetaApi')
-      }
-
-      console.log('[v0] MetaApi account created:', accountId)
-      return accountId
-    } catch (error) {
-      console.error('[v0] MetaApi authentication with credentials failed:', error)
-      throw new Error('Failed to connect to MT5. Check your credentials and broker name.')
-    }
-  }
-
-  /**
-   * Authenticate and connect user's MetaApi account via OAuth token
-   */
-  async authenticateAccount(accessToken: string, accountId: string): Promise<string> {
-    try {
-      console.log('[v0] Authenticating MetaApi account with token')
-
-      // Validate the token by fetching account info
-      const response = await fetch(`${this.baseUrl}/accounts/${accountId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to validate MetaApi account: ${response.statusText}`)
-      }
-
-      console.log('[v0] MetaApi account authenticated:', accountId)
-      return accountId
-    } catch (error) {
-      console.error('[v0] MetaApi authentication failed:', error)
-      throw new Error('Failed to authenticate MetaApi account.')
     }
   }
 }
