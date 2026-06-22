@@ -109,3 +109,28 @@ export function migrateLegacyKeys(userId: string): void {
     console.log(`[storage] Migrated ${migratedCount} legacy keys for user ${userId}`)
   }
 }
+
+// Stable per-browser guest id so unauthenticated visitors still get
+// persistent virtual/demo data (trades, journal, etc.) instead of an
+// empty state forever. Generated once and cached in localStorage.
+const GUEST_ID_KEY = "trader-mindset-guest-id"
+
+export function getOrCreateGuestId(): string {
+  if (typeof window === "undefined") return "guest"
+
+  try {
+    const existing = localStorage.getItem(GUEST_ID_KEY)
+    if (existing) return existing
+
+    const generated =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `guest-${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+    localStorage.setItem(GUEST_ID_KEY, generated)
+    return generated
+  } catch (e) {
+    console.warn("[storage] Error reading/creating guest id:", e)
+    return "guest"
+  }
+}

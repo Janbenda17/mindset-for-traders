@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase/browser"
 import { useSubscription } from "@/hooks/use-subscription"
 import { useLiveMode } from "./live-mode-context"
 import { toast } from "@/hooks/use-toast"
-import { getScoped, setScoped, type StorageScope } from "@/lib/storage"
+import { getScoped, setScoped, getOrCreateGuestId, type StorageScope } from "@/lib/storage"
 import {
   generateVirtualTrades,
   generateVirtualJournalEntries,
@@ -616,7 +616,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return
     }
 
-    if (!user?.id) {
+    // No logged-in user: still show virtual/demo data to the visitor
+    // (using a stable per-browser guest id) instead of leaving every
+    // page stuck at zero trades. Guests can never be in live mode, so
+    // this only ever loads the virtual/demo path.
+    const effectiveUserId = user?.id || (!isLiveMode ? getOrCreateGuestId() : null)
+
+    if (!effectiveUserId) {
       console.log("[v0] No user - skipping data load")
       return
     }
@@ -635,16 +641,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           loadDataFromSupabase()
         }, 500)
       } else {
-        loadVirtualData(user.id)
+        loadVirtualData(effectiveUserId)
       }
     } else {
       // Normal load (not a mode change)
-      console.log(`[v0] Mode debug: isLiveMode=${isLiveMode}, userId=${user.id}`)
+      console.log(`[v0] Mode debug: isLiveMode=${isLiveMode}, userId=${effectiveUserId}`)
 
       if (isLiveMode) {
         loadDataFromSupabase()
       } else {
-        loadVirtualData(user.id)
+        loadVirtualData(effectiveUserId)
       }
     }
     prevModeRef.current = isLiveMode
