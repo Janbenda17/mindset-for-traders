@@ -4,20 +4,15 @@ import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Progress } from '@/components/ui/progress'
 import { motion } from 'framer-motion'
 import {
   Target,
   TrendingUp,
   TrendingDown,
-  CheckCircle2,
-  Circle,
   ArrowRight,
-  Sparkles,
   Flame,
   Trophy,
   Activity,
-  Lock,
 } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -30,7 +25,6 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { useData } from '@/contexts/data-context'
-import { useDailyStage } from '@/contexts/daily-stage-context'
 import { useGamification } from '@/contexts/gamification-context'
 
 function isSameDay(a: Date, b: Date) {
@@ -44,7 +38,6 @@ function fmtMoney(n: number) {
 
 export default function DailyTrackerPage() {
   const { getAllTrades, isLiveMode, getTradingStats } = useData()
-  const { stages, getProgress } = useDailyStage()
   const { data: gamification, getLevelInfo } = useGamification()
   const [tab, setTab] = useState('today')
 
@@ -126,7 +119,6 @@ export default function DailyTrackerPage() {
       .slice(0, 30)
   }, [allTrades])
 
-  const progress = getProgress ? getProgress() : 0
   const levelInfo = getLevelInfo ? getLevelInfo(gamification?.level || 1) : null
 
   return (
@@ -305,68 +297,6 @@ export default function DailyTrackerPage() {
                       <p className="text-xs text-slate-400">Total Trades</p>
                       <p className="text-lg font-bold text-white">{overallStats.totalTrades}</p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Daily flow / stages */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <Sparkles className="h-5 w-5 text-cyan-400" />
-                      Today's Routine
-                    </CardTitle>
-                    <span className="text-sm text-slate-400">{Math.round(progress)}% complete</span>
-                  </div>
-                  <Progress value={progress} className="h-2 mt-2" />
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-                    {stages.map((stage) => (
-                      <Link
-                        key={stage.id}
-                        href={stage.unlocked ? stage.href : '#'}
-                        className={stage.unlocked ? '' : 'cursor-not-allowed'}
-                        onClick={(e) => {
-                          if (!stage.unlocked) e.preventDefault()
-                        }}
-                      >
-                        <motion.div
-                          whileHover={stage.unlocked ? { y: -4 } : {}}
-                          className={`p-4 rounded-xl h-full transition-all border-2 ${
-                            stage.completed
-                              ? 'bg-emerald-500/10 border-emerald-500/50'
-                              : stage.unlocked
-                                ? 'bg-slate-800/50 border-slate-700/50 hover:border-cyan-500/50 cursor-pointer'
-                                : 'bg-slate-900/30 border-slate-800/50 opacity-60'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xl">{stage.icon}</span>
-                            {stage.completed ? (
-                              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                            ) : stage.unlocked ? (
-                              <Circle className="h-4 w-4 text-slate-500" />
-                            ) : (
-                              <Lock className="h-4 w-4 text-slate-600" />
-                            )}
-                          </div>
-                          <h3 className="font-semibold text-white text-sm leading-tight">
-                            {stage.title}
-                          </h3>
-                          <p className="text-xs text-slate-400 mt-1">
-                            {stage.completed ? 'Completed' : stage.unlocked ? 'Pending' : 'Locked'}
-                          </p>
-                        </motion.div>
-                      </Link>
-                    ))}
                   </div>
                 </CardContent>
               </Card>
