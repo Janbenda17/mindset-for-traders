@@ -14,10 +14,10 @@ export default function Challenges() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <Trophy className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Sign In Required</h1>
+          <Trophy className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-white mb-2">Sign In Required</h1>
           <Button asChild>
             <Link href="/login">Sign In</Link>
           </Button>
@@ -126,29 +126,29 @@ export default function Challenges() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pt-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <Trophy className="w-8 h-8 mr-3 text-yellow-600" />
+        <div className="mb-2">
+          <h1 className="text-3xl font-bold text-white flex items-center">
+            <Trophy className="w-8 h-8 mr-3 text-yellow-400" />
             Trading Challenges
           </h1>
-          <p className="text-gray-600 mt-1">Test your skills • Compete with others • Earn rewards</p>
+          <p className="text-slate-400 mt-1">Test your skills • Compete with others • Earn rewards</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Active Challenge */}
-            <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+            <Card className="border border-purple-800/40 bg-gradient-to-br from-purple-950/40 to-slate-950">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center space-x-2">
-                    <Zap className="w-5 h-5 text-blue-600" />
+                  <CardTitle className="flex items-center space-x-2 text-white">
+                    <Zap className="w-5 h-5 text-purple-400" />
                     <span>Active Challenge</span>
                   </CardTitle>
-                  <Badge className="bg-blue-600 text-white">
+                  <Badge className="bg-purple-600 text-white">
                     <Clock className="w-3 h-3 mr-1" />
                     {activeChallenge.timeLeft}
                   </Badge>
@@ -157,12 +157,12 @@ export default function Challenges() {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-xl font-semibold text-blue-900">{activeChallenge.title}</h3>
-                    <p className="text-blue-700">{activeChallenge.description}</p>
+                    <h3 className="text-xl font-semibold text-white">{activeChallenge.title}</h3>
+                    <p className="text-slate-300">{activeChallenge.description}</p>
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm text-slate-300">
                       <span>Progress</span>
                       <span>
                         {activeChallenge.progress}/{activeChallenge.total} days
@@ -173,12 +173,12 @@ export default function Challenges() {
 
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-blue-600">Reward</p>
-                      <p className="font-medium">{activeChallenge.reward}</p>
+                      <p className="text-purple-300">Reward</p>
+                      <p className="font-medium text-white">{activeChallenge.reward}</p>
                     </div>
                     <div>
-                      <p className="text-blue-600">Participants</p>
-                      <p className="font-medium">{activeChallenge.participants} traders</p>
+                      <p className="text-purple-300">Participants</p>
+                      <p className="font-medium text-white">{activeChallenge.participants} traders</p>
                     </div>
                   </div>
 
@@ -191,9 +191,9 @@ export default function Challenges() {
             </Card>
 
             {/* Upcoming Challenges */}
-            <Card>
+            <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 text-white">
                   <Calendar className="w-5 h-5" />
                   <span>Upcoming Challenges</span>
                 </CardTitle>
@@ -201,20 +201,20 @@ export default function Challenges() {
               <CardContent>
                 <div className="space-y-4">
                   {upcomingChallenges.map((challenge) => (
-                    <div key={challenge.id} className="border rounded-lg p-4">
+                    <div key={challenge.id} className="border border-slate-800 rounded-lg p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h4 className="font-semibold text-gray-900">{challenge.title}</h4>
-                          <p className="text-sm text-gray-600 mt-1">{challenge.description}</p>
+                          <h4 className="font-semibold text-white">{challenge.title}</h4>
+                          <p className="text-sm text-slate-400 mt-1">{challenge.description}</p>
                         </div>
                         <Badge
                           variant="outline"
                           className={
                             challenge.difficulty === "Expert"
-                              ? "border-red-200 text-red-700"
+                              ? "border-red-500/30 text-red-400"
                               : challenge.difficulty === "Advanced"
-                                ? "border-orange-200 text-orange-700"
-                                : "border-green-200 text-green-700"
+                                ? "border-orange-500/30 text-orange-400"
+                                : "border-green-500/30 text-green-400"
                           }
                         >
                           {challenge.difficulty}
@@ -223,22 +223,22 @@ export default function Challenges() {
 
                       <div className="grid grid-cols-3 gap-4 text-sm mb-4">
                         <div>
-                          <p className="text-gray-500">Start</p>
-                          <p className="font-medium">{challenge.startDate}</p>
+                          <p className="text-slate-500">Start</p>
+                          <p className="font-medium text-white">{challenge.startDate}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Duration</p>
-                          <p className="font-medium">{challenge.duration}</p>
+                          <p className="text-slate-500">Duration</p>
+                          <p className="font-medium text-white">{challenge.duration}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500">Participants</p>
-                          <p className="font-medium">{challenge.participants}</p>
+                          <p className="text-slate-500">Participants</p>
+                          <p className="font-medium text-white">{challenge.participants}</p>
                         </div>
                       </div>
 
                       <div className="mb-4">
-                        <p className="text-sm text-gray-500">Reward</p>
-                        <p className="font-medium text-green-600">{challenge.reward}</p>
+                        <p className="text-sm text-slate-500">Reward</p>
+                        <p className="font-medium text-green-400">{challenge.reward}</p>
                       </div>
 
                       <Button variant="outline" className="w-full bg-transparent">
@@ -252,24 +252,27 @@ export default function Challenges() {
             </Card>
 
             {/* Completed Challenges */}
-            <Card>
+            <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+                <CardTitle className="flex items-center space-x-2 text-white">
+                  <CheckCircle className="w-5 h-5 text-green-400" />
                   <span>Completed Challenges</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {completedChallenges.map((challenge) => (
-                    <div key={challenge.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div
+                      key={challenge.id}
+                      className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 rounded-lg"
+                    >
                       <div>
-                        <h4 className="font-medium text-gray-900">{challenge.title}</h4>
-                        <p className="text-sm text-gray-600">{challenge.completedDate}</p>
+                        <h4 className="font-medium text-white">{challenge.title}</h4>
+                        <p className="text-sm text-slate-400">{challenge.completedDate}</p>
                       </div>
                       <div className="text-right">
-                        <Badge className="bg-green-100 text-green-800 mb-1">{challenge.reward}</Badge>
-                        <p className="text-sm text-gray-500">#{challenge.rank} place</p>
+                        <Badge className="bg-green-500/20 text-green-300 mb-1">{challenge.reward}</Badge>
+                        <p className="text-sm text-slate-500">#{challenge.rank} place</p>
                       </div>
                     </div>
                   ))}
@@ -281,32 +284,32 @@ export default function Challenges() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Your Stats */}
-            <Card>
+            <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 text-white">
                   <Star className="w-5 h-5" />
                   <span>Your Stats</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">1,750</div>
-                  <p className="text-sm text-gray-600">Total Points</p>
+                  <div className="text-2xl font-bold text-purple-400">1,750</div>
+                  <p className="text-sm text-slate-400">Total Points</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
-                    <div className="text-lg font-semibold">6</div>
-                    <p className="text-xs text-gray-600">Badges</p>
+                    <div className="text-lg font-semibold text-white">6</div>
+                    <p className="text-xs text-slate-400">Badges</p>
                   </div>
                   <div>
-                    <div className="text-lg font-semibold">3</div>
-                    <p className="text-xs text-gray-600">Completed</p>
+                    <div className="text-lg font-semibold text-white">3</div>
+                    <p className="text-xs text-slate-400">Completed</p>
                   </div>
                 </div>
 
                 <div className="text-center">
-                  <Badge className="bg-yellow-100 text-yellow-800">
+                  <Badge className="bg-yellow-500/20 text-yellow-300">
                     <Award className="w-3 h-3 mr-1" />
                     #5 in Leaderboard
                   </Badge>
@@ -315,9 +318,9 @@ export default function Challenges() {
             </Card>
 
             {/* Leaderboard */}
-            <Card>
+            <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 text-white">
                   <Trophy className="w-5 h-5" />
                   <span>Leaderboard</span>
                 </CardTitle>
@@ -328,7 +331,7 @@ export default function Challenges() {
                     <div
                       key={player.rank}
                       className={`flex items-center space-x-3 p-2 rounded-lg ${
-                        player.name === "You" ? "bg-blue-50 border border-blue-200" : ""
+                        player.name === "You" ? "bg-purple-500/10 border border-purple-500/30" : ""
                       }`}
                     >
                       <div
@@ -336,10 +339,10 @@ export default function Challenges() {
                           player.rank === 1
                             ? "bg-yellow-500 text-white"
                             : player.rank === 2
-                              ? "bg-gray-400 text-white"
+                              ? "bg-slate-400 text-white"
                               : player.rank === 3
                                 ? "bg-orange-500 text-white"
-                                : "bg-gray-200 text-gray-700"
+                                : "bg-slate-700 text-slate-200"
                         }`}
                       >
                         {player.rank}
@@ -349,13 +352,13 @@ export default function Challenges() {
                         <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <p className={`text-sm font-medium ${player.name === "You" ? "text-blue-900" : ""}`}>
+                        <p className={`text-sm font-medium ${player.name === "You" ? "text-purple-300" : "text-white"}`}>
                           {player.name}
                         </p>
-                        <p className="text-xs text-gray-500">{player.badges} badges</p>
+                        <p className="text-xs text-slate-500">{player.badges} badges</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold">{player.points}</p>
+                        <p className="text-sm font-semibold text-white">{player.points}</p>
                       </div>
                     </div>
                   ))}
@@ -364,9 +367,9 @@ export default function Challenges() {
             </Card>
 
             {/* Quick Actions */}
-            <Card>
+            <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 text-white">
                   <TrendingUp className="w-5 h-5" />
                   <span>Quick Actions</span>
                 </CardTitle>

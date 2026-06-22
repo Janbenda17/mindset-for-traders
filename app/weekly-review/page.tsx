@@ -1,6 +1,5 @@
 'use client'
 
-import { TopNavigation } from '@/components/top-navigation'
 import { WeeklyReviewAnalysis } from '@/components/weekly-review-analysis'
 import { motion } from 'framer-motion'
 import { ArrowLeft, RefreshCw } from 'lucide-react'
@@ -17,10 +16,8 @@ export default function WeeklyReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
-      <TopNavigation />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

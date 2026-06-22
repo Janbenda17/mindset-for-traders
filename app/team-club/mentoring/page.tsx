@@ -125,36 +125,43 @@ export default function Mentoring() {
 
   if (!user) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Mentoring</h1>
-          <p className="text-muted-foreground mt-2">Sign in to access mentoring groups</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Mentoring</h1>
+            <p className="text-slate-400 mt-2">Sign in to access mentoring groups</p>
+          </div>
         </div>
       </div>
     )
   }
 
   if (loading) {
-    return <div className="text-center py-8">Loading groups...</div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="text-center py-8 text-slate-400">Loading groups...</div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pt-6">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-bold">Mentoring</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-4xl font-bold text-white">Mentoring</h1>
+        <p className="text-slate-400 mt-2">
           {isMentor ? "Monitor your students' progress" : "Join a mentoring group"}
         </p>
       </div>
 
       {/* Join Group Section */}
       {!isMentor && myGroups.length === 0 && (
-        <Card className="border-2 border-dashed">
+        <Card className="border-2 border-dashed border-slate-700 bg-gradient-to-br from-slate-900 to-slate-950">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Lock className="w-5 h-5" />
-              <CardTitle>Join a Group</CardTitle>
+              <CardTitle className="text-white">Join a Group</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -176,8 +183,8 @@ export default function Mentoring() {
                 <div
                   className={`p-3 rounded-lg flex items-center gap-2 ${
                     joinMessage.type === "success"
-                      ? "bg-green-50 text-green-900 border border-green-200"
-                      : "bg-red-50 text-red-900 border border-red-200"
+                      ? "bg-green-500/10 text-green-300 border border-green-500/30"
+                      : "bg-red-500/10 text-red-300 border border-red-500/30"
                   }`}
                 >
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -214,15 +221,15 @@ export default function Mentoring() {
             {myGroups.map((group) => (
               <TabsContent key={group.id} value={group.id} className="space-y-6">
                 {/* Group Header Card */}
-                <Card>
+                <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
-                        <CardTitle className="flex items-center gap-2">
+                        <CardTitle className="flex items-center gap-2 text-white">
                           {group.name}
                           <Badge variant="outline">{group.code}</Badge>
                         </CardTitle>
-                        <p className="text-sm text-muted-foreground mt-2">{group.description}</p>
+                        <p className="text-sm text-slate-400 mt-2">{group.description}</p>
                       </div>
                       {isMentor && <Badge>Mentor</Badge>}
                     </div>
@@ -232,28 +239,28 @@ export default function Mentoring() {
                 {/* Group Stats Overview */}
                 {isMentor && (
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Card>
+                    <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Members</CardTitle>
+                        <CardTitle className="text-sm font-medium text-slate-400">Members</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4 text-blue-500" />
-                          <span className="text-2xl font-bold">{groupMembers.length}</span>
+                          <span className="text-2xl font-bold text-white">{groupMembers.length}</span>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                        <CardTitle className="text-sm font-medium text-slate-400">
                           Average Win Rate
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center gap-2">
                           <TrendingUp className="w-4 h-4 text-green-500" />
-                          <span className="text-2xl font-bold">
+                          <span className="text-2xl font-bold text-white">
                             {groupMembers.length > 0
                               ? (
                                   groupMembers.reduce(
@@ -268,30 +275,30 @@ export default function Mentoring() {
                       </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                        <CardTitle className="text-sm font-medium text-slate-400">
                           Trades Today
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center gap-2">
                           <CheckCircle className="w-4 h-4 text-orange-500" />
-                          <span className="text-2xl font-bold">
+                          <span className="text-2xl font-bold text-white">
                             {groupMembers.reduce((acc, m) => acc + (m.today_stats?.trades_count || 0), 0)}
                           </span>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                        <CardTitle className="text-sm font-medium text-slate-400">
                           Average Mood
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <span className="text-2xl font-bold">
+                        <span className="text-2xl font-bold text-white">
                           {groupMembers.length > 0
                             ? (
                                 groupMembers.reduce(
@@ -308,12 +315,12 @@ export default function Mentoring() {
                 )}
 
                 {/* Members List / Leaderboard */}
-                <Card>
+                <Card className="border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-950">
                   <CardHeader>
-                    <CardTitle>
+                    <CardTitle className="text-white">
                       {isMentor ? "Group Members - Mentoring Details" : "Your Standing in the Group"}
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-2">
+                    <p className="text-sm text-slate-400 mt-2">
                       {isMentor
                         ? "Track each member's progress and identify areas for improvement"
                         : "Compare yourself with other group members"}
@@ -343,60 +350,60 @@ export default function Mentoring() {
                           return (
                             <div
                               key={member.id}
-                              className="border rounded-lg p-4 hover:bg-muted/50 transition"
+                              className="border border-slate-800 rounded-lg p-4 hover:bg-slate-800/50 transition"
                             >
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-3">
                                   <Badge variant="outline">#{index + 1}</Badge>
                                   <div>
-                                    <p className="font-medium">{member.user_name || "User"}</p>
-                                    <p className="text-xs text-muted-foreground">{member.user_email}</p>
+                                    <p className="font-medium text-white">{member.user_name || "User"}</p>
+                                    <p className="text-xs text-slate-400">{member.user_email}</p>
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <p className="text-sm text-muted-foreground">Score</p>
-                                  <p className="text-2xl font-bold text-blue-600">{score.toFixed(0)}</p>
+                                  <p className="text-sm text-slate-400">Score</p>
+                                  <p className="text-2xl font-bold text-purple-400">{score.toFixed(0)}</p>
                                 </div>
                               </div>
 
                               {Object.keys(stats).length > 0 ? (
                                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                                  <div className="bg-muted p-2 rounded">
-                                    <p className="text-muted-foreground text-xs">Sleep</p>
-                                    <p className="font-bold">{stats.sleep_hours || 0}h</p>
+                                  <div className="bg-slate-800/60 p-2 rounded">
+                                    <p className="text-slate-400 text-xs">Sleep</p>
+                                    <p className="font-bold text-white">{stats.sleep_hours || 0}h</p>
                                   </div>
-                                  <div className="bg-muted p-2 rounded">
-                                    <p className="text-muted-foreground text-xs">Trades</p>
-                                    <p className="font-bold">{stats.trades_count || 0}</p>
+                                  <div className="bg-slate-800/60 p-2 rounded">
+                                    <p className="text-slate-400 text-xs">Trades</p>
+                                    <p className="font-bold text-white">{stats.trades_count || 0}</p>
                                   </div>
-                                  <div className="bg-muted p-2 rounded">
-                                    <p className="text-muted-foreground text-xs">Win Rate</p>
-                                    <p className="font-bold text-green-600">{stats.win_rate || 0}%</p>
+                                  <div className="bg-slate-800/60 p-2 rounded">
+                                    <p className="text-slate-400 text-xs">Win Rate</p>
+                                    <p className="font-bold text-green-400">{stats.win_rate || 0}%</p>
                                   </div>
-                                  <div className="bg-muted p-2 rounded">
-                                    <p className="text-muted-foreground text-xs">P&L</p>
+                                  <div className="bg-slate-800/60 p-2 rounded">
+                                    <p className="text-slate-400 text-xs">P&L</p>
                                     <p
                                       className={`font-bold ${
-                                        (stats.total_pnl || 0) >= 0 ? "text-green-600" : "text-red-600"
+                                        (stats.total_pnl || 0) >= 0 ? "text-green-400" : "text-red-400"
                                       }`}
                                     >
                                       ${(stats.total_pnl || 0).toFixed(2)}
                                     </p>
                                   </div>
-                                  <div className="bg-muted p-2 rounded">
-                                    <p className="text-muted-foreground text-xs">Mood</p>
-                                    <p className="font-bold">{stats.mood_score || 0}/10</p>
+                                  <div className="bg-slate-800/60 p-2 rounded">
+                                    <p className="text-slate-400 text-xs">Mood</p>
+                                    <p className="font-bold text-white">{stats.mood_score || 0}/10</p>
                                   </div>
                                 </div>
                               ) : (
-                                <p className="text-sm text-muted-foreground italic">No data yet today</p>
+                                <p className="text-sm text-slate-400 italic">No data yet today</p>
                               )}
                             </div>
                           )
                         })}
 
                       {groupMembers.length === 0 && (
-                        <p className="text-center text-muted-foreground py-8">
+                        <p className="text-center text-slate-400 py-8">
                           No members in this group yet
                         </p>
                       )}
@@ -408,6 +415,7 @@ export default function Mentoring() {
           </Tabs>
         </>
       )}
+      </div>
     </div>
   )
 }

@@ -449,7 +449,7 @@ export default function JournalPage() {
   const displayStats = !isLiveMode && virtualStats ? virtualStats : stats
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16">
       <div className="max-w-[1800px] mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3 md:gap-4">
           <div>

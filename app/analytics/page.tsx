@@ -1375,7 +1375,7 @@ export default function PsychologyAnalyticsPage() {
   // Ve Virtual Mode zobraz demo data i když je méně než 10 dní
   if (isAnalyticsLocked) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 p-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
         <div className="mx-auto max-w-4xl">
           <Card className="border-purple-500/20 bg-slate-900/50 backdrop-blur">
             <CardHeader className="text-center">
@@ -1467,7 +1467,7 @@ export default function PsychologyAnalyticsPage() {
   // Analytics content - display real data or demo data
   if (!analyticsData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
         <Card className="bg-slate-800/50 border-red-500/30">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-400">
@@ -1626,8 +1626,8 @@ export default function PsychologyAnalyticsPage() {
       : { good: 0, neutral: 0, poor: 0 }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
