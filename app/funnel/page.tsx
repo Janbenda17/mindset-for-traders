@@ -15,14 +15,14 @@ export default function FunnelPage() {
     if (typeof window !== 'undefined') {
       const completed = localStorage.getItem('funnel_completed')
       if (completed === 'true') {
-        router.push('/dashboard')
+        router.push('/daily-tracker')
       }
     }
     setIsLoading(false)
   }, [router])
 
   const handleComplete = () => {
-    router.push('/dashboard')
+    router.push('/daily-tracker')
   }
 
   if (isLoading) {

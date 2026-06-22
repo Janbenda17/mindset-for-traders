@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
   Brain,
-  Home,
   BarChart3,
   Users,
   Calendar,
@@ -75,7 +74,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const [isSwitchingToLive, setIsSwitchingToLive] = useState(false)
 
   const mainNavigation = [
-    { name: t('nav_home'), href: "/dashboard", icon: Home, shortName: t('nav_home') },
     { name: t('nav_daily_tracker'), href: "/daily-tracker", icon: Calendar, shortName: t('nav_daily_tracker') },
     { name: t('nav_mindtrader'), href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
     { name: t('nav_journal'), href: "/journal", icon: TrendingUp, shortName: t('nav_journal') },

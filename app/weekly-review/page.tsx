@@ -28,11 +28,11 @@ export default function WeeklyReviewPage() {
           className="mb-8"
         >
           <Link
-            href="/dashboard"
+            href="/daily-tracker"
             className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            Back to Daily Tracker
           </Link>
           
           <div className="flex items-center justify-between">
