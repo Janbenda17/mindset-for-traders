@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import { useData } from "@/contexts/data-context"
 
 interface Goal {
   id: string
@@ -21,8 +22,44 @@ interface Goal {
   createdAt: string
 }
 
+const DEMO_GOALS: Goal[] = [
+  {
+    id: 'demo-weekly-1',
+    period: 'weekly',
+    goal: 'Drž se max. 2% rizika na obchod a max. 3 obchody denně',
+    focusArea: 'Risk management',
+    why: 'Posledních pár týdnů jsem viděl, že větší velikost pozice po ztrátě mi škodí víc, než pomáhá.',
+    startDate: new Date().toISOString().slice(0, 10),
+    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    milestones: [
+      'Nastavit fixní velikost pozice na 2 % equity před session',
+      'Zapsat každý obchod do deníku ihned po uzavření',
+      'Po 3. obchodu zavřít platformu bez ohledu na výsledek',
+    ],
+    aiGenerated: false,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'demo-monthly-1',
+    period: 'monthly',
+    goal: 'Zvýšit win rate na A+ setupech nad 55 %',
+    focusArea: 'Selektivita setupů',
+    why: 'Chci obchodovat méně, ale kvalitněji - soustředit se jen na nejsilnější signály z mého playbooku.',
+    startDate: new Date().toISOString().slice(0, 10),
+    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    milestones: [
+      'Definovat přesná kritéria A+ setupu a držet se jich',
+      'Týdně revidovat obchody, které nesplňovaly kritéria, a proč jsem je vzal',
+      'Sledovat win rate jen na obchodech splňujících kritéria',
+    ],
+    aiGenerated: false,
+    createdAt: new Date().toISOString(),
+  },
+]
+
 export default function TradingGoalsPage() {
   const { toast } = useToast()
+  const { isLiveMode } = useData()
   const [goals, setGoals] = useState<Goal[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
@@ -92,8 +129,12 @@ export default function TradingGoalsPage() {
     }
   }
 
-  const weeklyGoals = goals.filter(g => g.period === 'weekly')
-  const monthlyGoals = goals.filter(g => g.period === 'monthly')
+  // In demo mode, show example goals until the user has real ones (own or AI-generated)
+  const displayGoals = goals.length > 0 ? goals : !isLiveMode ? DEMO_GOALS : []
+  const isShowingDemo = goals.length === 0 && !isLiveMode && displayGoals.length > 0
+
+  const weeklyGoals = displayGoals.filter(g => g.period === 'weekly')
+  const monthlyGoals = displayGoals.filter(g => g.period === 'monthly')
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
@@ -108,6 +149,11 @@ export default function TradingGoalsPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Obchodní Cíle</h1>
           <p className="text-slate-400">Týdenní a měsíční cíle generované AI</p>
+          {isShowingDemo && (
+            <div className="inline-flex mt-3 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
+              Ukázková data — takhle to bude vypadat s tvými vlastními cíli
+            </div>
+          )}
         </div>
 
         <Button
