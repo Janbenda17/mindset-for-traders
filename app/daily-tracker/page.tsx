@@ -13,6 +13,8 @@ import {
   Flame,
   Trophy,
   Activity,
+  Brain,
+  AlertTriangle,
 } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -81,6 +83,87 @@ export default function DailyTrackerPage() {
     }
     return { count, type: isWin ? ('win' as const) : ('loss' as const) }
   }, [allTrades])
+
+  // Emotional AI read — auto-derived from today's MetaTrader trades, no manual input
+  const emotionalRead = useMemo(() => {
+    if (todaysTrades.length === 0) {
+      return {
+        tilt: 0,
+        label: 'Čekání na data',
+        message:
+          'Dnes ještě nemáš žádné obchody — jakmile MetaTrader zaznamená první obchod, AI automaticky vyhodnotí tvůj emoční stav.',
+        tip: null as string | null,
+        tone: 'neutral' as const,
+      }
+    }
+
+    const sorted = [...todaysTrades].sort(
+      (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    )
+
+    let revengeCount = 0
+    let maxLossStreak = 0
+    let lossStreak = 0
+    for (let i = 0; i < sorted.length; i++) {
+      const t = sorted[i]
+      if (t.pnl < 0) {
+        lossStreak++
+        maxLossStreak = Math.max(maxLossStreak, lossStreak)
+        const prev = sorted[i - 1]
+        if (prev && prev.pnl < 0) {
+          const gapMin = (new Date(t.date).getTime() - new Date(prev.date).getTime()) / 60000
+          if (gapMin >= 0 && gapMin < 20 && Math.abs(t.pnl) >= Math.abs(prev.pnl)) {
+            revengeCount++
+          }
+        }
+      } else {
+        lossStreak = 0
+      }
+    }
+
+    const count = sorted.length
+    const wins = sorted.filter((t: any) => t.pnl > 0).length
+    const winRate = count > 0 ? wins / count : 0
+
+    let tilt = 0
+    tilt += revengeCount * 30
+    tilt += maxLossStreak >= 3 ? 25 : maxLossStreak === 2 ? 10 : 0
+    tilt += count > 6 ? 20 : count > 4 ? 10 : 0
+    tilt -= count > 0 && count <= 3 && winRate >= 0.5 ? 10 : 0
+    tilt = Math.max(0, Math.min(100, tilt))
+
+    let label: string
+    let message: string
+    let tip: string
+    let tone: 'good' | 'warn' | 'bad' | 'neutral'
+
+    if (tilt >= 50) {
+      label = 'Tilt riziko'
+      tone = 'bad'
+      message = `Vzorec dnešních obchodů (${revengeCount > 0 ? `${revengeCount}× rychlý re-entry po ztrátě, ` : ''}${
+        maxLossStreak >= 2 ? `série ${maxLossStreak} ztrát po sobě, ` : ''
+      }${count} obchodů celkem) odpovídá emočnímu tiltu, ne plánu.`
+      tip = 'Zastav obchodování na zbytek dne. Zítra začni s poloviční velikostí pozice.'
+    } else if (revengeCount > 0 || maxLossStreak >= 2) {
+      label = 'Lehké napětí'
+      tone = 'warn'
+      message =
+        'Po ztrátě následoval rychlý další vstup — typický raný signál frustrace, i když to dnes nepřerostlo do plného tiltu.'
+      tip = 'Po každé ztrátě si dej alespoň 5 minut pauzu před dalším obchodem.'
+    } else if (count > 0 && count <= 3 && winRate >= 0.5) {
+      label = 'Klid a disciplína'
+      tone = 'good'
+      message = `${count} dobře vybraných obchodů bez známek emočního přetížení — tohle je vzorec, který chceš opakovat.`
+      tip = 'Udrž stejnou selektivitu i zítra.'
+    } else {
+      label = 'Neutrální'
+      tone = 'neutral'
+      message = 'Dnešní obchody nevykazují výrazné emoční vzorce — žádný tilt, ale ani jasná disciplína navíc.'
+      tip = 'Zapiš si krátkou poznámku, jak ses během obchodování cítil — pomůže to budoucí AI analýze.'
+    }
+
+    return { tilt, label, message, tip, tone }
+  }, [todaysTrades])
 
   // Equity curve (last 30 trades, cumulative)
   const equityData = useMemo(() => {
@@ -219,6 +302,86 @@ export default function DailyTrackerPage() {
 
           {/* Today Tab */}
           <TabsContent value="today" className="space-y-6">
+            {/* Emotional AI read — fully automatic from today's MetaTrader trades */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.12 }}
+            >
+              <Card
+                className={`border bg-gradient-to-br from-slate-900 to-slate-950 ${
+                  emotionalRead.tone === 'bad'
+                    ? 'border-red-500/30'
+                    : emotionalRead.tone === 'warn'
+                      ? 'border-amber-500/30'
+                      : emotionalRead.tone === 'good'
+                        ? 'border-emerald-500/30'
+                        : 'border-slate-800'
+                }`}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between text-white">
+                    <span className="flex items-center gap-2">
+                      <Brain
+                        className={`h-5 w-5 ${
+                          emotionalRead.tone === 'bad'
+                            ? 'text-red-400'
+                            : emotionalRead.tone === 'warn'
+                              ? 'text-amber-400'
+                              : emotionalRead.tone === 'good'
+                                ? 'text-emerald-400'
+                                : 'text-slate-400'
+                        }`}
+                      />
+                      AI Emoční stav dne
+                    </span>
+                    <span
+                      className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                        emotionalRead.tone === 'bad'
+                          ? 'bg-red-500/10 text-red-300'
+                          : emotionalRead.tone === 'warn'
+                            ? 'bg-amber-500/10 text-amber-300'
+                            : emotionalRead.tone === 'good'
+                              ? 'bg-emerald-500/10 text-emerald-300'
+                              : 'bg-slate-500/10 text-slate-300'
+                      }`}
+                    >
+                      {emotionalRead.label}
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-slate-300">{emotionalRead.message}</p>
+
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                      <span>Tilt skóre</span>
+                      <span>{emotionalRead.tilt}/100</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          emotionalRead.tilt >= 50
+                            ? 'bg-red-500'
+                            : emotionalRead.tilt >= 20
+                              ? 'bg-amber-500'
+                              : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${emotionalRead.tilt}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {emotionalRead.tip && (
+                    <div className="flex items-start gap-2 text-xs text-slate-400 bg-slate-800/40 rounded-lg p-3 border border-slate-700/40">
+                      <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-slate-400" />
+                      <span>{emotionalRead.tip}</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+
             {/* Equity curve */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
