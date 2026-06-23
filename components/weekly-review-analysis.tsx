@@ -8,11 +8,11 @@ import { motion } from 'framer-motion'
 import { Sparkles, TrendingUp, TrendingDown, Target, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { generateWeeklyReview } from '@/app/actions/weekly-review'
-import { buildWeeklyReview, type NormalizedTrade, type WeeklyReviewData } from '@/lib/weekly-review-insights'
+import { buildWeeklyReview, type NormalizedTrade, type WeekSelfReportDay, type WeeklyReviewData } from '@/lib/weekly-review-insights'
 
 type WeeklyReview = WeeklyReviewData
 
-function computeDemoWeeklyReview(trades: any[]): WeeklyReview {
+function computeDemoWeeklyReview(trades: any[], journalEntries: any[] = []): WeeklyReview {
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
@@ -35,12 +35,23 @@ function computeDemoWeeklyReview(trades: any[]): WeeklyReview {
     followedPlan: t.followedPlan ?? null,
   }))
 
-  return buildWeeklyReview(normalized)
+  const weekJournals: WeekSelfReportDay[] = (journalEntries || [])
+    .filter((j: any) => typeof j.id === 'string' && j.id.startsWith('daily-summary-') && Array.isArray(j.tags))
+    .filter((j: any) => {
+      const d = new Date(j.date)
+      return !isNaN(d.getTime()) && d >= sevenDaysAgo
+    })
+    .map((j: any) => ({
+      date: j.date,
+      tags: (j.tags || []) as string[],
+    }))
+
+  return buildWeeklyReview(normalized, weekJournals)
 }
 
 export function WeeklyReviewAnalysis() {
   const { user } = useAuth()
-  const { isLiveMode, trades } = useData()
+  const { isLiveMode, trades, getAllJournalEntries } = useData()
   const [review, setReview] = useState<WeeklyReview | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -54,7 +65,7 @@ export function WeeklyReviewAnalysis() {
       // realistic-looking data, instead of an empty/fake placeholder.
       setLoading(true)
       setError(null)
-      setReview(computeDemoWeeklyReview(trades))
+      setReview(computeDemoWeeklyReview(trades, getAllJournalEntries ? getAllJournalEntries() : []))
       setLoading(false)
       return
     }
@@ -84,7 +95,7 @@ export function WeeklyReviewAnalysis() {
 
   const handleRetry = () => {
     if (!isLiveMode) {
-      setReview(computeDemoWeeklyReview(trades))
+      setReview(computeDemoWeeklyReview(trades, getAllJournalEntries ? getAllJournalEntries() : []))
       return
     }
     generateReview()

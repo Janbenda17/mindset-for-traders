@@ -177,6 +177,11 @@ interface ChatRequest {
       tags?: string[]
       marketConditions?: string
     }>
+    selfReportHistory?: Array<{
+      date: string
+      tags: string[]
+      marketConditions?: string
+    }>
     morningChecks?: Array<{
       date: string
       sleepQuality: number
@@ -482,7 +487,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const { trades, journals, stats, patterns } = userData
+    const { trades, journals, selfReportHistory, stats, patterns } = userData
 
     const isAnalyticsMode = mode === "analytics"
 
@@ -559,11 +564,13 @@ ${trades
   })
   .join("\n")}`
 
-    // Today's self-reported "Quick FOMO Tag" check-in (from the Daily
-    // Tracker page). This is ground truth from the trader himself - never
-    // guess what happened today if this is present, just reflect it back.
+    // Self-reported "Quick FOMO Tag" check-ins (from the Daily Tracker
+    // page) - ground truth from the trader himself. selfReportHistory holds
+    // up to the last 7 days (today included if present); never guess what
+    // happened on a day that's covered here, just reflect it back. Falls
+    // back to scanning journals directly for older clients that don't send
+    // selfReportHistory yet.
     const todayStr = new Date().toISOString().split("T")[0]
-    const todayJournal = journals.find((j) => j.id === `daily-summary-${todayStr}`)
     const selfReportTagLabels: Record<string, string> = {
       FOMO_overcome: "USTAL FOMO impuls (nenaskocil do rozjeteho pohybu)",
       FOMO_chased: "NASKOCIL do FOMO pohybu",
@@ -571,7 +578,17 @@ ${trades
       EARLY_CLOSE: "BRZKE UZAVRENI pozice ze strachu o zisk",
       CLEAN_DAY: "BEZCHYBNY DEN (dodrzen plan)",
     }
-    const todaySelfReportTags = (todayJournal?.tags || []).filter((t) => selfReportTagLabels[t])
+    const selfReportHist =
+      selfReportHistory && selfReportHistory.length > 0
+        ? selfReportHistory
+        : (() => {
+            const todayJournal = journals.find((j) => j.id === `daily-summary-${todayStr}`)
+            const tags = (todayJournal?.tags || []).filter((t) => selfReportTagLabels[t])
+            return tags.length > 0 ? [{ date: todayStr, tags, marketConditions: todayJournal?.marketConditions }] : []
+          })()
+
+    const todayEntry = selfReportHist.find((h) => h.date === todayStr)
+    const todaySelfReportTags = (todayEntry?.tags || []).filter((t) => selfReportTagLabels[t])
     if (todaySelfReportTags.length > 0) {
       dataSummary += `
 
@@ -579,7 +596,41 @@ ${trades
 ✅ DNESNI SELF-REPORT (sam oznacil, NEHADEJ - pouzij presne tohle):
 ═══════════════════════════════════════════════════════════
 ${todaySelfReportTags.map((t) => `- ${selfReportTagLabels[t]}`).join("\n")}
-${todayJournal?.marketConditions ? `- Trh/instrument v tu dobu: ${todayJournal.marketConditions}` : ""}`
+${todayEntry?.marketConditions ? `- Trh/instrument v tu dobu: ${todayEntry.marketConditions}` : ""}`
+    }
+
+    // Multi-day pattern: counts over the recorded history plus a same-tag
+    // streak counted back from the most recent day, so Claude can reference
+    // trends ("treti den v rade kdy...") instead of only ever seeing today.
+    const pastSelfReportHist = selfReportHist.filter((h) => h.date !== todayStr)
+    if (pastSelfReportHist.length > 0) {
+      const tagCounts: Record<string, number> = {}
+      pastSelfReportHist.forEach((h) => h.tags.forEach((t) => {
+        if (selfReportTagLabels[t]) tagCounts[t] = (tagCounts[t] || 0) + 1
+      }))
+      const calcStreak = (tag: string) => {
+        let streak = 0
+        for (const h of selfReportHist) {
+          if (h.tags.includes(tag)) streak++
+          else break
+        }
+        return streak
+      }
+      const streakLines = Object.keys(selfReportTagLabels)
+        .map((t) => ({ t, streak: calcStreak(t) }))
+        .filter((s) => s.streak >= 2)
+        .map((s) => `- 🔥 ${selfReportTagLabels[s.t]}: ${s.streak} dny v rade (vcetne dnes, pokud je dnes zaznamenano)`)
+      const trendLines = Object.entries(tagCounts).map(
+        ([t, count]) => `- ${selfReportTagLabels[t]}: ${count}x za poslednich ${pastSelfReportHist.length} zaznamenanych dni`,
+      )
+      if (trendLines.length > 0 || streakLines.length > 0) {
+        dataSummary += `
+
+═══════════════════════════════════════════════════════════
+📊 TREND SELF-REPORTU ZA POSLEDNI DNY (vyuzij k odkazu na vzorec, ne jen na dnesek):
+═══════════════════════════════════════════════════════════
+${[...streakLines, ...trendLines].join("\n")}`
+      }
     }
 
     if (isAnalyticsMode) {
@@ -626,7 +677,8 @@ KRITICKA PRAVIDLA (PORUSENI = FAIL):
 6. Kazda rada = KONKRETNI akce (CO + KDY + JAK merit uspech)
 7. ZAKAZANO: "pracuj na sobe", "zlepsuj disciplinu", "bud konzistentni", "trading je maraton"
 8. ZAKAZANO: vymyslene procenta, vymyslene korelace, vymyslene dolary
-9. Pokud je v datech sekce "DNESNI SELF-REPORT" - trader UZ SAM oznacil co se dnes stalo. NEHADEJ a NEPTEJ se na to znovu, primo na to reaguj a rozeber to s nim (pochval pri "USTAL"/"BEZCHYBNY DEN", proved pri "NASKOCIL"/"REVENGE"/"BRZKE UZAVRENI")`
+9. Pokud je v datech sekce "DNESNI SELF-REPORT" - trader UZ SAM oznacil co se dnes stalo. NEHADEJ a NEPTEJ se na to znovu, primo na to reaguj a rozeber to s nim (pochval pri "USTAL"/"BEZCHYBNY DEN", proved pri "NASKOCIL"/"REVENGE"/"BRZKE UZAVRENI")
+10. Pokud je v datech sekce "TREND SELF-REPORTU" - pouzij ji k odkazu na vzorec za vic dni (napr. "treti den v rade ustal FOMO" nebo "tohle uz je druhy den s revenge tradingem"), nejen na dnesek`
 
     try {
       const message = await client.messages.create({

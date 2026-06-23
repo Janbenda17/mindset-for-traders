@@ -140,6 +140,32 @@ export default function DailyTrackerPage() {
     return { count, type: isWin ? ('win' as const) : ('loss' as const) }
   }, [allTrades])
 
+  // Proactive cooldown warning: fires as soon as 2 real losses in a row are
+  // detected today, or the trader self-reported REVENGE_TRADING - shown
+  // right here on the page instead of waiting for the trader to open the
+  // /mindtrader chat on his own.
+  const cooldownAlert = useMemo(() => {
+    if (dayTags.includes('REVENGE_TRADING')) {
+      return {
+        reason: 'self-report' as const,
+        text: 'Sám jsi dnes označil revenge trading. Než otevřeš další pozici, dej si pauzu — trh tu bude i za 15 minut.',
+      }
+    }
+    if (todaysTrades.length >= 2) {
+      const sortedToday = [...todaysTrades].sort(
+        (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      )
+      const lastTwoLosses = sortedToday[0].pnl < 0 && sortedToday[1].pnl < 0
+      if (lastTwoLosses) {
+        return {
+          reason: 'consecutive-losses' as const,
+          text: 'Poslední 2 obchody dnes byly ztrátové. Riziko revenge tradingu roste — zvaž krátkou pauzu před dalším obchodem.',
+        }
+      }
+    }
+    return null
+  }, [dayTags, todaysTrades])
+
   // Daily Summary — full narrative of the day (trade count, win rate, P&L,
   // best/worst trade) plus the emotional read, fully automatic from today's
   // MetaTrader trades. Also persisted into journal_entries below so it
@@ -289,6 +315,30 @@ export default function DailyTrackerPage() {
             </div>
           )}
         </motion.div>
+
+        {/* Proactive cooldown warning */}
+        <AnimatePresence>
+          {cooldownAlert && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="rounded-xl border border-red-500/40 bg-gradient-to-r from-red-500/15 to-orange-500/10 p-4 flex items-start gap-3"
+            >
+              <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-red-200">Cooldown doporučen</p>
+                <p className="text-sm text-red-100/90 mt-1">{cooldownAlert.text}</p>
+              </div>
+              <Link href="/mindtrader">
+                <Button size="sm" variant="outline" className="border-red-400/40 text-red-200 hover:bg-red-500/10 flex-shrink-0">
+                  Probrat s MindTrader AI
+                </Button>
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Hero stat row */}
         <motion.div

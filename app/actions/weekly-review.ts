@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
-import { buildWeeklyReview, emptyWeeklyReview, type NormalizedTrade, type WeeklyReviewData } from '@/lib/weekly-review-insights'
+import { buildWeeklyReview, emptyWeeklyReview, type NormalizedTrade, type WeekSelfReportDay, type WeeklyReviewData } from '@/lib/weekly-review-insights'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,6 +30,26 @@ export async function generateWeeklyReview(userId: string): Promise<WeeklyReview
 
     if (tradesError) console.warn('[v0] Trades fetch warning:', tradesError)
 
+    // Self-report daily tags live in journal_entries (type = 'journal',
+    // id starting with "daily-summary-") - fetch the same 7-day window so
+    // Weekly Review can surface the FOMO/revenge/clean-day trend, not just trades.
+    const { data: journalEntries, error: journalsError } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('type', 'journal')
+      .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+      .order('date', { ascending: false })
+
+    if (journalsError) console.warn('[v0] Journals fetch warning:', journalsError)
+
+    const weekJournals: WeekSelfReportDay[] = (journalEntries || [])
+      .filter((e: any) => typeof e.id === 'string' && e.id.startsWith('daily-summary-') && Array.isArray(e.tags))
+      .map((e: any) => ({
+        date: e.date,
+        tags: (e.tags || []) as string[],
+      }))
+
     const normalized: NormalizedTrade[] = (entries || [])
       .filter((e: any) => typeof e.pnl === 'number' || typeof e.profit_loss === 'number')
       .map((e: any) => ({
@@ -46,7 +66,7 @@ export async function generateWeeklyReview(userId: string): Promise<WeeklyReview
         followedPlan: e.followed_plan ?? e.matched_plan ?? null,
       }))
 
-    return buildWeeklyReview(normalized)
+    return buildWeeklyReview(normalized, weekJournals)
   } catch (err) {
     console.error('[v0] Error generating weekly review:', err)
     return emptyWeeklyReview()

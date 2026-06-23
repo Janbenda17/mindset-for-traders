@@ -57,8 +57,62 @@ export function emptyWeeklyReview(): WeeklyReviewData {
   }
 }
 
-export function buildWeeklyReview(weekTradesInput: NormalizedTrade[]): WeeklyReviewData {
-  if (weekTradesInput.length === 0) return emptyWeeklyReview()
+export interface WeekSelfReportDay {
+  date: string
+  tags: string[]
+}
+
+const SELF_REPORT_TAG_LABELS: Record<string, string> = {
+  FOMO_overcome: 'ustál FOMO impuls',
+  FOMO_chased: 'naskočil do FOMO pohybu',
+  REVENGE_TRADING: 'revenge trading',
+  EARLY_CLOSE: 'brzké uzavření ze strachu',
+  CLEAN_DAY: 'bezchybný den (dodržen plán)',
+}
+
+function buildSelfReportTrend(weekJournals: WeekSelfReportDay[]): string[] {
+  const insights: string[] = []
+  if (!weekJournals || weekJournals.length === 0) return insights
+
+  const totalDays = weekJournals.length
+  const tagCounts: Record<string, number> = {}
+  weekJournals.forEach((day) => {
+    day.tags.forEach((t) => {
+      if (SELF_REPORT_TAG_LABELS[t]) tagCounts[t] = (tagCounts[t] || 0) + 1
+    })
+  })
+
+  // Self-reported good behavior - frame as "ustál X ze Y dní"
+  if (tagCounts['FOMO_overcome']) {
+    insights.push(`FOMO ustál ${tagCounts['FOMO_overcome']}x z ${totalDays} zaznamenaných dní – sebereflexe ukazuje rostoucí kontrolu`)
+  }
+  if (tagCounts['CLEAN_DAY']) {
+    insights.push(`${tagCounts['CLEAN_DAY']}x z ${totalDays} dní jsi sám označil jako bezchybný den (dodržen plán)`)
+  }
+
+  // Warning patterns
+  if (tagCounts['FOMO_chased']) {
+    insights.push(`Podle self-reportu jsi ${tagCounts['FOMO_chased']}x z ${totalDays} dní naskočil do FOMO pohybu – sleduj, co tyto dny spouští`)
+  }
+  if (tagCounts['REVENGE_TRADING']) {
+    insights.push(`Revenge trading sis sám přiznal ${tagCounts['REVENGE_TRADING']}x tento týden – po dvou ztrátách v řadě si vynuť pauzu`)
+  }
+  if (tagCounts['EARLY_CLOSE']) {
+    insights.push(`${tagCounts['EARLY_CLOSE']}x jsi podle self-reportu uzavřel pozici předčasně ze strachu o zisk`)
+  }
+
+  return insights
+}
+
+export function buildWeeklyReview(weekTradesInput: NormalizedTrade[], weekJournals: WeekSelfReportDay[] = []): WeeklyReviewData {
+  if (weekTradesInput.length === 0) {
+    const empty = emptyWeeklyReview()
+    const selfReportOnly = buildSelfReportTrend(weekJournals)
+    if (selfReportOnly.length > 0) {
+      empty.psychologicalInsights = selfReportOnly.slice(0, 7)
+    }
+    return empty
+  }
 
   const weekTrades = weekTradesInput
     .slice()
@@ -236,6 +290,10 @@ export function buildWeeklyReview(weekTradesInput: NormalizedTrade[]): WeeklyRev
     psychologicalInsights.push(`Sebevědomí před obchody ${avgConfidence.toFixed(1)}/10, nálada po obchodech ${avgMood.toFixed(1)}/10`)
   }
 
+  // Self-reported daily tags (FOMO_overcome/FOMO_chased/REVENGE_TRADING/EARLY_CLOSE/CLEAN_DAY)
+  const selfReportInsights = buildSelfReportTrend(weekJournals)
+  psychologicalInsights.push(...selfReportInsights)
+
   const nextWeekFocus: string[] = []
   if (revengeTradeAfter) {
     nextWeekFocus.push('Po dvou ztrátách za sebou si vynuť alespoň 15minutovou pauzu před dalším vstupem')
@@ -292,7 +350,7 @@ export function buildWeeklyReview(weekTradesInput: NormalizedTrade[]): WeeklyRev
     highlights: highlights.length ? highlights : ['Stabilní týden bez výrazných výkyvů'],
     improvements: improvements.length ? improvements : ['Pokračuj v zapisování obchodů pro hlubší analýzu'],
     nextWeekFocus: nextWeekFocus.slice(0, 3),
-    psychologicalInsights: psychologicalInsights.length ? psychologicalInsights.slice(0, 5) : ['Nedostatek psychologických dat za tento týden'],
+    psychologicalInsights: psychologicalInsights.length ? psychologicalInsights.slice(0, 7) : ['Nedostatek psychologických dat za tento týden'],
     riskAssessment,
   }
 }

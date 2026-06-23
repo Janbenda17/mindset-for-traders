@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Brain, Send, Loader2, Heart, Target, Zap, BarChart2, Sparkles } from "lucide-react"
+import { Brain, Send, Loader2, Heart, Target, Zap, BarChart2, Sparkles, BookmarkPlus, BookmarkCheck } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { getUserData } from "@/utils/storage-utils"
 import { useData } from "@/contexts/data-context"
@@ -101,6 +101,7 @@ const MindTraderAI = () => {
     getTraderProfile,
     currentMorningCheck,
     morningChecks,
+    addJournalEntry,
   } = useData()
   const { plan, isActive } = useSubscription()
   const { toast } = useToast()
@@ -111,6 +112,10 @@ const MindTraderAI = () => {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  // Tracks which assistant messages (by index) have already been saved into
+  // the journal, so the "save" action turns into a checkmark and won't
+  // duplicate the entry on a second click.
+  const [savedMessageIndexes, setSavedMessageIndexes] = useState<number[]>([])
 
   // AI Configuration
   const [aiMode, setAiMode] = useState("mind")
@@ -135,6 +140,21 @@ const MindTraderAI = () => {
 
   const trades = getAllTrades() || []
   const journalEntries = getAllJournalEntries() || []
+
+  // Last 7 days of "Quick FOMO Tag" self-report check-ins (Daily Tracker),
+  // so the chat can reference multi-day patterns ("treti den v rade...")
+  // instead of only ever seeing today's tags.
+  const KNOWN_SELF_REPORT_TAGS = ["FOMO_overcome", "FOMO_chased", "REVENGE_TRADING", "EARLY_CLOSE", "CLEAN_DAY"]
+  const selfReportHistory = journalEntries
+    .filter((j: any) => typeof j.id === "string" && j.id.startsWith("daily-summary-") && Array.isArray(j.tags))
+    .map((j: any) => ({
+      date: j.date,
+      tags: (j.tags || []).filter((t: string) => KNOWN_SELF_REPORT_TAGS.includes(t)),
+      marketConditions: j.marketConditions || j.market_conditions || undefined,
+    }))
+    .filter((j: any) => j.tags.length > 0)
+    .sort((a: any, b: any) => (a.date < b.date ? 1 : -1))
+    .slice(0, 7)
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -478,6 +498,7 @@ const MindTraderAI = () => {
                 stress: j.stress,
               }),
             })),
+            selfReportHistory,
             moodHistory: [],
             patterns: isAnalyticsMode
               ? {
@@ -621,6 +642,32 @@ const MindTraderAI = () => {
     })
   }
 
+  // Closes the loop between chat and journal: lets the trader take a
+  // concrete takeaway from a Claude response and persist it as a real
+  // journal_entries note, instead of it staying buried only in chat history.
+  const saveMessageToJournal = async (message: any, index: number) => {
+    if (!addJournalEntry || savedMessageIndexes.includes(index)) return
+    const todayStr = new Date().toISOString().split("T")[0]
+    const entry = {
+      id: `mindtrader-note-${Date.now()}`,
+      date: todayStr,
+      type: "journal",
+      title: isEn ? "Note from MindTrader AI chat" : "Poznámka z MindTrader AI chatu",
+      content: message.content,
+      tags: ["mindtrader-ai-note"],
+    }
+    try {
+      await addJournalEntry(entry)
+      setSavedMessageIndexes((prev) => [...prev, index])
+      toast({
+        title: isEn ? "Saved to journal" : "Uloženo do deníku",
+        description: isEn ? "You can find this note in your Journal." : "Poznámku najdeš v Deníku.",
+      })
+    } catch (error) {
+      console.error("Error saving message to journal:", error)
+    }
+  }
+
   return (
     <div className="relative w-full min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden">
       <GalaxyBackground />
@@ -723,12 +770,38 @@ const MindTraderAI = () => {
                           }`}
                         >
                           <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                          <span className="text-xs opacity-60 mt-2 block font-normal">
-                            {message.timestamp.toLocaleTimeString(language === "cs" ? "cs-CZ" : "en-US", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-xs opacity-60 font-normal">
+                              {message.timestamp.toLocaleTimeString(language === "cs" ? "cs-CZ" : "en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                            {message.role !== "user" && (
+                              <button
+                                type="button"
+                                onClick={() => saveMessageToJournal(message, index)}
+                                title={
+                                  savedMessageIndexes.includes(index)
+                                    ? isEn
+                                      ? "Saved to journal"
+                                      : "Uloženo do deníku"
+                                    : isEn
+                                      ? "Save to journal"
+                                      : "Uložit do deníku"
+                                }
+                                className={`ml-2 inline-flex items-center gap-1 text-xs opacity-70 hover:opacity-100 transition-opacity ${
+                                  savedMessageIndexes.includes(index) ? "text-emerald-400" : "text-purple-300"
+                                }`}
+                              >
+                                {savedMessageIndexes.includes(index) ? (
+                                  <BookmarkCheck className="w-3.5 h-3.5" />
+                                ) : (
+                                  <BookmarkPlus className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))
