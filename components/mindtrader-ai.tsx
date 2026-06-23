@@ -72,6 +72,25 @@ const MindTraderAI = () => {
       id: "plan-violation",
       label: isEn ? "❌ I broke the plan, what to do?" : "❌ Porušil jsem plán, co dělat?",
       content: isEn ? "I broke the plan, what to do?" : "Porušil jsem plán, co dělat?"
+    },
+    {
+      id: "revenge-urge",
+      label: isEn
+        ? "🔴 Just hit a huge stop-loss, want to jump into another trade"
+        : "🔴 Chytil jsem obrovský stop-loss a mám chuť hned naskočit do dalšího obchodu",
+      content: isEn
+        ? "I just hit a huge stop-loss and I want to immediately open another trade. Help me."
+        : "Právě jsem chytil obrovský stop-loss a mám chuť tam hned naskočit do dalšího obchodu."
+    },
+    {
+      id: "analyze-last-trade",
+      label: isEn ? "🔵 Analyze my last trade. Did I make a mistake?" : "🔵 Analyzuj můj poslední obchod. Udělal jsem chybu?",
+      content: isEn ? "Analyze my last trade. Did I make a mistake?" : "Analyzuj můj poslední obchod. Udělal jsem chybu?"
+    },
+    {
+      id: "avoid-overconfidence",
+      label: isEn ? "🟢 How to avoid overconfidence tomorrow?" : "🟢 Jak zítra nepropadnout přehnanému sebevědomí?",
+      content: isEn ? "How do I avoid overconfidence tomorrow?" : "Jak zítra nepropadnout přehnanému sebevědomí?"
     }
   ]
 

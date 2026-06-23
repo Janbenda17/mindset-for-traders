@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Target,
   TrendingUp,
@@ -15,6 +16,11 @@ import {
   Activity,
   Brain,
   AlertTriangle,
+  ShieldCheck,
+  Lock,
+  Eye,
+  MessageCircle,
+  Leaf,
 } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -42,7 +48,18 @@ function fmtMoney(n: number) {
 export default function DailyTrackerPage() {
   const { getAllTrades, isLiveMode, getTradingStats, journalEntries, addJournalEntry, updateJournalEntry } = useData()
   const { data: gamification, getLevelInfo } = useGamification()
+  const router = useRouter()
   const [tab, setTab] = useState('today')
+  const [failLogRevealed, setFailLogRevealed] = useState(false)
+
+  // Quick-action: hand a day-specific question off to MindTrader AI chat,
+  // pre-filled, same mechanism already used elsewhere in the app (loss-reset).
+  const askAi = (prompt: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mindtrader-ai-prefill', prompt)
+    }
+    router.push('/mindtrader?tab=ai')
+  }
 
   const allTrades = getAllTrades() || []
   const overallStats = getTradingStats()
@@ -91,6 +108,15 @@ export default function DailyTrackerPage() {
   // shows up in the History tab for that day.
   const dateLabel = today.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })
   const dailySummary = useMemo(() => buildDailySummary(todaysTrades, dateLabel), [todaysTrades, dateLabel])
+
+  const disciplineColor =
+    dailySummary.discipline.score >= 80 ? '#34d399' : dailySummary.discipline.score >= 50 ? '#fbbf24' : '#f87171'
+  const disciplineTextColor =
+    dailySummary.discipline.score >= 80
+      ? 'text-emerald-400'
+      : dailySummary.discipline.score >= 50
+        ? 'text-amber-400'
+        : 'text-red-400'
 
   // Persist today's Daily Summary into the journal so it shows up in History
   useEffect(() => {
@@ -297,8 +323,141 @@ export default function DailyTrackerPage() {
                     </span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-slate-300">{dailySummary.narrative}</p>
+                <CardContent className="space-y-5">
+                  {/* "Nálada trhu vs. tvoje emoce" — one-line mental-matrix read of the day */}
+                  <p className="text-sm text-slate-200 italic border-l-2 border-slate-600 pl-3 leading-relaxed">
+                    “{dailySummary.matrixLine}”
+                  </p>
+
+                  {todaysTrades.length > 0 && (
+                    <div className="grid md:grid-cols-2 gap-5">
+                      {/* Left column: Fail Log dne (gamified reveal) + AI chat triggers */}
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Fail Log dne</p>
+                          <AnimatePresence mode="wait" initial={false}>
+                            {!failLogRevealed && dailySummary.leak ? (
+                              <motion.div
+                                key="locked"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                              >
+                                <div className="rounded-xl border border-slate-700/50 bg-slate-900/70 backdrop-blur-sm p-5 text-center">
+                                  <Lock className="h-5 w-5 text-slate-500 mx-auto mb-2" />
+                                  <p className="text-sm text-slate-300 mb-3">
+                                    AI detekoval {dailySummary.bullets.length}{' '}
+                                    {dailySummary.bullets.length === 1
+                                      ? 'kritický psychologický přešlap'
+                                      : 'kritické psychologické přešlapy'}
+                                    . Jsi připraven na pravdu?
+                                  </p>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => setFailLogRevealed(true)}
+                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                  >
+                                    <Eye className="h-4 w-4 mr-1.5" /> Odhalit chyby
+                                  </Button>
+                                </div>
+                              </motion.div>
+                            ) : (
+                              <motion.div
+                                key="revealed"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="space-y-2"
+                              >
+                                {dailySummary.leak && (
+                                  <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3">
+                                    <p className="text-xs font-semibold text-red-300 mb-1">
+                                      {dailySummary.leak.title}
+                                    </p>
+                                    <p className="text-xs text-slate-300 leading-relaxed">
+                                      {dailySummary.leak.text}
+                                    </p>
+                                  </div>
+                                )}
+                                <ul className="space-y-1.5">
+                                  {dailySummary.bullets.map((b, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-xs text-slate-400">
+                                      <span className="mt-1 h-1 w-1 rounded-full bg-slate-500 flex-shrink-0" />
+                                      <span>{b}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {dailySummary.chatPrompts.length > 0 && (
+                          <div>
+                            <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">
+                              Zeptej se AI na dnešek
+                            </p>
+                            <div className="flex flex-col gap-2">
+                              {dailySummary.chatPrompts.map((p, i) => (
+                                <Button
+                                  key={i}
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => askAi(p.prompt)}
+                                  className="justify-start text-left h-auto py-2 px-3 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-slate-300 text-xs whitespace-normal"
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5 mr-2 flex-shrink-0 text-cyan-400" />
+                                  {p.label}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right column: Discipline Rating gauge + Anti-FOMO "Disciplined Dollars" */}
+                      <div className="space-y-4">
+                        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 flex flex-col items-center">
+                          <div className="relative w-36 h-36">
+                            <div
+                              className="absolute inset-0 rounded-full"
+                              style={{
+                                background: `conic-gradient(${disciplineColor} ${
+                                  dailySummary.discipline.score * 3.6
+                                }deg, rgb(30 41 59) 0deg)`,
+                              }}
+                            />
+                            <div className="absolute inset-[6px] rounded-full bg-slate-950 flex flex-col items-center justify-center">
+                              <ShieldCheck className={`h-4 w-4 mb-1 ${disciplineTextColor}`} />
+                              <span className="text-3xl font-black text-white">
+                                {dailySummary.discipline.score}%
+                              </span>
+                              <span className="text-[10px] text-slate-500 uppercase tracking-wide mt-0.5">
+                                Discipline
+                              </span>
+                            </div>
+                          </div>
+                          <p className={`text-xs font-semibold mt-3 ${disciplineTextColor}`}>
+                            {dailySummary.discipline.label}
+                          </p>
+                          <p className="text-xs text-slate-400 text-center mt-2 leading-relaxed">
+                            {dailySummary.discipline.text}
+                          </p>
+                        </div>
+
+                        {dailySummary.disciplinedDollars && (
+                          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+                            <p className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5 mb-1.5">
+                              <Leaf className="h-3.5 w-3.5" /> Ušetřeno disciplínou: $
+                              {dailySummary.disciplinedDollars.amount.toLocaleString('en-US')}
+                            </p>
+                            <p className="text-xs text-slate-300 leading-relaxed">
+                              {dailySummary.disciplinedDollars.text}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
