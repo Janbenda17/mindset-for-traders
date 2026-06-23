@@ -140,7 +140,7 @@ export function generateVirtualTrades(count = 30): VirtualTrade[] {
 
     trades.push({
       id: `virtual-trade-${i + 1}`,
-      date: getRandomDate(count - i),
+      date: getRandomDate(count - i - 1),
       pair,
       direction,
       entryPrice: Number(entryPrice.toFixed(5)),
@@ -195,7 +195,7 @@ export function generateVirtualMorningChecks(count = 30): VirtualMorningCheck[] 
 
     checks.push({
       id: `virtual-check-${i + 1}`,
-      date: getRandomDate(count - i),
+      date: getRandomDate(count - i - 1),
       sleepQuality,
       sleepHours: Number(sleepHours.toFixed(1)),
       energyLevel,

@@ -15,7 +15,7 @@ import { getUserStorageKey } from "@/utils/storage-namespace"
 import { useLanguage } from "@/contexts/language-context"
 
 const GalaxyBackground = () => (
-  <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-purple-900 to-slate-950 overflow-hidden pointer-events-none z-0">
+  <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden pointer-events-none z-0">
     <div className="absolute inset-0">
       {Array.from({ length: 80 }).map((_, i) => (
         <div
@@ -602,11 +602,11 @@ const MindTraderAI = () => {
   }
 
   return (
-    <div className="relative w-full min-h-screen bg-gradient-to-br from-slate-950 via-purple-900 to-slate-950 overflow-hidden">
+    <div className="relative w-full min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden">
       <GalaxyBackground />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-950/40 pointer-events-none" />
 
-      <div className="relative z-10 w-full flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 px-3 sm:px-4 lg:px-6 py-2 sm:py-4 lg:py-6">
+      <div className="relative z-10 max-w-7xl mx-auto flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 px-4 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-6">
         {/* Left Sidebar - AI Modes */}
         <div className="w-full lg:w-96 lg:h-[78vh] flex-shrink-0">
           <Card className="bg-gradient-to-b from-slate-900/90 to-slate-950/80 border-2 border-purple-500/30 backdrop-blur-xl lg:h-full shadow-2xl">

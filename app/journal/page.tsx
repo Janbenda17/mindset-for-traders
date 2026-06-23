@@ -450,7 +450,7 @@ export default function JournalPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16">
-      <div className="max-w-[1800px] mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-6 space-y-4 md:space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3 md:gap-4">
           <div>
             <h1 className="text-2xl md:text-4xl font-bold text-white mb-1 md:mb-2 flex items-center gap-2 md:gap-3">
