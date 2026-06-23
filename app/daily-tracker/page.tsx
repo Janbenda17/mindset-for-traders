@@ -138,17 +138,17 @@ export default function DailyTrackerPage() {
     let tone: 'good' | 'warn' | 'bad' | 'neutral'
 
     if (tilt >= 50) {
-      label = 'Tilt riziko'
+      label = 'Emoční riziko'
       tone = 'bad'
       message = `Vzorec dnešních obchodů (${revengeCount > 0 ? `${revengeCount}× rychlý re-entry po ztrátě, ` : ''}${
         maxLossStreak >= 2 ? `série ${maxLossStreak} ztrát po sobě, ` : ''
-      }${count} obchodů celkem) odpovídá emočnímu tiltu, ne plánu.`
+      }${count} obchodů celkem) odpovídá emočnímu přetížení, ne plánu.`
       tip = 'Zastav obchodování na zbytek dne. Zítra začni s poloviční velikostí pozice.'
     } else if (revengeCount > 0 || maxLossStreak >= 2) {
       label = 'Lehké napětí'
       tone = 'warn'
       message =
-        'Po ztrátě následoval rychlý další vstup — typický raný signál frustrace, i když to dnes nepřerostlo do plného tiltu.'
+        'Po ztrátě následoval rychlý další vstup — typický raný signál frustrace, i když to dnes nepřerostlo do plného emočního výkyvu.'
       tip = 'Po každé ztrátě si dej alespoň 5 minut pauzu před dalším obchodem.'
     } else if (count > 0 && count <= 3 && winRate >= 0.5) {
       label = 'Klid a disciplína'
@@ -158,7 +158,7 @@ export default function DailyTrackerPage() {
     } else {
       label = 'Neutrální'
       tone = 'neutral'
-      message = 'Dnešní obchody nevykazují výrazné emoční vzorce — žádný tilt, ale ani jasná disciplína navíc.'
+      message = 'Dnešní obchody nevykazují výrazné emoční vzorce — žádný emoční výkyv, ale ani jasná disciplína navíc.'
       tip = 'Zapiš si krátkou poznámku, jak ses během obchodování cítil — pomůže to budoucí AI analýze.'
     }
 
@@ -355,7 +355,7 @@ export default function DailyTrackerPage() {
 
                   <div>
                     <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                      <span>Tilt skóre</span>
+                      <span>Emoční skóre</span>
                       <span>{emotionalRead.tilt}/100</span>
                     </div>
                     <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
