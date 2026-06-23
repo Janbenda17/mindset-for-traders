@@ -11,10 +11,16 @@ import { ArrowRight, Check, AlertCircle, Loader, X, Plug } from 'lucide-react'
 import Link from 'next/link'
 import { connectMetaApi, disconnectMetaApi } from './actions'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  return supabaseInstance
+}
 
 export default function IntegrationsPage() {
   const { user } = useAuth()
@@ -60,7 +66,7 @@ export default function IntegrationsPage() {
         setChecking(true)
         console.log('[v0] Checking integration status for user:', user.id)
 
-        const { data, error } = await supabase
+        const { data, error } = await getSupabase()
           .from('profiles')
           .select('metaapi_token, metaapi_account_id, mt4_broker')
           .eq('user_id', user.id)

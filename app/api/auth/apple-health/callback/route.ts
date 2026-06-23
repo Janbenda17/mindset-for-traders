@@ -1,10 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
+
 import { NextRequest, NextResponse } from 'next/server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseInstance
+}
 
 // Apple Health OAuth callback
 export async function GET(request: NextRequest) {
@@ -78,7 +85,7 @@ export async function GET(request: NextRequest) {
     // Try from auth header first
     if (authHeader) {
       try {
-        const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
+        const { data: { user } } = await getSupabase().auth.getUser(authHeader.replace('Bearer ', ''))
         userId = user?.id || null
       } catch (e) {
         console.log('[v0] Auth header method failed, trying session...')
@@ -87,7 +94,7 @@ export async function GET(request: NextRequest) {
 
     // If not found, try from session cookies
     if (!userId) {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session } } = await getSupabase().auth.getSession()
       userId = session?.user?.id || null
     }
 
@@ -99,7 +106,7 @@ export async function GET(request: NextRequest) {
     console.log('[v0] Saving Terra integration for user:', userId)
 
     // Save Terra ID to user profile
-    const { error: updateError } = await supabase
+    const { error: updateError } = await getSupabase()
       .from('profiles')
       .update({
         terra_id: terraUserId,

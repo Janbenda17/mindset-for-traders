@@ -1,10 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseInstance
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the user session to extract user_id
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(
       authHeader.replace('Bearer ', '')
     )
 
@@ -32,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update profile with integrations
-    const { error: updateError } = await supabase
+    const { error: updateError } = await getSupabase()
       .from('profiles')
       .update({
         mt4_webhook_token: mt4_webhook_token || null,

@@ -2,10 +2,16 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseInstance
+}
 
 const secret = new TextEncoder().encode(process.env.SUPABASE_JWT_SECRET || '')
 
@@ -35,7 +41,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Date required' }, { status: 400 })
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('health_sync')
     .select('*')
     .eq('user_id', userId)

@@ -1,10 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseInstance
+}
 
 // Daily sync of health data from Terra API
 export async function POST(request: NextRequest) {
@@ -16,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get all users with Terra integration enabled
-    const { data: users, error: usersError } = await supabase
+    const { data: users, error: usersError } = await getSupabase()
       .from('profiles')
       .select('user_id, terra_id, terra_reference_id')
       .eq('sleep_sync_enabled', true)
@@ -52,7 +58,7 @@ export async function POST(request: NextRequest) {
           const date = new Date(latestSleep.start_time).toISOString().split('T')[0]
 
           // Check if already synced today
-          const { data: existing } = await supabase
+          const { data: existing } = await getSupabase()
             .from('health_sync')
             .select('id')
             .eq('user_id', user.user_id)
@@ -61,7 +67,7 @@ export async function POST(request: NextRequest) {
 
           if (!existing) {
             // Insert new health data
-            const { error: insertError } = await supabase
+            const { error: insertError } = await getSupabase()
               .from('health_sync')
               .insert({
                 user_id: user.user_id,

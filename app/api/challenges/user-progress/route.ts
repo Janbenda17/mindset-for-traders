@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseAdminInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabaseAdmin() {
+  if (supabaseAdminInstance) return supabaseAdminInstance
+  supabaseAdminInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseAdminInstance
+}
 
 const ALL_CHALLENGE_IDS = ["challenge-1", "challenge-2", "challenge-3", "challenge-4"]
 
@@ -18,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     console.log("[v0] GET - Načítám výzvy pro uživatele:", userId)
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from("user_challenge_progress")
       .select("*")
       .eq("user_id", userId)
@@ -44,7 +50,7 @@ export async function GET(req: NextRequest) {
         joined_at: new Date().toISOString(),
       }))
 
-      const { error: insertError, data: inserted } = await supabaseAdmin
+      const { error: insertError, data: inserted } = await getSupabaseAdmin()
         .from("user_challenge_progress")
         .insert(enrollmentData)
         .select()
@@ -92,7 +98,7 @@ export async function POST(req: NextRequest) {
 
     const today = new Date().toISOString().split("T")[0]
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from("user_challenge_progress")
       .upsert(
         {
@@ -133,7 +139,7 @@ export async function DELETE(req: NextRequest) {
 
     console.log("[v0] DELETE - Odebírám výzvu:", { userId, challengeId })
 
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from("user_challenge_progress")
       .delete()
       .eq("user_id", userId)

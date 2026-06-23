@@ -1,10 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseInstance
+}
 
 interface FatigueAnalysis {
   hasFatigue: boolean
@@ -21,7 +27,7 @@ async function analyzeFatigueError(
   profitLoss: number
 ): Promise<FatigueAnalysis> {
   // Get health data for this date
-  const { data: healthData } = await supabase
+  const { data: healthData } = await getSupabase()
     .from('health_sync')
     .select('sleep_hours, sleep_start_time, sleep_end_time, heart_rate_variability')
     .eq('user_id', userId)
@@ -99,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     // If fatigue error detected, save it
     if (analysis.hasFatigue) {
-      const { error: insertError } = await supabase
+      const { error: insertError } = await getSupabase()
         .from('fatigue_errors')
         .insert({
           user_id: userId,

@@ -4,10 +4,16 @@ import { autofillDailyIntentions } from '@/lib/services/autofill-intentions'
 import { getLosingTradesToday, generateFailLogSuggestions, saveFailLog, logAutofillAttempt } from '@/lib/services/autofill-logs'
 import { autoGenerateGoals } from '@/lib/services/auto-generate-goals'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseInstance
+}
 
 export async function POST(request: NextRequest) {
   try {

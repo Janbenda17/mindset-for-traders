@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseAdminInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabaseAdmin() {
+  if (supabaseAdminInstance) return supabaseAdminInstance
+  supabaseAdminInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseAdminInstance
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,7 +26,7 @@ export async function POST(req: NextRequest) {
     const today = new Date().toISOString().split("T")[0]
 
     // Ověřím, že uživatel už dnes tuto výzvu nedokončil
-    const { data: completedToday } = await supabaseAdmin
+    const { data: completedToday } = await getSupabaseAdmin()
       .from("user_badge_progress")
       .select("id")
       .eq("user_id", userId)
@@ -35,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     // Zaznamenám dnešní dokončení
     console.log("[v0] POST - Zaznamenávám dokončení...")
-    const { error: insertError } = await supabaseAdmin
+    const { error: insertError } = await getSupabaseAdmin()
       .from("user_badge_progress")
       .insert({
         user_id: userId,
@@ -52,7 +58,7 @@ export async function POST(req: NextRequest) {
     console.log("[v0] POST - Zaznamenáno úspěšně")
 
     // Počítám kolik dnů bylo dokončeno
-    const { data: completedDays, error: countError } = await supabaseAdmin
+    const { data: completedDays, error: countError } = await getSupabaseAdmin()
       .from("user_badge_progress")
       .select("date")
       .eq("user_id", userId)
@@ -65,7 +71,7 @@ export async function POST(req: NextRequest) {
 
     // Aktualizuji výzvu
     console.log("[v0] POST - Aktualizuji výzvu na progress:", totalCompletedDays)
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await getSupabaseAdmin()
       .from("user_challenge_progress")
       .upsert(
         {
@@ -100,7 +106,7 @@ export async function POST(req: NextRequest) {
 
       console.log("[v0] POST - Výzva hotová! XP:", xpAwarded)
 
-      const { data: xpData } = await supabaseAdmin
+      const { data: xpData } = await getSupabaseAdmin()
         .from("xp_progress")
         .select("current_xp")
         .eq("user_id", userId)
@@ -109,7 +115,7 @@ export async function POST(req: NextRequest) {
       const currentXp = xpData?.current_xp || 0
       const newXp = currentXp + xpAwarded
 
-      const { error: xpError } = await supabaseAdmin.from("xp_progress").upsert(
+      const { error: xpError } = await getSupabaseAdmin().from("xp_progress").upsert(
         {
           user_id: userId,
           current_xp: newXp,
@@ -148,7 +154,7 @@ export async function GET(req: NextRequest) {
 
     const today = new Date().toISOString().split("T")[0]
 
-    const { data } = await supabaseAdmin
+    const { data } = await getSupabaseAdmin()
       .from("user_badge_progress")
       .select("*")
       .eq("user_id", userId)

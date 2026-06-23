@@ -3,16 +3,22 @@
 import { createClient } from '@supabase/supabase-js'
 import { metaApiClient } from '@/lib/integrations/metaapi'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseInstance
+}
 
 export async function ensureProfileExists(userId: string) {
   try {
     console.log('[v0] Ensuring profile exists for user:', userId)
 
-    const { data: profile, error: selectError } = await supabase
+    const { data: profile, error: selectError } = await getSupabase()
       .from('profiles')
       .select('user_id')
       .eq('user_id', userId)
@@ -29,7 +35,7 @@ export async function ensureProfileExists(userId: string) {
     }
 
     console.log('[v0] Creating new profile for user:', userId)
-    const { error: insertError } = await supabase
+    const { error: insertError } = await getSupabase()
       .from('profiles')
       .insert({
         user_id: userId,
@@ -52,7 +58,7 @@ export async function disconnectMetaApi(userId: string) {
   try {
     console.log('[v0] Disconnecting MetaApi for user:', userId)
 
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('profiles')
       .update({
         metaapi_account_id: null,
@@ -105,7 +111,7 @@ export async function connectMetaApi(
       }
     }
 
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('profiles')
       .update({
         metaapi_account_id: accountId,

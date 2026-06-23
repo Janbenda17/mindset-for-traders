@@ -2,10 +2,16 @@ import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseInstance
+}
 
 // Verify webhook signature
 function verifyWebhookSignature(
@@ -50,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user by webhook token
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await getSupabase()
       .from('profiles')
       .select('user_id, mt4_api_key')
       .eq('mt4_webhook_token', webhook_token)
@@ -97,7 +103,7 @@ export async function POST(request: NextRequest) {
     const date = entryTime.toISOString().split('T')[0]
 
     // Insert trade into database
-    const { data: insertedTrade, error: insertError } = await supabase
+    const { data: insertedTrade, error: insertError } = await getSupabase()
       .from('mt4_trades')
       .insert({
         user_id: userId,
@@ -125,7 +131,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update last sync timestamp
-    await supabase
+    await getSupabase()
       .from('profiles')
       .update({ last_trades_sync: new Date().toISOString() })
       .eq('user_id', userId)

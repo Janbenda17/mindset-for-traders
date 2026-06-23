@@ -1,13 +1,17 @@
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+let supabaseInstance: ReturnType<typeof createClient> | null = null
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error("Missing Supabase credentials")
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Missing Supabase credentials")
+  }
+  supabaseInstance = createClient(supabaseUrl, supabaseServiceKey)
+  return supabaseInstance
 }
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 /**
  * Automatically trigger goal generation if needed
@@ -22,7 +26,7 @@ export async function autoGenerateGoals(userId: string, date?: string): Promise<
     console.log("[v0] Checking if goals need to be generated for user:", userId)
 
     // Check if weekly goal already exists for this week
-    const { data: weeklyGoals, error: weeklyError } = await supabase
+    const { data: weeklyGoals, error: weeklyError } = await getSupabase()
       .from("trading_goals")
       .select("id")
       .eq("user_id", userId)
@@ -31,7 +35,7 @@ export async function autoGenerateGoals(userId: string, date?: string): Promise<
       .limit(1)
 
     // Check if monthly goal already exists for this month
-    const { data: monthlyGoals, error: monthlyError } = await supabase
+    const { data: monthlyGoals, error: monthlyError } = await getSupabase()
       .from("trading_goals")
       .select("id")
       .eq("user_id", userId)

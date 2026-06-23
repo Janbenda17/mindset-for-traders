@@ -7,10 +7,16 @@ import { useRouter } from 'next/navigation'
 import { Copy, Check, AlertCircle, Zap, Apple, Cloud, ArrowRight } from 'lucide-react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  return supabaseInstance
+}
 
 export default function IntegrationSetupPage() {
   const { user } = useAuth()
@@ -30,7 +36,7 @@ export default function IntegrationSetupPage() {
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const { data } = await supabase
+        const { data } = await getSupabase()
           .from('profiles')
           .select('mt4_api_key, terra_id, sleep_sync_enabled')
           .eq('user_id', user?.id)

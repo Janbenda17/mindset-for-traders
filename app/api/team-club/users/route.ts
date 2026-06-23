@@ -1,19 +1,24 @@
 import { createClient } from "@supabase/supabase-js"
+
 import { NextRequest, NextResponse } from "next/server"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+let supabaseInstance: ReturnType<typeof createClient> | null = null
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error("Missing Supabase environment variables")
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Missing Supabase environment variables")
+  }
+  supabaseInstance = createClient(supabaseUrl, supabaseServiceKey)
+  return supabaseInstance
 }
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function GET(request: NextRequest) {
   try {
     // Fetch all users from profiles table with their stats
-    const { data: users, error: usersError } = await supabase
+    const { data: users, error: usersError } = await getSupabase()
       .from("profiles")
       .select(`
         id, 
@@ -36,7 +41,7 @@ export async function GET(request: NextRequest) {
     // Count trades for each user
     const usersWithStats = await Promise.all(
       users.map(async (user: any) => {
-        const { count: tradeCount } = await supabase
+        const { count: tradeCount } = await getSupabase()
           .from("journal_entries")
           .select("id", { count: "exact", head: true })
           .eq("user_id", user.id)

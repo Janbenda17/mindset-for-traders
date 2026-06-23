@@ -2,10 +2,16 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  return supabaseInstance
+}
 
 interface TraderProfile {
   tradingStyle: string
@@ -28,7 +34,7 @@ export async function analyzeTraderProfile(userId: string): Promise<TraderProfil
     console.log('[v0] Analyzing trader profile for user:', userId)
 
     // Fetch recent trades from trade_records table
-    const { data: trades, error: tradesError } = await supabase
+    const { data: trades, error: tradesError } = await getSupabase()
       .from('trade_records')
       .select('*')
       .eq('user_id', userId)

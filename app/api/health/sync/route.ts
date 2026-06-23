@@ -1,10 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseInstance
+}
 
 // Terra API webhook pro Apple Health sync
 export async function POST(request: NextRequest) {
@@ -32,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find MindTrader user by terra_id
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await getSupabase()
       .from('users')
       .select('id')
       .eq('terra_id', terraUserId)
@@ -50,7 +56,7 @@ export async function POST(request: NextRequest) {
     const sleepQuality = sleepData.quality_score || null
 
     // Store in health_sync table
-    const { error: insertError } = await supabase
+    const { error: insertError } = await getSupabase()
       .from('health_sync')
       .insert({
         user_id: user.id,

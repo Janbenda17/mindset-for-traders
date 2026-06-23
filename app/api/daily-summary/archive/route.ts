@@ -1,15 +1,20 @@
 import { createClient } from "@supabase/supabase-js"
+
 import { NextRequest, NextResponse } from "next/server"
 import { formatISO } from "date-fns"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+let supabaseInstance: ReturnType<typeof createClient> | null = null
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error("Missing Supabase credentials")
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Missing Supabase credentials")
+  }
+  supabaseInstance = createClient(supabaseUrl, supabaseServiceKey)
+  return supabaseInstance
 }
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Save to daily_tracker_entries (existing table)
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("daily_tracker_entries")
       .upsert({
         user_id: userId,

@@ -3,10 +3,16 @@
 import { createClient } from '@supabase/supabase-js'
 import { buildWeeklyReview, emptyWeeklyReview, type NormalizedTrade, type WeekSelfReportDay, type WeeklyReviewData } from '@/lib/weekly-review-insights'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  return supabaseInstance
+}
 
 export type WeeklyReview = WeeklyReviewData
 
@@ -20,7 +26,7 @@ export async function generateWeeklyReview(userId: string): Promise<WeeklyReview
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-    const { data: entries, error: tradesError } = await supabase
+    const { data: entries, error: tradesError } = await getSupabase()
       .from('journal_entries')
       .select('*')
       .eq('user_id', userId)
@@ -33,7 +39,7 @@ export async function generateWeeklyReview(userId: string): Promise<WeeklyReview
     // Self-report daily tags live in journal_entries (type = 'journal',
     // id starting with "daily-summary-") - fetch the same 7-day window so
     // Weekly Review can surface the FOMO/revenge/clean-day trend, not just trades.
-    const { data: journalEntries, error: journalsError } = await supabase
+    const { data: journalEntries, error: journalsError } = await getSupabase()
       .from('journal_entries')
       .select('*')
       .eq('user_id', userId)

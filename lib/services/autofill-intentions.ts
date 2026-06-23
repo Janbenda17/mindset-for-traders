@@ -1,9 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  return supabaseInstance
+}
 
 export interface DailyIntention {
   maxDailyLoss: number
@@ -25,7 +31,7 @@ export async function autofillDailyIntentions(
     console.log('[v0] Autofilling daily intentions for user:', userId, 'date:', date)
 
     // Get morning check for psychological state
-    const { data: morningCheck } = await supabase
+    const { data: morningCheck } = await getSupabase()
       .from('morning_checks')
       .select('*')
       .eq('user_id', userId)
@@ -63,7 +69,7 @@ export async function generateDailyIntentions(
 ): Promise<DailyIntention> {
   try {
     // Get user's trading profile to understand their edge
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await getSupabase()
       .from('trading_identity')
       .select('*')
       .eq('user_id', userId)
@@ -74,7 +80,7 @@ export async function generateDailyIntentions(
     }
 
     // Get recent performance to calibrate risk
-    const { data: recentTrades, error: tradesError } = await supabase
+    const { data: recentTrades, error: tradesError } = await getSupabase()
       .from('mt4_trades')
       .select('profit')
       .eq('user_id', userId)
@@ -282,7 +288,7 @@ export async function saveIntentions(
   intentions: DailyIntention
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('daily_intentions')
       .insert({
         user_id: userId,

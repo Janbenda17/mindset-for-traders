@@ -3,10 +3,16 @@ import { generateObject, generateText } from 'ai'
 import { xai } from '@ai-sdk/xai'
 import { z } from 'zod'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  return supabaseInstance
+}
 
 export interface LosingTrade {
   id?: string
@@ -56,7 +62,7 @@ export async function getLosingTradesToday(userId: string, date?: string): Promi
   try {
     const targetDate = date || new Date().toISOString().split('T')[0]
     
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('mt4_trades')
       .select('*')
       .eq('user_id', userId)
@@ -280,7 +286,7 @@ export async function logAutofillAttempt(
   errorMessage?: string
 ): Promise<void> {
   try {
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('autofill_logs')
       .insert({
         user_id: userId,
@@ -311,7 +317,7 @@ export async function getAutofillFailureLogs(
   limit: number = 50
 ): Promise<AutofillFailureLog[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('autofill_logs')
       .select('*')
       .eq('user_id', userId)
@@ -352,7 +358,7 @@ export async function saveFailLog(
     // Save individual fail logs for each trade
     for (const trade of suggestion.trades) {
       try {
-        const { error } = await supabase
+        const { error } = await getSupabase()
           .from('fail_log')
           .insert({
             user_id: userId,

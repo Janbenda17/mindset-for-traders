@@ -1,11 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
+
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabase() {
+  if (supabaseInstance) return supabaseInstance
+  supabaseInstance = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  return supabaseInstance
+}
 
 // Encrypt credentials using encryption key
 function encryptCredentials(login: string, password: string, encryptionKey: string): string {
@@ -74,7 +81,7 @@ export async function POST(request: NextRequest) {
     console.log('[v0] Saving encrypted credentials to profile')
 
     // Save to profile
-    const { error, data } = await supabase
+    const { error, data } = await getSupabase()
       .from('profiles')
       .update({
         mt4_api_key: `${broker}:${encrypted}`,
@@ -122,7 +129,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('profiles')
       .select('mt4_api_key, trades_sync_enabled')
       .eq('user_id', userId)
