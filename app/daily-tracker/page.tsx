@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,10 @@ import {
   Eye,
   MessageCircle,
   Leaf,
+  Zap,
+  RotateCcw,
+  LogOut,
+  CheckCircle2,
 } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -51,6 +55,40 @@ export default function DailyTrackerPage() {
   const router = useRouter()
   const [tab, setTab] = useState('today')
   const [failLogRevealed, setFailLogRevealed] = useState(false)
+
+  // Quick FOMO Tag check-in: 2-second self-report instead of free-text
+  // journaling. dayTags feeds straight into the daily-summary engine, which
+  // layers it on top of (never instead of) the automatic MT5-based detection.
+  const [dayTags, setDayTags] = useState<string[]>([])
+  const [fomoStep, setFomoStep] = useState(false)
+  const tagsSeededRef = useRef(false)
+
+  const toggleTag = (tag: string) => {
+    setDayTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
+  }
+  const onFomoClick = () => {
+    if (dayTags.includes('FOMO_overcome') || dayTags.includes('FOMO_chased')) {
+      setDayTags((prev) => prev.filter((t) => t !== 'FOMO_overcome' && t !== 'FOMO_chased'))
+      setFomoStep(false)
+    } else {
+      setFomoStep(true)
+    }
+  }
+  const resolveFomo = (choice: 'FOMO_overcome' | 'FOMO_chased') => {
+    setDayTags((prev) => [...prev.filter((t) => t !== 'FOMO_overcome' && t !== 'FOMO_chased'), choice])
+    setFomoStep(false)
+  }
+  const tagPillClass = (tag: string, color: 'red' | 'orange' | 'emerald') => {
+    const active = dayTags.includes(tag)
+    const activeClasses: Record<string, string> = {
+      red: 'border-red-500/40 bg-red-500/10 text-red-300',
+      orange: 'border-orange-500/40 bg-orange-500/10 text-orange-300',
+      emerald: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
+    }
+    return `inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+      active ? activeClasses[color] : 'border-slate-700 bg-slate-800/40 text-slate-400 hover:border-slate-600'
+    }`
+  }
 
   // Quick-action: hand a day-specific question off to MindTrader AI chat,
   // pre-filled, same mechanism already used elsewhere in the app (loss-reset).
@@ -107,7 +145,26 @@ export default function DailyTrackerPage() {
   // MetaTrader trades. Also persisted into journal_entries below so it
   // shows up in the History tab for that day.
   const dateLabel = today.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })
-  const dailySummary = useMemo(() => buildDailySummary(todaysTrades, dateLabel), [todaysTrades, dateLabel])
+  const dateStr = today.toISOString().split('T')[0]
+  const dailySummary = useMemo(
+    () => buildDailySummary(todaysTrades, dateLabel, dayTags),
+    [todaysTrades, dateLabel, dayTags]
+  )
+
+  // Automatically derived market context for the day's self-report tags —
+  // most-traded instrument + (if found) the same real time-gap window the
+  // disciplinedDollars estimate is grounded in. Never typed in by the user.
+  const marketContextLabel = useMemo(() => {
+    if (todaysTrades.length === 0) return null
+    const counts: Record<string, number> = {}
+    todaysTrades.forEach((t: any) => {
+      if (t.pair) counts[t.pair] = (counts[t.pair] || 0) + 1
+    })
+    const instrument = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0]
+    const gapMatch = dailySummary.disciplinedDollars?.text.match(/Mezi (\d{1,2}:\d{2}) a (\d{1,2}:\d{2})/)
+    if (instrument && gapMatch) return `${instrument}, ${gapMatch[1]}-${gapMatch[2]}`
+    return instrument || null
+  }, [todaysTrades, dailySummary.disciplinedDollars])
 
   const disciplineColor =
     dailySummary.discipline.score >= 80 ? '#34d399' : dailySummary.discipline.score >= 50 ? '#fbbf24' : '#f87171'
@@ -118,12 +175,30 @@ export default function DailyTrackerPage() {
         ? 'text-amber-400'
         : 'text-red-400'
 
-  // Persist today's Daily Summary into the journal so it shows up in History
+  // Seed dayTags from the persisted journal entry once (e.g. after reload),
+  // without ever overwriting the user's live in-session toggles.
   useEffect(() => {
-    if (todaysTrades.length === 0) return
-    const dateStr = today.toISOString().split('T')[0]
+    if (tagsSeededRef.current || todaysTrades.length === 0) return
     const id = `daily-summary-${dateStr}`
     const existing = (journalEntries || []).find((e: any) => e.id === id)
+    if (existing) {
+      tagsSeededRef.current = true
+      const knownTags = ['FOMO_overcome', 'FOMO_chased', 'REVENGE_TRADING', 'EARLY_CLOSE', 'CLEAN_DAY']
+      const seeded = (existing.tags || []).filter((t: string) => knownTags.includes(t))
+      if (seeded.length > 0) setDayTags(seeded)
+    }
+  }, [journalEntries, todaysTrades.length, dateStr])
+
+  // Persist today's Daily Summary + self-report tags + derived market
+  // context into the journal so it shows up in History and so MindTrader AI
+  // chat can reference the self-reported tags instead of guessing.
+  useEffect(() => {
+    if (todaysTrades.length === 0) return
+    const id = `daily-summary-${dateStr}`
+    const existing = (journalEntries || []).find((e: any) => e.id === id)
+    const fullTags = ['auto-daily-summary', ...dayTags]
+    const tagsChanged = JSON.stringify(existing?.tags || []) !== JSON.stringify(fullTags)
+    const marketChanged = (existing?.market_conditions ?? null) !== (marketContextLabel ?? null)
     if (!existing) {
       addJournalEntry({
         id,
@@ -131,12 +206,27 @@ export default function DailyTrackerPage() {
         type: 'journal',
         title: 'Daily Summary',
         content: dailySummary.narrative,
-        tags: ['auto-daily-summary'],
+        tags: fullTags,
+        market_conditions: marketContextLabel,
       })
-    } else if (existing.content !== dailySummary.narrative) {
-      updateJournalEntry({ ...existing, content: dailySummary.narrative })
+    } else if (existing.content !== dailySummary.narrative || tagsChanged || marketChanged) {
+      updateJournalEntry({
+        ...existing,
+        content: dailySummary.narrative,
+        tags: fullTags,
+        market_conditions: marketContextLabel,
+      })
     }
-  }, [dailySummary.narrative, todaysTrades.length, journalEntries, addJournalEntry, updateJournalEntry])
+  }, [
+    dailySummary.narrative,
+    todaysTrades.length,
+    journalEntries,
+    addJournalEntry,
+    updateJournalEntry,
+    dayTags,
+    marketContextLabel,
+    dateStr,
+  ])
 
   // Equity curve (last 30 trades, cumulative)
   const equityData = useMemo(() => {
@@ -330,6 +420,72 @@ export default function DailyTrackerPage() {
                   </p>
 
                   {todaysTrades.length > 0 && (
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">
+                        Detekoval jsi dnes u sebe některý z těchto impulsů?
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={onFomoClick}
+                          className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                            dayTags.includes('FOMO_overcome')
+                              ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                              : dayTags.includes('FOMO_chased')
+                                ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                                : 'border-slate-700 bg-slate-800/40 text-slate-400 hover:border-slate-600'
+                          }`}
+                        >
+                          <Zap className="h-3 w-3" />
+                          FOMO
+                          {dayTags.includes('FOMO_overcome')
+                            ? ' — ovládl jsi ho'
+                            : dayTags.includes('FOMO_chased')
+                              ? ' — naskočil jsi'
+                              : ' (Strach z uteklého zisku)'}
+                        </button>
+                        <button type="button" onClick={() => toggleTag('REVENGE_TRADING')} className={tagPillClass('REVENGE_TRADING', 'red')}>
+                          <RotateCcw className="h-3 w-3" /> Revenge Trading
+                        </button>
+                        <button type="button" onClick={() => toggleTag('EARLY_CLOSE')} className={tagPillClass('EARLY_CLOSE', 'orange')}>
+                          <LogOut className="h-3 w-3" /> Brzké uzavření
+                        </button>
+                        <button type="button" onClick={() => toggleTag('CLEAN_DAY')} className={tagPillClass('CLEAN_DAY', 'emerald')}>
+                          <CheckCircle2 className="h-3 w-3" /> Bezchybný den
+                        </button>
+                      </div>
+                      <AnimatePresence>
+                        {fomoStep && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-2 flex items-center gap-2 text-xs text-slate-400 overflow-hidden"
+                          >
+                            <span>Naskočil jsi do něj, nebo jsi ho ovládl?</span>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2 text-xs border-amber-500/40 text-amber-300 bg-transparent hover:bg-amber-500/10"
+                              onClick={() => resolveFomo('FOMO_chased')}
+                            >
+                              Naskočil
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2 text-xs border-emerald-500/40 text-emerald-300 bg-transparent hover:bg-emerald-500/10"
+                              onClick={() => resolveFomo('FOMO_overcome')}
+                            >
+                              Ovládl
+                            </Button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+
+                  {todaysTrades.length > 0 && (
                     <div className="grid md:grid-cols-2 gap-5">
                       {/* Left column: Fail Log dne (gamified reveal) + AI chat triggers */}
                       <div className="space-y-4">
@@ -444,39 +600,28 @@ export default function DailyTrackerPage() {
                           </p>
                         </div>
 
-                        {dailySummary.disciplinedDollars && (
-                          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
-                            <p className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5 mb-1.5">
-                              <Leaf className="h-3.5 w-3.5" /> Ušetřeno disciplínou: $
-                              {dailySummary.disciplinedDollars.amount.toLocaleString('en-US')}
-                            </p>
-                            <p className="text-xs text-slate-300 leading-relaxed">
-                              {dailySummary.disciplinedDollars.text}
-                            </p>
-                          </div>
-                        )}
+                        <AnimatePresence>
+                          {dailySummary.disciplinedDollars && (
+                            <motion.div
+                              key="disciplined-dollars"
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.3 }}
+                              className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4"
+                            >
+                              <p className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5 mb-1.5">
+                                <Leaf className="h-3.5 w-3.5" /> Ušetřeno disciplínou: $
+                                {dailySummary.disciplinedDollars.amount.toLocaleString('en-US')}
+                              </p>
+                              <p className="text-xs text-slate-300 leading-relaxed">
+                                {dailySummary.disciplinedDollars.text}
+                              </p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </div>
                   )}
-
-                  <div>
-                    <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                      <span>Emoční skóre</span>
-                      <span>{dailySummary.tilt}/100</span>
-                    </div>
-                    <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${
-                          dailySummary.tilt >= 50
-                            ? 'bg-red-500'
-                            : dailySummary.tilt >= 20
-                              ? 'bg-amber-500'
-                              : 'bg-emerald-500'
-                        }`}
-                        style={{ width: `${dailySummary.tilt}%` }}
-                      />
-                    </div>
-                  </div>
 
                   {dailySummary.tip && (
                     <div className="flex items-start gap-2 text-xs text-slate-400 bg-slate-800/40 rounded-lg p-3 border border-slate-700/40">

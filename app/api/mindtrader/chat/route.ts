@@ -175,6 +175,7 @@ interface ChatRequest {
       confidence?: number
       stress?: number
       tags?: string[]
+      marketConditions?: string
     }>
     morningChecks?: Array<{
       date: string
@@ -558,6 +559,29 @@ ${trades
   })
   .join("\n")}`
 
+    // Today's self-reported "Quick FOMO Tag" check-in (from the Daily
+    // Tracker page). This is ground truth from the trader himself - never
+    // guess what happened today if this is present, just reflect it back.
+    const todayStr = new Date().toISOString().split("T")[0]
+    const todayJournal = journals.find((j) => j.id === `daily-summary-${todayStr}`)
+    const selfReportTagLabels: Record<string, string> = {
+      FOMO_overcome: "USTAL FOMO impuls (nenaskocil do rozjeteho pohybu)",
+      FOMO_chased: "NASKOCIL do FOMO pohybu",
+      REVENGE_TRADING: "REVENGE TRADING (snaha pomstit se trhu po ztrate)",
+      EARLY_CLOSE: "BRZKE UZAVRENI pozice ze strachu o zisk",
+      CLEAN_DAY: "BEZCHYBNY DEN (dodrzen plan)",
+    }
+    const todaySelfReportTags = (todayJournal?.tags || []).filter((t) => selfReportTagLabels[t])
+    if (todaySelfReportTags.length > 0) {
+      dataSummary += `
+
+═══════════════════════════════════════════════════════════
+✅ DNESNI SELF-REPORT (sam oznacil, NEHADEJ - pouzij presne tohle):
+═══════════════════════════════════════════════════════════
+${todaySelfReportTags.map((t) => `- ${selfReportTagLabels[t]}`).join("\n")}
+${todayJournal?.marketConditions ? `- Trh/instrument v tu dobu: ${todayJournal.marketConditions}` : ""}`
+    }
+
     if (isAnalyticsMode) {
       dataSummary += `
 
@@ -601,7 +625,8 @@ KRITICKA PRAVIDLA (PORUSENI = FAIL):
 5. Odpovez na OTAZKU uzivatele, ne na jeho data
 6. Kazda rada = KONKRETNI akce (CO + KDY + JAK merit uspech)
 7. ZAKAZANO: "pracuj na sobe", "zlepsuj disciplinu", "bud konzistentni", "trading je maraton"
-8. ZAKAZANO: vymyslene procenta, vymyslene korelace, vymyslene dolary`
+8. ZAKAZANO: vymyslene procenta, vymyslene korelace, vymyslene dolary
+9. Pokud je v datech sekce "DNESNI SELF-REPORT" - trader UZ SAM oznacil co se dnes stalo. NEHADEJ a NEPTEJ se na to znovu, primo na to reaguj a rozeber to s nim (pochval pri "USTAL"/"BEZCHYBNY DEN", proved pri "NASKOCIL"/"REVENGE"/"BRZKE UZAVRENI")`
 
     try {
       const message = await client.messages.create({

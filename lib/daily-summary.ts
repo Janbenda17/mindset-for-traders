@@ -110,7 +110,7 @@ export function emptyDailySummary(): DailySummaryResult {
   }
 }
 
-export function buildDailySummary(trades: any[], dateLabel: string): DailySummaryResult {
+export function buildDailySummary(trades: any[], dateLabel: string, userTags: string[] = []): DailySummaryResult {
   if (!trades || trades.length === 0) return emptyDailySummary()
 
   const sorted = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -411,6 +411,58 @@ export function buildDailySummary(trades: any[], dateLabel: string): DailySummar
     label: `Vysvětli mi dnešní Discipline Score ${disciplineScore}%`,
     prompt: `Dnes (${dateLabel}) mám Discipline Score ${disciplineScore}% (${disciplineLabel}). ${disciplineText} Rozeber mi konkrétně, co bych měl zítra udělat jinak.`,
   })
+
+  // ---- Self-reported quick tags ("Quick FOMO Tag" check-in) layered on top
+  // of the automatic detection above. These never invent numbers on their
+  // own -- FOMO_overcome only unlocks/boosts disciplinedDollars using the
+  // same real-data grounding (avg loss size) already computed above; the
+  // others just add an honest, explicitly self-reported line to the bullets.
+  const hasTag = (tag: string) => userTags.includes(tag)
+
+  if (hasTag('FOMO_overcome')) {
+    const losingTrades = sorted.filter((t) => t.pnl < 0)
+    const avgLossMagnitude =
+      losingTrades.length > 0
+        ? losingTrades.reduce((s, t) => s + Math.abs(t.pnl), 0) / losingTrades.length
+        : (sorted.reduce((s, t) => s + Math.abs(t.pnl), 0) / sorted.length) * 0.8
+    if (disciplinedDollars) {
+      disciplinedDollars = {
+        amount: disciplinedDollars.amount,
+        text: `Sám jsi dnes označil, že jsi ustál FOMO impuls a neskočil do rozjetého pohybu. ${disciplinedDollars.text}`,
+      }
+    } else if (avgLossMagnitude > 0) {
+      const amount = Math.round(avgLossMagnitude)
+      disciplinedDollars = {
+        amount,
+        text: `Sám jsi dnes označil, že jsi ustál FOMO impuls a neskočil do rozjetého pohybu. Na základě tvé průměrné ztráty dnes (${fmtMoney(
+          -avgLossMagnitude
+        )}) jsi tím odhadem ušetřil přibližně ${fmtAbsMoney(amount)}. Skvělý trade je občas ten, který neuděláš.`,
+      }
+    }
+  }
+
+  const tagBullets: string[] = []
+  if (hasTag('FOMO_chased')) {
+    tagBullets.push('Sám jsi dnes označil, že jsi naskočil do FOMO pohybu — přiznané emotivní vstupy jsou první krok k tomu je přestat dělat.')
+  }
+  if (hasTag('REVENGE_TRADING')) {
+    tagBullets.push('Sám jsi dnes označil revenge trading — chuť pomstít se trhu po ztrátě.')
+  }
+  if (hasTag('EARLY_CLOSE')) {
+    tagBullets.push('Sám jsi dnes označil brzké uzavření pozice ze strachu, že přijdeš o rozjetý zisk.')
+  }
+  if (tagBullets.length > 0) {
+    if (bullets.length === 1 && bullets[0].startsWith('Bez detekovaných')) bullets.length = 0
+    bullets.push(...tagBullets)
+  }
+
+  if (hasTag('CLEAN_DAY')) {
+    disciplineScore = Math.min(100, disciplineScore + 5)
+    if (disciplineScore >= 80 && disciplineLabel !== 'Excelentní den') {
+      disciplineLabel = 'Excelentní den'
+    }
+    bullets.unshift('Sám jsi dnes označil bezchybný den — žádné porušení plánu podle tvého vlastního pocitu.')
+  }
 
   return {
     tilt,
