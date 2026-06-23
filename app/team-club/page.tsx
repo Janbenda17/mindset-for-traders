@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   Users,
   TrendingUp,
@@ -630,38 +631,14 @@ function MentorTeamClubView({
       const realStudents = generateStudentsFromRealData(trades, journals, moodEntries, user?.id || "unknown")
       setStudents(realStudents)
       console.log("[v0] Team Club: Generated LIVE student data for user:", user?.id)
-      
-      // Load community users
-      loadCommunityUsers()
+      // communityUsers is now fetched once in the parent TeamClubPage and shared
+      // with both Mentor and Student views, so no separate fetch is needed here.
     } else {
       // In virtual mode, show demo students
       setStudents(DEMO_STUDENTS)
       console.log("[v0] Team Club: Using DEMO students in virtual mode")
     }
   }, [isLiveMode, user?.id]) // Only depend on mode and user ID, not functions
-
-  const loadCommunityUsers = async () => {
-    setLoadingCommunity(true)
-    try {
-      const response = await fetch("/api/team-club/users", {
-        credentials: "include",
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log(`[v0] Loaded ${data.users.length} community users`)
-        setCommunityUsers(data.users)
-      } else {
-        console.error("[v0] Failed to load community users:", response.status)
-        setCommunityUsers([])
-      }
-    } catch (error) {
-      console.error("[v0] Error loading community users:", error)
-      setCommunityUsers([])
-    } finally {
-      setLoadingCommunity(false)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -914,12 +891,10 @@ function StudentTeamClubView({
       // This ensures ALL users see the SAME team club data
       const savedPosts = localStorage.getItem("team-club-posts")
       const savedStories = localStorage.getItem("team-club-stories")
-      const savedBuddies = localStorage.getItem("team-club-buddies")
       const savedChallenges = localStorage.getItem("team-club-challenges")
 
       if (savedPosts && posts.length === 0) setPosts(JSON.parse(savedPosts))
       if (savedStories && successStories.length === 0) setSuccessStories(JSON.parse(savedStories))
-      if (savedBuddies && buddies.length === 0) setBuddies(JSON.parse(savedBuddies))
       if (savedChallenges && challenges.length === 0) {
         const parsedChallenges = JSON.parse(savedChallenges)
         setChallenges(parsedChallenges)
@@ -937,7 +912,7 @@ function StudentTeamClubView({
       setRooms(DEMO_TRADING_ROOMS)
       setSuccessStories(DEMO_SUCCESS_STORIES)
     }
-  }, [isLiveMode, posts.length, successStories.length, buddies.length, challenges.length]) // Removed user?.id to ensure shared data
+  }, [isLiveMode, posts.length, successStories.length, challenges.length]) // Removed user?.id to ensure shared data
 
   useEffect(() => {
     if (isLiveMode) {
@@ -945,10 +920,113 @@ function StudentTeamClubView({
       // This ensures ALL users save to the SAME shared data store
       if (posts.length > 0) localStorage.setItem("team-club-posts", JSON.stringify(posts))
       if (successStories.length > 0) localStorage.setItem("team-club-stories", JSON.stringify(successStories))
-      if (buddies.length > 0) localStorage.setItem("team-club-buddies", JSON.stringify(buddies))
       if (challenges.length > 0) localStorage.setItem("team-club-challenges", JSON.stringify(challenges))
     }
-  }, [posts, successStories, buddies, isLiveMode, challenges]) // Removed user?.id to ensure shared data
+  }, [posts, successStories, isLiveMode, challenges]) // Removed user?.id to ensure shared data
+
+  // Real Study Buddy matching: in live mode, buddies are derived directly from
+  // real community profiles (communityUsers, fetched from Supabase via
+  // /api/team-club/users) instead of a static fake list. Compatibility is a
+  // genuine similarity score based on the logged-in user's own real stats
+  // (win rate, XP) vs. each candidate's real stats - no invented data.
+  useEffect(() => {
+    if (!isLiveMode) return
+    if (!communityUsers || communityUsers.length === 0) {
+      setBuddies([])
+      return
+    }
+    const myWinRate = userStats.winRate
+    const myXP = userStats.totalXP
+    const realBuddies: StudyBuddy[] = communityUsers
+      .filter((u) => u.id !== user?.id)
+      .map((u) => {
+        const winRateDiff = Math.abs((u.winRate || 0) - myWinRate)
+        const xpDiff = Math.abs((u.xp || 0) - myXP)
+        const xpScale = Math.max(myXP, u.xp || 0, 1)
+        const compatibility = Math.max(
+          40,
+          Math.round(100 - winRateDiff * 0.6 - Math.min(40, (xpDiff / xpScale) * 40)),
+        )
+        const traderType =
+          u.totalTrades === 0
+            ? "Nový trader"
+            : u.winRate >= 65
+              ? "Disciplinovaný trader"
+              : u.winRate >= 45
+                ? "Rozvíjející se trader"
+                : "Trader v učení"
+        return {
+          id: u.id,
+          name: u.name || "Trader",
+          nickname: `Level ${u.level || 1} · ${u.totalTrades || 0} obchodů`,
+          avatar: u.avatar || "",
+          traderType,
+          winRate: u.winRate || 0,
+          streak: 0,
+          status: "offline",
+          compatibility,
+          timezone: "",
+          tradingHours: "",
+        }
+      })
+      .sort((a, b) => b.compatibility - a.compatibility)
+    setBuddies(realBuddies)
+  }, [isLiveMode, communityUsers, user?.id])
+
+  // Real buddy connections + DMs, persisted per logged-in user in localStorage.
+  const [buddyConnections, setBuddyConnections] = useState<string[]>([])
+  const [messageDialogBuddy, setMessageDialogBuddy] = useState<StudyBuddy | null>(null)
+  const [profileDialogBuddy, setProfileDialogBuddy] = useState<StudyBuddy | null>(null)
+  const [dmMessages, setDmMessages] = useState<{ from: string; text: string; ts: number }[]>([])
+  const [dmDraft, setDmDraft] = useState("")
+
+  const connectionsKey = user?.id ? `team-club-connections:${user.id}` : null
+  const dmKey = (buddyId: string) =>
+    user?.id ? `team-club-dm:${[user.id, buddyId].sort().join(":")}` : null
+
+  useEffect(() => {
+    if (!connectionsKey) return
+    try {
+      const saved = localStorage.getItem(connectionsKey)
+      setBuddyConnections(saved ? JSON.parse(saved) : [])
+    } catch {
+      setBuddyConnections([])
+    }
+  }, [connectionsKey])
+
+  const handleConnectBuddy = (buddyId: string) => {
+    if (!connectionsKey) return
+    const next = buddyConnections.includes(buddyId)
+      ? buddyConnections.filter((id) => id !== buddyId)
+      : [...buddyConnections, buddyId]
+    setBuddyConnections(next)
+    localStorage.setItem(connectionsKey, JSON.stringify(next))
+  }
+
+  const openMessageDialog = (buddy: StudyBuddy) => {
+    setMessageDialogBuddy(buddy)
+    const key = dmKey(buddy.id)
+    if (!key) {
+      setDmMessages([])
+      return
+    }
+    try {
+      const saved = localStorage.getItem(key)
+      setDmMessages(saved ? JSON.parse(saved) : [])
+    } catch {
+      setDmMessages([])
+    }
+  }
+
+  const sendDmMessage = () => {
+    if (!dmDraft.trim() || !messageDialogBuddy || !user?.id) return
+    const key = dmKey(messageDialogBuddy.id)
+    if (!key) return
+    const next = [...dmMessages, { from: user.id, text: dmDraft.trim(), ts: Date.now() }]
+    setDmMessages(next)
+    localStorage.setItem(key, JSON.stringify(next))
+    setDmDraft("")
+  }
 
   useEffect(() => {
     const savedLimits = localStorage.getItem("teamclub-daily-limits")
@@ -2705,17 +2783,24 @@ function StudentTeamClubView({
                     <div>
                       <h3 className="text-white font-bold text-xl mb-2">AI-Powered Study Buddy Matching</h3>
                       <p className="text-white/90 text-sm leading-relaxed mb-3">
-                        Náš AI algoritmus najde tradera s podobným stylem, cílem, časovou zónou a úrovní. Společně se
-                        učte, rostěte, motivujte a sdílejte zkušenosti. Study buddies mají o 34% vyšší success rate!
+                        {isLiveMode
+                          ? "Najdeme ti tradera s podobnou úspěšností a XP z naší komunity, se kterým se můžeš spojit a sdílet zkušenosti."
+                          : "Náš AI algoritmus najde tradera s podobným stylem, cílem, časovou zónou a úrovní. Společně se učte, rostěte, motivujte a sdílejte zkušenosti."}
                       </p>
                       <div className="flex gap-2">
                         <Badge className="bg-white/20 text-white border-white/30 text-xs backdrop-blur-sm">
                           <Sparkles className="h-3 w-3 mr-1" />
-                          92% compatibility matching
+                          {isLiveMode ? "Matching podle reálných dat" : "92% compatibility matching"}
                         </Badge>
-                        <Badge className="bg-white/20 text-white border-white/30 text-xs backdrop-blur-sm">
-                          {buddies.filter((b) => b.status === "online").length} online teď
-                        </Badge>
+                        {isLiveMode ? (
+                          <Badge className="bg-white/20 text-white border-white/30 text-xs backdrop-blur-sm">
+                            {buddies.length} traderů k napárování
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-white/20 text-white border-white/30 text-xs backdrop-blur-sm">
+                            {buddies.filter((b) => b.status === "online").length} online teď
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2726,92 +2811,122 @@ function StudentTeamClubView({
             <div className="relative mb-6">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Hledat podle jména, stylu, země nebo timezone..."
+                placeholder="Hledat podle jména nebo stylu tradera..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-11 bg-slate-800/50 backdrop-blur-xl border-slate-700/50 rounded-2xl h-12 text-white placeholder:text-slate-500"
               />
             </div>
 
+            {isLiveMode && loadingCommunity && (
+              <p className="text-slate-400 text-sm text-center py-8">Načítám tradery z komunity...</p>
+            )}
+            {isLiveMode && !loadingCommunity && filteredBuddies.length === 0 && (
+              <p className="text-slate-400 text-sm text-center py-8">
+                Zatím tu nejsou žádní další traderi k napárování. Jakmile se připojí další lidé, AI matching se
+                naplní automaticky.
+              </p>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBuddies.map((buddy) => (
-                <Card key={buddy.id} className="psyche-card">
-                  <CardContent className="p-6">
-                    <div className="text-center mb-4">
-                      <div className="relative inline-block mb-3">
-                        <Avatar className="w-20 h-20 ring-4 ring-purple-500/20">
-                          <AvatarImage src={buddy.avatar || "/placeholder.svg"} />
-                          <AvatarFallback>{buddy.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div
-                          className={`absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-slate-800 ${
-                            buddy.status === "online" ? "bg-emerald-500" : "bg-slate-600"
+              {filteredBuddies.map((buddy) => {
+                const isConnected = buddyConnections.includes(buddy.id)
+                return (
+                  <Card key={buddy.id} className="psyche-card">
+                    <CardContent className="p-6">
+                      <div className="text-center mb-4">
+                        <div className="relative inline-block mb-3">
+                          <Avatar className="w-20 h-20 ring-4 ring-purple-500/20">
+                            <AvatarImage src={buddy.avatar || "/placeholder.svg"} />
+                            <AvatarFallback>{buddy.name[0]}</AvatarFallback>
+                          </Avatar>
+                          {!isLiveMode && (
+                            <div
+                              className={`absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-slate-800 ${
+                                buddy.status === "online" ? "bg-emerald-500" : "bg-slate-600"
+                              }`}
+                            ></div>
+                          )}
+                        </div>
+                        <h3 className="text-white font-bold text-sm mb-1">{buddy.name}</h3>
+                        <p className="text-slate-400 text-xs mb-2">{buddy.nickname}</p>
+                        <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-xs">
+                          {buddy.traderType}
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-400">Úspěšnost</span>
+                          <span className="text-white font-bold">{buddy.winRate}%</span>
+                        </div>
+                        {!isLiveMode && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-400">Streak</span>
+                            <span className="text-amber-400 font-bold flex items-center gap-1">
+                              <Flame className="h-3 w-3" />
+                              {buddy.streak} dní
+                            </span>
+                          </div>
+                        )}
+                        {buddy.timezone && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-400">Časové pásmo</span>
+                            <span className="text-white text-xs">{buddy.timezone}</span>
+                          </div>
+                        )}
+                        {buddy.tradingHours && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-400">Obchodní hodiny</span>
+                            <span className="text-white text-xs">{buddy.tradingHours}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-slate-400 text-xs">AI Kompatibilita</span>
+                          <span className="text-purple-400 font-bold text-sm">{buddy.compatibility}%</span>
+                        </div>
+                        <Progress value={buddy.compatibility} className="h-2 rounded-full" />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleConnectBuddy(buddy.id)}
+                          disabled={isLiveMode && !user?.id}
+                          className={`flex-1 rounded-xl text-xs h-9 ${
+                            isConnected
+                              ? "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-600/30"
+                              : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                           }`}
-                        ></div>
+                        >
+                          <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+                          {isConnected ? "Spojeno ✓" : "Připojit"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openMessageDialog(buddy)}
+                          disabled={isLiveMode && !user?.id}
+                          className="bg-transparent border-slate-700 rounded-xl text-xs h-9"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setProfileDialogBuddy(buddy)}
+                          className="bg-transparent border-slate-700 rounded-xl text-xs h-9"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
-                      <h3 className="text-white font-bold text-sm mb-1">{buddy.name}</h3>
-                      <p className="text-slate-400 text-xs mb-2">{buddy.nickname}</p>
-                      <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-xs">
-                        {buddy.traderType}
-                      </Badge>
-                    </div>
-
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Úspěšnost</span>
-                        <span className="text-white font-bold">{buddy.winRate}%</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Streak</span>
-                        <span className="text-amber-400 font-bold flex items-center gap-1">
-                          <Flame className="h-3 w-3" />
-                          {buddy.streak} dní
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Časové pásmo</span>
-                        <span className="text-white text-xs">{buddy.timezone}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400">Obchodní hodiny</span>
-                        <span className="text-white text-xs">{buddy.tradingHours}</span>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-slate-400 text-xs">AI Kompatibilita</span>
-                        <span className="text-purple-400 font-bold text-sm">{buddy.compatibility}%</span>
-                      </div>
-                      <Progress value={buddy.compatibility} className="h-2 rounded-full" />
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl text-xs h-9"
-                      >
-                        <UserPlus className="h-3.5 w-3.5 mr-1.5" />
-                        Připojit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-transparent border-slate-700 rounded-xl text-xs h-9"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-transparent border-slate-700 rounded-xl text-xs h-9"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
           </TabsContent>
 
@@ -3225,6 +3340,80 @@ function StudentTeamClubView({
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Real DM dialog for Study Buddies - persisted per-pair in localStorage */}
+      <Dialog open={!!messageDialogBuddy} onOpenChange={(open) => !open && setMessageDialogBuddy(null)}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle>Zpráva pro {messageDialogBuddy?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 max-h-72 overflow-y-auto">
+            {dmMessages.length === 0 ? (
+              <p className="text-slate-500 text-sm">Zatím žádné zprávy. Napiš první!</p>
+            ) : (
+              dmMessages.map((m, i) => (
+                <div
+                  key={i}
+                  className={`text-sm rounded-xl px-3 py-2 max-w-[80%] ${
+                    m.from === user?.id
+                      ? "bg-purple-600/30 ml-auto text-right"
+                      : "bg-slate-800 text-left"
+                  }`}
+                >
+                  {m.text}
+                </div>
+              ))
+            )}
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Input
+              value={dmDraft}
+              onChange={(e) => setDmDraft(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && sendDmMessage()}
+              placeholder="Napiš zprávu..."
+              className="bg-slate-800 border-slate-700 text-white"
+            />
+            <Button onClick={sendDmMessage} disabled={!dmDraft.trim()}>
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Real profile dialog for Study Buddies - shows actual stats from communityUsers */}
+      <Dialog open={!!profileDialogBuddy} onOpenChange={(open) => !open && setProfileDialogBuddy(null)}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{profileDialogBuddy?.name}</DialogTitle>
+          </DialogHeader>
+          {profileDialogBuddy && (
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-14 h-14">
+                  <AvatarImage src={profileDialogBuddy.avatar || "/placeholder.svg"} />
+                  <AvatarFallback>{profileDialogBuddy.name[0]}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-white font-bold">{profileDialogBuddy.name}</p>
+                  <p className="text-slate-400 text-xs">{profileDialogBuddy.nickname}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Typ tradera</span>
+                <span className="text-white">{profileDialogBuddy.traderType}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Úspěšnost</span>
+                <span className="text-white font-bold">{profileDialogBuddy.winRate}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">AI Kompatibilita</span>
+                <span className="text-purple-400 font-bold">{profileDialogBuddy.compatibility}%</span>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -3321,6 +3510,36 @@ function TeamClubPage() {
       setUserIsMentor(false)
     }
   }, [user]) // Depend on the user object
+
+  // Fetch real community users (Supabase profiles) for ALL users in live mode,
+  // not just mentors - this is what powers the real Study Buddies matching below.
+  // Previously this fetch only ran inside MentorTeamClubView, so regular students
+  // never got real community data and Study Buddies stayed empty/fake for them.
+  useEffect(() => {
+    if (!isLiveMode) return
+    let cancelled = false
+    const loadCommunityUsers = async () => {
+      setLoadingCommunity(true)
+      try {
+        const response = await fetch("/api/team-club/users", { credentials: "include" })
+        if (response.ok) {
+          const data = await response.json()
+          if (!cancelled) setCommunityUsers(data.users || [])
+        } else if (!cancelled) {
+          setCommunityUsers([])
+        }
+      } catch (error) {
+        console.error("[v0] Error loading community users:", error)
+        if (!cancelled) setCommunityUsers([])
+      } finally {
+        if (!cancelled) setLoadingCommunity(false)
+      }
+    }
+    loadCommunityUsers()
+    return () => {
+      cancelled = true
+    }
+  }, [isLiveMode])
 
   if (isLoading) {
     return (
