@@ -76,21 +76,25 @@ const MindTraderAI = () => {
     {
       id: "revenge-urge",
       label: isEn
-        ? "🔴 Just hit a huge stop-loss, want to jump into another trade"
-        : "🔴 Chytil jsem obrovský stop-loss a mám chuť hned naskočit do dalšího obchodu",
+        ? "🔴 Just hit a huge stop-loss and I want to click into another trade. Stop me."
+        : "🔴 Právě jsem chytil obrovský stop-loss a mám chuť tam kliknout další trade. Zastav mě.",
       content: isEn
-        ? "I just hit a huge stop-loss and I want to immediately open another trade. Help me."
-        : "Právě jsem chytil obrovský stop-loss a mám chuť tam hned naskočit do dalšího obchodu."
+        ? "I just hit a huge stop-loss and I want to click into another trade right now. Stop me."
+        : "Právě jsem chytil obrovský stop-loss a mám chuť tam kliknout další trade. Zastav mě."
     },
     {
       id: "analyze-last-trade",
-      label: isEn ? "🔵 Analyze my last trade. Did I make a mistake?" : "🔵 Analyzuj můj poslední obchod. Udělal jsem chybu?",
-      content: isEn ? "Analyze my last trade. Did I make a mistake?" : "Analyzuj můj poslední obchod. Udělal jsem chybu?"
+      label: isEn ? "🔵 Analyze my last MT5 trade. Did I make a mistake?" : "🔵 Analyzuj můj poslední obchod z MT5. Udělal jsem chybu?",
+      content: isEn ? "Analyze my last trade from MT5. Did I make a mistake?" : "Analyzuj můj poslední obchod z MT5. Udělal jsem chybu?"
     },
     {
       id: "avoid-overconfidence",
-      label: isEn ? "🟢 How to avoid overconfidence tomorrow?" : "🟢 Jak zítra nepropadnout přehnanému sebevědomí?",
-      content: isEn ? "How do I avoid overconfidence tomorrow?" : "Jak zítra nepropadnout přehnanému sebevědomí?"
+      label: isEn
+        ? "🟢 I just had a great profitable day. How do I avoid overconfidence tomorrow?"
+        : "🟢 Mám za sebou skvělý ziskový den. Jak zítra nepropadnout přehnanému sebevědomí?",
+      content: isEn
+        ? "I just had a great profitable day. How do I avoid overconfidence tomorrow?"
+        : "Mám za sebou skvělý ziskový den. Jak zítra nepropadnout přehnanému sebevědomí?"
     }
   ]
 
@@ -155,6 +159,40 @@ const MindTraderAI = () => {
     .filter((j: any) => j.tags.length > 0)
     .sort((a: any, b: any) => (a.date < b.date ? 1 : -1))
     .slice(0, 7)
+
+  // Context for the dynamic quick-start buttons shown above the input on an
+  // empty chat: which canned scenario is actually relevant right now, based
+  // on real account data, not always the same static three.
+  const todayStrForContext = new Date().toISOString().split("T")[0]
+  const todayTagsForContext = (selfReportHistory.find((h: any) => h.date === todayStrForContext)?.tags || []) as string[]
+  const getTradeTimeValue = (t: any) => new Date(t.closeDate || t.date || t.recordedDate || 0).getTime()
+  const sortedTradesDesc = [...trades].sort((a: any, b: any) => getTradeTimeValue(b) - getTradeTimeValue(a))
+  const lastTradeForContext = sortedTradesDesc[0]
+  const todayTradesForContext = trades.filter(
+    (t: any) => (t.recordedDate || t.date || t.closeDate) === todayStrForContext,
+  )
+  const todayPnlForContext = todayTradesForContext.reduce(
+    (sum: number, t: any) => sum + (t.pnl ?? t.profitLoss ?? 0),
+    0,
+  )
+  const last2TodayForContext = [...todayTradesForContext]
+    .sort((a: any, b: any) => getTradeTimeValue(b) - getTradeTimeValue(a))
+    .slice(0, 2)
+  const last2BothLossesForContext =
+    last2TodayForContext.length === 2 &&
+    last2TodayForContext.every((t: any) => (t.pnl ?? t.profitLoss ?? 0) < 0)
+  const lastTradePnlForContext = lastTradeForContext
+    ? (lastTradeForContext.pnl ?? lastTradeForContext.profitLoss ?? 0)
+    : 0
+
+  const showRevengeStarter =
+    todayTagsForContext.includes("REVENGE_TRADING") ||
+    last2BothLossesForContext ||
+    (!!lastTradeForContext && lastTradePnlForContext < 0 && Math.abs(lastTradePnlForContext) >= 100)
+  const showAnalyzeStarter = !!lastTradeForContext
+  const showOverconfidenceStarter =
+    todayPnlForContext > 0 &&
+    (todayTagsForContext.includes("CLEAN_DAY") || todayTagsForContext.includes("FOMO_overcome") || todayPnlForContext >= 100)
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -331,27 +369,6 @@ const MindTraderAI = () => {
     },
   }
 
-  // Quick Prompts
-  const quickPrompts = isEn ? [
-    "How to recover from loss?",
-    "How to handle fear?",
-    "Help me with discipline",
-    "I broke the plan, what to do?",
-    "How to overcome FOMO?",
-    "How to improve risk management?",
-    "How to strengthen mental power?",
-    "How to avoid revenge trading?",
-  ] : [
-    "Jak se zotavit po ztrátě?",
-    "Jak zvládat strach?",
-    "Pomoz mi s disciplínou",
-    "Porušil jsem plán, co dělat?",
-    "Jak překonat FOMO?",
-    "Jak zlepšit risk management?",
-    "Jak posílit mentální sílu?",
-    "Jak se vyhnout revenge tradingu?",
-  ]
-
   // Initialize with welcome message
   useEffect(() => {
     if (messages.length === 0) {
@@ -407,15 +424,18 @@ const MindTraderAI = () => {
     localStorage.setItem("mindtrader-live-message-date", today)
   }
 
-  const handleSendMessage = async () => {
-    if (!input.trim() || isLoading) return
-    
-    // VIRTUAL MODE: Block free text input - only scénáře allowed
-    if (!isLiveMode) {
+  // overrideContent + bypassLiveModeCheck let canned quick-start/scenario
+  // buttons send immediately (they are not free text, so the demo-mode text
+  // lock doesn't apply to them) - typed input still goes through the normal
+  // path and stays blocked in demo/virtual mode.
+  const handleSendMessage = async (overrideContent?: string, bypassLiveModeCheck?: boolean) => {
+    const messageContent = (overrideContent ?? input).trim()
+    if (!messageContent || isLoading) return
+
+    // VIRTUAL MODE: Block free typed text - only canned scénáře are allowed
+    if (!isLiveMode && !bypassLiveModeCheck) {
       return // Do nothing - only scénáře can be clicked
     }
-
-    const messageContent = input.trim()
 
     const userMessage = {
       role: "user",
@@ -668,6 +688,26 @@ const MindTraderAI = () => {
     }
   }
 
+  // Dynamic quick-start buttons shown above the input on an empty chat.
+  // Which colored scenario shows depends on real account state instead of
+  // always being the same static three - e.g. the red "stop me" button only
+  // appears if there's an actual revenge-trading signal today.
+  const hasUserSentMessage = messages.some((m: any) => m.role === "user")
+  const dynamicStarterIds: string[] = []
+  if (showRevengeStarter) dynamicStarterIds.push("revenge-urge")
+  if (showAnalyzeStarter) dynamicStarterIds.push("analyze-last-trade")
+  if (showOverconfidenceStarter) dynamicStarterIds.push("avoid-overconfidence")
+  // Fill remaining slots with generic scenarios so the row is never sparse
+  // for brand-new accounts with no trade/self-report data yet.
+  for (const fallbackId of ["recovery", "fear", "discipline", "plan-violation"]) {
+    if (dynamicStarterIds.length >= 4) break
+    if (!dynamicStarterIds.includes(fallbackId)) dynamicStarterIds.push(fallbackId)
+  }
+  const dynamicStarters = dynamicStarterIds
+    .map((id) => scenarios.find((s) => s.id === id))
+    .filter(Boolean)
+    .slice(0, 4)
+
   return (
     <div className="relative w-full min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden">
       <GalaxyBackground />
@@ -826,17 +866,23 @@ const MindTraderAI = () => {
 
               {/* Quick Prompts and Input - Enhanced */}
               <div className="border-t border-purple-500/20 bg-gradient-to-t from-slate-950/80 to-slate-950/40 p-3 sm:p-4 space-y-2 sm:space-y-3">
-                {messages.length < 3 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {quickPrompts.slice(0, 4).map((prompt, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setInput(prompt)}
-                        className="text-xs p-3 rounded-lg bg-slate-700/60 hover:bg-slate-600/80 text-slate-200 border border-purple-400/30 hover:border-purple-400/60 transition-all duration-200 hover:shadow-md hover:shadow-purple-500/10 font-medium truncate"
-                      >
-                        {prompt}
-                      </button>
-                    ))}
+                {!hasUserSentMessage && dynamicStarters.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-400 font-semibold uppercase">
+                      {isEn ? "Quick start" : "Rychlý start"}
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      {dynamicStarters.map((scenario: any) => (
+                        <Button
+                          key={scenario.id}
+                          onClick={() => handleSendMessage(scenario.content, true)}
+                          disabled={isLoading}
+                          className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold shadow-lg shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-200 justify-start text-left h-auto py-2 px-4"
+                        >
+                          {scenario.label}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -847,28 +893,7 @@ const MindTraderAI = () => {
                       Jen v live modu můžeš psát vlastní zprávy
                     </div>
                   )}
-                  {!isLiveMode && messages.length === 0 ? (
-                    <div className="space-y-3">
-                      <p className="text-xs text-gray-400 font-semibold uppercase">Choose a scenario:</p>
-                      <div className="flex flex-col gap-2">
-                        {scenarios.map((scenario) => (
-                          <Button
-                            key={scenario.id}
-                            onClick={() => {
-                              setInput(scenario.content)
-                              setTimeout(() => {
-                                handleSendMessage()
-                              }, 100)
-                            }}
-                            disabled={isLoading}
-                            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold shadow-lg shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-200 justify-start text-left h-auto py-2 px-4"
-                          >
-                            {scenario.label}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : isLiveMode || messages.length > 0 ? (
+                  {isLiveMode || messages.length > 0 ? (
                     <div className="flex gap-3">
                       <Textarea
                         value={input}
