@@ -110,22 +110,23 @@ export function emptyDailySummary(): DailySummaryResult {
   }
 }
 
-export function buildDailySummary(trades: any[], dateLabel: string, userTags: string[] = []): DailySummaryResult {
-  if (!trades || trades.length === 0) return emptyDailySummary()
-
-  const sorted = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-  const withTime = sorted.map((t, i) => ({ trade: t, time: getTradeTime(t, i, sorted.length) }))
-
+// Objective revenge-re-entry detection: two losses in a row, re-entered
+// within 20 minutes, with the second loss at least as large as the first.
+// Grounded purely in real trade timestamps/P&L -- no self-report needed.
+// Also honors an explicit `revengeTrade` flag on the trade itself if present.
+// Shared by buildDailySummary and the Discipline Matrix so both surfaces
+// agree on what counts as a revenge trade.
+export function countRevengeTrades(sortedTrades: any[]): { revengeCount: number; maxLossStreak: number; revengeFlags: boolean[] } {
   let revengeCount = 0
   let maxLossStreak = 0
   let lossStreak = 0
-  const revengeFlags = new Array(sorted.length).fill(false)
-  for (let i = 0; i < sorted.length; i++) {
-    const t = sorted[i]
+  const revengeFlags = new Array(sortedTrades.length).fill(false)
+  for (let i = 0; i < sortedTrades.length; i++) {
+    const t = sortedTrades[i]
     if (t.pnl < 0) {
       lossStreak++
       maxLossStreak = Math.max(maxLossStreak, lossStreak)
-      const prev = sorted[i - 1]
+      const prev = sortedTrades[i - 1]
       if (prev && prev.pnl < 0) {
         const gapMin = (new Date(t.date).getTime() - new Date(prev.date).getTime()) / 60000
         if (gapMin >= 0 && gapMin < 20 && Math.abs(t.pnl) >= Math.abs(prev.pnl)) {
@@ -138,6 +139,16 @@ export function buildDailySummary(trades: any[], dateLabel: string, userTags: st
     }
     if (t.revengeTrade) revengeFlags[i] = true
   }
+  return { revengeCount, maxLossStreak, revengeFlags }
+}
+
+export function buildDailySummary(trades: any[], dateLabel: string, userTags: string[] = []): DailySummaryResult {
+  if (!trades || trades.length === 0) return emptyDailySummary()
+
+  const sorted = [...trades].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  const withTime = sorted.map((t, i) => ({ trade: t, time: getTradeTime(t, i, sorted.length) }))
+
+  const { revengeCount, maxLossStreak, revengeFlags } = countRevengeTrades(sorted)
 
   const count = sorted.length
   const wins = sorted.filter((t) => t.pnl > 0).length

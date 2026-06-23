@@ -26,6 +26,9 @@ import {
 } from "lucide-react"
 import JournalCalendar from "@/components/journal-calendar"
 import JournalEntries from "@/components/journal-entries"
+import DisciplineMatrix from "@/components/discipline-matrix"
+import JournalAiSearch from "@/components/journal-ai-search"
+import type { DisciplineDay } from "@/lib/discipline-matrix"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context" // Fixed import path from /context/ (singular) to /contexts/ (plural)
@@ -122,6 +125,9 @@ export default function JournalPage() {
   const { user } = useAuth()
   const { language } = useLanguage()
   const [virtualStats, setVirtualStats] = useState<any>(null) // State for virtual stats
+  const [highlightedDates, setHighlightedDates] = useState<Set<string> | null>(null)
+  const [matchedDays, setMatchedDays] = useState<DisciplineDay[]>([])
+  const [searchSummary, setSearchSummary] = useState<string | null>(null)
   const isEn = language === "en"
 
   const txt = {
@@ -776,6 +782,40 @@ export default function JournalPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Discipline Matrix — disciplína per day, grounded in real
+            followedPlan/matchedPlan booleans + objective revenge detection
+            + self-report tags (see lib/discipline-matrix.ts). AI search bar
+            lets the trader query their own history in plain language;
+            Claude only narrows a fixed-vocabulary filter, every date shown
+            is computed from real trade/journal data, never invented. */}
+        <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
+          <CardContent className="p-3 md:p-6 space-y-4">
+            <JournalAiSearch
+              onResults={(dates, days, summary) => {
+                setHighlightedDates(dates)
+                setMatchedDays(days)
+                setSearchSummary(summary)
+              }}
+            />
+            {searchSummary && (
+              <div className="text-sm text-gray-300 bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+                <p>{searchSummary}</p>
+                {matchedDays.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-xs text-gray-400">
+                    {matchedDays.slice(0, 8).map((d) => (
+                      <li key={d.date}>
+                        <span className="text-gray-300 font-medium">{d.date}</span> — {d.reason}
+                      </li>
+                    ))}
+                    {matchedDays.length > 8 && <li>… a {matchedDays.length - 8} dalších dní</li>}
+                  </ul>
+                )}
+              </div>
+            )}
+            <DisciplineMatrix highlightedDates={highlightedDates} />
+          </CardContent>
+        </Card>
 
         <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
           <CardContent className="p-3 md:p-6">
