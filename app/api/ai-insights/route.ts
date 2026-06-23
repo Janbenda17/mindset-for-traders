@@ -1,9 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+let clientInstance: Anthropic | null = null
+
+function getClient(): Anthropic {
+  if (clientInstance) return clientInstance
+  clientInstance = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  })
+  return clientInstance
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     const prompt = buildEnhancedAnalysisPrompt(dataSummary, psychPatterns, advancedMetrics, type)
 
-    const message = await client.messages.create({
+    const message = await getClient().messages.create({
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 3000,
       messages: [

@@ -13,9 +13,15 @@ import { type NextRequest, NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
 import { buildDisciplineMatrix, type DisciplineDay } from "@/lib/discipline-matrix"
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+let clientInstance: Anthropic | null = null
+
+function getClient(): Anthropic {
+  if (clientInstance) return clientInstance
+  clientInstance = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  })
+  return clientInstance
+}
 
 const KNOWN_TAGS = ["FOMO_overcome", "FOMO_chased", "REVENGE_TRADING", "EARLY_CLOSE", "CLEAN_DAY"] as const
 const KNOWN_COLORS = ["emerald", "orange", "red", "gray"] as const
@@ -79,7 +85,7 @@ Můžeš použít POUZE tyto hodnoty:
 
 Odpověz POUZE validním JSON objektem s těmito 4 klíči, nic jiného (žádné markdown, žádné vysvětlení).`
 
-  const msg = await client.messages.create({
+  const msg = await getClient().messages.create({
     model: "claude-3-5-sonnet-20241022",
     max_tokens: 200,
     temperature: 0,

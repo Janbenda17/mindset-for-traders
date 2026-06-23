@@ -1,6 +1,6 @@
 'use server'
 
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { createServerClient } from '@/lib/supabase/server'
 
 const PRICE_ID = 'price_1S59GOL0tgTNaSwwEqyW1brC'
@@ -34,7 +34,7 @@ export async function startCheckoutSession(email: string, name: string) {
     
     if (!customerId) {
       console.log("[v0] startCheckoutSession: Creating new customer for:", email)
-      const customer = await stripe.customers.create({
+      const customer = await getStripe().customers.create({
         email: email,
         name: name,
         metadata: {
@@ -62,7 +62,7 @@ export async function startCheckoutSession(email: string, name: string) {
 
     // Create embedded checkout session
     // IMPORTANT: Include user_id in metadata AND client_reference_id for webhook to identify user
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       customer: customerId,
       client_reference_id: user.id, // CRITICAL: This allows webhook to identify user
       ui_mode: 'embedded',

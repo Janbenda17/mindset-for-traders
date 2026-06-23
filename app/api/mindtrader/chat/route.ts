@@ -1,9 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+let clientInstance: Anthropic | null = null
+
+function getClient(): Anthropic {
+  if (clientInstance) return clientInstance
+  clientInstance = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  })
+  return clientInstance
+}
 
 const MODE_PROMPTS_CS = {
   mind: `Jsi MIND AI – elitní trading psycholog. Pomáháš traderům s mentálními výzvami.
@@ -681,7 +687,7 @@ KRITICKA PRAVIDLA (PORUSENI = FAIL):
 10. Pokud je v datech sekce "TREND SELF-REPORTU" - pouzij ji k odkazu na vzorec za vic dni (napr. "treti den v rade ustal FOMO" nebo "tohle uz je druhy den s revenge tradingem"), nejen na dnesek`
 
     try {
-      const message = await client.messages.create({
+      const message = await getClient().messages.create({
         model: "claude-3-5-sonnet-20241022",
         max_tokens: 500,
         temperature: 0.35,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { stripe } from "@/lib/stripe"
+import { getStripe } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     console.log("[v0] [VERIFY-PAYMENT] Checking Stripe for customer:", profile.stripe_customer_id)
 
     // Step 3: Query Stripe for ALL subscriptions (active, trialing, or past_due)
-    const subscriptions = await stripe.subscriptions.list({
+    const subscriptions = await getStripe().subscriptions.list({
       customer: profile.stripe_customer_id,
       limit: 10
     })
