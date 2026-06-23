@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
   Brain,
-  BarChart3,
   Users,
   Calendar,
   User,
@@ -77,7 +76,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     { name: t('nav_daily_tracker'), href: "/daily-tracker", icon: Calendar, shortName: t('nav_daily_tracker') },
     { name: t('nav_mindtrader'), href: "/mindtrader", icon: Brain, badge: "AI", shortName: "AI" },
     { name: t('nav_journal'), href: "/journal", icon: TrendingUp, shortName: t('nav_journal') },
-    { name: t('nav_analytics'), href: "/analytics", icon: BarChart3, shortName: t('nav_analytics') },
     { name: t('nav_weekly_review'), href: "/weekly-review", icon: Calendar },
     { name: t('nav_team_club'), href: "/team-club", icon: Users },
     { name: t('nav_bonus'), href: "/bonus", icon: Trophy, badge: t('nav_new') },

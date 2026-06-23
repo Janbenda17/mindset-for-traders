@@ -28,6 +28,7 @@ import JournalCalendar from "@/components/journal-calendar"
 import JournalEntries from "@/components/journal-entries"
 import DisciplineMatrix from "@/components/discipline-matrix"
 import JournalAiSearch from "@/components/journal-ai-search"
+import AnalyticsSuite from "@/components/analytics-suite"
 import type { DisciplineDay } from "@/lib/discipline-matrix"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
@@ -820,15 +821,7 @@ export default function JournalPage() {
         <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
           <CardContent className="p-3 md:p-6">
             <Tabs defaultValue="calendar" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 gap-2 md:gap-4 bg-slate-800 border border-slate-600 p-1">
-                <TabsTrigger
-                  value="new"
-                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
-                >
-                  <Plus className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden md:inline">Nový záznam</span>
-                  <span className="md:hidden">+</span>
-                </TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 gap-2 md:gap-4 bg-slate-800 border border-slate-600 p-1">
                 <TabsTrigger
                   value="calendar"
                   className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
@@ -836,6 +829,22 @@ export default function JournalPage() {
                   <Calendar className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden md:inline">Kalendář</span>
                   <span className="md:hidden">Cal</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="mindset"
+                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
+                >
+                  <Brain className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden md:inline">Mindset</span>
+                  <span className="md:hidden">Mind</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="patterns"
+                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
+                >
+                  <TrendingDown className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden md:inline">Vzorce</span>
+                  <span className="md:hidden">Vzor</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="entries"
@@ -853,24 +862,34 @@ export default function JournalPage() {
                   <span className="hidden md:inline">Statistiky</span>
                   <span className="md:hidden">Stats</span>
                 </TabsTrigger>
+                <TabsTrigger
+                  value="action"
+                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
+                >
+                  <Target className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden md:inline">Akční plán</span>
+                  <span className="md:hidden">Plán</span>
+                </TabsTrigger>
               </TabsList>
-
-              <TabsContent value="new" className="mt-0">
-                <Card className="bg-slate-700/50 border-slate-600">
-                  <CardContent className="pt-6">
-                    <p className="text-slate-400 text-center py-12">
-                      {isEn ? "Trades sync automatically from your MetaTrader connection" : "Obchody se synchronizují automaticky z vašeho MetaTrader připojení"}
-                    </p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
               <TabsContent value="calendar" className="mt-0">
                 <JournalCalendar onDateSelect={setSelectedDate} demoEntries={!isLiveMode ? entries : undefined} />
               </TabsContent>
 
+              <TabsContent value="mindset" className="mt-0">
+                <AnalyticsSuite tab="mindset" />
+              </TabsContent>
+
+              <TabsContent value="patterns" className="mt-0">
+                <AnalyticsSuite tab="patterns" />
+              </TabsContent>
+
               <TabsContent value="entries" className="mt-0">
                 <JournalEntries selectedDate={selectedDate} />
+              </TabsContent>
+
+              <TabsContent value="action" className="mt-0">
+                <AnalyticsSuite tab="action" />
               </TabsContent>
 
               <TabsContent value="stats" className="mt-0">
