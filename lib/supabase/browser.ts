@@ -37,4 +37,15 @@ export function getBrowserSupabase(): SupabaseClient {
   return globalThis.__supabaseBrowserClient
 }
 
-export const supabase = typeof window !== "undefined" ? getBrowserSupabase() : createSupabaseBrowserClient()
+// Lazy proxy: defers actual client construction until a property is accessed
+// at runtime. Next.js evaluates every route module during the build's
+// "Collecting page data" phase; eagerly constructing the client at module
+// scope throws if NEXT_PUBLIC_SUPABASE_URL/ANON_KEY aren't available in that
+// build environment, crashing the entire build.
+export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_target, prop, receiver) {
+    const client = getBrowserSupabase()
+    const value = (client as any)[prop]
+    return typeof value === "function" ? value.bind(client) : value
+  },
+})
