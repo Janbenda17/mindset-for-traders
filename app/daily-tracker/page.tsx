@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -27,6 +27,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { useData } from '@/contexts/data-context'
+import { buildDailySummary } from '@/lib/daily-summary'
 import { useGamification } from '@/contexts/gamification-context'
 
 function isSameDay(a: Date, b: Date) {
@@ -39,7 +40,7 @@ function fmtMoney(n: number) {
 }
 
 export default function DailyTrackerPage() {
-  const { getAllTrades, isLiveMode, getTradingStats } = useData()
+  const { getAllTrades, isLiveMode, getTradingStats, journalEntries, addJournalEntry, updateJournalEntry } = useData()
   const { data: gamification, getLevelInfo } = useGamification()
   const [tab, setTab] = useState('today')
 
@@ -84,86 +85,32 @@ export default function DailyTrackerPage() {
     return { count, type: isWin ? ('win' as const) : ('loss' as const) }
   }, [allTrades])
 
-  // Emotional AI read — auto-derived from today's MetaTrader trades, no manual input
-  const emotionalRead = useMemo(() => {
-    if (todaysTrades.length === 0) {
-      return {
-        tilt: 0,
-        label: 'Čekání na data',
-        message:
-          'Dnes ještě nemáš žádné obchody — jakmile MetaTrader zaznamená první obchod, AI automaticky vyhodnotí tvůj emoční stav.',
-        tip: null as string | null,
-        tone: 'neutral' as const,
-      }
+  // Daily Summary — full narrative of the day (trade count, win rate, P&L,
+  // best/worst trade) plus the emotional read, fully automatic from today's
+  // MetaTrader trades. Also persisted into journal_entries below so it
+  // shows up in the History tab for that day.
+  const dateLabel = today.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })
+  const dailySummary = useMemo(() => buildDailySummary(todaysTrades, dateLabel), [todaysTrades, dateLabel])
+
+  // Persist today's Daily Summary into the journal so it shows up in History
+  useEffect(() => {
+    if (todaysTrades.length === 0) return
+    const dateStr = today.toISOString().split('T')[0]
+    const id = `daily-summary-${dateStr}`
+    const existing = (journalEntries || []).find((e: any) => e.id === id)
+    if (!existing) {
+      addJournalEntry({
+        id,
+        date: dateStr,
+        type: 'journal',
+        title: 'Daily Summary',
+        content: dailySummary.narrative,
+        tags: ['auto-daily-summary'],
+      })
+    } else if (existing.content !== dailySummary.narrative) {
+      updateJournalEntry({ ...existing, content: dailySummary.narrative })
     }
-
-    const sorted = [...todaysTrades].sort(
-      (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    )
-
-    let revengeCount = 0
-    let maxLossStreak = 0
-    let lossStreak = 0
-    for (let i = 0; i < sorted.length; i++) {
-      const t = sorted[i]
-      if (t.pnl < 0) {
-        lossStreak++
-        maxLossStreak = Math.max(maxLossStreak, lossStreak)
-        const prev = sorted[i - 1]
-        if (prev && prev.pnl < 0) {
-          const gapMin = (new Date(t.date).getTime() - new Date(prev.date).getTime()) / 60000
-          if (gapMin >= 0 && gapMin < 20 && Math.abs(t.pnl) >= Math.abs(prev.pnl)) {
-            revengeCount++
-          }
-        }
-      } else {
-        lossStreak = 0
-      }
-    }
-
-    const count = sorted.length
-    const wins = sorted.filter((t: any) => t.pnl > 0).length
-    const winRate = count > 0 ? wins / count : 0
-
-    let tilt = 0
-    tilt += revengeCount * 30
-    tilt += maxLossStreak >= 3 ? 25 : maxLossStreak === 2 ? 10 : 0
-    tilt += count > 6 ? 20 : count > 4 ? 10 : 0
-    tilt -= count > 0 && count <= 3 && winRate >= 0.5 ? 10 : 0
-    tilt = Math.max(0, Math.min(100, tilt))
-
-    let label: string
-    let message: string
-    let tip: string
-    let tone: 'good' | 'warn' | 'bad' | 'neutral'
-
-    if (tilt >= 50) {
-      label = 'Emoční riziko'
-      tone = 'bad'
-      message = `Vzorec dnešních obchodů (${revengeCount > 0 ? `${revengeCount}× rychlý re-entry po ztrátě, ` : ''}${
-        maxLossStreak >= 2 ? `série ${maxLossStreak} ztrát po sobě, ` : ''
-      }${count} obchodů celkem) odpovídá emočnímu přetížení, ne plánu.`
-      tip = 'Zastav obchodování na zbytek dne. Zítra začni s poloviční velikostí pozice.'
-    } else if (revengeCount > 0 || maxLossStreak >= 2) {
-      label = 'Lehké napětí'
-      tone = 'warn'
-      message =
-        'Po ztrátě následoval rychlý další vstup — typický raný signál frustrace, i když to dnes nepřerostlo do plného emočního výkyvu.'
-      tip = 'Po každé ztrátě si dej alespoň 5 minut pauzu před dalším obchodem.'
-    } else if (count > 0 && count <= 3 && winRate >= 0.5) {
-      label = 'Klid a disciplína'
-      tone = 'good'
-      message = `${count} dobře vybraných obchodů bez známek emočního přetížení — tohle je vzorec, který chceš opakovat.`
-      tip = 'Udrž stejnou selektivitu i zítra.'
-    } else {
-      label = 'Neutrální'
-      tone = 'neutral'
-      message = 'Dnešní obchody nevykazují výrazné emoční vzorce — žádný emoční výkyv, ale ani jasná disciplína navíc.'
-      tip = 'Zapiš si krátkou poznámku, jak ses během obchodování cítil — pomůže to budoucí AI analýze.'
-    }
-
-    return { tilt, label, message, tip, tone }
-  }, [todaysTrades])
+  }, [dailySummary.narrative, todaysTrades.length, journalEntries, addJournalEntry, updateJournalEntry])
 
   // Equity curve (last 30 trades, cumulative)
   const equityData = useMemo(() => {
@@ -310,11 +257,11 @@ export default function DailyTrackerPage() {
             >
               <Card
                 className={`border bg-gradient-to-br from-slate-900 to-slate-950 ${
-                  emotionalRead.tone === 'bad'
+                  dailySummary.tone === 'bad'
                     ? 'border-red-500/30'
-                    : emotionalRead.tone === 'warn'
+                    : dailySummary.tone === 'warn'
                       ? 'border-amber-500/30'
-                      : emotionalRead.tone === 'good'
+                      : dailySummary.tone === 'good'
                         ? 'border-emerald-500/30'
                         : 'border-slate-800'
                 }`}
@@ -324,11 +271,11 @@ export default function DailyTrackerPage() {
                     <span className="flex items-center gap-2">
                       <Brain
                         className={`h-5 w-5 ${
-                          emotionalRead.tone === 'bad'
+                          dailySummary.tone === 'bad'
                             ? 'text-red-400'
-                            : emotionalRead.tone === 'warn'
+                            : dailySummary.tone === 'warn'
                               ? 'text-amber-400'
-                              : emotionalRead.tone === 'good'
+                              : dailySummary.tone === 'good'
                                 ? 'text-emerald-400'
                                 : 'text-slate-400'
                         }`}
@@ -337,45 +284,45 @@ export default function DailyTrackerPage() {
                     </span>
                     <span
                       className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                        emotionalRead.tone === 'bad'
+                        dailySummary.tone === 'bad'
                           ? 'bg-red-500/10 text-red-300'
-                          : emotionalRead.tone === 'warn'
+                          : dailySummary.tone === 'warn'
                             ? 'bg-amber-500/10 text-amber-300'
-                            : emotionalRead.tone === 'good'
+                            : dailySummary.tone === 'good'
                               ? 'bg-emerald-500/10 text-emerald-300'
                               : 'bg-slate-500/10 text-slate-300'
                       }`}
                     >
-                      {emotionalRead.label}
+                      {dailySummary.label}
                     </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-slate-300">{emotionalRead.message}</p>
+                  <p className="text-sm text-slate-300">{dailySummary.narrative}</p>
 
                   <div>
                     <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
                       <span>Emoční skóre</span>
-                      <span>{emotionalRead.tilt}/100</span>
+                      <span>{dailySummary.tilt}/100</span>
                     </div>
                     <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
                       <div
                         className={`h-full rounded-full ${
-                          emotionalRead.tilt >= 50
+                          dailySummary.tilt >= 50
                             ? 'bg-red-500'
-                            : emotionalRead.tilt >= 20
+                            : dailySummary.tilt >= 20
                               ? 'bg-amber-500'
                               : 'bg-emerald-500'
                         }`}
-                        style={{ width: `${emotionalRead.tilt}%` }}
+                        style={{ width: `${dailySummary.tilt}%` }}
                       />
                     </div>
                   </div>
 
-                  {emotionalRead.tip && (
+                  {dailySummary.tip && (
                     <div className="flex items-start gap-2 text-xs text-slate-400 bg-slate-800/40 rounded-lg p-3 border border-slate-700/40">
                       <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-slate-400" />
-                      <span>{emotionalRead.tip}</span>
+                      <span>{dailySummary.tip}</span>
                     </div>
                   )}
                 </CardContent>
@@ -565,6 +512,17 @@ export default function DailyTrackerPage() {
                           {fmtMoney(day.pnl)}
                         </p>
                       </div>
+                      {(() => {
+                        const dateStr = day.date.toISOString().split('T')[0]
+                        const saved = (journalEntries || []).find(
+                          (e: any) => e.id === `daily-summary-${dateStr}`
+                        )
+                        return saved?.content ? (
+                          <p className="text-xs text-slate-400 mt-3 pt-3 border-t border-slate-800/60">
+                            {saved.content}
+                          </p>
+                        ) : null
+                      })()}
                     </CardContent>
                   </Card>
                 </motion.div>
