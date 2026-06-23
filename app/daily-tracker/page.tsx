@@ -333,7 +333,7 @@ export default function DailyTrackerPage() {
                                 : 'text-slate-400'
                         }`}
                       />
-                      AI Emoční stav dne
+                      Daily Summary
                     </span>
                     <span
                       className={`text-xs font-semibold px-2 py-1 rounded-full ${
