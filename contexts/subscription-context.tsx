@@ -33,7 +33,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [plan, setPlan] = useState<"free" | "premium">("free")
   const [daysRemaining, setDaysRemaining] = useState(0)
   const [isActive, setIsActive] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [isCanceled, setIsCanceled] = useState(false)
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null)
@@ -47,9 +47,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   // Check subscription status only on initial mount and when user changes
   useEffect(() => {
-    if (authReady && user) {
+    if (!authReady) return
+
+    if (user) {
       console.log("[v0] [SUBSCRIPTION] Initial check for user:", user.id)
       checkSubscriptionStatus()
+    } else {
+      // No user (guest/demo) - nothing to check, stop loading immediately
+      setIsLoading(false)
     }
   }, [authReady, user])
 
