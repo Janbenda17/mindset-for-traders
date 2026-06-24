@@ -94,7 +94,7 @@ export default function DisciplineMatrix({ highlightedDates, onDayClick }: Disci
           tags: [],
           reason: "Žádné obchody tento den",
         }),
-        dayNum,
+        dayNum: dNum,
         inMonth: true,
       })
     }
