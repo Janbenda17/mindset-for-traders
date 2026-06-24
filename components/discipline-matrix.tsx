@@ -2,16 +2,23 @@
 
 import { useMemo, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Shield, ChevronLeft, ChevronRight } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
 import { buildDisciplineMatrix, type DisciplineDay } from "@/lib/discipline-matrix"
 
 const COLOR_CLASSES: Record<DisciplineDay["color"], string> = {
-  emerald: "bg-emerald-500 hover:bg-emerald-400",
-  orange: "bg-amber-500 hover:bg-amber-400",
-  red: "bg-red-500 hover:bg-red-400",
-  gray: "bg-slate-700 hover:bg-slate-600",
+  emerald: "bg-emerald-500/90 hover:bg-emerald-400 border-emerald-400/40",
+  orange: "bg-amber-500/90 hover:bg-amber-400 border-amber-400/40",
+  red: "bg-red-500/90 hover:bg-red-400 border-red-400/40",
+  gray: "bg-slate-800 hover:bg-slate-700 border-slate-700",
+}
+
+const TEXT_CLASSES: Record<DisciplineDay["color"], string> = {
+  emerald: "text-white",
+  orange: "text-white",
+  red: "text-white",
+  gray: "text-gray-500",
 }
 
 const WEEKDAY_LABELS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"]
@@ -24,17 +31,13 @@ interface DisciplineMatrixProps {
   onDayClick?: (day: DisciplineDay) => void
 }
 
-function startOfWeekMonday(d: Date): Date {
-  const day = (d.getDay() + 6) % 7 // 0 = Monday
-  const copy = new Date(d)
-  copy.setDate(copy.getDate() - day)
-  copy.setHours(0, 0, 0, 0)
-  return copy
+function ymKey(year: number, month: number) {
+  return `${year}-${String(month + 1).padStart(2, "0")}`
 }
 
 export default function DisciplineMatrix({ highlightedDates, onDayClick }: DisciplineMatrixProps) {
   const { getAllTrades, getAllJournalEntries } = useData()
-  const [weekOffset, setWeekOffset] = useState(0) // 0 = most recent 12 weeks
+  const [monthOffset, setMonthOffset] = useState(0) // 0 = current month, positive = further back
 
   const days = useMemo(() => {
     const trades = getAllTrades?.() || []
@@ -48,45 +51,89 @@ export default function DisciplineMatrix({ highlightedDates, onDayClick }: Disci
     return m
   }, [days])
 
-  const WEEKS_VISIBLE = 12
-  const { weeks, rangeLabel } = useMemo(() => {
+  const { grid, monthLabel, year, month, isCurrentMonth } = useMemo(() => {
     const today = new Date()
-    today.setDate(today.getDate() - weekOffset * 7 * WEEKS_VISIBLE)
-    const lastWeekStart = startOfWeekMonday(today)
-    const firstWeekStart = new Date(lastWeekStart)
-    firstWeekStart.setDate(firstWeekStart.getDate() - (WEEKS_VISIBLE - 1) * 7)
+    const targetMonthDate = new Date(today.getFullYear(), today.getMonth() - monthOffset, 1)
+    const y = targetMonthDate.getFullYear()
+    const m = targetMonthDate.getMonth()
 
-    const weeksArr: DisciplineDay[][] = []
-    for (let w = 0; w < WEEKS_VISIBLE; w++) {
-      const weekStart = new Date(firstWeekStart)
-      weekStart.setDate(weekStart.getDate() + w * 7)
-      const week: DisciplineDay[] = []
-      for (let d = 0; d < 7; d++) {
-        const day = new Date(weekStart)
-        day.setDate(day.getDate() + d)
-        const key = day.toISOString().slice(0, 10)
-        week.push(
-          dayMap.get(key) || {
-            date: key,
-            color: "gray",
-            score: null,
-            tradeCount: 0,
-            tags: [],
-            reason: "Žádné obchody tento den",
-          },
-        )
-      }
-      weeksArr.push(week)
+    const firstOfMonth = new Date(y, m, 1)
+    const daysInMonth = new Date(y, m + 1, 0).getDate()
+    // Monday-first offset: getDay() 0=Sun..6=Sat -> convert so Monday=0
+    const leadingBlanks = (firstOfMonth.getDay() + 6) % 7
+
+    const cells: (DisciplineDay & { dayNum: number; inMonth: boolean })[] = []
+
+    // Leading days from previous month (shown dimmed, not clickable)
+    for (let i = leadingBlanks - 1; i >= 0; i--) {
+      const d = new Date(y, m, -i)
+      const key = d.toISOString().slice(0, 10)
+      cells.push({
+        ...(dayMap.get(key) || {
+          date: key,
+          color: "gray",
+          score: null,
+          tradeCount: 0,
+          tags: [],
+          reason: "",
+        }),
+        dayNum: d.getDate(),
+        inMonth: false,
+      })
     }
 
-    const fmt = (d: Date) => d.toLocaleDateString("cs-CZ", { day: "numeric", month: "short" })
+    for (let dNum = 1; dNum <= daysInMonth; dNum++) {
+      const d = new Date(y, m, dNum)
+      const key = d.toISOString().slice(0, 10)
+      cells.push({
+        ...(dayMap.get(key) || {
+          date: key,
+          color: "gray",
+          score: null,
+          tradeCount: 0,
+          tags: [],
+          reason: "Žádné obchody tento den",
+        }),
+        dayNum,
+        inMonth: true,
+      })
+    }
+
+    // Trailing days from next month to complete the final week
+    const trailing = (7 - (cells.length % 7)) % 7
+    for (let i = 1; i <= trailing; i++) {
+      const d = new Date(y, m + 1, i)
+      const key = d.toISOString().slice(0, 10)
+      cells.push({
+        ...(dayMap.get(key) || {
+          date: key,
+          color: "gray",
+          score: null,
+          tradeCount: 0,
+          tags: [],
+          reason: "",
+        }),
+        dayNum: d.getDate(),
+        inMonth: false,
+      })
+    }
+
+    const weeks: typeof cells[] = []
+    for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
+
+    const label = firstOfMonth.toLocaleDateString("cs-CZ", { month: "long", year: "numeric" })
+
     return {
-      weeks: weeksArr,
-      rangeLabel: `${fmt(firstWeekStart)} – ${fmt(lastWeekStart)}`,
+      grid: weeks,
+      monthLabel: label.charAt(0).toUpperCase() + label.slice(1),
+      year: y,
+      month: m,
+      isCurrentMonth: monthOffset === 0,
     }
-  }, [dayMap, weekOffset])
+  }, [dayMap, monthOffset])
 
-  const totalScored = days.filter((d) => d.color !== "gray")
+  const monthKey = ymKey(year, month)
+  const totalScored = days.filter((d) => d.date.startsWith(monthKey) && d.color !== "gray")
   const cleanDays = totalScored.filter((d) => d.color === "emerald").length
   const redDays = totalScored.filter((d) => d.color === "red").length
 
@@ -96,10 +143,10 @@ export default function DisciplineMatrix({ highlightedDates, onDayClick }: Disci
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500/20 to-amber-500/20">
-              <Shield className="w-5 h-5 text-emerald-400" />
+              <Calendar className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-              <h3 className="text-white font-bold text-base md:text-lg">Disciplinová matice</h3>
+              <h3 className="text-white font-bold text-base md:text-lg">Kalendář</h3>
               <p className="text-gray-400 text-xs">
                 {cleanDays} bezchybných dní · {redDays} dní s porušením pravidel · {totalScored.length} dní s daty
               </p>
@@ -107,64 +154,67 @@ export default function DisciplineMatrix({ highlightedDates, onDayClick }: Disci
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setWeekOffset((o) => o + 1)}
+              onClick={() => setMonthOffset((o) => o + 1)}
               className="p-1.5 rounded-md hover:bg-slate-700 text-gray-400 hover:text-white transition-colors"
-              aria-label="Starší týdny"
+              aria-label="Předchozí měsíc"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-xs text-gray-400 min-w-[110px] text-center">{rangeLabel}</span>
+            <span className="text-xs md:text-sm text-gray-300 font-medium min-w-[120px] text-center">
+              {monthLabel}
+            </span>
             <button
-              onClick={() => setWeekOffset((o) => Math.max(0, o - 1))}
-              disabled={weekOffset === 0}
+              onClick={() => setMonthOffset((o) => Math.max(0, o - 1))}
+              disabled={isCurrentMonth}
               className="p-1.5 rounded-md hover:bg-slate-700 text-gray-400 hover:text-white transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
-              aria-label="Novější týdny"
+              aria-label="Následující měsíc"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <div className="flex gap-2 min-w-fit">
-            <div className="flex flex-col gap-1 pt-5 pr-1">
-              {WEEKDAY_LABELS.map((label) => (
-                <div key={label} className="h-4 md:h-5 flex items-center text-[9px] md:text-[10px] text-gray-500">
-                  {label}
-                </div>
-              ))}
+        <div className="grid grid-cols-7 gap-1 md:gap-1.5 mb-1">
+          {WEEKDAY_LABELS.map((label) => (
+            <div key={label} className="text-center text-[10px] md:text-xs text-gray-500 font-medium py-1">
+              {label}
             </div>
-            {weeks.map((week, wi) => (
-              <div key={wi} className="flex flex-col gap-1">
-                {wi === 0 || new Date(week[0].date).getDate() <= 7 ? (
-                  <div className="h-4 text-[9px] text-gray-500 whitespace-nowrap">
-                    {new Date(week[0].date).toLocaleDateString("cs-CZ", { month: "short" })}
-                  </div>
-                ) : (
-                  <div className="h-4" />
-                )}
-                {week.map((day) => {
-                  const isHighlighted = highlightedDates ? highlightedDates.has(day.date) : true
-                  const dimmed = highlightedDates && highlightedDates.size > 0 && !isHighlighted
-                  return (
-                    <button
-                      key={day.date}
-                      onClick={() => onDayClick?.(day)}
-                      title={`${day.date} — ${day.reason}${day.tags.length ? ` [${day.tags.join(", ")}]` : ""}`}
-                      className={cn(
-                        "w-4 h-4 md:w-5 md:h-5 rounded-sm transition-all",
-                        COLOR_CLASSES[day.color],
-                        dimmed ? "opacity-20" : "opacity-100",
-                        highlightedDates && isHighlighted && highlightedDates.size > 0
-                          ? "ring-2 ring-purple-400 ring-offset-1 ring-offset-slate-800"
-                          : "",
-                      )}
-                    />
-                  )
-                })}
-              </div>
-            ))}
-          </div>
+          ))}
+        </div>
+
+        <div className="space-y-1 md:space-y-1.5">
+          {grid.map((week, wi) => (
+            <div key={wi} className="grid grid-cols-7 gap-1 md:gap-1.5">
+              {week.map((day) => {
+                const isHighlighted = highlightedDates ? highlightedDates.has(day.date) : true
+                const dimmed = highlightedDates && highlightedDates.size > 0 && !isHighlighted
+
+                return (
+                  <button
+                    key={day.date}
+                    onClick={() => day.inMonth && onDayClick?.(day)}
+                    disabled={!day.inMonth}
+                    title={
+                      day.inMonth
+                        ? `${day.date} — ${day.reason}${day.tags.length ? ` [${day.tags.join(", ")}]` : ""}`
+                        : undefined
+                    }
+                    className={cn(
+                      "aspect-square w-full rounded-md border flex items-center justify-center text-[11px] md:text-sm font-semibold transition-all",
+                      day.inMonth ? COLOR_CLASSES[day.color] : "bg-slate-900/40 border-slate-800 cursor-default",
+                      day.inMonth ? TEXT_CLASSES[day.color] : "text-gray-600",
+                      dimmed && day.inMonth ? "opacity-20" : "opacity-100",
+                      highlightedDates && isHighlighted && highlightedDates.size > 0 && day.inMonth
+                        ? "ring-2 ring-purple-400 ring-offset-1 ring-offset-slate-800"
+                        : "",
+                    )}
+                  >
+                    {day.dayNum}
+                  </button>
+                )
+              })}
+            </div>
+          ))}
         </div>
 
         <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-700 text-[10px] md:text-xs text-gray-400 flex-wrap">
@@ -181,7 +231,7 @@ export default function DisciplineMatrix({ highlightedDates, onDayClick }: Disci
             <span>Revenge trading / porušen plán</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-slate-700" />
+            <div className="w-3 h-3 rounded-sm bg-slate-800" />
             <span>Žádné obchody</span>
           </div>
         </div>

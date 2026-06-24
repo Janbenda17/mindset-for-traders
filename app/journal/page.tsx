@@ -3,39 +3,28 @@
 import { useState, useEffect, useMemo } from "react"
 import { useLanguage } from "@/contexts/language-context"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
   BookOpen,
-  Calendar,
-  TrendingUp,
   Plus,
   Sparkles,
-  BarChart3,
   Brain,
-  Target,
-  Zap,
   Download,
   Eye,
-  Flame,
   Award,
-  TrendingDown,
   DollarSign,
   Shield,
 } from "lucide-react"
-import JournalCalendar from "@/components/journal-calendar"
 import DisciplineMatrix from "@/components/discipline-matrix"
 import JournalAiSearch from "@/components/journal-ai-search"
 import DayDetailPanel from "@/components/day-detail-panel"
-import AnalyticsSuite from "@/components/analytics-suite"
 import { buildDisciplineMatrix, type DisciplineDay } from "@/lib/discipline-matrix"
 import { buildDailySummary } from "@/lib/daily-summary"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context" // Fixed import path from /context/ (singular) to /contexts/ (plural)
 import { useAuth } from "@/contexts/auth-context" // Import useAuth hook
-import { useLiveMode } from "@/contexts/live-mode-context"
 import { generateVirtualJournalStats } from "@/lib/virtual-data-generator" // Import for virtual stats
 
 const generateDemoEntries = () => {
@@ -117,8 +106,6 @@ const generateDemoEntries = () => {
 }
 
 export default function JournalPage() {
-  const [selectedTab, setSelectedTab] = useState("calendar")
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [entries, setEntries] = useState<any[]>([])
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [showInsights, setShowInsights] = useState(false)
@@ -165,25 +152,29 @@ export default function JournalPage() {
     mood: isEn ? "Mood" : "Nálada",
     
     // Insights
-    aiInsightsAvailable: isEn ? "AI Insights available!" : "AI Analýza dostupná!",
-    greatConsistency: isEn ? "Great Consistency!" : "Skvělá konzistence!",
-    consistencyMsg: (streak: number) => isEn ? `You've journaled for ${streak} days in a row. Keep it up!` : `Zaznamenáváš si ${streak} dní v kuse. Pokračuj!`,
-    improveConsistency: isEn ? "Improve Consistency" : "Vylepši konzistenci",
-    consistencyWarning: isEn ? "Regular journaling is key to success. Try writing every day!" : "Pravidelné zaznamenávání je klíčem k úspěchu. Zkus psát každý den!",
-    excellentWinRate: isEn ? "Excellent Win Rate!" : "Vynikající míra výher!",
-    winRateSuccess: (wr: number) => isEn ? `${wr}% win rate is professional level. Great work!` : `${wr}% míra výher je profesionální úroveň. Skvělá práce!`,
-    winRateNeeds: isEn ? "Win Rate Needs Improvement" : "Míra výher potřebuje vylepšení",
-    winRateWarning: (wr: number) => isEn ? `${wr}% win rate is below break-even. Check your strategy!` : `${wr}% míra výher je pod rentabilností. Zkontroluj svou strategii!`,
-    greatPnL: isEn ? "Great P&L!" : "Skvělý P&L!",
-    pnLSuccess: (pnl: number) => isEn ? `+$${pnl} is excellent performance. Keep it up!` : `+$${pnl} je vynikající výkon. Pokračuj!`,
-    negativePnL: isEn ? "Negative P&L" : "Negativní P&L",
-    pnLWarning: (pnl: number) => isEn ? `${pnl} requires immediate action. Review your risk management!` : `${pnl} vyžaduje okamžité jednání. Zkontroluj řízení rizik!`,
-    greatMood: isEn ? "Great Mood!" : "Skvělá nálada!",
-    moodSuccess: (mood: number) => isEn ? `Average mood ${mood}/10 is excellent. Positive mindset = better results!` : `Průměrná nálada ${mood}/10 je vynikající. Pozitivní myšlení = lepší výsledky!`,
-    lowMood: isEn ? "Low Mood" : "Nízká nálada",
-    moodWarning: (mood: number) => isEn ? `Average mood ${mood}/10. Focus on mental health!` : `Průměrná nálada ${mood}/10. Soustřeď se na duševní zdraví!`,
-    excellentProfitFactor: isEn ? "Excellent Profit Factor!" : "Vynikající profit faktor!",
-    profitFactorMsg: (pf: number) => isEn ? `Profit factor ${pf.toFixed(2)} is excellent. Your wins are bigger than losses!` : `Profit faktor ${pf.toFixed(2)} je vynikající. Tvoje výhry jsou větší než ztráty!`,
+    aiInsightsAvailable: isEn ? "AI performance analysis" : "AI analýza výkonu",
+    greatConsistency: isEn ? "Consistent journaling habit" : "Stabilní rutina zaznamenávání",
+    consistencyMsg: (streak: number) => isEn ? `${streak} consecutive days of journaling. This consistency improves the reliability of every metric below.` : `${streak} dní zaznamenávání v řadě. Tato pravidelnost zvyšuje vypovídací hodnotu všech metrik níže.`,
+    improveConsistency: isEn ? "Irregular journaling" : "Nepravidelné zaznamenávání",
+    consistencyWarning: isEn ? "Journaling fewer than 3 days in a row limits how reliable your statistics are. Daily entries give a more accurate read on your patterns." : "Zaznamenávání méně než 3 dny v řadě omezuje vypovídací hodnotu statistik. Denní záznamy poskytují přesnější obraz tvých vzorců.",
+    excellentWinRate: isEn ? "Win rate above professional benchmark" : "Win rate nad profesionální úrovní",
+    winRateSuccess: (wr: number) => isEn ? `A ${wr}% win rate is in line with consistently profitable traders. Maintain the process that produced it.` : `Win rate ${wr}% odpovídá úrovni dlouhodobě ziskových obchodníků. Udržuj proces, který k tomu vedl.`,
+    winRateNeeds: isEn ? "Win rate below break-even" : "Win rate pod hranicí rentability",
+    winRateWarning: (wr: number) => isEn ? `A ${wr}% win rate is below break-even for most risk/reward setups. Review entry criteria before increasing position size.` : `Win rate ${wr}% je pod hranicí rentability pro většinu poměrů risk/reward. Před navýšením velikosti pozic prověř vstupní kritéria.`,
+    greatPnL: isEn ? "Strong cumulative result" : "Silný kumulativní výsledek",
+    pnLSuccess: (pnl: number) => isEn ? `+$${pnl} reflects a consistently profitable stretch. Document what's working so it can be repeated.` : `+$${pnl} odráží stabilně ziskové období. Zaznamenej si, co funguje, ať to lze opakovat.`,
+    negativePnL: isEn ? "Negative cumulative result" : "Negativní kumulativní výsledek",
+    pnLWarning: (pnl: number) => isEn ? `$${pnl} warrants a review of position sizing and risk management before the next session.` : `$${pnl} si vyžaduje revizi velikosti pozic a řízení rizik před další obchodní seancí.`,
+    greatMood: isEn ? "Stable psychological state" : "Stabilní psychický stav",
+    moodSuccess: (mood: number) => isEn ? `Average mood of ${mood}/10 correlates with more disciplined decision-making in your trade history.` : `Průměrná nálada ${mood}/10 koreluje s disciplinovanějším rozhodováním ve tvé historii obchodů.`,
+    lowMood: isEn ? "Reduced psychological wellbeing" : "Snížená psychická pohoda",
+    moodWarning: (mood: number) => isEn ? `Average mood of ${mood}/10. Consider a shorter session or a break before trading again — mood is a leading indicator of impulsive decisions.` : `Průměrná nálada ${mood}/10. Zvaž kratší seanci nebo pauzu před dalším obchodováním — nálada je předstihovým indikátorem impulzivních rozhodnutí.`,
+    excellentProfitFactor: isEn ? "Healthy profit factor" : "Zdravý profit faktor",
+    profitFactorMsg: (pf: number) => isEn ? `A profit factor of ${pf.toFixed(2)} means your average win meaningfully outweighs your average loss.` : `Profit faktor ${pf.toFixed(2)} znamená, že tvá průměrná výhra výrazně převažuje průměrnou ztrátu.`,
+    highDiscipline: isEn ? "High plan adherence" : "Vysoká disciplína v dodržování plánu",
+    highDisciplineMsg: (pct: number, saved: number) => isEn ? `${pct}% average discipline score. Estimated $${saved.toLocaleString("en-US")} preserved by not chasing impulsive entries — this is the strongest predictor of long-term results.` : `Průměrná disciplína ${pct}%. Odhadem $${saved.toLocaleString("en-US")} ušetřeno tím, že jsi nehonil impulzivní vstupy — to je nejsilnější predikátor dlouhodobého výsledku.`,
+    lowDiscipline: isEn ? "Low plan adherence" : "Nízká disciplína v dodržování plánu",
+    lowDisciplineMsg: (pct: number) => isEn ? `${pct}% average discipline score. Review the days marked red or orange in the calendar below to identify the specific rule being broken most often.` : `Průměrná disciplína ${pct}%. Projdi dny označené červeně nebo oranžově v kalendáři níže a urči, které pravidlo se porušuje nejčastěji.`,
     
     // Trade stats
     profitingTrades: isEn ? "Profitable Trades" : "Ziskové obchody",
@@ -468,6 +459,24 @@ export default function JournalPage() {
       })
     }
 
+    if (cockpit.avgDiscipline !== null) {
+      if (cockpit.avgDiscipline >= 80) {
+        insights.push({
+          type: "success",
+          icon: "🛡️",
+          title: txt.highDiscipline,
+          message: txt.highDisciplineMsg(cockpit.avgDiscipline, cockpit.savedTotal),
+        })
+      } else if (cockpit.avgDiscipline < 50) {
+        insights.push({
+          type: "critical",
+          icon: "🛡️",
+          title: txt.lowDiscipline,
+          message: txt.lowDisciplineMsg(cockpit.avgDiscipline),
+        })
+      }
+    }
+
     return insights
   }
 
@@ -609,7 +618,7 @@ export default function JournalPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-3 md:p-4">
               <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Obchodů</p>
@@ -630,14 +639,6 @@ export default function JournalPage() {
                 )}
               >
                 {displayStats.winRate}%
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
-            <CardContent className="p-3 md:p-4">
-              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Profit Factor</p>
-              <p className="text-xl md:text-2xl font-bold text-white">
-                {displayStats.avgLoss !== 0 ? Math.abs(displayStats.avgWin / displayStats.avgLoss).toFixed(2) : "0"}
               </p>
             </CardContent>
           </Card>
@@ -731,226 +732,6 @@ export default function JournalPage() {
           />
         )}
 
-        <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-          <CardContent className="p-3 md:p-6">
-            <Tabs defaultValue="calendar" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 gap-2 md:gap-4 bg-slate-800 border border-slate-600 p-1">
-                <TabsTrigger
-                  value="calendar"
-                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
-                >
-                  <Calendar className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden md:inline">Kalendář</span>
-                  <span className="md:hidden">Cal</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="mindset"
-                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
-                >
-                  <Brain className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden md:inline">Mindset</span>
-                  <span className="md:hidden">Mind</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="patterns"
-                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
-                >
-                  <TrendingDown className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden md:inline">Vzorce</span>
-                  <span className="md:hidden">Vzor</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="stats"
-                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
-                >
-                  <BarChart3 className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden md:inline">Statistiky</span>
-                  <span className="md:hidden">Stats</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="action"
-                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
-                >
-                  <Target className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden md:inline">Akční plán</span>
-                  <span className="md:hidden">Plán</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="calendar" className="mt-0">
-                <JournalCalendar onDateSelect={setSelectedDate} demoEntries={!isLiveMode ? entries : undefined} />
-              </TabsContent>
-
-              <TabsContent value="mindset" className="mt-0">
-                <AnalyticsSuite tab="mindset" />
-              </TabsContent>
-
-              <TabsContent value="patterns" className="mt-0">
-                <AnalyticsSuite tab="patterns" />
-              </TabsContent>
-
-              <TabsContent value="action" className="mt-0">
-                <AnalyticsSuite tab="action" />
-              </TabsContent>
-
-              <TabsContent value="stats" className="mt-0">
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Card className="bg-slate-700/50 border-slate-600">
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="p-3 bg-emerald-500/20 rounded-xl">
-                            <TrendingUp className="w-6 h-6 text-emerald-400" />
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">Ziskové obchody</p>
-                            <p className="text-2xl font-bold text-white">{displayStats.winningTrades}</p>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-400">Průměrný zisk</span>
-                            <span className="text-emerald-400 font-bold">+${displayStats.avgWin}</span>
-                          </div>
-                          <div className="h-2 bg-slate-600 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-emerald-500 to-green-500"
-                              style={{
-                                width: `${(displayStats.winningTrades / (displayStats.totalTrades || 1)) * 100}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-slate-700/50 border-slate-600">
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="p-3 bg-rose-500/20 rounded-xl">
-                            <TrendingDown className="w-6 h-6 text-rose-400" />
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">Ztrátové obchody</p>
-                            <p className="text-2xl font-bold text-white">{displayStats.losingTrades}</p>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-400">Průměrná ztráta</span>
-                            <span className="text-rose-400 font-bold">${displayStats.avgLoss}</span>
-                          </div>
-                          <div className="h-2 bg-slate-600 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-rose-500 to-red-500"
-                              style={{
-                                width: `${(displayStats.losingTrades / (displayStats.totalTrades || 1)) * 100}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-slate-700/50 border-slate-600">
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="p-3 bg-purple-500/20 rounded-xl">
-                            <Zap className="w-6 h-6 text-purple-400" />
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-400">Profit Factor</p>
-                            <p className="text-2xl font-bold text-white">
-                              {displayStats.avgLoss !== 0
-                                ? Math.abs(displayStats.avgWin / displayStats.avgLoss).toFixed(2)
-                                : "0"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-400">Hodnocení</span>
-                            <span className="text-purple-400 font-bold">
-                              {displayStats.avgLoss !== 0 && Math.abs(displayStats.avgWin / displayStats.avgLoss) > 2
-                                ? "Výborný"
-                                : "Dobrý"}
-                            </span>
-                          </div>
-                          <div className="h-2 bg-slate-600 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
-                              style={{
-                                width: `${Math.min((displayStats.avgLoss !== 0 ? Math.abs(displayStats.avgWin / displayStats.avgLoss) : 0) * 33, 100)}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <Card className="bg-slate-700/50 border-slate-600">
-                    <CardContent className="p-6">
-                      <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                        <BarChart3 className="w-6 h-6 text-blue-400" />
-                        Performance Overview
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <Award className="w-5 h-5 text-emerald-400" />
-                              <span className="text-gray-300">Nejlepší den</span>
-                            </div>
-                            <span className="text-emerald-400 font-bold text-lg">+${displayStats.bestDay}</span>
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <TrendingDown className="w-5 h-5 text-rose-400" />
-                              <span className="text-gray-300">Nejhorší den</span>
-                            </div>
-                            <span className="text-rose-400 font-bold text-lg">${displayStats.worstDay}</span>
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <Target className="w-5 h-5 text-cyan-400" />
-                              <span className="text-gray-300">Win Rate</span>
-                            </div>
-                            <span className="text-cyan-400 font-bold text-lg">{displayStats.winRate}%</span>
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <Flame className="w-5 h-5 text-orange-400" />
-                              <span className="text-gray-300">Série dní</span>
-                            </div>
-                            <span className="text-orange-400 font-bold text-lg">{displayStats.streak} dní</span>
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <Brain className="w-5 h-5 text-pink-400" />
-                              <span className="text-gray-300">Průměrná nálada</span>
-                            </div>
-                            <span className="text-pink-400 font-bold text-lg">{displayStats.avgMood}/10</span>
-                          </div>
-                          <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <BookOpen className="w-5 h-5 text-blue-400" />
-                              <span className="text-gray-300">Tento měsíc</span>
-                            </div>
-                            <span className="text-blue-400 font-bold text-lg">{displayStats.thisMonth} záznamů</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-            </Tabs>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Quick Add Dialog */}
