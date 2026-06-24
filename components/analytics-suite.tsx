@@ -344,84 +344,175 @@ function generateDemoData(tradingStyle: string, isEn: boolean) {
 }
 
 // Dummy functions for the sake of the example, replace with actual implementations
-function calculateEmotionalPatternsFromTrades(trades: any[], isEn: boolean): any[] {
-  // Placeholder: Replace with actual logic to analyze trades for emotional patterns
-  const patterns = [
+function calculateEmotionalPatternsFromTrades(trades: any[], isEn: boolean, isLiveMode = false): any[] {
+  // VIRTUAL/DEMO MODE: illustrative patterns "for show" - intentionally randomized
+  // each render so the demo experience feels alive. Never used for real users.
+  if (!isLiveMode) {
+    const demoPatterns = [
+      {
+        name: "FOMO Trading",
+        emoji: "😰",
+        count: Math.floor(Math.random() * 8) + 3,
+        impact: -(Math.random() * 2500 + 800),
+        color: "#ef4444",
+        severity: Math.random() > 0.5 ? "high" : "medium",
+        description: "Impulsive trades from fear of missing an opportunity",
+        recommendation: "Wait 10 minutes before entry. FOMO usually means you're late.",
+      },
+      {
+        name: "Revenge Trading",
+        emoji: "😤",
+        count: Math.floor(Math.random() * 5) + 2,
+        impact: -(Math.random() * 4500 + 1500),
+        color: "#dc2626",
+        severity: "critical",
+        description: "Attempt to quickly recover losses - most dangerous pattern",
+        recommendation: "STOP trading after 2 losses in a row. Take a break of at least 30 minutes.",
+      },
+      {
+        name: "Fear of Losing",
+        emoji: "😨",
+        count: Math.floor(Math.random() * 10) + 5,
+        impact: -(Math.random() * 2000 + 1000),
+        color: "#f59e0b",
+        severity: "high",
+        description: "Premature closing of profitable positions due to fear of loss",
+        recommendation: "Stick to the plan - close positions on TP or trailing stop, not emotionally.",
+      },
+      {
+        name: "Overconfidence",
+        emoji: "🤑",
+        count: Math.floor(Math.random() * 6) + 2,
+        impact: -(Math.random() * 1800 + 800),
+        color: "#f97316",
+        severity: "medium",
+        description: "Trading with too large risk after a series of wins",
+        recommendation: "Risk management is constant - always max 1-2% per trade, regardless of winning streak.",
+      },
+      {
+        name: "Greed",
+        emoji: "💰",
+        count: Math.floor(Math.random() * 7) + 3,
+        impact: -(Math.random() * 3000 + 1500),
+        color: "#eab308",
+        severity: "high",
+        description: "Holding positions too long hoping for bigger profit",
+        recommendation: "Profit is profit. Take TP when it appears and don't be greedy.",
+      },
+      {
+        name: "Hope Trading",
+        emoji: "🙏",
+        count: Math.floor(Math.random() * 8) + 4,
+        impact: -(Math.random() * 3500 + 1500),
+        color: "#ef4444",
+        severity: "critical",
+        description: "Holding losing positions hoping for reversal",
+        recommendation: "Stop loss is mandatory. Never wait in hope - cut losses quickly.",
+      },
+      {
+        name: "Analysis Paralysis",
+        emoji: "🤔",
+        count: Math.floor(Math.random() * 4) + 2,
+        impact: -(Math.random() * 1000 + 500),
+        color: "#06b6d4",
+        severity: "medium",
+        description: "Overthinking and hesitating until the opportunity is lost",
+        recommendation: "Prepare your trading plan in advance. When the setup occurs, act immediately.",
+      },
+    ]
+
+    const demoCount = Math.floor(Math.random() * 3) + 5
+    return demoPatterns.sort(() => Math.random() - 0.5).slice(0, demoCount)
+  }
+
+  // LIVE MODE: computed strictly from the user's real trades - no randomness,
+  // no fabricated counts. A pattern only appears if it's actually backed by
+  // real journal/trade fields (revengeTrade, exitedEarly, missedDueToHesitation,
+  // matchedPlan/followedPlan, and self-reported tags from the quick-tag check-in).
+  const hasTag = (t: any, tag: string) => Array.isArray(t.tags) && t.tags.includes(tag)
+
+  const defs = [
     {
       name: "FOMO Trading",
       emoji: "😰",
-      count: Math.floor(Math.random() * 8) + 3,
-      impact: -(Math.random() * 2500 + 800),
       color: "#ef4444",
-      severity: Math.random() > 0.5 ? "high" : "medium",
-      description: "Impulsive trades from fear of missing an opportunity",
-      recommendation: "Wait 10 minutes before entry. FOMO usually means you're late.",
+      match: (t: any) => hasTag(t, "FOMO_chased"),
+      description: isEn
+        ? "Impulsive trades from fear of missing an opportunity"
+        : "Impulzivní vstupy ze strachu, že vstup uteče",
+      recommendation: isEn
+        ? "Wait 10 minutes before entry. FOMO usually means you're late."
+        : "Před vstupem počkej 10 minut. FOMO většinou znamená, že už jsi pozdě.",
     },
     {
       name: "Revenge Trading",
       emoji: "😤",
-      count: Math.floor(Math.random() * 5) + 2,
-      impact: -(Math.random() * 4500 + 1500),
       color: "#dc2626",
-      severity: "critical",
-      description: "Attempt to quickly recover losses - most dangerous pattern",
-      recommendation: "STOP trading after 2 losses in a row. Take a break of at least 30 minutes.",
+      match: (t: any) => t.revengeTrade === true || hasTag(t, "REVENGE_TRADING"),
+      description: isEn
+        ? "Attempt to quickly recover losses - most dangerous pattern"
+        : "Snaha rychle dohnat ztrátu - nejnebezpečnější vzorec",
+      recommendation: isEn
+        ? "STOP trading after 2 losses in a row. Take a break of at least 30 minutes."
+        : "Po 2 ztrátách za sebou STOP. Dej si pauzu alespoň 30 minut.",
     },
     {
       name: "Fear of Losing",
       emoji: "😨",
-      count: Math.floor(Math.random() * 10) + 5,
-      impact: -(Math.random() * 2000 + 1000),
       color: "#f59e0b",
-      severity: "high",
-      description: "Premature closing of profitable positions due to fear of loss",
-      recommendation: "Stick to the plan - close positions on TP or trailing stop, not emotionally.",
-    },
-    {
-      name: "Overconfidence",
-      emoji: "🤑",
-      count: Math.floor(Math.random() * 6) + 2,
-      impact: -(Math.random() * 1800 + 800),
-      color: "#f97316",
-      severity: "medium",
-      description: "Trading with too large risk after a series of wins",
-      recommendation: "Risk management is constant - always max 1-2% per trade, regardless of winning streak.",
-    },
-    {
-      name: "Greed",
-      emoji: "💰",
-      count: Math.floor(Math.random() * 7) + 3,
-      impact: -(Math.random() * 3000 + 1500),
-      color: "#eab308",
-      severity: "high",
-      description: "Holding positions too long hoping for bigger profit",
-      recommendation: "Profit is profit. Take TP when it appears and don't be greedy.",
-    },
-    {
-      name: "Hope Trading",
-      emoji: "🙏",
-      count: Math.floor(Math.random() * 8) + 4,
-      impact: -(Math.random() * 3500 + 1500),
-      color: "#ef4444",
-      severity: "critical",
-      description: "Holding losing positions hoping for reversal",
-      recommendation: "Stop loss is mandatory. Never wait in hope - cut losses quickly.",
+      match: (t: any) => t.exitedEarly === true || hasTag(t, "EARLY_CLOSE"),
+      description: isEn
+        ? "Premature closing of positions due to fear of loss"
+        : "Předčasné uzavírání pozic ze strachu ze ztráty",
+      recommendation: isEn
+        ? "Stick to the plan - close positions on TP or trailing stop, not emotionally."
+        : "Drž se plánu - zavírej na TP nebo trailing stopu, ne emočně.",
     },
     {
       name: "Analysis Paralysis",
       emoji: "🤔",
-      count: Math.floor(Math.random() * 4) + 2,
-      impact: -(Math.random() * 1000 + 500),
       color: "#06b6d4",
-      severity: "medium",
-      description: "Overthinking and hesitating until the opportunity is lost",
-      recommendation: "Prepare your trading plan in advance. When the setup occurs, act immediately.",
+      match: (t: any) => t.missedDueToHesitation === true,
+      description: isEn
+        ? "Overthinking and hesitating until the opportunity is lost"
+        : "Přemýšlení a váhání, dokud setup nezmizí",
+      recommendation: isEn
+        ? "Prepare your trading plan in advance. When the setup occurs, act immediately."
+        : "Připrav si plán dopředu. Když nastane setup, jednej hned.",
+    },
+    {
+      name: isEn ? "Broke Trading Plan" : "Porušení obchodního plánu",
+      emoji: "📋",
+      color: "#f97316",
+      match: (t: any) => t.matchedPlan === false || t.followedPlan === false,
+      description: isEn
+        ? "Trades taken outside your defined trading plan"
+        : "Obchody mimo tvůj definovaný obchodní plán",
+      recommendation: isEn
+        ? "No trade without completing your pre-trade checklist."
+        : "Žádný obchod bez splnění checklistu před vstupem.",
     },
   ]
-  
-  // Return random 5-7 patterns
-  const count = Math.floor(Math.random() * 3) + 5
-  return patterns.sort(() => Math.random() - 0.5).slice(0, count)
+
+  return defs
+    .map((def) => {
+      const matched = trades.filter(def.match)
+      const count = matched.length
+      const impact = matched.reduce((sum: number, t: any) => sum + Math.min(0, t.pnl || 0), 0)
+      const severity = count >= 5 ? "critical" : count >= 3 ? "high" : "medium"
+      return {
+        name: def.name,
+        emoji: def.emoji,
+        count,
+        impact,
+        color: def.color,
+        severity,
+        description: def.description,
+        recommendation: def.recommendation,
+      }
+    })
+    .filter((p) => p.count > 0)
+    .sort((a, b) => a.impact - b.impact)
 }
 
 function calculatePsychologicalMetrics(trades: any[], moodEntries: any[]) {
@@ -866,7 +957,7 @@ function generatePsychologicalAnalysis(
 
   // Add other action items based on your analysis logic
   // Example: If revenge trading is detected as high severity, add specific action
-  const emotionalPatterns = calculateEmotionalPatternsFromTrades(trades, isEn)
+  const emotionalPatterns = calculateEmotionalPatternsFromTrades(trades, isEn, isLiveMode)
   if (emotionalPatterns.some((p) => p.severity === "high" || p.severity === "critical")) {
     const criticalPattern = emotionalPatterns.find((p) => p.severity === "high" || p.severity === "critical")
     if (!actionPlan.some((a) => a.title.includes(criticalPattern?.name || ""))) {
