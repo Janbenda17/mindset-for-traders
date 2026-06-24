@@ -22,6 +22,7 @@ import {
   Award,
   TrendingDown,
   DollarSign,
+  Shield,
 } from "lucide-react"
 import JournalCalendar from "@/components/journal-calendar"
 import DisciplineMatrix from "@/components/discipline-matrix"
