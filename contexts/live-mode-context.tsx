@@ -188,7 +188,7 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
       }, 500)
     } catch (err) {
       console.error("[v0] [LiveMode] Error switching to live:", err)
-      setIsSwitchingToLive(false)
+      throw err
     }
   }
 

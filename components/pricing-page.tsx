@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Check, Star, Crown, Loader2, ArrowRight, TrendingUp, Brain, Target } from "lucide-react"
-import { useSubscription } from "@/hooks/use-subscription"
+import { useSubscription } from "@/contexts/subscription-context"
 import { useAuth } from "@/contexts/auth-context"
 import { cn } from "@/lib/utils"
 

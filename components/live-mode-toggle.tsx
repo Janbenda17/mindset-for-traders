@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Zap, Shield, Lock, Download, Crown } from "lucide-react"
 import { useLiveMode } from "@/contexts/live-mode-context"
 import { useAuth } from "@/contexts/auth-context"
-import { useSubscription } from "@/hooks/use-subscription"
+import { useSubscription } from "@/contexts/subscription-context"
 import { useToast } from "@/hooks/use-toast"
 import { offerMigration, migrateVirtualDataToLive } from "@/lib/data-migration"
 import {
