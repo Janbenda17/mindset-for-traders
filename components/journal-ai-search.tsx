@@ -68,7 +68,7 @@ export default function JournalAiSearch({ onResults }: JournalAiSearchProps) {
             onKeyDown={(e) => {
               if (e.key === "Enter") runSearch(query)
             }}
-            placeholder="Zeptej se na svou disciplínu, např. 'kdy jsem dělal revenge trading'..."
+            placeholder="Zeptej se Claude na tvou tradingovou historii..."
             className="pl-9 bg-slate-900/60 border-slate-600 text-white placeholder:text-gray-500"
           />
         </div>

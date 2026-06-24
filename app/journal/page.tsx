@@ -22,14 +22,14 @@ import {
   Award,
   TrendingDown,
   DollarSign,
-  FileText,
 } from "lucide-react"
 import JournalCalendar from "@/components/journal-calendar"
-import JournalEntries from "@/components/journal-entries"
 import DisciplineMatrix from "@/components/discipline-matrix"
 import JournalAiSearch from "@/components/journal-ai-search"
+import DayDetailPanel from "@/components/day-detail-panel"
 import AnalyticsSuite from "@/components/analytics-suite"
-import type { DisciplineDay } from "@/lib/discipline-matrix"
+import { buildDisciplineMatrix, type DisciplineDay } from "@/lib/discipline-matrix"
+import { buildDailySummary } from "@/lib/daily-summary"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context" // Fixed import path from /context/ (singular) to /contexts/ (plural)
@@ -122,13 +122,14 @@ export default function JournalPage() {
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [showInsights, setShowInsights] = useState(false)
   const [sortedJournalEntries, setSortedJournalEntries] = useState<any[]>([])
-  const { getAllJournalEntries, isLiveMode } = useData()
+  const { getAllJournalEntries, getAllTrades, isLiveMode } = useData()
   const { user } = useAuth()
   const { language } = useLanguage()
   const [virtualStats, setVirtualStats] = useState<any>(null) // State for virtual stats
   const [highlightedDates, setHighlightedDates] = useState<Set<string> | null>(null)
   const [matchedDays, setMatchedDays] = useState<DisciplineDay[]>([])
   const [searchSummary, setSearchSummary] = useState<string | null>(null)
+  const [selectedDay, setSelectedDay] = useState<DisciplineDay | null>(null)
   const isEn = language === "en"
 
   const txt = {
@@ -350,6 +351,42 @@ export default function JournalPage() {
     }
   }, [getAllJournalEntries, entries, isLiveMode]) // Recalculate when entries from context change
 
+  // Behavioral Cockpit: the two dominant psychological metrics shown above
+  // the fold. Both are derived from the exact same engines that drive the
+  // Discipline Matrix heatmap and the Daily Tracker's "Ušetřeno disciplínou"
+  // card (lib/discipline-matrix.ts + lib/daily-summary.ts) -- no separate
+  // made-up numbers, so this can never disagree with the matrix below it.
+  const cockpit = useMemo(() => {
+    const cockpitTrades = isLiveMode ? getAllTrades() || [] : entries.filter((e: any) => e.type === "trade")
+    const cockpitJournalEntries = isLiveMode ? getAllJournalEntries() || [] : []
+
+    if (cockpitTrades.length === 0) {
+      return { avgDiscipline: null as number | null, savedTotal: 0 }
+    }
+
+    const days = buildDisciplineMatrix(cockpitTrades, cockpitJournalEntries)
+    const scored = days.filter((d) => d.score !== null)
+    const avgDiscipline =
+      scored.length > 0 ? Math.round(scored.reduce((s, d) => s + (d.score || 0), 0) / scored.length) : null
+
+    const byDate = new Map<string, any[]>()
+    cockpitTrades.forEach((t: any) => {
+      const d = String(t?.date || "").slice(0, 10)
+      if (!d) return
+      if (!byDate.has(d)) byDate.set(d, [])
+      byDate.get(d)!.push(t)
+    })
+
+    let savedTotal = 0
+    byDate.forEach((dayTrades, date) => {
+      const dayInfo = days.find((d) => d.date === date)
+      const daySummary = buildDailySummary(dayTrades, date, dayInfo?.tags || [])
+      if (daySummary.disciplinedDollars) savedTotal += daySummary.disciplinedDollars.amount
+    })
+
+    return { avgDiscipline, savedTotal: Math.round(savedTotal) }
+  }, [isLiveMode, getAllTrades, getAllJournalEntries, entries])
+
   // AI Insights
   const generateInsights = () => {
     const insights = []
@@ -513,245 +550,112 @@ export default function JournalPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-4">
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
-            <CardContent className="p-0">
-              <div className="p-2 md:p-4 pb-2 md:pb-3">
-                <div className="flex items-center justify-between mb-2 md:mb-3">
-                  <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.total}</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">
-                      {displayStats.totalEntries || displayStats.celkem}
-                    </p>
-                    <p className="text-blue-400 text-[10px] md:text-xs font-semibold">{txt.records}</p>
-                  </div>
-                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20">
-                    <BookOpen className="w-4 h-4 md:w-6 md:h-6 text-blue-400" />
-                  </div>
+        {/* Behavioral Cockpit -- two dominant psychological metrics first,
+            the classic trade stats demoted to a smaller secondary row. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+          <Card className="bg-gradient-to-br from-purple-900/60 to-slate-900/60 border-purple-500/30 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-xs md:text-sm font-medium mb-1 flex items-center gap-1.5">
+                    <Brain className="w-3.5 h-3.5 text-purple-400" /> Průměrná disciplína
+                  </p>
+                  <p className="text-3xl md:text-5xl font-black text-white mb-1">
+                    {cockpit.avgDiscipline !== null ? `${cockpit.avgDiscipline}%` : "—"}
+                  </p>
+                  <p className="text-purple-300 text-xs md:text-sm">
+                    {cockpit.avgDiscipline === null
+                      ? "Zatím bez dat"
+                      : cockpit.avgDiscipline >= 80
+                        ? "Excelentní dodržování plánu"
+                        : cockpit.avgDiscipline >= 50
+                          ? "Solidní, prostor pro zlepšení"
+                          : "Pravidla se často porušují"}
+                  </p>
+                </div>
+                <div className="p-3 md:p-4 rounded-full bg-purple-500/20">
+                  <Award className="w-7 h-7 md:w-9 md:h-9 text-purple-300" />
                 </div>
               </div>
-              <div className="h-1 md:h-1.5 bg-slate-700">
+              <div className="h-1.5 mt-4 bg-slate-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full transition-all bg-gradient-to-r from-blue-500 to-cyan-500"
-                  style={{ width: "100%" }}
+                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                  style={{ width: `${cockpit.avgDiscipline ?? 0}%` }}
                 />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
-            <CardContent className="p-0">
-              <div className="p-2 md:p-4 pb-2 md:pb-3">
-                <div className="flex items-center justify-between mb-2 md:mb-3">
-                  <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.thisWeek}</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.thisWeek}</p>
-                    <p className="text-green-400 text-[10px] md:text-xs font-semibold flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3 md:w-4 md:h-4" /> {txt.newEntry}
-                    </p>
-                  </div>
-                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20">
-                    <Calendar className="w-4 h-4 md:w-6 md:h-6 text-green-400" />
-                  </div>
+          <Card className="bg-gradient-to-br from-emerald-900/60 to-slate-900/60 border-emerald-500/30 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-xs md:text-sm font-medium mb-1 flex items-center gap-1.5">
+                    <DollarSign className="w-3.5 h-3.5 text-emerald-400" /> Ušetřeno sebekontrolou
+                  </p>
+                  <p className="text-3xl md:text-5xl font-black text-white mb-1">
+                    ${cockpit.savedTotal.toLocaleString("en-US")}
+                  </p>
+                  <p className="text-emerald-300 text-xs md:text-sm">
+                    Odhad, kolik jsi nepřišel díky tomu, že jsi nehonil impulzivní vstupy
+                  </p>
                 </div>
-              </div>
-              <div className="h-1 md:h-1.5 bg-slate-700">
-                <div
-                  className="h-full transition-all bg-gradient-to-r from-green-500 to-emerald-500"
-                  style={{ width: `${Math.min((displayStats.thisWeek / 10) * 100, 100)}%` }}
-                />
+                <div className="p-3 md:p-4 rounded-full bg-emerald-500/20">
+                  <Shield className="w-7 h-7 md:w-9 md:h-9 text-emerald-300" />
+                </div>
               </div>
             </CardContent>
           </Card>
+        </div>
 
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
-            <CardContent className="p-0">
-              <div className="p-2 md:p-4 pb-2 md:pb-3">
-                <div className="flex items-center justify-between mb-2 md:mb-3">
-                  <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.avgPerDay}</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">
-                      {displayStats.avgPerDay || displayStats.avgPerTrade}
-                    </p>
-                    <p className="text-purple-400 text-[10px] md:text-xs font-semibold">{txt.records}</p>
-                  </div>
-                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-                    <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-400" />
-                  </div>
-                </div>
-              </div>
-              <div className="h-1 md:h-1.5 bg-slate-700">
-                <div
-                  className="h-full transition-all bg-gradient-to-r from-purple-500 to-pink-500"
-                  style={{
-                    width: `${Math.min(Number.parseFloat(displayStats.avgPerDay || displayStats.avgPerTrade) * 20, 100)}%`,
-                  }}
-                />
-              </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-3 md:p-4">
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Obchodů</p>
+              <p className="text-xl md:text-2xl font-bold text-white">{displayStats.totalTrades}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
-            <CardContent className="p-0">
-              <div className="p-2 md:p-4 pb-2 md:pb-3">
-                <div className="flex items-center justify-between mb-2 md:mb-3">
-                  <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.streak}</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.streak}</p>
-                    <p className="text-orange-400 text-[10px] md:text-xs font-semibold flex items-center gap-1">
-                      <Flame className="w-3 h-3 md:w-4 md:h-4" /> {txt.bestDay}
-                    </p>
-                  </div>
-                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-orange-500/20 to-amber-500/20">
-                    <Flame className="w-4 h-4 md:w-6 md:h-6 text-orange-400" />
-                  </div>
-                </div>
-              </div>
-              <div className="h-1 md:h-1.5 bg-slate-700">
-                <div
-                  className="h-full transition-all bg-gradient-to-r from-orange-500 to-amber-500"
-                  style={{ width: `${Math.min((displayStats.streak / 30) * 100, 100)}%` }}
-                />
-              </div>
+          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-3 md:p-4">
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Win Rate</p>
+              <p
+                className={cn(
+                  "text-xl md:text-2xl font-bold",
+                  displayStats.winRate >= 60
+                    ? "text-emerald-400"
+                    : displayStats.winRate >= 50
+                      ? "text-yellow-400"
+                      : "text-rose-400",
+                )}
+              >
+                {displayStats.winRate}%
+              </p>
             </CardContent>
           </Card>
-
+          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-3 md:p-4">
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Profit Factor</p>
+              <p className="text-xl md:text-2xl font-bold text-white">
+                {displayStats.avgLoss !== 0 ? Math.abs(displayStats.avgWin / displayStats.avgLoss).toFixed(2) : "0"}
+              </p>
+            </CardContent>
+          </Card>
           <Card
             className={cn(
-              "bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all",
-              displayStats.totalPnL >= 0 ? "ring-2 ring-emerald-500/50" : "ring-2 ring-rose-500/50",
+              "bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden",
+              displayStats.totalPnL >= 0 ? "ring-1 ring-emerald-500/40" : "ring-1 ring-rose-500/40",
             )}
           >
-            <CardContent className="p-0">
-              <div className="p-2 md:p-4 pb-2 md:pb-3">
-                <div className="flex items-center justify-between mb-2 md:mb-3">
-                  <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Total P&L</p>
-                    <p
-                      className={cn(
-                        "text-xl md:text-3xl font-bold mb-0.5 md:mb-1",
-                        displayStats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400",
-                      )}
-                    >
-                      {displayStats.totalPnL >= 0 ? "+" : ""}${displayStats.totalPnL}
-                    </p>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-semibold">Celkem</p>
-                  </div>
-                  <div
-                    className={cn(
-                      "p-2 md:p-3 rounded-full bg-gradient-to-br",
-                      displayStats.totalPnL >= 0
-                        ? "from-emerald-500/20 to-green-500/20"
-                        : "from-rose-500/20 to-red-500/20",
-                    )}
-                  >
-                    <DollarSign
-                      className={cn(
-                        "w-4 h-4 md:w-6 md:h-6",
-                        displayStats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400",
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="h-1 md:h-1.5 bg-slate-700">
-                <div
-                  className={cn(
-                    "h-full transition-all",
-                    displayStats.totalPnL >= 0
-                      ? "bg-gradient-to-r from-emerald-500 to-green-500"
-                      : "bg-gradient-to-r from-rose-500 to-red-500",
-                  )}
-                  style={{ width: "100%" }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
-            <CardContent className="p-0">
-              <div className="p-2 md:p-4 pb-2 md:pb-3">
-                <div className="flex items-center justify-between mb-2 md:mb-3">
-                  <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">Win Rate</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.winRate}%</p>
-                    <p
-                      className={cn(
-                        "text-[10px] md:text-xs font-semibold flex items-center gap-1",
-                        displayStats.winRate >= 60
-                          ? "text-emerald-400"
-                          : displayStats.winRate >= 50
-                            ? "text-yellow-400"
-                            : "text-rose-400",
-                      )}
-                    >
-                      {displayStats.winRate >= 60 ? (
-                        <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
-                      ) : (
-                        <TrendingDown className="w-3 h-3 md:w-4 md:h-4" />
-                      )}
-                      {displayStats.winRate >= 60 ? "Excellent" : displayStats.winRate >= 50 ? "Good" : "Weak"}
-                    </p>
-                  </div>
-                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
-                    <Target className="w-4 h-4 md:w-6 md:h-6 text-cyan-400" />
-                  </div>
-                </div>
-              </div>
-              <div className="h-1 md:h-1.5 bg-slate-700">
-                <div
-                  className="h-full transition-all bg-gradient-to-r from-cyan-500 to-blue-500"
-                  style={{ width: `${displayStats.winRate}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
-            <CardContent className="p-0">
-              <div className="p-2 md:p-4 pb-2 md:pb-3">
-                <div className="flex items-center justify-between mb-2 md:mb-3">
-                  <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.bestDayVal}</p>
-                    <p className="text-xl md:text-3xl font-bold text-emerald-400 mb-0.5 md:mb-1">
-                      +${displayStats.bestDay}
-                    </p>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-semibold">{txt.day}</p>
-                  </div>
-                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20">
-                    <Award className="w-4 h-4 md:w-6 md:h-6 text-emerald-400" />
-                  </div>
-                </div>
-              </div>
-              <div className="h-1 md:h-1.5 bg-slate-700">
-                <div
-                  className="h-full transition-all bg-gradient-to-r from-emerald-500 to-green-500"
-                  style={{ width: "100%" }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden hover:scale-105 transition-all">
-            <CardContent className="p-0">
-              <div className="p-2 md:p-4 pb-2 md:pb-3">
-                <div className="flex items-center justify-between mb-2 md:mb-3">
-                  <div>
-                    <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-0.5 md:mb-1">{txt.mood}</p>
-                    <p className="text-xl md:text-3xl font-bold text-white mb-0.5 md:mb-1">{displayStats.avgMood}</p>
-                    <p className="text-pink-400 text-[10px] md:text-xs font-semibold">/10 avg</p>
-                  </div>
-                  <div className="p-2 md:p-3 rounded-full bg-gradient-to-br from-pink-500/20 to-rose-500/20">
-                    <Brain className="w-4 h-4 md:w-6 md:h-6 text-pink-400" />
-                  </div>
-                </div>
-              </div>
-              <div className="h-1 md:h-1.5 bg-slate-700">
-                <div
-                  className="h-full transition-all bg-gradient-to-r from-pink-500 to-rose-500"
-                  style={{ width: `${displayStats.avgMood * 10}%` }}
-                />
-              </div>
+            <CardContent className="p-3 md:p-4">
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Net P&L</p>
+              <p
+                className={cn(
+                  "text-xl md:text-2xl font-bold",
+                  displayStats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400",
+                )}
+              >
+                {displayStats.totalPnL >= 0 ? "+" : ""}${displayStats.totalPnL}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -814,14 +718,22 @@ export default function JournalPage() {
                 )}
               </div>
             )}
-            <DisciplineMatrix highlightedDates={highlightedDates} />
+            <DisciplineMatrix highlightedDates={highlightedDates} onDayClick={setSelectedDay} />
           </CardContent>
         </Card>
+
+        {selectedDay && (
+          <DayDetailPanel
+            day={selectedDay}
+            onClose={() => setSelectedDay(null)}
+            demoTrades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
+          />
+        )}
 
         <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
           <CardContent className="p-3 md:p-6">
             <Tabs defaultValue="calendar" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 gap-2 md:gap-4 bg-slate-800 border border-slate-600 p-1">
+              <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 gap-2 md:gap-4 bg-slate-800 border border-slate-600 p-1">
                 <TabsTrigger
                   value="calendar"
                   className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
@@ -845,14 +757,6 @@ export default function JournalPage() {
                   <TrendingDown className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden md:inline">Vzorce</span>
                   <span className="md:hidden">Vzor</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="entries"
-                  className="gap-1 md:gap-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-300 text-xs md:text-sm px-2 md:px-4"
-                >
-                  <BookOpen className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden md:inline">Všechny záznamy</span>
-                  <span className="md:hidden">List</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="stats"
@@ -882,10 +786,6 @@ export default function JournalPage() {
 
               <TabsContent value="patterns" className="mt-0">
                 <AnalyticsSuite tab="patterns" />
-              </TabsContent>
-
-              <TabsContent value="entries" className="mt-0">
-                <JournalEntries selectedDate={selectedDate} />
               </TabsContent>
 
               <TabsContent value="action" className="mt-0">
@@ -1047,143 +947,6 @@ export default function JournalPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="all" className="mt-0">
-                <div className="space-y-4">
-                  {sortedJournalEntries.length === 0 ? (
-                    <Card className="p-8 text-center">
-                      <div className="space-y-2">
-                        <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
-                        <h3 className="text-lg font-semibold">Zatím žádné záznamy</h3>
-                        <p className="text-sm text-muted-foreground">Začněte zaznamenávat své obchody a poznatky</p>
-                      </div>
-                    </Card>
-                  ) : (
-                    sortedJournalEntries.map((entry) => (
-                      <Card key={entry.id} className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            {entry.type === "trade" ? (
-                              <TrendingUp className="h-5 w-5 text-blue-500" />
-                            ) : (
-                              <FileText className="h-5 w-5 text-purple-500" />
-                            )}
-                            <div>
-                              <h3 className="font-semibold">
-                                {entry.type === "trade"
-                                  ? `${entry.direction?.toUpperCase() || ""} ${entry.pair || ""}`
-                                  : "Journal Entry"}
-                              </h3>
-                              <p className="text-sm text-muted-foreground">{entry.date}</p>
-                            </div>
-                          </div>
-                          {entry.type === "trade" && (
-                            <div
-                              className={cn(
-                                "text-lg font-bold",
-                                (entry.profitLoss || entry.pnl || 0) >= 0 ? "text-green-500" : "text-red-500",
-                              )}
-                            >
-                              {(entry.profitLoss || entry.pnl || 0) >= 0 ? "+" : ""}$
-                              {entry.profitLoss || entry.pnl || 0}
-                            </div>
-                          )}
-                        </div>
-
-                        {entry.type === "trade" && (
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 p-4 bg-muted/50 rounded-lg">
-                            {entry.emotionBefore && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Emoce před</p>
-                                <Badge variant="outline" className="text-xs">
-                                  {entry.emotionBefore}
-                                </Badge>
-                              </div>
-                            )}
-                            {entry.emotionDuring && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Emoce během</p>
-                                <Badge variant="outline" className="text-xs">
-                                  {entry.emotionDuring}
-                                </Badge>
-                              </div>
-                            )}
-                            {entry.emotionAfter && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Emoce po</p>
-                                <Badge variant="outline" className="text-xs">
-                                  {entry.emotionAfter}
-                                </Badge>
-                              </div>
-                            )}
-                            {entry.confidenceBefore !== undefined && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Důvěra v obchod</p>
-                                <div className="flex items-center gap-2">
-                                  <div className="text-sm font-semibold">{entry.confidenceBefore}/10</div>
-                                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-blue-500 transition-all"
-                                      style={{ width: `${(entry.confidenceBefore / 10) * 100}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                            {entry.stressLevel !== undefined && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Úroveň stresu</p>
-                                <div className="flex items-center gap-2">
-                                  <div className="text-sm font-semibold">{entry.stressLevel}/10</div>
-                                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                                    <div
-                                      className={cn(
-                                        "h-full transition-all",
-                                        entry.stressLevel > 7
-                                          ? "bg-red-500"
-                                          : entry.stressLevel > 4
-                                            ? "bg-yellow-500"
-                                            : "bg-green-500",
-                                      )}
-                                      style={{ width: `${(entry.stressLevel / 10) * 100}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                            {entry.mood !== undefined && (
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Nálada</p>
-                                <div className="flex items-center gap-2">
-                                  <Brain className="h-4 w-4 text-purple-500" />
-                                  <div className="text-sm font-semibold">{entry.mood}/10</div>
-                                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-purple-500 transition-all"
-                                      style={{ width: `${(entry.mood / 10) * 100}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {entry.notes && <p className="text-sm text-muted-foreground mb-3">{entry.notes}</p>}
-
-                        {entry.tags && entry.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {entry.tags.map((tag: string, i: number) => (
-                              <Badge key={i} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </Card>
-                    ))
-                  )}
-                </div>
-              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
