@@ -1993,44 +1993,24 @@ export default function AnalyticsSuite({ tab }: { tab: "mindset" | "patterns" | 
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
-                          {[
-                            {
-                              name: "Asian Session",
-                              icon: <Moon className="w-6 h-6 text-indigo-400" />,
-                              time: "00:00 - 08:00",
-                              winRate: 45 + Math.random() * 20,
-                              trades: Math.floor(Math.random() * 15) + 5,
-                              avgPnL: Math.floor((Math.random() - 0.3) * 1500), // CHANGE: Increased avgPnL to thousands
-                              color: "indigo",
-                            },
-                            {
-                              name: "London Open",
-                              icon: <Sunrise className="w-6 h-6 text-amber-400" />,
-                              time: "08:00 - 12:00",
-                              winRate: 55 + Math.random() * 25,
-                              trades: Math.floor(Math.random() * 25) + 10,
-                              avgPnL: Math.floor((Math.random() - 0.2) * 2200), // CHANGE: Increased avgPnL to thousands
-                              color: "amber",
-                            },
-                            {
-                              name: "NY Session",
-                              icon: <Sun className="w-6 h-6 text-orange-400" />,
-                              time: "13:00 - 18:00",
-                              winRate: 50 + Math.random() * 30,
-                              trades: Math.floor(Math.random() * 30) + 15,
-                              avgPnL: Math.floor((Math.random() - 0.25) * 2800), // CHANGE: Increased avgPnL to thousands
-                              color: "orange",
-                            },
-                            {
-                              name: "Evening",
-                              icon: <Sunset className="w-6 h-6 text-rose-400" />,
-                              time: "18:00 - 24:00",
-                              winRate: 40 + Math.random() * 20,
-                              trades: Math.floor(Math.random() * 10) + 3,
-                              avgPnL: Math.floor((Math.random() - 0.4) * 1200), // CHANGE: Increased avgPnL to thousands
-                              color: "rose",
-                            },
-                          ].map((session, idx) => (
+                          {(() => {
+                            const sessionIcons = [
+                              { icon: <Sunrise className="w-6 h-6 text-amber-400" />, color: "amber" },
+                              { icon: <Sun className="w-6 h-6 text-orange-400" />, color: "orange" },
+                              { icon: <Sunset className="w-6 h-6 text-rose-400" />, color: "rose" },
+                            ]
+                            return (analyticsData.tradingSessionPerformance || []).map(
+                              (s: any, i: number) => ({
+                                name: s.name,
+                                icon: sessionIcons[i % sessionIcons.length].icon,
+                                time: "",
+                                winRate: s.winRate,
+                                trades: s.trades,
+                                avgPnL: s.pnl,
+                                color: sessionIcons[i % sessionIcons.length].color,
+                              }),
+                            )
+                          })().map((session, idx) => (
                             <div
                               key={idx}
                               className="p-4 bg-slate-700/30 rounded-lg border border-slate-600 hover:border-slate-500 transition-colors"
@@ -2089,17 +2069,26 @@ export default function AnalyticsSuite({ tab }: { tab: "mindset" | "patterns" | 
                             </div>
                           ))}
                         </div>
-                        <div className="mt-4 p-4 bg-cyan-500/10 rounded-lg border border-cyan-500/30">
-                          <div className="flex items-start gap-2">
-                            <Zap className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-cyan-300 font-semibold text-sm mb-1">💡 Pattern Insight:</p>
-                              <p className="text-white text-sm">
-                                Your best trading window is London Open (08:00-12:00). Focus 70% of your trades on this time!
-                              </p>
+                        {(analyticsData.tradingSessionPerformance || []).some((s: any) => s.trades > 0) && (
+                          <div className="mt-4 p-4 bg-cyan-500/10 rounded-lg border border-cyan-500/30">
+                            <div className="flex items-start gap-2">
+                              <Zap className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-cyan-300 font-semibold text-sm mb-1">💡 Pattern Insight:</p>
+                                <p className="text-white text-sm">
+                                  {(() => {
+                                    const withTrades = (analyticsData.tradingSessionPerformance || []).filter(
+                                      (s: any) => s.trades > 0,
+                                    )
+                                    if (withTrades.length === 0) return "Zatím nemáš dost dat pro doporučení."
+                                    const best = withTrades.reduce((a: any, b: any) => (b.winRate > a.winRate ? b : a))
+                                    return `Tvoje nejlepší session je ${best.name} (${best.winRate}% win rate, ${best.trades} obchodů).`
+                                  })()}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </CardContent>
                     </Card>
                   </AccordionContent>
@@ -2225,44 +2214,45 @@ export default function AnalyticsSuite({ tab }: { tab: "mindset" | "patterns" | 
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                          {[
-                            {
-                              condition: "Strong Trend",
-                              icon: <TrendingUp className="w-6 h-6 text-green-400" />,
-                              winRate: 65 + Math.random() * 20,
-                              trades: Math.floor(Math.random() * 30) + 20,
-                              avgPnL: Math.floor((Math.random() - 0.1) * 400),
-                              color: "green",
-                              recommendation: "BEST - Your top market!",
-                            },
-                            {
-                              condition: "Ranging",
-                              icon: <TrendingUpDown className="w-6 h-6 text-yellow-400" />,
-                              winRate: 45 + Math.random() * 15,
-                              trades: Math.floor(Math.random() * 25) + 15,
-                              avgPnL: Math.floor((Math.random() - 0.35) * 250),
-                              color: "yellow",
-                              recommendation: "Caution - lower edge",
-                            },
-                            {
-                              condition: "High Volatility",
-                              icon: <Zap className="w-6 h-6 text-orange-400" />,
-                              winRate: 50 + Math.random() * 20,
-                              trades: Math.floor(Math.random() * 20) + 10,
-                              avgPnL: Math.floor((Math.random() - 0.25) * 350),
-                              color: "orange",
-                              recommendation: "Mixed results",
-                            },
-                            {
-                              condition: "Low Volume",
-                              icon: <Wind className="w-6 h-6 text-slate-400" />,
-                              winRate: 35 + Math.random() * 15,
-                              trades: Math.floor(Math.random() * 15) + 5,
-                              avgPnL: Math.floor((Math.random() - 0.45) * 200),
-                              color: "slate",
-                              recommendation: "AVOID - worst edge",
-                            },
-                          ].map((market, idx) => (
+                          {(() => {
+                            const real = (analyticsData.marketConditionsPerformance || []) as any[]
+                            if (real.length === 0) {
+                              return (
+                                <div className="col-span-full text-center text-gray-400 text-sm py-6">
+                                  Zatím žádné obchody s vyplněnými market conditions. Vyplň pole "Market Conditions" v
+                                  deníku, ať se ti tu objeví reálná statistika.
+                                </div>
+                              )
+                            }
+                            const colorFor = (wr: number) =>
+                              wr >= 60 ? "green" : wr >= 50 ? "yellow" : wr >= 40 ? "orange" : "slate"
+                            const recFor = (wr: number) =>
+                              wr >= 60
+                                ? "BEST - tvůj nejlepší trh"
+                                : wr >= 50
+                                  ? "Solidní edge"
+                                  : wr >= 40
+                                    ? "Smíšené výsledky"
+                                    : "POZOR - slabý edge"
+                            const iconFor = (name: string) => {
+                              const n = name.toLowerCase()
+                              if (n.includes("trend")) return <TrendingUp className="w-6 h-6 text-green-400" />
+                              if (n.includes("rang") || n.includes("konsolid"))
+                                return <TrendingUpDown className="w-6 h-6 text-yellow-400" />
+                              if (n.includes("volat")) return <Zap className="w-6 h-6 text-orange-400" />
+                              if (n.includes("volu")) return <Wind className="w-6 h-6 text-slate-400" />
+                              return <CloudRain className="w-6 h-6 text-sky-400" />
+                            }
+                            return real.map((m: any) => ({
+                              condition: m.name,
+                              icon: iconFor(m.name),
+                              winRate: m.winRate,
+                              trades: m.trades,
+                              avgPnL: m.pnl,
+                              color: colorFor(m.winRate),
+                              recommendation: recFor(m.winRate),
+                            }))
+                          })().map((market, idx) => (
                             <Card
                               key={idx}
                               className={cn(
@@ -2327,24 +2317,29 @@ export default function AnalyticsSuite({ tab }: { tab: "mindset" | "patterns" | 
                           ))}
                         </div>
 
-                        <div className="mt-6 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/30">
-                          <div className="flex items-start gap-3">
-                            <Award className="w-6 h-6 text-green-400 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-green-300 font-bold text-base mb-2">🎯 Pattern Recommendation:</p>
-                              <p className="text-white text-sm mb-2">
-                                Tuje performance je o 45% lepší v strong trending markets! Learn to identify trends using:
-                                pomocí:
-                              </p>
-                              <ul className="text-gray-300 text-sm space-y-1 ml-4 list-disc">
-                                <li>Moving averages alignment (20/50/200 EMA)</li>
-                                <li>Higher highs & higher lows structure</li>
-                                <li>Increased volume na směru trendu</li>
-                                <li>Breakout z consolidation zones</li>
-                              </ul>
+                        {(analyticsData.marketConditionsPerformance || []).length > 0 && (
+                          <div className="mt-6 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/30">
+                            <div className="flex items-start gap-3">
+                              <Award className="w-6 h-6 text-green-400 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-green-300 font-bold text-base mb-2">🎯 Pattern Recommendation:</p>
+                                <p className="text-white text-sm mb-2">
+                                  {(() => {
+                                    const real = (analyticsData.marketConditionsPerformance || []) as any[]
+                                    const withTrades = real.filter((m: any) => m.trades > 0)
+                                    if (withTrades.length === 0)
+                                      return "Zatím nemáš dost dat pro doporučení podle market conditions."
+                                    const best = withTrades.reduce((a: any, b: any) => (b.winRate > a.winRate ? b : a))
+                                    const worst = withTrades.reduce((a: any, b: any) => (b.winRate < a.winRate ? b : a))
+                                    if (withTrades.length === 1)
+                                      return `V "${best.name}" máš ${best.winRate}% win rate (${best.trades} obchodů).`
+                                    return `Nejlépe se ti vede v "${best.name}" (${best.winRate}% WR), nejhůř v "${worst.name}" (${worst.winRate}% WR). Vyplácí se vybírat si trhy podle toho, co reálně funguje.`
+                                  })()}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </CardContent>
                     </Card>
                   </AccordionContent>
