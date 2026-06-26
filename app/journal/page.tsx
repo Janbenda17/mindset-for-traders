@@ -786,54 +786,57 @@ export default function JournalPage() {
           </Card>
         )}
 
-        {/* Discipline Matrix + Day Detail — side-by-side on desktop when a day
-            is selected; stacked vertically on mobile. */}
-        <div className={cn("flex gap-4 items-start", selectedDay ? "flex-col md:flex-row" : "flex-col")}>
-          <Card className={cn("bg-slate-800/80 backdrop-blur-sm border-slate-600 transition-all duration-300", selectedDay ? "md:w-[55%] w-full" : "w-full")}>
-            <CardContent className="p-3 md:p-6 space-y-4">
-              <JournalAiSearch
-                trades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
-                journalEntries={!isLiveMode ? entries.filter((e: any) => e.type === "journal") : undefined}
-                onResults={(dates, days, summary) => {
-                  setHighlightedDates(dates)
-                  setMatchedDays(days)
-                  setSearchSummary(summary)
-                }}
-              />
-              {searchSummary && (
-                <div className="text-sm text-gray-300 bg-slate-900/50 rounded-lg p-3 border border-slate-700">
-                  <p>{searchSummary}</p>
-                  {matchedDays.length > 0 && (
-                    <ul className="mt-2 space-y-1 text-xs text-gray-400">
-                      {matchedDays.slice(0, 8).map((d) => (
-                        <li key={d.date}>
-                          <span className="text-gray-300 font-medium">{d.date}</span> — {d.reason}
-                        </li>
-                      ))}
-                      {matchedDays.length > 8 && <li>… a {matchedDays.length - 8} dalších dní</li>}
-                    </ul>
-                  )}
+        {/* Discipline Matrix + Day Detail — AI search on top, then calendar
+            and detail side by side when a day is selected. */}
+        <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
+          <CardContent className="p-3 md:p-6 space-y-4">
+            <JournalAiSearch
+              trades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
+              journalEntries={!isLiveMode ? entries.filter((e: any) => e.type === "journal") : undefined}
+              onResults={(dates, days, summary) => {
+                setHighlightedDates(dates)
+                setMatchedDays(days)
+                setSearchSummary(summary)
+              }}
+            />
+            {searchSummary && (
+              <div className="text-sm text-gray-300 bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+                <p>{searchSummary}</p>
+                {matchedDays.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-xs text-gray-400">
+                    {matchedDays.slice(0, 8).map((d) => (
+                      <li key={d.date}>
+                        <span className="text-gray-300 font-medium">{d.date}</span> — {d.reason}
+                      </li>
+                    ))}
+                    {matchedDays.length > 8 && <li>… a {matchedDays.length - 8} dalších dní</li>}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* Calendar + detail side by side on desktop */}
+            <div className={cn("flex gap-4 items-start", selectedDay ? "flex-col md:flex-row" : "")}>
+              <div className={cn("transition-all duration-300", selectedDay ? "w-full md:w-[52%] shrink-0" : "w-full")}>
+                <DisciplineMatrix
+                  highlightedDates={highlightedDates}
+                  onDayClick={setSelectedDay}
+                  trades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
+                  journalEntries={!isLiveMode ? entries.filter((e: any) => e.type === "journal") : undefined}
+                />
+              </div>
+              {selectedDay && (
+                <div className="w-full md:flex-1 min-w-0">
+                  <DayDetailPanel
+                    day={selectedDay}
+                    onClose={() => setSelectedDay(null)}
+                    demoTrades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
+                  />
                 </div>
               )}
-              <DisciplineMatrix
-                highlightedDates={highlightedDates}
-                onDayClick={setSelectedDay}
-                trades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
-                journalEntries={!isLiveMode ? entries.filter((e: any) => e.type === "journal") : undefined}
-              />
-            </CardContent>
-          </Card>
-
-          {selectedDay && (
-            <div className="w-full md:flex-1 md:sticky md:top-20">
-              <DayDetailPanel
-                day={selectedDay}
-                onClose={() => setSelectedDay(null)}
-                demoTrades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
-              />
             </div>
-          )}
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Recent entries — searchable, filterable list of individual trades
             and notes for the selected period. */}
