@@ -70,6 +70,13 @@ export async function generateWeeklyReview(userId: string): Promise<WeeklyReview
         emotionBefore: e.emotion_before ?? null,
         notes: e.notes ?? null,
         followedPlan: e.followed_plan ?? e.matched_plan ?? null,
+        // Behavioural fields for the Emotional Tax integration (optional).
+        id: e.id ?? null,
+        positionSize: e.position_size ?? e.positionSize ?? null,
+        revengeTrade: e.revenge_trade ?? e.revengeTrade ?? null,
+        fomo: e.fomo ?? null,
+        hasStopLoss: e.has_stop_loss ?? e.hasStopLoss ?? null,
+        openTime: e.open_time ?? e.openTime ?? null,
       }))
 
     return buildWeeklyReview(normalized, weekJournals)

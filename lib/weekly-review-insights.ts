@@ -5,6 +5,8 @@
 // place means demo and live users get the same depth of insight, not a
 // generic fallback in one of the two modes.
 
+import { buildEmotionalTaxSheet } from './emotional-tax'
+
 export interface WeeklyReviewData {
   summary: string
   keyMetrics: { label: string; value: string | number; trend: 'up' | 'down' | 'neutral' }[]
@@ -13,6 +15,24 @@ export interface WeeklyReviewData {
   nextWeekFocus: string[]
   psychologicalInsights: string[]
   riskAssessment: string
+  // --- Richer fields (additive; safe defaults in emptyWeeklyReview) ---
+  grade: { letter: string; score: number; headline: string } // A–F weekly grade
+  quant: {
+    profitFactor: number | null
+    avgWin: number
+    avgLoss: number
+    expectancy: number
+    largestWin: number
+    largestLoss: number
+    maxDrawdown: number
+    maxDrawdownR: number | null // drawdown expressed in average-trade ("R") units
+  }
+  equityCurve: number[] // cumulative P&L after each trade, chronological
+  emotionalTax: {
+    total: number // $ given back to emotional mistakes this week (>= 0)
+    topOffender: string | null
+    rows: { label: string; incidents: number; realLoss: number }[]
+  } | null
 }
 
 export interface NormalizedTrade {
@@ -27,11 +47,33 @@ export interface NormalizedTrade {
   emotionBefore?: string | null
   notes?: string | null
   followedPlan?: boolean | null
+  // Optional behavioural fields used by the Emotional Tax integration.
+  id?: string | null
+  positionSize?: number | null
+  revengeTrade?: boolean | null
+  fomo?: boolean | null
+  hasStopLoss?: boolean | null
+  openTime?: string | null
 }
 
 const DAY_NAMES = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota']
 
 const fmt = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(0)}`
+// Proper USD formatting with sign + thousands separator: +$1,234 / -$850.
+const money = (n: number) => `${n < 0 ? '-' : ''}$${Math.abs(Math.round(n)).toLocaleString('en-US')}`
+const moneySigned = (n: number) => `${n >= 0 ? '+' : '-'}$${Math.abs(Math.round(n)).toLocaleString('en-US')}`
+
+const EMPTY_GRADE = { letter: '—', score: 0, headline: 'Zatím bez hodnocení' }
+const EMPTY_QUANT = {
+  profitFactor: null,
+  avgWin: 0,
+  avgLoss: 0,
+  expectancy: 0,
+  largestWin: 0,
+  largestLoss: 0,
+  maxDrawdown: 0,
+  maxDrawdownR: null,
+}
 
 function avgOf(trades: NormalizedTrade[], key: keyof NormalizedTrade): number | null {
   const vals = trades.map((t) => t[key]).filter((v): v is number => typeof v === 'number')
@@ -54,6 +96,10 @@ export function emptyWeeklyReview(): WeeklyReviewData {
     nextWeekFocus: ['Stanov si jasná pravidla vstupu', 'Definuj maximální riziko na obchod'],
     psychologicalInsights: ['Zatím nedostatek dat pro psychologickou analýzu'],
     riskAssessment: 'Bez obchodů tento týden nelze vyhodnotit riziko.',
+    grade: EMPTY_GRADE,
+    quant: EMPTY_QUANT,
+    equityCurve: [],
+    emotionalTax: null,
   }
 }
 
@@ -133,6 +179,50 @@ export function buildWeeklyReview(weekTradesInput: NormalizedTrade[], weekJourna
   const avgStress = avgOf(weekTrades, 'stress')
   const avgConfidence = avgOf(weekTrades, 'confidence')
   const avgMood = avgOf(weekTrades, 'mood')
+
+  // --- Quant metrics (the numbers a serious trader actually wants) ---------
+  const grossProfit = winningTrades.reduce((s, t) => s + t.pnl, 0)
+  const grossLoss = Math.abs(losingTrades.reduce((s, t) => s + t.pnl, 0))
+  const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0
+  const avgWin = winningTrades.length ? grossProfit / winningTrades.length : 0
+  const avgLoss = losingTrades.length ? grossLoss / losingTrades.length : 0
+  const expectancy = avgTrade // mean P&L per trade
+  const largestWin = winningTrades.length ? Math.max(...winningTrades.map((t) => t.pnl)) : 0
+  const largestLoss = losingTrades.length ? Math.min(...losingTrades.map((t) => t.pnl)) : 0
+  const avgAbsTrade = weekTrades.reduce((s, t) => s + Math.abs(t.pnl), 0) / weekTrades.length
+
+  // Equity curve + max drawdown, both computed once from the same running sum.
+  const equityCurve: number[] = []
+  let runningEq = 0
+  let peakEq = 0
+  let maxDrawdown = 0
+  weekTrades.forEach((t) => {
+    runningEq += t.pnl
+    equityCurve.push(Math.round(runningEq))
+    peakEq = Math.max(peakEq, runningEq)
+    maxDrawdown = Math.max(maxDrawdown, peakEq - runningEq)
+  })
+  // Drawdown in "R" units = relative to a typical trade, so the threshold
+  // works for a $50 account and a $500k account alike (the old $10 threshold
+  // flagged literally every real account as high risk).
+  const maxDrawdownR = avgAbsTrade > 0 ? maxDrawdown / avgAbsTrade : null
+
+  // --- Emotional Tax for the week: the app's signature insight, reused here
+  // so Weekly Review agrees with the Journal's Emotional Tax Sheet. ---------
+  const taxJournalEntries = weekJournals.map((j) => ({ date: j.date, tags: j.tags }))
+  const taxSheet = buildEmotionalTaxSheet(weekTrades as any[], taxJournalEntries)
+  const emotionalTaxTotal = Math.abs(taxSheet.totals.realLoss)
+  const taxRowsSorted = [...taxSheet.rows]
+    .filter((r) => r.incidents > 0)
+    .sort((a, b) => a.realLoss - b.realLoss) // most negative first
+  const topTaxOffender = taxRowsSorted[0] || null
+  const emotionalTax = taxSheet.hasData
+    ? {
+        total: emotionalTaxTotal,
+        topOffender: topTaxOffender ? topTaxOffender.label : null,
+        rows: taxRowsSorted.map((r) => ({ label: r.label, incidents: r.incidents, realLoss: r.realLoss })),
+      }
+    : null
 
   const followedPlanTrades = weekTrades.filter((t) => t.followedPlan !== null && t.followedPlan !== undefined)
   const followedPlanCount = followedPlanTrades.filter((t) => t.followedPlan).length
@@ -316,41 +406,106 @@ export function buildWeeklyReview(weekTradesInput: NormalizedTrade[], weekJourna
   }
   if (nextWeekFocus.length < 3) nextWeekFocus.push('Udržuj maximální riziko 2 % kapitálu na jeden obchod')
 
-  let peak = 0
-  let maxDrawdown = 0
-  let running = 0
-  weekTrades.forEach((t) => {
-    running += t.pnl
-    peak = Math.max(peak, running)
-    maxDrawdown = Math.max(maxDrawdown, peak - running)
-  })
+  // --- Emotional Tax callouts (consistent with the Journal's tax sheet) ----
+  if (emotionalTax && topTaxOffender) {
+    improvements.push(
+      `Emoční chyby tě tento týden stály ${money(emotionalTaxTotal)} (${taxSheet.totals.incidents}× incident) – nejdražší byl ${topTaxOffender.label.toLowerCase()} za ${money(topTaxOffender.realLoss)}`,
+    )
+    if (taxSheet.strategyPnL > 0 && taxSheet.emotionalPnL < 0) {
+      highlights.push(
+        `Tvá čistá strategie vydělala ${moneySigned(taxSheet.strategyPnL)} – problém nejsou vstupy, ale emoční obchody (${moneySigned(taxSheet.emotionalPnL)})`,
+      )
+    }
+    nextWeekFocus.unshift(`Cíl: nula incidentů typu „${topTaxOffender.label}“ – to byl tento týden tvůj nejdražší vzorec`)
+  }
+  if (profitFactor !== Infinity && profitFactor >= 1.5 && losingTrades.length > 0) {
+    highlights.push(`Profit faktor ${profitFactor.toFixed(2)} – tvé výhry solidně převažují ztráty`)
+  } else if (profitFactor !== Infinity && profitFactor < 1 && weekTrades.length >= 4) {
+    improvements.push(`Profit faktor ${profitFactor.toFixed(2)} (pod 1.0) – ztráty převažují výhry, zmenši velikost ztrát nebo zvyš kvalitu vstupů`)
+  }
 
+  // --- Weekly grade (process-weighted, not just P&L) -----------------------
+  const revengeIncidents = (taxSheet.rows.find((r) => r.key === 'revenge')?.incidents) || 0
+  let gScore = 100
+  if (totalPnL < 0) gScore -= 6
+  if (winRate < 40) gScore -= 18
+  else if (winRate < 50) gScore -= 10
+  else if (winRate >= 60) gScore += 4
+  if (followedPlanRate !== null) {
+    if (followedPlanRate < 50) gScore -= 18
+    else if (followedPlanRate < 70) gScore -= 9
+    else if (followedPlanRate >= 90) gScore += 5
+  }
+  if (avgDiscipline !== null) {
+    if (avgDiscipline < 5) gScore -= 10
+    else if (avgDiscipline >= 8) gScore += 4
+  }
+  gScore -= Math.min(24, revengeIncidents * 8)
+  if (grossProfit > 0 && emotionalTaxTotal > grossProfit * 0.5) gScore -= 10
+  if (maxDrawdownR !== null) {
+    if (maxDrawdownR > 4) gScore -= 14
+    else if (maxDrawdownR > 2.5) gScore -= 7
+  }
+  gScore = Math.max(0, Math.min(100, Math.round(gScore)))
+  const gLetter = gScore >= 90 ? 'A' : gScore >= 80 ? 'B' : gScore >= 70 ? 'C' : gScore >= 58 ? 'D' : 'F'
+  let gHeadline: string
+  if (revengeIncidents > 0) gHeadline = 'Revenge trading ti tento týden srazil známku nejvíc'
+  else if (followedPlanRate !== null && followedPlanRate < 70) gHeadline = 'Největší slabina týdne je disciplína v dodržování plánu'
+  else if (winRate < 50) gHeadline = 'Edge potřebuje doladit – nízký win rate'
+  else if (maxDrawdownR !== null && maxDrawdownR > 4) gHeadline = 'Výsledek táhl dolů hluboký propad uvnitř týdne'
+  else if (gLetter === 'A' || gLetter === 'B') gHeadline = 'Silný, disciplinovaný týden – drž ten proces'
+  else gHeadline = 'Solidní týden s prostorem pro doladění'
+  const grade = { letter: gLetter, score: gScore, headline: gHeadline }
+
+  // --- Risk assessment grounded in drawdown-as-R (works at any account size)
   const riskAssessment =
-    maxDrawdown > 10
-      ? `Riziko je tento týden zvýšené – propad od maxima byl ${maxDrawdown.toFixed(0)}$. Sniž velikost pozic a obchoduj menší lot.`
-      : maxDrawdown > 5
-        ? `Riziko je mírné (propad ${maxDrawdown.toFixed(0)}$) a v rámci akceptovatelných hranic, dál ho sleduj.`
-        : 'Riziko bylo dobře pod kontrolou – pokračuj ve stejném nastavení risk managementu.'
+    maxDrawdownR === null
+      ? 'Bez dostatku obchodů nelze spolehlivě vyhodnotit riziko.'
+      : maxDrawdownR > 4
+        ? `Zvýšené riziko – maximální propad uvnitř týdne byl ${money(maxDrawdown)} (${maxDrawdownR.toFixed(1)}× tvůj průměrný obchod). Sniž velikost pozic, dokud se křivka neuklidní.`
+        : maxDrawdownR > 2.5
+          ? `Mírně zvýšené riziko – propad ${money(maxDrawdown)} (${maxDrawdownR.toFixed(1)}× průměrný obchod). Drž velikost pozic na uzdě a sleduj sérii ztrát.`
+          : `Riziko pod kontrolou – maximální propad jen ${money(maxDrawdown)} (${maxDrawdownR.toFixed(1)}× průměrný obchod). Pokračuj ve stejném risk managementu.`
 
   const bestTag = [bestTrade.direction, bestTrade.pair].filter(Boolean).join(' ')
   const summary =
-    `Tento týden jsi udělal ${weekTrades.length} ${weekTrades.length === 1 ? 'obchod' : 'obchodů'} s ${winRate.toFixed(0)}% úspěšností a ${totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(0)}$ ${totalPnL >= 0 ? 'ziskem' : 'ztrátou'}. ` +
-    `Tahounem byl${bestTag ? ` ${bestTag}` : ''} obchod z ${fmtDate(bestTrade.date)} (${fmt(bestTrade.pnl)}$)` +
-    (worstTrade.pnl < 0 ? `, naopak nejvíc bolel obchod z ${fmtDate(worstTrade.date)} (${fmt(worstTrade.pnl)}$).` : '.')
+    `Známka týdne: ${grade.letter} (${grade.score}/100). ` +
+    `Udělal jsi ${weekTrades.length} ${weekTrades.length === 1 ? 'obchod' : 'obchodů'} s ${winRate.toFixed(0)}% úspěšností a výsledkem ${moneySigned(totalPnL)}. ` +
+    `Tahounem byl${bestTag ? ` ${bestTag}` : ''} obchod z ${fmtDate(bestTrade.date)} (${moneySigned(bestTrade.pnl)})` +
+    (worstTrade.pnl < 0 ? `, naopak nejvíc bolel obchod z ${fmtDate(worstTrade.date)} (${moneySigned(worstTrade.pnl)}).` : '.') +
+    (emotionalTax && emotionalTaxTotal > 0
+      ? ` Tvé emoce tě přitom stály ${money(emotionalTaxTotal)} – nejvíc ${(topTaxOffender?.label || '').toLowerCase()}.`
+      : '')
+
+  const pfDisplay = profitFactor === Infinity ? '∞' : profitFactor.toFixed(2)
 
   return {
     summary,
     keyMetrics: [
       { label: 'Celkem obchodů', value: weekTrades.length, trend: 'neutral' },
-      { label: 'Win Rate', value: `${winRate.toFixed(0)}%`, trend: winRate >= 55 ? 'up' : 'down' },
-      { label: 'Týdenní P&L', value: `${totalPnL.toFixed(0)}`, trend: totalPnL > 0 ? 'up' : 'down' },
-      { label: 'Nejlepší obchod', value: `${bestTrade.pnl.toFixed(0)}`, trend: 'up' },
-      { label: 'Průměrný obchod', value: `${avgTrade.toFixed(0)}`, trend: avgTrade >= 0 ? 'up' : 'down' },
+      { label: 'Win Rate', value: `${winRate.toFixed(0)}%`, trend: winRate >= 55 ? 'up' : winRate < 45 ? 'down' : 'neutral' },
+      { label: 'Týdenní P&L', value: money(totalPnL), trend: totalPnL > 0 ? 'up' : totalPnL < 0 ? 'down' : 'neutral' },
+      { label: 'Profit faktor', value: pfDisplay, trend: profitFactor >= 1.3 ? 'up' : profitFactor < 1 ? 'down' : 'neutral' },
+      { label: 'Průměrný obchod', value: money(expectancy), trend: expectancy >= 0 ? 'up' : 'down' },
+      { label: 'Max. propad', value: money(maxDrawdown), trend: 'down' },
     ],
     highlights: highlights.length ? highlights : ['Stabilní týden bez výrazných výkyvů'],
     improvements: improvements.length ? improvements : ['Pokračuj v zapisování obchodů pro hlubší analýzu'],
     nextWeekFocus: nextWeekFocus.slice(0, 3),
     psychologicalInsights: psychologicalInsights.length ? psychologicalInsights.slice(0, 7) : ['Nedostatek psychologických dat za tento týden'],
     riskAssessment,
+    grade,
+    quant: {
+      profitFactor: profitFactor === Infinity ? null : Math.round(profitFactor * 100) / 100,
+      avgWin: Math.round(avgWin),
+      avgLoss: Math.round(avgLoss),
+      expectancy: Math.round(expectancy),
+      largestWin: Math.round(largestWin),
+      largestLoss: Math.round(largestLoss),
+      maxDrawdown: Math.round(maxDrawdown),
+      maxDrawdownR: maxDrawdownR === null ? null : Math.round(maxDrawdownR * 10) / 10,
+    },
+    equityCurve,
+    emotionalTax,
   }
 }
