@@ -11,6 +11,12 @@ interface SubscriptionContextType {
   isActive: boolean
   isPremium: boolean
   isLoading: boolean
+  // True only after a subscription status fetch has SUCCESSFULLY completed.
+  // A failed/aborted fetch leaves isActive=false, which is indistinguishable
+  // from a confirmed free user — consumers (e.g. live-mode auto-revert) must
+  // wait for this before acting on a "not premium" state, otherwise a single
+  // API hiccup would wrongly downgrade a paying user.
+  statusConfirmed: boolean
   isCanceled: boolean
   trialEndsAt: string | null
   subscriptionId: string | null
@@ -34,6 +40,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [daysRemaining, setDaysRemaining] = useState(0)
   const [isActive, setIsActive] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [statusConfirmed, setStatusConfirmed] = useState(false)
   const [isCanceled, setIsCanceled] = useState(false)
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null)
@@ -53,7 +60,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       console.log("[v0] [SUBSCRIPTION] Initial check for user:", user.id)
       checkSubscriptionStatus()
     } else {
-      // No user (guest/demo) - nothing to check, stop loading immediately
+      // No user (guest/demo) - confirmed free, nothing to check.
+      setIsActive(false)
+      setStatusConfirmed(true)
       setIsLoading(false)
     }
   }, [authReady, user])
@@ -84,6 +93,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         const data = await response.json()
         setPlan(data.plan)
         setIsActive(data.isActive)
+        setStatusConfirmed(true) // status is now confirmed from a real response
         setSubscriptionStatus(data.status)
         setTrialEndsAt(data.trialEndsAt)
         setSubscriptionId(data.subscriptionId)
@@ -261,6 +271,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         isActive,
         isPremium,
         isLoading,
+        statusConfirmed,
         isCanceled,
         trialEndsAt,
         subscriptionId,
@@ -289,6 +300,7 @@ export function useSubscription() {
         isActive: false,
         isPremium: false,
         isLoading: true,
+        statusConfirmed: false,
         trialEndsAt: null,
         subscriptionId: null,
         customerId: null,
