@@ -15,10 +15,16 @@ import {
   Award,
   DollarSign,
   Shield,
+  Flame,
+  Smile,
+  TrendingUp,
+  Calendar,
+  FileSpreadsheet,
 } from "lucide-react"
 import DisciplineMatrix from "@/components/discipline-matrix"
 import JournalAiSearch from "@/components/journal-ai-search"
 import DayDetailPanel from "@/components/day-detail-panel"
+import JournalRecentEntries from "@/components/journal-recent-entries"
 import { buildDisciplineMatrix, type DisciplineDay } from "@/lib/discipline-matrix"
 import { buildDailySummary } from "@/lib/daily-summary"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -118,6 +124,7 @@ export default function JournalPage() {
   const [matchedDays, setMatchedDays] = useState<DisciplineDay[]>([])
   const [searchSummary, setSearchSummary] = useState<string | null>(null)
   const [selectedDay, setSelectedDay] = useState<DisciplineDay | null>(null)
+  const [timeFilter, setTimeFilter] = useState<"week" | "month" | "all">("month")
   const isEn = language === "en"
 
   const txt = {
@@ -203,6 +210,22 @@ export default function JournalPage() {
     tradingGreat: isEn ? "Your trading is in great shape. Keep going! 🚀" : "Tvé obchodování je ve skvělé formě. Pokračuj! 🚀",
     personalizedRecommendations: isEn ? "personalized recommendations for improving performance" : "personalizovaných doporučení pro zlepšení výkonu",
     viewInsights: isEn ? "View Insights" : "Zobrazit Insights",
+
+    // Time filter
+    filterWeek: isEn ? "Week" : "Týden",
+    filterMonth: isEn ? "Month" : "Měsíc",
+    filterAll: isEn ? "All time" : "Vše",
+    periodLabel: isEn ? "Period" : "Období",
+
+    // Extended stat cards
+    statTrades: isEn ? "Trades" : "Obchodů",
+    statWinRate: isEn ? "Win Rate" : "Win Rate",
+    statNetPnL: isEn ? "Net P&L" : "Čistý P&L",
+    statBestDay: isEn ? "Best Day" : "Nejlepší den",
+    statStreak: isEn ? "Streak" : "Série",
+    statMood: isEn ? "Avg Mood" : "Prům. nálada",
+    daysUnit: isEn ? "days" : "dní",
+    exportCsv: "CSV",
   }
 
   useEffect(() => {
@@ -237,9 +260,26 @@ export default function JournalPage() {
     loadEntries() // Reload entries to reflect the new one
   }
 
+  // All entries for the active source (live context or demo), unfiltered.
+  const allSourceEntries = useMemo(
+    () => (isLiveMode ? getAllJournalEntries() || [] : entries),
+    [isLiveMode, getAllJournalEntries, entries],
+  )
+
+  // Entries narrowed to the selected time window (week / month / all). Stats
+  // and the recent-entries list both read from this so the period selector
+  // controls everything consistently.
+  const periodEntries = useMemo(() => {
+    if (timeFilter === "all") return allSourceEntries
+    const cutoff = new Date()
+    cutoff.setHours(0, 0, 0, 0)
+    cutoff.setDate(cutoff.getDate() - (timeFilter === "week" ? 7 : 30))
+    return allSourceEntries.filter((e: any) => new Date(e.date) >= cutoff)
+  }, [allSourceEntries, timeFilter])
+
   const stats = useMemo(() => {
-    const contextEntries = isLiveMode ? getAllJournalEntries() || [] : entries
-    const trades = contextEntries.filter((e) => e.type === "trade")
+    const contextEntries = periodEntries
+    const trades = contextEntries.filter((e: any) => e.type === "trade")
 
     // Return zero stats if no entries from context
     if (contextEntries.length === 0) {
@@ -341,7 +381,7 @@ export default function JournalPage() {
             ) / 100
           : 0,
     }
-  }, [getAllJournalEntries, entries, isLiveMode]) // Recalculate when entries from context change
+  }, [periodEntries]) // Recalculate when the active period's entries change
 
   // Behavioral Cockpit: the two dominant psychological metrics shown above
   // the fold. Both are derived from the exact same engines that drive the
@@ -482,25 +522,49 @@ export default function JournalPage() {
 
   const insights = generateInsights()
 
-  const exportData = () => {
-    const dataStr = JSON.stringify(getAllJournalEntries() || [], null, 2) // Use context for export
-    const dataBlob = new Blob([dataStr], { type: "application/json" })
-    const url = URL.createObjectURL(dataBlob)
+  const triggerDownload = (content: string, mime: string, ext: string) => {
+    const blob = new Blob([content], { type: mime })
+    const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
-    link.download = `trading-journal-${new Date().toISOString().split("T")[0]}.json`
+    link.download = `trading-journal-${new Date().toISOString().split("T")[0]}.${ext}`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
   }
 
+  const exportData = () => {
+    const source = isLiveMode ? getAllJournalEntries() || [] : entries
+    triggerDownload(JSON.stringify(source, null, 2), "application/json", "json")
+  }
+
+  const exportCsv = () => {
+    const source = isLiveMode ? getAllJournalEntries() || [] : entries
+    const cols = ["date", "type", "pair", "direction", "profitLoss", "mood", "emotion", "notes"]
+    const escape = (v: any) => {
+      const s = String(v ?? "")
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    }
+    const rows = [
+      cols.join(","),
+      ...source.map((e: any) =>
+        cols.map((c) => escape(c === "profitLoss" ? e.profitLoss ?? e.pnl ?? "" : e[c])).join(","),
+      ),
+    ]
+    triggerDownload(rows.join("\n"), "text/csv;charset=utf-8", "csv")
+  }
+
   // const openEntryModal = (entry) => {
   //   // Implement modal opening logic here
   // }
 
-  // Determine which stats to display
-  const displayStats = !isLiveMode && virtualStats ? virtualStats : stats
+  // Stats now always come from the period-filtered computation so the
+  // Week / Month / All selector controls the numbers in both live and demo
+  // mode. (virtualStats is kept available for any legacy callers but the
+  // header cards read the live, filter-aware figures.)
+  const displayStats = stats
+  void virtualStats
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16">
@@ -547,7 +611,15 @@ export default function JournalPage() {
               className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 text-xs md:text-sm px-3 md:px-4 hidden md:flex"
             >
               <Download className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              Export
+              JSON
+            </Button>
+            <Button
+              onClick={exportCsv}
+              variant="outline"
+              className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 text-xs md:text-sm px-3 md:px-4 hidden md:flex"
+            >
+              <FileSpreadsheet className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+              {txt.exportCsv}
             </Button>
             <Button
               onClick={() => setShowQuickAdd(true)}
@@ -618,16 +690,48 @@ export default function JournalPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
+        {/* Time period selector — controls the stat cards below and the
+            recent-entries list. */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2 text-gray-400 text-xs md:text-sm">
+            <Calendar className="w-4 h-4" />
+            <span className="font-medium">{txt.periodLabel}:</span>
+          </div>
+          <div className="inline-flex items-center gap-1 bg-slate-800/80 border border-slate-700 rounded-xl p-1">
+            {[
+              { key: "week" as const, label: txt.filterWeek },
+              { key: "month" as const, label: txt.filterMonth },
+              { key: "all" as const, label: txt.filterAll },
+            ].map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setTimeFilter(opt.key)}
+                className={cn(
+                  "px-4 py-1.5 rounded-lg text-xs md:text-sm font-medium transition-all",
+                  timeFilter === opt.key
+                    ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow"
+                    : "text-gray-400 hover:text-white",
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Extended stat grid — 6 key figures, each period-aware. */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-3 md:p-4">
-              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Obchodů</p>
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1 flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" /> {txt.statTrades}
+              </p>
               <p className="text-xl md:text-2xl font-bold text-white">{displayStats.totalTrades}</p>
             </CardContent>
           </Card>
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-3 md:p-4">
-              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Win Rate</p>
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">{txt.statWinRate}</p>
               <p
                 className={cn(
                   "text-xl md:text-2xl font-bold",
@@ -649,14 +753,49 @@ export default function JournalPage() {
             )}
           >
             <CardContent className="p-3 md:p-4">
-              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Net P&L</p>
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">{txt.statNetPnL}</p>
               <p
                 className={cn(
                   "text-xl md:text-2xl font-bold",
                   displayStats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400",
                 )}
               >
-                {displayStats.totalPnL >= 0 ? "+" : ""}${displayStats.totalPnL}
+                {displayStats.totalPnL >= 0 ? "+" : ""}${displayStats.totalPnL.toLocaleString("en-US")}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-3 md:p-4">
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1 flex items-center gap-1">
+                <Award className="w-3 h-3 text-amber-400" /> {txt.statBestDay}
+              </p>
+              <p className="text-xl md:text-2xl font-bold text-emerald-400">
+                +${displayStats.bestDay.toLocaleString("en-US")}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-3 md:p-4">
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1 flex items-center gap-1">
+                <Flame className="w-3 h-3 text-orange-400" /> {txt.statStreak}
+              </p>
+              <p className="text-xl md:text-2xl font-bold text-white">
+                {displayStats.streak} <span className="text-xs font-normal text-gray-400">{txt.daysUnit}</span>
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-3 md:p-4">
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1 flex items-center gap-1">
+                <Smile className="w-3 h-3 text-blue-400" /> {txt.statMood}
+              </p>
+              <p
+                className={cn(
+                  "text-xl md:text-2xl font-bold",
+                  displayStats.avgMood >= 70 ? "text-emerald-400" : displayStats.avgMood >= 50 ? "text-yellow-400" : "text-rose-400",
+                )}
+              >
+                {displayStats.avgMood || "—"}
               </p>
             </CardContent>
           </Card>
@@ -723,6 +862,10 @@ export default function JournalPage() {
             <DisciplineMatrix highlightedDates={highlightedDates} onDayClick={setSelectedDay} />
           </CardContent>
         </Card>
+
+        {/* Recent entries — searchable, filterable list of individual trades
+            and notes for the selected period. */}
+        <JournalRecentEntries entries={periodEntries} isEn={isEn} />
 
         {selectedDay && (
           <DayDetailPanel
