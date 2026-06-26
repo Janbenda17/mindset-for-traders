@@ -544,44 +544,6 @@ export default function JournalPage() {
             </span>
           </div>
         )}
-
-          <div className="flex gap-2 md:gap-3 flex-wrap">
-            <Button
-              onClick={() => setShowInsights(true)}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg text-xs md:text-sm px-3 md:px-4"
-            >
-              <Brain className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              <span className="hidden md:inline">{txt.aiInsights}</span>
-              <span className="md:hidden">{txt.aiShort}</span>
-              {insights.length > 0 && (
-                <Badge className="ml-1 md:ml-2 bg-white/20 text-white border-0 text-xs">{insights.length}</Badge>
-              )}
-            </Button>
-            <Button
-              onClick={exportData}
-              variant="outline"
-              className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 text-xs md:text-sm px-3 md:px-4 hidden md:flex"
-            >
-              <Download className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              JSON
-            </Button>
-            <Button
-              onClick={exportCsv}
-              variant="outline"
-              className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 text-xs md:text-sm px-3 md:px-4 hidden md:flex"
-            >
-              <FileSpreadsheet className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              {txt.exportCsv}
-            </Button>
-            <Button
-              onClick={() => setShowQuickAdd(true)}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-lg text-xs md:text-sm px-3 md:px-4"
-            >
-              <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              <span className="hidden md:inline">{txt.quickEntry}</span>
-              <span className="md:hidden">+</span>
-            </Button>
-          </div>
         </div>
 
         {/* Behavioral Cockpit -- two dominant psychological metrics first,
@@ -758,38 +720,11 @@ export default function JournalPage() {
             saved / potential columns are grounded estimates. */}
         <EmotionalTaxSheet trades={periodTrades} journalEntries={periodJournal} isEn={isEn} />
 
-        {/* Quick Insights Bar */}
-        {insights.length > 0 && (
-          <Card className="bg-gradient-to-r from-purple-900/40 to-pink-900/40 border-2 border-purple-500/40 backdrop-blur-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-xl">
-                    <Sparkles className="w-6 h-6 text-purple-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-white font-bold text-lg">{txt.aiInsightsAvailable}</h3>
-                    <p className="text-gray-300 text-sm">
-                      {insights.length} {txt.personalizedRecommendations}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => setShowInsights(true)}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  {txt.viewInsights}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {/* Discipline Matrix + Day Detail — AI search on top, then calendar
-            and detail side by side when a day is selected. */}
+
+        {/* AI search — its own card above the calendar */}
         <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-          <CardContent className="p-3 md:p-6 space-y-4">
+          <CardContent className="p-3 md:p-5 space-y-3">
             <JournalAiSearch
               trades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
               journalEntries={!isLiveMode ? entries.filter((e: any) => e.type === "journal") : undefined}
@@ -814,29 +749,29 @@ export default function JournalPage() {
                 )}
               </div>
             )}
-
-            {/* Calendar + detail side by side on desktop */}
-            <div className={cn("flex gap-4 items-start", selectedDay ? "flex-col md:flex-row" : "")}>
-              <div className={cn("transition-all duration-300", selectedDay ? "w-full md:w-[52%] shrink-0" : "w-full")}>
-                <DisciplineMatrix
-                  highlightedDates={highlightedDates}
-                  onDayClick={setSelectedDay}
-                  trades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
-                  journalEntries={!isLiveMode ? entries.filter((e: any) => e.type === "journal") : undefined}
-                />
-              </div>
-              {selectedDay && (
-                <div className="w-full md:flex-1 min-w-0">
-                  <DayDetailPanel
-                    day={selectedDay}
-                    onClose={() => setSelectedDay(null)}
-                    demoTrades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
-                  />
-                </div>
-              )}
-            </div>
           </CardContent>
         </Card>
+
+        {/* Kalendář + Detail dne — vedle sebe na desktopu, pod sebou na mobilu */}
+        <div className="flex flex-col md:flex-row gap-4 items-start">
+          <div className={cn("w-full transition-all duration-300", selectedDay ? "md:w-[52%]" : "md:w-full")}>
+            <DisciplineMatrix
+              highlightedDates={highlightedDates}
+              onDayClick={setSelectedDay}
+              trades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
+              journalEntries={!isLiveMode ? entries.filter((e: any) => e.type === "journal") : undefined}
+            />
+          </div>
+          {selectedDay && (
+            <div className="w-full md:flex-1 min-w-0">
+              <DayDetailPanel
+                day={selectedDay}
+                onClose={() => setSelectedDay(null)}
+                demoTrades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Recent entries — searchable, filterable list of individual trades
             and notes for the selected period. */}

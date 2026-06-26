@@ -85,10 +85,10 @@ export default function DayDetailPanel({ day, onClose, demoTrades }: DayDetailPa
           <p className="text-gray-400 text-sm">Pro tento den nemáme žádné zaznamenané obchody.</p>
         ) : (
           <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {/* Left: hard trade data */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm text-gray-400 mb-1">
+          <div className="space-y-4">
+            {/* Trade list */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm text-gray-400">
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5" /> {dayTrades.length} obchodů
                 </span>
@@ -96,7 +96,7 @@ export default function DayDetailPanel({ day, onClose, demoTrades }: DayDetailPa
                   {netPnl >= 0 ? "+" : ""}${Math.round(netPnl)}
                 </span>
               </div>
-              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                 {dayTrades.map((t: any, i: number) => {
                   const pnl = t.pnl || t.profitLoss || 0
                   const item = autopsyById.get(t.id || `t-${i}`)
@@ -117,7 +117,6 @@ export default function DayDetailPanel({ day, onClose, demoTrades }: DayDetailPa
                         )}
                         <div className="min-w-0">
                           <p className="text-white text-sm font-medium truncate">{t.pair || "Obchod"}</p>
-                          {/* Emotional ROI badge: green = under control, red = priced leak */}
                           {item &&
                             (isLeak ? (
                               <span className="inline-flex items-center gap-1 text-[10px] text-rose-300 bg-rose-500/10 rounded px-1.5 py-0.5 mt-0.5">
@@ -142,8 +141,8 @@ export default function DayDetailPanel({ day, onClose, demoTrades }: DayDetailPa
               </div>
             </div>
 
-            {/* Right: AI verdict for the day */}
-            <div className="space-y-3">
+            {/* Discipline verdict */}
+            <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <Shield className="w-4 h-4 text-purple-400" />
                 <span className="text-white font-semibold">{summary.discipline.label}</span>
@@ -159,33 +158,34 @@ export default function DayDetailPanel({ day, onClose, demoTrades }: DayDetailPa
               )}
 
               {summary.bullets.length > 0 && (
-                <ul className="space-y-1.5 text-xs text-gray-400 list-disc ml-4">
+                <ul className="space-y-1 text-xs text-gray-400 list-disc ml-4">
                   {summary.bullets.slice(0, 4).map((b, i) => (
                     <li key={i}>{b}</li>
                   ))}
                 </ul>
               )}
-
-              {summary.chatPrompts.length > 0 && (
-                <div className="pt-2">
-                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Probrat s Claude</p>
-                  <div className="flex flex-col gap-2">
-                    {summary.chatPrompts.slice(0, 3).map((p, i) => (
-                      <Button
-                        key={i}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => askAi(p.prompt)}
-                        className="justify-start text-left h-auto py-2 px-3 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-slate-300 text-xs whitespace-normal"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5 mr-2 flex-shrink-0 text-cyan-400" />
-                        {p.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
+
+            {/* Probrat s Claude */}
+            {summary.chatPrompts.length > 0 && (
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">Probrat s Claude</p>
+                <div className="flex flex-col gap-2">
+                  {summary.chatPrompts.slice(0, 3).map((p, i) => (
+                    <Button
+                      key={i}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => askAi(p.prompt)}
+                      className="justify-start text-left h-auto py-2 px-3 border-slate-700 bg-slate-800/40 hover:bg-slate-800 text-slate-300 text-xs whitespace-normal"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5 mr-2 flex-shrink-0 text-cyan-400" />
+                      {p.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Pitevní protokol obchodu — second-by-second forensic breakdown of
