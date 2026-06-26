@@ -25,6 +25,7 @@ import DisciplineMatrix from "@/components/discipline-matrix"
 import JournalAiSearch from "@/components/journal-ai-search"
 import DayDetailPanel from "@/components/day-detail-panel"
 import JournalRecentEntries from "@/components/journal-recent-entries"
+import EmotionalTaxSheet from "@/components/emotional-tax-sheet"
 import { buildDisciplineMatrix, type DisciplineDay } from "@/lib/discipline-matrix"
 import { buildDailySummary } from "@/lib/daily-summary"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -88,45 +89,92 @@ const generateDemoEntries = () => {
       roll < 0.55 ? "disciplined" : roll < 0.85 ? "mixed" : "revenge"
     const tradesToday = dayKind === "revenge" ? rnd(2, 3) : rnd(1, 2)
 
+    const fmtClock = (totalSec: number) => {
+      const s = ((totalSec % 86400) + 86400) % 86400
+      const hh = Math.floor(s / 3600)
+      const mm = Math.floor((s % 3600) / 60)
+      const ss = Math.floor(s % 60)
+      return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`
+    }
+
+    // Per-day timeline state, so revenge re-entries can sit seconds after the
+    // prior loss with an escalated size — exactly what the Trade Autopsy reads.
+    let prevSec = 9 * 3600 + rnd(0, 90) * 60 // first entry somewhere 09:00-10:30
+    let prevLossMag = 0
+    let prevSize = 1
+    let prevWasLoss = false
+
     for (let k = 0; k < tradesToday; k++) {
       let isWin: boolean
       let followedPlan: boolean
-      if (dayKind === "disciplined") {
-        isWin = Math.random() > 0.3
-        followedPlan = Math.random() > 0.12
-      } else if (dayKind === "mixed") {
-        isWin = Math.random() > 0.45
-        followedPlan = Math.random() > 0.5
+      let revengeTrade = false
+      let openSec: number
+      let positionSize: number
+
+      const isRevengeReentry = dayKind === "revenge" && k >= 1 && prevWasLoss
+      if (isRevengeReentry) {
+        // Re-entry 35-90s after the previous loss, ~2-3.5× the size, mostly a
+        // bigger loss → trips objective revenge detection AND oversizing.
+        isWin = Math.random() > 0.8
+        followedPlan = false
+        revengeTrade = true
+        openSec = prevSec + rnd(35, 90)
+        positionSize = Number((prevSize * (Math.random() * 1.5 + 2)).toFixed(2))
       } else {
-        // revenge day: mostly losses, plan mostly broken
-        isWin = Math.random() > 0.72
-        followedPlan = Math.random() > 0.82
+        if (dayKind === "disciplined") {
+          isWin = Math.random() > 0.3
+          followedPlan = Math.random() > 0.12
+        } else if (dayKind === "mixed") {
+          isWin = Math.random() > 0.45
+          followedPlan = Math.random() > 0.5
+        } else {
+          isWin = Math.random() > 0.72
+          followedPlan = Math.random() > 0.82
+        }
+        openSec = prevSec + rnd(25, 75) * 60 // 25-75 min after the previous
+        positionSize =
+          !followedPlan && Math.random() > 0.5
+            ? Number((Math.random() * 1.5 + 1.8).toFixed(2)) // 1.8-3.3 (oversized)
+            : Number((Math.random() * 0.8 + 0.6).toFixed(2)) // 0.6-1.4 (normal)
       }
+
+      // Loss magnitude: a revenge re-entry loss is at least as big as the
+      // previous one (escalation), so countRevengeTrades flags it.
+      let profitLoss: number
+      if (isWin) {
+        profitLoss = rnd(500, 3500)
+      } else if (isRevengeReentry && prevLossMag > 0) {
+        profitLoss = -rnd(prevLossMag, prevLossMag + 800)
+      } else {
+        profitLoss = -rnd(200, 1700)
+      }
+
+      // FOMO: chasing a late entry (not on revenge re-entries, those are their
+      // own category). No stop loss: rare normally, common on revenge days.
+      const fomo = !isRevengeReentry && Math.random() < (isWin ? 0.06 : 0.25)
+      const hasStopLoss = !(dayKind === "revenge" ? Math.random() < 0.4 : Math.random() < 0.08)
 
       const pair = pick(pairs)
       const direction = Math.random() > 0.5 ? "long" : "short"
       const session = pick(sessions)
-      const profitLoss = isWin ? rnd(500, 3500) : -rnd(200, 1700)
       const mood = isWin ? rnd(70, 95) : rnd(40, 70)
       const stressLevel = isWin ? rnd(2, 6) : rnd(6, 10)
       const confidenceBefore = isWin ? rnd(7, 10) : rnd(4, 8)
       const discipline = followedPlan ? rnd(7, 10) : rnd(3, 6)
-      // Most days a normal size; revenge/plan-break sometimes oversized.
-      const positionSize =
-        !followedPlan && Math.random() > 0.5
-          ? Number((Math.random() * 1.5 + 1.8).toFixed(2)) // 1.8-3.3 (oversized)
-          : Number((Math.random() * 0.8 + 0.6).toFixed(2)) // 0.6-1.4 (normal)
 
       demoEntries.push({
         id: `demo-trade-${tradeId++}`,
         type: "trade",
         date: dateStr,
+        openTime: fmtClock(openSec),
         title: `${direction.toUpperCase()} ${pair}`,
         content: isWin
           ? `Solid ${session} session setup, followed the plan`
-          : Math.random() > 0.5
-            ? "Should have waited for a cleaner setup"
-            : "Entered too early, bad timing",
+          : revengeTrade
+            ? "Revenge re-entry right after the loss"
+            : fomo
+              ? "Chased a move that already ran"
+              : "Entered too early, bad timing",
         pair,
         direction,
         entryPrice: Number((Math.random() * 100 + 1).toFixed(4)),
@@ -137,9 +185,11 @@ const generateDemoEntries = () => {
         mood,
         notes: isWin
           ? `Solid ${session} session setup, followed the plan`
-          : Math.random() > 0.5
-            ? "Should have waited for a cleaner setup"
-            : "Entered too early, bad timing",
+          : revengeTrade
+            ? "Revenge re-entry right after the loss"
+            : fomo
+              ? "Chased a move that already ran"
+              : "Entered too early, bad timing",
         emotion: pick(emotions),
         tags: followedPlan ? ["A+ setup", "disciplined"] : ["learning", "improvement needed"],
         emotionBefore: pick(emotions),
@@ -152,7 +202,15 @@ const generateDemoEntries = () => {
         discipline,
         followedPlan,
         matchedPlan: followedPlan,
+        revengeTrade,
+        fomo,
+        hasStopLoss,
       })
+
+      prevSec = openSec
+      prevWasLoss = !isWin
+      prevLossMag = !isWin ? Math.abs(profitLoss) : 0
+      prevSize = positionSize
     }
 
     // Layer a self-report tag on a few days so the calendar demonstrates the
@@ -354,6 +412,28 @@ export default function JournalPage() {
     cutoff.setDate(cutoff.getDate() - (timeFilter === "week" ? 7 : 30))
     return allSourceEntries.filter((e: any) => new Date(e.date) >= cutoff)
   }, [allSourceEntries, timeFilter])
+
+  // Real trades + tagged journal notes for the active period. Unlike
+  // periodEntries (journal-only in live mode), this pulls actual trades from
+  // getAllTrades() in live mode so the Emotional Tax Sheet always analyses the
+  // genuine trade ledger.
+  const periodTrades = useMemo(() => {
+    const src = isLiveMode ? getAllTrades() || [] : entries.filter((e: any) => e.type === "trade")
+    if (timeFilter === "all") return src
+    const cutoff = new Date()
+    cutoff.setHours(0, 0, 0, 0)
+    cutoff.setDate(cutoff.getDate() - (timeFilter === "week" ? 7 : 30))
+    return src.filter((t: any) => new Date(t.date) >= cutoff)
+  }, [isLiveMode, getAllTrades, entries, timeFilter])
+
+  const periodJournal = useMemo(() => {
+    const src = isLiveMode ? getAllJournalEntries() || [] : entries.filter((e: any) => e.type === "journal")
+    if (timeFilter === "all") return src
+    const cutoff = new Date()
+    cutoff.setHours(0, 0, 0, 0)
+    cutoff.setDate(cutoff.getDate() - (timeFilter === "week" ? 7 : 30))
+    return src.filter((e: any) => new Date(e.date) >= cutoff)
+  }, [isLiveMode, getAllJournalEntries, entries, timeFilter])
 
   const stats = useMemo(() => {
     const contextEntries = periodEntries
@@ -880,6 +960,11 @@ export default function JournalPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* The Emotional Tax Sheet — financial statement of the trader's
+            psychology, period-aware. Incident counts + real loss are exact;
+            saved / potential columns are grounded estimates. */}
+        <EmotionalTaxSheet trades={periodTrades} journalEntries={periodJournal} isEn={isEn} />
 
         {/* Quick Insights Bar */}
         {insights.length > 0 && (

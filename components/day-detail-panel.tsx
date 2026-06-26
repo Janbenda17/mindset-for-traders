@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { X, MessageCircle, TrendingUp, TrendingDown, Clock, Shield, DollarSign } from "lucide-react"
+import { X, MessageCircle, TrendingUp, TrendingDown, Clock, Shield, DollarSign, Stethoscope } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context"
 import { buildDailySummary } from "@/lib/daily-summary"
+import { buildTradeAutopsy } from "@/lib/emotional-tax"
 import type { DisciplineDay } from "@/lib/discipline-matrix"
 
 interface DayDetailPanelProps {
@@ -39,6 +40,15 @@ export default function DayDetailPanel({ day, onClose, demoTrades }: DayDetailPa
   )
 
   const summary = useMemo(() => buildDailySummary(dayTrades, dateLabel, day.tags || []), [dayTrades, dateLabel, day.tags])
+
+  // Hyper-detailed autopsy: per-trade forensic narrative + emotional ROI.
+  const autopsy = useMemo(() => buildTradeAutopsy(dayTrades, day.tags || [], false), [dayTrades, day.tags])
+  const autopsyById = useMemo(() => {
+    const m = new Map<string, (typeof autopsy.items)[number]>()
+    autopsy.items.forEach((it) => m.set(it.tradeId, it))
+    return m
+  }, [autopsy])
+  const leaks = autopsy.items.filter((it) => it.roi === "leak")
 
   const askAi = (prompt: string) => {
     if (typeof window !== "undefined") {
@@ -74,6 +84,7 @@ export default function DayDetailPanel({ day, onClose, demoTrades }: DayDetailPa
         {dayTrades.length === 0 ? (
           <p className="text-gray-400 text-sm">Pro tento den nemáme žádné zaznamenané obchody.</p>
         ) : (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Left: hard trade data */}
             <div className="space-y-3">
@@ -88,23 +99,41 @@ export default function DayDetailPanel({ day, onClose, demoTrades }: DayDetailPa
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                 {dayTrades.map((t: any, i: number) => {
                   const pnl = t.pnl || t.profitLoss || 0
+                  const item = autopsyById.get(t.id || `t-${i}`)
+                  const isLeak = item?.roi === "leak"
                   return (
                     <div
                       key={t.id || i}
-                      className="flex items-center justify-between bg-slate-800/60 border border-slate-700 rounded-lg px-3 py-2"
+                      className={cn(
+                        "flex items-center justify-between rounded-lg px-3 py-2 border",
+                        isLeak ? "bg-rose-500/5 border-rose-500/30" : "bg-slate-800/60 border-slate-700",
+                      )}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         {pnl >= 0 ? (
-                          <TrendingUp className="w-4 h-4 text-emerald-400" />
+                          <TrendingUp className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                         ) : (
-                          <TrendingDown className="w-4 h-4 text-rose-400" />
+                          <TrendingDown className="w-4 h-4 text-rose-400 flex-shrink-0" />
                         )}
-                        <div>
-                          <p className="text-white text-sm font-medium">{t.pair || "Obchod"}</p>
-                          <p className="text-gray-500 text-xs">{String(t.direction || "").toUpperCase()}</p>
+                        <div className="min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{t.pair || "Obchod"}</p>
+                          {/* Emotional ROI badge: green = under control, red = priced leak */}
+                          {item &&
+                            (isLeak ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-rose-300 bg-rose-500/10 rounded px-1.5 py-0.5 mt-0.5">
+                                {item.emoji} {item.title}
+                                {item.emotionalCost > 0 && (
+                                  <span className="text-rose-400 font-semibold">· cena ${item.emotionalCost}</span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-emerald-300 bg-emerald-500/10 rounded px-1.5 py-0.5 mt-0.5">
+                                ✅ Pod kontrolou
+                              </span>
+                            ))}
                         </div>
                       </div>
-                      <span className={cn("text-sm font-bold", pnl >= 0 ? "text-emerald-400" : "text-rose-400")}>
+                      <span className={cn("text-sm font-bold flex-shrink-0", pnl >= 0 ? "text-emerald-400" : "text-rose-400")}>
                         {pnl >= 0 ? "+" : ""}${Math.round(pnl)}
                       </span>
                     </div>
@@ -158,6 +187,46 @@ export default function DayDetailPanel({ day, onClose, demoTrades }: DayDetailPa
               )}
             </div>
           </div>
+
+          {/* Pitevní protokol obchodu — second-by-second forensic breakdown of
+              every emotional trade in the day. */}
+          {leaks.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-slate-700">
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <p className="text-sm font-bold text-white flex items-center gap-2">
+                  <Stethoscope className="w-4 h-4 text-rose-400" /> Pitevní protokol obchodu
+                </p>
+                {autopsy.emotionalTotal > 0 && (
+                  <span className="text-xs text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-md px-2 py-1">
+                    Cena za emoce dnes: <span className="font-bold text-rose-400">${autopsy.emotionalTotal}</span>
+                  </span>
+                )}
+              </div>
+              <div className="space-y-2">
+                {leaks.map((it) => (
+                  <div
+                    key={it.tradeId}
+                    className="flex items-start gap-3 bg-slate-800/50 border border-rose-500/20 rounded-lg p-3"
+                  >
+                    <div className="text-xl leading-none mt-0.5">{it.emoji}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-white text-sm font-semibold">{it.title}</span>
+                        {it.timeLabel && <span className="text-gray-500 text-xs">{it.timeLabel}</span>}
+                        {it.emotionalCost > 0 && (
+                          <span className="text-[10px] text-rose-300 bg-rose-500/15 rounded px-1.5 py-0.5 font-semibold">
+                            −${it.emotionalCost}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-300 text-xs mt-1 leading-relaxed">{it.narrative}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          </>
         )}
       </CardContent>
     </Card>
