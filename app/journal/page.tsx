@@ -33,81 +33,159 @@ import { useData } from "@/contexts/data-context" // Fixed import path from /con
 import { useAuth } from "@/contexts/auth-context" // Import useAuth hook
 import { generateVirtualJournalStats } from "@/lib/virtual-data-generator" // Import for virtual stats
 
+// Generates a realistic month of demo activity for Virtual mode. Unlike the
+// old version, every demo trade now carries the same plan-adherence signals
+// real trades do (followedPlan / matchedPlan / positionSize), and a handful of
+// days get self-report tags (CLEAN_DAY / REVENGE_TRADING / EARLY_CLOSE) on a
+// paired journal note. This is what lets the Discipline Matrix calendar AND
+// the "Průměrná disciplína" cockpit actually score demo days instead of
+// showing "—". Trades are grouped into 1-3 per active day with mixed
+// plan-adherence so the calendar shows a believable emerald/orange/red mix.
 const generateDemoEntries = () => {
   const pairs = ["EUR/USD", "GBP/USD", "USD/JPY", "XAU/USD", "BTC/USD", "EUR/JPY", "GBP/JPY", "AUD/USD"]
   const emotions = ["confident", "calm", "focused", "anxious", "excited", "nervous", "stressed", "disciplined"]
   const sessions = ["London", "New York", "Asian", "Overlap"]
-  
-  const demoEntries = []
-  
-  // Generate 25 random trades
-  for (let i = 0; i < 25; i++) {
-    const isWin = Math.random() > 0.35 // 65% win rate
-    const pair = pairs[Math.floor(Math.random() * pairs.length)]
-    const direction = Math.random() > 0.5 ? "long" : "short"
-    const daysAgo = Math.floor(Math.random() * 30) + 1
-    
-    const profitLoss = isWin 
-      ? Math.floor(Math.random() * 3000) + 500  // Win: 500-3500
-      : -Math.floor(Math.random() * 1500) - 200 // Loss: -200 to -1700
-    
-    const mood = isWin 
-      ? Math.floor(Math.random() * 25) + 70  // 70-95
-      : Math.floor(Math.random() * 30) + 40 // 40-70
-      
-    const stressLevel = isWin
-      ? Math.floor(Math.random() * 4) + 2  // 2-6
-      : Math.floor(Math.random() * 4) + 6 // 6-10
-      
-    const confidenceBefore = isWin
-      ? Math.floor(Math.random() * 3) + 7  // 7-10
-      : Math.floor(Math.random() * 4) + 4 // 4-8
-    
-    const session = sessions[Math.floor(Math.random() * sessions.length)]
-    
+
+  const rnd = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
+  const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
+
+  const demoEntries: any[] = []
+  let tradeId = 1
+  let journalId = 1
+  const now = Date.now()
+
+  const addTaggedJournal = (dateStr: string, tag: string, good: boolean) => {
+    const titles: Record<string, string> = {
+      CLEAN_DAY: "Bezchybný den – plně podle plánu",
+      REVENGE_TRADING: "Revenge trading – ztratil jsem hlavu",
+      EARLY_CLOSE: "Zavřel jsem moc brzo ze strachu",
+      FOMO_overcome: "Ustál jsem FOMO – nenaskočil jsem",
+    }
     demoEntries.push({
-      id: `demo-trade-${i + 1}`,
-      type: "trade",
-      date: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      title: `${direction.toUpperCase()} ${pair}`,
-      content: isWin 
-        ? `Perfect setup, I followed my plan on ${session} session`
-        : `${Math.random() > 0.5 ? "I should have waited for a better setup" : "Too early entry, bad timing"}`,
-      pair,
-      direction,
-      entryPrice: Math.random() * 100 + 1,
-      exitPrice: Math.random() * 100 + 1,
-      profitLoss,
-      pnl: profitLoss,
-      mood,
-      notes: isWin 
-        ? `Perfect setup, I followed my plan on ${session} session`
-        : `${Math.random() > 0.5 ? "I should have waited for a better setup" : "Too early entry, bad timing"}`,
-      emotion: emotions[Math.floor(Math.random() * emotions.length)],
-      tags: isWin ? ["A+ setup", "disciplined"] : ["learning", "improvement needed"],
-      emotionBefore: emotions[Math.floor(Math.random() * emotions.length)],
-      emotionDuring: emotions[Math.floor(Math.random() * emotions.length)],
-      emotionAfter: isWin ? emotions[Math.floor(Math.random() * 3)] : emotions[Math.floor(Math.random() * 3) + 5],
-      confidenceBefore,
-      stressLevel,
-    })
-  }
-  
-  // Add 5 journal entries
-  for (let i = 0; i < 5; i++) {
-    const daysAgo = Math.floor(Math.random() * 30) + 1
-    demoEntries.push({
-      id: `demo-journal-${i + 1}`,
+      id: `demo-journal-${journalId++}`,
       type: "journal",
-      date: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      title: `Journal - ${i % 2 === 0 ? "Good" : "Challenging"} day`,
-      content: `${i % 2 === 0 ? "Good" : "Challenging"} day, ${i % 3 === 0 ? "I learned a lot" : "working on discipline"}`,
-      mood: Math.floor(Math.random() * 40) + 50,
-      notes: `${i % 2 === 0 ? "Good" : "Challenging"} day, ${i % 3 === 0 ? "I learned a lot" : "working on discipline"}`,
-      emotion: emotions[Math.floor(Math.random() * emotions.length)],
+      date: dateStr,
+      title: titles[tag] || "Poznámka",
+      content: titles[tag] || "",
+      mood: good ? rnd(70, 92) : rnd(40, 60),
+      notes: titles[tag] || "",
+      emotion: good ? pick(["calm", "focused", "disciplined"]) : pick(["frustrated", "stressed", "nervous"]),
+      tags: [tag],
     })
   }
-  
+
+  // Walk the last 30 days; trade on weekdays, skip ~25% of them for realism.
+  for (let daysAgo = 1; daysAgo <= 30; daysAgo++) {
+    const dayDate = new Date(now - daysAgo * 24 * 60 * 60 * 1000)
+    const dow = dayDate.getDay()
+    if (dow === 0 || dow === 6) continue // no weekend trading
+    if (Math.random() < 0.25) continue // some flat days
+    const dateStr = dayDate.toISOString().split("T")[0]
+
+    // Day character drives win-rate, plan-adherence and trade count.
+    const roll = Math.random()
+    const dayKind: "disciplined" | "mixed" | "revenge" =
+      roll < 0.55 ? "disciplined" : roll < 0.85 ? "mixed" : "revenge"
+    const tradesToday = dayKind === "revenge" ? rnd(2, 3) : rnd(1, 2)
+
+    for (let k = 0; k < tradesToday; k++) {
+      let isWin: boolean
+      let followedPlan: boolean
+      if (dayKind === "disciplined") {
+        isWin = Math.random() > 0.3
+        followedPlan = Math.random() > 0.12
+      } else if (dayKind === "mixed") {
+        isWin = Math.random() > 0.45
+        followedPlan = Math.random() > 0.5
+      } else {
+        // revenge day: mostly losses, plan mostly broken
+        isWin = Math.random() > 0.72
+        followedPlan = Math.random() > 0.82
+      }
+
+      const pair = pick(pairs)
+      const direction = Math.random() > 0.5 ? "long" : "short"
+      const session = pick(sessions)
+      const profitLoss = isWin ? rnd(500, 3500) : -rnd(200, 1700)
+      const mood = isWin ? rnd(70, 95) : rnd(40, 70)
+      const stressLevel = isWin ? rnd(2, 6) : rnd(6, 10)
+      const confidenceBefore = isWin ? rnd(7, 10) : rnd(4, 8)
+      const discipline = followedPlan ? rnd(7, 10) : rnd(3, 6)
+      // Most days a normal size; revenge/plan-break sometimes oversized.
+      const positionSize =
+        !followedPlan && Math.random() > 0.5
+          ? Number((Math.random() * 1.5 + 1.8).toFixed(2)) // 1.8-3.3 (oversized)
+          : Number((Math.random() * 0.8 + 0.6).toFixed(2)) // 0.6-1.4 (normal)
+
+      demoEntries.push({
+        id: `demo-trade-${tradeId++}`,
+        type: "trade",
+        date: dateStr,
+        title: `${direction.toUpperCase()} ${pair}`,
+        content: isWin
+          ? `Solid ${session} session setup, followed the plan`
+          : Math.random() > 0.5
+            ? "Should have waited for a cleaner setup"
+            : "Entered too early, bad timing",
+        pair,
+        direction,
+        entryPrice: Number((Math.random() * 100 + 1).toFixed(4)),
+        exitPrice: Number((Math.random() * 100 + 1).toFixed(4)),
+        positionSize,
+        profitLoss,
+        pnl: profitLoss,
+        mood,
+        notes: isWin
+          ? `Solid ${session} session setup, followed the plan`
+          : Math.random() > 0.5
+            ? "Should have waited for a cleaner setup"
+            : "Entered too early, bad timing",
+        emotion: pick(emotions),
+        tags: followedPlan ? ["A+ setup", "disciplined"] : ["learning", "improvement needed"],
+        emotionBefore: pick(emotions),
+        emotionDuring: pick(emotions),
+        emotionAfter: isWin
+          ? pick(["satisfied", "confident", "proud"])
+          : pick(["frustrated", "disappointed", "learning"]),
+        confidenceBefore,
+        stressLevel,
+        discipline,
+        followedPlan,
+        matchedPlan: followedPlan,
+      })
+    }
+
+    // Layer a self-report tag on a few days so the calendar demonstrates the
+    // green/red overrides and the AI search has something to find.
+    if (dayKind === "revenge") {
+      addTaggedJournal(dateStr, "REVENGE_TRADING", false)
+    } else if (dayKind === "disciplined" && Math.random() < 0.3) {
+      addTaggedJournal(dateStr, Math.random() < 0.5 ? "CLEAN_DAY" : "FOMO_overcome", true)
+    } else if (dayKind === "mixed" && Math.random() < 0.3) {
+      addTaggedJournal(dateStr, "EARLY_CLOSE", false)
+    }
+  }
+
+  // A couple of plain reflection notes (no scoring tags) for the list view.
+  const reflections = [
+    "Dobrý týden, držel jsem se rizikového plánu a nehonil jsem ztráty.",
+    "Náročný den, pracuji na trpělivosti při čekání na setup.",
+    "Hodně jsem se naučil o své reakci po sérii ztrát.",
+  ]
+  reflections.forEach((content, i) => {
+    const dayDate = new Date(now - rnd(1, 28) * 24 * 60 * 60 * 1000)
+    demoEntries.push({
+      id: `demo-reflection-${journalId++}`,
+      type: "journal",
+      date: dayDate.toISOString().split("T")[0],
+      title: i % 2 === 0 ? "Reflexe – dobrý den" : "Reflexe – výzva",
+      content,
+      mood: rnd(50, 88),
+      notes: content,
+      emotion: pick(emotions),
+    })
+  })
+
   return demoEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 }
 
@@ -390,7 +468,9 @@ export default function JournalPage() {
   // made-up numbers, so this can never disagree with the matrix below it.
   const cockpit = useMemo(() => {
     const cockpitTrades = isLiveMode ? getAllTrades() || [] : entries.filter((e: any) => e.type === "trade")
-    const cockpitJournalEntries = isLiveMode ? getAllJournalEntries() || [] : []
+    const cockpitJournalEntries = isLiveMode
+      ? getAllJournalEntries() || []
+      : entries.filter((e: any) => e.type === "journal")
 
     if (cockpitTrades.length === 0) {
       return { avgDiscipline: null as number | null, savedTotal: 0 }
@@ -838,6 +918,8 @@ export default function JournalPage() {
         <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
           <CardContent className="p-3 md:p-6 space-y-4">
             <JournalAiSearch
+              trades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
+              journalEntries={!isLiveMode ? entries.filter((e: any) => e.type === "journal") : undefined}
               onResults={(dates, days, summary) => {
                 setHighlightedDates(dates)
                 setMatchedDays(days)
@@ -859,7 +941,12 @@ export default function JournalPage() {
                 )}
               </div>
             )}
-            <DisciplineMatrix highlightedDates={highlightedDates} onDayClick={setSelectedDay} />
+            <DisciplineMatrix
+              highlightedDates={highlightedDates}
+              onDayClick={setSelectedDay}
+              trades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
+              journalEntries={!isLiveMode ? entries.filter((e: any) => e.type === "journal") : undefined}
+            />
           </CardContent>
         </Card>
 
