@@ -21,6 +21,8 @@ import { NotificationsProvider } from "@/contexts/notifications-context"
 import { CloudSyncProvider } from "@/contexts/cloud-sync-context"
 import { TradingIntegrationProvider } from "@/contexts/trading-integration-context"
 import { AdminProvider } from "@/contexts/admin-context"
+import { TradeCheckinProvider } from "@/contexts/trade-checkin-context"
+import TradeCheckinOverlay from "@/components/trade-checkin-overlay"
 import { LiveModeProvider } from "@/contexts/live-mode-context"
 import { AnalyticsProvider } from "@/contexts/analytics-context"
 import { MilestoneCelebrationsProvider } from "@/contexts/milestone-celebrations-context"
@@ -95,9 +97,12 @@ export default function RootLayout({
                                       <NotificationsProvider>
                                         <CloudSyncProvider>
                                           <TradingIntegrationProvider>
-                                            <LanguageProvider>
-                                              <ClientLayout>{children}</ClientLayout>
-                                            </LanguageProvider>
+                                            <TradeCheckinProvider>
+                                              <LanguageProvider>
+                                                <ClientLayout>{children}</ClientLayout>
+                                                <TradeCheckinOverlay />
+                                              </LanguageProvider>
+                                            </TradeCheckinProvider>
                                           </TradingIntegrationProvider>
                                         </CloudSyncProvider>
                                       </NotificationsProvider>
