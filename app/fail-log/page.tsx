@@ -58,9 +58,9 @@ function deriveEgoLevel(severity: string): EgoLevel {
 }
 
 const EGO_META: Record<EgoLevel, { label: string; className: string }> = {
-  "full-amok": { label: "Full Amok 🔥",  className: "bg-rose-500/20 text-rose-300 border-rose-500/40" },
-  "severe":    { label: "Severe",         className: "bg-amber-500/20 text-amber-300 border-amber-500/40" },
-  "mild":      { label: "Mild",           className: "bg-yellow-500/20 text-yellow-300 border-yellow-500/40" },
+  "full-amok": { label: "Full Amok 🔥",   className: "bg-rose-500/20 text-rose-300 border-rose-500/40" },
+  "severe":    { label: "Severe Tilt",    className: "bg-amber-500/20 text-amber-300 border-amber-500/40" },
+  "mild":      { label: "Mild Slip",      className: "bg-yellow-500/20 text-yellow-300 border-yellow-500/40" },
 }
 
 // ── Demo data ────────────────────────────────────────────────────────────────
@@ -495,6 +495,11 @@ export default function FailLogPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                        {log.trade && log.trade.loss > 0 && (
+                          <Badge className="text-xs border font-mono font-bold bg-rose-950/60 text-rose-300 border-rose-500/50">
+                            💸 Financial Leak: −${log.trade.loss.toLocaleString()}
+                          </Badge>
+                        )}
                         <Badge className={cn("text-xs border font-medium", egoMeta.className)}>
                           Ego Level: {egoMeta.label}
                         </Badge>

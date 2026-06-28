@@ -66,17 +66,41 @@ const DEMO_GOALS: Goal[] = [
 const DEMO_STATS = {
   dailyProcessScore: 83,      // % of today's process habits completed
   dailyProcessMax: 100,
-  drawdownShield: 67,         // % remaining of max weekly drawdown budget
-  drawdownUsed: 650,          // $650 used of $2,000 weekly limit
+  drawdownShield: 17,         // % remaining — intentionally low to show pulsing danger state
+  drawdownUsed: 1660,         // $1,660 used of $2,000 weekly limit
   drawdownMax: 2000,
   monthlyHabitScore: 70,      // % of days this month with clean process
   monthlyDaysClean: 21,
   monthlyDaysTotal: 30,
   badHabits: [
-    { id: "revenge",    label: "Revenge Trade",      sublabel: "tento týden",   limit: 0, used: 0 },
-    { id: "fomo",       label: "FOMO Exit",          sublabel: "tento měsíc",   limit: 3, used: 1 },
-    { id: "overtrade",  label: "Overtrading Day",    sublabel: "tento měsíc",   limit: 5, used: 2 },
-    { id: "rulebreak",  label: "Porušení plánu",     sublabel: "tento týden",   limit: 2, used: 0 },
+    { id: "revenge",    label: "Revenge Trade",                    sublabel: "tento týden",   limit: 0, used: 0 },
+    { id: "fomo",       label: "FOMO Exit",                        sublabel: "tento měsíc",   limit: 3, used: 1 },
+    { id: "overtrade",  label: "Overtrading Day",                  sublabel: "tento měsíc",   limit: 5, used: 2 },
+    { id: "rulebreak",  label: "Porušení plánu",                   sublabel: "tento týden",   limit: 2, used: 0 },
+    { id: "3loss",      label: "Trading after 3 consecutive losses", sublabel: "tento týden", limit: 0, used: 0 },
+  ],
+  processRules: [
+    {
+      id: "3loss-rule",
+      label: "No execution after 3 consecutive losses",
+      description: "Po 3 prohrách v řadě okamžitě zavři platformu. Bez výjimky, bez 'ještě jeden pokus'.",
+      status: "active" as const,
+      icon: "🛑",
+    },
+    {
+      id: "breathwork",
+      label: "Meditation / Breathwork before NY Session Open",
+      description: "Minimálně 5 minut dechového cvičení nebo meditace před 15:30 CET každý den.",
+      status: "active" as const,
+      icon: "🧘",
+    },
+    {
+      id: "routine-match",
+      label: "100% Morning Routine Match",
+      description: "Všechny checkboxy ranní rutiny musí být zelené než otevřeš první chart.",
+      status: "active" as const,
+      icon: "☀️",
+    },
   ],
 }
 
@@ -256,30 +280,38 @@ export default function TradingGoalsPage() {
             "border transition-colors",
             stats.drawdownShield > 50
               ? "bg-gradient-to-br from-blue-900/30 to-slate-900/60 border-blue-500/20"
-              : stats.drawdownShield > 25
+              : stats.drawdownShield > 20
               ? "bg-gradient-to-br from-amber-900/30 to-slate-900/60 border-amber-500/20"
-              : "bg-gradient-to-br from-rose-900/30 to-slate-900/60 border-rose-500/20"
+              : "bg-gradient-to-br from-rose-900/30 to-slate-900/60 border-rose-500/40"
           )}>
             <CardContent className="p-6 flex flex-col items-center gap-4">
               <div className="flex items-center gap-2 self-start">
-                <Shield className="w-4 h-4" style={{ color: shield.stroke }} />
-                <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: shield.stroke }}>
+                <Shield className={cn("w-4 h-4", stats.drawdownShield <= 20 && "animate-pulse")} style={{ color: shield.stroke }} />
+                <span className={cn("text-xs font-semibold uppercase tracking-wide", stats.drawdownShield <= 20 && "animate-pulse")} style={{ color: shield.stroke }}>
                   Max Drawdown Shield
                 </span>
               </div>
-              <CircularGauge value={stats.drawdownShield} color={shield.stroke}>
-                <span className="text-3xl font-bold text-white">{stats.drawdownShield}%</span>
-                <span className={cn("text-[10px] font-semibold", shield.text)}>{shield.label}</span>
-              </CircularGauge>
+              {/* Pulsing danger ring when below 20% */}
+              <div className={cn("relative", stats.drawdownShield <= 20 && "animate-pulse")}>
+                <CircularGauge value={stats.drawdownShield} color={shield.stroke}>
+                  <span className={cn("text-3xl font-bold", stats.drawdownShield <= 20 ? "text-rose-300" : "text-white")}>
+                    {stats.drawdownShield}%
+                  </span>
+                  <span className={cn("text-[10px] font-semibold", shield.text)}>{shield.label}</span>
+                </CircularGauge>
+                {stats.drawdownShield <= 20 && (
+                  <div className="absolute inset-0 rounded-full border-2 border-rose-500 animate-ping opacity-30 pointer-events-none" />
+                )}
+              </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-white">
+                <p className={cn("text-sm font-semibold", stats.drawdownShield <= 20 ? "text-rose-300" : "text-white")}>
                   ${(stats.drawdownMax - stats.drawdownUsed).toLocaleString()} zbývá
                 </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   z ${stats.drawdownMax.toLocaleString()} týdenního limitu
                 </p>
-                {stats.drawdownShield <= 25 && (
-                  <p className="text-[10px] text-rose-400 mt-1 font-semibold">⚠️ Stop trading dnes!</p>
+                {stats.drawdownShield <= 20 && (
+                  <p className="text-[10px] text-rose-300 mt-1 font-bold animate-pulse">🚨 ZAVŘI PLATFORMU HNED!</p>
                 )}
               </div>
             </CardContent>
@@ -370,6 +402,35 @@ export default function TradingGoalsPage() {
                 Obyčejné aplikace ti říkají, abys vydělal $500 denně — a tím tě nutí hazardovat. Tady je tvůj jediný cíl udržet Bad Habits Quota na nule. Zisk je pak přirozeným výsledkem železné disciplíny.
               </p>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Process Rules (Iron Discipline Laws) ─────────────────── */}
+        <Card className="bg-slate-900/50 border-slate-800 mb-6">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-amber-500/20 rounded-lg">
+                <Zap className="w-4 h-4 text-amber-400" />
+              </div>
+              <div>
+                <CardTitle className="text-white text-base">Iron Discipline Laws</CardTitle>
+                <p className="text-xs text-slate-400 mt-0.5">Pevná pravidla, která nesmíš nikdy porušit — bez výjimky, bez diskuze</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-3">
+            {stats.processRules.map((rule) => (
+              <div key={rule.id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-amber-500/30 transition-colors">
+                <span className="text-xl shrink-0 mt-0.5">{rule.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white">{rule.label}</p>
+                  <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{rule.description}</p>
+                </div>
+                <Badge className="shrink-0 bg-emerald-500/20 text-emerald-300 border-emerald-500/30 border text-[10px]">
+                  ACTIVE
+                </Badge>
+              </div>
+            ))}
           </CardContent>
         </Card>
 
