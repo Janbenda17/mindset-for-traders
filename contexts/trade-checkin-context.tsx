@@ -11,20 +11,43 @@ export interface PendingCheckin {
   phase: CheckinPhase
   tradeId: string
   pair: string
-  pnl?: number // only when phase === "close"
+  pnl?: number
 }
 
 interface TradeCheckinContextType {
   pending: PendingCheckin | null
   submitOpen: (tradeId: string, confidence: number, emotion: string) => Promise<void>
-  submitClose: (tradeId: string, followedPlan: "yes" | "no" | "partial") => Promise<void>
   dismiss: () => void
-  // Manual trigger for testing / pre-MT5 environments
   triggerOpen: (tradeId: string, pair: string) => void
   triggerClose: (tradeId: string, pair: string, pnl?: number) => void
 }
 
 const TradeCheckinContext = createContext<TradeCheckinContextType | undefined>(undefined)
+
+/**
+ * Determines if a trade was closed early (before SL/TP) based on MT5 data.
+ * Returns "panic" | "tp_hit" | "sl_hit" | "manual" | null
+ */
+function analyzeExitType(row: any): string | null {
+  if (!row.stop_loss && !row.take_profit) return null
+  const pnl = row.pnl ?? row.profit_loss ?? 0
+  const sl = row.stop_loss
+  const tp = row.take_profit
+
+  if (tp && pnl > 0) return "tp_hit"
+  if (sl && pnl < 0) {
+    // If close price is significantly better than SL, likely manual close before SL
+    const closePrice = row.close_price
+    const openPrice = row.open_price
+    if (closePrice && openPrice && sl) {
+      const expectedSlLoss = Math.abs(openPrice - sl)
+      const actualLoss = Math.abs(openPrice - closePrice)
+      if (actualLoss < expectedSlLoss * 0.85) return "panic"
+    }
+    return "sl_hit"
+  }
+  return "manual"
+}
 
 export function TradeCheckinProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
@@ -32,7 +55,6 @@ export function TradeCheckinProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<PendingCheckin | null>(null)
   const seenIds = useRef<Set<string>>(new Set())
 
-  // Real-time Supabase subscription: detects new trades from MT5 webhook
   useEffect(() => {
     if (!user || !isLiveMode) return
 
@@ -52,7 +74,6 @@ export function TradeCheckinProvider({ children }: { children: ReactNode }) {
           if (seenIds.current.has(row.id)) return
           seenIds.current.add(row.id)
 
-          // Only trigger check-in if confidence_before not already filled
           if (row.confidence_before == null) {
             setPending({ phase: "open", tradeId: row.id, pair: row.pair || row.symbol || "Obchod" })
           }
@@ -66,23 +87,34 @@ export function TradeCheckinProvider({ children }: { children: ReactNode }) {
           table: "journal_entries",
           filter: `user_id=eq.${user.id}`,
         },
-        (payload) => {
+        async (payload) => {
           const row = payload.new as any
           const old = payload.old as any
           if (row.type !== "trade") return
 
-          // Trade just got a close_time or pnl that wasn't there before
           const justClosed =
             (!old.close_time && row.close_time) || (old.pnl == null && row.pnl != null)
 
-          if (justClosed && row.followed_plan == null) {
-            setPending({
-              phase: "close",
-              tradeId: row.id,
-              pair: row.pair || row.symbol || "Obchod",
-              pnl: row.pnl ?? row.profit_loss,
+          if (!justClosed) return
+
+          // Auto-analyze exit — no UI prompt needed
+          const exitType = analyzeExitType(row)
+          const followedPlan =
+            exitType === "tp_hit" || exitType === "sl_hit"
+              ? "yes"
+              : exitType === "panic"
+                ? "no"
+                : "partial"
+
+          await supabase
+            .from("journal_entries")
+            .update({
+              followed_plan: followedPlan === "yes",
+              matched_plan: followedPlan,
+              exit_type: exitType,
             })
-          }
+            .eq("id", row.id)
+            .eq("user_id", user.id)
         },
       )
       .subscribe()
@@ -97,7 +129,15 @@ export function TradeCheckinProvider({ children }: { children: ReactNode }) {
   }
 
   const triggerClose = (tradeId: string, pair: string, pnl?: number) => {
-    setPending({ phase: "close", tradeId, pair, pnl })
+    // Close is now silent — just log it (no UI widget)
+    setPending(null)
+    if (user && isLiveMode) {
+      supabase
+        .from("journal_entries")
+        .update({ matched_plan: "partial" })
+        .eq("id", tradeId)
+        .eq("user_id", user.id)
+    }
   }
 
   const submitOpen = async (tradeId: string, confidence: number, emotion: string) => {
@@ -111,21 +151,10 @@ export function TradeCheckinProvider({ children }: { children: ReactNode }) {
     setPending(null)
   }
 
-  const submitClose = async (tradeId: string, followedPlan: "yes" | "no" | "partial") => {
-    if (user && isLiveMode) {
-      await supabase
-        .from("journal_entries")
-        .update({ followed_plan: followedPlan === "yes", matched_plan: followedPlan })
-        .eq("id", tradeId)
-        .eq("user_id", user.id)
-    }
-    setPending(null)
-  }
-
   const dismiss = () => setPending(null)
 
   return (
-    <TradeCheckinContext.Provider value={{ pending, submitOpen, submitClose, dismiss, triggerOpen, triggerClose }}>
+    <TradeCheckinContext.Provider value={{ pending, submitOpen, dismiss, triggerOpen, triggerClose }}>
       {children}
     </TradeCheckinContext.Provider>
   )
