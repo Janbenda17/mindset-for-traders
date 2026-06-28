@@ -39,6 +39,7 @@ import {
 import { useData } from '@/contexts/data-context'
 import { buildDailySummary } from '@/lib/daily-summary'
 import { useGamification } from '@/contexts/gamification-context'
+import PreTradeCheckin, { type TradeCheckin } from '@/components/pre-trade-checkin'
 
 function isSameDay(a: Date, b: Date) {
   return a.toDateString() === b.toDateString()
@@ -55,6 +56,7 @@ export default function DailyTrackerPage() {
   const router = useRouter()
   const [tab, setTab] = useState('today')
   const [failLogRevealed, setFailLogRevealed] = useState(false)
+  const [tradeCheckins, setTradeCheckins] = useState<TradeCheckin[]>([])
 
   // Quick FOMO Tag check-in: 2-second self-report instead of free-text
   // journaling. dayTags feeds straight into the daily-summary engine, which
@@ -400,6 +402,15 @@ export default function DailyTrackerPage() {
               <p className="text-xs text-slate-500 mt-1 truncate">{levelInfo?.name || 'Trader'}</p>
             </CardContent>
           </Card>
+        </motion.div>
+
+        {/* Pre-Trade Check-in */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.08 }}
+        >
+          <PreTradeCheckin checkins={tradeCheckins} onChange={setTradeCheckins} />
         </motion.div>
 
         {/* Tabs */}
