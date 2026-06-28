@@ -2,16 +2,21 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowLeft, Sparkles, Loader } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { motion } from "framer-motion"
+import {
+  ArrowLeft, Sparkles, Loader, Shield, Target, Zap,
+  Brain, CheckCircle2, AlertTriangle, TrendingDown, Flame, Lock
+} from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useData } from "@/contexts/data-context"
+import { cn } from "@/lib/utils"
 
 interface Goal {
   id: string
-  period: 'weekly' | 'monthly'
+  period: "weekly" | "monthly"
   goal: string
   focusArea?: string
   why?: string
@@ -24,38 +29,114 @@ interface Goal {
 
 const DEMO_GOALS: Goal[] = [
   {
-    id: 'demo-weekly-1',
-    period: 'weekly',
-    goal: 'Drž se max. 2% rizika na obchod a max. 3 obchody denně',
-    focusArea: 'Risk management',
-    why: 'Posledních pár týdnů jsem viděl, že větší velikost pozice po ztrátě mi škodí víc, než pomáhá.',
+    id: "demo-weekly-1",
+    period: "weekly",
+    goal: "Drž se max. 2% rizika na obchod a max. 3 obchody denně",
+    focusArea: "Risk management",
+    why: "Posledních pár týdnů jsem viděl, že větší velikost pozice po ztrátě mi škodí víc, než pomáhá.",
     startDate: new Date().toISOString().slice(0, 10),
     endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     milestones: [
-      'Nastavit fixní velikost pozice na 2 % equity před session',
-      'Zapsat každý obchod do deníku ihned po uzavření',
-      'Po 3. obchodu zavřít platformu bez ohledu na výsledek',
+      "Nastavit fixní velikost pozice na 2 % equity před session",
+      "Zapsat každý obchod do deníku ihned po uzavření",
+      "Po 3. obchodu zavřít platformu bez ohledu na výsledek",
     ],
     aiGenerated: false,
     createdAt: new Date().toISOString(),
   },
   {
-    id: 'demo-monthly-1',
-    period: 'monthly',
-    goal: 'Zvýšit win rate na A+ setupech nad 55 %',
-    focusArea: 'Selektivita setupů',
-    why: 'Chci obchodovat méně, ale kvalitněji - soustředit se jen na nejsilnější signály z mého playbooku.',
+    id: "demo-monthly-1",
+    period: "monthly",
+    goal: "Zvýšit win rate na A+ setupech nad 55 %",
+    focusArea: "Selektivita setupů",
+    why: "Chci obchodovat méně, ale kvalitněji — soustředit se jen na nejsilnější signály z mého playbooku.",
     startDate: new Date().toISOString().slice(0, 10),
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     milestones: [
-      'Definovat přesná kritéria A+ setupu a držet se jich',
-      'Týdně revidovat obchody, které nesplňovaly kritéria, a proč jsem je vzal',
-      'Sledovat win rate jen na obchodech splňujících kritéria',
+      "Definovat přesná kritéria A+ setupu a držet se jich",
+      "Týdně revidovat obchody, které nesplňovaly kritéria, a proč jsem je vzal",
+      "Sledovat win rate jen na obchodech splňujících kritéria",
     ],
     aiGenerated: false,
     createdAt: new Date().toISOString(),
   },
 ]
+
+// Demo stats — in live mode these would come from Supabase journal aggregation
+const DEMO_STATS = {
+  dailyProcessScore: 83,      // % of today's process habits completed
+  dailyProcessMax: 100,
+  drawdownShield: 67,         // % remaining of max weekly drawdown budget
+  drawdownUsed: 650,          // $650 used of $2,000 weekly limit
+  drawdownMax: 2000,
+  monthlyHabitScore: 70,      // % of days this month with clean process
+  monthlyDaysClean: 21,
+  monthlyDaysTotal: 30,
+  badHabits: [
+    { id: "revenge",    label: "Revenge Trade",      sublabel: "tento týden",   limit: 0, used: 0 },
+    { id: "fomo",       label: "FOMO Exit",          sublabel: "tento měsíc",   limit: 3, used: 1 },
+    { id: "overtrade",  label: "Overtrading Day",    sublabel: "tento měsíc",   limit: 5, used: 2 },
+    { id: "rulebreak",  label: "Porušení plánu",     sublabel: "tento týden",   limit: 2, used: 0 },
+  ],
+}
+
+function shieldColor(pct: number) {
+  if (pct > 75) return { stroke: "#10b981", text: "text-emerald-400", label: "Bezpečná zóna" }
+  if (pct > 50) return { stroke: "#3b82f6", text: "text-blue-400",    label: "Pozor" }
+  if (pct > 25) return { stroke: "#f59e0b", text: "text-amber-400",   label: "Varování!" }
+  return           { stroke: "#f43f5e", text: "text-rose-400",         label: "KRITICKÉ" }
+}
+
+function habitStatusColor(used: number, limit: number): string {
+  if (limit === 0) return used === 0 ? "text-emerald-400" : "text-rose-400"
+  const ratio = used / limit
+  if (ratio === 0) return "text-emerald-400"
+  if (ratio < 0.5) return "text-emerald-400"
+  if (ratio < 1) return "text-amber-400"
+  return "text-rose-500"
+}
+
+function habitBarColor(used: number, limit: number): string {
+  if (limit === 0) return used === 0 ? "bg-emerald-500" : "bg-rose-500"
+  const ratio = used / limit
+  if (ratio < 0.5) return "bg-emerald-500"
+  if (ratio < 1) return "bg-amber-500"
+  return "bg-rose-500"
+}
+
+interface GaugeProps {
+  value: number       // 0–100 (percentage)
+  size?: number
+  strokeWidth?: number
+  color: string
+  children: React.ReactNode
+}
+
+function CircularGauge({ value, size = 140, strokeWidth = 10, color, children }: GaugeProps) {
+  const r = (size - strokeWidth) / 2
+  const circ = 2 * Math.PI * r
+  const offset = circ * (1 - Math.min(100, Math.max(0, value)) / 100)
+
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90" style={{ position: "absolute" }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgb(30,41,59)" strokeWidth={strokeWidth} />
+        <motion.circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke={color} strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+        />
+      </svg>
+      <div className="relative flex flex-col items-center justify-center text-center">
+        {children}
+      </div>
+    </div>
+  )
+}
 
 export default function TradingGoalsPage() {
   const { toast } = useToast()
@@ -65,80 +146,53 @@ export default function TradingGoalsPage() {
   const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
-    fetchGoals()
-  }, [])
-
-  const fetchGoals = async () => {
     try {
-      setLoading(true)
-      const stored = localStorage.getItem('trading-goals-ai')
-      if (stored) {
-        setGoals(JSON.parse(stored))
-      }
-    } catch (error) {
-      console.error('[v0] Error fetching goals:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+      const stored = localStorage.getItem("trading-goals-ai")
+      if (stored) setGoals(JSON.parse(stored))
+    } catch {}
+    setLoading(false)
+  }, [])
 
   const generateGoalsWithAI = async () => {
     try {
       setGenerating(true)
-      console.log('[v0] Starting goal generation...')
-      
-      const response = await fetch('/api/goals/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      const response = await fetch("/api/goals/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
       })
-
-      console.log('[v0] API response status:', response.status)
-      
-      if (!response.ok) {
-        const text = await response.text()
-        console.error('[v0] API error response:', text)
-        throw new Error(`API error: ${response.status}`)
-      }
-
+      if (!response.ok) throw new Error(`API error: ${response.status}`)
       const data = await response.json()
-      console.log('[v0] API data received:', data)
-
       if (data.success && data.goals) {
         setGoals(data.goals)
-        localStorage.setItem('trading-goals-ai', JSON.stringify(data.goals))
-        toast({
-          title: 'Hotovo!',
-          description: 'Týdenní a měsíční cíle byly vygenerovány AI'
-        })
-      } else if (data.error) {
-        throw new Error(data.error)
+        localStorage.setItem("trading-goals-ai", JSON.stringify(data.goals))
+        toast({ title: "Hotovo!", description: "Procesní cíle vygenerovány AI" })
       } else {
-        throw new Error('Unexpected response format')
+        throw new Error(data.error || "Unexpected response")
       }
     } catch (error) {
-      console.error('[v0] Error generating goals:', error)
       toast({
-        title: 'Chyba',
-        description: error instanceof Error ? error.message : 'Nepodařilo se vygenerovat cíle. Zkuste znovu.',
-        variant: 'destructive'
+        title: "Chyba",
+        description: error instanceof Error ? error.message : "Nepodařilo se vygenerovat cíle.",
+        variant: "destructive",
       })
     } finally {
       setGenerating(false)
     }
   }
 
-  // In demo mode, show example goals until the user has real ones (own or AI-generated)
   const displayGoals = goals.length > 0 ? goals : !isLiveMode ? DEMO_GOALS : []
   const isShowingDemo = goals.length === 0 && !isLiveMode && displayGoals.length > 0
+  const weeklyGoals = displayGoals.filter((g) => g.period === "weekly")
+  const monthlyGoals = displayGoals.filter((g) => g.period === "monthly")
 
-  const weeklyGoals = displayGoals.filter(g => g.period === 'weekly')
-  const monthlyGoals = displayGoals.filter(g => g.period === 'monthly')
+  const stats = DEMO_STATS
+  const shield = shieldColor(stats.drawdownShield)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
       <div className="max-w-6xl mx-auto">
+
+        {/* Back */}
         <Link href="/bonus" className="inline-flex mb-6">
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
             <ArrowLeft className="w-4 h-4 text-gray-400" />
@@ -146,125 +200,286 @@ export default function TradingGoalsPage() {
           </div>
         </Link>
 
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Obchodní Cíle</h1>
-          <p className="text-slate-400">Týdenní a měsíční cíle generované AI</p>
-          {isShowingDemo && (
-            <div className="inline-flex mt-3 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
-              Ukázková data — takhle to bude vypadat s tvými vlastními cíli
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 mb-2">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-1">Disciplined Goals</h1>
+            <p className="text-slate-400 text-sm max-w-lg">
+              Žádné finanční targety. Tvůj jediný cíl je dodržet proces — zisk je vedlejší produkt železné disciplíny.
+            </p>
+          </div>
+          <Button
+            onClick={generateGoalsWithAI}
+            disabled={generating}
+            className="shrink-0 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
+          >
+            {generating ? (
+              <><Loader className="w-4 h-4 mr-2 animate-spin" />Generuji...</>
+            ) : (
+              <><Sparkles className="w-4 h-4 mr-2" />Vygenerovat s AI</>
+            )}
+          </Button>
+        </div>
+
+        {isShowingDemo && (
+          <div className="inline-flex mb-8 mt-3 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
+            Ukázková data — takhle to bude vypadat s tvými vlastními výsledky
+          </div>
+        )}
+        {!isShowingDemo && <div className="mb-8" />}
+
+        {/* ── 3 Circular Gauges ────────────────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+
+          {/* 1. Daily Process Score */}
+          <Card className="bg-gradient-to-br from-emerald-900/30 to-slate-900/60 border-emerald-500/20">
+            <CardContent className="p-6 flex flex-col items-center gap-4">
+              <div className="flex items-center gap-2 self-start">
+                <Target className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Daily Process Score</span>
+              </div>
+              <CircularGauge value={stats.dailyProcessScore} color="#10b981">
+                <span className="text-3xl font-bold text-white">{stats.dailyProcessScore}%</span>
+                <span className="text-[10px] text-emerald-400 font-semibold">DNES</span>
+              </CircularGauge>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-white">
+                  {stats.dailyProcessScore === 100 ? "Perfektní den! 🌟" : `${Math.round(stats.dailyProcessScore / 100 * 6)}/6 návyků`}
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">I při ztrátě může svítit 100 %</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 2. Weekly Drawdown Shield */}
+          <Card className={cn(
+            "border transition-colors",
+            stats.drawdownShield > 50
+              ? "bg-gradient-to-br from-blue-900/30 to-slate-900/60 border-blue-500/20"
+              : stats.drawdownShield > 25
+              ? "bg-gradient-to-br from-amber-900/30 to-slate-900/60 border-amber-500/20"
+              : "bg-gradient-to-br from-rose-900/30 to-slate-900/60 border-rose-500/20"
+          )}>
+            <CardContent className="p-6 flex flex-col items-center gap-4">
+              <div className="flex items-center gap-2 self-start">
+                <Shield className="w-4 h-4" style={{ color: shield.stroke }} />
+                <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: shield.stroke }}>
+                  Max Drawdown Shield
+                </span>
+              </div>
+              <CircularGauge value={stats.drawdownShield} color={shield.stroke}>
+                <span className="text-3xl font-bold text-white">{stats.drawdownShield}%</span>
+                <span className={cn("text-[10px] font-semibold", shield.text)}>{shield.label}</span>
+              </CircularGauge>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-white">
+                  ${(stats.drawdownMax - stats.drawdownUsed).toLocaleString()} zbývá
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  z ${stats.drawdownMax.toLocaleString()} týdenního limitu
+                </p>
+                {stats.drawdownShield <= 25 && (
+                  <p className="text-[10px] text-rose-400 mt-1 font-semibold">⚠️ Stop trading dnes!</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 3. Monthly Habit Score */}
+          <Card className="bg-gradient-to-br from-purple-900/30 to-slate-900/60 border-purple-500/20">
+            <CardContent className="p-6 flex flex-col items-center gap-4">
+              <div className="flex items-center gap-2 self-start">
+                <Brain className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-semibold text-purple-400 uppercase tracking-wide">Monthly Habit Score</span>
+              </div>
+              <CircularGauge value={stats.monthlyHabitScore} color="#a855f7">
+                <span className="text-3xl font-bold text-white">{stats.monthlyHabitScore}%</span>
+                <span className="text-[10px] text-purple-400 font-semibold">ČERVEN</span>
+              </CircularGauge>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-white">
+                  {stats.monthlyDaysClean}/{stats.monthlyDaysTotal} čistých dní
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Dny bez porušení plánu</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ── Bad Habits Quota ─────────────────────────────────────── */}
+        <Card className="bg-slate-900/50 border-slate-800 mb-6">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-rose-500/20 rounded-lg">
+                <Lock className="w-4 h-4 text-rose-400" />
+              </div>
+              <div>
+                <CardTitle className="text-white text-base">Bad Habits Quota</CardTitle>
+                <p className="text-xs text-slate-400 mt-0.5">Limity na nešvary — překročit = ztráta disciplíny, ne jenom peněz</p>
+              </div>
             </div>
-          )}
-        </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {stats.badHabits.map((h) => {
+                const isHardStop = h.limit === 0
+                const atLimit = h.used >= h.limit && !isHardStop
+                const pct = isHardStop ? (h.used > 0 ? 100 : 0) : Math.min(100, (h.used / h.limit) * 100)
+                const statusText = isHardStop
+                  ? h.used === 0 ? "✅ Perfect" : `🚨 ${h.used}× PORUŠENO`
+                  : h.used === h.limit ? `🔴 Limit vyčerpán` : `${h.limit - h.used} zbývá`
 
-        <Button
-          onClick={generateGoalsWithAI}
-          disabled={generating}
-          className="mb-8 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
-        >
-          {generating ? (
-            <>
-              <Loader className="w-4 h-4 mr-2 animate-spin" />
-              Generuji...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 mr-2" />
-              Vygenerovat s AI
-            </>
-          )}
-        </Button>
-
-        {/* Weekly Goals */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-4">Tydenni Cil</h2>
-          <div className="grid gap-4">
-            {weeklyGoals.length > 0 ? (
-              weeklyGoals.map(goal => (
-                <Card key={goal.id} className="bg-slate-900 border-slate-700 hover:border-blue-500/50 transition-all">
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-xl font-bold text-white leading-snug flex-1">{goal.goal}</h3>
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        {goal.focusArea && (
-                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 border text-xs">
-                            {goal.focusArea}
-                          </Badge>
+                return (
+                  <div key={h.id} className={cn(
+                    "rounded-xl p-4 border transition-colors",
+                    h.used === 0 || (h.limit === 0 && h.used === 0)
+                      ? "bg-emerald-500/5 border-emerald-500/20"
+                      : atLimit || (isHardStop && h.used > 0)
+                      ? "bg-rose-500/10 border-rose-500/30"
+                      : "bg-slate-800/50 border-slate-700/50"
+                  )}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{h.label}</p>
+                        <p className="text-[10px] text-slate-500">{h.sublabel}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className={cn("text-xs font-bold", habitStatusColor(h.used, h.limit))}>{statusText}</p>
+                        {!isHardStop && (
+                          <p className="text-[10px] text-slate-500">{h.used}/{h.limit}</p>
                         )}
-                        <span className="text-xs text-slate-500">
-                          {new Date(goal.startDate).toLocaleDateString('cs-CZ')} – {new Date(goal.endDate).toLocaleDateString('cs-CZ')}
-                        </span>
                       </div>
                     </div>
-                    {goal.why && (
-                      <p className="text-sm text-slate-400 italic border-l-2 border-blue-500/40 pl-3">{goal.why}</p>
-                    )}
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Jak to dosáhnout</p>
-                      <ul className="space-y-2">
-                        {goal.milestones.map((m, i) => (
-                          <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
-                            <span className="text-blue-400 font-bold shrink-0">{i + 1}.</span>
-                            {m}
-                          </li>
-                        ))}
-                      </ul>
+                    {/* Mini progress bar */}
+                    <div className="h-1.5 bg-slate-700/60 rounded-full overflow-hidden">
+                      <motion.div
+                        className={cn("h-full rounded-full", habitBarColor(h.used, h.limit))}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="p-8 bg-slate-800/30 border border-dashed border-slate-700 rounded-lg text-center text-slate-400">
-                Klikněte na "Vygenerovat s AI"
-              </div>
-            )}
-          </div>
-        </div>
+                  </div>
+                )
+              })}
+            </div>
 
-        {/* Monthly Goals */}
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-4">Mesicni Cil</h2>
-          <div className="grid gap-4">
-            {monthlyGoals.length > 0 ? (
-              monthlyGoals.map(goal => (
-                <Card key={goal.id} className="bg-slate-900 border-slate-700 hover:border-green-500/50 transition-all">
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-xl font-bold text-white leading-snug flex-1">{goal.goal}</h3>
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        {goal.focusArea && (
-                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30 border text-xs">
-                            {goal.focusArea}
-                          </Badge>
+            <div className="mt-4 p-3 rounded-lg bg-slate-800/40 border border-slate-700/50">
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                <span className="text-slate-300 font-semibold">Proč tohle funguje: </span>
+                Obyčejné aplikace ti říkají, abys vydělal $500 denně — a tím tě nutí hazardovat. Tady je tvůj jediný cíl udržet Bad Habits Quota na nule. Zisk je pak přirozeným výsledkem železné disciplíny.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── AI-Generated Process Goals ───────────────────────────── */}
+        {displayGoals.length > 0 && (
+          <>
+            {/* Weekly */}
+            {weeklyGoals.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-4 h-4 text-amber-400" />
+                  <h2 className="text-lg font-bold text-white">Týdenní procesní cíl</h2>
+                  <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 border text-xs">Tento týden</Badge>
+                </div>
+                <div className="grid gap-4">
+                  {weeklyGoals.map((goal) => (
+                    <Card key={goal.id} className="bg-slate-900 border-slate-700 hover:border-amber-500/40 transition-all">
+                      <CardContent className="pt-6 space-y-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="text-lg font-bold text-white leading-snug flex-1">{goal.goal}</h3>
+                          <div className="flex flex-col items-end gap-2 shrink-0">
+                            {goal.focusArea && (
+                              <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 border text-xs">
+                                {goal.focusArea}
+                              </Badge>
+                            )}
+                            <span className="text-xs text-slate-500">
+                              {new Date(goal.startDate).toLocaleDateString("cs-CZ")} –{" "}
+                              {new Date(goal.endDate).toLocaleDateString("cs-CZ")}
+                            </span>
+                          </div>
+                        </div>
+                        {goal.why && (
+                          <p className="text-sm text-slate-400 italic border-l-2 border-amber-500/40 pl-3">{goal.why}</p>
                         )}
-                        <span className="text-xs text-slate-500">
-                          {new Date(goal.startDate).toLocaleDateString('cs-CZ')} – {new Date(goal.endDate).toLocaleDateString('cs-CZ')}
-                        </span>
-                      </div>
-                    </div>
-                    {goal.why && (
-                      <p className="text-sm text-slate-400 italic border-l-2 border-green-500/40 pl-3">{goal.why}</p>
-                    )}
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Jak to dosáhnout</p>
-                      <ul className="space-y-2">
-                        {goal.milestones.map((m, i) => (
-                          <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
-                            <span className="text-green-400 font-bold shrink-0">{i + 1}.</span>
-                            {m}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="p-8 bg-slate-800/30 border border-dashed border-slate-700 rounded-lg text-center text-slate-400">
-                Klikněte na "Vygenerovat s AI"
+                        <div>
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Jak to dosáhnout</p>
+                          <ul className="space-y-2">
+                            {goal.milestones.map((m, i) => (
+                              <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
+                                <span className="text-amber-400 font-bold shrink-0">{i + 1}.</span>
+                                {m}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
             )}
+
+            {/* Monthly */}
+            {monthlyGoals.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingDown className="w-4 h-4 text-purple-400" />
+                  <h2 className="text-lg font-bold text-white">Měsíční procesní cíl</h2>
+                  <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 border text-xs">Tento měsíc</Badge>
+                </div>
+                <div className="grid gap-4">
+                  {monthlyGoals.map((goal) => (
+                    <Card key={goal.id} className="bg-slate-900 border-slate-700 hover:border-purple-500/40 transition-all">
+                      <CardContent className="pt-6 space-y-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="text-lg font-bold text-white leading-snug flex-1">{goal.goal}</h3>
+                          <div className="flex flex-col items-end gap-2 shrink-0">
+                            {goal.focusArea && (
+                              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 border text-xs">
+                                {goal.focusArea}
+                              </Badge>
+                            )}
+                            <span className="text-xs text-slate-500">
+                              {new Date(goal.startDate).toLocaleDateString("cs-CZ")} –{" "}
+                              {new Date(goal.endDate).toLocaleDateString("cs-CZ")}
+                            </span>
+                          </div>
+                        </div>
+                        {goal.why && (
+                          <p className="text-sm text-slate-400 italic border-l-2 border-purple-500/40 pl-3">{goal.why}</p>
+                        )}
+                        <div>
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Jak to dosáhnout</p>
+                          <ul className="space-y-2">
+                            {goal.milestones.map((m, i) => (
+                              <li key={i} className="text-sm text-slate-300 flex items-start gap-2">
+                                <span className="text-purple-400 font-bold shrink-0">{i + 1}.</span>
+                                {m}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {displayGoals.length === 0 && (
+          <div className="p-12 bg-slate-800/30 border border-dashed border-slate-700 rounded-xl text-center text-slate-400">
+            <Sparkles className="w-10 h-10 mx-auto mb-3 text-slate-600" />
+            <p className="font-medium text-slate-300 mb-1">Žádné cíle zatím</p>
+            <p className="text-sm">Klikni na "Vygenerovat s AI" a AI analyzuje tvůj obchodní styl</p>
           </div>
-        </div>
+        )}
+
       </div>
     </div>
   )
