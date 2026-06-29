@@ -256,7 +256,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-lg p-6 shadow-xl">
                     {/* Hlavní produkty - 8 vedle sebe, vycentrovaný */}
                     <div className="flex justify-center w-full">
-                      <div className="grid grid-cols-8 gap-3 w-fit">
+                      <div className="grid grid-cols-6 gap-3 w-fit">
                         {mainNavigation.map((item) => {
                           const isActive = pathname === item.href
 
