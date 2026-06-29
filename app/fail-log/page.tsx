@@ -18,6 +18,12 @@ import { cn } from "@/lib/utils"
 
 type EgoLevel = "full-amok" | "severe" | "mild"
 
+interface SessionContext {
+  confidence: number   // 1-10 morning confidence
+  routineComplete: boolean
+  session: "London" | "NY" | "Pre-Market" | "After-Hours"
+}
+
 interface FailLog {
   id: string
   date: string
@@ -29,6 +35,7 @@ interface FailLog {
   lessonLearned: string
   severity: "high" | "medium" | "low"
   egoLevel?: EgoLevel
+  sessionContext?: SessionContext
   trade?: { symbol: string; entry: number; exit: number; loss: number; timeInTrade?: string }
   aiGenerated: boolean
   autopsy?: string
@@ -79,6 +86,7 @@ const DEMO_FAIL_LOGS: FailLog[] = [
     actionPlan: "Po jakékoliv stopce: 30 minut pryč od platformy. Bez výjimky. Nastavit timer.",
     lessonLearned: "Trh není tvůj nepřítel. Po stopce jsem nebojoval s trhem — bojoval jsem sám se sebou a prohrál.",
     severity: "high",
+    sessionContext: { confidence: 3, routineComplete: false, session: "London" },
     trade: { symbol: "XAU/USD", entry: 2015.4, exit: 2008.2, loss: 610, timeInTrade: "22 min" },
     aiGenerated: false,
     autopsy: `🔬 AI AUTOPSY — Identifikovaný vzorec: Emoční eskalaace po stopce
@@ -100,6 +108,7 @@ const DEMO_FAIL_LOGS: FailLog[] = [
     actionPlan: "Před každým vstupem povinná kontrola trendu na denním a 4H grafu. Obchodovat pouze ve směru trendu.",
     lessonLearned: "Trh může zůstat 'moc vysoko' mnohem déle, než vydrží účet. Pocit není setup.",
     severity: "medium",
+    sessionContext: { confidence: 6, routineComplete: true, session: "London" },
     trade: { symbol: "EUR/USD", entry: 1.0850, exit: 1.0910, loss: 420, timeInTrade: "45 min" },
     aiGenerated: false,
     autopsy: `🔬 AI AUTOPSY — Identifikovaný vzorec: Opinion trading bez setupu
@@ -121,6 +130,7 @@ const DEMO_FAIL_LOGS: FailLog[] = [
     actionPlan: "Denní limit max. 3 obchody. Po dosažení limitu okamžitě zavřít platformu — i když 'vypadá' další setup.",
     lessonLearned: "Kvalita setupů exponenciálně klesá s každým dalším obchodem. Nejlepší obchody jsou první 1–2 v session.",
     severity: "medium",
+    sessionContext: { confidence: 8, routineComplete: true, session: "NY" },
     trade: { symbol: "GBP/USD", entry: 1.2650, exit: 1.2618, loss: 180, timeInTrade: "15 min" },
     aiGenerated: false,
     autopsy: `🔬 AI AUTOPSY — Identifikovaný vzorec: Gambler's fallacy po winning streak
@@ -142,6 +152,7 @@ const DEMO_FAIL_LOGS: FailLog[] = [
     actionPlan: "Fixní risk calculator před každým obchodem. Bez výjimky. Feeling o setupu neznamená 5× lot.",
     lessonLearned: "Nejlepší setup světa nezasluhuje porušení risk managementu. Právě proto, že vypadá perfektně, je nebezpečný.",
     severity: "medium",
+    sessionContext: { confidence: 9, routineComplete: true, session: "Pre-Market" },
     trade: { symbol: "BTC/USD", entry: 43200, exit: 42650, loss: 340, timeInTrade: "1h 20min" },
     aiGenerated: false,
     autopsy: `🔬 AI AUTOPSY — Identifikovaný vzorec: Overconfidence sizing
@@ -163,6 +174,7 @@ const DEMO_FAIL_LOGS: FailLog[] = [
     actionPlan: "Nastavit TP a SL a pak ZAVŘÍT obrazovku. Pokud sleduješ každou svíčku, budeš manuálně zasahovat.",
     lessonLearned: "Největší ztráty nejsou vždy záporné číslo. Ztráta zisku z paniky je ztráta stejně reálná jako stopka.",
     severity: "low",
+    sessionContext: { confidence: 7, routineComplete: true, session: "NY" },
     trade: { symbol: "EUR/USD", entry: 1.0820, exit: 1.0847, loss: 0, timeInTrade: "2h 10min" },
     aiGenerated: false,
     autopsy: `🔬 AI AUTOPSY — Identifikovaný vzorec: Screen addiction → Panic exit
@@ -301,6 +313,17 @@ export default function FailLogPage() {
   const totalLoss = displayLogs.reduce((s, l) => s + (l.trade?.loss ?? 0), 0)
   const worstCategory = chartData[0]?.category ?? "—"
 
+  // Pattern Intelligence: $ loss per category
+  const lossPerCategory: Record<string, number> = {}
+  for (const log of displayLogs) {
+    if (log.trade?.loss) {
+      lossPerCategory[log.category] = (lossPerCategory[log.category] ?? 0) + log.trade.loss
+    }
+  }
+  const patternIntelligence = Object.entries(lossPerCategory)
+    .sort((a, b) => b[1] - a[1])
+    .map(([category, loss]) => ({ category, loss, hex: categoryMeta(category).hex }))
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
       <div className="max-w-6xl mx-auto">
@@ -431,6 +454,58 @@ export default function FailLogPage() {
           </div>
         )}
 
+        {/* ── Pattern Intelligence ── */}
+        {patternIntelligence.length > 0 && (
+          <Card className="bg-slate-900/50 border-slate-800 mb-6">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-1.5 bg-violet-500/20 rounded-lg">
+                  <Zap className="w-4 h-4 text-violet-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Pattern Intelligence</p>
+                  <p className="text-[11px] text-slate-400">Kde tě to stojí nejvíc peněz? Žebříček kategorií podle ztráty</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {patternIntelligence.map((item, i) => {
+                  const maxLoss = patternIntelligence[0].loss
+                  const pct = Math.round((item.loss / maxLoss) * 100)
+                  const meta = categoryMeta(item.category)
+                  return (
+                    <div key={item.category} className="flex items-center gap-3">
+                      <span className="text-[11px] text-slate-500 w-3 font-mono">{i + 1}</span>
+                      <span className="text-sm w-4">{meta.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold text-slate-200 truncate">{item.category}</span>
+                          <span className="text-xs font-bold text-rose-300 ml-2 shrink-0">−${item.loss.toLocaleString()}</span>
+                        </div>
+                        <div className="h-1.5 bg-slate-700/60 rounded-full overflow-hidden">
+                          <motion.div
+                            className="h-full rounded-full"
+                            style={{ backgroundColor: item.hex }}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${pct}%` }}
+                            transition={{ duration: 0.9, ease: "easeOut", delay: i * 0.1 }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="mt-4 p-3 rounded-lg bg-violet-900/10 border border-violet-500/20">
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  <span className="text-violet-300 font-bold">{patternIntelligence[0]?.category}</span>{" "}
+                  je tvůj největší sabotér — −${patternIntelligence[0]?.loss.toLocaleString()} ze {displayLogs.length} incidentů.
+                  Fokusuj prevenci tady jako první.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* ── Active filter bar ── */}
         <AnimatePresence>
           {activeCategory && (
@@ -513,7 +588,47 @@ export default function FailLogPage() {
                       </div>
                     </div>
 
-                    {/* Row 2: 3-col info grid */}
+                    {/* Row 2: Session context */}
+                    {log.sessionContext && (
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/60 border border-slate-700/50">
+                          <span className="text-[10px] text-slate-500">Confidence:</span>
+                          <div className="flex gap-0.5">
+                            {Array.from({ length: 10 }, (_, i) => (
+                              <div
+                                key={i}
+                                className="w-1.5 h-3 rounded-sm"
+                                style={{
+                                  backgroundColor: i < log.sessionContext!.confidence
+                                    ? log.sessionContext!.confidence <= 3 ? "#f43f5e"
+                                    : log.sessionContext!.confidence <= 6 ? "#f59e0b"
+                                    : "#10b981"
+                                    : "rgb(51,65,85)",
+                                }}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-[10px] font-bold" style={{
+                            color: log.sessionContext.confidence <= 3 ? "#f43f5e"
+                              : log.sessionContext.confidence <= 6 ? "#f59e0b"
+                              : "#10b981"
+                          }}>{log.sessionContext.confidence}/10</span>
+                        </div>
+                        <div className={cn(
+                          "flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-semibold",
+                          log.sessionContext.routineComplete
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                            : "bg-rose-500/10 border-rose-500/30 text-rose-400"
+                        )}>
+                          {log.sessionContext.routineComplete ? "✅ Rutina splněna" : "❌ Rutina přeskočena"}
+                        </div>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/60 border border-slate-700/50">
+                          <span className="text-[10px] text-slate-400 font-medium">{log.sessionContext.session} Session</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Row 3: 3-col info grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="p-3 rounded-lg bg-rose-950/40 border border-rose-800/30">
                         <p className="text-[10px] font-semibold text-rose-400 mb-1 uppercase tracking-wide">Kořenová příčina</p>
@@ -529,7 +644,7 @@ export default function FailLogPage() {
                       </div>
                     </div>
 
-                    {/* Row 3: trade metrics */}
+                    {/* Row 4: trade metrics */}
                     {log.trade && (
                       <div className="flex items-center flex-wrap gap-4 px-3 py-2.5 rounded-lg bg-slate-800/50 border border-slate-700/50">
                         <span className="font-bold text-white text-sm">{log.trade.symbol}</span>
@@ -544,7 +659,7 @@ export default function FailLogPage() {
                       </div>
                     )}
 
-                    {/* Row 4: AI Autopsy button + expandable panel */}
+                    {/* Row 5: AI Autopsy button + expandable panel */}
                     <div>
                       <button
                         onClick={() => setOpenAutopsy(isOpen ? null : log.id)}

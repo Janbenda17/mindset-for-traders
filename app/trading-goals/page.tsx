@@ -62,6 +62,22 @@ const DEMO_GOALS: Goal[] = [
   },
 ]
 
+// 7-day discipline calendar — last 7 trading days
+const DISCIPLINE_CALENDAR = [
+  { day: "Po",    score: 100, winRate: 100, pnl: "+$340",   clean: true  },
+  { day: "Út",    score: 83,  winRate: 67,  pnl: "+$210",   clean: true  },
+  { day: "St",    score: 67,  winRate: 33,  pnl: "−$180",   clean: false },
+  { day: "Čt",    score: 100, winRate: 100, pnl: "+$520",   clean: true  },
+  { day: "Pá",    score: 17,  winRate: 14,  pnl: "−$1,660", clean: false },
+  { day: "Po",    score: 100, winRate: 100, pnl: "+$180",   clean: true  },
+  { day: "Dnes",  score: 83,  winRate: 67,  pnl: "+$120",   clean: true  },
+]
+
+const IMPACT_DATA = {
+  withRoutine:    { winRate: 71, avgPnl: "+$348", days: 18 },
+  withoutRoutine: { winRate: 24, avgPnl: "−$290", days: 11 },
+}
+
 // Demo stats — in live mode these would come from Supabase journal aggregation
 const DEMO_STATS = {
   dailyProcessScore: 83,      // % of today's process habits completed
@@ -337,6 +353,88 @@ export default function TradingGoalsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* ── 7-Day Discipline Calendar ────────────────────────────── */}
+        <Card className="bg-slate-900/50 border-slate-800 mb-6">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">7-Day Discipline Calendar</p>
+                <p className="text-[11px] text-slate-600 mt-0.5">Disciplína = zelená. Vidíš ten vzorec?</p>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] text-slate-500">
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block" />Čistý den</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-rose-500 inline-block" />Incident</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-7 gap-2">
+              {DISCIPLINE_CALENDAR.map((d, i) => {
+                const scoreColor = d.score >= 90 ? "#10b981" : d.score >= 60 ? "#f59e0b" : "#f43f5e"
+                return (
+                  <div key={i} className="flex flex-col items-center gap-1.5">
+                    <p className="text-[10px] text-slate-500 font-medium">{d.day}</p>
+                    <motion.div
+                      initial={{ scaleY: 0, opacity: 0 }}
+                      animate={{ scaleY: 1, opacity: 1 }}
+                      transition={{ duration: 0.4, delay: i * 0.07, ease: "easeOut" }}
+                      className="w-full rounded-md flex flex-col items-center justify-center py-2.5 px-1"
+                      style={{
+                        backgroundColor: scoreColor + "22",
+                        border: `1px solid ${scoreColor}44`,
+                      }}
+                    >
+                      <span className="text-sm font-bold" style={{ color: scoreColor }}>{d.score}%</span>
+                    </motion.div>
+                    <p className={cn("text-[10px] font-semibold", d.pnl.startsWith("+") ? "text-emerald-400" : "text-rose-400")}>{d.pnl}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Discipline Impact on Win Rate ─────────────────────────── */}
+        <Card className="bg-slate-900/50 border-slate-800 mb-6">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-1.5 bg-emerald-500/20 rounded-lg">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Disciplína → Win Rate korelace</p>
+                <p className="text-[11px] text-slate-400">Posledních 29 obchodních dní tvých dat</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {/* With routine */}
+              <div className="p-4 rounded-xl bg-emerald-900/20 border border-emerald-500/20">
+                <p className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wide mb-3">Dny s čistou disciplínou</p>
+                <p className="text-3xl font-bold text-emerald-300">{IMPACT_DATA.withRoutine.winRate}%</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">win rate</p>
+                <div className="mt-3 pt-3 border-t border-emerald-500/20 flex items-center justify-between">
+                  <span className="text-xs text-emerald-300 font-semibold">{IMPACT_DATA.withRoutine.avgPnl}</span>
+                  <span className="text-[10px] text-slate-500">{IMPACT_DATA.withRoutine.days} dní</span>
+                </div>
+              </div>
+              {/* Without routine */}
+              <div className="p-4 rounded-xl bg-rose-900/20 border border-rose-500/20">
+                <p className="text-[10px] font-semibold text-rose-400 uppercase tracking-wide mb-3">Dny s incidentem</p>
+                <p className="text-3xl font-bold text-rose-300">{IMPACT_DATA.withoutRoutine.winRate}%</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">win rate</p>
+                <div className="mt-3 pt-3 border-t border-rose-500/20 flex items-center justify-between">
+                  <span className="text-xs text-rose-300 font-semibold">{IMPACT_DATA.withoutRoutine.avgPnl}</span>
+                  <span className="text-[10px] text-slate-500">{IMPACT_DATA.withoutRoutine.days} dní</span>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 p-3 rounded-lg bg-slate-800/40 border border-slate-700/50">
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                <span className="text-emerald-400 font-bold">+47pp rozdíl ve win rate</span> mezi čistými a incidentovými dny.{" "}
+                Disciplína není jen pocit — je to edge v číslech.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* ── Bad Habits Quota ─────────────────────────────────────── */}
         <Card className="bg-slate-900/50 border-slate-800 mb-6">
