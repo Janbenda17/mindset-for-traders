@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useLanguage } from "@/contexts/language-context"
 import { cn } from "@/lib/utils"
 
 // ── Level system ──────────────────────────────────────────────────────────────
@@ -52,17 +53,36 @@ interface Achievement {
 
 const ACHIEVEMENTS: Achievement[] = [
   // Foundation
+  { id: "a1",  icon: "🔥", title: "First Flame",        description: "Complete your first morning routine",               xp: 75,   status: "unlocked",  category: "foundation", unlockedAt: "15.5.2025" },
+  { id: "a2",  icon: "📋", title: "The Planner",         description: "Set goals 7 days in a row",                         xp: 150,  status: "unlocked",  category: "foundation", unlockedAt: "22.5.2025" },
+  { id: "a3",  icon: "🧘", title: "Zen Entry",           description: "Complete pre-trade breathwork 5× in a row",         xp: 200,  status: "unlocked",  category: "foundation", unlockedAt: "29.5.2025" },
+  { id: "a4",  icon: "🛡️", title: "Drawdown Guardian",  description: "Keep drawdown <2% for 10 consecutive trades",       xp: 250,  status: "unlocked",  category: "foundation", unlockedAt: "3.6.2025"  },
+  // Discipline
+  { id: "a5",  icon: "⚡", title: "Iron 5",              description: "5 consecutive clean discipline days",               xp: 500,  status: "unlocked",  category: "discipline", unlockedAt: "8.6.2025"  },
+  { id: "a6",  icon: "🎯", title: "Sniper Week",         description: "Win rate >60% for an entire week",                  xp: 400,  status: "unlocked",  category: "discipline", unlockedAt: "10.6.2025" },
+  { id: "a7",  icon: "🚫", title: "No Revenge",          description: "14 days without a single revenge trade",            xp: 600,  status: "unlocked",  category: "discipline", unlockedAt: "17.6.2025" },
+  { id: "a8",  icon: "📉", title: "Loss Learner",        description: "Write a fail log within 1h of a stop-loss — 5×",   xp: 300,  status: "unlocked",  category: "discipline", unlockedAt: "20.6.2025" },
+  { id: "a9",  icon: "🧠", title: "Process First",       description: "30 consecutive days with process score >80%",       xp: 1000, status: "progress", progress: 22, target: 30, category: "discipline" },
+  // Elite
+  { id: "a10", icon: "👑", title: "Iron Month",          description: "30 consecutive clean days",                         xp: 1500, status: "progress", progress: 22, target: 30, category: "elite" },
+  { id: "a11", icon: "🏆", title: "Elite Streak",        description: "50-day trading streak",                             xp: 2000, status: "progress", progress: 31, target: 50, category: "elite" },
+  { id: "a12", icon: "🔬", title: "Autopsy Master",      description: "Complete 20 AI Autopsies",                          xp: 800,  status: "progress", progress: 11, target: 20, category: "elite" },
+  { id: "a13", icon: "💎", title: "Diamond Hands",       description: "Hold a position to TP without panic exit — 20×",   xp: 1200, status: "locked",   progress: 0,  target: 20, category: "elite" },
+  { id: "a14", icon: "🌅", title: "Dawn Ritual",         description: "60 morning routines in a row",                      xp: 1500, status: "locked",   progress: 0,  target: 60, category: "elite" },
+  { id: "a15", icon: "⚔️", title: "Zero Incident Week", description: "Full week without an incident — 4×",                xp: 1000, status: "locked",   progress: 2,  target: 4,  category: "elite" },
+  { id: "a16", icon: "🎖️", title: "Mind Master",        description: "Reach Level 10 — the absolute peak",                xp: 5000, status: "locked",   progress: 0,  target: 1,  category: "elite" },
+]
+
+const ACHIEVEMENTS_CS: Achievement[] = [
   { id: "a1",  icon: "🔥", title: "First Flame",        description: "Dokonči svoji první ranní rutinu",                     xp: 75,   status: "unlocked",  category: "foundation", unlockedAt: "15.5.2025" },
   { id: "a2",  icon: "📋", title: "The Planner",         description: "Nastav si cíle 7 dní v řadě",                          xp: 150,  status: "unlocked",  category: "foundation", unlockedAt: "22.5.2025" },
   { id: "a3",  icon: "🧘", title: "Zen Entry",           description: "Dokonči pre-trade dechové cvičení 5× za sebou",        xp: 200,  status: "unlocked",  category: "foundation", unlockedAt: "29.5.2025" },
   { id: "a4",  icon: "🛡️", title: "Drawdown Guardian",  description: "Udržuj drawdown <2 % po 10 obchodech v řadě",          xp: 250,  status: "unlocked",  category: "foundation", unlockedAt: "3.6.2025"  },
-  // Discipline
   { id: "a5",  icon: "⚡", title: "Iron 5",              description: "5 po sobě jdoucích čistých disciplinových dnů",       xp: 500,  status: "unlocked",  category: "discipline", unlockedAt: "8.6.2025"  },
   { id: "a6",  icon: "🎯", title: "Sniper Week",         description: "Win rate >60 % celý týden",                           xp: 400,  status: "unlocked",  category: "discipline", unlockedAt: "10.6.2025" },
   { id: "a7",  icon: "🚫", title: "No Revenge",          description: "14 dní bez jediného revenge tradu",                   xp: 600,  status: "unlocked",  category: "discipline", unlockedAt: "17.6.2025" },
   { id: "a8",  icon: "📉", title: "Loss Learner",        description: "Zapiš fail log do 1h po stopce — 5×",                 xp: 300,  status: "unlocked",  category: "discipline", unlockedAt: "20.6.2025" },
   { id: "a9",  icon: "🧠", title: "Process First",       description: "30 dní po sobě process score >80 %",                  xp: 1000, status: "progress", progress: 22, target: 30, category: "discipline" },
-  // Elite
   { id: "a10", icon: "👑", title: "Iron Month",          description: "30 po sobě jdoucích čistých dnů",                     xp: 1500, status: "progress", progress: 22, target: 30, category: "elite" },
   { id: "a11", icon: "🏆", title: "Elite Streak",        description: "50denní obchodní streak",                             xp: 2000, status: "progress", progress: 31, target: 50, category: "elite" },
   { id: "a12", icon: "🔬", title: "Autopsy Master",      description: "Dokonči 20 AI Autopsies",                              xp: 800,  status: "progress", progress: 11, target: 20, category: "elite" },
@@ -74,7 +94,7 @@ const ACHIEVEMENTS: Achievement[] = [
 
 // ── Recent XP events ──────────────────────────────────────────────────────────
 
-const XP_EVENTS = [
+const XP_EVENTS_CS = [
   { label: "Ranní rutina dokončena",    xp: 25,  time: "Dnes 07:12",      icon: "🌅" },
   { label: "Clean Discipline Day",      xp: 50,  time: "Dnes 00:00",      icon: "⚡" },
   { label: "Fail Log zápis",            xp: 50,  time: "Včera 16:23",     icon: "📉" },
@@ -83,27 +103,45 @@ const XP_EVENTS = [
   { label: "Process Score 91 %",        xp: 45,  time: "2 dny zpět",      icon: "🎯" },
   { label: "Mid-Day Reset dokončen",    xp: 20,  time: "2 dny zpět",      icon: "🧘" },
 ]
+const XP_EVENTS_EN = [
+  { label: "Morning routine completed", xp: 25,  time: "Today 07:12",     icon: "🌅" },
+  { label: "Clean Discipline Day",      xp: 50,  time: "Today 00:00",     icon: "⚡" },
+  { label: "Fail Log entry",            xp: 50,  time: "Yesterday 16:23", icon: "📉" },
+  { label: "AI Autopsy triggered",      xp: 100, time: "Yesterday 16:25", icon: "🔬" },
+  { label: "Trading Streak — Day 31",   xp: 80,  time: "Yesterday 00:00", icon: "🔥" },
+  { label: "Process Score 91%",         xp: 45,  time: "2 days ago",      icon: "🎯" },
+  { label: "Mid-Day Reset completed",   xp: 20,  time: "2 days ago",      icon: "🧘" },
+]
 
 // ── Category meta ─────────────────────────────────────────────────────────────
 
-const CAT_META = {
+const CAT_META_CS = {
   foundation: { label: "Základy",   color: "#3b82f6", icon: Target  },
   discipline:  { label: "Disciplína", color: "#10b981", icon: Shield  },
   elite:       { label: "Elite",     color: "#a855f7", icon: Crown   },
+}
+const CAT_META_EN = {
+  foundation: { label: "Foundation", color: "#3b82f6", icon: Target  },
+  discipline:  { label: "Discipline", color: "#10b981", icon: Shield  },
+  elite:       { label: "Elite",      color: "#a855f7", icon: Crown   },
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function RewardsPage() {
+  const { isEn } = useLanguage()
   const [activeCategory, setActiveCategory] = useState<"all" | "foundation" | "discipline" | "elite">("all")
   const [expandRoadmap, setExpandRoadmap] = useState(false)
 
-  const unlocked = ACHIEVEMENTS.filter((a) => a.status === "unlocked").length
-  const totalXpEarned = ACHIEVEMENTS.filter((a) => a.status === "unlocked").reduce((s, a) => s + a.xp, 0)
+  const CAT_META = isEn ? CAT_META_EN : CAT_META_CS
+  const XP_EVENTS = isEn ? XP_EVENTS_EN : XP_EVENTS_CS
+  const ACTIVE_ACHIEVEMENTS = isEn ? ACHIEVEMENTS : ACHIEVEMENTS_CS
+  const unlocked = ACTIVE_ACHIEVEMENTS.filter((a) => a.status === "unlocked").length
+  const totalXpEarned = ACTIVE_ACHIEVEMENTS.filter((a) => a.status === "unlocked").reduce((s, a) => s + a.xp, 0)
 
   const filtered = activeCategory === "all"
-    ? ACHIEVEMENTS
-    : ACHIEVEMENTS.filter((a) => a.category === activeCategory)
+    ? ACTIVE_ACHIEVEMENTS
+    : ACTIVE_ACHIEVEMENTS.filter((a) => a.category === activeCategory)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
@@ -113,7 +151,7 @@ export default function RewardsPage() {
         <Link href="/bonus" className="inline-flex mb-6">
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
             <ArrowLeft className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-400">Zpět</span>
+            <span className="text-sm text-gray-400">{isEn ? "Back" : "Zpět"}</span>
           </div>
         </Link>
 
@@ -124,7 +162,9 @@ export default function RewardsPage() {
             <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 border text-xs font-mono">XP SYSTEM</Badge>
           </div>
           <p className="text-slate-400 text-sm max-w-lg">
-            Každé správné rozhodnutí se počítá. Disciplína se tady mění na čísla — a čísla nelžou.
+            {isEn
+              ? "Every right decision counts. Discipline turns into numbers here — and numbers don't lie."
+              : "Každé správné rozhodnutí se počítá. Disciplína se tady mění na čísla — a čísla nelžou."}
           </p>
         </div>
 
@@ -145,14 +185,14 @@ export default function RewardsPage() {
                   </p>
                   <h2 className="text-3xl font-black text-white">{CURRENT_LEVEL.name}</h2>
                   <p className="text-sm text-slate-400 mt-1">
-                    Další úroveň: <span className="text-amber-300 font-semibold">{NEXT_LEVEL.name}</span>
+                    {isEn ? "Next level: " : "Další úroveň: "}<span className="text-amber-300 font-semibold">{NEXT_LEVEL.name}</span>
                   </p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-xs text-slate-500 mb-0.5">Mind Points</p>
                   <p className="text-4xl font-black text-amber-300">{CURRENT_XP.toLocaleString()}</p>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    {(NEXT_LEVEL.xpMin - CURRENT_XP).toLocaleString()} XP do levelu {NEXT_LEVEL.level}
+                    {(NEXT_LEVEL.xpMin - CURRENT_XP).toLocaleString()} XP {isEn ? `to level ${NEXT_LEVEL.level}` : `do levelu ${NEXT_LEVEL.level}`}
                   </p>
                 </div>
               </div>
@@ -172,15 +212,15 @@ export default function RewardsPage() {
                     transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
                   />
                 </div>
-                <p className="text-right text-xs text-amber-400 font-semibold">{Math.round(PROGRESS_PCT)} % dokončeno</p>
+                <p className="text-right text-xs text-amber-400 font-semibold">{Math.round(PROGRESS_PCT)}% {isEn ? "complete" : "dokončeno"}</p>
               </div>
 
               {/* Stats row */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: "Odemknuto", value: `${unlocked}/${ACHIEVEMENTS.length}`, icon: Trophy, color: "text-yellow-400" },
-                  { label: "XP z odznaků", value: totalXpEarned.toLocaleString(), icon: Star,   color: "text-purple-400" },
-                  { label: "Streak",       value: "31 dní",                          icon: Flame,  color: "text-orange-400" },
+                  { label: isEn ? "Unlocked" : "Odemknuto",   value: `${unlocked}/${ACHIEVEMENTS.length}`, icon: Trophy, color: "text-yellow-400" },
+                  { label: isEn ? "XP from badges" : "XP z odznaků", value: totalXpEarned.toLocaleString(), icon: Star,   color: "text-purple-400" },
+                  { label: "Streak",                                   value: isEn ? "31 days" : "31 dní",   icon: Flame,  color: "text-orange-400" },
                 ].map((s) => (
                   <div key={s.label} className="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40 text-center">
                     <s.icon className={cn("w-4 h-4 mx-auto mb-1", s.color)} />
@@ -212,7 +252,7 @@ export default function RewardsPage() {
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-bold text-white">Rank Progression Road</p>
-                    <p className="text-[11px] text-slate-400">10 úrovní od Raw Tradera po Mind Mastera</p>
+                    <p className="text-[11px] text-slate-400">{isEn ? "10 levels from Raw Trader to Mind Master" : "10 úrovní od Raw Tradera po Mind Mastera"}</p>
                   </div>
                 </div>
                 <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0", expandRoadmap && "rotate-180")} />
@@ -286,7 +326,7 @@ export default function RewardsPage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Recent XP Activity</p>
-                  <p className="text-[11px] text-slate-400">Každé správné rozhodnutí se zaznamenává</p>
+                  <p className="text-[11px] text-slate-400">{isEn ? "Every right decision is recorded" : "Každé správné rozhodnutí se zaznamenává"}</p>
                 </div>
               </div>
               <div className="space-y-2">
@@ -322,10 +362,10 @@ export default function RewardsPage() {
           {/* Category filter */}
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             {[
-              { key: "all",        label: "Vše",        count: ACHIEVEMENTS.length },
-              { key: "foundation", label: "Základy",    count: ACHIEVEMENTS.filter(a => a.category === "foundation").length },
-              { key: "discipline", label: "Disciplína", count: ACHIEVEMENTS.filter(a => a.category === "discipline").length },
-              { key: "elite",      label: "Elite",      count: ACHIEVEMENTS.filter(a => a.category === "elite").length },
+              { key: "all",        label: isEn ? "All" : "Vše",              count: ACTIVE_ACHIEVEMENTS.length },
+              { key: "foundation", label: isEn ? "Foundation" : "Základy",   count: ACTIVE_ACHIEVEMENTS.filter(a => a.category === "foundation").length },
+              { key: "discipline", label: isEn ? "Discipline" : "Disciplína",count: ACTIVE_ACHIEVEMENTS.filter(a => a.category === "discipline").length },
+              { key: "elite",      label: "Elite",                            count: ACTIVE_ACHIEVEMENTS.filter(a => a.category === "elite").length },
             ].map((c) => (
               <button
                 key={c.key}
@@ -424,7 +464,7 @@ export default function RewardsPage() {
                       </div>
 
                       {badge.status === "unlocked" && badge.unlockedAt && (
-                        <p className="text-[10px] text-slate-600 mt-2">Odemknuto {badge.unlockedAt}</p>
+                        <p className="text-[10px] text-slate-600 mt-2">{isEn ? "Unlocked" : "Odemknuto"} {badge.unlockedAt}</p>
                       )}
                     </CardContent>
                   </Card>

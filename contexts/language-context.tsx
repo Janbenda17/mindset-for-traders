@@ -10,6 +10,7 @@ interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
   t: (key: string) => string
+  isEn: boolean
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
@@ -270,7 +271,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t, isEn: language === "en" }}>
       {children}
     </LanguageContext.Provider>
   )
@@ -284,6 +285,7 @@ export function useLanguage() {
         language: "cs" as const,
         setLanguage: () => {},
         t: (key: string) => key,
+        isEn: false,
       }
     }
     throw new Error("useLanguage must be used within LanguageProvider")

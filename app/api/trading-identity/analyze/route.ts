@@ -53,6 +53,11 @@ const DEMO_SCAN_DATA = {
 
 export async function POST(req: NextRequest) {
   const cookieStore = cookies()
+  let language = "cs"
+  try {
+    const body = await req.json()
+    if (body?.language === "en") language = "en"
+  } catch {}
 
   // ── Try to get real user data ──────────────────────────────────────────────
   let scanData = DEMO_SCAN_DATA
@@ -156,17 +161,65 @@ ${scanData.routines.map((r) => `- ${r.date}: ${r.completed ? "✓" : "✗"} | Co
 
   // ── Call Claude ────────────────────────────────────────────────────────────
 
-  const message = await getClient().messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 2000,
-    system: `Jsi elite trading psycholog. Na základě 10 dní obchodních dat vygeneruješ přesný psychologický profil tradera.
+  const isEnLang = language === "en"
+
+  const systemPrompt = isEnLang
+    ? `You are an elite trading psychologist. Based on 10 days of trading data you generate an accurate psychological profile of a trader.
+You respond EXCLUSIVELY with clean JSON without markdown blocks, exactly according to the given structure.
+Everything in English. Archetype name always in UPPERCASE ENGLISH.
+Be brutally honest — that is the value for the trader.`
+    : `Jsi elite trading psycholog. Na základě 10 dní obchodních dat vygeneruješ přesný psychologický profil tradera.
 Odpovídáš VÝHRADNĚ čistým JSON bez markdown bloků, přesně podle zadané struktury.
 Vše v češtině kromě technických termínů (archetype name vždy ANGLICKY VERZÁLKAMI).
-Buď brutálně upřímný — to je hodnota pro tradera.`,
-    messages: [
-      {
-        role: "user",
-        content: `Na základě těchto dat vygeneruj trader identity profil jako JSON:
+Buď brutálně upřímný — to je hodnota pro tradera.`
+
+  const userPrompt = isEnLang
+    ? `Based on this data generate a trader identity profile as JSON:
+
+${context}
+
+Return exactly this JSON (fill in all fields):
+{
+  "archetypeCode": "2-3 chars + number, e.g. IS-91",
+  "archetypeName": "ENGLISH NAME IN UPPERCASE, max 3 words",
+  "archetypeTagline": "one dramatic sentence in English",
+  "archetypeDescription": "3-4 sentences: what this trader does well, their weakness, their edge",
+  "archetypeStats": [
+    { "label": "Identity Strength", "value": "XX / 100" },
+    { "label": "Archetype Rarity", "value": "Top X %" },
+    { "label": "Edge Type", "value": "..." }
+  ],
+  "dnaAxes": [
+    { "label": "Discipline",       "value": 0-100 },
+    { "label": "Patience",         "value": 0-100 },
+    { "label": "Risk Control",     "value": 0-100 },
+    { "label": "Emotional Stability", "value": 0-100 },
+    { "label": "Process",          "value": 0-100 },
+    { "label": "Adaptability",     "value": 0-100 }
+  ],
+  "shadowPatterns": [
+    {
+      "name": "pattern name in English",
+      "trigger": "specific situation when it activates",
+      "frequency": "X× in 10 days / Every ...",
+      "riskLevel": "Critical | High | Medium",
+      "description": "1-2 sentences in English, brutally honest"
+    }
+  ],
+  "behavioralFingerprint": [
+    { "label": "...", "you": number, "avg": number, "unit": "% | × / month | ...", "invert": false/true }
+  ],
+  "evolution": [
+    { "week": "W-5", "discipline": 0-100, "emotion": 0-100, "process": 0-100 },
+    { "week": "W-4", "discipline": ..., "emotion": ..., "process": ... },
+    { "week": "W-3", "discipline": ..., "emotion": ..., "process": ... },
+    { "week": "W-2", "discipline": ..., "emotion": ..., "process": ... },
+    { "week": "W-1", "discipline": ..., "emotion": ..., "process": ... },
+    { "week": "Now", "discipline": ..., "emotion": ..., "process": ... }
+  ],
+  "manifesto": "trader's personal commitment in English, 8-12 lines, format: title\\n\\nsentences\\n→ rules\\n\\nclosing line"
+}`
+    : `Na základě těchto dat vygeneruj trader identity profil jako JSON:
 
 ${context}
 
@@ -210,9 +263,13 @@ Vrať přesně tento JSON (vyplň všechna pole):
     { "week": "Nyní","discipline": ..., "emotion": ..., "process": ... }
   ],
   "manifesto": "osobní závazek tradera v češtině, 8-12 řádků, formát: nadpis\\n\\nvěty\\n→ pravidla\\n\\nzávěrečná věta"
-}`,
-      },
-    ],
+}`
+
+  const message = await getClient().messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 2000,
+    system: systemPrompt,
+    messages: [{ role: "user", content: userPrompt }],
   })
 
   const raw = (message.content[0] as { type: string; text: string }).text.trim()

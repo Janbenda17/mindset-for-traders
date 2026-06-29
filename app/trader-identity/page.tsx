@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useLanguage } from "@/contexts/language-context"
 import { cn } from "@/lib/utils"
 
 // ── DNA axis colors (fixed, applied to AI output) ────────────────────────────
@@ -17,13 +18,21 @@ const DNA_COLORS = ["#10b981", "#6366f1", "#3b82f6", "#f59e0b", "#8b5cf6", "#ec4
 
 // ── Scanning steps shown during analysis ─────────────────────────────────────
 
-const SCAN_STEPS = [
+const SCAN_STEPS_CS = [
   { icon: "📉", label: "Načítám fail logy posledních 10 dní...",      key: "failLogs"  },
   { icon: "🌅", label: "Analyzuji záznamy ranních rutin...",           key: "routines"  },
   { icon: "📊", label: "Zpracovávám obchodní záznamy...",             key: "trades"    },
   { icon: "🧠", label: "Mapuji emoční vzorce a triggery...",          key: "emotion"   },
   { icon: "⚡", label: "Identifikuji behaviorální fingerprint...",     key: "behavior"  },
   { icon: "🤖", label: "AI syntetizuje identity profil...",            key: "ai"        },
+]
+const SCAN_STEPS_EN = [
+  { icon: "📉", label: "Loading fail logs from last 10 days...",       key: "failLogs"  },
+  { icon: "🌅", label: "Analyzing morning routine records...",          key: "routines"  },
+  { icon: "📊", label: "Processing trade records...",                   key: "trades"    },
+  { icon: "🧠", label: "Mapping emotional patterns and triggers...",    key: "emotion"   },
+  { icon: "⚡", label: "Identifying behavioral fingerprint...",         key: "behavior"  },
+  { icon: "🤖", label: "AI synthesizing identity profile...",           key: "ai"        },
 ]
 
 // ── Radar chart ───────────────────────────────────────────────────────────────
@@ -100,9 +109,9 @@ function EvolutionChart({ data }: { data: EvolutionPoint[] }) {
   }
 
   const lines = [
-    { key: "discipline" as const, color: "#10b981", label: "Disciplína" },
-    { key: "emotion"    as const, color: "#f59e0b", label: "Emoce" },
-    { key: "process"    as const, color: "#6366f1", label: "Proces" },
+    { key: "discipline" as const, color: "#10b981", label: "Discipline" },
+    { key: "emotion"    as const, color: "#f59e0b", label: "Emotion" },
+    { key: "process"    as const, color: "#6366f1", label: "Process" },
   ]
 
   return (
@@ -177,9 +186,14 @@ const RISK_COLOR: Record<string, string> = {
   "Kritické": "#f43f5e",
   "Vysoké":   "#f59e0b",
   "Střední":  "#6366f1",
+  "Critical": "#f43f5e",
+  "High":     "#f59e0b",
+  "Medium":   "#6366f1",
 }
 
 export default function TraderIdentityPage() {
+  const { isEn } = useLanguage()
+  const SCAN_STEPS = isEn ? SCAN_STEPS_EN : SCAN_STEPS_CS
   const [phase, setPhase]               = useState<Phase>("idle")
   const [scanStep, setScanStep]         = useState(-1)
   const [scanSummary, setScanSummary]   = useState<ScanSummary | null>(null)
@@ -209,7 +223,11 @@ export default function TraderIdentityPage() {
 
     // Parallel: actually call the API
     try {
-      const res  = await fetch("/api/trading-identity/analyze", { method: "POST" })
+      const res  = await fetch("/api/trading-identity/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: isEn ? "en" : "cs" }),
+      })
       const data = await res.json()
       if (!res.ok || data.error) throw new Error(data.error || "API error")
 
@@ -240,7 +258,7 @@ export default function TraderIdentityPage() {
           <Link href="/bonus" className="inline-flex mb-6">
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
               <ArrowLeft className="w-4 h-4 text-gray-400" />
-              <span className="text-sm text-gray-400">Zpět</span>
+              <span className="text-sm text-gray-400">{isEn ? "Back" : "Zpět"}</span>
             </div>
           </Link>
 
@@ -259,20 +277,27 @@ export default function TraderIdentityPage() {
               </Badge>
               <h1 className="text-4xl font-black text-white mb-3">Trader Identity</h1>
               <p className="text-slate-400 leading-relaxed mb-3">
-                AI analyzuje tvých <span className="text-violet-300 font-semibold">posledních 10 dní</span> obchodních dat —
-                fail logy, rutiny, trade záznamy — a vytvoří přesný psychologický profil.
+                {isEn ? (
+                  <>AI analyzes your <span className="text-violet-300 font-semibold">last 10 days</span> of trading data — fail logs, routines, trade records — and creates an accurate psychological profile.</>
+                ) : (
+                  <>AI analyzuje tvých <span className="text-violet-300 font-semibold">posledních 10 dní</span> obchodních dat — fail logy, rutiny, trade záznamy — a vytvoří přesný psychologický profil.</>
+                )}
               </p>
               <p className="text-slate-500 text-sm mb-8">
-                Ne kdo chceš být. Kdo skutečně jsi.
+                {isEn ? "Not who you want to be. Who you actually are." : "Ne kdo chceš být. Kdo skutečně jsi."}
               </p>
 
               {/* What gets scanned */}
               <div className="grid grid-cols-3 gap-3 mb-8 text-left">
-                {[
-                  { icon: "📉", label: "Fail logy",    desc: "Incidenty a vzorce" },
-                  { icon: "🌅", label: "Rutiny",        desc: "10denní konzistence" },
-                  { icon: "📊", label: "Obchody",       desc: "Win rate a chování" },
-                ].map((item) => (
+                {(isEn ? [
+                  { icon: "📉", label: "Fail Logs",  desc: "Incidents & patterns" },
+                  { icon: "🌅", label: "Routines",   desc: "10-day consistency" },
+                  { icon: "📊", label: "Trades",     desc: "Win rate & behavior" },
+                ] : [
+                  { icon: "📉", label: "Fail logy",  desc: "Incidenty a vzorce" },
+                  { icon: "🌅", label: "Rutiny",      desc: "10denní konzistence" },
+                  { icon: "📊", label: "Obchody",     desc: "Win rate a chování" },
+                ]).map((item) => (
                   <div key={item.label} className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
                     <p className="text-xl mb-1">{item.icon}</p>
                     <p className="text-xs font-semibold text-slate-200">{item.label}</p>
@@ -285,7 +310,7 @@ export default function TraderIdentityPage() {
                 onClick={startAnalysis}
                 className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-sm transition-all duration-200 shadow-lg shadow-violet-500/20"
               >
-                Spustit AI analýzu
+                {isEn ? "Start AI Analysis" : "Spustit AI analýzu"}
               </button>
             </motion.div>
           </div>
@@ -303,10 +328,10 @@ export default function TraderIdentityPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
             <div className="text-center mb-8">
               <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 border text-xs font-mono mb-3">
-                ANALÝZA PROBÍHÁ
+                {isEn ? "ANALYSIS IN PROGRESS" : "ANALÝZA PROBÍHÁ"}
               </Badge>
-              <h2 className="text-2xl font-black text-white">Skenuji 10 dní dat...</h2>
-              <p className="text-slate-400 text-sm mt-1">Identifikuji tvůj trading fingerprint</p>
+              <h2 className="text-2xl font-black text-white">{isEn ? "Scanning 10 days of data..." : "Skenuji 10 dní dat..."}</h2>
+              <p className="text-slate-400 text-sm mt-1">{isEn ? "Identifying your trading fingerprint" : "Identifikuji tvůj trading fingerprint"}</p>
             </div>
 
             <Card className="bg-slate-900/60 border-slate-800">
@@ -364,14 +389,14 @@ export default function TraderIdentityPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 flex items-center justify-center">
         <div className="text-center max-w-sm">
           <AlertTriangle className="w-10 h-10 text-rose-400 mx-auto mb-3" />
-          <h2 className="text-xl font-bold text-white mb-2">Analýza selhala</h2>
+          <h2 className="text-xl font-bold text-white mb-2">{isEn ? "Analysis failed" : "Analýza selhala"}</h2>
           <p className="text-slate-400 text-sm mb-6">{errorMsg}</p>
           <button
             onClick={() => { setPhase("idle"); setScanStep(-1) }}
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-sm font-medium hover:bg-slate-700 transition-colors mx-auto"
           >
             <RefreshCw className="w-4 h-4" />
-            Zkusit znovu
+            {isEn ? "Try again" : "Zkusit znovu"}
           </button>
         </div>
       </div>
@@ -396,7 +421,7 @@ export default function TraderIdentityPage() {
           <Link href="/bonus" className="inline-flex">
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
               <ArrowLeft className="w-4 h-4 text-gray-400" />
-              <span className="text-sm text-gray-400">Zpět</span>
+              <span className="text-sm text-gray-400">{isEn ? "Back" : "Zpět"}</span>
             </div>
           </Link>
           <button
@@ -404,7 +429,7 @@ export default function TraderIdentityPage() {
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors text-xs text-slate-400"
           >
             <RefreshCw className="w-3 h-3" />
-            Nová analýza
+            {isEn ? "New analysis" : "Nová analýza"}
           </button>
         </div>
 
@@ -416,8 +441,13 @@ export default function TraderIdentityPage() {
           </div>
           {scanSummary && (
             <p className="text-slate-400 text-sm">
-              Analyzováno <span className="text-violet-300 font-semibold">{scanSummary.daysAnalyzed} dní</span> ·{" "}
-              {scanSummary.trades} obchodů · {scanSummary.failLogs} incidentů · rutina {scanSummary.routines}/{scanSummary.totalRoutines} dní
+              {isEn ? (
+                <>Analyzed <span className="text-violet-300 font-semibold">{scanSummary.daysAnalyzed} days</span> ·{" "}
+                {scanSummary.trades} trades · {scanSummary.failLogs} incidents · routine {scanSummary.routines}/{scanSummary.totalRoutines} days</>
+              ) : (
+                <>Analyzováno <span className="text-violet-300 font-semibold">{scanSummary.daysAnalyzed} dní</span> ·{" "}
+                {scanSummary.trades} obchodů · {scanSummary.failLogs} incidentů · rutina {scanSummary.routines}/{scanSummary.totalRoutines} dní</>
+              )}
             </p>
           )}
         </div>
@@ -462,7 +492,7 @@ export default function TraderIdentityPage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Behavioral Fingerprint</p>
-                  <p className="text-[11px] text-slate-400">Tvůj profil vs. průměrný retail trader</p>
+                  <p className="text-[11px] text-slate-400">{isEn ? "Your profile vs. average retail trader" : "Tvůj profil vs. průměrný retail trader"}</p>
                 </div>
               </div>
               <div className="space-y-4">
@@ -477,13 +507,13 @@ export default function TraderIdentityPage() {
                         <div className="flex items-center gap-3 text-[11px]">
                           <span style={{ color: youColor }} className="font-bold">{row.you} {row.unit}</span>
                           <span className="text-slate-600">vs.</span>
-                          <span className="text-slate-500">{row.avg} {row.unit} průměr</span>
+                          <span className="text-slate-500">{row.avg} {row.unit} {isEn ? "avg" : "průměr"}</span>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-1">
                         {[
-                          { label: "Ty", val: row.you, color: youColor },
-                          { label: "Průměr", val: row.avg, color: "#475569" },
+                          { label: isEn ? "You" : "Ty", val: row.you, color: youColor },
+                          { label: isEn ? "Average" : "Průměr", val: row.avg, color: "#475569" },
                         ].map((bar) => (
                           <div key={bar.label}>
                             <p className="text-[9px] text-slate-600 mb-0.5">{bar.label}</p>
@@ -516,7 +546,7 @@ export default function TraderIdentityPage() {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-white">Neural Trading DNA</p>
-                    <p className="text-[11px] text-slate-400">6 psychologických dimenzí</p>
+                    <p className="text-[11px] text-slate-400">{isEn ? "6 psychological dimensions" : "6 psychologických dimenzí"}</p>
                   </div>
                 </div>
                 <div className="flex justify-center">
@@ -543,15 +573,15 @@ export default function TraderIdentityPage() {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-white">Identity Evolution</p>
-                    <p className="text-[11px] text-slate-400">6týdenní trajektorie — trend je jasný</p>
+                    <p className="text-[11px] text-slate-400">{isEn ? "6-week trajectory — the trend is clear" : "6týdenní trajektorie — trend je jasný"}</p>
                   </div>
                 </div>
                 {profile.evolution?.length > 0 && <EvolutionChart data={profile.evolution} />}
                 <div className="mt-5 grid grid-cols-3 gap-2">
                   {profile.evolution?.length > 1 && [
-                    { label: "Disciplína", key: "discipline" as const, color: "#10b981" },
-                    { label: "Emoce",      key: "emotion"    as const, color: "#f59e0b" },
-                    { label: "Proces",     key: "process"    as const, color: "#6366f1" },
+                    { label: isEn ? "Discipline" : "Disciplína", key: "discipline" as const, color: "#10b981" },
+                    { label: isEn ? "Emotion" : "Emoce",         key: "emotion"    as const, color: "#f59e0b" },
+                    { label: isEn ? "Process" : "Proces",        key: "process"    as const, color: "#6366f1" },
                   ].map((m) => {
                     const first = profile.evolution[0][m.key]
                     const last  = profile.evolution[profile.evolution.length - 1][m.key]
@@ -559,7 +589,7 @@ export default function TraderIdentityPage() {
                       <div key={m.label} className="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40 text-center">
                         <p className="text-[10px] text-slate-500 mb-1">{m.label}</p>
                         <p className="text-xl font-bold" style={{ color: m.color }}>{last}</p>
-                        <p className="text-[10px] text-emerald-400">+{Number(last) - Number(first)} za 6T</p>
+                        <p className="text-[10px] text-emerald-400">+{Number(last) - Number(first)} {isEn ? "in 6W" : "za 6T"}</p>
                       </div>
                     )
                   })}
@@ -579,7 +609,7 @@ export default function TraderIdentityPage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Shadow Patterns</p>
-                  <p className="text-[11px] text-slate-400">Identifikované psychologické sabotéry z tvých dat</p>
+                  <p className="text-[11px] text-slate-400">{isEn ? "Identified psychological saboteurs from your data" : "Identifikované psychologické sabotéry z tvých dat"}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -602,7 +632,7 @@ export default function TraderIdentityPage() {
                           <span className="font-semibold" style={{ color: col }}>Trigger: </span>{p.trigger}
                         </p>
                         <p className="text-[10px] text-slate-500 mt-0.5">
-                          <span className="font-semibold" style={{ color: col }}>Frekvence: </span>{p.frequency}
+                          <span className="font-semibold" style={{ color: col }}>{isEn ? "Frequency: " : "Frekvence: "}</span>{p.frequency}
                         </p>
                       </div>
                     </motion.div>
@@ -624,7 +654,7 @@ export default function TraderIdentityPage() {
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-bold text-white">The Iron Manifesto</p>
-                    <p className="text-[11px] text-slate-400">Tvůj osobní závazek — generovaný AI z tvých dat</p>
+                    <p className="text-[11px] text-slate-400">{isEn ? "Your personal commitment — generated by AI from your data" : "Tvůj osobní závazek — generovaný AI z tvých dat"}</p>
                   </div>
                 </div>
                 <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0", manifestoOpen && "rotate-180")} />

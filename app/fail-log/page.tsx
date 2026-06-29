@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useData } from "@/contexts/data-context"
+import { useLanguage } from "@/contexts/language-context"
 import { cn } from "@/lib/utils"
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -252,6 +253,7 @@ function DonutChart({ data, active, onSelect }: {
 export default function FailLogPage() {
   const { toast } = useToast()
   const { isLiveMode } = useData()
+  const { isEn } = useLanguage()
   const [failLogs, setFailLogs] = useState<FailLog[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
@@ -278,14 +280,14 @@ export default function FailLogPage() {
       if (data.success && data.logs) {
         setFailLogs(data.logs)
         localStorage.setItem("fail-logs-ai", JSON.stringify(data.logs))
-        toast({ title: "Hotovo!", description: "Fail logy analyzovány AI" })
+        toast({ title: isEn ? "Done!" : "Hotovo!", description: isEn ? "Fail logs analyzed by AI" : "Fail logy analyzovány AI" })
       } else {
         throw new Error(data.error || "Unexpected response")
       }
     } catch (error) {
       toast({
-        title: "Chyba",
-        description: error instanceof Error ? error.message : "Nepodařilo se analyzovat fail logy.",
+        title: isEn ? "Error" : "Chyba",
+        description: error instanceof Error ? error.message : isEn ? "Failed to analyze fail logs." : "Nepodařilo se analyzovat fail logy.",
         variant: "destructive",
       })
     } finally {
@@ -332,7 +334,7 @@ export default function FailLogPage() {
         <Link href="/bonus" className="inline-flex mb-6">
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
             <ArrowLeft className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-400">Zpět</span>
+            <span className="text-sm text-gray-400">{isEn ? "Back" : "Zpět"}</span>
           </div>
         </Link>
 
@@ -344,7 +346,9 @@ export default function FailLogPage() {
               <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/30 border text-xs font-mono">BLACK BOX</Badge>
             </div>
             <p className="text-slate-400 text-sm max-w-lg">
-              Všechny ostatní platformy schovávají tvoje chyby. Tady je vytahujeme na světlo, pitvujeme a kvantifikujeme — protože to je jediná cesta ke zlepšení.
+              {isEn
+                ? "Every other platform hides your mistakes. Here we expose them, dissect them and quantify them — because that's the only path to improvement."
+                : "Všechny ostatní platformy schovávají tvoje chyby. Tady je vytahujeme na světlo, pitvujeme a kvantifikujeme — protože to je jediná cesta ke zlepšení."}
             </p>
           </div>
           <Button
@@ -353,16 +357,16 @@ export default function FailLogPage() {
             className="shrink-0 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold"
           >
             {generating ? (
-              <><Loader className="w-4 h-4 mr-2 animate-spin" />Generuji...</>
+              <><Loader className="w-4 h-4 mr-2 animate-spin" />{isEn ? "Analyzing..." : "Generuji..."}</>
             ) : (
-              <><Sparkles className="w-4 h-4 mr-2" />Analyzovat s AI</>
+              <><Sparkles className="w-4 h-4 mr-2" />{isEn ? "Analyze with AI" : "Analyzovat s AI"}</>
             )}
           </Button>
         </div>
 
         {isShowingDemo && (
           <div className="inline-flex mb-6 mt-3 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
-            Ukázková data — takhle to bude vypadat s tvými reálnými obchody z MT5
+            {isEn ? "Demo data — this is what it looks like with your real MT5 trades" : "Ukázková data — takhle to bude vypadat s tvými reálnými obchody z MT5"}
           </div>
         )}
         {!isShowingDemo && <div className="mb-6" />}
@@ -376,7 +380,7 @@ export default function FailLogPage() {
               <CardContent className="p-5">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-4">
                   Top Failure Triggers
-                  <span className="ml-2 text-slate-600 normal-case font-normal">(klikni pro filtrování)</span>
+                  <span className="ml-2 text-slate-600 normal-case font-normal">({isEn ? "click to filter" : "klikni pro filtrování"})</span>
                 </p>
                 <div className="flex items-center gap-6">
                   <DonutChart data={chartData} active={activeCategory} onSelect={setActiveCategory} />
@@ -424,21 +428,21 @@ export default function FailLogPage() {
                 <CardContent className="p-4">
                   <TrendingDown className="w-4 h-4 text-rose-400 mb-2" />
                   <p className="text-2xl font-bold text-white">${totalLoss.toLocaleString()}</p>
-                  <p className="text-xs text-slate-400">Celková ztráta z incidentů</p>
+                  <p className="text-xs text-slate-400">{isEn ? "Total loss from incidents" : "Celková ztráta z incidentů"}</p>
                 </CardContent>
               </Card>
               <Card className="bg-slate-900/50 border-slate-800">
                 <CardContent className="p-4">
                   <AlertTriangle className="w-4 h-4 text-amber-400 mb-2" />
                   <p className="text-2xl font-bold text-white">{displayLogs.length}</p>
-                  <p className="text-xs text-slate-400">Celkem incidentů</p>
+                  <p className="text-xs text-slate-400">{isEn ? "Total incidents" : "Celkem incidentů"}</p>
                 </CardContent>
               </Card>
               <Card className="bg-slate-900/50 border-slate-800">
                 <CardContent className="p-4">
                   <Flame className="w-4 h-4 text-orange-400 mb-2" />
                   <p className="text-lg font-bold text-white leading-tight">{worstCategory}</p>
-                  <p className="text-xs text-slate-400">Nejčastější vzorec</p>
+                  <p className="text-xs text-slate-400">{isEn ? "Most frequent pattern" : "Nejčastější vzorec"}</p>
                 </CardContent>
               </Card>
               <Card className="bg-emerald-900/20 border-emerald-500/20">
@@ -447,7 +451,7 @@ export default function FailLogPage() {
                   <p className="text-2xl font-bold text-white">
                     {displayLogs.filter((l) => (l.egoLevel ?? deriveEgoLevel(l.severity)) === "mild").length}
                   </p>
-                  <p className="text-xs text-slate-400">Mild incidentů (pod kontrolou)</p>
+                  <p className="text-xs text-slate-400">{isEn ? "Mild incidents (controlled)" : "Mild incidentů (pod kontrolou)"}</p>
                 </CardContent>
               </Card>
             </div>
@@ -464,7 +468,7 @@ export default function FailLogPage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Pattern Intelligence</p>
-                  <p className="text-[11px] text-slate-400">Kde tě to stojí nejvíc peněz? Žebříček kategorií podle ztráty</p>
+                  <p className="text-[11px] text-slate-400">{isEn ? "Where are you losing the most? Category ranking by loss" : "Kde tě to stojí nejvíc peněz? Žebříček kategorií podle ztráty"}</p>
                 </div>
               </div>
               <div className="space-y-3">
@@ -498,8 +502,9 @@ export default function FailLogPage() {
               <div className="mt-4 p-3 rounded-lg bg-violet-900/10 border border-violet-500/20">
                 <p className="text-[11px] text-slate-400 leading-relaxed">
                   <span className="text-violet-300 font-bold">{patternIntelligence[0]?.category}</span>{" "}
-                  je tvůj největší sabotér — −${patternIntelligence[0]?.loss.toLocaleString()} ze {displayLogs.length} incidentů.
-                  Fokusuj prevenci tady jako první.
+                  {isEn
+                    ? `is your biggest saboteur — −$${patternIntelligence[0]?.loss.toLocaleString()} from ${displayLogs.length} incidents. Focus prevention here first.`
+                    : `je tvůj největší sabotér — −$${patternIntelligence[0]?.loss.toLocaleString()} ze ${displayLogs.length} incidentů. Fokusuj prevenci tady jako první.`}
                 </p>
               </div>
             </CardContent>
@@ -515,7 +520,7 @@ export default function FailLogPage() {
               exit={{ opacity: 0, y: -6 }}
               className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg bg-slate-800/60 border border-slate-700 w-fit"
             >
-              <span className="text-xs text-slate-400">Filtr:</span>
+              <span className="text-xs text-slate-400">{isEn ? "Filter:" : "Filtr:"}</span>
               <span className="text-xs font-semibold text-white">{categoryMeta(activeCategory).icon} {activeCategory}</span>
               <button onClick={() => setActiveCategory(null)} className="ml-1 text-slate-500 hover:text-slate-300 transition-colors">
                 <X className="w-3.5 h-3.5" />
@@ -526,15 +531,19 @@ export default function FailLogPage() {
 
         {/* ── Incident Log ── */}
         {loading ? (
-          <div className="text-center py-12 text-slate-400">Načítám...</div>
+          <div className="text-center py-12 text-slate-400">{isEn ? "Loading..." : "Načítám..."}</div>
         ) : filteredLogs.length === 0 ? (
           <div className="p-12 bg-slate-800/30 border border-dashed border-slate-700 rounded-xl text-center">
             <FlaskConical className="w-10 h-10 mx-auto mb-3 text-slate-600" />
             <p className="text-slate-300 font-medium mb-1">
-              {activeCategory ? `Žádné incidenty kategorie "${activeCategory}"` : "Žádné záznamy"}
+              {activeCategory
+                ? (isEn ? `No incidents in category "${activeCategory}"` : `Žádné incidenty kategorie "${activeCategory}"`)
+                : (isEn ? "No records" : "Žádné záznamy")}
             </p>
             <p className="text-sm text-slate-500">
-              {activeCategory ? "Zkus jiný filtr nebo klikni pro zrušení" : "Klikni na Analyzovat s AI"}
+              {activeCategory
+                ? (isEn ? "Try another filter or click to clear" : "Zkus jiný filtr nebo klikni pro zrušení")
+                : (isEn ? "Click Analyze with AI" : "Klikni na Analyzovat s AI")}
             </p>
           </div>
         ) : (
@@ -565,7 +574,7 @@ export default function FailLogPage() {
                           <h3 className="text-base font-bold text-white leading-tight">{log.title}</h3>
                         </div>
                         <p className="text-xs text-slate-500">
-                          {new Date(log.date).toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "long" })}
+                          {new Date(log.date).toLocaleDateString(isEn ? "en-US" : "cs-CZ", { weekday: "long", day: "numeric", month: "long" })}
                           {log.time && <span className="ml-1.5">· {log.time} CET</span>}
                         </p>
                       </div>
@@ -620,7 +629,7 @@ export default function FailLogPage() {
                             ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                             : "bg-rose-500/10 border-rose-500/30 text-rose-400"
                         )}>
-                          {log.sessionContext.routineComplete ? "✅ Rutina splněna" : "❌ Rutina přeskočena"}
+                          {log.sessionContext.routineComplete ? (isEn ? "✅ Routine done" : "✅ Rutina splněna") : (isEn ? "❌ Routine skipped" : "❌ Rutina přeskočena")}
                         </div>
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/60 border border-slate-700/50">
                           <span className="text-[10px] text-slate-400 font-medium">{log.sessionContext.session} Session</span>
@@ -631,7 +640,7 @@ export default function FailLogPage() {
                     {/* Row 3: 3-col info grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="p-3 rounded-lg bg-rose-950/40 border border-rose-800/30">
-                        <p className="text-[10px] font-semibold text-rose-400 mb-1 uppercase tracking-wide">Kořenová příčina</p>
+                        <p className="text-[10px] font-semibold text-rose-400 mb-1 uppercase tracking-wide">{isEn ? "Root Cause" : "Kořenová příčina"}</p>
                         <p className="text-xs text-slate-200 leading-relaxed">{log.rootCause}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-800/30">
@@ -639,7 +648,7 @@ export default function FailLogPage() {
                         <p className="text-xs text-slate-200 leading-relaxed italic">{log.lessonLearned}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-emerald-950/30 border border-emerald-800/30">
-                        <p className="text-[10px] font-semibold text-emerald-400 mb-1 uppercase tracking-wide">Protokol prevence</p>
+                        <p className="text-[10px] font-semibold text-emerald-400 mb-1 uppercase tracking-wide">{isEn ? "Prevention Protocol" : "Protokol prevence"}</p>
                         <p className="text-xs text-slate-200 leading-relaxed">{log.actionPlan}</p>
                       </div>
                     </div>
@@ -651,7 +660,7 @@ export default function FailLogPage() {
                         <span className="text-slate-400 text-xs">Entry <span className="text-white font-medium">{log.trade.entry}</span></span>
                         <span className="text-slate-400 text-xs">Exit <span className="text-white font-medium">{log.trade.exit}</span></span>
                         {log.trade.timeInTrade && (
-                          <span className="text-slate-400 text-xs">Čas <span className="text-white font-medium">{log.trade.timeInTrade}</span></span>
+                          <span className="text-slate-400 text-xs">{isEn ? "Time" : "Čas"} <span className="text-white font-medium">{log.trade.timeInTrade}</span></span>
                         )}
                         {log.trade.loss > 0 && (
                           <span className="ml-auto font-bold text-rose-400">−${log.trade.loss.toFixed(2)}</span>
