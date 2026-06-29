@@ -39,8 +39,6 @@ import {
 import { useData } from '@/contexts/data-context'
 import { buildDailySummary } from '@/lib/daily-summary'
 import { useGamification } from '@/contexts/gamification-context'
-import PreTradeCheckin, { type TradeCheckin } from '@/components/pre-trade-checkin'
-import { useTradeCheckin } from '@/contexts/trade-checkin-context'
 
 function isSameDay(a: Date, b: Date) {
   return a.toDateString() === b.toDateString()
@@ -57,8 +55,6 @@ export default function DailyTrackerPage() {
   const router = useRouter()
   const [tab, setTab] = useState('today')
   const [failLogRevealed, setFailLogRevealed] = useState(false)
-  const [tradeCheckins, setTradeCheckins] = useState<TradeCheckin[]>([])
-  const { triggerOpen, triggerClose } = useTradeCheckin()
 
   // Quick FOMO Tag check-in: 2-second self-report instead of free-text
   // journaling. dayTags feeds straight into the daily-summary engine, which
@@ -318,20 +314,6 @@ export default function DailyTrackerPage() {
               <div className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
                 Demo mode — connect MetaTrader for real data
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => triggerOpen('demo-trade-1', 'EUR/USD')}
-                  className="px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-medium hover:bg-blue-500/20 transition-colors"
-                >
-                  ▶ Test: otevřít obchod
-                </button>
-                <button
-                  onClick={() => triggerClose('demo-trade-1', 'EUR/USD', -234)}
-                  className="px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-medium hover:bg-purple-500/20 transition-colors"
-                >
-                  ■ Test: zavřít obchod
-                </button>
-              </div>
             </div>
           )}
         </motion.div>
@@ -420,15 +402,6 @@ export default function DailyTrackerPage() {
               <p className="text-xs text-slate-500 mt-1 truncate">{levelInfo?.name || 'Trader'}</p>
             </CardContent>
           </Card>
-        </motion.div>
-
-        {/* Pre-Trade Check-in */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.08 }}
-        >
-          <PreTradeCheckin checkins={tradeCheckins} onChange={setTradeCheckins} />
         </motion.div>
 
         {/* Tabs */}
