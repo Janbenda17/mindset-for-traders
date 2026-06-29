@@ -2977,14 +2977,6 @@ function StudentTeamClubView({
                   ) : (
                     leaderboardData.slice(0, 5).map((trader) => {
                       const isSaluted = salutedTraders.has(String(trader.rank))
-                      // Generate pseudo-random discipline mini grid from discipline score
-                      const disciplineSquares = Array.from({ length: 10 }, (_, i) => {
-                        const jitter = Math.sin(i * 137.5 + (trader.rank || 0) * 17) * 12
-                        const score = Math.min(100, Math.max(0, (trader.discipline || 75) + jitter))
-                        if (score >= 75) return "bg-emerald-500"
-                        if (score >= 50) return "bg-amber-500"
-                        return "bg-rose-500"
-                      })
                       return (
                         <div
                           key={trader.rank}
@@ -3009,13 +3001,13 @@ function StudentTeamClubView({
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-white font-bold text-sm">{trader.name}</h4>
-                            {/* Mini discipline MindMatrix grid */}
-                            <div className="flex gap-0.5 mt-1.5">
-                              {disciplineSquares.map((color, i) => (
-                                <div key={i} className={`w-3.5 h-3.5 rounded-sm ${color} opacity-85`} />
-                              ))}
-                            </div>
-                            <p className="text-xs text-slate-500 mt-0.5">{trader.discipline ?? 75}% disciplína</p>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              <span className={`font-bold ${
+                                (trader.discipline ?? 75) >= 80 ? "text-emerald-400"
+                                : (trader.discipline ?? 75) >= 60 ? "text-amber-400"
+                                : "text-rose-400"
+                              }`}>{trader.discipline ?? 75}%</span>{" "}disciplína
+                            </p>
                           </div>
                           <div className="flex items-center gap-3 flex-shrink-0">
                             <div className="text-right hidden sm:block">
