@@ -329,6 +329,80 @@ export default function TraderIdentityPage() {
           </Card>
         </motion.div>
 
+        {/* ── Behavioral Fingerprint ───────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.08 }}
+          className="mb-6"
+        >
+          <Card className="bg-slate-900/50 border-slate-800">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-5">
+                <div className="p-1.5 bg-amber-500/20 rounded-lg">
+                  <Zap className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Behavioral Fingerprint</p>
+                  <p className="text-[11px] text-slate-400">Tvůj profil vs. průměrný retail trader</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { label: "Dodržení Stop-Loss",    you: 94, avg: 61, unit: "%" },
+                  { label: "Overtrading dny",        you: 7,  avg: 34, unit: "% dní", invert: true },
+                  { label: "Win rate",               you: 67, avg: 43, unit: "%" },
+                  { label: "Rutina před trhem",      you: 88, avg: 22, unit: "% dní" },
+                  { label: "Revenge trade incidenty", you: 3, avg: 18, unit: "× / měsíc", invert: true },
+                ].map((row, i) => {
+                  const youBetter = row.invert ? row.you < row.avg : row.you > row.avg
+                  const youColor  = youBetter ? "#10b981" : "#f43f5e"
+                  const avgColor  = "#475569"
+                  const maxVal    = Math.max(row.you, row.avg, 1)
+                  return (
+                    <div key={row.label}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-xs text-slate-300 font-medium">{row.label}</p>
+                        <div className="flex items-center gap-3 text-[11px]">
+                          <span style={{ color: youColor }} className="font-bold">{row.you} {row.unit}</span>
+                          <span className="text-slate-600">vs.</span>
+                          <span className="text-slate-500">{row.avg} {row.unit} průměr</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1">
+                        <div>
+                          <p className="text-[9px] text-slate-600 mb-0.5">Ty</p>
+                          <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <motion.div
+                              className="h-full rounded-full"
+                              style={{ backgroundColor: youColor }}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(row.you / maxVal) * 100}%` }}
+                              transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 + i * 0.08 }}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[9px] text-slate-600 mb-0.5">Průměr</p>
+                          <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <motion.div
+                              className="h-full rounded-full"
+                              style={{ backgroundColor: avgColor }}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(row.avg / maxVal) * 100}%` }}
+                              transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 + i * 0.08 }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* ── DNA Radar + Evolution ─────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 
