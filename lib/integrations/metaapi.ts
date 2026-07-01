@@ -70,12 +70,13 @@ export class MetaApiClient {
   }
 
   /**
-   * Create a provisioning profile for a broker server, then create the
-   * MetaTrader account itself using that profile. This is the real two-step
-   * flow MetaApi requires - the old code tried to create an account directly
-   * with no profile and against a host that doesn't exist.
-   *
-   * version 5 = MetaTrader 5, version 4 = MetaTrader 4.
+   * Create the MetaTrader account directly, relying on MetaApi's automatic
+   * broker settings detection (matched by the `server` name). Provisioning
+   * profiles are only needed for brokers MetaApi can't auto-detect, and they
+   * only become usable once a servers.dat/.srv file is uploaded to them - a
+   * step this app has no way to perform, so creating one here just produced
+   * an inactive profile and every account creation failed with "You can
+   * create accounts using active profiles only."
    */
   async authenticateWithCredentials(credentials: {
     login: string
@@ -87,35 +88,9 @@ export class MetaApiClient {
       throw new Error('MetaApi is not configured on the server (missing METAAPI_API_KEY).')
     }
 
-    const version = credentials.platform === 'mt4' ? 4 : 5
+    const platform = credentials.platform === 'mt4' ? 'mt4' : 'mt5'
 
     try {
-      console.log('[v0] Creating MetaApi provisioning profile for broker:', credentials.broker)
-
-      const profileResponse = await fetch(`${this.provisioningBaseUrl}/users/current/provisioning-profiles`, {
-        method: 'POST',
-        headers: this.authHeaders(),
-        body: JSON.stringify({
-          name: `profile-${credentials.login}-${Date.now()}`,
-          version,
-          brokerTimezone: 'EET',
-          brokerDSTSwitchTimezone: 'EET',
-        }),
-      })
-
-      if (!profileResponse.ok) {
-        const errorText = await profileResponse.text()
-        console.error('[v0] Failed to create provisioning profile:', profileResponse.status, errorText)
-        throw new Error(`MetaApi rejected the provisioning profile (${profileResponse.status}): ${errorText}`)
-      }
-
-      const profile = await profileResponse.json()
-      const provisioningProfileId = profile.id
-
-      if (!provisioningProfileId) {
-        throw new Error('MetaApi did not return a provisioning profile id')
-      }
-
       console.log('[v0] Creating MetaApi account for login:', credentials.login)
 
       const accountResponse = await fetch(`${this.provisioningBaseUrl}/users/current/accounts`, {
@@ -126,10 +101,10 @@ export class MetaApiClient {
           password: credentials.password,
           name: `MT-${credentials.login}`,
           server: credentials.broker,
-          provisioningProfileId,
+          platform,
           magic: Math.floor(Math.random() * 900000) + 100000,
-          application: 'MetaApi',
           type: 'cloud-g2',
+          reliability: 'high',
         }),
       })
 
