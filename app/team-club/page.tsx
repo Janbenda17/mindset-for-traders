@@ -1679,7 +1679,8 @@ function StudentTeamClubView({
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-slate-800/80 backdrop-blur-xl border border-slate-600 p-1.5 flex lg:grid lg:grid-cols-6 overflow-x-auto scrollbar-hide">
+          <div className="relative">
+            <TabsList className="bg-slate-800/80 backdrop-blur-xl border border-slate-600 p-1.5 flex lg:grid lg:grid-cols-6 overflow-x-auto scrollbar-hide">
             <TabsTrigger
               value="overview"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
@@ -1726,7 +1727,9 @@ function StudentTeamClubView({
               <span className="hidden sm:inline">Success</span>
               <span className="sm:hidden">Succ</span>
             </TabsTrigger>
-          </TabsList>
+            </TabsList>
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-900 to-transparent lg:hidden" />
+          </div>
 
           {/* OVERVIEW TAB */}
           <TabsContent value="overview" className="space-y-6">
