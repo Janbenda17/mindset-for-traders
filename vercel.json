@@ -1,8 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/check-trial-expiration",
-      "schedule": "0 0 * * *"
-    }
-  ]
-}
+{}

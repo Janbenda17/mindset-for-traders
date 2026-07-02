@@ -28,7 +28,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const { user: authUser, logout } = useAuth()
-  const { subscription, isTrialActive, daysLeftInTrial } = useSubscription()
+  const { isPremium } = useSubscription()
 
   if (!authUser) return null
 
@@ -88,11 +88,7 @@ export function NavUser({
               <DropdownMenuItem asChild>
                 <Link href="/upgrade">
                   <Sparkles />
-                  {isTrialActive
-                    ? `Trial (${daysLeftInTrial}d)`
-                    : subscription?.plan === "premium"
-                      ? "Premium"
-                      : "Upgrade na Premium"}
+                  {isPremium ? "Premium" : "Upgrade na Premium"}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

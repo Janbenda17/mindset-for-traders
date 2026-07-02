@@ -77,7 +77,7 @@ export function MindTrader() {
   const [apiError, setApiError] = useState(null)
 
   const { isLiveMode, getAllTrades, getAllJournalEntries } = useData()
-  const { plan, isActive, daysRemaining } = useSubscription()
+  const { plan, isActive } = useSubscription()
 
   const isPremium = plan === "premium" && isActive
 
@@ -494,7 +494,7 @@ export function MindTrader() {
               }
             >
               <Crown className="w-4 h-4 mr-2" />
-              {isPremium ? `✨ Premium Active (${daysRemaining} days remaining)` : "🆓 Free Plan - Limited Features"}
+              {isPremium ? "✨ Premium Active" : "🆓 Free Plan - Limited Features"}
             </Badge>
           </div>
 

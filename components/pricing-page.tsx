@@ -182,7 +182,6 @@ export function PricingPage() {
       "Mood tracking",
     ],
     premium: [
-      "14 days free - no payment",
       "All features on your data",
       "Option to switch to Live Mode",
       "Unlimited trading journal",
@@ -359,7 +358,7 @@ export function PricingPage() {
                   Ušetříte 1000 Kč
                 </Badge>
               </div>
-              <p className="text-sm text-green-600 dark:text-green-400 font-semibold mt-3">Sleva 40% - jen s 14-denní zdarma variantou</p>
+              <p className="text-sm text-green-600 dark:text-green-400 font-semibold mt-3">Sleva 40% - časově omezená nabídka</p>
             </CardHeader>
             <CardContent className="flex-grow">
               <ul className="space-y-4">
@@ -389,7 +388,7 @@ export function PricingPage() {
                     "Váš plán je aktivní"
                   ) : (
                     <>
-                      Zkusit 14 dní zdarma
+                      Upgradovat na Premium
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </>
                   )}

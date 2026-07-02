@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/auth-context"
 
 interface SubscriptionContextType {
   plan: "free" | "premium"
-  daysRemaining: number
   isActive: boolean
   isPremium: boolean
   isLoading: boolean
@@ -18,12 +17,10 @@ interface SubscriptionContextType {
   // API hiccup would wrongly downgrade a paying user.
   statusConfirmed: boolean
   isCanceled: boolean
-  trialEndsAt: string | null
   subscriptionId: string | null
   customerId: string | null
   subscriptionStatus: string | null
   subscribe: (plan: "free" | "premium") => Promise<boolean>
-  startTrial: () => Promise<boolean>
   upgradeToPremium: () => Promise<boolean>
   cancelSubscription: () => Promise<boolean>
   openBillingPortal: () => Promise<void>
@@ -37,12 +34,10 @@ const STRIPE_BILLING_PORTAL = "https://billing.stripe.com/p/login/test_00g5kFbKe
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [plan, setPlan] = useState<"free" | "premium">("free")
-  const [daysRemaining, setDaysRemaining] = useState(0)
   const [isActive, setIsActive] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [statusConfirmed, setStatusConfirmed] = useState(false)
   const [isCanceled, setIsCanceled] = useState(false)
-  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null)
   const [customerId, setCustomerId] = useState<string | null>(null)
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
@@ -95,23 +90,14 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         setIsActive(data.isActive)
         setStatusConfirmed(true) // status is now confirmed from a real response
         setSubscriptionStatus(data.status)
-        setTrialEndsAt(data.trialEndsAt)
         setSubscriptionId(data.subscriptionId)
-        
+
         // Check if subscription was canceled
         setIsCanceled(data.status === "canceled")
 
         if (data.customerId) {
           setCustomerId(data.customerId)
           localStorage.setItem("stripe-customer-id", data.customerId)
-        }
-
-        if (data.trialEndsAt) {
-          const endDate = new Date(data.trialEndsAt)
-          const now = new Date()
-          const diffTime = endDate.getTime() - now.getTime()
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-          setDaysRemaining(Math.max(0, diffDays))
         }
 
         console.log("[v0] Subscription status checked:", { plan: data.plan, isActive: data.isActive, status: data.status, isCanceled: data.status === "canceled" })
@@ -127,11 +113,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const subscribe = async (planType: "free" | "premium"): Promise<boolean> => {
     if (planType === "free") return true
-    window.location.href = STRIPE_PAYMENT_LINK
-    return true
-  }
-
-  const startTrial = async (): Promise<boolean> => {
     window.location.href = STRIPE_PAYMENT_LINK
     return true
   }
@@ -186,43 +167,31 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }
 
   const cancelSubscription = async (): Promise<boolean> => {
+    if (!subscriptionId) {
+      toast({
+        title: "Žádné aktivní předplatné",
+        description: "Nemáte žádné aktivní předplatné ke zrušení.",
+        variant: "destructive",
+      })
+      return false
+    }
+
     setIsLoading(true)
     try {
-      // If user has a Stripe subscription, cancel via Stripe
-      if (subscriptionId) {
-        const response = await fetch("/api/subscription/cancel", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subscriptionId }),
-        })
-
-        if (response.ok) {
-          toast({
-            title: "Předplatné zrušeno",
-            description: "Vaše předplatné bude zrušeno na konci aktuálního období.",
-          })
-          await checkSubscriptionStatus()
-          return true
-        }
-        return false
-      }
-
-      // If user is on trial (no Stripe subscription), cancel trial via API
-      const response = await fetch("/api/subscription/cancel-trial", {
+      const response = await fetch("/api/subscription/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        body: JSON.stringify({ subscriptionId }),
       })
 
       if (response.ok) {
         toast({
-          title: "Trial zrušen",
-          description: "Váš zkušební přístup byl zrušen.",
+          title: "Předplatné zrušeno",
+          description: "Vaše předplatné bude zrušeno na konci aktuálního období.",
         })
         await checkSubscriptionStatus()
         return true
       }
-
       return false
     } catch (error) {
       console.error("Cancel subscription error:", error)
@@ -267,18 +236,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     <SubscriptionContext.Provider
       value={{
         plan,
-        daysRemaining,
         isActive,
         isPremium,
         isLoading,
         statusConfirmed,
         isCanceled,
-        trialEndsAt,
         subscriptionId,
         customerId,
         subscriptionStatus,
         subscribe,
-        startTrial,
         upgradeToPremium,
         cancelSubscription,
         openBillingPortal,
@@ -296,16 +262,15 @@ export function useSubscription() {
     if (typeof window === "undefined") {
       return {
         plan: "free" as const,
-        daysRemaining: 0,
         isActive: false,
         isPremium: false,
         isLoading: true,
         statusConfirmed: false,
-        trialEndsAt: null,
+        isCanceled: false,
         subscriptionId: null,
         customerId: null,
+        subscriptionStatus: null,
         subscribe: async () => false,
-        startTrial: async () => false,
         upgradeToPremium: async () => false,
         cancelSubscription: async () => false,
         openBillingPortal: async () => {},

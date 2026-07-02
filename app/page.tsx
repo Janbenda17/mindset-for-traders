@@ -435,8 +435,8 @@ export default function HomePage() {
                 </h2>
                 <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
                   {language === 'en'
-                    ? 'Start your free 14-day trial today. Full access to all features. No credit card required.'
-                    : 'Začni svůj 14denní zdarma trial dnes. Plný přístup ke všem funkcím. Bez platební karty.'}
+                    ? 'Sign up free today. Upgrade to Premium anytime for full access to all features.'
+                    : 'Zaregistruj se dnes zdarma. Upgraduj na Premium kdykoli a získej plný přístup ke všem funkcím.'}
                 </p>
                 <Button
                   size="lg"

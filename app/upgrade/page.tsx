@@ -161,16 +161,13 @@ export default function UpgradePage() {
           <div className="mb-8 p-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-center">
             <Gift className="h-12 w-12 mx-auto mb-3" />
             <h2 className="text-2xl font-bold mb-2">{language === 'en' ? `Welcome, ${user.name}! 🎉` : `Vítejte, ${user.name}! 🎉`}</h2>
-            <p className="text-lg">{language === 'en' ? 'Your account is ready. Now start your 14-day Premium trial free!' : 'Váš účet je připraven. Nyní spusťte 14-denní Premium trial zdarma!'}</p>
+            <p className="text-lg">{language === 'en' ? 'Your account is ready. Upgrade now to unlock Premium!' : 'Váš účet je připraven. Upgradujte nyní a odemkněte Premium!'}</p>
           </div>
         )}
 
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            {language === 'en' 
-              ? (user ? "Start Premium Trial" : "Upgrade to Premium")
-              : (user ? "Spusťte Premium Trial" : "Upgradujte na Premium")
-            }
+            {language === 'en' ? "Upgrade to Premium" : "Upgradujte na Premium"}
           </h1>
           <p className="text-xl text-gray-600 mb-8">{language === 'en' ? 'Unlock advanced features for professional trading' : 'Odemkněte pokročilé funkce pro profesionální trading'}</p>
 
@@ -179,7 +176,7 @@ export default function UpgradePage() {
                 <Zap className="h-6 w-6" />
                 <span className="text-2xl font-bold">{language === 'en' ? 'Special Offer!' : 'Speciální nabídka!'}</span>
               </div>
-              <p className="text-lg">{language === 'en' ? '14 days free, then $49.99/month' : '14 dní zdarma, poté 1499 Kč/měsíc'}</p>
+              <p className="text-lg">{language === 'en' ? '$49.99/month' : '1499 Kč/měsíc'}</p>
               <p className="text-sm opacity-90 mt-1">{language === 'en' ? '7-day money-back guarantee' : '7denní záruka vrácení peněz'}</p>
             </div>
         </div>
@@ -240,7 +237,7 @@ export default function UpgradePage() {
                   {language === 'en' ? 'Save $30' : 'Ušetříte 1000 Kč'}
                 </Badge>
               </div>
-              <p className="text-sm text-green-600 font-semibold mt-3">{language === 'en' ? '40% off - only with 14-day free trial' : 'Sleva 40% - jen s 14-denní zdarma variantou'}</p>
+              <p className="text-sm text-green-600 font-semibold mt-3">{language === 'en' ? '40% off - limited-time offer' : 'Sleva 40% - časově omezená nabídka'}</p>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3 mb-6">
@@ -288,18 +285,18 @@ export default function UpgradePage() {
                   disabled={isLoading || isUpgrading}
                   className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-3"
                 >
-                  {isLoading || isUpgrading ? (language === 'en' ? "Processing..." : "Zpracovávám...") : (language === 'en' ? "Start 14-Day Free Trial" : "Začít 14-denní trial zdarma")}
+                  {isLoading || isUpgrading ? (language === 'en' ? "Processing..." : "Zpracovávám...") : (language === 'en' ? "Upgrade to Premium" : "Upgradovat na Premium")}
                 </Button>
               ) : (
                 <Button
                   asChild
                   className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-3"
                 >
-                  <Link href="/signup">{language === 'en' ? "Sign Up & Start Trial" : "Registrovat se a začít trial"}</Link>
+                  <Link href="/signup">{language === 'en' ? "Sign Up & Upgrade" : "Registrovat se a upgradovat"}</Link>
                 </Button>
               )}
 
-              <p className="text-xs text-gray-500 text-center mt-3">{language === 'en' ? "After 14 days $49.99/month. 7-day money-back guarantee." : "Po 14 dnech 1499 Kč/měsíc. 7denní záruka vrácení peněz."}</p>
+              <p className="text-xs text-gray-500 text-center mt-3">{language === 'en' ? "$49.99/month, billed immediately. 7-day money-back guarantee." : "1499 Kč/měsíc, účtováno ihned. 7denní záruka vrácení peněz."}</p>
             </CardContent>
           </Card>
         </div>

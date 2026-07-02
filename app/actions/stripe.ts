@@ -75,7 +75,6 @@ export async function startCheckoutSession(email: string, name: string) {
       ],
       mode: 'subscription',
       subscription_data: {
-        trial_period_days: 7,
         metadata: {
           plan: "premium",
           user_id: user.id,

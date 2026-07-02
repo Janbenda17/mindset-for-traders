@@ -68,21 +68,21 @@ export default function WelcomePage() {
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">Váš účet byl úspěšně vytvořen 🎉</p>
         </div>
 
-        {/* Trial Info Card */}
+        {/* Premium Upsell Card */}
         <Card className="bg-gradient-to-br from-green-600 to-emerald-600 border-0 shadow-2xl shadow-green-500/30 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
           <CardContent className="pt-8 pb-8 relative z-10">
             <div className="flex items-center justify-center gap-3 mb-6">
               <Gift className="w-8 h-8 text-white animate-bounce" />
-              <h2 className="text-3xl font-bold text-white">7 dní Premium ZDARMA</h2>
+              <h2 className="text-3xl font-bold text-white">Odemkněte Premium</h2>
             </div>
             <p className="text-center text-green-50 text-lg mb-6">
-              Spusťte svůj trial a získejte okamžitý přístup ke všem funkcím Trader Mindset
+              Získejte okamžitý přístup ke všem funkcím Trader Mindset
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
                 <CheckCircle className="w-6 h-6 text-white mx-auto mb-2" />
-                <p className="text-white font-semibold text-sm">7 dní zdarma</p>
+                <p className="text-white font-semibold text-sm">Aktivace ihned</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
                 <CheckCircle className="w-6 h-6 text-white mx-auto mb-2" />
@@ -101,7 +101,7 @@ export default function WelcomePage() {
               <a href={stripeUrl} className="w-full sm:w-auto">
                 <Button className="w-full sm:w-auto bg-white hover:bg-gray-100 text-green-600 font-bold text-lg px-8 py-6 rounded-xl shadow-xl hover:scale-105 transition-all">
                   <Sparkles className="w-5 h-5 mr-2" />
-                  Spustit 7denní Premium Trial
+                  Aktivovat Premium
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </a>
