@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Sun, Target, AlertTriangle, Trophy, User, ArrowRight } from "lucide-react"
+import { Sun, Target, AlertTriangle, Trophy, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { useLanguage } from "@/contexts/language-context"
 
@@ -54,17 +54,6 @@ export default function BonusPage() {
       color: "from-yellow-500 to-amber-500",
       bgColor: "from-yellow-500/10 to-amber-500/10",
       borderColor: "border-yellow-500/30",
-    },
-    {
-      name: isEn ? "Trader Identity" : "Identita obchodníka",
-      href: "/trading-identity",
-      icon: User,
-      description: isEn
-        ? "Define your trader identity and stick to your principles"
-        : "Definuj svou identitu obchodníka a drž se svých principů",
-      color: "from-purple-500 to-pink-500",
-      bgColor: "from-purple-500/10 to-pink-500/10",
-      borderColor: "border-purple-500/30",
     },
   ]
 

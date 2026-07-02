@@ -24,7 +24,6 @@ export function useUserStorage() {
     getPlansKey: () => getUserStorageKey(user?.id, "trading-plans"),
     getIntentionsKey: () => getUserStorageKey(user?.id, "daily-intentions"),
     getProfileKey: () => getUserStorageKey(user?.id, "trader-mindset-profile"),
-    getIdentityKey: () => getUserStorageKey(user?.id, "trading-identity-profile"),
     getStyleKey: () => getUserStorageKey(user?.id, "trader-mindset-trading-style"),
     getMoodKey: () => getUserStorageKey(user?.id, "trader-mindset-mood-entries"),
     getTrackerKey: () => getUserStorageKey(user?.id, "daily-tracker-entries"),
