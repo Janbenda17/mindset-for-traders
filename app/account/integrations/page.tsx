@@ -23,7 +23,7 @@ function getSupabase() {
 }
 
 export default function IntegrationsPage() {
-  const { user } = useAuth()
+  const { user, authReady } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
@@ -56,6 +56,13 @@ export default function IntegrationsPage() {
       router.replace('/account/integrations')
     }
   }, [searchParams, router])
+
+  // Not logged in - send straight to login instead of showing an inline message
+  useEffect(() => {
+    if (authReady && !user) {
+      router.replace('/login')
+    }
+  }, [authReady, user, router])
 
   // Check integration status on mount
   useEffect(() => {
@@ -95,7 +102,7 @@ export default function IntegrationsPage() {
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Please log in first</p>
+        <Loader className="w-6 h-6 animate-spin text-slate-500" />
       </div>
     )
   }
