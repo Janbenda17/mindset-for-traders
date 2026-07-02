@@ -318,9 +318,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Vítejte v MindTrader!",
       })
 
-      console.log("[v0] ✅ Registrace HOTOVA - redirect na /onboarding")
+      console.log("[v0] ✅ Registrace HOTOVA - redirect na /daily-tracker")
       await new Promise((resolve) => setTimeout(resolve, 500))
-      router.push("/onboarding")
+      router.push("/daily-tracker")
       return true
     } catch (error: any) {
       console.error("[v0] ===== REGISTRACE ERROR =====")

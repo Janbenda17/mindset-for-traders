@@ -101,7 +101,7 @@ export function ProductTour() {
   const { isLiveMode } = useData()
 
   useEffect(() => {
-    if (pathname === "/login" || pathname === "/signup" || pathname === "/onboarding") {
+    if (pathname === "/login" || pathname === "/signup") {
       return
     }
 

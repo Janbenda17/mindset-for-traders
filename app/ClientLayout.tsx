@@ -37,7 +37,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   const hideNavigation =
     pathname?.startsWith("/auth/") ||
-    pathname === "/onboarding" ||
     pathname === "/landing" ||
     pathname === "/about" ||
     isLandingPage ||
