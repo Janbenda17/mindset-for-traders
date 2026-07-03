@@ -82,7 +82,7 @@ export default function HomePage() {
         {/* Presale banner */}
         <button
           onClick={handlePricingClick}
-          className="fixed top-0 left-0 right-0 z-[60] h-9 flex items-center justify-center gap-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white text-xs sm:text-sm font-semibold transition-colors px-4 text-center"
+          className="fixed top-0 left-0 right-0 z-[60] h-9 flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs sm:text-sm font-semibold transition-colors px-4 text-center"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
           {language === 'en' ? 'Presale — limited to the first 30 users only' : 'Předprodej — jen pro prvních 30 uživatelů'}
@@ -300,6 +300,30 @@ export default function HomePage() {
               </p>
             </motion.div>
 
+            {/* Product demo video placeholder */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative mb-12 aspect-video rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden flex items-center justify-center group/video"
+            >
+              <div
+                className="absolute inset-0 opacity-50"
+                style={{
+                  background: 'radial-gradient(ellipse at 50% 50%, rgba(217, 70, 239, 0.15), transparent 70%)',
+                }}
+              />
+              <div className="relative flex flex-col items-center gap-3">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full border border-white/15 bg-white/5 group-hover/video:border-fuchsia-500/40 group-hover/video:bg-fuchsia-500/10 transition-colors">
+                  <Play className="w-7 h-7 text-slate-400 group-hover/video:text-fuchsia-400 transition-colors fill-current" />
+                </div>
+                <span className="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">
+                  {language === 'en' ? 'Video coming soon' : 'Video už brzy'}
+                </span>
+              </div>
+            </motion.div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10">
               {[
                 {
@@ -401,24 +425,6 @@ export default function HomePage() {
                         ))}
                       </ul>
                     )}
-
-                    {/* Video placeholder */}
-                    <div className="relative mb-6 aspect-video rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden flex items-center justify-center group/video">
-                      <div
-                        className="absolute inset-0 opacity-50"
-                        style={{
-                          background: 'radial-gradient(ellipse at 50% 50%, rgba(217, 70, 239, 0.12), transparent 70%)',
-                        }}
-                      />
-                      <div className="relative flex flex-col items-center gap-2.5">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full border border-white/15 bg-white/5 group-hover/video:border-fuchsia-500/40 group-hover/video:bg-fuchsia-500/10 transition-colors">
-                          <Play className="w-5 h-5 text-slate-400 group-hover/video:text-fuchsia-400 transition-colors fill-current" />
-                        </div>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">
-                          {language === 'en' ? 'Video coming soon' : 'Video už brzy'}
-                        </span>
-                      </div>
-                    </div>
 
                     <div className="flex items-center gap-2 pt-4 border-t border-white/5">
                       <MetricIcon className="w-3.5 h-3.5 text-fuchsia-400" />
