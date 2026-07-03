@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
-import { ArrowRight, Zap, Brain, TrendingUp, Users, Check, Shield, Clock, Target } from 'lucide-react'
+import { ArrowRight, Zap, Brain, TrendingUp, Users, Check, Shield, Clock, Target, Play } from 'lucide-react'
 
 export default function HomePage() {
   const router = useRouter()
@@ -401,6 +401,24 @@ export default function HomePage() {
                         ))}
                       </ul>
                     )}
+
+                    {/* Video placeholder */}
+                    <div className="relative mb-6 aspect-video rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden flex items-center justify-center group/video">
+                      <div
+                        className="absolute inset-0 opacity-50"
+                        style={{
+                          background: 'radial-gradient(ellipse at 50% 50%, rgba(217, 70, 239, 0.12), transparent 70%)',
+                        }}
+                      />
+                      <div className="relative flex flex-col items-center gap-2.5">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full border border-white/15 bg-white/5 group-hover/video:border-fuchsia-500/40 group-hover/video:bg-fuchsia-500/10 transition-colors">
+                          <Play className="w-5 h-5 text-slate-400 group-hover/video:text-fuchsia-400 transition-colors fill-current" />
+                        </div>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                          {language === 'en' ? 'Video coming soon' : 'Video už brzy'}
+                        </span>
+                      </div>
+                    </div>
 
                     <div className="flex items-center gap-2 pt-4 border-t border-white/5">
                       <MetricIcon className="w-3.5 h-3.5 text-fuchsia-400" />
