@@ -170,9 +170,56 @@ export default function HomePage() {
             </motion.div>
           </div>
 
+          {/* Broker + Wealth data connect teaser — a roadmap note, sits right above the
+              video as a quick "what's coming" line before the main demo hook */}
+          <div className="pt-8 sm:pt-10">
+            <motion.div
+              className="max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl border border-white/15 overflow-hidden flex-shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #0d2b4e 0%, #0a1f3a 100%)' }}
+                    aria-label="MetaTrader 5"
+                    title="MetaTrader 5"
+                  >
+                    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className="w-7 h-7 sm:w-8 sm:h-8">
+                      <rect x="10" y="14" width="5" height="18" rx="1" fill="#e53935" />
+                      <line x1="12.5" y1="10" x2="12.5" y2="36" stroke="#e53935" strokeWidth="1.3" />
+                      <rect x="19" y="18" width="5" height="16" rx="1" fill="#43a047" />
+                      <line x1="21.5" y1="12" x2="21.5" y2="38" stroke="#43a047" strokeWidth="1.3" />
+                      <text x="36" y="32" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontWeight="900" fontSize="20" fill="#ffffff">5</text>
+                    </svg>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">
+                      {language === 'en' ? 'Coming soon' : 'Už brzy'}
+                    </span>
+                    <span className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">
+                      {language === 'en' ? 'Broker + Wealth data connect' : 'Broker + Wealth data connect'}
+                    </span>
+                  </div>
+                </div>
+
+                <Link
+                  href={user ? '/account/integrations' : '/signup'}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/15 bg-white/5 font-mono text-xs uppercase tracking-[0.2em] text-slate-300 hover:border-fuchsia-500/40 hover:text-fuchsia-300 transition-all flex-shrink-0"
+                >
+                  <ArrowRight className="w-3.5 h-3.5" />
+                  {language === 'en' ? 'Connect' : 'Připojit'}
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+
           {/* Product demo video — front and center right after the hero, this is the
               first real proof of the product a new visitor sees */}
-          <div className="pt-4 pb-12 sm:pt-6 sm:pb-16">
+          <div className="pt-8 pb-12 sm:pt-10 sm:pb-16">
             <motion.div
               className="max-w-4xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
@@ -257,6 +304,15 @@ export default function HomePage() {
                   bullets: language === 'en'
                     ? ['Mood & energy check-in', 'Pattern detection over time', 'Smart pre-market warnings']
                     : ['Check-in nálady a energie', 'Detekce vzorců v čase', 'Chytrá varování před trhem'],
+                  accent: {
+                    icon: 'text-blue-400',
+                    iconHover: 'group-hover:border-blue-500/40 group-hover:text-blue-500',
+                    number: 'group-hover:text-blue-500/60',
+                    bulletBg: 'bg-blue-500/10 border-blue-500/30',
+                    bulletIcon: 'text-blue-400',
+                    metricIcon: 'text-blue-400',
+                    underline: 'from-blue-500 to-cyan-500',
+                  },
                 },
                 {
                   icon: Zap,
@@ -271,6 +327,15 @@ export default function HomePage() {
                   bullets: language === 'en'
                     ? ['FOMO & revenge trade alerts', 'Instant intervention prompts', 'Trained on 10k+ trader journals']
                     : ['Upozornění na FOMO a revenge trade', 'Okamžité intervenční hlášky', 'Trénováno na 10k+ denících traderů'],
+                  accent: {
+                    icon: 'text-rose-400',
+                    iconHover: 'group-hover:border-rose-500/40 group-hover:text-rose-500',
+                    number: 'group-hover:text-rose-500/60',
+                    bulletBg: 'bg-rose-500/10 border-rose-500/30',
+                    bulletIcon: 'text-rose-400',
+                    metricIcon: 'text-rose-400',
+                    underline: 'from-rose-500 to-red-500',
+                  },
                 },
                 {
                   icon: TrendingUp,
@@ -285,6 +350,15 @@ export default function HomePage() {
                   bullets: language === 'en'
                     ? ['Automated trade breakdowns', 'Mistake-pattern heatmap', 'Actionable weekly goals']
                     : ['Automatický rozbor obchodů', 'Heatmapa chybových vzorců', 'Konkrétní týdenní cíle'],
+                  accent: {
+                    icon: 'text-amber-400',
+                    iconHover: 'group-hover:border-amber-500/40 group-hover:text-amber-500',
+                    number: 'group-hover:text-amber-500/60',
+                    bulletBg: 'bg-amber-500/10 border-amber-500/30',
+                    bulletIcon: 'text-amber-400',
+                    metricIcon: 'text-amber-400',
+                    underline: 'from-amber-500 to-orange-500',
+                  },
                 },
                 {
                   icon: Users,
@@ -297,10 +371,20 @@ export default function HomePage() {
                     ? 'Join a private community of serious traders and stay accountable when it matters most.'
                     : 'Připoj se do soukromé komunity vážných traderů a zůstaň zodpovědný, když na tom záleží.',
                   bullets: [] as string[],
+                  accent: {
+                    icon: 'text-emerald-400',
+                    iconHover: 'group-hover:border-emerald-500/40 group-hover:text-emerald-500',
+                    number: 'group-hover:text-emerald-500/60',
+                    bulletBg: 'bg-emerald-500/10 border-emerald-500/30',
+                    bulletIcon: 'text-emerald-400',
+                    metricIcon: 'text-emerald-400',
+                    underline: 'from-emerald-500 to-teal-500',
+                  },
                 },
               ].map((feature, i) => {
                 const Icon = feature.icon
                 const MetricIcon = feature.metricIcon
+                const accent = feature.accent
                 return (
                   <motion.div
                     key={i}
@@ -312,14 +396,14 @@ export default function HomePage() {
                   >
                     <div className="flex items-start justify-between mb-6">
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-11 h-11 rounded-lg border border-white/10 bg-white/5 text-fuchsia-400 group-hover:border-fuchsia-500/40 group-hover:text-fuchsia-500 transition-colors">
+                        <div className={`flex items-center justify-center w-11 h-11 rounded-lg border border-white/10 bg-white/5 transition-colors ${accent.icon} ${accent.iconHover}`}>
                           <Icon className="w-5 h-5" />
                         </div>
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-white/10 bg-white/5 font-mono text-[10px] uppercase tracking-[0.15em] text-slate-400">
                           {feature.tag}
                         </span>
                       </div>
-                      <span className="font-mono text-xs tracking-widest text-slate-600 group-hover:text-fuchsia-500/60 transition-colors">
+                      <span className={`font-mono text-xs tracking-widest text-slate-600 transition-colors ${accent.number}`}>
                         {feature.number}
                       </span>
                     </div>
@@ -335,8 +419,8 @@ export default function HomePage() {
                       <ul className="space-y-2.5 mb-6">
                         {feature.bullets.map((bullet, bi) => (
                           <li key={bi} className="flex items-start gap-3 text-sm text-slate-300">
-                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/30 flex-shrink-0 mt-0.5">
-                              <Check className="w-3 h-3 text-fuchsia-400" />
+                            <span className={`flex items-center justify-center w-5 h-5 rounded-full border flex-shrink-0 mt-0.5 ${accent.bulletBg}`}>
+                              <Check className={`w-3 h-3 ${accent.bulletIcon}`} />
                             </span>
                             <span className="leading-snug">{bullet}</span>
                           </li>
@@ -345,64 +429,17 @@ export default function HomePage() {
                     )}
 
                     <div className="flex items-center gap-2 pt-4 border-t border-white/5">
-                      <MetricIcon className="w-3.5 h-3.5 text-fuchsia-400" />
+                      <MetricIcon className={`w-3.5 h-3.5 ${accent.metricIcon}`} />
                       <span className="font-mono text-xs uppercase tracking-widest text-slate-500">
                         {feature.metric}
                       </span>
                     </div>
 
-                    <div className="absolute bottom-0 left-0 h-px w-0 bg-gradient-to-r from-fuchsia-500 to-purple-500 group-hover:w-full transition-all duration-500" />
+                    <div className={`absolute bottom-0 left-0 h-px w-0 bg-gradient-to-r group-hover:w-full transition-all duration-500 ${accent.underline}`} />
                   </motion.div>
                 )
               })}
             </div>
-          </div>
-
-          {/* Broker + Wealth data connect teaser — a roadmap note, not core value prop,
-              so it lives further down the page instead of competing with the hero */}
-          <div className="pb-4">
-            <motion.div
-              className="max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-                <div className="flex items-center gap-4">
-                  <div
-                    className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl border border-white/15 overflow-hidden flex-shrink-0"
-                    style={{ background: 'linear-gradient(135deg, #0d2b4e 0%, #0a1f3a 100%)' }}
-                    aria-label="MetaTrader 5"
-                    title="MetaTrader 5"
-                  >
-                    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className="w-7 h-7 sm:w-8 sm:h-8">
-                      <rect x="10" y="14" width="5" height="18" rx="1" fill="#e53935" />
-                      <line x1="12.5" y1="10" x2="12.5" y2="36" stroke="#e53935" strokeWidth="1.3" />
-                      <rect x="19" y="18" width="5" height="16" rx="1" fill="#43a047" />
-                      <line x1="21.5" y1="12" x2="21.5" y2="38" stroke="#43a047" strokeWidth="1.3" />
-                      <text x="36" y="32" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontWeight="900" fontSize="20" fill="#ffffff">5</text>
-                    </svg>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">
-                      {language === 'en' ? 'Coming soon' : 'Už brzy'}
-                    </span>
-                    <span className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">
-                      {language === 'en' ? 'Broker + Wealth data connect' : 'Broker + Wealth data connect'}
-                    </span>
-                  </div>
-                </div>
-
-                <Link
-                  href={user ? '/account/integrations' : '/signup'}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/15 bg-white/5 font-mono text-xs uppercase tracking-[0.2em] text-slate-300 hover:border-fuchsia-500/40 hover:text-fuchsia-300 transition-all flex-shrink-0"
-                >
-                  <ArrowRight className="w-3.5 h-3.5" />
-                  {language === 'en' ? 'Connect' : 'Připojit'}
-                </Link>
-              </div>
-            </motion.div>
           </div>
 
           {/* Final CTA */}
