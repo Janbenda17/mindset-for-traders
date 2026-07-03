@@ -117,13 +117,10 @@ export default function AccountPage() {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   // Trading Settings
-  const [tradingStyle, setTradingStyle] = useState<"scalper" | "day-trader" | "swing-trader">("day-trader")
-  const [riskLevel, setRiskLevel] = useState<"conservative" | "moderate" | "aggressive">("moderate")
   const [timezone, setTimezone] = useState("Europe/Prague")
-  const [experienceLevel, setExperienceLevel] = useState<"beginner" | "intermediate" | "advanced">("intermediate")
-  const [defaultCurrency, setDefaultCurrency] = useState("USD")
 
   // Preferences
   const [soundsEnabled, setSoundsEnabled] = useState(true)
@@ -361,7 +358,6 @@ export default function AccountPage() {
         nickname,
         bio,
         country,
-        experienceLevel,
         avatarUrl,
         updatedAt: new Date().toISOString(),
       }
@@ -540,15 +536,36 @@ export default function AccountPage() {
     }
   }
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (
-      confirm(
+      !confirm(
         "Are you sure you want to delete your account? This action cannot be undone.",
       )
     ) {
+      return
+    }
+
+    setDeletingAccount(true)
+    try {
+      const response = await fetch("/api/account/delete", { method: "POST" })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || "Failed to delete account")
+      }
+
       clearAllDemoData()
       logout()
       router.push("/")
+    } catch (error: any) {
+      console.error("[v0] Error deleting account:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete account",
+        variant: "destructive",
+      })
+    } finally {
+      setDeletingAccount(false)
     }
   }
 
@@ -1179,100 +1196,6 @@ export default function AccountPage() {
               </CardContent>
             </Card>
 
-            {/* Trading Profile */}
-            <Card className="bg-slate-900/80 border-slate-700/50 backdrop-blur-xl overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-red-500" />
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-orange-400" />
-                  {language === "cs" ? "Trading Profil" : "Trading Profile"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">Styl obchodování</Label>
-                    <Select value={tradingStyle} onValueChange={(v: any) => setTradingStyle(v)}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="scalper" className="text-white">
-                          Scalper
-                        </SelectItem>
-                        <SelectItem value="day-trader" className="text-white">
-                          Day Trader
-                        </SelectItem>
-                        <SelectItem value="swing-trader" className="text-white">
-                          Swing Trader
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">Úroveň rizika</Label>
-                    <Select value={riskLevel} onValueChange={(v: any) => setRiskLevel(v)}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="conservative" className="text-white">
-                          {language === "cs" ? "Konzervativní (0.25-1%)" : "Conservative (0.25-1%)"}
-                        </SelectItem>
-                        <SelectItem value="moderate" className="text-white">
-                          {language === "cs" ? "Střední (1-3%)" : "Moderate (1-3%)"}
-                        </SelectItem>
-                        <SelectItem value="aggressive" className="text-white">
-                          {language === "cs" ? "Agresivní (3-5%)" : "Aggressive (3-5%)"}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">{language === "cs" ? "Zkušenosti" : "Experience"}</Label>
-                    <Select value={experienceLevel} onValueChange={(v: any) => setExperienceLevel(v)}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="beginner" className="text-white">
-                          {language === "cs" ? "Začátečník (< 1 rok)" : "Beginner (< 1 year)"}
-                        </SelectItem>
-                        <SelectItem value="intermediate" className="text-white">
-                          {language === "cs" ? "Pokročilý (1-3 roky)" : "Intermediate (1-3 years)"}
-                        </SelectItem>
-                        <SelectItem value="advanced" className="text-white">
-                          {language === "cs" ? "Expert (3+ let)" : "Expert (3+ years)"}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">{language === "cs" ? "Měna" : "Currency"}</Label>
-                    <Select value={defaultCurrency} onValueChange={setDefaultCurrency}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="USD" className="text-white">
-                          USD ($)
-                        </SelectItem>
-                        <SelectItem value="EUR" className="text-white">
-                          EUR (€)
-                        </SelectItem>
-                        <SelectItem value="CZK" className="text-white">
-                          CZK (Kč)
-                        </SelectItem>
-                        <SelectItem value="GBP" className="text-white">
-                          GBP (£)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             <Button onClick={handleSaveProfile} disabled={loading} className="bg-blue-600 hover:bg-blue-700">
               {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               {language === "cs" ? "Uložit profil" : "Save Profile"}
@@ -1677,10 +1600,15 @@ export default function AccountPage() {
                 <CardContent>
                   <Button
                     onClick={handleDeleteAccount}
+                    disabled={deletingAccount}
                     variant="outline"
                     className="w-full bg-transparent text-red-400 hover:text-red-300 border-red-500/30 hover:border-red-500/50 hover:bg-red-500/10"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    {deletingAccount ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 mr-2" />
+                    )}
                     {language === "cs" ? "Smazat účet" : "Delete Account"}
                   </Button>
                 </CardContent>
