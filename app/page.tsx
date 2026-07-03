@@ -79,11 +79,22 @@ export default function HomePage() {
 
       {/* Content */}
       <div className="relative z-10">
-        <TopNavigation />
+        {/* Presale banner */}
+        <button
+          onClick={handlePricingClick}
+          className="fixed top-0 left-0 right-0 z-[60] h-9 flex items-center justify-center gap-2 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white text-xs sm:text-sm font-semibold transition-colors px-4 text-center"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
+          {language === 'en' ? 'Presale — limited to the first 30 users only' : 'Předprodej — jen pro prvních 30 uživatelů'}
+        </button>
+
+        <div className="[&>nav]:!top-9">
+          <TopNavigation />
+        </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Section */}
-          <div className="pt-24 sm:pt-32 pb-4 flex items-center justify-center">
+          <div className="pt-32 sm:pt-40 pb-4 flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
