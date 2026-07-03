@@ -170,8 +170,9 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          {/* Broker + Wealth data connect teaser — centered between hero and features */}
-          <div className="pt-8 pb-12 sm:pt-10 sm:pb-16">
+          {/* Product demo video — front and center right after the hero, this is the
+              first real proof of the product a new visitor sees */}
+          <div className="pt-4 pb-12 sm:pt-6 sm:pb-16">
             <motion.div
               className="max-w-4xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
@@ -179,87 +180,28 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
             >
-              <div className="relative rounded-3xl border border-fuchsia-500/25 bg-gradient-to-br from-fuchsia-500/[0.08] via-slate-950 to-purple-600/[0.08] p-[1px] shadow-[0_0_60px_-15px_rgba(217,70,239,0.35)]">
-                <div className="relative flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-8 px-6 sm:px-10 py-6 sm:py-8 rounded-3xl bg-slate-950/80 backdrop-blur-sm overflow-hidden">
+              <p className="text-center font-mono text-xs uppercase tracking-[0.25em] text-fuchsia-400 mb-4">
+                {language === 'en' ? 'See it in action' : 'Podívej se, jak to funguje'}
+              </p>
+              <div className="relative aspect-video rounded-2xl border border-fuchsia-500/25 bg-gradient-to-br from-fuchsia-500/[0.08] via-slate-950 to-purple-600/[0.08] p-[1px] shadow-[0_0_60px_-15px_rgba(217,70,239,0.35)]">
+                <div className="relative w-full h-full rounded-2xl bg-slate-950/80 backdrop-blur-sm overflow-hidden flex items-center justify-center group/video">
                   <div
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_left,rgba(217,70,239,0.12),transparent_60%)]"
+                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(217,70,239,0.18),transparent_65%)]"
                   />
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_right,rgba(168,85,247,0.1),transparent_60%)]"
-                  />
-
-                  <div className="relative flex items-center gap-4 sm:gap-5">
-                      {/* MetaTrader 5 logo */}
-                      <div
-                        className="relative z-20 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border border-white/15 shadow-lg shadow-black/40 overflow-hidden"
-                        style={{
-                          background:
-                            'linear-gradient(135deg, #0d2b4e 0%, #0a1f3a 100%)',
-                        }}
-                        aria-label="MetaTrader 5"
-                        title="MetaTrader 5"
-                      >
-                        <svg
-                          viewBox="0 0 48 48"
-                          fill="none"
-                          aria-hidden="true"
-                          className="w-8 h-8 sm:w-9 sm:h-9"
-                        >
-                          {/* Red descending candle */}
-                          <rect x="10" y="14" width="5" height="18" rx="1" fill="#e53935" />
-                          <line
-                            x1="12.5"
-                            y1="10"
-                            x2="12.5"
-                            y2="36"
-                            stroke="#e53935"
-                            strokeWidth="1.3"
-                          />
-                          {/* Green ascending candle */}
-                          <rect x="19" y="18" width="5" height="16" rx="1" fill="#43a047" />
-                          <line
-                            x1="21.5"
-                            y1="12"
-                            x2="21.5"
-                            y2="38"
-                            stroke="#43a047"
-                            strokeWidth="1.3"
-                          />
-                          {/* White "5" */}
-                          <text
-                            x="36"
-                            y="32"
-                            textAnchor="middle"
-                            fontFamily="Arial, Helvetica, sans-serif"
-                            fontWeight="900"
-                            fontSize="20"
-                            fill="#ffffff"
-                          >
-                            5
-                          </text>
-                        </svg>
-                      </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.25em] text-fuchsia-400">
-                        {language === 'en' ? 'Next up' : 'Už brzy'}
-                      </span>
-                      <span className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight">
-                        {language === 'en'
-                          ? 'Broker + Wealth data connect'
-                          : 'Broker + Wealth data connect'}
-                      </span>
+                  <div className="relative flex flex-col items-center gap-4 px-6 text-center">
+                    <div className="flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/15 bg-white/5 group-hover/video:border-fuchsia-500/40 group-hover/video:bg-fuchsia-500/10 transition-colors shadow-lg shadow-black/40">
+                      <Play className="w-7 h-7 sm:w-8 sm:h-8 text-slate-300 group-hover/video:text-fuchsia-400 transition-colors fill-current" />
+                    </div>
+                    <div>
+                      <p className="text-lg sm:text-xl font-bold text-white mb-1">
+                        {language === 'en' ? '2-minute walkthrough' : '2minutová ukázka'}
+                      </p>
+                      <p className="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">
+                        {language === 'en' ? 'Coming very soon' : 'Už brzy'}
+                      </p>
                     </div>
                   </div>
-
-                  <Link 
-                    href={user ? '/account/integrations' : '/signup'}
-                    className="relative inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-fuchsia-500/40 bg-gradient-to-r from-fuchsia-500/15 to-purple-600/15 font-mono text-xs sm:text-sm uppercase tracking-[0.2em] text-fuchsia-200 shadow-lg shadow-fuchsia-500/10 hover:from-fuchsia-500/25 hover:to-purple-600/25 transition-all"
-                  >
-                    <ArrowRight className="w-4 h-4" />
-                    {language === 'en' ? 'Connect' : 'Připojit'}
-                  </Link>
                 </div>
               </div>
             </motion.div>
@@ -298,30 +240,6 @@ export default function HomePage() {
                   ? 'Four pillars working together to rewire your trading mindset and hold you accountable every single day.'
                   : 'Čtyři pilíře, které spolupracují na přenastavení tvého obchodního mindsetu a drží tě v disciplíně každý den.'}
               </p>
-            </motion.div>
-
-            {/* Product demo video placeholder */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative mb-12 aspect-video rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden flex items-center justify-center group/video"
-            >
-              <div
-                className="absolute inset-0 opacity-50"
-                style={{
-                  background: 'radial-gradient(ellipse at 50% 50%, rgba(217, 70, 239, 0.15), transparent 70%)',
-                }}
-              />
-              <div className="relative flex flex-col items-center gap-3">
-                <div className="flex items-center justify-center w-16 h-16 rounded-full border border-white/15 bg-white/5 group-hover/video:border-fuchsia-500/40 group-hover/video:bg-fuchsia-500/10 transition-colors">
-                  <Play className="w-7 h-7 text-slate-400 group-hover/video:text-fuchsia-400 transition-colors fill-current" />
-                </div>
-                <span className="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">
-                  {language === 'en' ? 'Video coming soon' : 'Video už brzy'}
-                </span>
-              </div>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10">
@@ -438,6 +356,53 @@ export default function HomePage() {
                 )
               })}
             </div>
+          </div>
+
+          {/* Broker + Wealth data connect teaser — a roadmap note, not core value prop,
+              so it lives further down the page instead of competing with the hero */}
+          <div className="pb-4">
+            <motion.div
+              className="max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl border border-white/15 overflow-hidden flex-shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #0d2b4e 0%, #0a1f3a 100%)' }}
+                    aria-label="MetaTrader 5"
+                    title="MetaTrader 5"
+                  >
+                    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className="w-7 h-7 sm:w-8 sm:h-8">
+                      <rect x="10" y="14" width="5" height="18" rx="1" fill="#e53935" />
+                      <line x1="12.5" y1="10" x2="12.5" y2="36" stroke="#e53935" strokeWidth="1.3" />
+                      <rect x="19" y="18" width="5" height="16" rx="1" fill="#43a047" />
+                      <line x1="21.5" y1="12" x2="21.5" y2="38" stroke="#43a047" strokeWidth="1.3" />
+                      <text x="36" y="32" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontWeight="900" fontSize="20" fill="#ffffff">5</text>
+                    </svg>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">
+                      {language === 'en' ? 'Coming soon' : 'Už brzy'}
+                    </span>
+                    <span className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">
+                      {language === 'en' ? 'Broker + Wealth data connect' : 'Broker + Wealth data connect'}
+                    </span>
+                  </div>
+                </div>
+
+                <Link
+                  href={user ? '/account/integrations' : '/signup'}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/15 bg-white/5 font-mono text-xs uppercase tracking-[0.2em] text-slate-300 hover:border-fuchsia-500/40 hover:text-fuchsia-300 transition-all flex-shrink-0"
+                >
+                  <ArrowRight className="w-3.5 h-3.5" />
+                  {language === 'en' ? 'Connect' : 'Připojit'}
+                </Link>
+              </div>
+            </motion.div>
           </div>
 
           {/* Final CTA */}
