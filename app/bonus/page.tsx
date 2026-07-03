@@ -34,7 +34,7 @@ export default function BonusPage() {
       borderColor: "border-blue-500/30",
     },
     {
-      name: isEn ? "Error Log" : "Deník chyb",
+      name: isEn ? "Fail Log" : "Fail Log",
       href: "/fail-log",
       icon: AlertTriangle,
       description: isEn

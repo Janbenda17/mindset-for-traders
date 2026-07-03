@@ -340,21 +340,26 @@ export default function FailLogPage() {
 
         {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-2">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-4xl font-bold text-white">The Anomaly Ledger</h1>
-              <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/30 border text-xs font-mono">BLACK BOX</Badge>
+          <div className="flex items-start gap-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-rose-600 to-orange-600 shadow-lg shadow-rose-600/20 flex-shrink-0">
+              <FlaskConical className="w-6 h-6 text-white" />
             </div>
-            <p className="text-slate-400 text-sm max-w-lg">
-              {isEn
-                ? "Every other platform hides your mistakes. Here we expose them, dissect them and quantify them — because that's the only path to improvement."
-                : "Všechny ostatní platformy schovávají tvoje chyby. Tady je vytahujeme na světlo, pitvujeme a kvantifikujeme — protože to je jediná cesta ke zlepšení."}
-            </p>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-4xl font-bold text-white tracking-tight">The Anomaly Ledger</h1>
+                <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/30 border text-xs font-mono">BLACK BOX</Badge>
+              </div>
+              <p className="text-slate-400 text-sm max-w-lg">
+                {isEn
+                  ? "Every other platform hides your mistakes. Here we expose them, dissect them and quantify them — because that's the only path to improvement."
+                  : "Všechny ostatní platformy schovávají tvoje chyby. Tady je vytahujeme na světlo, pitvujeme a kvantifikujeme — protože to je jediná cesta ke zlepšení."}
+              </p>
+            </div>
           </div>
           <Button
             onClick={generateFailLogsWithAI}
             disabled={generating}
-            className="shrink-0 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold"
+            className="shrink-0 h-11 px-5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold shadow-lg shadow-red-600/20 transition-all disabled:opacity-50 disabled:shadow-none"
           >
             {generating ? (
               <><Loader className="w-4 h-4 mr-2 animate-spin" />{isEn ? "Analyzing..." : "Generuji..."}</>
@@ -365,7 +370,8 @@ export default function FailLogPage() {
         </div>
 
         {isShowingDemo && (
-          <div className="inline-flex mb-6 mt-3 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
+          <div className="flex items-center gap-2 w-fit mb-6 mt-3 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
+            <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />
             {isEn ? "Demo data — this is what it looks like with your real MT5 trades" : "Ukázková data — takhle to bude vypadat s tvými reálnými obchody z MT5"}
           </div>
         )}
@@ -378,10 +384,15 @@ export default function FailLogPage() {
             {/* Donut chart card */}
             <Card className="bg-slate-900/50 border-slate-800">
               <CardContent className="p-5">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-4">
-                  Top Failure Triggers
-                  <span className="ml-2 text-slate-600 normal-case font-normal">({isEn ? "click to filter" : "klikni pro filtrování"})</span>
-                </p>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-1.5 bg-rose-500/20 rounded-lg">
+                    <AlertTriangle className="w-4 h-4 text-rose-400" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                    Top Failure Triggers
+                    <span className="ml-2 text-slate-600 normal-case font-normal">({isEn ? "click to filter" : "klikni pro filtrování"})</span>
+                  </p>
+                </div>
                 <div className="flex items-center gap-6">
                   <DonutChart data={chartData} active={activeCategory} onSelect={setActiveCategory} />
                   <div className="flex-1 space-y-2.5">
