@@ -136,8 +136,12 @@ export default function IntegrationsPage() {
       setMetaApiLogin('')
       setMetaApiPassword('')
       setMetaApiBroker('')
-      setSuccess('Account connected! Trades will sync every 30 seconds.')
-      setTimeout(() => setSuccess(''), 5000)
+      setSuccess(
+        result.connected
+          ? 'Account connected! Trades will sync every 30 seconds.'
+          : 'Account created and logging into your broker - this can take a minute on first connect. Trades will start syncing automatically once it finishes.',
+      )
+      setTimeout(() => setSuccess(''), 8000)
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to connect your account'
       setError(errorMsg)

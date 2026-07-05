@@ -83,7 +83,7 @@ export class MetaApiClient {
     password: string
     broker: string
     platform?: 'mt4' | 'mt5'
-  }): Promise<string> {
+  }): Promise<{ accountId: string; connected: boolean }> {
     if (!this.apiKey) {
       throw new Error('MetaApi is not configured on the server (missing METAAPI_API_KEY).')
     }
@@ -122,13 +122,82 @@ export class MetaApiClient {
       }
 
       console.log('[v0] MetaApi account created:', accountId)
-      return accountId
+
+      // Creating the account only registers it with MetaApi - it starts out
+      // UNDEPLOYED and never runs until explicitly deployed. Without this,
+      // the account object exists but no terminal is ever started, so it
+      // never actually logs into the broker and connectionStatus stays
+      // DISCONNECTED forever - the previous code returned right after
+      // creation and the UI reported "Connected!" even though nothing was
+      // ever deployed.
+      await this.deployAccount(accountId)
+      const connected = await this.waitUntilConnected(accountId)
+      if (!connected) {
+        console.warn(
+          '[v0] MetaApi account deployed but not yet CONNECTED after wait window:',
+          accountId,
+        )
+      }
+
+      return { accountId, connected }
     } catch (error) {
       console.error('[v0] MetaApi authentication with credentials failed:', error)
       throw error instanceof Error
         ? error
         : new Error('Failed to connect to MT5. Check your credentials and broker name.')
     }
+  }
+
+  /**
+   * Start the MetaApi trading terminal for a freshly created account. A
+   * created account is UNDEPLOYED and inert until this is called.
+   */
+  async deployAccount(accountId: string): Promise<void> {
+    const response = await fetch(`${this.provisioningBaseUrl}/users/current/accounts/${accountId}/deploy`, {
+      method: 'POST',
+      headers: this.authHeaders(),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('[v0] Failed to deploy MetaApi account:', response.status, errorText)
+      throw new Error(`Failed to deploy MT account (${response.status}): ${errorText}`)
+    }
+  }
+
+  /**
+   * Poll the account until MetaApi reports it as actually logged into the
+   * broker, or bail out after the timeout. A first-time demo connection
+   * typically takes 10-40s; a genuinely bad login/password/server usually
+   * surfaces as a DEPLOY_FAILED state well before the timeout.
+   */
+  async waitUntilConnected(accountId: string, timeoutMs = 30000, intervalMs = 3000): Promise<boolean> {
+    const deadline = Date.now() + timeoutMs
+
+    while (Date.now() < deadline) {
+      const response = await fetch(`${this.provisioningBaseUrl}/users/current/accounts/${accountId}`, {
+        method: 'GET',
+        headers: this.authHeaders(),
+      })
+
+      if (response.ok) {
+        const account = await response.json()
+
+        if (account.connectionStatus === 'CONNECTED') {
+          return true
+        }
+
+        if (account.state === 'DEPLOY_FAILED') {
+          throw new Error(
+            'MetaApi could not start the trading account. Double-check your login, password and broker server name.',
+          )
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, intervalMs))
+    }
+
+    return false
   }
 
   /**
@@ -151,7 +220,7 @@ export class MetaApiClient {
         account_id: accountId,
         api_key: this.apiKey,
         broker: brokerName,
-        connected: account.connectionStatus === 'connected',
+        connected: account.connectionStatus === 'CONNECTED',
       }
     } catch (error) {
       console.error('[v0] MetaApi account connection failed:', error)

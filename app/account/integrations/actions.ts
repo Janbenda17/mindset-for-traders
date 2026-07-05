@@ -3,6 +3,11 @@
 import { createClient } from '@supabase/supabase-js'
 import { metaApiClient } from '@/lib/integrations/metaapi'
 
+// Deploying a MetaApi account and waiting for it to log into the broker can
+// take up to ~30s on a first connection; give this action room to finish
+// instead of getting cut off by the platform's default function timeout.
+export const maxDuration = 60
+
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 
 function getSupabase() {
@@ -101,8 +106,11 @@ export async function connectMetaApi(
     }
 
     let accountId: string
+    let connected: boolean
     try {
-      accountId = await metaApiClient.authenticateWithCredentials(credentials)
+      const result = await metaApiClient.authenticateWithCredentials(credentials)
+      accountId = result.accountId
+      connected = result.connected
     } catch (authErr) {
       console.error('[v0] MetaApi authentication failed:', authErr)
       return {
@@ -126,8 +134,8 @@ export async function connectMetaApi(
       return { success: false, error: error.message || 'Failed to save MetaApi connection' }
     }
 
-    console.log('[v0] MetaApi connected successfully with account:', accountId)
-    return { success: true, accountId }
+    console.log('[v0] MetaApi connected successfully with account:', accountId, 'connected:', connected)
+    return { success: true, accountId, connected }
   } catch (err) {
     console.error('[v0] Error in connectMetaApi:', err)
     return { success: false, error: err instanceof Error ? err.message : 'Failed to connect MetaApi. Check your credentials.' }
