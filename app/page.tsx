@@ -82,10 +82,16 @@ export default function HomePage() {
         {/* Presale banner */}
         <button
           onClick={handlePricingClick}
-          className="fixed top-0 left-0 right-0 z-[60] h-9 flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs sm:text-sm font-semibold transition-colors px-4 text-center"
+          className="group fixed top-0 left-0 right-0 z-[60] h-9 flex items-center justify-center gap-2.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-red-500/20 text-xs sm:text-sm transition-colors hover:border-red-500/40 px-4 text-center"
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
-          {language === 'en' ? 'Presale — limited to the first 30 users only' : 'Předprodej — jen pro prvních 30 uživatelů'}
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-300 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] shrink-0">
+            <span className="w-1 h-1 rounded-full bg-red-400 animate-pulse" />
+            {language === 'en' ? 'Presale' : 'Předprodej'}
+          </span>
+          <span className="text-slate-300 font-medium group-hover:text-white transition-colors">
+            {language === 'en' ? 'Limited to the first 30 users only' : 'Jen pro prvních 30 uživatelů'}
+          </span>
+          <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all shrink-0" />
         </button>
 
         <div className="[&>nav]:!top-9">
