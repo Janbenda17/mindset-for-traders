@@ -3,11 +3,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { metaApiClient } from '@/lib/integrations/metaapi'
 
-// Deploying a MetaApi account and waiting for it to log into the broker can
-// take up to ~30s on a first connection; give this action room to finish
-// instead of getting cut off by the platform's default function timeout.
-export const maxDuration = 60
-
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 
 function getSupabase() {
