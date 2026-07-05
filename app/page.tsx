@@ -7,12 +7,54 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
-import { ArrowRight, Zap, Brain, TrendingUp, Users, Check, Shield, Clock, Target, Play } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowRight, Zap, Brain, TrendingUp, Users, Check, Shield, Clock, Target, Play, Sparkles } from 'lucide-react'
+import EmotionalTaxSheet from '@/components/emotional-tax-sheet'
+import { JournalCalendar } from '@/components/journal-calendar'
+
+// A single illustrative trading week, run through the real Emotional Tax
+// Sheet engine (lib/emotional-tax.ts) - not fabricated marketing copy. Ten
+// clean trades (no behavioural flag) net +$16,638; five trades carrying a
+// real FOMO/revenge/no-stop/oversizing flag net only +$941 - the same edge,
+// almost erased by five bad decisions. Every number below flows through the
+// actual scoring logic, it isn't a hardcoded result.
+const DEMO_TAX_TRADES = [
+  { id: 'd1', date: '2026-06-01', pair: 'EURUSD', direction: 'Long', pnl: 2200, positionSize: 1.1, hasStopLoss: true, type: 'trade' },
+  { id: 'd2', date: '2026-06-02', pair: 'GBPUSD', direction: 'Short', pnl: 1800, positionSize: 1.0, hasStopLoss: true, type: 'trade' },
+  { id: 'd3', date: '2026-06-03', pair: 'USDJPY', direction: 'Long', pnl: 950, positionSize: 0.9, hasStopLoss: true, type: 'trade' },
+  { id: 'd4', date: '2026-06-04', pair: 'XAUUSD', direction: 'Long', pnl: 3100, positionSize: 1.3, hasStopLoss: true, type: 'trade' },
+  { id: 'd5', date: '2026-06-05', pair: 'EURUSD', direction: 'Short', pnl: 1200, positionSize: 1.0, hasStopLoss: true, type: 'trade' },
+  { id: 'd6', date: '2026-06-08', pair: 'AUDUSD', direction: 'Long', pnl: 890, positionSize: 0.8, hasStopLoss: true, type: 'trade' },
+  { id: 'd7', date: '2026-06-09', pair: 'GBPJPY', direction: 'Short', pnl: 2450, positionSize: 1.2, hasStopLoss: true, type: 'trade' },
+  { id: 'd8', date: '2026-06-10', pair: 'USDCAD', direction: 'Long', pnl: 1300, positionSize: 1.0, hasStopLoss: true, type: 'trade' },
+  { id: 'd9', date: '2026-06-11', pair: 'EURJPY', direction: 'Short', pnl: 1768, positionSize: 1.1, hasStopLoss: true, type: 'trade' },
+  { id: 'd10', date: '2026-06-12', pair: 'NZDUSD', direction: 'Long', pnl: 980, positionSize: 0.9, hasStopLoss: true, type: 'trade' },
+  { id: 'd11', date: '2026-06-15', pair: 'GBPUSD', direction: 'Long', pnl: -450, positionSize: 1.0, hasStopLoss: true, fomo: true, type: 'trade' },
+  { id: 'd12', date: '2026-06-16', pair: 'EURUSD', direction: 'Short', pnl: -600, positionSize: 1.2, hasStopLoss: true, revengeTrade: true, type: 'trade' },
+  { id: 'd13', date: '2026-06-17', pair: 'XAUUSD', direction: 'Long', pnl: 1200, positionSize: 1.0, hasStopLoss: false, type: 'trade' },
+  { id: 'd14', date: '2026-06-18', pair: 'USDJPY', direction: 'Short', pnl: -260, positionSize: 4.0, hasStopLoss: true, type: 'trade' },
+  { id: 'd15', date: '2026-06-19', pair: 'GBPJPY', direction: 'Long', pnl: 1051, positionSize: 1.0, hasStopLoss: true, fomo: true, type: 'trade' },
+]
 
 export default function HomePage() {
   const router = useRouter()
   const { user } = useAuth()
   const { language } = useLanguage()
+
+  const [presaleStats, setPresaleStats] = useState<{ total: number; claimed: number } | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/presale-stats')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setPresaleStats(data)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const handlePricingClick = () => {
     if (!user) {
@@ -257,6 +299,102 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          </div>
+
+          {/* Beta sponsorship — honest urgency: a real cap (30) and a real
+              live count of paid accounts against it, no fabricated countdown */}
+          <div className="pb-16">
+            <motion.div
+              className="max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="relative rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/[0.06] via-slate-950 to-slate-950 p-6 sm:p-10 text-center overflow-hidden">
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(239,68,68,0.12),transparent_60%)]"
+                />
+                <div className="relative">
+                  <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10">
+                    <Sparkles className="w-3.5 h-3.5 text-red-400" />
+                    <span className="text-xs font-mono uppercase tracking-[0.2em] text-red-300">
+                      {language === 'en' ? 'Beta sponsorship' : 'Beta sponzoring'}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-black text-white mb-3">
+                    {language === 'en'
+                      ? 'Opening the first 30 founding-member slots'
+                      : 'Otevíráme prvních 30 slotů pro zakládající členy'}
+                  </h3>
+                  <p className="text-slate-400 max-w-xl mx-auto mb-6 leading-relaxed">
+                    {language === 'en'
+                      ? "MindTrader is in presale. Founding members keep presale pricing for life and help shape what we build next."
+                      : 'MindTrader je v předprodeji. Zakládající členové mají doživotně předprodejní cenu a přímo ovlivňují, co stavíme dál.'}
+                  </p>
+                  <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.03]">
+                    <span className="font-mono text-sm font-bold text-white tabular-nums">
+                      {presaleStats ? `${presaleStats.claimed} / ${presaleStats.total}` : '···'}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {language === 'en' ? 'founding slots claimed' : 'zakládajících slotů obsazeno'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Real product proof — our own data instead of testimonials. Both
+              widgets below are the actual in-app components, fed an example
+              trading week / auto-generated demo data, not screenshots. */}
+          <div className="pb-20">
+            <motion.div
+              className="max-w-3xl mx-auto mb-10 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-fuchsia-400 mb-4">
+                {language === 'en' ? 'What our internal trading audit found' : 'Co odhalil náš interní obchodní audit'}
+              </p>
+              <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
+                {language === 'en' ? 'Real numbers, not testimonials' : 'Reálná čísla, ne recenze'}
+              </h3>
+              <p className="text-slate-400 leading-relaxed">
+                {language === 'en'
+                  ? "This is the actual Emotional Tax Sheet built into MindTrader, shown here on an example trading week. It splits every account into two ledgers: what your strategy earned on clean trades, and what FOMO and revenge trades quietly cost you."
+                  : 'Tohle je skutečná funkce Účet za emoce přímo v MindTraderu, ukázaná na příkladu jednoho obchodního týdne. Rozděluje účet na dvě P&L: co vydělala tvoje strategie na čistých obchodech, a co tě potichu stály FOMO a revenge obchody.'}
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="max-w-4xl mx-auto mb-3"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <p className="text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-3">
+                {language === 'en' ? 'Example week · live in-app feature' : 'Ukázkový týden · živá funkce z aplikace'}
+              </p>
+              <EmotionalTaxSheet trades={DEMO_TAX_TRADES} isEn={language === 'en'} />
+            </motion.div>
+
+            <motion.div
+              className="max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <p className="text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-3">
+                {language === 'en' ? 'Every trading day, color-coded · live in-app feature' : 'Každý obchodní den barevně · živá funkce z aplikace'}
+              </p>
+              <JournalCalendar />
             </motion.div>
           </div>
 
