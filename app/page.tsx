@@ -8,9 +8,9 @@ import { useAuth } from '@/contexts/auth-context'
 import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { ArrowRight, Zap, Brain, TrendingUp, Users, Check, Shield, Clock, Target, Play, Sparkles } from 'lucide-react'
+import { ArrowRight, Zap, Brain, TrendingUp, Users, Shield, Clock, Target, Play, Sparkles } from 'lucide-react'
 import EmotionalTaxSheet from '@/components/emotional-tax-sheet'
-import { JournalCalendar } from '@/components/journal-calendar'
+import { cn } from '@/lib/utils'
 
 // A single illustrative trading week, run through the real Emotional Tax
 // Sheet engine (lib/emotional-tax.ts) - not fabricated marketing copy. Ten
@@ -36,12 +36,33 @@ const DEMO_TAX_TRADES = [
   { id: 'd15', date: '2026-06-19', pair: 'GBPJPY', direction: 'Long', pnl: 1051, positionSize: 1.0, hasStopLoss: true, fomo: true, type: 'trade' },
 ]
 
+// Same example month as DEMO_TAX_TRADES above (June 2026), per-day P&L for
+// the minimal calendar preview - derived from the same data, not separate
+// random numbers, so the two sections tell one consistent story.
+const DEMO_CALENDAR_YEAR = 2026
+const DEMO_CALENDAR_MONTH = 5 // June (0-indexed)
+const DEMO_CALENDAR_PNL: Record<number, number> = DEMO_TAX_TRADES.reduce(
+  (acc, t) => {
+    acc[Number(t.date.slice(-2))] = t.pnl
+    return acc
+  },
+  {} as Record<number, number>,
+)
+
 export default function HomePage() {
   const router = useRouter()
   const { user } = useAuth()
   const { language } = useLanguage()
 
   const [presaleStats, setPresaleStats] = useState<{ total: number; claimed: number } | null>(null)
+
+  const calendarDaysInMonth = new Date(DEMO_CALENDAR_YEAR, DEMO_CALENDAR_MONTH + 1, 0).getDate()
+  const calendarFirstWeekday = new Date(DEMO_CALENDAR_YEAR, DEMO_CALENDAR_MONTH, 1).getDay()
+  const calendarPnLValues = Object.values(DEMO_CALENDAR_PNL)
+  const calendarTotalPnL = calendarPnLValues.reduce((sum, p) => sum + p, 0)
+  const calendarWinRate = Math.round(
+    (calendarPnLValues.filter((p) => p > 0).length / calendarPnLValues.length) * 100,
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -331,16 +352,26 @@ export default function HomePage() {
                   </h3>
                   <p className="text-slate-400 max-w-xl mx-auto mb-6 leading-relaxed">
                     {language === 'en'
-                      ? "MindTrader is in presale. Founding members keep presale pricing for life and help shape what we build next."
-                      : 'MindTrader je v předprodeji. Zakládající členové mají doživotně předprodejní cenu a přímo ovlivňují, co stavíme dál.'}
+                      ? "MindTrader is in presale. Founding members keep presale pricing for life and help shape what we build next — once all 30 spots are gone, that pricing is gone for good."
+                      : 'MindTrader je v předprodeji. Zakládající členové mají doživotně předprodejní cenu a přímo ovlivňují, co stavíme dál — jakmile je všech 30 míst pryč, ta cena už se nevrátí.'}
                   </p>
-                  <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.03]">
-                    <span className="font-mono text-sm font-bold text-white tabular-nums">
-                      {presaleStats ? `${presaleStats.claimed} / ${presaleStats.total}` : '···'}
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      {language === 'en' ? 'founding slots claimed' : 'zakládajících slotů obsazeno'}
-                    </span>
+                  <div className="max-w-xs mx-auto">
+                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden mb-2">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-500 transition-all duration-700"
+                        style={{
+                          width: presaleStats
+                            ? `${Math.max(4, (presaleStats.claimed / presaleStats.total) * 100)}%`
+                            : '4%',
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between font-mono text-[11px] text-slate-500">
+                      <span>
+                        {presaleStats ? presaleStats.claimed : '···'} {language === 'en' ? 'claimed' : 'obsazeno'}
+                      </span>
+                      <span>{presaleStats ? presaleStats.total : 30} {language === 'en' ? 'total spots' : 'míst celkem'}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -392,9 +423,65 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.1 }}
             >
               <p className="text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-3">
-                {language === 'en' ? 'Every trading day, color-coded · live in-app feature' : 'Každý obchodní den barevně · živá funkce z aplikace'}
+                {language === 'en' ? 'Same example month · live in-app feature' : 'Stejný ukázkový měsíc · živá funkce z aplikace'}
               </p>
-              <JournalCalendar />
+              <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
+                <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+                  <span className="text-sm font-bold text-white tracking-tight">June 2026</span>
+                  <div className="flex items-center gap-4 font-mono text-xs">
+                    <span className="text-emerald-400 font-bold tabular-nums">
+                      +${calendarTotalPnL.toLocaleString('en-US')}
+                    </span>
+                    <span className="text-slate-500 tabular-nums">{calendarWinRate}% {language === 'en' ? 'win' : 'výhry'}</span>
+                    <span className="text-slate-500 tabular-nums">
+                      {calendarPnLValues.length} {language === 'en' ? 'trades' : 'obchodů'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-7 gap-1.5 mb-4">
+                  {(language === 'en' ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['N', 'P', 'Ú', 'S', 'Č', 'P', 'S']).map(
+                    (d, i) => (
+                      <div key={i} className="text-center text-[10px] font-mono uppercase text-slate-600 pb-1">
+                        {d}
+                      </div>
+                    ),
+                  )}
+                  {Array.from({ length: calendarFirstWeekday }).map((_, i) => (
+                    <div key={`blank-${i}`} />
+                  ))}
+                  {Array.from({ length: calendarDaysInMonth }).map((_, i) => {
+                    const day = i + 1
+                    const pnl = DEMO_CALENDAR_PNL[day]
+                    const isProfit = pnl !== undefined && pnl > 0
+                    const isLoss = pnl !== undefined && pnl < 0
+                    return (
+                      <div
+                        key={day}
+                        className={cn(
+                          'aspect-square rounded-lg flex items-center justify-center text-[10px] font-mono tabular-nums',
+                          isProfit && 'bg-emerald-500/15 text-emerald-300',
+                          isLoss && 'bg-rose-500/15 text-rose-300',
+                          pnl === undefined && 'bg-white/[0.02] text-slate-600',
+                        )}
+                      >
+                        {day}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div className="flex items-center gap-4 font-mono text-[10px] text-slate-500">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500/50" />
+                    {language === 'en' ? 'Profit day' : 'Ziskový den'}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500/50" />
+                    {language === 'en' ? 'Loss day' : 'Ztrátový den'}
+                  </span>
+                </div>
+              </div>
             </motion.div>
           </div>
 
@@ -527,7 +614,6 @@ export default function HomePage() {
                 },
               ].map((feature, i) => {
                 const Icon = feature.icon
-                const MetricIcon = feature.metricIcon
                 const accent = feature.accent
                 return (
                   <motion.div
@@ -536,50 +622,40 @@ export default function HomePage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: i * 0.08 }}
-                    className="group relative p-8 sm:p-10 bg-slate-950 hover:bg-slate-900/80 transition-colors duration-300"
+                    className="relative p-8 sm:p-10 bg-slate-950"
                   >
-                    <div className="flex items-start justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className={`flex items-center justify-center w-11 h-11 rounded-lg border border-white/10 bg-white/5 transition-colors ${accent.icon} ${accent.iconHover}`}>
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-white/10 bg-white/5 font-mono text-[10px] uppercase tracking-[0.15em] text-slate-400">
-                          {feature.tag}
-                        </span>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg border border-white/10 bg-white/5 ${accent.icon}`}>
+                        <Icon className="w-5 h-5" />
                       </div>
-                      <span className={`font-mono text-xs tracking-widest text-slate-600 transition-colors ${accent.number}`}>
+                      <span className="font-mono text-xs tracking-widest text-slate-700">
                         {feature.number}
                       </span>
                     </div>
 
-                    <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 tracking-tight">
+                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-2.5 tracking-tight">
                       {feature.title}
                     </h3>
-                    <p className="text-base text-slate-400 leading-relaxed max-w-md mb-6">
+                    <p className="text-sm text-slate-400 leading-relaxed max-w-md mb-6">
                       {feature.description}
                     </p>
 
                     {feature.bullets.length > 0 && (
-                      <ul className="space-y-2.5 mb-6">
+                      <ul className="space-y-2 mb-6">
                         {feature.bullets.map((bullet, bi) => (
-                          <li key={bi} className="flex items-start gap-3 text-sm text-slate-300">
-                            <span className={`flex items-center justify-center w-5 h-5 rounded-full border flex-shrink-0 mt-0.5 ${accent.bulletBg}`}>
-                              <Check className={`w-3 h-3 ${accent.bulletIcon}`} />
-                            </span>
-                            <span className="leading-snug">{bullet}</span>
+                          <li key={bi} className="flex items-center gap-2.5 text-sm text-slate-300">
+                            <span className={`w-1 h-1 rounded-full flex-shrink-0 ${accent.bulletIcon}`} />
+                            <span>{bullet}</span>
                           </li>
                         ))}
                       </ul>
                     )}
 
                     <div className="flex items-center gap-2 pt-4 border-t border-white/5">
-                      <MetricIcon className={`w-3.5 h-3.5 ${accent.metricIcon}`} />
-                      <span className="font-mono text-xs uppercase tracking-widest text-slate-500">
+                      <span className="font-mono text-[11px] uppercase tracking-widest text-slate-600">
                         {feature.metric}
                       </span>
                     </div>
-
-                    <div className={`absolute bottom-0 left-0 h-px w-0 bg-gradient-to-r group-hover:w-full transition-all duration-500 ${accent.underline}`} />
                   </motion.div>
                 )
               })}
