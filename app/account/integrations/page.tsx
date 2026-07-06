@@ -75,7 +75,7 @@ export default function IntegrationsPage() {
 
         const { data, error } = await getSupabase()
           .from('profiles')
-          .select('metaapi_token, metaapi_account_id, mt4_broker')
+          .select('metaapi_token, metaapi_account_id, metaapi_broker')
           .eq('user_id', user.id)
           .maybeSingle()
 
@@ -87,7 +87,7 @@ export default function IntegrationsPage() {
         if (data) {
           console.log('[v0] Profile found:', data)
           setMetaApiConnected(!!data.metaapi_token && !!data.metaapi_account_id)
-          setConnectedBroker(data.mt4_broker || null)
+          setConnectedBroker(data.metaapi_broker || null)
         }
       } catch (err) {
         console.error('[v0] Error checking integration status:', err)
