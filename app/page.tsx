@@ -9,16 +9,11 @@ import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { ArrowRight, Play, Sparkles } from 'lucide-react'
-import { buildEmotionalTaxSheet } from '@/lib/emotional-tax'
+import EmotionalTaxSheet from '@/components/emotional-tax-sheet'
 import DisciplineMatrix from '@/components/discipline-matrix'
 import DayDetailPanel from '@/components/day-detail-panel'
 import type { DisciplineDay } from '@/lib/discipline-matrix'
 import { cn } from '@/lib/utils'
-
-function money(n: number) {
-  const sign = n > 0 ? '+' : n < 0 ? '-' : ''
-  return `${sign}$${Math.abs(n).toLocaleString('en-US')}`
-}
 
 // Dates are anchored to the CURRENT month rather than a fixed one, since
 // DisciplineMatrix (the real in-app Kalendář, reused below) always opens on
@@ -31,29 +26,35 @@ function demoDate(day: number) {
   return `${DEMO_YEAR}-${String(DEMO_MONTH + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
-// A single illustrative trading week, run through the real Emotional Tax
+// A single illustrative trading month, run through the real Emotional Tax
 // Sheet + Discipline Matrix engines (lib/emotional-tax.ts, lib/discipline-matrix.ts)
-// - not fabricated marketing copy. Ten clean trades (no behavioural flag,
-// followedPlan: true) net +$16,638; five trades carrying a real FOMO/revenge/
-// no-stop/oversizing flag (followedPlan: false) net only +$941 - the same
-// edge, almost erased by five bad decisions. Every number below flows
-// through the actual scoring logic, it isn't a hardcoded result.
+// - not fabricated marketing copy. Eight clean trades (no behavioural flag,
+// followedPlan: true) net +$11,470; twelve trades carrying a real FOMO/
+// revenge/no-stop/oversizing flag (followedPlan: false) net -$6,800 - the
+// account's own edge, wiped out and then some by five bad decisions. Every
+// number in the sheet below flows through the actual scoring logic, none of
+// it is a hardcoded result.
 const DEMO_TAX_TRADES = [
   { id: 'd1', date: demoDate(1), pair: 'EURUSD', direction: 'Long', pnl: 2200, positionSize: 1.1, hasStopLoss: true, followedPlan: true, type: 'trade' },
-  { id: 'd2', date: demoDate(2), pair: 'GBPUSD', direction: 'Short', pnl: 1800, positionSize: 1.0, hasStopLoss: true, followedPlan: true, type: 'trade' },
-  { id: 'd3', date: demoDate(3), pair: 'USDJPY', direction: 'Long', pnl: 950, positionSize: 0.9, hasStopLoss: true, followedPlan: true, type: 'trade' },
-  { id: 'd4', date: demoDate(4), pair: 'XAUUSD', direction: 'Long', pnl: 3100, positionSize: 1.3, hasStopLoss: true, followedPlan: true, type: 'trade' },
-  { id: 'd5', date: demoDate(5), pair: 'EURUSD', direction: 'Short', pnl: 1200, positionSize: 1.0, hasStopLoss: true, followedPlan: true, type: 'trade' },
-  { id: 'd6', date: demoDate(8), pair: 'AUDUSD', direction: 'Long', pnl: 890, positionSize: 0.8, hasStopLoss: true, followedPlan: true, type: 'trade' },
-  { id: 'd7', date: demoDate(9), pair: 'GBPJPY', direction: 'Short', pnl: 2450, positionSize: 1.2, hasStopLoss: true, followedPlan: true, type: 'trade' },
-  { id: 'd8', date: demoDate(10), pair: 'USDCAD', direction: 'Long', pnl: 1300, positionSize: 1.0, hasStopLoss: true, followedPlan: true, type: 'trade' },
-  { id: 'd9', date: demoDate(11), pair: 'EURJPY', direction: 'Short', pnl: 1768, positionSize: 1.1, hasStopLoss: true, followedPlan: true, type: 'trade' },
-  { id: 'd10', date: demoDate(12), pair: 'NZDUSD', direction: 'Long', pnl: 980, positionSize: 0.9, hasStopLoss: true, followedPlan: true, type: 'trade' },
-  { id: 'd11', date: demoDate(15), pair: 'GBPUSD', direction: 'Long', pnl: -450, positionSize: 1.0, hasStopLoss: true, fomo: true, followedPlan: false, type: 'trade' },
-  { id: 'd12', date: demoDate(16), pair: 'EURUSD', direction: 'Short', pnl: -600, positionSize: 1.2, hasStopLoss: true, revengeTrade: true, followedPlan: false, type: 'trade' },
-  { id: 'd13', date: demoDate(17), pair: 'XAUUSD', direction: 'Long', pnl: 1200, positionSize: 1.0, hasStopLoss: false, followedPlan: false, type: 'trade' },
-  { id: 'd14', date: demoDate(18), pair: 'USDJPY', direction: 'Short', pnl: -260, positionSize: 4.0, hasStopLoss: true, followedPlan: false, type: 'trade' },
-  { id: 'd15', date: demoDate(19), pair: 'GBPJPY', direction: 'Long', pnl: 1051, positionSize: 1.0, hasStopLoss: true, fomo: true, followedPlan: false, type: 'trade' },
+  { id: 'd2', date: demoDate(2), pair: 'GBPUSD', direction: 'Short', pnl: 1450, positionSize: 1.0, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd3', date: demoDate(3), pair: 'USDJPY', direction: 'Long', pnl: 890, positionSize: 0.9, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd4', date: demoDate(4), pair: 'XAUUSD', direction: 'Long', pnl: 1680, positionSize: 1.3, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd5', date: demoDate(5), pair: 'EURUSD', direction: 'Short', pnl: 720, positionSize: 1.0, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd6', date: demoDate(6), pair: 'AUDUSD', direction: 'Long', pnl: 2340, positionSize: 0.8, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd7', date: demoDate(7), pair: 'GBPJPY', direction: 'Short', pnl: 1050, positionSize: 1.2, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd8', date: demoDate(8), pair: 'USDCAD', direction: 'Long', pnl: 1140, positionSize: 1.0, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'f1', date: demoDate(10), pair: 'GBPUSD', direction: 'Long', pnl: -1200, positionSize: 3.5, hasStopLoss: true, fomo: true, followedPlan: false, type: 'trade' },
+  { id: 'f2', date: demoDate(11), pair: 'EURJPY', direction: 'Short', pnl: -850, positionSize: 3.2, hasStopLoss: true, fomo: true, followedPlan: false, type: 'trade' },
+  { id: 'f3', date: demoDate(12), pair: 'XAUUSD', direction: 'Long', pnl: 620, positionSize: 1.0, hasStopLoss: true, fomo: true, followedPlan: false, type: 'trade' },
+  { id: 'f4', date: demoDate(13), pair: 'NZDUSD', direction: 'Short', pnl: -1450, positionSize: 1.0, hasStopLoss: false, revengeTrade: true, followedPlan: false, type: 'trade' },
+  { id: 'f5', date: demoDate(14), pair: 'USDCAD', direction: 'Long', pnl: -980, positionSize: 3.8, hasStopLoss: true, revengeTrade: true, followedPlan: false, type: 'trade' },
+  { id: 'f6', date: demoDate(15), pair: 'EURUSD', direction: 'Short', pnl: 410, positionSize: 1.0, hasStopLoss: true, revengeTrade: true, followedPlan: false, type: 'trade' },
+  { id: 'f7', date: demoDate(16), pair: 'GBPJPY', direction: 'Long', pnl: -890, positionSize: 1.0, hasStopLoss: false, followedPlan: false, type: 'trade' },
+  { id: 'f8', date: demoDate(17), pair: 'USDJPY', direction: 'Short', pnl: -670, positionSize: 1.0, hasStopLoss: false, followedPlan: false, type: 'trade' },
+  { id: 'f9', date: demoDate(18), pair: 'AUDUSD', direction: 'Long', pnl: -1340, positionSize: 3.6, hasStopLoss: false, followedPlan: false, type: 'trade' },
+  { id: 'f10', date: demoDate(19), pair: 'XAUUSD', direction: 'Short', pnl: -560, positionSize: 3.3, hasStopLoss: true, followedPlan: false, type: 'trade' },
+  { id: 'f11', date: demoDate(20), pair: 'EURUSD', direction: 'Long', pnl: 290, positionSize: 3.4, hasStopLoss: true, followedPlan: false, type: 'trade' },
+  { id: 'f12', date: demoDate(21), pair: 'GBPUSD', direction: 'Short', pnl: -180, positionSize: 3.1, hasStopLoss: true, followedPlan: false, type: 'trade' },
 ]
 
 export default function HomePage() {
@@ -63,9 +64,6 @@ export default function HomePage() {
 
   const [presaleStats, setPresaleStats] = useState<{ total: number; claimed: number } | null>(null)
   const [selectedDemoDay, setSelectedDemoDay] = useState<DisciplineDay | null>(null)
-
-  const taxSheet = buildEmotionalTaxSheet(DEMO_TAX_TRADES, [], language === 'en')
-  const taxWorstRow = [...taxSheet.rows].sort((a, b) => a.realLoss - b.realLoss)[0]
 
   useEffect(() => {
     let cancelled = false
@@ -352,38 +350,13 @@ export default function HomePage() {
             </motion.div>
 
             <motion.div
-              className="max-w-2xl mx-auto mb-6"
+              className="max-w-4xl mx-auto mb-6"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 sm:p-8">
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <p className="text-xs text-emerald-400/80 mb-1.5">
-                      {language === 'en' ? 'Strategy P&L' : 'P&L strategie'}
-                    </p>
-                    <p className="text-2xl sm:text-3xl font-black text-emerald-400 tabular-nums">
-                      +${taxSheet.strategyPnL.toLocaleString('en-US')}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-rose-400/80 mb-1.5">
-                      {language === 'en' ? 'Emotional P&L' : 'P&L emocí'}
-                    </p>
-                    <p className="text-2xl sm:text-3xl font-black text-white tabular-nums">
-                      +${taxSheet.emotionalPnL.toLocaleString('en-US')}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm text-slate-400 leading-relaxed border-t border-white/5 pt-4">
-                  {taxWorstRow &&
-                    (language === 'en'
-                      ? `${taxWorstRow.label} was the single biggest leak this week — ${money(taxWorstRow.realLoss)} in real losses from ${taxWorstRow.incidents} flagged trade${taxWorstRow.incidents === 1 ? '' : 's'}, on an account that otherwise made $${taxSheet.strategyPnL.toLocaleString('en-US')}.`
-                      : `${taxWorstRow.label} byl tenhle týden největší únik — ${money(taxWorstRow.realLoss)} reálné ztráty z ${taxWorstRow.incidents} problémových obchodů, na účtu, který jinak vydělal $${taxSheet.strategyPnL.toLocaleString('en-US')}.`)}
-                </p>
-              </div>
+              <EmotionalTaxSheet trades={DEMO_TAX_TRADES} isEn={language === 'en'} />
             </motion.div>
 
             <motion.div
