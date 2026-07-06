@@ -10,6 +10,9 @@ import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { ArrowRight, Zap, Brain, TrendingUp, Users, Shield, Clock, Target, Play, Sparkles } from 'lucide-react'
 import { buildEmotionalTaxSheet } from '@/lib/emotional-tax'
+import DisciplineMatrix from '@/components/discipline-matrix'
+import DayDetailPanel from '@/components/day-detail-panel'
+import type { DisciplineDay } from '@/lib/discipline-matrix'
 import { cn } from '@/lib/utils'
 
 function money(n: number) {
@@ -17,42 +20,41 @@ function money(n: number) {
   return `${sign}$${Math.abs(n).toLocaleString('en-US')}`
 }
 
-// A single illustrative trading week, run through the real Emotional Tax
-// Sheet engine (lib/emotional-tax.ts) - not fabricated marketing copy. Ten
-// clean trades (no behavioural flag) net +$16,638; five trades carrying a
-// real FOMO/revenge/no-stop/oversizing flag net only +$941 - the same edge,
-// almost erased by five bad decisions. Every number below flows through the
-// actual scoring logic, it isn't a hardcoded result.
-const DEMO_TAX_TRADES = [
-  { id: 'd1', date: '2026-06-01', pair: 'EURUSD', direction: 'Long', pnl: 2200, positionSize: 1.1, hasStopLoss: true, type: 'trade' },
-  { id: 'd2', date: '2026-06-02', pair: 'GBPUSD', direction: 'Short', pnl: 1800, positionSize: 1.0, hasStopLoss: true, type: 'trade' },
-  { id: 'd3', date: '2026-06-03', pair: 'USDJPY', direction: 'Long', pnl: 950, positionSize: 0.9, hasStopLoss: true, type: 'trade' },
-  { id: 'd4', date: '2026-06-04', pair: 'XAUUSD', direction: 'Long', pnl: 3100, positionSize: 1.3, hasStopLoss: true, type: 'trade' },
-  { id: 'd5', date: '2026-06-05', pair: 'EURUSD', direction: 'Short', pnl: 1200, positionSize: 1.0, hasStopLoss: true, type: 'trade' },
-  { id: 'd6', date: '2026-06-08', pair: 'AUDUSD', direction: 'Long', pnl: 890, positionSize: 0.8, hasStopLoss: true, type: 'trade' },
-  { id: 'd7', date: '2026-06-09', pair: 'GBPJPY', direction: 'Short', pnl: 2450, positionSize: 1.2, hasStopLoss: true, type: 'trade' },
-  { id: 'd8', date: '2026-06-10', pair: 'USDCAD', direction: 'Long', pnl: 1300, positionSize: 1.0, hasStopLoss: true, type: 'trade' },
-  { id: 'd9', date: '2026-06-11', pair: 'EURJPY', direction: 'Short', pnl: 1768, positionSize: 1.1, hasStopLoss: true, type: 'trade' },
-  { id: 'd10', date: '2026-06-12', pair: 'NZDUSD', direction: 'Long', pnl: 980, positionSize: 0.9, hasStopLoss: true, type: 'trade' },
-  { id: 'd11', date: '2026-06-15', pair: 'GBPUSD', direction: 'Long', pnl: -450, positionSize: 1.0, hasStopLoss: true, fomo: true, type: 'trade' },
-  { id: 'd12', date: '2026-06-16', pair: 'EURUSD', direction: 'Short', pnl: -600, positionSize: 1.2, hasStopLoss: true, revengeTrade: true, type: 'trade' },
-  { id: 'd13', date: '2026-06-17', pair: 'XAUUSD', direction: 'Long', pnl: 1200, positionSize: 1.0, hasStopLoss: false, type: 'trade' },
-  { id: 'd14', date: '2026-06-18', pair: 'USDJPY', direction: 'Short', pnl: -260, positionSize: 4.0, hasStopLoss: true, type: 'trade' },
-  { id: 'd15', date: '2026-06-19', pair: 'GBPJPY', direction: 'Long', pnl: 1051, positionSize: 1.0, hasStopLoss: true, fomo: true, type: 'trade' },
-]
+// Dates are anchored to the CURRENT month rather than a fixed one, since
+// DisciplineMatrix (the real in-app Kalendář, reused below) always opens on
+// the visitor's current month with no way to deep-link a different one -
+// a hardcoded month would just show an empty grid a few weeks after launch.
+const now = new Date()
+const DEMO_YEAR = now.getFullYear()
+const DEMO_MONTH = now.getMonth() // 0-indexed
+function demoDate(day: number) {
+  return `${DEMO_YEAR}-${String(DEMO_MONTH + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
 
-// Same example month as DEMO_TAX_TRADES above (June 2026), per-day P&L for
-// the minimal calendar preview - derived from the same data, not separate
-// random numbers, so the two sections tell one consistent story.
-const DEMO_CALENDAR_YEAR = 2026
-const DEMO_CALENDAR_MONTH = 5 // June (0-indexed)
-const DEMO_CALENDAR_PNL: Record<number, number> = DEMO_TAX_TRADES.reduce(
-  (acc, t) => {
-    acc[Number(t.date.slice(-2))] = t.pnl
-    return acc
-  },
-  {} as Record<number, number>,
-)
+// A single illustrative trading week, run through the real Emotional Tax
+// Sheet + Discipline Matrix engines (lib/emotional-tax.ts, lib/discipline-matrix.ts)
+// - not fabricated marketing copy. Ten clean trades (no behavioural flag,
+// followedPlan: true) net +$16,638; five trades carrying a real FOMO/revenge/
+// no-stop/oversizing flag (followedPlan: false) net only +$941 - the same
+// edge, almost erased by five bad decisions. Every number below flows
+// through the actual scoring logic, it isn't a hardcoded result.
+const DEMO_TAX_TRADES = [
+  { id: 'd1', date: demoDate(1), pair: 'EURUSD', direction: 'Long', pnl: 2200, positionSize: 1.1, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd2', date: demoDate(2), pair: 'GBPUSD', direction: 'Short', pnl: 1800, positionSize: 1.0, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd3', date: demoDate(3), pair: 'USDJPY', direction: 'Long', pnl: 950, positionSize: 0.9, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd4', date: demoDate(4), pair: 'XAUUSD', direction: 'Long', pnl: 3100, positionSize: 1.3, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd5', date: demoDate(5), pair: 'EURUSD', direction: 'Short', pnl: 1200, positionSize: 1.0, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd6', date: demoDate(8), pair: 'AUDUSD', direction: 'Long', pnl: 890, positionSize: 0.8, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd7', date: demoDate(9), pair: 'GBPJPY', direction: 'Short', pnl: 2450, positionSize: 1.2, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd8', date: demoDate(10), pair: 'USDCAD', direction: 'Long', pnl: 1300, positionSize: 1.0, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd9', date: demoDate(11), pair: 'EURJPY', direction: 'Short', pnl: 1768, positionSize: 1.1, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd10', date: demoDate(12), pair: 'NZDUSD', direction: 'Long', pnl: 980, positionSize: 0.9, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'd11', date: demoDate(15), pair: 'GBPUSD', direction: 'Long', pnl: -450, positionSize: 1.0, hasStopLoss: true, fomo: true, followedPlan: false, type: 'trade' },
+  { id: 'd12', date: demoDate(16), pair: 'EURUSD', direction: 'Short', pnl: -600, positionSize: 1.2, hasStopLoss: true, revengeTrade: true, followedPlan: false, type: 'trade' },
+  { id: 'd13', date: demoDate(17), pair: 'XAUUSD', direction: 'Long', pnl: 1200, positionSize: 1.0, hasStopLoss: false, followedPlan: false, type: 'trade' },
+  { id: 'd14', date: demoDate(18), pair: 'USDJPY', direction: 'Short', pnl: -260, positionSize: 4.0, hasStopLoss: true, followedPlan: false, type: 'trade' },
+  { id: 'd15', date: demoDate(19), pair: 'GBPJPY', direction: 'Long', pnl: 1051, positionSize: 1.0, hasStopLoss: true, fomo: true, followedPlan: false, type: 'trade' },
+]
 
 export default function HomePage() {
   const router = useRouter()
@@ -60,14 +62,7 @@ export default function HomePage() {
   const { language } = useLanguage()
 
   const [presaleStats, setPresaleStats] = useState<{ total: number; claimed: number } | null>(null)
-
-  const calendarDaysInMonth = new Date(DEMO_CALENDAR_YEAR, DEMO_CALENDAR_MONTH + 1, 0).getDate()
-  const calendarFirstWeekday = new Date(DEMO_CALENDAR_YEAR, DEMO_CALENDAR_MONTH, 1).getDay()
-  const calendarPnLValues = Object.values(DEMO_CALENDAR_PNL)
-  const calendarTotalPnL = calendarPnLValues.reduce((sum, p) => sum + p, 0)
-  const calendarWinRate = Math.round(
-    (calendarPnLValues.filter((p) => p > 0).length / calendarPnLValues.length) * 100,
-  )
+  const [selectedDemoDay, setSelectedDemoDay] = useState<DisciplineDay | null>(null)
 
   const taxSheet = buildEmotionalTaxSheet(DEMO_TAX_TRADES, [], language === 'en')
   const taxWorstRow = [...taxSheet.rows].sort((a, b) => a.realLoss - b.realLoss)[0]
@@ -571,67 +566,28 @@ export default function HomePage() {
             </motion.div>
 
             <motion.div
-              className="max-w-2xl mx-auto"
+              className="max-w-4xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
-                <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
-                  <span className="text-sm font-bold text-white tracking-tight">
-                    {language === 'en' ? 'Same week, on the calendar' : 'Stejný týden, na kalendáři'}
-                  </span>
-                  <div className="flex items-center gap-4 font-mono text-xs">
-                    <span className="text-emerald-400 font-bold tabular-nums">
-                      +${calendarTotalPnL.toLocaleString('en-US')}
-                    </span>
-                    <span className="text-slate-500 tabular-nums">{calendarWinRate}% {language === 'en' ? 'win' : 'výhry'}</span>
+              <p className="text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-3">
+                {language === 'en' ? 'Click any day for the full breakdown · live in-app feature' : 'Klikni na den pro detailní rozbor · živá funkce z aplikace'}
+              </p>
+              <div className="flex flex-col md:flex-row gap-4 items-start">
+                <div className={cn('w-full transition-all duration-300', selectedDemoDay ? 'md:w-[52%]' : 'md:w-full')}>
+                  <DisciplineMatrix trades={DEMO_TAX_TRADES} journalEntries={[]} onDayClick={setSelectedDemoDay} />
+                </div>
+                {selectedDemoDay && (
+                  <div className="w-full md:flex-1 min-w-0">
+                    <DayDetailPanel
+                      day={selectedDemoDay}
+                      onClose={() => setSelectedDemoDay(null)}
+                      demoTrades={DEMO_TAX_TRADES}
+                    />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-7 gap-1.5 mb-4">
-                  {(language === 'en' ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['N', 'P', 'Ú', 'S', 'Č', 'P', 'S']).map(
-                    (d, i) => (
-                      <div key={i} className="text-center text-[10px] font-mono uppercase text-slate-600 pb-1">
-                        {d}
-                      </div>
-                    ),
-                  )}
-                  {Array.from({ length: calendarFirstWeekday }).map((_, i) => (
-                    <div key={`blank-${i}`} />
-                  ))}
-                  {Array.from({ length: calendarDaysInMonth }).map((_, i) => {
-                    const day = i + 1
-                    const pnl = DEMO_CALENDAR_PNL[day]
-                    const isProfit = pnl !== undefined && pnl > 0
-                    const isLoss = pnl !== undefined && pnl < 0
-                    return (
-                      <div
-                        key={day}
-                        className={cn(
-                          'aspect-square rounded-lg flex items-center justify-center text-[10px] font-mono tabular-nums',
-                          isProfit && 'bg-emerald-500/15 text-emerald-300',
-                          isLoss && 'bg-rose-500/15 text-rose-300',
-                          pnl === undefined && 'bg-white/[0.02] text-slate-600',
-                        )}
-                      >
-                        {day}
-                      </div>
-                    )
-                  })}
-                </div>
-
-                <div className="flex items-center gap-4 font-mono text-[10px] text-slate-500">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500/50" />
-                    {language === 'en' ? 'Profit day' : 'Ziskový den'}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-rose-500/50" />
-                    {language === 'en' ? 'Loss day' : 'Ztrátový den'}
-                  </span>
-                </div>
+                )}
               </div>
             </motion.div>
           </div>
