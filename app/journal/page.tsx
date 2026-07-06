@@ -34,6 +34,7 @@ import { useData } from "@/contexts/data-context" // Fixed import path from /con
 import { useAuth } from "@/contexts/auth-context" // Import useAuth hook
 import { generateVirtualJournalStats } from "@/lib/virtual-data-generator" // Import for virtual stats
 import { generateDemoTradingHistory } from "@/lib/demo-data"
+import { DemoUpgradeBanner } from "@/components/demo-upgrade-banner"
 
 // Demo trading history (Virtual mode) now comes from the shared generator
 // in lib/demo-data.ts so Journal and Weekly Review show the same demo trader.
@@ -544,6 +545,7 @@ export default function JournalPage() {
             </span>
           </div>
         )}
+        {!isLiveMode && <DemoUpgradeBanner />}
         </div>
 
         {/* Behavioral Cockpit -- two dominant psychological metrics first,

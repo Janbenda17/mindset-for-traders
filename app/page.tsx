@@ -12,6 +12,8 @@ import { ArrowRight, Play, Sparkles } from 'lucide-react'
 import EmotionalTaxSheet from '@/components/emotional-tax-sheet'
 import DisciplineMatrix from '@/components/discipline-matrix'
 import DayDetailPanel from '@/components/day-detail-panel'
+import DailySummaryTeaser from '@/components/daily-summary-teaser'
+import AiCoachTeaser from '@/components/ai-coach-teaser'
 import type { DisciplineDay } from '@/lib/discipline-matrix'
 import { cn } from '@/lib/utils'
 
@@ -55,6 +57,14 @@ const DEMO_TAX_TRADES = [
   { id: 'f10', date: demoDate(19), pair: 'XAUUSD', direction: 'Short', pnl: -560, positionSize: 3.3, hasStopLoss: true, followedPlan: false, type: 'trade' },
   { id: 'f11', date: demoDate(20), pair: 'EURUSD', direction: 'Long', pnl: 290, positionSize: 3.4, hasStopLoss: true, followedPlan: false, type: 'trade' },
   { id: 'f12', date: demoDate(21), pair: 'GBPUSD', direction: 'Short', pnl: -180, positionSize: 3.1, hasStopLoss: true, followedPlan: false, type: 'trade' },
+]
+
+// One example day for the Daily Tracker teaser - a net-positive day that's
+// still flagged reckless (revenge re-entry, oversized), run through the
+// real buildDailySummary() engine (lib/daily-summary.ts).
+const DEMO_DAY_TRADES = [
+  { id: 'dd1', date: demoDate(22), pair: 'EURUSD', direction: 'Long', pnl: 680, positionSize: 1.0, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'dd2', date: demoDate(22), pair: 'XAUUSD', direction: 'Short', pnl: -246, positionSize: 4.5, hasStopLoss: true, revengeTrade: true, followedPlan: false, type: 'trade' },
 ]
 
 export default function HomePage() {
@@ -324,11 +334,74 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          {/* Real proof of Weekly Review — condensed to the two-number hook
-              + one verdict line instead of the full in-app ledger table, so
-              it reads in a few seconds instead of overwhelming a cold
-              visitor with FOMO/revenge/no-SL/oversizing jargon. */}
+          {/* Real proof, page by page - each section below is the actual
+              in-app component/engine for that feature, fed example data,
+              not a screenshot or a fabricated mockup. */}
           <div className="pb-20 pt-4">
+            {/* Daily Tracker */}
+            <motion.div
+              className="max-w-3xl mx-auto mb-8 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-blue-400 mb-4">
+                {language === 'en' ? 'From Daily Tracker' : 'Z Daily Trackeru'}
+              </p>
+              <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
+                {language === 'en' ? 'Real numbers, not testimonials' : 'Reálná čísla, ne recenze'}
+              </h3>
+              <p className="text-slate-400 leading-relaxed">
+                {language === 'en'
+                  ? 'This is the real Daily Summary card, run through the same engine MindTrader uses on your own trades every morning.'
+                  : 'Tohle je skutečná karta Daily Summary, spočítaná stejným enginem, jaký MindTrader používá na tvých vlastních obchodech každé ráno.'}
+              </p>
+            </motion.div>
+            <motion.div
+              className="max-w-4xl mx-auto mb-20"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <DailySummaryTeaser
+                trades={DEMO_DAY_TRADES}
+                dateLabel={language === 'en' ? 'today' : 'dnes'}
+              />
+            </motion.div>
+
+            {/* AI Coach */}
+            <motion.div
+              className="max-w-3xl mx-auto mb-8 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-rose-400 mb-4">
+                {language === 'en' ? 'From AI Coach' : 'Z AI Coache'}
+              </p>
+              <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
+                {language === 'en' ? 'Talks you down before you click' : 'Zastaví tě dřív, než klikneš'}
+              </h3>
+              <p className="text-slate-400 leading-relaxed">
+                {language === 'en'
+                  ? 'The same AI Coach panel you get inside the app - trained to intervene on FOMO and revenge trades before they happen.'
+                  : 'Stejný panel AI Coache, jaký dostaneš v appce - natrénovaný zasáhnout proti FOMO a revenge trade dřív, než k nim dojde.'}
+              </p>
+            </motion.div>
+            <motion.div
+              className="max-w-4xl mx-auto mb-20"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <AiCoachTeaser isEn={language === 'en'} />
+            </motion.div>
+
+            {/* Journal */}
             <motion.div
               className="max-w-3xl mx-auto mb-10 text-center"
               initial={{ opacity: 0, y: 20 }}
@@ -337,15 +410,15 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
             >
               <p className="font-mono text-xs uppercase tracking-[0.25em] text-amber-400 mb-4">
-                {language === 'en' ? 'From Weekly Review' : 'Z Weekly Review'}
+                {language === 'en' ? 'From Journal' : 'Z Journalu'}
               </p>
               <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
-                {language === 'en' ? 'Real numbers, not testimonials' : 'Reálná čísla, ne recenze'}
+                {language === 'en' ? 'Every trade, scored' : 'Každý obchod, ohodnocený'}
               </h3>
               <p className="text-slate-400 leading-relaxed">
                 {language === 'en'
-                  ? "This is what Weekly Review's trade breakdown looks like on a real trading week, run through the same scoring MindTrader uses on your account — not a screenshot, not a testimonial."
-                  : 'Takhle vypadá rozbor obchodů z Weekly Review na skutečném obchodním týdnu, spočítaný stejnou logikou, jakou MindTrader používá na tvém účtu — žádný screenshot, žádná recenze.'}
+                  ? "This is what your Journal's trade breakdown looks like on a real trading month, run through the same scoring MindTrader uses on your account — not a screenshot, not a testimonial."
+                  : 'Takhle vypadá rozbor obchodů z Journalu na skutečném obchodním měsíci, spočítaný stejnou logikou, jakou MindTrader používá na tvém účtu — žádný screenshot, žádná recenze.'}
               </p>
             </motion.div>
 
