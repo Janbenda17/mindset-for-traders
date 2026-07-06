@@ -9,8 +9,13 @@ import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { ArrowRight, Zap, Brain, TrendingUp, Users, Shield, Clock, Target, Play, Sparkles } from 'lucide-react'
-import EmotionalTaxSheet from '@/components/emotional-tax-sheet'
+import { buildEmotionalTaxSheet } from '@/lib/emotional-tax'
 import { cn } from '@/lib/utils'
+
+function money(n: number) {
+  const sign = n > 0 ? '+' : n < 0 ? '-' : ''
+  return `${sign}$${Math.abs(n).toLocaleString('en-US')}`
+}
 
 // A single illustrative trading week, run through the real Emotional Tax
 // Sheet engine (lib/emotional-tax.ts) - not fabricated marketing copy. Ten
@@ -63,6 +68,9 @@ export default function HomePage() {
   const calendarWinRate = Math.round(
     (calendarPnLValues.filter((p) => p > 0).length / calendarPnLValues.length) * 100,
   )
+
+  const taxSheet = buildEmotionalTaxSheet(DEMO_TAX_TRADES, [], language === 'en')
+  const taxWorstRow = [...taxSheet.rows].sort((a, b) => a.realLoss - b.realLoss)[0]
 
   useEffect(() => {
     let cancelled = false
@@ -323,169 +331,8 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          {/* Beta sponsorship — honest urgency: a real cap (30) and a real
-              live count of paid accounts against it, no fabricated countdown */}
-          <div className="pb-16">
-            <motion.div
-              className="max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="relative rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/[0.06] via-slate-950 to-slate-950 p-6 sm:p-10 text-center overflow-hidden">
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(239,68,68,0.12),transparent_60%)]"
-                />
-                <div className="relative">
-                  <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10">
-                    <Sparkles className="w-3.5 h-3.5 text-red-400" />
-                    <span className="text-xs font-mono uppercase tracking-[0.2em] text-red-300">
-                      {language === 'en' ? 'Beta sponsorship' : 'Beta sponzoring'}
-                    </span>
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-white mb-3">
-                    {language === 'en'
-                      ? 'Opening the first 30 founding-member slots'
-                      : 'Otevíráme prvních 30 slotů pro zakládající členy'}
-                  </h3>
-                  <p className="text-slate-400 max-w-xl mx-auto mb-6 leading-relaxed">
-                    {language === 'en'
-                      ? "MindTrader is in presale. Founding members keep presale pricing for life and help shape what we build next — once all 30 spots are gone, that pricing is gone for good."
-                      : 'MindTrader je v předprodeji. Zakládající členové mají doživotně předprodejní cenu a přímo ovlivňují, co stavíme dál — jakmile je všech 30 míst pryč, ta cena už se nevrátí.'}
-                  </p>
-                  <div className="max-w-xs mx-auto">
-                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden mb-2">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-500 transition-all duration-700"
-                        style={{
-                          width: presaleStats
-                            ? `${Math.max(4, (presaleStats.claimed / presaleStats.total) * 100)}%`
-                            : '4%',
-                        }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between font-mono text-[11px] text-slate-500">
-                      <span>
-                        {presaleStats ? presaleStats.claimed : '···'} {language === 'en' ? 'claimed' : 'obsazeno'}
-                      </span>
-                      <span>{presaleStats ? presaleStats.total : 30} {language === 'en' ? 'total spots' : 'míst celkem'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Real product proof — our own data instead of testimonials. Both
-              widgets below are the actual in-app components, fed an example
-              trading week / auto-generated demo data, not screenshots. */}
-          <div className="pb-20">
-            <motion.div
-              className="max-w-3xl mx-auto mb-10 text-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <p className="font-mono text-xs uppercase tracking-[0.25em] text-fuchsia-400 mb-4">
-                {language === 'en' ? 'What our internal trading audit found' : 'Co odhalil náš interní obchodní audit'}
-              </p>
-              <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
-                {language === 'en' ? 'Real numbers, not testimonials' : 'Reálná čísla, ne recenze'}
-              </h3>
-              <p className="text-slate-400 leading-relaxed">
-                {language === 'en'
-                  ? "This is the actual Emotional Tax Sheet built into MindTrader, shown here on an example trading week. It splits every account into two ledgers: what your strategy earned on clean trades, and what FOMO and revenge trades quietly cost you."
-                  : 'Tohle je skutečná funkce Účet za emoce přímo v MindTraderu, ukázaná na příkladu jednoho obchodního týdne. Rozděluje účet na dvě P&L: co vydělala tvoje strategie na čistých obchodech, a co tě potichu stály FOMO a revenge obchody.'}
-              </p>
-            </motion.div>
-
-            <motion.div
-              className="max-w-4xl mx-auto mb-3"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <p className="text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-3">
-                {language === 'en' ? 'Example week · live in-app feature' : 'Ukázkový týden · živá funkce z aplikace'}
-              </p>
-              <EmotionalTaxSheet trades={DEMO_TAX_TRADES} isEn={language === 'en'} />
-            </motion.div>
-
-            <motion.div
-              className="max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
-              <p className="text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-3">
-                {language === 'en' ? 'Same example month · live in-app feature' : 'Stejný ukázkový měsíc · živá funkce z aplikace'}
-              </p>
-              <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
-                <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
-                  <span className="text-sm font-bold text-white tracking-tight">June 2026</span>
-                  <div className="flex items-center gap-4 font-mono text-xs">
-                    <span className="text-emerald-400 font-bold tabular-nums">
-                      +${calendarTotalPnL.toLocaleString('en-US')}
-                    </span>
-                    <span className="text-slate-500 tabular-nums">{calendarWinRate}% {language === 'en' ? 'win' : 'výhry'}</span>
-                    <span className="text-slate-500 tabular-nums">
-                      {calendarPnLValues.length} {language === 'en' ? 'trades' : 'obchodů'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-7 gap-1.5 mb-4">
-                  {(language === 'en' ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['N', 'P', 'Ú', 'S', 'Č', 'P', 'S']).map(
-                    (d, i) => (
-                      <div key={i} className="text-center text-[10px] font-mono uppercase text-slate-600 pb-1">
-                        {d}
-                      </div>
-                    ),
-                  )}
-                  {Array.from({ length: calendarFirstWeekday }).map((_, i) => (
-                    <div key={`blank-${i}`} />
-                  ))}
-                  {Array.from({ length: calendarDaysInMonth }).map((_, i) => {
-                    const day = i + 1
-                    const pnl = DEMO_CALENDAR_PNL[day]
-                    const isProfit = pnl !== undefined && pnl > 0
-                    const isLoss = pnl !== undefined && pnl < 0
-                    return (
-                      <div
-                        key={day}
-                        className={cn(
-                          'aspect-square rounded-lg flex items-center justify-center text-[10px] font-mono tabular-nums',
-                          isProfit && 'bg-emerald-500/15 text-emerald-300',
-                          isLoss && 'bg-rose-500/15 text-rose-300',
-                          pnl === undefined && 'bg-white/[0.02] text-slate-600',
-                        )}
-                      >
-                        {day}
-                      </div>
-                    )
-                  })}
-                </div>
-
-                <div className="flex items-center gap-4 font-mono text-[10px] text-slate-500">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500/50" />
-                    {language === 'en' ? 'Profit day' : 'Ziskový den'}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-rose-500/50" />
-                    {language === 'en' ? 'Loss day' : 'Ztrátový den'}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Features Grid */}
+          {/* Features Grid — explains the product first, before any proof or
+              urgency, so a cold visitor knows what they're even looking at */}
           <div className="pb-24 pt-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -660,6 +507,189 @@ export default function HomePage() {
                 )
               })}
             </div>
+          </div>
+
+          {/* Real proof of Weekly Review — tied explicitly to pillar 03 above
+              instead of a floating unlabeled "audit", and condensed to the
+              two-number hook + one verdict line instead of the full in-app
+              ledger table, so it reads in a few seconds instead of overwhelming
+              a cold visitor with FOMO/revenge/no-SL/oversizing jargon. */}
+          <div className="pb-20">
+            <motion.div
+              className="max-w-3xl mx-auto mb-10 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-amber-400 mb-4">
+                {language === 'en' ? 'From Weekly Review — pillar 03' : 'Z Weekly Review — pilíř 03'}
+              </p>
+              <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
+                {language === 'en' ? 'Real numbers, not testimonials' : 'Reálná čísla, ne recenze'}
+              </h3>
+              <p className="text-slate-400 leading-relaxed">
+                {language === 'en'
+                  ? "This is what Weekly Review's trade breakdown looks like on a real trading week, run through the same scoring MindTrader uses on your account — not a screenshot, not a testimonial."
+                  : 'Takhle vypadá rozbor obchodů z Weekly Review na skutečném obchodním týdnu, spočítaný stejnou logikou, jakou MindTrader používá na tvém účtu — žádný screenshot, žádná recenze.'}
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="max-w-2xl mx-auto mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 sm:p-8">
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <p className="text-xs text-emerald-400/80 mb-1.5">
+                      {language === 'en' ? 'Strategy P&L' : 'P&L strategie'}
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-black text-emerald-400 tabular-nums">
+                      +${taxSheet.strategyPnL.toLocaleString('en-US')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-rose-400/80 mb-1.5">
+                      {language === 'en' ? 'Emotional P&L' : 'P&L emocí'}
+                    </p>
+                    <p className="text-2xl sm:text-3xl font-black text-white tabular-nums">
+                      +${taxSheet.emotionalPnL.toLocaleString('en-US')}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-400 leading-relaxed border-t border-white/5 pt-4">
+                  {taxWorstRow &&
+                    (language === 'en'
+                      ? `${taxWorstRow.label} was the single biggest leak this week — ${money(taxWorstRow.realLoss)} in real losses from ${taxWorstRow.incidents} flagged trade${taxWorstRow.incidents === 1 ? '' : 's'}, on an account that otherwise made $${taxSheet.strategyPnL.toLocaleString('en-US')}.`
+                      : `${taxWorstRow.label} byl tenhle týden největší únik — ${money(taxWorstRow.realLoss)} reálné ztráty z ${taxWorstRow.incidents} problémových obchodů, na účtu, který jinak vydělal $${taxSheet.strategyPnL.toLocaleString('en-US')}.`)}
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              className="max-w-2xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 sm:p-6">
+                <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+                  <span className="text-sm font-bold text-white tracking-tight">
+                    {language === 'en' ? 'Same week, on the calendar' : 'Stejný týden, na kalendáři'}
+                  </span>
+                  <div className="flex items-center gap-4 font-mono text-xs">
+                    <span className="text-emerald-400 font-bold tabular-nums">
+                      +${calendarTotalPnL.toLocaleString('en-US')}
+                    </span>
+                    <span className="text-slate-500 tabular-nums">{calendarWinRate}% {language === 'en' ? 'win' : 'výhry'}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-7 gap-1.5 mb-4">
+                  {(language === 'en' ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['N', 'P', 'Ú', 'S', 'Č', 'P', 'S']).map(
+                    (d, i) => (
+                      <div key={i} className="text-center text-[10px] font-mono uppercase text-slate-600 pb-1">
+                        {d}
+                      </div>
+                    ),
+                  )}
+                  {Array.from({ length: calendarFirstWeekday }).map((_, i) => (
+                    <div key={`blank-${i}`} />
+                  ))}
+                  {Array.from({ length: calendarDaysInMonth }).map((_, i) => {
+                    const day = i + 1
+                    const pnl = DEMO_CALENDAR_PNL[day]
+                    const isProfit = pnl !== undefined && pnl > 0
+                    const isLoss = pnl !== undefined && pnl < 0
+                    return (
+                      <div
+                        key={day}
+                        className={cn(
+                          'aspect-square rounded-lg flex items-center justify-center text-[10px] font-mono tabular-nums',
+                          isProfit && 'bg-emerald-500/15 text-emerald-300',
+                          isLoss && 'bg-rose-500/15 text-rose-300',
+                          pnl === undefined && 'bg-white/[0.02] text-slate-600',
+                        )}
+                      >
+                        {day}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div className="flex items-center gap-4 font-mono text-[10px] text-slate-500">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500/50" />
+                    {language === 'en' ? 'Profit day' : 'Ziskový den'}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500/50" />
+                    {language === 'en' ? 'Loss day' : 'Ztrátový den'}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Beta sponsorship — last urgency push right before the CTA. Honest
+              real cap (30) and a real live count of paid accounts against it,
+              no fabricated countdown. */}
+          <div className="pb-16">
+            <motion.div
+              className="max-w-4xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="relative rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/[0.06] via-slate-950 to-slate-950 p-6 sm:p-10 text-center overflow-hidden">
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(239,68,68,0.12),transparent_60%)]"
+                />
+                <div className="relative">
+                  <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10">
+                    <Sparkles className="w-3.5 h-3.5 text-red-400" />
+                    <span className="text-xs font-mono uppercase tracking-[0.2em] text-red-300">
+                      {language === 'en' ? 'Beta sponsorship' : 'Beta sponzoring'}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-black text-white mb-3">
+                    {language === 'en'
+                      ? 'Opening the first 30 founding-member slots'
+                      : 'Otevíráme prvních 30 slotů pro zakládající členy'}
+                  </h3>
+                  <p className="text-slate-400 max-w-xl mx-auto mb-6 leading-relaxed">
+                    {language === 'en'
+                      ? "MindTrader is in presale. Founding members keep presale pricing for life and help shape what we build next — once all 30 spots are gone, that pricing is gone for good."
+                      : 'MindTrader je v předprodeji. Zakládající členové mají doživotně předprodejní cenu a přímo ovlivňují, co stavíme dál — jakmile je všech 30 míst pryč, ta cena už se nevrátí.'}
+                  </p>
+                  <div className="max-w-xs mx-auto">
+                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden mb-2">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-500 transition-all duration-700"
+                        style={{
+                          width: presaleStats
+                            ? `${Math.max(4, (presaleStats.claimed / presaleStats.total) * 100)}%`
+                            : '4%',
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between font-mono text-[11px] text-slate-500">
+                      <span>
+                        {presaleStats ? presaleStats.claimed : '···'} {language === 'en' ? 'claimed' : 'obsazeno'}
+                      </span>
+                      <span>{presaleStats ? presaleStats.total : 30} {language === 'en' ? 'total spots' : 'míst celkem'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
 
           {/* Final CTA */}
