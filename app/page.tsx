@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { ArrowRight, Zap, Brain, TrendingUp, Users, Shield, Clock, Target, Play, Sparkles } from 'lucide-react'
+import { ArrowRight, Play, Sparkles } from 'lucide-react'
 import { buildEmotionalTaxSheet } from '@/lib/emotional-tax'
 import DisciplineMatrix from '@/components/discipline-matrix'
 import DayDetailPanel from '@/components/day-detail-panel'
@@ -326,190 +326,11 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          {/* Features Grid — explains the product first, before any proof or
-              urgency, so a cold visitor knows what they're even looking at */}
-          <div className="pb-24 pt-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="mb-20 max-w-3xl"
-            >
-              <div className="inline-flex items-center gap-2 mb-5 px-3 py-1 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/5">
-                <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse" />
-                <span className="text-xs font-mono uppercase tracking-[0.2em] text-fuchsia-400">
-                  {language === 'en' ? 'Built for traders' : 'Stvořené pro tradery'}
-                </span>
-              </div>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-5 leading-[1.05] text-balance">
-                {language === 'en' ? (
-                  <>
-                    Everything you need to{' '}
-                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">trade better</span>
-                  </>
-                ) : (
-                  <>
-                    Vše co potřebuješ k{' '}
-                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">lepšímu obchodování</span>
-                  </>
-                )}
-              </h2>
-              <p className="text-lg text-slate-400 leading-relaxed text-pretty">
-                {language === 'en'
-                  ? 'Four pillars working together to rewire your trading mindset and hold you accountable every single day.'
-                  : 'Čtyři pilíře, které spolupracují na přenastavení tvého obchodního mindsetu a drží tě v disciplíně každý den.'}
-              </p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10">
-              {[
-                {
-                  icon: Brain,
-                  number: '01',
-                  tag: language === 'en' ? 'Morning routine' : 'Ranní rutina',
-                  metric: language === 'en' ? '2 min / day' : '2 min / den',
-                  metricIcon: Clock,
-                  title: language === 'en' ? 'Daily Tracker' : 'Denní Sledování',
-                  description: language === 'en'
-                    ? 'Track your psychology each morning and understand your trading patterns before the market opens.'
-                    : 'Sleduj svou psychiku každé ráno a pochop své vzorce dřív, než otevře trh.',
-                  bullets: language === 'en'
-                    ? ['Mood & energy check-in', 'Pattern detection over time', 'Smart pre-market warnings']
-                    : ['Check-in nálady a energie', 'Detekce vzorců v čase', 'Chytrá varování před trhem'],
-                  accent: {
-                    icon: 'text-blue-400',
-                    iconHover: 'group-hover:border-blue-500/40 group-hover:text-blue-500',
-                    number: 'group-hover:text-blue-500/60',
-                    bulletBg: 'bg-blue-500/10 border-blue-500/30',
-                    bulletIcon: 'text-blue-400',
-                    metricIcon: 'text-blue-400',
-                    underline: 'from-blue-500 to-cyan-500',
-                  },
-                },
-                {
-                  icon: Zap,
-                  number: '02',
-                  tag: language === 'en' ? 'Live protection' : 'Live ochrana',
-                  metric: language === 'en' ? 'Real-time' : 'V reálném čase',
-                  metricIcon: Shield,
-                  title: language === 'en' ? 'AI Coach' : 'AI Kouč',
-                  description: language === 'en'
-                    ? 'Real-time AI stops emotional mistakes before they cost you the account.'
-                    : 'AI v reálném čase zastaví emoční chyby dřív, než tě připraví o účet.',
-                  bullets: language === 'en'
-                    ? ['FOMO & revenge trade alerts', 'Instant intervention prompts', 'Trained on 10k+ trader journals']
-                    : ['Upozornění na FOMO a revenge trade', 'Okamžité intervenční hlášky', 'Trénováno na 10k+ denících traderů'],
-                  accent: {
-                    icon: 'text-rose-400',
-                    iconHover: 'group-hover:border-rose-500/40 group-hover:text-rose-500',
-                    number: 'group-hover:text-rose-500/60',
-                    bulletBg: 'bg-rose-500/10 border-rose-500/30',
-                    bulletIcon: 'text-rose-400',
-                    metricIcon: 'text-rose-400',
-                    underline: 'from-rose-500 to-red-500',
-                  },
-                },
-                {
-                  icon: TrendingUp,
-                  number: '03',
-                  tag: language === 'en' ? 'Friday ritual' : 'Páteční rituál',
-                  metric: language === 'en' ? 'Weekly insights' : 'Týdenní přehled',
-                  metricIcon: Target,
-                  title: language === 'en' ? 'Weekly Review' : 'Týdenní Přezkum',
-                  description: language === 'en'
-                    ? 'Every Friday: analyze losses, extract lessons and plan a sharper next week.'
-                    : 'Každý pátek: analyzuj ztráty, vytěž lekce a naplánuj ostřejší týden.',
-                  bullets: language === 'en'
-                    ? ['Automated trade breakdowns', 'Mistake-pattern heatmap', 'Actionable weekly goals']
-                    : ['Automatický rozbor obchodů', 'Heatmapa chybových vzorců', 'Konkrétní týdenní cíle'],
-                  accent: {
-                    icon: 'text-amber-400',
-                    iconHover: 'group-hover:border-amber-500/40 group-hover:text-amber-500',
-                    number: 'group-hover:text-amber-500/60',
-                    bulletBg: 'bg-amber-500/10 border-amber-500/30',
-                    bulletIcon: 'text-amber-400',
-                    metricIcon: 'text-amber-400',
-                    underline: 'from-amber-500 to-orange-500',
-                  },
-                },
-                {
-                  icon: Users,
-                  number: '04',
-                  tag: language === 'en' ? 'Accountability' : 'Zodpovědnost',
-                  metric: language === 'en' ? 'Invite-only community' : 'Komunita pouze na pozvání',
-                  metricIcon: Users,
-                  title: language === 'en' ? 'Team Club' : 'Tým Klub',
-                  description: language === 'en'
-                    ? 'Join a private community of serious traders and stay accountable when it matters most.'
-                    : 'Připoj se do soukromé komunity vážných traderů a zůstaň zodpovědný, když na tom záleží.',
-                  bullets: [] as string[],
-                  accent: {
-                    icon: 'text-emerald-400',
-                    iconHover: 'group-hover:border-emerald-500/40 group-hover:text-emerald-500',
-                    number: 'group-hover:text-emerald-500/60',
-                    bulletBg: 'bg-emerald-500/10 border-emerald-500/30',
-                    bulletIcon: 'text-emerald-400',
-                    metricIcon: 'text-emerald-400',
-                    underline: 'from-emerald-500 to-teal-500',
-                  },
-                },
-              ].map((feature, i) => {
-                const Icon = feature.icon
-                const accent = feature.accent
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: i * 0.08 }}
-                    className="relative p-8 sm:p-10 bg-slate-950"
-                  >
-                    <div className="flex items-center justify-between mb-6">
-                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg border border-white/10 bg-white/5 ${accent.icon}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <span className="font-mono text-xs tracking-widest text-slate-700">
-                        {feature.number}
-                      </span>
-                    </div>
-
-                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-2.5 tracking-tight">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm text-slate-400 leading-relaxed max-w-md mb-6">
-                      {feature.description}
-                    </p>
-
-                    {feature.bullets.length > 0 && (
-                      <ul className="space-y-2 mb-6">
-                        {feature.bullets.map((bullet, bi) => (
-                          <li key={bi} className="flex items-center gap-2.5 text-sm text-slate-300">
-                            <span className={`w-1 h-1 rounded-full flex-shrink-0 ${accent.bulletIcon}`} />
-                            <span>{bullet}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    <div className="flex items-center gap-2 pt-4 border-t border-white/5">
-                      <span className="font-mono text-[11px] uppercase tracking-widest text-slate-600">
-                        {feature.metric}
-                      </span>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Real proof of Weekly Review — tied explicitly to pillar 03 above
-              instead of a floating unlabeled "audit", and condensed to the
-              two-number hook + one verdict line instead of the full in-app
-              ledger table, so it reads in a few seconds instead of overwhelming
-              a cold visitor with FOMO/revenge/no-SL/oversizing jargon. */}
-          <div className="pb-20">
+          {/* Real proof of Weekly Review — condensed to the two-number hook
+              + one verdict line instead of the full in-app ledger table, so
+              it reads in a few seconds instead of overwhelming a cold
+              visitor with FOMO/revenge/no-SL/oversizing jargon. */}
+          <div className="pb-20 pt-4">
             <motion.div
               className="max-w-3xl mx-auto mb-10 text-center"
               initial={{ opacity: 0, y: 20 }}
@@ -518,7 +339,7 @@ export default function HomePage() {
               transition={{ duration: 0.6 }}
             >
               <p className="font-mono text-xs uppercase tracking-[0.25em] text-amber-400 mb-4">
-                {language === 'en' ? 'From Weekly Review — pillar 03' : 'Z Weekly Review — pilíř 03'}
+                {language === 'en' ? 'From Weekly Review' : 'Z Weekly Review'}
               </p>
               <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
                 {language === 'en' ? 'Real numbers, not testimonials' : 'Reálná čísla, ne recenze'}
