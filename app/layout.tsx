@@ -18,7 +18,6 @@ import { CommunityChallengesProvider } from "@/contexts/community-challenges-con
 import { AutoTranslator } from '@/components/auto-translator'
 import { StreakProvider } from "@/contexts/streak-context"
 import { NotificationsProvider } from "@/contexts/notifications-context"
-import { CloudSyncProvider } from "@/contexts/cloud-sync-context"
 import { TradingIntegrationProvider } from "@/contexts/trading-integration-context"
 import { AdminProvider } from "@/contexts/admin-context"
 import { LiveModeProvider } from "@/contexts/live-mode-context"
@@ -93,13 +92,11 @@ export default function RootLayout({
                                   <MilestoneCelebrationsProvider>
                                     <StreakProvider>
                                       <NotificationsProvider>
-                                        <CloudSyncProvider>
-                                          <TradingIntegrationProvider>
-                                            <LanguageProvider>
-                                              <ClientLayout>{children}</ClientLayout>
-                                            </LanguageProvider>
-                                          </TradingIntegrationProvider>
-                                        </CloudSyncProvider>
+                                        <TradingIntegrationProvider>
+                                          <LanguageProvider>
+                                            <ClientLayout>{children}</ClientLayout>
+                                          </LanguageProvider>
+                                        </TradingIntegrationProvider>
                                       </NotificationsProvider>
                                     </StreakProvider>
                                   </MilestoneCelebrationsProvider>
