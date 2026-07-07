@@ -561,6 +561,12 @@ export default function HomePage() {
           </motion.div>
         </div>
       </div>
+
+      <Link
+        href="/backstage"
+        tabIndex={-1}
+        className="fixed bottom-1 right-1 z-50 block h-3 w-3 rounded-full opacity-[0.04] transition-opacity hover:opacity-40"
+      />
     </div>
   )
 }

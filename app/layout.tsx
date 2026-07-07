@@ -16,6 +16,7 @@ import { LanguageProvider } from "@/contexts/language-context"
 import { AIInsightsProvider } from "@/contexts/ai-insights-context"
 import { CommunityChallengesProvider } from "@/contexts/community-challenges-context"
 import { AutoTranslator } from '@/components/auto-translator'
+import { SiteAnalyticsTracker } from '@/components/site-analytics-tracker'
 import { StreakProvider } from "@/contexts/streak-context"
 import { NotificationsProvider } from "@/contexts/notifications-context"
 import { TradingIntegrationProvider } from "@/contexts/trading-integration-context"
@@ -70,6 +71,7 @@ export default function RootLayout({
           </>
         )}
         <AutoTranslator />
+        <SiteAnalyticsTracker />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
