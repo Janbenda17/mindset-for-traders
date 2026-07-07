@@ -3,6 +3,11 @@
 import { createClient } from '@supabase/supabase-js'
 import { metaApiClient } from '@/lib/integrations/metaapi'
 
+// Broker logins can take 10-40s to go CONNECTED on MetaApi's side. Give this
+// action enough runway to save the account before the platform's default
+// serverless timeout would otherwise kill the request mid-flight.
+export const maxDuration = 60
+
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 
 function getSupabase() {
@@ -101,11 +106,9 @@ export async function connectMetaApi(
     }
 
     let accountId: string
-    let connected: boolean
     try {
       const result = await metaApiClient.authenticateWithCredentials(credentials)
       accountId = result.accountId
-      connected = result.connected
     } catch (authErr) {
       console.error('[v0] MetaApi authentication failed:', authErr)
       return {
@@ -114,6 +117,13 @@ export async function connectMetaApi(
       }
     }
 
+    // Persist the account right away, before waiting on the broker login to
+    // finish. The account is already created and deploying on MetaApi's side
+    // at this point - if we waited to save until after a full CONNECTED
+    // check and the request got cut off (slow broker login, function
+    // timeout), the credentials the user just entered would be lost and
+    // they'd have to reconnect from scratch even though a MetaApi account
+    // was already spun up for them.
     const { error } = await getSupabase()
       .from('profiles')
       .update({
@@ -127,6 +137,17 @@ export async function connectMetaApi(
     if (error) {
       console.error('[v0] Error saving MetaApi account:', error)
       return { success: false, error: error.message || 'Failed to save MetaApi connection' }
+    }
+
+    // Best-effort short wait just to tell the user whether the broker login
+    // already finished. Its outcome doesn't affect what's saved above - the
+    // background sync job will pick up the connection once it goes CONNECTED
+    // even if this wait times out first.
+    let connected = false
+    try {
+      connected = await metaApiClient.waitUntilConnected(accountId, 20000, 2000)
+    } catch (waitErr) {
+      console.warn('[v0] MetaApi account saved but broker login check failed:', waitErr)
     }
 
     console.log('[v0] MetaApi connected successfully with account:', accountId, 'connected:', connected)

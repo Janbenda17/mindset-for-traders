@@ -77,13 +77,20 @@ export class MetaApiClient {
    * step this app has no way to perform, so creating one here just produced
    * an inactive profile and every account creation failed with "You can
    * create accounts using active profiles only."
+   *
+   * Deliberately does NOT wait for connectionStatus === CONNECTED - that can
+   * take 10-40s on a first connect, well past the timeout most serverless
+   * platforms give a single request. The caller is expected to persist the
+   * returned accountId right away and poll/verify the CONNECTED status
+   * separately (see waitUntilConnected), so a slow or killed request can't
+   * lose the account credentials the user just entered.
    */
   async authenticateWithCredentials(credentials: {
     login: string
     password: string
     broker: string
     platform?: 'mt4' | 'mt5'
-  }): Promise<{ accountId: string; connected: boolean }> {
+  }): Promise<{ accountId: string }> {
     if (!this.apiKey) {
       throw new Error('MetaApi is not configured on the server (missing METAAPI_API_KEY).')
     }
@@ -127,19 +134,10 @@ export class MetaApiClient {
       // UNDEPLOYED and never runs until explicitly deployed. Without this,
       // the account object exists but no terminal is ever started, so it
       // never actually logs into the broker and connectionStatus stays
-      // DISCONNECTED forever - the previous code returned right after
-      // creation and the UI reported "Connected!" even though nothing was
-      // ever deployed.
+      // DISCONNECTED forever.
       await this.deployAccount(accountId)
-      const connected = await this.waitUntilConnected(accountId)
-      if (!connected) {
-        console.warn(
-          '[v0] MetaApi account deployed but not yet CONNECTED after wait window:',
-          accountId,
-        )
-      }
 
-      return { accountId, connected }
+      return { accountId }
     } catch (error) {
       console.error('[v0] MetaApi authentication with credentials failed:', error)
       throw error instanceof Error

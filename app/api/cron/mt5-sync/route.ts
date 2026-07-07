@@ -4,9 +4,17 @@ import { metaApiClient } from '@/lib/integrations/metaapi'
 
 /**
  * GET /api/cron/mt5-sync
- * Vercel Cron Job - runs every 30 seconds
- * Syncs live MT5 trades and account data for all connected users
+ * Vercel Cron Job - runs every minute (Vercel Cron's finest granularity;
+ * true 30s scheduling isn't available on the platform).
+ * Syncs live MT5 trades and account data for all connected users.
+ *
+ * This previously lived at the repo-root `api/cron/mt5-sync.ts`, which is
+ * NOT a route the Next.js App Router serves (only files under `app/api/**`
+ * are), so this job never actually ran in production - connected accounts
+ * never got their trades/balance synced after the initial connect.
  */
+export const maxDuration = 60
+
 export async function GET(request: NextRequest) {
   // Verify cron secret
   const cronSecret = request.headers.get('authorization')
@@ -154,7 +162,7 @@ export async function GET(request: NextRequest) {
           .update({
             last_trades_sync: new Date().toISOString(),
           })
-          .eq('id', userId)
+          .eq('user_id', userId)
 
         syncedCount++
         console.log(
