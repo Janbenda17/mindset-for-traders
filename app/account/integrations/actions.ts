@@ -3,11 +3,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { metaApiClient } from '@/lib/integrations/metaapi'
 
-// Broker logins can take 10-40s to go CONNECTED on MetaApi's side. Give this
-// action enough runway to save the account before the platform's default
-// serverless timeout would otherwise kill the request mid-flight.
-export const maxDuration = 60
-
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 
 function getSupabase() {
@@ -142,10 +137,14 @@ export async function connectMetaApi(
     // Best-effort short wait just to tell the user whether the broker login
     // already finished. Its outcome doesn't affect what's saved above - the
     // background sync job will pick up the connection once it goes CONNECTED
-    // even if this wait times out first.
+    // even if this wait times out first. Kept short (well under Vercel's
+    // default 10s serverless timeout on the Hobby plan) since this file
+    // can't export maxDuration - Next.js only allows async function exports
+    // from a 'use server' file, so there's no way to extend this action's
+    // own time budget.
     let connected = false
     try {
-      connected = await metaApiClient.waitUntilConnected(accountId, 20000, 2000)
+      connected = await metaApiClient.waitUntilConnected(accountId, 6000, 2000)
     } catch (waitErr) {
       console.warn('[v0] MetaApi account saved but broker login check failed:', waitErr)
     }
