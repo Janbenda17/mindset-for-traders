@@ -54,6 +54,7 @@ import {
   ArrowRight,
   Target,
   Plug,
+  Compass,
 } from "lucide-react"
 import {
   getUserData,
@@ -1235,6 +1236,33 @@ export default function AccountPage() {
               {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               {language === "cs" ? "Uložit profil" : "Save Profile"}
             </Button>
+
+            <Card className="bg-slate-900/50 border-slate-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Compass className="w-5 h-5" />
+                  {language === "cs" ? "Úvodní prohlídka aplikace" : "App product tour"}
+                </CardTitle>
+                <CardDescription>
+                  {language === "cs"
+                    ? "Znovu si projdi rychlý přehled hlavních funkcí MindTrader."
+                    : "Replay the quick walkthrough of MindTrader's main features."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="outline"
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                  onClick={() => {
+                    localStorage.setItem("mindtrader-show-tour", "true")
+                    router.push("/daily-tracker")
+                  }}
+                >
+                  <Compass className="w-4 h-4 mr-2" />
+                  {language === "cs" ? "Spustit prohlídku znovu" : "Replay tour"}
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* NOTIFICATIONS TAB */}
