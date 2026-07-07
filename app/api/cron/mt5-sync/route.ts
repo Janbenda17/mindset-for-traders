@@ -4,8 +4,9 @@ import { metaApiClient } from '@/lib/integrations/metaapi'
 
 /**
  * GET /api/cron/mt5-sync
- * Vercel Cron Job - runs every minute (Vercel Cron's finest granularity;
- * true 30s scheduling isn't available on the platform).
+ * Vercel Cron Job - runs once a day. Vercel's Hobby plan rejects any cron
+ * schedule that would fire more than once per day, so sub-daily scheduling
+ * (e.g. every minute) isn't available unless the project is on a paid plan.
  * Syncs live MT5 trades and account data for all connected users.
  *
  * This previously lived at the repo-root `api/cron/mt5-sync.ts`, which is

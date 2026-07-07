@@ -138,7 +138,7 @@ export default function IntegrationsPage() {
       setMetaApiBroker('')
       setSuccess(
         result.connected
-          ? 'Account connected! Trades will sync every 30 seconds.'
+          ? 'Account connected! Trades will sync automatically once a day.'
           : 'Account created and logging into your broker - this can take a minute on first connect. Trades will start syncing automatically once it finishes.',
       )
       setTimeout(() => setSuccess(''), 8000)
@@ -227,7 +227,7 @@ export default function IntegrationsPage() {
             <div>
               <h2 className="text-xl font-bold text-white">MetaTrader Account</h2>
               <p className="text-sm text-slate-400 mt-0.5">
-                Connect your MT4 or MT5 account to sync trades automatically, in real time, via MetaApi.
+                Connect your MT4 or MT5 account to sync trades automatically via MetaApi.
               </p>
             </div>
           </div>
@@ -245,7 +245,7 @@ export default function IntegrationsPage() {
                       <p className="font-semibold text-white">
                         Connected{connectedBroker ? `: ${connectedBroker}` : ''}
                       </p>
-                      <p className="text-sm text-emerald-300/80">Trades syncing every 30 seconds</p>
+                      <p className="text-sm text-emerald-300/80">Trades sync automatically once a day</p>
                     </div>
                   </div>
                   <Button
