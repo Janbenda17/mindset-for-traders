@@ -36,6 +36,7 @@ export default function BackstagePage() {
   const [range, setRange] = useState('7d')
   const [stats, setStats] = useState<Stats | null>(null)
   const [loadingStats, setLoadingStats] = useState(false)
+  const [statsError, setStatsError] = useState('')
 
   const loadStats = async (selectedRange: string) => {
     setLoadingStats(true)
@@ -48,7 +49,17 @@ export default function BackstagePage() {
       if (res.ok) {
         setStats(await res.json())
         setAuthed(true)
+        setStatsError('')
+        return
       }
+      // Logged in successfully but the stats query itself failed (e.g. the
+      // analytics_pageviews table hasn't been created yet in Supabase) -
+      // surface that instead of silently dropping back to the login form,
+      // which otherwise looks exactly like "nothing happened."
+      const body = await res.json().catch(() => null)
+      setStatsError(body?.error || `Nepodařilo se načíst data (HTTP ${res.status})`)
+    } catch (err) {
+      setStatsError('Nepodařilo se spojit se serverem')
     } finally {
       setLoadingStats(false)
       setChecking(false)
@@ -119,6 +130,11 @@ export default function BackstagePage() {
             className="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50"
           />
           {loginError && <p className="text-sm text-red-400">{loginError}</p>}
+          {statsError && (
+            <p className="text-sm text-amber-400">
+              Heslo bylo v pořádku, ale nepodařilo se načíst data: {statsError}
+            </p>
+          )}
           <button
             type="submit"
             disabled={loggingIn || !password}
