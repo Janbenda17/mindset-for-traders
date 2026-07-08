@@ -565,8 +565,10 @@ export default function HomePage() {
       <Link
         href="/backstage"
         tabIndex={-1}
-        className="fixed bottom-2 right-2 z-50 block h-3 w-3 rounded-full bg-slate-400 opacity-[0.15] transition-opacity hover:opacity-70"
-      />
+        className="group fixed bottom-0 right-0 z-50 flex h-10 w-10 items-end justify-end p-3"
+      >
+        <span className="block h-3 w-3 rounded-full bg-slate-400 opacity-[0.15] transition-opacity group-hover:opacity-70" />
+      </Link>
     </div>
   )
 }
