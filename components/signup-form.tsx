@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
 
 export function SignupForm() {
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", acceptTerms: false, acceptMarketing: false })
+  const [formData, setFormData] = useState({ email: "", password: "", acceptTerms: false, acceptMarketing: false })
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
@@ -28,8 +28,6 @@ export function SignupForm() {
     tagline: isEn ? "Start your journey to success" : "Start your journey to success",
     cardTitle: isEn ? "Create Account" : "Create Account",
     cardDesc: isEn ? "Join thousands of successful traders" : "Join thousands of successful traders",
-    nameLabel: isEn ? "Full Name" : "Full Name",
-    namePlaceholder: isEn ? "John Smith" : "John Smith",
     emailLabel: isEn ? "Email" : "Email",
     emailPlaceholder: isEn ? "your@email.com" : "your@email.com",
     passwordLabel: isEn ? "Password" : "Password",
@@ -51,7 +49,7 @@ export function SignupForm() {
     howItWorks: isEn ? "How does it work?" : "Jak to funguje?",
     howItWorksSub: isEn ? "4 simple steps to better trading" : "4 jednoduché kroky k lepšímu tradingu",
     step1Title: isEn ? "Simple Registration" : "Jednoduchá registrace",
-    step1Desc: isEn ? "Email, password and name. No nonsense. You're in within 30 seconds." : "Email, heslo a jméno. Žádné kraviny. Za 30 sekund jsi uvnitř.",
+    step1Desc: isEn ? "Just email and password. No nonsense. You're in within 30 seconds." : "Jen email a heslo. Žádné kraviny. Za 30 sekund jsi uvnitř.",
     step2Title: isEn ? "Virtual Mode FREE" : "Virtual režim ZDARMA",
     step2Desc: isEn ? "Instant access to the app with demo data. Try all features without risk." : "Okamžitý přístup k aplikaci s demo daty. Vyzkoušej všechny funkce bez rizika.",
     step2Badge: isEn ? "Free forever" : "Navždy zdarma",
@@ -60,7 +58,6 @@ export function SignupForm() {
     step4Title: isEn ? "Track your real trades" : "Trackuj své skutečné obchody",
     step4Desc: isEn ? "In Live mode, log your real trades, get AI analyses and improve." : "V Live režimu zapisuj své reálné obchody, získej AI analýzy a zlepšuj se.",
     // Errors
-    errName: isEn ? "Name is required" : "Jméno je povinné",
     errEmail: isEn ? "Email is required" : "Email je povinný",
     errEmailFormat: isEn ? "Invalid email format" : "Neplatný formát emailu",
     errPassword: isEn ? "Password is required" : "Heslo je povinné",
@@ -81,7 +78,6 @@ export function SignupForm() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
-    if (!formData.name.trim()) newErrors.name = txt.errName
     if (!formData.email.trim()) newErrors.email = txt.errEmail
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = txt.errEmailFormat
     if (!formData.password) newErrors.password = txt.errPassword
@@ -97,7 +93,8 @@ export function SignupForm() {
     setIsLoading(true)
     setErrors({})
     try {
-      const success = await register({ name: formData.name, email: formData.email, password: formData.password })
+      const derivedName = formData.email.split("@")[0] || "Trader"
+      const success = await register({ name: derivedName, email: formData.email, password: formData.password })
       if (!success) { setIsLoading(false); setErrors({ general: txt.errRegFailed }) }
     } catch (error: any) {
       setIsLoading(false)
@@ -155,15 +152,6 @@ export function SignupForm() {
                       <AlertDescription className="text-red-400">{errors.general}</AlertDescription>
                     </Alert>
                   )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm font-medium text-gray-300">{txt.nameLabel}</Label>
-                    <div className="relative group">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
-                      <Input id="name" type="text" placeholder={txt.namePlaceholder} value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} className={`pl-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20 transition-all ${errors.name ? "border-red-500/50" : ""}`} disabled={isLoading} />
-                    </div>
-                    {errors.name && <p className="text-sm text-red-400">{errors.name}</p>}
-                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium text-gray-300">{txt.emailLabel}</Label>
