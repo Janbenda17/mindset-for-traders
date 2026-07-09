@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { ArrowRight, Play, Sparkles } from 'lucide-react'
+import { ArrowRight, Sparkles } from 'lucide-react'
 import EmotionalTaxSheet from '@/components/emotional-tax-sheet'
 import DisciplineMatrix from '@/components/discipline-matrix'
 import DayDetailPanel from '@/components/day-detail-panel'
@@ -293,43 +293,6 @@ export default function HomePage() {
                   <ArrowRight className="w-3.5 h-3.5" />
                   {language === 'en' ? 'Connect' : 'Připojit'}
                 </Link>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Product demo video — front and center right after the hero, this is the
-              first real proof of the product a new visitor sees */}
-          <div className="pt-8 pb-12 sm:pt-10 sm:pb-16">
-            <motion.div
-              className="max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7 }}
-            >
-              <p className="text-center font-mono text-xs uppercase tracking-[0.25em] text-fuchsia-400 mb-4">
-                {language === 'en' ? 'See it in action' : 'Podívej se, jak to funguje'}
-              </p>
-              <div className="relative aspect-video rounded-2xl border border-fuchsia-500/25 bg-gradient-to-br from-fuchsia-500/[0.08] via-slate-950 to-purple-600/[0.08] p-[1px] shadow-[0_0_60px_-15px_rgba(217,70,239,0.35)]">
-                <div className="relative w-full h-full rounded-2xl bg-slate-950/80 backdrop-blur-sm overflow-hidden flex items-center justify-center group/video">
-                  <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(217,70,239,0.18),transparent_65%)]"
-                  />
-                  <div className="relative flex flex-col items-center gap-4 px-6 text-center">
-                    <div className="flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/15 bg-white/5 group-hover/video:border-fuchsia-500/40 group-hover/video:bg-fuchsia-500/10 transition-colors shadow-lg shadow-black/40">
-                      <Play className="w-7 h-7 sm:w-8 sm:h-8 text-slate-300 group-hover/video:text-fuchsia-400 transition-colors fill-current" />
-                    </div>
-                    <div>
-                      <p className="text-lg sm:text-xl font-bold text-white mb-1">
-                        {language === 'en' ? '2-minute walkthrough' : '2minutová ukázka'}
-                      </p>
-                      <p className="font-mono text-xs uppercase tracking-[0.2em] text-slate-500">
-                        {language === 'en' ? 'Coming very soon' : 'Už brzy'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
             </motion.div>
           </div>
