@@ -30,7 +30,10 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "MindTrader AI - Trading Psychology Platform",
   description: "Advanced trading psychology and performance tracking platform",
-    generator: 'v0.app'
+    generator: 'v0.app',
+  other: {
+    "trustpilot-one-time-domain-verification-id": "084c5f53-f122-48f8-83cc-3c63964e54a5",
+  },
 }
 
 export const viewport: Viewport = {
