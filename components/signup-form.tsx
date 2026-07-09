@@ -1,14 +1,14 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, EyeOff, Mail, Lock, Brain } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, Brain, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
@@ -18,11 +18,31 @@ export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
+  const [presaleStats, setPresaleStats] = useState<{ total: number; claimed: number } | null>(null)
   const { register } = useAuth()
   const { language } = useLanguage()
   const isEn = language === "en"
 
+  // Same real presale-slot count the homepage shows - no fabricated
+  // countdown, just the actual number of claimed founding-member spots.
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/presale-stats')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setPresaleStats(data)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const txt = {
+    presaleBadge: isEn ? "Presale" : "Předprodej",
+    presaleTitle: isEn ? "First 30 founding members keep this pricing for life" : "Prvních 30 zakládajících členů má tuhle cenu doživotně",
+    presaleClaimed: isEn ? "claimed" : "obsazeno",
+    presaleTotal: isEn ? "total spots" : "míst celkem",
     cardTitle: isEn ? "Create your account" : "Vytvořit účet",
     cardDesc: isEn ? "Just email and password - takes 30 seconds" : "Jen email a heslo - zabere to 30 sekund",
     emailLabel: isEn ? "Email" : "Email",
@@ -99,6 +119,26 @@ export function SignupForm() {
             <Brain className="w-6 h-6 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">MindTrader</h1>
+        </div>
+
+        <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/[0.04] p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-red-300">{txt.presaleBadge}</span>
+          </div>
+          <p className="text-sm text-slate-300 leading-snug mb-3">{txt.presaleTitle}</p>
+          <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden mb-1.5">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-500 transition-all duration-700"
+              style={{
+                width: presaleStats ? `${Math.max(4, (presaleStats.claimed / presaleStats.total) * 100)}%` : '4%',
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between font-mono text-[11px] text-slate-500">
+            <span>{presaleStats ? presaleStats.claimed : '···'} {txt.presaleClaimed}</span>
+            <span>{presaleStats ? presaleStats.total : 30} {txt.presaleTotal}</span>
+          </div>
         </div>
 
         <Card className="border-slate-800 bg-slate-900/60">
