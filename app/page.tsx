@@ -250,25 +250,24 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          {/* Broker + Wealth data connect teaser — a roadmap note, sits right above the
-              video as a quick "what's coming" line before the main demo hook */}
-          <div className="pt-8 sm:pt-10">
+          {/* Broker connect teaser — small, just logo + label + CTA */}
+          <div className="pt-6 sm:pt-8">
             <motion.div
-              className="max-w-4xl mx-auto"
+              className="max-w-md mx-auto"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-                <div className="flex items-center gap-4">
+              <div className="relative rounded-full border border-white/10 bg-white/[0.03] pl-3 pr-1.5 py-1.5 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
                   <div
-                    className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl border border-white/15 overflow-hidden flex-shrink-0"
+                    className="relative flex items-center justify-center w-7 h-7 rounded-lg border border-white/15 overflow-hidden flex-shrink-0"
                     style={{ background: 'linear-gradient(135deg, #0d2b4e 0%, #0a1f3a 100%)' }}
                     aria-label="MetaTrader 5"
                     title="MetaTrader 5"
                   >
-                    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className="w-7 h-7 sm:w-8 sm:h-8">
+                    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className="w-5 h-5">
                       <rect x="10" y="14" width="5" height="18" rx="1" fill="#e53935" />
                       <line x1="12.5" y1="10" x2="12.5" y2="36" stroke="#e53935" strokeWidth="1.3" />
                       <rect x="19" y="18" width="5" height="16" rx="1" fill="#43a047" />
@@ -276,21 +275,16 @@ export default function HomePage() {
                       <text x="36" y="32" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontWeight="900" fontSize="20" fill="#ffffff">5</text>
                     </svg>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">
-                      {language === 'en' ? 'Coming soon' : 'Už brzy'}
-                    </span>
-                    <span className="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">
-                      {language === 'en' ? 'Broker + Wealth data connect' : 'Broker + Wealth data connect'}
-                    </span>
-                  </div>
+                  <span className="text-sm font-semibold tracking-tight text-white">
+                    {language === 'en' ? 'Broker' : 'Broker'}
+                  </span>
                 </div>
 
                 <Link
                   href={user ? '/account/integrations' : '/signup'}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/15 bg-white/5 font-mono text-xs uppercase tracking-[0.2em] text-slate-300 hover:border-fuchsia-500/40 hover:text-fuchsia-300 transition-all flex-shrink-0"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 font-mono text-[11px] uppercase tracking-[0.15em] text-slate-300 hover:border-fuchsia-500/40 hover:text-fuchsia-300 transition-all flex-shrink-0"
                 >
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3 h-3" />
                   {language === 'en' ? 'Connect' : 'Připojit'}
                 </Link>
               </div>
