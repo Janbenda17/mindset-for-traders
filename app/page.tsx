@@ -198,21 +198,21 @@ export default function HomePage() {
               <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[1.05] mb-6 text-white text-balance">
                 {language === 'en' ? (
                   <>
-                    93% of traders don't fail because of bad strategy - they fail because of{' '}
-                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">psychology</span>
+                    Your brain becomes your{' '}
+                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">biggest advantage</span>
                   </>
                 ) : (
                   <>
-                    93 % traderů nezkrachuje kvůli špatné strategii, ale kvůli{' '}
-                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">psychice</span>
+                    Tvůj mozek se stane tvojí{' '}
+                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">největší výhodou</span>
                   </>
                 )}
               </h1>
 
               <p className="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed text-pretty font-medium">
                 {language === 'en'
-                  ? 'MindTrader.ai catches your emotional mistakes before they wipe out another account.'
-                  : 'MindTrader.ai odhalí tvoje emoční chyby dřív, než ti smažou další účet.'}
+                  ? '93% of traders fail because of psychology, not strategy.'
+                  : '93% obchodníků padne kvůli psychice, ne kvůli strategii.'}
               </p>
 
               {/* Stats */}
@@ -247,50 +247,6 @@ export default function HomePage() {
                   </div>
                 </div>
               </motion.div>
-            </motion.div>
-          </div>
-
-          {/* Pain agitation - short, blunt lines a trader recognizes
-              themselves in immediately, right before the product reveal */}
-          <div className="pb-16 sm:pb-20">
-            <motion.div
-              className="max-w-2xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <h2 className="text-3xl sm:text-4xl font-black text-white text-center mb-10">
-                {language === 'en' ? 'Why is your trading stagnating?' : 'Proč tvůj trading stagnuje?'}
-              </h2>
-              <div className="space-y-4 mb-8">
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
-                  <p className="text-lg sm:text-xl text-slate-200 leading-snug">
-                    {language === 'en'
-                      ? "Know that feeling when you break your own rules, then watch the market go exactly your direction - without you?"
-                      : 'Znáš ten pocit, když porušíš vlastní pravidla a pak sleduješ, jak trh jde přesně tvým směrem - ale bez tebe?'}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
-                  <p className="text-lg sm:text-xl text-slate-200 leading-snug">
-                    {language === 'en'
-                      ? 'How many revenge trades did you make this month just to chase back a previous loss?'
-                      : 'Kolikrát jsi tento měsíc udělal revenge trade jen proto, abys dohnal předchozí ztrátu?'}
-                  </p>
-                </div>
-              </div>
-              <p className="text-center text-2xl sm:text-3xl font-black text-white text-balance">
-                {language === 'en' ? (
-                  <>
-                    Your system works. Your{' '}
-                    <span className="text-fuchsia-400">head</span> doesn't.
-                  </>
-                ) : (
-                  <>
-                    Tvůj systém funguje. Tvoje <span className="text-fuchsia-400">hlava</span> ne.
-                  </>
-                )}
-              </p>
             </motion.div>
           </div>
 
