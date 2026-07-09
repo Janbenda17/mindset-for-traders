@@ -198,21 +198,21 @@ export default function HomePage() {
               <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[1.05] mb-6 text-white text-balance">
                 {language === 'en' ? (
                   <>
-                    Your brain becomes your{' '}
-                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">biggest advantage</span>
+                    93% of traders don't fail because of bad strategy - they fail because of{' '}
+                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">psychology</span>
                   </>
                 ) : (
                   <>
-                    Tvůj mozek se stane tvojí{' '}
-                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">největší výhodou</span>
+                    93 % traderů nezkrachuje kvůli špatné strategii, ale kvůli{' '}
+                    <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">psychice</span>
                   </>
                 )}
               </h1>
 
               <p className="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed text-pretty font-medium">
                 {language === 'en'
-                  ? '93% of traders fail because of psychology, not strategy.'
-                  : '93% obchodníků padne kvůli psychice, ne kvůli strategii.'}
+                  ? 'MindTrader.ai catches your emotional mistakes before they wipe out another account.'
+                  : 'MindTrader.ai odhalí tvoje emoční chyby dřív, než ti smažou další účet.'}
               </p>
 
               {/* Stats */}
@@ -340,22 +340,19 @@ export default function HomePage() {
           <div className="pb-20 pt-4">
             {/* Daily Tracker */}
             <motion.div
-              className="max-w-3xl mx-auto mb-8 text-center"
+              className="max-w-3xl mx-auto mb-6 text-center"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <p className="font-mono text-xs uppercase tracking-[0.25em] text-blue-400 mb-4">
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-blue-400 mb-3">
                 {language === 'en' ? 'From Daily Tracker' : 'Z Daily Trackeru'}
               </p>
-              <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
-                {language === 'en' ? 'Real numbers, not testimonials' : 'Reálná čísla, ne recenze'}
-              </h3>
-              <p className="text-slate-400 leading-relaxed">
+              <p className="text-xl sm:text-2xl font-bold text-white">
                 {language === 'en'
-                  ? 'This is the real Daily Summary card, run through the same engine MindTrader uses on your own trades every morning.'
-                  : 'Tohle je skutečná karta Daily Summary, spočítaná stejným enginem, jaký MindTrader používá na tvých vlastních obchodech každé ráno.'}
+                  ? 'Your real daily summary - computed, not staged.'
+                  : 'Tvůj skutečný denní přehled - spočítaný, ne nafocený.'}
               </p>
             </motion.div>
             <motion.div
@@ -373,22 +370,19 @@ export default function HomePage() {
 
             {/* AI Coach */}
             <motion.div
-              className="max-w-3xl mx-auto mb-8 text-center"
+              className="max-w-3xl mx-auto mb-6 text-center"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <p className="font-mono text-xs uppercase tracking-[0.25em] text-rose-400 mb-4">
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-rose-400 mb-3">
                 {language === 'en' ? 'From AI Coach' : 'Z AI Coache'}
               </p>
-              <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
-                {language === 'en' ? 'Talks you down before you click' : 'Zastaví tě dřív, než klikneš'}
-              </h3>
-              <p className="text-slate-400 leading-relaxed">
+              <p className="text-xl sm:text-2xl font-bold text-white">
                 {language === 'en'
-                  ? 'The same AI Coach panel you get inside the app - trained to intervene on FOMO and revenge trades before they happen.'
-                  : 'Stejný panel AI Coache, jaký dostaneš v appce - natrénovaný zasáhnout proti FOMO a revenge trade dřív, než k nim dojde.'}
+                  ? 'An AI coach that stops you before the mistake happens.'
+                  : 'AI kouč, co tě zastaví dřív, než uděláš chybu.'}
               </p>
             </motion.div>
             <motion.div
@@ -403,22 +397,19 @@ export default function HomePage() {
 
             {/* Journal */}
             <motion.div
-              className="max-w-3xl mx-auto mb-10 text-center"
+              className="max-w-3xl mx-auto mb-6 text-center"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <p className="font-mono text-xs uppercase tracking-[0.25em] text-amber-400 mb-4">
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-amber-400 mb-3">
                 {language === 'en' ? 'From Journal' : 'Z Journalu'}
               </p>
-              <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
-                {language === 'en' ? 'Every trade, scored' : 'Každý obchod, ohodnocený'}
-              </h3>
-              <p className="text-slate-400 leading-relaxed">
+              <p className="text-xl sm:text-2xl font-bold text-white">
                 {language === 'en'
-                  ? "This is what your Journal's trade breakdown looks like on a real trading month, run through the same scoring MindTrader uses on your account — not a screenshot, not a testimonial."
-                  : 'Takhle vypadá rozbor obchodů z Journalu na skutečném obchodním měsíci, spočítaný stejnou logikou, jakou MindTrader používá na tvém účtu — žádný screenshot, žádná recenze.'}
+                  ? 'Every mistake, priced in real money.'
+                  : 'Každá chyba, se svou skutečnou cenou v penězích.'}
               </p>
             </motion.div>
 
