@@ -69,7 +69,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   // cross.
   const openProductsMenu = () => setIsProductsOpen(true)
   const closeProductsMenu = () => setIsProductsOpen(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSwitchingToLive, setIsSwitchingToLive] = useState(false)
 
   const mainNavigation = [
@@ -81,19 +80,22 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     { name: t('nav_bonus'), href: "/bonus", icon: Trophy, badge: t('nav_new') },
   ]
 
+  const { logout, user: authUser } = useAuth()
+  const isAuthenticated = !!authUser
+
+  // Populated straight from the already-resolved AuthProvider session (no
+  // network round trip), so the nav can render real content immediately
+  // instead of blanking out. The richer fields below (avatar, level,
+  // subscription tier) fill in once the profiles-row fetch resolves.
   const [profileData, setProfileData] = useState({
-    name: "",
-    email: "",
+    name: authUser?.name || "",
+    email: authUser?.email || "",
     nickname: "",
     avatarUrl: "",
     experienceLevel: "beginner",
     isPremium: false,
     level: 1,
   })
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false) // Track if we loaded profile once
-
-  const { logout } = useAuth()
 
   const handlePricingClick = () => {
     if (!isAuthenticated) {
@@ -115,71 +117,42 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     }
   }
 
-  const loadProfileData = async () => {
-    if (typeof window === "undefined") return
-
-    if (hasLoadedOnce) return
-
-    setIsLoading(true)
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      console.log("[v0] No authenticated user")
-      setIsLoading(false)
-      setIsAuthenticated(false)
-      setHasLoadedOnce(true)
-      return
-    }
-
-    console.log("[v0] User authenticated:", user.email)
-    setIsAuthenticated(true)
-
-    const { data, error } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle()
-
-    if (error) {
-      console.error("[v0] Profile load error:", error)
-    }
-
-    const profile = data
-
-    if (!profile) {
-      console.log("[v0] No profile found - user needs onboarding")
-      setProfileData({
-        name: "Loading...",
-        email: user.email || "",
-        nickname: "",
-        avatarUrl: "",
-        experienceLevel: "beginner",
-        isPremium: false,
-        level: 1,
-      })
-      setIsLoading(false)
-      setHasLoadedOnce(true)
-      return
-    }
-
-    setProfileData({
-      name: profile.display_name || profile.username || user.email?.split("@")[0] || "Trader",
-      email: user.email || "",
-      nickname: profile.username || "",
-      avatarUrl: profile.avatar_url || "",
-      experienceLevel: profile.experience_level || "beginner",
-      isPremium: profile.subscription_tier === "premium" || profile.subscription_tier === "pro",
-      level: 1,
-    })
-
-    setIsLoading(false)
-    setHasLoadedOnce(true)
-  }
-
+  // Auth state (isAuthenticated) comes straight from AuthProvider - this
+  // effect only fetches the extra profile-row fields (avatar, level,
+  // subscription tier) that aren't already on the auth session, and never
+  // blocks the nav itself from rendering.
   useEffect(() => {
-    loadProfileData()
+    if (!authUser?.id) return
 
-    // Auth state is already managed by AuthProvider
-  }, []) // Only load once on mount
+    let cancelled = false
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", authUser.id)
+      .maybeSingle()
+      .then(({ data: profile, error }) => {
+        if (cancelled) return
+        if (error) {
+          console.error("[v0] Profile load error:", error)
+          return
+        }
+        if (!profile) return
+
+        setProfileData({
+          name: profile.display_name || profile.username || authUser.email?.split("@")[0] || "Trader",
+          email: authUser.email || "",
+          nickname: profile.username || "",
+          avatarUrl: profile.avatar_url || "",
+          experienceLevel: profile.experience_level || "beginner",
+          isPremium: profile.subscription_tier === "premium" || profile.subscription_tier === "pro",
+          level: 1,
+        })
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [authUser?.id, authUser?.email])
 
   const getInitials = (name: string) => {
     if (!name) return "T"
@@ -202,18 +175,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
 
   const handleLogout = () => {
     logout()
-  }
-
-  if (isLoading) {
-    return (
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
-        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-14 md:h-16">
-            <div className="text-gray-400 text-sm">{t('loading')}</div>
-          </div>
-        </div>
-      </nav>
-    )
   }
 
   return (
