@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { ArrowRight, Play, Sparkles, LineChart } from 'lucide-react'
+import { ArrowRight, Play, Sparkles } from 'lucide-react'
 import EmotionalTaxSheet from '@/components/emotional-tax-sheet'
 import DisciplineMatrix from '@/components/discipline-matrix'
 import DayDetailPanel from '@/components/day-detail-panel'
@@ -446,40 +446,6 @@ export default function HomePage() {
                     />
                   </div>
                 )}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Founder story - trust right before the conversion ask. The image
-              slot below is a placeholder ONLY: it's meant for a real
-              screenshot of an actual MT4/MT5 or TradingView account/journal,
-              not a generated chart. Swap the placeholder div for a real
-              <img> once that screenshot exists - a fabricated P&L curve
-              presented as real proof would be actively dishonest, so none
-              is generated here. */}
-          <div className="pb-16 sm:pb-20">
-            <motion.div
-              className="max-w-2xl mx-auto text-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <p className="font-mono text-xs uppercase tracking-[0.25em] text-slate-500 mb-4">
-                {language === 'en' ? 'Built by traders, for traders' : 'Postaveno tradery pro tradery'}
-              </p>
-              <p className="text-xl sm:text-2xl text-slate-300 leading-relaxed font-medium mb-8 text-balance">
-                {language === 'en'
-                  ? "We burned through hundreds of thousands of crowns in the market before it clicked - the problem wasn't in the charts, it was in our psychology. We built MindTrader.ai as an internal tool for our own discipline. Today we're opening it up to the community."
-                  : 'Sami jsme na trhu spálili statisíce korun, než nám došlo, že chyba není v grafech, ale v naší psychice. MindTrader.ai jsme vytvořili jako interní nástroj pro vlastní disciplínu. Dnes ho otevíráme pro komunitu.'}
-              </p>
-              <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] p-8 sm:p-10 flex flex-col items-center gap-3 text-slate-600">
-                <LineChart className="w-8 h-8" />
-                <p className="text-xs font-mono uppercase tracking-[0.15em]">
-                  {language === 'en'
-                    ? 'Real MT4/MT5 or journal screenshot goes here'
-                    : 'Sem patří skutečný screenshot z MT4/MT5 nebo deníku'}
-                </p>
               </div>
             </motion.div>
           </div>
