@@ -55,13 +55,10 @@ const PUBLIC_PATHS = [
   "/risk-calculator",
   "/subscription",
   "/trading-goals",
-  "/trading-identity",
 ]
 
 // Protected paths that require authentication
-const PROTECTED_PATHS = [
-  "/onboarding",
-]
+const PROTECTED_PATHS: string[] = []
 
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl

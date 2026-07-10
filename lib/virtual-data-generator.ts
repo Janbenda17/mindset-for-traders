@@ -3,6 +3,7 @@
 
 export interface VirtualTrade {
   id: string
+  type: "trade"
   date: string
   pair: string
   direction: string
@@ -140,6 +141,7 @@ export function generateVirtualTrades(count = 30): VirtualTrade[] {
 
     trades.push({
       id: `virtual-trade-${i + 1}`,
+      type: "trade",
       date: getRandomDate(count - i - 1),
       pair,
       direction,

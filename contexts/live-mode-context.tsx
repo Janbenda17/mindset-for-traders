@@ -16,7 +16,7 @@ const LiveModeContext = createContext<LiveModeContextType | undefined>(undefined
 
 export function LiveModeProvider({ children }: { children: ReactNode }) {
   const { user, authReady } = useAuth()
-  const { isPremium, isLoading: isSubscriptionLoading } = useSubscription()
+  const { isPremium, isLoading: isSubscriptionLoading, statusConfirmed } = useSubscription()
   const [isLiveMode, setIsLiveMode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [canSwitchMode, setCanSwitchMode] = useState(true)
@@ -61,22 +61,27 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
     loadModeFromDatabase()
   }, [user, authReady])
 
-  // Auto-revert to virtual mode if premium expires
+  // Auto-revert to virtual mode if premium expires.
+  // CRITICAL: only act on a CONFIRMED subscription status. A failed/aborted
+  // /api/subscription/status fetch leaves isPremium=false while isLoading is
+  // also false — indistinguishable from a real free user. Without the
+  // statusConfirmed gate, a single transient API hiccup would flip a paying
+  // user from LIVE to VIRTUAL (and previously force a page reload), which is
+  // exactly the "flickering between live and demo" bug.
   useEffect(() => {
     if (!user || !isLiveMode) return
 
-    // IMPORTANT: Don't revert during subscription loading - wait for subscription status to be confirmed
-    if (isSubscriptionLoading) {
-      console.log(`[v0] [LiveMode] Subscription status still loading - NOT reverting live mode yet`)
+    if (isSubscriptionLoading || !statusConfirmed) {
+      console.log(`[v0] [LiveMode] Subscription not confirmed yet - NOT reverting live mode`)
       return
     }
 
-    // Only revert if subscription is definitely not active (not loading AND not premium)
-    if (!isPremium && isLiveMode) {
-      console.log(`[v0] [LiveMode] ⚠️ Premium expired for user ${user.id} - reverting to VIRTUAL mode`)
+    // Subscription status is confirmed AND the user is genuinely not premium.
+    if (!isPremium) {
+      console.log(`[v0] [LiveMode] ⚠️ Premium confirmed expired for user ${user.id} - reverting to VIRTUAL mode`)
       switchToVirtualForExpiredPremium()
     }
-  }, [isPremium, user?.id, isLiveMode, isSubscriptionLoading])
+  }, [isPremium, user?.id, isLiveMode, isSubscriptionLoading, statusConfirmed])
 
   const loadModeFromDatabase = async () => {
     if (!user) {
@@ -225,11 +230,9 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
       setIsLiveMode(false)
       setCanSwitchMode(true)
       modeLoadedRef.current = true
-
-      // Reload page to refresh data
-      setTimeout(() => {
-        window.location.reload()
-      }, 100)
+      // No page reload: the data-context reacts to the isLiveMode change and
+      // swaps live → virtual data on its own. Reloading here is what made the
+      // revert look like a jarring flicker.
     } catch (err) {
       console.error("[v0] [LiveMode] Exception reverting to virtual:", err)
     }

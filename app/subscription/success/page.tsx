@@ -78,7 +78,7 @@ export default function SubscriptionSuccessPage() {
             <Crown className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
             <h3 className="font-semibold text-yellow-800 mb-1">Premium aktivován!</h3>
             <p className="text-sm text-yellow-700">
-              Váš 7-denní trial začal. Po trialu bude automaticky strženo €59/měsíc.
+              Vaše předplatné je aktivní. Bude automaticky obnovováno za €59/měsíc.
             </p>
           </div>
 

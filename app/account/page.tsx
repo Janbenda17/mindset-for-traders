@@ -49,14 +49,12 @@ import {
   Key,
   CheckCircle,
   Monitor,
-  MapPin,
   Database,
   ExternalLink,
   ArrowRight,
   Target,
-  Phone,
-  Send,
   Plug,
+  Compass,
 } from "lucide-react"
 import {
   getUserData,
@@ -75,6 +73,34 @@ import { useSubscription } from "@/contexts/subscription-context"
 import { useGamification } from "@/contexts/gamification-context"
 import { useLanguage } from "@/contexts/language-context"
 import { useLiveMode } from "@/contexts/live-mode-context"
+
+function describeUserAgent(ua: string): string {
+  const os = /Windows/.test(ua)
+    ? "Windows"
+    : /Mac OS X/.test(ua)
+      ? "macOS"
+      : /Android/.test(ua)
+        ? "Android"
+        : /iPhone|iPad|iPod/.test(ua)
+          ? "iOS"
+          : /Linux/.test(ua)
+            ? "Linux"
+            : "Unknown OS"
+
+  const browser = /Edg\//.test(ua)
+    ? "Edge"
+    : /OPR\//.test(ua)
+      ? "Opera"
+      : /Chrome\//.test(ua)
+        ? "Chrome"
+        : /Firefox\//.test(ua)
+          ? "Firefox"
+          : /Safari\//.test(ua)
+            ? "Safari"
+            : "Unknown browser"
+
+  return `${browser} on ${os}`
+}
 
 export default function AccountPage() {
   console.log("[v0] Account page - rendering...")
@@ -117,13 +143,10 @@ export default function AccountPage() {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   // Trading Settings
-  const [tradingStyle, setTradingStyle] = useState<"scalper" | "day-trader" | "swing-trader">("day-trader")
-  const [riskLevel, setRiskLevel] = useState<"conservative" | "moderate" | "aggressive">("moderate")
   const [timezone, setTimezone] = useState("Europe/Prague")
-  const [experienceLevel, setExperienceLevel] = useState<"beginner" | "intermediate" | "advanced">("intermediate")
-  const [defaultCurrency, setDefaultCurrency] = useState("USD")
 
   // Preferences
   const [soundsEnabled, setSoundsEnabled] = useState(true)
@@ -139,20 +162,25 @@ export default function AccountPage() {
 
   // Security
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
-  const [twoFactorMethod, setTwoFactorMethod] = useState<"email" | "sms">("email")
-  const [twoFactorContact, setTwoFactorContact] = useState("")
   const [sessionTimeout, setSessionTimeout] = useState("30")
   const [loginAlerts, setLoginAlerts] = useState(true)
   const [emailOnNewDevice, setEmailOnNewDevice] = useState(true)
   const [emailOnPasswordChange, setEmailOnPasswordChange] = useState(true)
   const [emailOnSecurityChange, setEmailOnSecurityChange] = useState(true)
 
+  // 2FA (TOTP via Supabase Auth MFA)
   const [show2FADialog, setShow2FADialog] = useState(false)
-  const [twoFactorStep, setTwoFactorStep] = useState<"method" | "contact" | "verify">("method")
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null)
+  const [mfaQrCode, setMfaQrCode] = useState<string | null>(null)
+  const [mfaSecret, setMfaSecret] = useState<string | null>(null)
+  const [mfaEnrolling, setMfaEnrolling] = useState(false)
+  const [mfaVerifying, setMfaVerifying] = useState(false)
+  const [mfaDisabling, setMfaDisabling] = useState(false)
   const [verificationCode, setVerificationCode] = useState("")
-  const [pendingCode, setPendingCode] = useState("")
-  const [sendingCode, setSendingCode] = useState(false)
-  const [showDemoCode, setShowDemoCode] = useState(false)
+
+  // Current session (real device/browser + last sign-in, replaces the old hardcoded row)
+  const [sessionDevice, setSessionDevice] = useState("")
+  const [sessionLastSignIn, setSessionLastSignIn] = useState<string | null>(null)
 
   // Readiness average
   const [averageReadiness, setAverageReadiness] = useState(0)
@@ -195,13 +223,35 @@ export default function AccountPage() {
     }
   }, [isPremium, isLiveMode, switchToLive])
 
+  // Real 2FA status - is there a verified TOTP factor on this Supabase account?
   useEffect(() => {
-    const userData = getUserData()
-    if (userData.settings?.twoFactor) {
-      setTwoFactorEnabled(userData.settings.twoFactor.enabled || false)
-      setTwoFactorMethod(userData.settings.twoFactor.method || "email")
-      setTwoFactorContact(userData.settings.twoFactor.contact || "")
+    const loadMfaStatus = async () => {
+      const { data, error } = await supabase.auth.mfa.listFactors()
+      if (error) {
+        console.error("[v0] Error loading MFA factors:", error)
+        return
+      }
+      const verifiedTotp = data?.totp?.find((f) => f.status === "verified")
+      setTwoFactorEnabled(!!verifiedTotp)
+      setMfaFactorId(verifiedTotp?.id || null)
     }
+    loadMfaStatus()
+  }, [])
+
+  // Real current-session info (device/browser + last sign-in), replacing the
+  // previous hardcoded "Prague, Czech Republic - Now" row.
+  useEffect(() => {
+    if (typeof navigator !== "undefined") {
+      setSessionDevice(describeUserAgent(navigator.userAgent))
+    }
+
+    const loadSession = async () => {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser()
+      setSessionLastSignIn(authUser?.last_sign_in_at || null)
+    }
+    loadSession()
   }, [])
 
   const calculateAverageReadiness = () => {
@@ -361,7 +411,6 @@ export default function AccountPage() {
         nickname,
         bio,
         country,
-        experienceLevel,
         avatarUrl,
         updatedAt: new Date().toISOString(),
       }
@@ -540,15 +589,36 @@ export default function AccountPage() {
     }
   }
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (
-      confirm(
+      !confirm(
         "Are you sure you want to delete your account? This action cannot be undone.",
       )
     ) {
+      return
+    }
+
+    setDeletingAccount(true)
+    try {
+      const response = await fetch("/api/account/delete", { method: "POST" })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || "Failed to delete account")
+      }
+
       clearAllDemoData()
       logout()
       router.push("/")
+    } catch (error: any) {
+      console.error("[v0] Error deleting account:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete account",
+        variant: "destructive",
+      })
+    } finally {
+      setDeletingAccount(false)
     }
   }
 
@@ -752,124 +822,107 @@ export default function AccountPage() {
     }
   }
 
-  const start2FASetup = () => {
-    setTwoFactorStep("method")
-    setTwoFactorContact("")
+  const start2FASetup = async () => {
     setVerificationCode("")
-    setPendingCode("")
-    setShow2FADialog(false)
+    setMfaQrCode(null)
+    setMfaSecret(null)
+    setMfaFactorId(null)
+    setMfaEnrolling(true)
     setShow2FADialog(true)
-  }
 
-  const send2FACode = async () => {
-    if (!twoFactorContact) {
+    try {
+      // Clean up any previously abandoned/unverified enrollment first - Supabase
+      // only allows one unverified TOTP factor per user at a time.
+      const { data: existing } = await supabase.auth.mfa.listFactors()
+      const stale = existing?.all?.find((f) => f.factor_type === "totp" && f.status === "unverified")
+      if (stale) {
+        await supabase.auth.mfa.unenroll({ factorId: stale.id })
+      }
+
+      const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" })
+      if (error) throw error
+
+      setMfaFactorId(data.id)
+      setMfaQrCode(data.totp.qr_code)
+      setMfaSecret(data.totp.secret)
+    } catch (error: any) {
+      console.error("[v0] Error starting 2FA setup:", error)
       toast({
         title: "Error",
-        description: "Enter contact",
+        description: error.message || "Failed to start 2FA setup",
         variant: "destructive",
       })
-      return
+      setShow2FADialog(false)
+    } finally {
+      setMfaEnrolling(false)
     }
-
-    if (twoFactorMethod === "email") {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(twoFactorContact)) {
-        toast({
-          title: "Error",
-          description: "Enter a valid email",
-          variant: "destructive",
-        })
-        return
-      }
-    } else {
-      const phoneRegex = /^[+]?[\d\s-]{9,}$/
-      if (!phoneRegex.test(twoFactorContact)) {
-        toast({
-          title: "Error",
-          description: "Enter a valid phone number",
-          variant: "destructive",
-        })
-        return
-      }
-    }
-
-    setSendingCode(true)
-
-    // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
-    setPendingCode(code)
-    setShowDemoCode(true)
-
-    // Simulate sending
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    toast({
-      title: "Code Sent",
-      description: `Verification code sent to ${twoFactorContact}`,
-    })
-
-    setSendingCode(false)
-    setTwoFactorStep("verify")
   }
 
-  const verify2FACode = () => {
-    if (verificationCode !== pendingCode) {
+  const verify2FACode = async () => {
+    if (!mfaFactorId || verificationCode.length !== 6) return
+
+    setMfaVerifying(true)
+    try {
+      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+        factorId: mfaFactorId,
+      })
+      if (challengeError) throw challengeError
+
+      const { error: verifyError } = await supabase.auth.mfa.verify({
+        factorId: mfaFactorId,
+        challengeId: challenge.id,
+        code: verificationCode,
+      })
+      if (verifyError) throw verifyError
+
+      setTwoFactorEnabled(true)
+      setShow2FADialog(false)
+      setVerificationCode("")
+
+      toast({
+        title: language === "cs" ? "2FA aktivováno" : "2FA Enabled",
+        description:
+          language === "cs"
+            ? "Dvoufaktorové ověření bylo úspěšně aktivováno"
+            : "Two-factor authentication enabled successfully",
+      })
+    } catch (error: any) {
+      console.error("[v0] Error verifying 2FA code:", error)
       toast({
         title: "Error",
-        description: "Invalid code",
+        description: error.message || "Invalid code",
         variant: "destructive",
       })
-      return
+    } finally {
+      setMfaVerifying(false)
     }
-
-    // Save 2FA settings
-    const userData = getUserData()
-    if (!userData.settings) userData.settings = {}
-    userData.settings.twoFactor = {
-      enabled: true,
-      method: twoFactorMethod,
-      contact: twoFactorContact,
-      verifiedAt: new Date().toISOString(),
-    }
-    userData.settings.security = {
-      ...userData.settings.security,
-      twoFactorEnabled: true,
-    }
-    saveUserData(userData)
-
-    setTwoFactorEnabled(true)
-    setShow2FADialog(false)
-
-    toast({
-      title: "2FA Enabled",
-      description: "Two-factor authentication enabled successfully",
-    })
-
-    window.dispatchEvent(new Event("settings-updated"))
   }
 
-  const disable2FA = () => {
-    const userData = getUserData()
-    if (userData.settings?.twoFactor) {
-      userData.settings.twoFactor = {
-        enabled: false,
-        method: "email",
-      }
+  const disable2FA = async () => {
+    if (!mfaFactorId) return
+
+    setMfaDisabling(true)
+    try {
+      const { error } = await supabase.auth.mfa.unenroll({ factorId: mfaFactorId })
+      if (error) throw error
+
+      setTwoFactorEnabled(false)
+      setMfaFactorId(null)
+
+      toast({
+        title: language === "cs" ? "2FA deaktivováno" : "2FA Disabled",
+        description: language === "cs" ? "Dvoufaktorové ověření bylo vypnuto" : "Two-factor authentication disabled",
+      })
+    } catch (error: any) {
+      console.error("[v0] Error disabling 2FA:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to disable 2FA",
+        variant: "destructive",
+      })
+    } finally {
+      setMfaDisabling(false)
     }
-    if (userData.settings?.security) {
-      userData.settings.security.twoFactorEnabled = false
-    }
-    saveUserData(userData)
-
-    setTwoFactorEnabled(false)
-    setTwoFactorContact("")
-
-    toast({
-      title: language === "cs" ? "2FA deaktivováno" : "2FA Disabled",
-      description: language === "cs" ? "Dvoufaktorové ověření bylo vypnuto" : "Two-factor authentication disabled",
-    })
-
-    window.dispatchEvent(new Event("settings-updated"))
   }
 
   // Calculate XP progress
@@ -1179,104 +1232,37 @@ export default function AccountPage() {
               </CardContent>
             </Card>
 
-            {/* Trading Profile */}
-            <Card className="bg-slate-900/80 border-slate-700/50 backdrop-blur-xl overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-red-500" />
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-orange-400" />
-                  {language === "cs" ? "Trading Profil" : "Trading Profile"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">Styl obchodování</Label>
-                    <Select value={tradingStyle} onValueChange={(v: any) => setTradingStyle(v)}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="scalper" className="text-white">
-                          Scalper
-                        </SelectItem>
-                        <SelectItem value="day-trader" className="text-white">
-                          Day Trader
-                        </SelectItem>
-                        <SelectItem value="swing-trader" className="text-white">
-                          Swing Trader
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">Úroveň rizika</Label>
-                    <Select value={riskLevel} onValueChange={(v: any) => setRiskLevel(v)}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="conservative" className="text-white">
-                          {language === "cs" ? "Konzervativní (0.25-1%)" : "Conservative (0.25-1%)"}
-                        </SelectItem>
-                        <SelectItem value="moderate" className="text-white">
-                          {language === "cs" ? "Střední (1-3%)" : "Moderate (1-3%)"}
-                        </SelectItem>
-                        <SelectItem value="aggressive" className="text-white">
-                          {language === "cs" ? "Agresivní (3-5%)" : "Aggressive (3-5%)"}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">{language === "cs" ? "Zkušenosti" : "Experience"}</Label>
-                    <Select value={experienceLevel} onValueChange={(v: any) => setExperienceLevel(v)}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="beginner" className="text-white">
-                          {language === "cs" ? "Začátečník (< 1 rok)" : "Beginner (< 1 year)"}
-                        </SelectItem>
-                        <SelectItem value="intermediate" className="text-white">
-                          {language === "cs" ? "Pokročilý (1-3 roky)" : "Intermediate (1-3 years)"}
-                        </SelectItem>
-                        <SelectItem value="advanced" className="text-white">
-                          {language === "cs" ? "Expert (3+ let)" : "Expert (3+ years)"}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">{language === "cs" ? "Měna" : "Currency"}</Label>
-                    <Select value={defaultCurrency} onValueChange={setDefaultCurrency}>
-                      <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="USD" className="text-white">
-                          USD ($)
-                        </SelectItem>
-                        <SelectItem value="EUR" className="text-white">
-                          EUR (€)
-                        </SelectItem>
-                        <SelectItem value="CZK" className="text-white">
-                          CZK (Kč)
-                        </SelectItem>
-                        <SelectItem value="GBP" className="text-white">
-                          GBP (£)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             <Button onClick={handleSaveProfile} disabled={loading} className="bg-blue-600 hover:bg-blue-700">
               {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               {language === "cs" ? "Uložit profil" : "Save Profile"}
             </Button>
+
+            <Card className="bg-slate-900/50 border-slate-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Compass className="w-5 h-5" />
+                  {language === "cs" ? "Úvodní prohlídka aplikace" : "App product tour"}
+                </CardTitle>
+                <CardDescription>
+                  {language === "cs"
+                    ? "Znovu si projdi rychlý přehled hlavních funkcí MindTrader."
+                    : "Replay the quick walkthrough of MindTrader's main features."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="outline"
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                  onClick={() => {
+                    localStorage.setItem("mindtrader-show-tour", "true")
+                    router.push("/daily-tracker")
+                  }}
+                >
+                  <Compass className="w-4 h-4 mr-2" />
+                  {language === "cs" ? "Spustit prohlídku znovu" : "Replay tour"}
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* NOTIFICATIONS TAB */}
@@ -1506,8 +1492,8 @@ export default function AccountPage() {
                 </CardTitle>
                 <CardDescription className="text-gray-400">
                   {language === "cs"
-                    ? "Přidejte další vrstvu zabezpečení pomocí SMS nebo emailu"
-                    : "Add an extra layer of security via SMS or email"}
+                    ? "Přidejte další vrstvu zabezpečení pomocí aplikace pro ověřování (Google Authenticator, Authy...)"
+                    : "Add an extra layer of security using an authenticator app (Google Authenticator, Authy...)"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1521,23 +1507,33 @@ export default function AccountPage() {
                             {language === "cs" ? "2FA je aktivní" : "2FA is Active"}
                           </p>
                           <p className="text-gray-400 text-sm">
-                            {twoFactorMethod === "email" ? "Email: " : "SMS: "}
-                            {twoFactorContact}
+                            {language === "cs" ? "Aplikace pro ověřování" : "Authenticator app"}
                           </p>
                         </div>
                       </div>
                       <Button
                         variant="outline"
                         onClick={disable2FA}
+                        disabled={mfaDisabling}
                         className="border-red-500/50 text-red-400 hover:bg-red-900/20 bg-transparent"
                       >
-                        {language === "cs" ? "Vypnout" : "Disable"}
+                        {mfaDisabling ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : language === "cs" ? (
+                          "Vypnout"
+                        ) : (
+                          "Disable"
+                        )}
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <Button onClick={start2FASetup} className="bg-green-600 hover:bg-green-700">
-                    <Shield className="w-4 h-4 mr-2" />
+                  <Button onClick={start2FASetup} disabled={mfaEnrolling} className="bg-green-600 hover:bg-green-700">
+                    {mfaEnrolling ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Shield className="w-4 h-4 mr-2" />
+                    )}
                     {language === "cs" ? "Aktivovat 2FA" : "Enable 2FA"}
                   </Button>
                 )}
@@ -1635,8 +1631,13 @@ export default function AccountPage() {
                         {language === "cs" ? "Aktuální zařízení" : "Current Device"}
                       </p>
                       <p className="text-gray-400 text-sm flex items-center gap-2">
-                        <MapPin className="w-3 h-3" />
-                        {language === "cs" ? "Praha, Česko • Právě teď" : "Prague, Czech Republic • Now"}
+                        <Clock className="w-3 h-3" />
+                        {sessionDevice || (language === "cs" ? "Neznámé zařízení" : "Unknown device")}
+                        {sessionLastSignIn &&
+                          ` • ${language === "cs" ? "Přihlášení" : "Signed in"} ${new Date(sessionLastSignIn).toLocaleString(
+                            language === "cs" ? "cs-CZ" : "en-US",
+                            { dateStyle: "medium", timeStyle: "short" },
+                          )}`}
                       </p>
                     </div>
                   </div>
@@ -1677,10 +1678,15 @@ export default function AccountPage() {
                 <CardContent>
                   <Button
                     onClick={handleDeleteAccount}
+                    disabled={deletingAccount}
                     variant="outline"
                     className="w-full bg-transparent text-red-400 hover:text-red-300 border-red-500/30 hover:border-red-500/50 hover:bg-red-500/10"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    {deletingAccount ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 mr-2" />
+                    )}
                     {language === "cs" ? "Smazat účet" : "Delete Account"}
                   </Button>
                 </CardContent>
@@ -2016,112 +2022,40 @@ export default function AccountPage() {
                 {language === "cs" ? "Nastavení 2FA" : "2FA Setup"}
               </DialogTitle>
               <DialogDescription className="text-gray-400">
-                {twoFactorStep === "method" &&
-                  (language === "cs" ? "Vyberte metodu ověření" : "Choose verification method")}
-                {twoFactorStep === "contact" &&
-                  (language === "cs" ? "Zadejte kontaktní údaje" : "Enter contact details")}
-                {twoFactorStep === "verify" &&
-                  (language === "cs" ? "Zadejte ověřovací kód" : "Enter verification code")}
+                {language === "cs"
+                  ? "Naskenujte QR kód v aplikaci pro ověřování a zadejte kód"
+                  : "Scan the QR code with your authenticator app, then enter the code"}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              {/* Step 1: Method Selection */}
-              {twoFactorStep === "method" && (
-                <div className="space-y-3">
-                  <button
-                    onClick={() => {
-                      setTwoFactorMethod("email")
-                      setTwoFactorStep("contact")
-                    }}
-                    className="w-full p-4 rounded-xl border-2 border-slate-700 hover:border-blue-500 transition-all flex items-center gap-4 bg-slate-800/50"
-                  >
-                    <div className="p-3 bg-blue-500/20 rounded-lg">
-                      <Mail className="w-6 h-6 text-blue-400" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-white font-medium">Email</p>
-                      <p className="text-gray-400 text-sm">{language === "cs" ? "Kód na email" : "Code via email"}</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setTwoFactorMethod("sms")
-                      setTwoFactorStep("contact")
-                    }}
-                    className="w-full p-4 rounded-xl border-2 border-slate-700 hover:border-green-500 transition-all flex items-center gap-4 bg-slate-800/50"
-                  >
-                    <div className="p-3 bg-green-500/20 rounded-lg">
-                      <Phone className="w-6 h-6 text-green-400" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-white font-medium">SMS</p>
-                      <p className="text-gray-400 text-sm">{language === "cs" ? "Kód přes SMS" : "Code via SMS"}</p>
-                    </div>
-                  </button>
+              {mfaEnrolling ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
                 </div>
-              )}
+              ) : (
+                <>
+                  {mfaQrCode && (
+                    <div className="flex justify-center p-4 bg-white rounded-xl">
+                      <img src={mfaQrCode} alt="2FA QR code" className="w-48 h-48" />
+                    </div>
+                  )}
 
-              {/* Step 2: Contact Input */}
-              {twoFactorStep === "contact" && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">
-                      {twoFactorMethod === "email" ? "Email" : language === "cs" ? "Telefonní číslo" : "Phone Number"}
-                    </Label>
-                    <Input
-                      type={twoFactorMethod === "email" ? "email" : "tel"}
-                      value={twoFactorContact}
-                      onChange={(e) => setTwoFactorContact(e.target.value)}
-                      placeholder={twoFactorMethod === "email" ? "vas@email.cz" : "+420 xxx xxx xxx"}
-                      className="bg-slate-800/50 border-slate-700 text-white"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setTwoFactorStep("method")}
-                      className="flex-1 border-slate-600 text-gray-300"
-                    >
-                      {language === "cs" ? "Zpět" : "Back"}
-                    </Button>
-                    <Button
-                      onClick={send2FACode}
-                      disabled={sendingCode || !twoFactorContact}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700"
-                    >
-                      {sendingCode ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4 mr-2" />
-                          {language === "cs" ? "Odeslat kód" : "Send Code"}
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Verify Code */}
-              {twoFactorStep === "verify" && (
-                <div className="space-y-4">
-                  {/* Demo code display */}
-                  {showDemoCode && pendingCode && (
-                    <div className="p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-xl">
-                      <p className="text-yellow-300 text-sm mb-2">
-                        {language === "cs" ? "Demo kód (pro testování):" : "Demo code (for testing):"}
+                  {mfaSecret && (
+                    <div className="p-3 bg-slate-800/50 border border-slate-700 rounded-xl">
+                      <p className="text-gray-400 text-xs mb-1">
+                        {language === "cs" ? "Nebo zadejte klíč ručně:" : "Or enter this key manually:"}
                       </p>
                       <div className="flex items-center gap-2">
-                        <code className="text-2xl font-mono font-bold text-white tracking-widest">{pendingCode}</code>
+                        <code className="text-sm font-mono text-white break-all">{mfaSecret}</code>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            navigator.clipboard.writeText(pendingCode)
+                            navigator.clipboard.writeText(mfaSecret)
                             toast({ title: language === "cs" ? "Zkopírováno" : "Copied" })
                           }}
-                          className="text-yellow-300 hover:text-yellow-200"
+                          className="text-gray-300 hover:text-white flex-shrink-0"
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
@@ -2140,24 +2074,19 @@ export default function AccountPage() {
                       maxLength={6}
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setTwoFactorStep("contact")}
-                      className="flex-1 border-slate-600 text-gray-300"
-                    >
-                      {language === "cs" ? "Zpět" : "Back"}
-                    </Button>
-                    <Button
-                      onClick={verify2FACode}
-                      disabled={verificationCode.length !== 6}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                    >
+                  <Button
+                    onClick={verify2FACode}
+                    disabled={verificationCode.length !== 6 || mfaVerifying}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    {mfaVerifying ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      {language === "cs" ? "Ověřit" : "Verify"}
-                    </Button>
-                  </div>
-                </div>
+                    )}
+                    {language === "cs" ? "Ověřit a aktivovat" : "Verify & Enable"}
+                  </Button>
+                </>
               )}
             </div>
           </DialogContent>

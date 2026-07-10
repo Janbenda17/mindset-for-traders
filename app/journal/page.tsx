@@ -15,10 +15,17 @@ import {
   Award,
   DollarSign,
   Shield,
+  Flame,
+  Smile,
+  TrendingUp,
+  Calendar,
+  FileSpreadsheet,
 } from "lucide-react"
 import DisciplineMatrix from "@/components/discipline-matrix"
 import JournalAiSearch from "@/components/journal-ai-search"
 import DayDetailPanel from "@/components/day-detail-panel"
+import JournalRecentEntries from "@/components/journal-recent-entries"
+import EmotionalTaxSheet from "@/components/emotional-tax-sheet"
 import { buildDisciplineMatrix, type DisciplineDay } from "@/lib/discipline-matrix"
 import { buildDailySummary } from "@/lib/daily-summary"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -26,84 +33,12 @@ import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context" // Fixed import path from /context/ (singular) to /contexts/ (plural)
 import { useAuth } from "@/contexts/auth-context" // Import useAuth hook
 import { generateVirtualJournalStats } from "@/lib/virtual-data-generator" // Import for virtual stats
+import { generateDemoTradingHistory } from "@/lib/demo-data"
+import { DemoUpgradeBanner } from "@/components/demo-upgrade-banner"
 
-const generateDemoEntries = () => {
-  const pairs = ["EUR/USD", "GBP/USD", "USD/JPY", "XAU/USD", "BTC/USD", "EUR/JPY", "GBP/JPY", "AUD/USD"]
-  const emotions = ["confident", "calm", "focused", "anxious", "excited", "nervous", "stressed", "disciplined"]
-  const sessions = ["London", "New York", "Asian", "Overlap"]
-  
-  const demoEntries = []
-  
-  // Generate 25 random trades
-  for (let i = 0; i < 25; i++) {
-    const isWin = Math.random() > 0.35 // 65% win rate
-    const pair = pairs[Math.floor(Math.random() * pairs.length)]
-    const direction = Math.random() > 0.5 ? "long" : "short"
-    const daysAgo = Math.floor(Math.random() * 30) + 1
-    
-    const profitLoss = isWin 
-      ? Math.floor(Math.random() * 3000) + 500  // Win: 500-3500
-      : -Math.floor(Math.random() * 1500) - 200 // Loss: -200 to -1700
-    
-    const mood = isWin 
-      ? Math.floor(Math.random() * 25) + 70  // 70-95
-      : Math.floor(Math.random() * 30) + 40 // 40-70
-      
-    const stressLevel = isWin
-      ? Math.floor(Math.random() * 4) + 2  // 2-6
-      : Math.floor(Math.random() * 4) + 6 // 6-10
-      
-    const confidenceBefore = isWin
-      ? Math.floor(Math.random() * 3) + 7  // 7-10
-      : Math.floor(Math.random() * 4) + 4 // 4-8
-    
-    const session = sessions[Math.floor(Math.random() * sessions.length)]
-    
-    demoEntries.push({
-      id: `demo-trade-${i + 1}`,
-      type: "trade",
-      date: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      title: `${direction.toUpperCase()} ${pair}`,
-      content: isWin 
-        ? `Perfect setup, I followed my plan on ${session} session`
-        : `${Math.random() > 0.5 ? "I should have waited for a better setup" : "Too early entry, bad timing"}`,
-      pair,
-      direction,
-      entryPrice: Math.random() * 100 + 1,
-      exitPrice: Math.random() * 100 + 1,
-      profitLoss,
-      pnl: profitLoss,
-      mood,
-      notes: isWin 
-        ? `Perfect setup, I followed my plan on ${session} session`
-        : `${Math.random() > 0.5 ? "I should have waited for a better setup" : "Too early entry, bad timing"}`,
-      emotion: emotions[Math.floor(Math.random() * emotions.length)],
-      tags: isWin ? ["A+ setup", "disciplined"] : ["learning", "improvement needed"],
-      emotionBefore: emotions[Math.floor(Math.random() * emotions.length)],
-      emotionDuring: emotions[Math.floor(Math.random() * emotions.length)],
-      emotionAfter: isWin ? emotions[Math.floor(Math.random() * 3)] : emotions[Math.floor(Math.random() * 3) + 5],
-      confidenceBefore,
-      stressLevel,
-    })
-  }
-  
-  // Add 5 journal entries
-  for (let i = 0; i < 5; i++) {
-    const daysAgo = Math.floor(Math.random() * 30) + 1
-    demoEntries.push({
-      id: `demo-journal-${i + 1}`,
-      type: "journal",
-      date: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      title: `Journal - ${i % 2 === 0 ? "Good" : "Challenging"} day`,
-      content: `${i % 2 === 0 ? "Good" : "Challenging"} day, ${i % 3 === 0 ? "I learned a lot" : "working on discipline"}`,
-      mood: Math.floor(Math.random() * 40) + 50,
-      notes: `${i % 2 === 0 ? "Good" : "Challenging"} day, ${i % 3 === 0 ? "I learned a lot" : "working on discipline"}`,
-      emotion: emotions[Math.floor(Math.random() * emotions.length)],
-    })
-  }
-  
-  return demoEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-}
+// Demo trading history (Virtual mode) now comes from the shared generator
+// in lib/demo-data.ts so Journal and Weekly Review show the same demo trader.
+const generateDemoEntries = () => generateDemoTradingHistory(30)
 
 export default function JournalPage() {
   const [entries, setEntries] = useState<any[]>([])
@@ -118,6 +53,7 @@ export default function JournalPage() {
   const [matchedDays, setMatchedDays] = useState<DisciplineDay[]>([])
   const [searchSummary, setSearchSummary] = useState<string | null>(null)
   const [selectedDay, setSelectedDay] = useState<DisciplineDay | null>(null)
+  const [timeFilter, setTimeFilter] = useState<"week" | "month" | "all">("month")
   const isEn = language === "en"
 
   const txt = {
@@ -203,6 +139,22 @@ export default function JournalPage() {
     tradingGreat: isEn ? "Your trading is in great shape. Keep going! 🚀" : "Tvé obchodování je ve skvělé formě. Pokračuj! 🚀",
     personalizedRecommendations: isEn ? "personalized recommendations for improving performance" : "personalizovaných doporučení pro zlepšení výkonu",
     viewInsights: isEn ? "View Insights" : "Zobrazit Insights",
+
+    // Time filter
+    filterWeek: isEn ? "Week" : "Týden",
+    filterMonth: isEn ? "Month" : "Měsíc",
+    filterAll: isEn ? "All time" : "Vše",
+    periodLabel: isEn ? "Period" : "Období",
+
+    // Extended stat cards
+    statTrades: isEn ? "Trades" : "Obchodů",
+    statWinRate: isEn ? "Win Rate" : "Win Rate",
+    statNetPnL: isEn ? "Net P&L" : "Čistý P&L",
+    statBestDay: isEn ? "Best Day" : "Nejlepší den",
+    statStreak: isEn ? "Streak" : "Série",
+    statMood: isEn ? "Avg Mood" : "Prům. nálada",
+    daysUnit: isEn ? "days" : "dní",
+    exportCsv: "CSV",
   }
 
   useEffect(() => {
@@ -237,9 +189,48 @@ export default function JournalPage() {
     loadEntries() // Reload entries to reflect the new one
   }
 
+  // All entries for the active source (live context or demo), unfiltered.
+  const allSourceEntries = useMemo(
+    () => (isLiveMode ? getAllJournalEntries() || [] : entries),
+    [isLiveMode, getAllJournalEntries, entries],
+  )
+
+  // Entries narrowed to the selected time window (week / month / all). Stats
+  // and the recent-entries list both read from this so the period selector
+  // controls everything consistently.
+  const periodEntries = useMemo(() => {
+    if (timeFilter === "all") return allSourceEntries
+    const cutoff = new Date()
+    cutoff.setHours(0, 0, 0, 0)
+    cutoff.setDate(cutoff.getDate() - (timeFilter === "week" ? 7 : 30))
+    return allSourceEntries.filter((e: any) => new Date(e.date) >= cutoff)
+  }, [allSourceEntries, timeFilter])
+
+  // Real trades + tagged journal notes for the active period. Unlike
+  // periodEntries (journal-only in live mode), this pulls actual trades from
+  // getAllTrades() in live mode so the Emotional Tax Sheet always analyses the
+  // genuine trade ledger.
+  const periodTrades = useMemo(() => {
+    const src = isLiveMode ? getAllTrades() || [] : entries.filter((e: any) => e.type === "trade")
+    if (timeFilter === "all") return src
+    const cutoff = new Date()
+    cutoff.setHours(0, 0, 0, 0)
+    cutoff.setDate(cutoff.getDate() - (timeFilter === "week" ? 7 : 30))
+    return src.filter((t: any) => new Date(t.date) >= cutoff)
+  }, [isLiveMode, getAllTrades, entries, timeFilter])
+
+  const periodJournal = useMemo(() => {
+    const src = isLiveMode ? getAllJournalEntries() || [] : entries.filter((e: any) => e.type === "journal")
+    if (timeFilter === "all") return src
+    const cutoff = new Date()
+    cutoff.setHours(0, 0, 0, 0)
+    cutoff.setDate(cutoff.getDate() - (timeFilter === "week" ? 7 : 30))
+    return src.filter((e: any) => new Date(e.date) >= cutoff)
+  }, [isLiveMode, getAllJournalEntries, entries, timeFilter])
+
   const stats = useMemo(() => {
-    const contextEntries = isLiveMode ? getAllJournalEntries() || [] : entries
-    const trades = contextEntries.filter((e) => e.type === "trade")
+    const contextEntries = periodEntries
+    const trades = contextEntries.filter((e: any) => e.type === "trade")
 
     // Return zero stats if no entries from context
     if (contextEntries.length === 0) {
@@ -341,7 +332,7 @@ export default function JournalPage() {
             ) / 100
           : 0,
     }
-  }, [getAllJournalEntries, entries, isLiveMode]) // Recalculate when entries from context change
+  }, [periodEntries]) // Recalculate when the active period's entries change
 
   // Behavioral Cockpit: the two dominant psychological metrics shown above
   // the fold. Both are derived from the exact same engines that drive the
@@ -350,7 +341,9 @@ export default function JournalPage() {
   // made-up numbers, so this can never disagree with the matrix below it.
   const cockpit = useMemo(() => {
     const cockpitTrades = isLiveMode ? getAllTrades() || [] : entries.filter((e: any) => e.type === "trade")
-    const cockpitJournalEntries = isLiveMode ? getAllJournalEntries() || [] : []
+    const cockpitJournalEntries = isLiveMode
+      ? getAllJournalEntries() || []
+      : entries.filter((e: any) => e.type === "journal")
 
     if (cockpitTrades.length === 0) {
       return { avgDiscipline: null as number | null, savedTotal: 0 }
@@ -482,25 +475,49 @@ export default function JournalPage() {
 
   const insights = generateInsights()
 
-  const exportData = () => {
-    const dataStr = JSON.stringify(getAllJournalEntries() || [], null, 2) // Use context for export
-    const dataBlob = new Blob([dataStr], { type: "application/json" })
-    const url = URL.createObjectURL(dataBlob)
+  const triggerDownload = (content: string, mime: string, ext: string) => {
+    const blob = new Blob([content], { type: mime })
+    const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
-    link.download = `trading-journal-${new Date().toISOString().split("T")[0]}.json`
+    link.download = `trading-journal-${new Date().toISOString().split("T")[0]}.${ext}`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
   }
 
+  const exportData = () => {
+    const source = isLiveMode ? getAllJournalEntries() || [] : entries
+    triggerDownload(JSON.stringify(source, null, 2), "application/json", "json")
+  }
+
+  const exportCsv = () => {
+    const source = isLiveMode ? getAllJournalEntries() || [] : entries
+    const cols = ["date", "type", "pair", "direction", "profitLoss", "mood", "emotion", "notes"]
+    const escape = (v: any) => {
+      const s = String(v ?? "")
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+    }
+    const rows = [
+      cols.join(","),
+      ...source.map((e: any) =>
+        cols.map((c) => escape(c === "profitLoss" ? e.profitLoss ?? e.pnl ?? "" : e[c])).join(","),
+      ),
+    ]
+    triggerDownload(rows.join("\n"), "text/csv;charset=utf-8", "csv")
+  }
+
   // const openEntryModal = (entry) => {
   //   // Implement modal opening logic here
   // }
 
-  // Determine which stats to display
-  const displayStats = !isLiveMode && virtualStats ? virtualStats : stats
+  // Stats now always come from the period-filtered computation so the
+  // Week / Month / All selector controls the numbers in both live and demo
+  // mode. (virtualStats is kept available for any legacy callers but the
+  // header cards read the live, filter-aware figures.)
+  const displayStats = stats
+  void virtualStats
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16">
@@ -528,36 +545,7 @@ export default function JournalPage() {
             </span>
           </div>
         )}
-
-          <div className="flex gap-2 md:gap-3 flex-wrap">
-            <Button
-              onClick={() => setShowInsights(true)}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg text-xs md:text-sm px-3 md:px-4"
-            >
-              <Brain className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              <span className="hidden md:inline">{txt.aiInsights}</span>
-              <span className="md:hidden">{txt.aiShort}</span>
-              {insights.length > 0 && (
-                <Badge className="ml-1 md:ml-2 bg-white/20 text-white border-0 text-xs">{insights.length}</Badge>
-              )}
-            </Button>
-            <Button
-              onClick={exportData}
-              variant="outline"
-              className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 text-xs md:text-sm px-3 md:px-4 hidden md:flex"
-            >
-              <Download className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              Export
-            </Button>
-            <Button
-              onClick={() => setShowQuickAdd(true)}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-lg text-xs md:text-sm px-3 md:px-4"
-            >
-              <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-              <span className="hidden md:inline">{txt.quickEntry}</span>
-              <span className="md:hidden">+</span>
-            </Button>
-          </div>
+        {!isLiveMode && <DemoUpgradeBanner />}
         </div>
 
         {/* Behavioral Cockpit -- two dominant psychological metrics first,
@@ -618,16 +606,48 @@ export default function JournalPage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
+        {/* Time period selector — controls the stat cards below and the
+            recent-entries list. */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2 text-gray-400 text-xs md:text-sm">
+            <Calendar className="w-4 h-4" />
+            <span className="font-medium">{txt.periodLabel}:</span>
+          </div>
+          <div className="inline-flex items-center gap-1 bg-slate-800/80 border border-slate-700 rounded-xl p-1">
+            {[
+              { key: "week" as const, label: txt.filterWeek },
+              { key: "month" as const, label: txt.filterMonth },
+              { key: "all" as const, label: txt.filterAll },
+            ].map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setTimeFilter(opt.key)}
+                className={cn(
+                  "px-4 py-1.5 rounded-lg text-xs md:text-sm font-medium transition-all",
+                  timeFilter === opt.key
+                    ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow"
+                    : "text-gray-400 hover:text-white",
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Extended stat grid — 6 key figures, each period-aware. */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-3 md:p-4">
-              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Obchodů</p>
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1 flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" /> {txt.statTrades}
+              </p>
               <p className="text-xl md:text-2xl font-bold text-white">{displayStats.totalTrades}</p>
             </CardContent>
           </Card>
           <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-3 md:p-4">
-              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Win Rate</p>
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">{txt.statWinRate}</p>
               <p
                 className={cn(
                   "text-xl md:text-2xl font-bold",
@@ -649,56 +669,67 @@ export default function JournalPage() {
             )}
           >
             <CardContent className="p-3 md:p-4">
-              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">Net P&L</p>
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1">{txt.statNetPnL}</p>
               <p
                 className={cn(
                   "text-xl md:text-2xl font-bold",
                   displayStats.totalPnL >= 0 ? "text-emerald-400" : "text-rose-400",
                 )}
               >
-                {displayStats.totalPnL >= 0 ? "+" : ""}${displayStats.totalPnL}
+                {displayStats.totalPnL >= 0 ? "+" : ""}${displayStats.totalPnL.toLocaleString("en-US")}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-3 md:p-4">
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1 flex items-center gap-1">
+                <Award className="w-3 h-3 text-amber-400" /> {txt.statBestDay}
+              </p>
+              <p className="text-xl md:text-2xl font-bold text-emerald-400">
+                +${displayStats.bestDay.toLocaleString("en-US")}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-3 md:p-4">
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1 flex items-center gap-1">
+                <Flame className="w-3 h-3 text-orange-400" /> {txt.statStreak}
+              </p>
+              <p className="text-xl md:text-2xl font-bold text-white">
+                {displayStats.streak} <span className="text-xs font-normal text-gray-400">{txt.daysUnit}</span>
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-3 md:p-4">
+              <p className="text-gray-400 text-[10px] md:text-xs font-medium mb-1 flex items-center gap-1">
+                <Smile className="w-3 h-3 text-blue-400" /> {txt.statMood}
+              </p>
+              <p
+                className={cn(
+                  "text-xl md:text-2xl font-bold",
+                  displayStats.avgMood >= 70 ? "text-emerald-400" : displayStats.avgMood >= 50 ? "text-yellow-400" : "text-rose-400",
+                )}
+              >
+                {displayStats.avgMood || "—"}
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quick Insights Bar */}
-        {insights.length > 0 && (
-          <Card className="bg-gradient-to-r from-purple-900/40 to-pink-900/40 border-2 border-purple-500/40 backdrop-blur-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-xl">
-                    <Sparkles className="w-6 h-6 text-purple-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-white font-bold text-lg">{txt.aiInsightsAvailable}</h3>
-                    <p className="text-gray-300 text-sm">
-                      {insights.length} {txt.personalizedRecommendations}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => setShowInsights(true)}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  {txt.viewInsights}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* The Emotional Tax Sheet — financial statement of the trader's
+            psychology, period-aware. Incident counts + real loss are exact;
+            saved / potential columns are grounded estimates. */}
+        <EmotionalTaxSheet trades={periodTrades} journalEntries={periodJournal} isEn={isEn} />
 
-        {/* Discipline Matrix — disciplína per day, grounded in real
-            followedPlan/matchedPlan booleans + objective revenge detection
-            + self-report tags (see lib/discipline-matrix.ts). AI search bar
-            lets the trader query their own history in plain language;
-            Claude only narrows a fixed-vocabulary filter, every date shown
-            is computed from real trade/journal data, never invented. */}
+
+
+        {/* AI search — its own card above the calendar */}
         <Card className="bg-slate-800/80 backdrop-blur-sm border-slate-600">
-          <CardContent className="p-3 md:p-6 space-y-4">
+          <CardContent className="p-3 md:p-5 space-y-3">
             <JournalAiSearch
+              trades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
+              journalEntries={!isLiveMode ? entries.filter((e: any) => e.type === "journal") : undefined}
               onResults={(dates, days, summary) => {
                 setHighlightedDates(dates)
                 setMatchedDays(days)
@@ -720,17 +751,33 @@ export default function JournalPage() {
                 )}
               </div>
             )}
-            <DisciplineMatrix highlightedDates={highlightedDates} onDayClick={setSelectedDay} />
           </CardContent>
         </Card>
 
-        {selectedDay && (
-          <DayDetailPanel
-            day={selectedDay}
-            onClose={() => setSelectedDay(null)}
-            demoTrades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
-          />
-        )}
+        {/* Kalendář + Detail dne — vedle sebe na desktopu, pod sebou na mobilu */}
+        <div className="flex flex-col md:flex-row gap-4 items-start">
+          <div className={cn("w-full transition-all duration-300", selectedDay ? "md:w-[52%]" : "md:w-full")}>
+            <DisciplineMatrix
+              highlightedDates={highlightedDates}
+              onDayClick={setSelectedDay}
+              trades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
+              journalEntries={!isLiveMode ? entries.filter((e: any) => e.type === "journal") : undefined}
+            />
+          </div>
+          {selectedDay && (
+            <div className="w-full md:flex-1 min-w-0">
+              <DayDetailPanel
+                day={selectedDay}
+                onClose={() => setSelectedDay(null)}
+                demoTrades={!isLiveMode ? entries.filter((e: any) => e.type === "trade") : undefined}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Recent entries — searchable, filterable list of individual trades
+            and notes for the selected period. */}
+        <JournalRecentEntries entries={periodEntries} isEn={isEn} />
 
       </div>
 

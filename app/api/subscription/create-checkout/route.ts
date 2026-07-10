@@ -125,7 +125,6 @@ export async function POST(request: NextRequest) {
           user_id: user.id,
           user_email: user.email || "",
         },
-        trial_period_days: 14,
       },
       success_url: `${baseUrl}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/upgrade`,

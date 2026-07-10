@@ -313,14 +313,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Nový uživatel má pouze FREE verzi (bez trial)
       console.log("[v0] Nový uživatel - nastavuji FREE verzi bez trial...")
 
+            // Fire CompleteRegistration to Meta: client-side Pixel (works for
+            // visitors without ad blockers) AND server-side Conversions API
+            // (works for everyone else). Same eventId on both so Meta deduplicates
+            // instead of double-counting.
+            try {
+                      const eventId = `reg_${authData.user.id}`
+                      const fbp = document.cookie.match(/_fbp=([^;]+)/)?.[1]
+                      const fbc = document.cookie.match(/_fbc=([^;]+)/)?.[1]
+
+                      if (typeof window !== "undefined" && (window as any).fbq) {
+                                  ;(window as any).fbq("track", "CompleteRegistration", {}, { eventID: eventId })
+                      }
+
+                      fetch("/api/meta-capi", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({
+                                                eventName: "CompleteRegistration",
+                                                eventId,
+                                                email,
+                                                fbp,
+                                                fbc,
+                                                eventSourceUrl: window.location.href,
+                                  }),
+                      }).catch((err) => console.error("[v0] Meta CAPI call failed:", err))
+            } catch (err) {
+                      console.error("[v0] Meta tracking error:", err)
+            }
+
       toast({
         title: "Registrace úspěšná!",
         description: "Vítejte v MindTrader!",
       })
 
-      console.log("[v0] ✅ Registrace HOTOVA - redirect na /onboarding")
+      console.log("[v0] ✅ Registrace HOTOVA - redirect na /daily-tracker")
       await new Promise((resolve) => setTimeout(resolve, 500))
-      router.push("/onboarding")
+      router.push("/daily-tracker")
       return true
     } catch (error: any) {
       console.error("[v0] ===== REGISTRACE ERROR =====")

@@ -102,7 +102,8 @@ export async function connectMetaApi(
 
     let accountId: string
     try {
-      accountId = await metaApiClient.authenticateWithCredentials(credentials)
+      const result = await metaApiClient.authenticateWithCredentials(credentials)
+      accountId = result.accountId
     } catch (authErr) {
       console.error('[v0] MetaApi authentication failed:', authErr)
       return {
@@ -111,6 +112,13 @@ export async function connectMetaApi(
       }
     }
 
+    // Persist the account right away, before waiting on the broker login to
+    // finish. The account is already created and deploying on MetaApi's side
+    // at this point - if we waited to save until after a full CONNECTED
+    // check and the request got cut off (slow broker login, function
+    // timeout), the credentials the user just entered would be lost and
+    // they'd have to reconnect from scratch even though a MetaApi account
+    // was already spun up for them.
     const { error } = await getSupabase()
       .from('profiles')
       .update({
@@ -126,8 +134,23 @@ export async function connectMetaApi(
       return { success: false, error: error.message || 'Failed to save MetaApi connection' }
     }
 
-    console.log('[v0] MetaApi connected successfully with account:', accountId)
-    return { success: true, accountId }
+    // Best-effort short wait just to tell the user whether the broker login
+    // already finished. Its outcome doesn't affect what's saved above - the
+    // background sync job will pick up the connection once it goes CONNECTED
+    // even if this wait times out first. Kept short (well under Vercel's
+    // default 10s serverless timeout on the Hobby plan) since this file
+    // can't export maxDuration - Next.js only allows async function exports
+    // from a 'use server' file, so there's no way to extend this action's
+    // own time budget.
+    let connected = false
+    try {
+      connected = await metaApiClient.waitUntilConnected(accountId, 6000, 2000)
+    } catch (waitErr) {
+      console.warn('[v0] MetaApi account saved but broker login check failed:', waitErr)
+    }
+
+    console.log('[v0] MetaApi connected successfully with account:', accountId, 'connected:', connected)
+    return { success: true, accountId, connected }
   } catch (err) {
     console.error('[v0] Error in connectMetaApi:', err)
     return { success: false, error: err instanceof Error ? err.message : 'Failed to connect MetaApi. Check your credentials.' }

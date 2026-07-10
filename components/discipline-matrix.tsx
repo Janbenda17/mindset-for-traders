@@ -29,21 +29,32 @@ interface DisciplineMatrixProps {
   // slightly so the matched days stand out.
   highlightedDates?: Set<string> | null
   onDayClick?: (day: DisciplineDay) => void
+  // Optional data override. When provided (e.g. Virtual/demo mode on the
+  // journal page), the matrix scores these instead of the live data-context
+  // data, so the calendar and the "Průměrná disciplína" cockpit read from the
+  // exact same dataset.
+  trades?: any[]
+  journalEntries?: any[]
 }
 
 function ymKey(year: number, month: number) {
   return `${year}-${String(month + 1).padStart(2, "0")}`
 }
 
-export default function DisciplineMatrix({ highlightedDates, onDayClick }: DisciplineMatrixProps) {
+export default function DisciplineMatrix({
+  highlightedDates,
+  onDayClick,
+  trades: tradesOverride,
+  journalEntries: journalOverride,
+}: DisciplineMatrixProps) {
   const { getAllTrades, getAllJournalEntries } = useData()
   const [monthOffset, setMonthOffset] = useState(0) // 0 = current month, positive = further back
 
   const days = useMemo(() => {
-    const trades = getAllTrades?.() || []
-    const journalEntries = getAllJournalEntries?.() || []
+    const trades = tradesOverride ?? getAllTrades?.() ?? []
+    const journalEntries = journalOverride ?? getAllJournalEntries?.() ?? []
     return buildDisciplineMatrix(trades, journalEntries)
-  }, [getAllTrades, getAllJournalEntries])
+  }, [tradesOverride, journalOverride, getAllTrades, getAllJournalEntries])
 
   const dayMap = useMemo(() => {
     const m = new Map<string, DisciplineDay>()
