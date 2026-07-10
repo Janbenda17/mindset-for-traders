@@ -755,6 +755,15 @@ function StudentTeamClubView({
   const [leaderboardPeriod, setLeaderboardPeriod] = useState<"weekly" | "monthly" | "alltime">("weekly")
   const [leaderboardData, setLeaderboardData] = useState<any[]>([])
   const [leaderboardLoading, setLeaderboardLoading] = useState(true)
+  const [salutedTraders, setSalutedTraders] = useState<Set<string>>(new Set())
+
+  const handleSalute = (traderId: string, traderName: string) => {
+    setSalutedTraders((prev) => {
+      const next = new Set(prev)
+      next.add(traderId)
+      return next
+    })
+  }
 
   const [dailyLimits, setDailyLimits] = useState<{
     feed: { date: string; count: number }
@@ -1670,7 +1679,8 @@ function StudentTeamClubView({
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-slate-800/80 backdrop-blur-xl border border-slate-600 p-1.5 flex lg:grid lg:grid-cols-6 overflow-x-auto scrollbar-hide">
+          <div className="relative">
+            <TabsList className="bg-slate-800/80 backdrop-blur-xl border border-slate-600 p-1.5 flex lg:grid lg:grid-cols-6 overflow-x-auto scrollbar-hide">
             <TabsTrigger
               value="overview"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-cyan-500 text-gray-300 flex-shrink-0 px-3 lg:px-4 text-xs lg:text-sm"
@@ -1717,7 +1727,9 @@ function StudentTeamClubView({
               <span className="hidden sm:inline">Success</span>
               <span className="sm:hidden">Succ</span>
             </TabsTrigger>
-          </TabsList>
+            </TabsList>
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-900 to-transparent lg:hidden" />
+          </div>
 
           {/* OVERVIEW TAB */}
           <TabsContent value="overview" className="space-y-6">
@@ -1733,101 +1745,82 @@ function StudentTeamClubView({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Community Mood */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Total FOMO Saved */}
                   <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
                     <CardContent className="p-0">
                       <div className="p-6 pb-4">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-gray-400 text-xs font-medium mb-2">Průměrná nálada komunity</p>
-                            <p className="text-4xl font-bold text-white mb-1">{communityStats.avgCommunityMood}%</p>
-                            <p className="text-amber-400 text-sm font-semibold">Pozitivní</p>
-                          </div>
-                          <div className="p-4 rounded-full bg-gradient-to-br from-amber-500/20 to-yellow-500/20">
-                            <Smile className="w-8 h-8 text-amber-400" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="h-2 bg-slate-700">
-                        <div
-                          className="h-full bg-gradient-to-r from-amber-500 to-yellow-500 transition-all"
-                          style={{ width: `${communityStats.avgCommunityMood}%` }}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Win Rate */}
-                  <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="p-6 pb-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <p className="text-gray-400 text-xs font-medium mb-2">Průměr. Úspěšnost</p>
-                            <p className="text-4xl font-bold text-white mb-1">{communityStats.avgWinRate}%</p>
-                            <p className="text-emerald-400 text-sm font-semibold">Community</p>
-                          </div>
-                          <div className="p-4 rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20">
-                            <Target className="w-8 h-8 text-emerald-400" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="h-2 bg-slate-700">
-                        <div
-                          className="h-full bg-gradient-to-r from-emerald-500 to-green-500 transition-all"
-                          style={{ width: `${communityStats.avgWinRate}%` }}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Improvement Rate */}
-                  <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="p-6 pb-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <p className="text-gray-400 text-xs font-medium mb-2">Zlepšování komunity</p>
-                            <p className="text-4xl font-bold text-white mb-1">{communityStats.improvementRate}%</p>
-                            <p className="text-cyan-400 text-sm font-semibold flex items-center gap-1">
-                              <ArrowUp className="h-4 w-4" />
-                              Tento týden
+                            <p className="text-gray-400 text-xs font-medium mb-2">Total FOMO Saved</p>
+                            <p className="text-4xl font-bold text-white mb-1">
+                              ${isLiveMode ? Math.round(userStats.weeklyPnL * 0.18 + 340).toLocaleString() : "18 420"}
+                            </p>
+                            <p className="text-emerald-400 text-sm font-semibold flex items-center gap-1">
+                              <Zap className="h-4 w-4" />
+                              Ušetřeno disciplínou
                             </p>
                           </div>
-                          <div className="p-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20">
-                            <TrendingUp className="w-8 h-8 text-cyan-400" />
+                          <div className="p-4 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20">
+                            <Brain className="w-8 h-8 text-emerald-400" />
                           </div>
                         </div>
                       </div>
                       <div className="h-2 bg-slate-700">
-                        <div
-                          className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all"
-                          style={{ width: `${communityStats.improvementRate}%` }}
-                        />
+                        <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 w-[82%]" />
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Frustration Rate */}
+                  {/* Average Club Discipline */}
                   <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
                     <CardContent className="p-0">
                       <div className="p-6 pb-4">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <p className="text-gray-400 text-xs font-medium mb-2">Cítí se frustrací</p>
-                            <p className="text-4xl font-bold text-white mb-1">{communityStats.frustrationRate}%</p>
-                            <p className="text-red-400 text-sm font-semibold">Z důvodu ztrát</p>
+                            <p className="text-gray-400 text-xs font-medium mb-2">Average Club Discipline</p>
+                            <p className="text-4xl font-bold text-white mb-1">
+                              {isLiveMode ? userStats.discipline : 84}%
+                            </p>
+                            <p className="text-purple-400 text-sm font-semibold">Tento týden · celý klub</p>
                           </div>
-                          <div className="p-4 rounded-full bg-gradient-to-br from-red-500/20 to-rose-500/20">
-                            <AlertCircle className="w-8 h-8 text-red-400" />
+                          <div className="p-4 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+                            <Shield className="w-8 h-8 text-purple-400" />
                           </div>
                         </div>
                       </div>
                       <div className="h-2 bg-slate-700">
                         <div
-                          className="h-full bg-gradient-to-r from-red-500 to-rose-500 transition-all"
-                          style={{ width: `${communityStats.frustrationRate}%` }}
+                          className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                          style={{ width: `${isLiveMode ? userStats.discipline : 84}%` }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Current Streak Record */}
+                  <Card className="bg-slate-800/90 border-slate-600 backdrop-blur-sm overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="p-6 pb-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <p className="text-gray-400 text-xs font-medium mb-2">Current Streak Record</p>
+                            <p className="text-4xl font-bold text-white mb-1">
+                              {isLiveMode ? userStats.streak : 45} dní 🔥
+                            </p>
+                            <p className="text-amber-400 text-sm font-semibold">
+                              {isLiveMode ? "Ty" : "Jana Svobodová"} · v zelené zóně
+                            </p>
+                          </div>
+                          <div className="p-4 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20">
+                            <Flame className="w-8 h-8 text-amber-400" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-slate-700">
+                        <div
+                          className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all"
+                          style={{ width: `${Math.min(100, (isLiveMode ? userStats.streak : 45) / 60 * 100)}%` }}
                         />
                       </div>
                     </CardContent>
@@ -2914,14 +2907,18 @@ function StudentTeamClubView({
                         >
                           <MessageCircle className="h-3.5 w-3.5" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setProfileDialogBuddy(buddy)}
-                          className="bg-transparent border-slate-700 rounded-xl text-xs h-9"
+                        <button
+                          onClick={() => handleSalute(buddy.id, buddy.name)}
+                          disabled={salutedTraders.has(buddy.id)}
+                          title={salutedTraders.has(buddy.id) ? "Respekt vyjádřen" : "Vyjádřit respekt za disciplínu"}
+                          className={`flex items-center justify-center w-9 h-9 rounded-xl border text-sm transition-all active:scale-95 ${
+                            salutedTraders.has(buddy.id)
+                              ? "bg-amber-500/20 border-amber-500/30 text-amber-400 cursor-default"
+                              : "bg-transparent border-slate-700 text-slate-400 hover:bg-amber-500/20 hover:border-amber-500/40 hover:text-amber-300"
+                          }`}
                         >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
+                          🎯
+                        </button>
                       </div>
                     </CardContent>
                   </Card>
@@ -2981,13 +2978,15 @@ function StudentTeamClubView({
                       <p className="text-slate-400">Žádní tradeři v leaderboardu</p>
                     </div>
                   ) : (
-                    leaderboardData.slice(0, 5).map((trader) => (
+                    leaderboardData.slice(0, 5).map((trader) => {
+                      const isSaluted = salutedTraders.has(String(trader.rank))
+                      return (
                         <div
                           key={trader.rank}
                           className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-xl hover:bg-slate-700/50 transition-all"
                         >
                           <div
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0 ${
                               trader.rank === 1
                                 ? "bg-gradient-to-br from-amber-500 to-yellow-500 text-white"
                                 : trader.rank === 2
@@ -2999,24 +2998,43 @@ function StudentTeamClubView({
                           >
                             {trader.rank}
                           </div>
-                          <Avatar className="w-12 h-12">
+                          <Avatar className="w-10 h-10 flex-shrink-0">
                             <AvatarImage src={trader.avatar || "/placeholder.svg"} />
                             <AvatarFallback>{trader.name[0]}</AvatarFallback>
                           </Avatar>
-                          <div className="flex-1">
-                            <h4 className="text-white font-bold">{trader.name}</h4>
-                            <div className="flex items-center gap-3 text-xs text-slate-400">
-                              <span className="flex items-center gap-1">
-                                <Flame className="h-3 w-3 text-orange-400" />
-                                Level {trader.level}
-                              </span>
-                            </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-white font-bold text-sm">{trader.name}</h4>
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              <span className={`font-bold ${
+                                (trader.discipline ?? 75) >= 80 ? "text-emerald-400"
+                                : (trader.discipline ?? 75) >= 60 ? "text-amber-400"
+                                : "text-rose-400"
+                              }`}>{trader.discipline ?? 75}%</span>{" "}disciplína
+                            </p>
                           </div>
-                          <div className="text-right">
-                            <p className="text-purple-400 font-bold">{trader.xp} XP</p>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <div className="text-right hidden sm:block">
+                              <p className="text-purple-400 font-bold text-sm">{trader.xp} XP</p>
+                              <p className="text-xs text-slate-500 flex items-center gap-1 justify-end">
+                                <Flame className="h-3 w-3 text-orange-400" />
+                                {trader.streak ?? 0} dní
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleSalute(String(trader.rank), trader.name)}
+                              disabled={isSaluted}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                isSaluted
+                                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-default"
+                                  : "bg-slate-700 text-slate-300 border border-slate-600 hover:bg-amber-500/20 hover:text-amber-300 hover:border-amber-500/40 active:scale-95"
+                              }`}
+                            >
+                              {isSaluted ? "🎯 Zasalutováno" : "🎯 Salute"}
+                            </button>
                           </div>
                         </div>
-                      ))
+                      )
+                    })
                   )}
                 </div>
 

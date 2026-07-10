@@ -277,7 +277,7 @@ export function MT5AccountWidget({ onData }: { onData?: (data: { balance: number
 
               {/* Status bar */}
               <div className="text-xs text-slate-400 text-center py-2 border-t border-slate-700/50">
-                Data syncs every 30 seconds
+                Balance/trades refresh once a day; this view checks for updates every 30s
               </div>
             </div>
           ) : (

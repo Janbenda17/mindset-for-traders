@@ -71,7 +71,7 @@ export const translations = {
     home_features_title: 'Všechno co potřebuješ',
     home_try_now: 'Vyzkoušet teď',
     home_cta_text: 'Zbývá ti jen psychika. Strategii už máš. Počítej s tím že prvních 30 dní bude tvrdých. Pak už to popluje na autopilota.',
-    home_cta_button: 'Začít zdarma - 14 dní',
+    home_cta_button: 'Začít zdarma',
     home_are_you_ready: 'Připraven stát se lepším traderem?',
 
     // Features
@@ -294,7 +294,7 @@ export const translations = {
     home_features_title: 'Everything you need',
     home_try_now: 'Try it now',
     home_cta_text: "All that's left is psychology. You have the strategy. Expect the first 30 days to be tough. After that it runs on autopilot.",
-    home_cta_button: 'Start Free - 14 Days',
+    home_cta_button: 'Start Free',
     home_are_you_ready: 'Ready to become a better trader?',
 
     // Features
@@ -523,7 +523,7 @@ export const cs = {
     feature5Highlight: 'Komunita > Solo trading',
     
     ctaText: 'Zbývá ti jen psychika. Strategii už máš. Počítej s tím že prvních 30 dní bude tvrdých. Pak už to popluje na autopilota.',
-    ctaButton: 'Začít zdarma - 14 dní',
+    ctaButton: 'Začít zdarma',
     moreInfo: 'Více informací',
   },
 
@@ -610,7 +610,7 @@ export const en = {
     feature5Highlight: 'Community > Solo trading',
     
     ctaText: 'All that\'s left is psychology. You have the strategy. Expect the first 30 days to be tough. After that it runs on autopilot.',
-    ctaButton: 'Start Free - 14 Days',
+    ctaButton: 'Start Free',
     moreInfo: 'More Info',
   },
 

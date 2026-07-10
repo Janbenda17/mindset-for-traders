@@ -877,7 +877,7 @@ const MindTraderAI = () => {
                           key={scenario.id}
                           onClick={() => handleSendMessage(scenario.content, true)}
                           disabled={isLoading}
-                          className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold shadow-lg shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-200 justify-start text-left h-auto py-2 px-4"
+                          className="w-full whitespace-normal break-words bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold shadow-lg shadow-purple-500/30 hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-200 justify-start text-left h-auto py-2.5 px-4 leading-snug"
                         >
                           {scenario.label}
                         </Button>

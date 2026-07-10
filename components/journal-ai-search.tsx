@@ -9,6 +9,10 @@ import type { DisciplineDay } from "@/lib/discipline-matrix"
 
 interface JournalAiSearchProps {
   onResults: (matchedDates: Set<string> | null, matchedDays: DisciplineDay[], summary: string | null) => void
+  // Optional data override (Virtual/demo mode) so the AI search queries the
+  // same demo dataset the calendar shows instead of empty live context data.
+  trades?: any[]
+  journalEntries?: any[]
 }
 
 const EXAMPLE_QUERIES = [
@@ -18,7 +22,7 @@ const EXAMPLE_QUERIES = [
   "dny bez self-reportu",
 ]
 
-export default function JournalAiSearch({ onResults }: JournalAiSearchProps) {
+export default function JournalAiSearch({ onResults, trades: tradesOverride, journalEntries: journalOverride }: JournalAiSearchProps) {
   const { getAllTrades, getAllJournalEntries } = useData()
   const [query, setQuery] = useState("")
   const [loading, setLoading] = useState(false)
@@ -31,8 +35,8 @@ export default function JournalAiSearch({ onResults }: JournalAiSearchProps) {
     setLoading(true)
     setError(null)
     try {
-      const trades = getAllTrades?.() || []
-      const journalEntries = getAllJournalEntries?.() || []
+      const trades = tradesOverride ?? getAllTrades?.() ?? []
+      const journalEntries = journalOverride ?? getAllJournalEntries?.() ?? []
       const res = await fetch("/api/journal/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

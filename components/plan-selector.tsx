@@ -122,10 +122,6 @@ export function PlanSelector() {
               <CheckCircle2 className="h-5 w-5 text-green-500 mr-2" />
               **Pokročilý obchodní deník**
             </div>
-            <div className="flex items-center text-gray-800 dark:text-gray-200">
-              <CheckCircle2 className="h-5 w-5 text-green-500 mr-2" />
-              **14-denní bezplatná zkušební verze**
-            </div>
           </CardContent>
           <CardFooter>
             <Button
@@ -133,7 +129,7 @@ export function PlanSelector() {
               onClick={() => handleSubscribe("premium")}
               disabled={isSubscribing}
             >
-              {isSubscribing ? "Přesměrování..." : "Začít s 14-denní zdarma"}
+              {isSubscribing ? "Přesměrování..." : "Upgradovat na Premium"}
             </Button>
           </CardFooter>
         </Card>

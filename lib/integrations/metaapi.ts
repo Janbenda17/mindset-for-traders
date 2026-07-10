@@ -70,52 +70,34 @@ export class MetaApiClient {
   }
 
   /**
-   * Create a provisioning profile for a broker server, then create the
-   * MetaTrader account itself using that profile. This is the real two-step
-   * flow MetaApi requires - the old code tried to create an account directly
-   * with no profile and against a host that doesn't exist.
+   * Create the MetaTrader account directly, relying on MetaApi's automatic
+   * broker settings detection (matched by the `server` name). Provisioning
+   * profiles are only needed for brokers MetaApi can't auto-detect, and they
+   * only become usable once a servers.dat/.srv file is uploaded to them - a
+   * step this app has no way to perform, so creating one here just produced
+   * an inactive profile and every account creation failed with "You can
+   * create accounts using active profiles only."
    *
-   * version 5 = MetaTrader 5, version 4 = MetaTrader 4.
+   * Deliberately does NOT wait for connectionStatus === CONNECTED - that can
+   * take 10-40s on a first connect, well past the timeout most serverless
+   * platforms give a single request. The caller is expected to persist the
+   * returned accountId right away and poll/verify the CONNECTED status
+   * separately (see waitUntilConnected), so a slow or killed request can't
+   * lose the account credentials the user just entered.
    */
   async authenticateWithCredentials(credentials: {
     login: string
     password: string
     broker: string
     platform?: 'mt4' | 'mt5'
-  }): Promise<string> {
+  }): Promise<{ accountId: string }> {
     if (!this.apiKey) {
       throw new Error('MetaApi is not configured on the server (missing METAAPI_API_KEY).')
     }
 
-    const version = credentials.platform === 'mt4' ? 4 : 5
+    const platform = credentials.platform === 'mt4' ? 'mt4' : 'mt5'
 
     try {
-      console.log('[v0] Creating MetaApi provisioning profile for broker:', credentials.broker)
-
-      const profileResponse = await fetch(`${this.provisioningBaseUrl}/users/current/provisioning-profiles`, {
-        method: 'POST',
-        headers: this.authHeaders(),
-        body: JSON.stringify({
-          name: `profile-${credentials.login}-${Date.now()}`,
-          version,
-          brokerTimezone: 'EET',
-          brokerDSTSwitchTimezone: 'EET',
-        }),
-      })
-
-      if (!profileResponse.ok) {
-        const errorText = await profileResponse.text()
-        console.error('[v0] Failed to create provisioning profile:', profileResponse.status, errorText)
-        throw new Error(`MetaApi rejected the provisioning profile (${profileResponse.status}): ${errorText}`)
-      }
-
-      const profile = await profileResponse.json()
-      const provisioningProfileId = profile.id
-
-      if (!provisioningProfileId) {
-        throw new Error('MetaApi did not return a provisioning profile id')
-      }
-
       console.log('[v0] Creating MetaApi account for login:', credentials.login)
 
       const accountResponse = await fetch(`${this.provisioningBaseUrl}/users/current/accounts`, {
@@ -126,10 +108,10 @@ export class MetaApiClient {
           password: credentials.password,
           name: `MT-${credentials.login}`,
           server: credentials.broker,
-          provisioningProfileId,
+          platform,
           magic: Math.floor(Math.random() * 900000) + 100000,
-          application: 'MetaApi',
           type: 'cloud-g2',
+          reliability: 'high',
         }),
       })
 
@@ -147,13 +129,73 @@ export class MetaApiClient {
       }
 
       console.log('[v0] MetaApi account created:', accountId)
-      return accountId
+
+      // Creating the account only registers it with MetaApi - it starts out
+      // UNDEPLOYED and never runs until explicitly deployed. Without this,
+      // the account object exists but no terminal is ever started, so it
+      // never actually logs into the broker and connectionStatus stays
+      // DISCONNECTED forever.
+      await this.deployAccount(accountId)
+
+      return { accountId }
     } catch (error) {
       console.error('[v0] MetaApi authentication with credentials failed:', error)
       throw error instanceof Error
         ? error
         : new Error('Failed to connect to MT5. Check your credentials and broker name.')
     }
+  }
+
+  /**
+   * Start the MetaApi trading terminal for a freshly created account. A
+   * created account is UNDEPLOYED and inert until this is called.
+   */
+  async deployAccount(accountId: string): Promise<void> {
+    const response = await fetch(`${this.provisioningBaseUrl}/users/current/accounts/${accountId}/deploy`, {
+      method: 'POST',
+      headers: this.authHeaders(),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('[v0] Failed to deploy MetaApi account:', response.status, errorText)
+      throw new Error(`Failed to deploy MT account (${response.status}): ${errorText}`)
+    }
+  }
+
+  /**
+   * Poll the account until MetaApi reports it as actually logged into the
+   * broker, or bail out after the timeout. A first-time demo connection
+   * typically takes 10-40s; a genuinely bad login/password/server usually
+   * surfaces as a DEPLOY_FAILED state well before the timeout.
+   */
+  async waitUntilConnected(accountId: string, timeoutMs = 30000, intervalMs = 3000): Promise<boolean> {
+    const deadline = Date.now() + timeoutMs
+
+    while (Date.now() < deadline) {
+      const response = await fetch(`${this.provisioningBaseUrl}/users/current/accounts/${accountId}`, {
+        method: 'GET',
+        headers: this.authHeaders(),
+      })
+
+      if (response.ok) {
+        const account = await response.json()
+
+        if (account.connectionStatus === 'CONNECTED') {
+          return true
+        }
+
+        if (account.state === 'DEPLOY_FAILED') {
+          throw new Error(
+            'MetaApi could not start the trading account. Double-check your login, password and broker server name.',
+          )
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, intervalMs))
+    }
+
+    return false
   }
 
   /**
@@ -176,7 +218,7 @@ export class MetaApiClient {
         account_id: accountId,
         api_key: this.apiKey,
         broker: brokerName,
-        connected: account.connectionStatus === 'connected',
+        connected: account.connectionStatus === 'CONNECTED',
       }
     } catch (error) {
       console.error('[v0] MetaApi account connection failed:', error)

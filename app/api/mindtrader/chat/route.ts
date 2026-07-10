@@ -479,7 +479,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const hasApiKey = Boolean(process.env.OPENAI_API_KEY)
+    const hasApiKey = Boolean(process.env.ANTHROPIC_API_KEY)
 
     if (!hasApiKey) {
       await new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 2500))

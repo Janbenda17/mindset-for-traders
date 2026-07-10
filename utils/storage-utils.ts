@@ -637,6 +637,25 @@ export function getUserData(): UserData {
   try {
     const STORAGE_KEY = getStorageKey()
     const data = localStorage.getItem(STORAGE_KEY)
+
+    // First-ever visit from a signed-out browser (no saved data yet, and not
+    // tied to a real logged-in user's key): seed it with sample entries so
+    // Daily Tracker/Journal/Weekly Review/Fail Log have something to show
+    // instead of a blank state, matching what the product tour promises
+    // ("demo data is already in the app"). Only applies to the anonymous
+    // fallback key - a signed-in user's own key is never auto-seeded, so a
+    // real new account still starts genuinely empty.
+    if (data === null && STORAGE_KEY === "trader-mindset-data") {
+      const seeded: UserData = {
+        ...getDefaultUserData(),
+        journalEntries: getSampleJournalEntries(),
+        moodEntries: getSampleMoodEntries(),
+        tradingData: getSampleTradingData(),
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded))
+      return seeded
+    }
+
     const parsedData: Partial<UserData> = JSON.parse(data)
     const fullData = { ...getDefaultUserData(), ...parsedData }
 

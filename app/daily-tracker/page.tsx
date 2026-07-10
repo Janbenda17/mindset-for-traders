@@ -39,6 +39,7 @@ import {
 import { useData } from '@/contexts/data-context'
 import { buildDailySummary } from '@/lib/daily-summary'
 import { useGamification } from '@/contexts/gamification-context'
+import { DemoUpgradeBanner } from '@/components/demo-upgrade-banner'
 
 function isSameDay(a: Date, b: Date) {
   return a.toDateString() === b.toDateString()
@@ -310,11 +311,15 @@ export default function DailyTrackerPage() {
             </p>
           </div>
           {!isLiveMode && (
-            <div className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
-              Demo mode — connect MetaTrader for real data
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">
+                Demo mode — connect MetaTrader for real data
+              </div>
             </div>
           )}
         </motion.div>
+
+        {!isLiveMode && <DemoUpgradeBanner />}
 
         {/* Proactive cooldown warning */}
         <AnimatePresence>

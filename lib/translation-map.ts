@@ -240,7 +240,7 @@ export const czechToEnglishMap: Record<string, string> = {
   '24/7 - AI analýza tvého mindetu': '24/7 - AI analysis of your mindset',
 
   'Zbývá ti jen psychika. Strategii už máš. Počítej s tím že prvních 30 dní bude tvrdých. Pak už to popluje na autopilota.': 'All that\'s left is psychology. You have the strategy. Expect the first 30 days to be tough. After that it runs on autopilot.',
-  'Začít zdarma - 14 dní': 'Start Free - 14 Days',
+  'Začít zdarma': 'Start Free',
   'Více informací': 'More Info',
 
   // Auth

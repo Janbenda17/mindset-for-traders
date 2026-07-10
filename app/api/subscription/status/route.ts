@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("subscription_status, subscription_tier, stripe_customer_id, trial_ends_at, is_premium")
+      .select("subscription_status, subscription_tier, stripe_customer_id, stripe_subscription_id, is_premium")
       .eq("user_id", user.id)
       .maybeSingle()
 
@@ -32,20 +32,15 @@ export async function GET(request: NextRequest) {
         tier: "free",
         plan: "free",
         isActive: false,
-        trialEndsAt: null,
         subscriptionId: null,
         customerId: null,
         status: "inactive",
       })
     }
 
-    // Check if subscription is ACTIVE (premium or trialing)
+    // Check if subscription is ACTIVE
     // Zdroj pravdy je is_premium flag v databázi!
-    // Stripe uses "trialing" not "trial"
-    const isActive = profile?.is_premium === true || 
-                     profile?.subscription_status === "active" || 
-                     profile?.subscription_status === "trialing" ||
-                     profile?.subscription_status === "trial"
+    const isActive = profile?.is_premium === true || profile?.subscription_status === "active"
     const isPremium = profile?.is_premium === true
 
     const tier = profile?.subscription_tier || "free"
@@ -56,7 +51,6 @@ export async function GET(request: NextRequest) {
         user_id: user.id,
         status: profile?.subscription_status,
         tier: profile?.subscription_tier,
-        trialEndsAt: profile?.trial_ends_at,
         isPremium,
         isActive,
       },
@@ -64,13 +58,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       isPremium,  // TRUE = user has premium
-      tier,       // "premium", "trial", or "free"
+      tier,       // "premium" or "free"
       plan: isPremium ? "premium" : "free",
       isActive,
-      trialEndsAt: profile?.trial_ends_at,
-      subscriptionId: null,
+      subscriptionId: profile?.stripe_subscription_id,
       customerId: profile?.stripe_customer_id,
-      status: profile?.subscription_status,  // "active", "trial", "canceled", etc.
+      status: profile?.subscription_status,  // "active", "canceled", etc.
       cancelAtPeriodEnd: false,
     })
   } catch (error: any) {

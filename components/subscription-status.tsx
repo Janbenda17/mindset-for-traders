@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useSubscription } from "@/contexts/subscription-context"
-import { Crown, CreditCard, Calendar, AlertTriangle, CheckCircle } from "lucide-react"
+import { Crown, CreditCard, AlertTriangle, CheckCircle } from "lucide-react"
 import Link from "next/link"
 
 export function SubscriptionStatus() {
@@ -13,8 +13,6 @@ export function SubscriptionStatus() {
     plan,
     isActive,
     isPremium,
-    daysRemaining,
-    trialEndsAt,
     subscriptionId,
     customerId,
     isLoading,
@@ -74,8 +72,6 @@ export function SubscriptionStatus() {
     }
   }
 
-  const isTrialing = trialEndsAt && new Date(trialEndsAt) > new Date()
-
   return (
     <Card>
       <CardHeader>
@@ -94,11 +90,7 @@ export function SubscriptionStatus() {
                 {plan === "premium" ? "Premium" : "Free"}
               </Badge>
             </div>
-            {isPremium && (
-              <p className="text-sm text-gray-600 mt-1">
-                {isTrialing ? `Trial končí za ${daysRemaining} dní` : "€59/měsíc"}
-              </p>
-            )}
+            {isPremium && <p className="text-sm text-gray-600 mt-1">€59/měsíc</p>}
           </div>
           {isPremium && (
             <div className="flex items-center gap-1 text-green-600">
@@ -107,20 +99,6 @@ export function SubscriptionStatus() {
             </div>
           )}
         </div>
-
-        {/* Trial Information */}
-        {isTrialing && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="h-4 w-4 text-blue-600" />
-              <span className="font-medium text-blue-900">Trial období</span>
-            </div>
-            <p className="text-sm text-blue-800">
-              Váš trial končí {new Date(trialEndsAt).toLocaleDateString("cs-CZ")}. Po skončení trialu bude automaticky
-              strženo €59/měsíc.
-            </p>
-          </div>
-        )}
 
         {/* Free Plan Limitations */}
         {!isPremium && (
