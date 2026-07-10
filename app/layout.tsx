@@ -90,7 +90,7 @@ export default function RootLayout({
         {/* Meta Pixel */}
         <Script
           id="meta-pixel-init"
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               !function(f,b,e,v,n,t,s)
