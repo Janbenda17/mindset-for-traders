@@ -437,8 +437,8 @@ export default function HomePage() {
                   </h3>
                   <p className="text-slate-400 max-w-xl mx-auto mb-6 leading-relaxed">
                     {language === 'en'
-                      ? "MindTrader is in presale. Founding members keep presale pricing for life and help shape what we build next — once all 30 spots are gone, that pricing is gone for good."
-                      : 'MindTrader je v předprodeji. Zakládající členové mají doživotně předprodejní cenu a přímo ovlivňují, co stavíme dál — jakmile je všech 30 míst pryč, ta cena už se nevrátí.'}
+                      ? "MindTrader is in presale. Founding members keep presale pricing and help shape what we build next — once all 30 spots are gone, that pricing is gone for good."
+                      : 'MindTrader je v předprodeji. Zakládající členové mají předprodejní cenu a přímo ovlivňují, co stavíme dál — jakmile je všech 30 míst pryč, ta cena už se nevrátí.'}
                   </p>
                   <div className="max-w-xs mx-auto">
                     <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden mb-2">

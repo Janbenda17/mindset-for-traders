@@ -40,7 +40,7 @@ export function SignupForm() {
 
   const txt = {
     presaleBadge: isEn ? "Presale" : "Předprodej",
-    presaleTitle: isEn ? "First 30 founding members keep this pricing for life" : "Prvních 30 zakládajících členů má tuhle cenu doživotně",
+    presaleTitle: isEn ? "First 30 founding members keep this presale pricing" : "Prvních 30 zakládajících členů má tuhle předprodejní cenu",
     presaleClaimed: isEn ? "claimed" : "obsazeno",
     presaleTotal: isEn ? "total spots" : "míst celkem",
     cardTitle: isEn ? "Create your account" : "Vytvořit účet",
