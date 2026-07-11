@@ -214,6 +214,10 @@ export default function HomePage() {
                   ? '93% of traders fail because of psychology, not strategy.'
                   : '93% obchodníků padne kvůli psychice, ne kvůli strategii.'}
               </p>
+              {/* Explainer video */}
+              <div className="max-w-3xl mx-auto mb-12">
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-fuchsia-500/10"><video className="w-full h-auto block" src="/videos/explainer.mp4" controls playsInline preload="metadata" /></div>
+              </div>
 
               {/* Stats */}
               <motion.div
