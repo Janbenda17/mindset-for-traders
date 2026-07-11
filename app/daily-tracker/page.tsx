@@ -324,6 +324,22 @@ export default function DailyTrackerPage() {
         {/* Proactive cooldown warning */}
         <AnimatePresence>
           {cooldownAlert && (
+      {allTrades.length === 0 && (
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="rounded-xl border border-fuchsia-500/30 bg-gradient-to-r from-fuchsia-500/10 to-purple-500/5 p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+      <div>
+      
+      <p className="text-sm font-semibold text-white mb-1">Vítej! Tvůj Daily Tracker je připravený.</p>
+      <p className="text-sm text-slate-400">Jakmile zalogíš první obchod nebo připojíš MetaTrader, čísla níže ožijou tvými reálnými daty.</p>
+      </div>
+        <div className="flex gap-2 flex-shrink-0">
+        <Link href="/account/integrations">
+          <Button size="sm" className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white">Připojit broker</Button>
+        </Link>
+          <Link href="/record-trades">
+          <Button size="sm" variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800">Zalogovat obchod ručně</Button></Link>
+        </div>
+        </motion.div>
+      )}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
