@@ -39,7 +39,6 @@ import {
 import { useData } from '@/contexts/data-context'
 import { buildDailySummary } from '@/lib/daily-summary'
 import { useGamification } from '@/contexts/gamification-context'
-import { DemoUpgradeBanner } from '@/components/demo-upgrade-banner'
 
 function isSameDay(a: Date, b: Date) {
   return a.toDateString() === b.toDateString()
@@ -317,9 +316,7 @@ export default function DailyTrackerPage() {
               </div>
             </div>
           )}
-        </motion.div>
-
-        {!isLiveMode && <DemoUpgradeBanner />}
+        </motion.div>        
 
         {allTrades.length === 0 && (
           <motion.div
