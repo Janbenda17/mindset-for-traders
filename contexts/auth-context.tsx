@@ -325,6 +325,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       if (typeof window !== "undefined" && (window as any).fbq) {
                                   ;(window as any).fbq("track", "CompleteRegistration", {}, { eventID: eventId })
                       }
+              if (typeof window !== "undefined" && (window as any).clarity) { (window as any).clarity("event", "signup_completed") }
 
                       fetch("/api/meta-capi", {
                                   method: "POST",
