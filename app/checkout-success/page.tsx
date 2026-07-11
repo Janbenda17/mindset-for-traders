@@ -54,6 +54,7 @@ function CheckoutSuccessContent() {
 
         if (data.success && data.isPremium) {
           console.log("[v0] [CHECKOUT] ✓ Payment verified and premium activated!")
+          if (typeof window !== "undefined" && (window as any).clarity) { (window as any).clarity("event", "purchase_completed") }
           
           // Refresh subscription context
           await checkSubscriptionStatus()
