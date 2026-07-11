@@ -7,11 +7,13 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import { ArrowRight, Sparkles, Brain, CalendarCheck, Check } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowRight } from 'lucide-react'
 import EmotionalTaxSheet from '@/components/emotional-tax-sheet'
 import DisciplineMatrix from '@/components/discipline-matrix'
 import DayDetailPanel from '@/components/day-detail-panel'
+import DailySummaryTeaser from '@/components/daily-summary-teaser'
+import AiCoachTeaser from '@/components/ai-coach-teaser'
 import type { DisciplineDay } from '@/lib/discipline-matrix'
 import { cn } from '@/lib/utils'
 
@@ -57,26 +59,20 @@ const DEMO_TAX_TRADES = [
   { id: 'f12', date: demoDate(21), pair: 'GBPUSD', direction: 'Short', pnl: -180, positionSize: 3.1, hasStopLoss: true, followedPlan: false, type: 'trade' },
 ]
 
+// One example day for the Daily Tracker teaser - a net-positive day that's
+// still flagged reckless (revenge re-entry, oversized), run through the
+// real buildDailySummary() engine (lib/daily-summary.ts).
+const DEMO_DAY_TRADES = [
+  { id: 'dd1', date: demoDate(22), pair: 'EURUSD', direction: 'Long', pnl: 680, positionSize: 1.0, hasStopLoss: true, followedPlan: true, type: 'trade' },
+  { id: 'dd2', date: demoDate(22), pair: 'XAUUSD', direction: 'Short', pnl: -246, positionSize: 4.5, hasStopLoss: true, revengeTrade: true, followedPlan: false, type: 'trade' },
+]
+
 export default function HomePage() {
   const router = useRouter()
   const { user } = useAuth()
   const { language } = useLanguage()
 
-  const [presaleStats, setPresaleStats] = useState<{ total: number; claimed: number } | null>(null)
   const [selectedDemoDay, setSelectedDemoDay] = useState<DisciplineDay | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/presale-stats')
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled) setPresaleStats(data)
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   const handlePricingClick = () => {
     if (!user) {
@@ -85,8 +81,6 @@ export default function HomePage() {
       router.push('/upgrade')
     }
   }
-
-  const isEn = language === 'en'
 
   return (
     <div className="min-h-screen bg-slate-950 overflow-hidden">
@@ -152,10 +146,10 @@ export default function HomePage() {
         >
           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-300 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] shrink-0">
             <span className="w-1 h-1 rounded-full bg-red-400 animate-pulse" />
-            {isEn ? 'Presale' : 'Předprodej'}
+            {language === 'en' ? 'Presale' : 'Předprodej'}
           </span>
           <span className="text-slate-300 font-medium group-hover:text-white transition-colors">
-            {isEn ? 'Limited to the first 30 users only' : 'Jen pro prvních 30 uživatelů'}
+            {language === 'en' ? 'Limited to the first 30 users only' : 'Jen pro prvních 30 uživatelů'}
           </span>
           <ArrowRight className="hidden sm:block w-3 h-3 text-slate-600 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all shrink-0" />
         </button>
@@ -182,13 +176,13 @@ export default function HomePage() {
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse" />
                 <span className="text-xs font-mono uppercase tracking-[0.2em] text-fuchsia-400">
-                  {isEn ? '#1 Trading Psychology Platform' : '#1 Trading Psychology Platform'}
+                  {language === 'en' ? '#1 Trading Psychology Platform' : '#1 Trading Psychology Platform'}
                 </span>
               </motion.div>
 
               {/* Main heading */}
               <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[1.05] mb-6 text-white text-balance">
-                {isEn ? (
+                {language === 'en' ? (
                   <>
                     Your brain becomes your{' '}
                     <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">biggest advantage</span>
@@ -202,14 +196,13 @@ export default function HomePage() {
               </h1>
 
               <p className="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed text-pretty font-medium">
-                {isEn
+                {language === 'en'
                   ? '93% of traders fail because of psychology, not strategy.'
                   : '93% obchodníků padne kvůli psychice, ne kvůli strategii.'}
               </p>
-
               {/* Explainer video */}
               <div className="max-w-xs mx-auto mb-12">
-                <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-xl group">
+                <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-xl group">
                   <video
                     className="w-full h-auto block"
                     src="/videos/explainer.mp4"
@@ -249,7 +242,7 @@ export default function HomePage() {
                     9<span className="text-fuchsia-500">/</span>10
                   </div>
                   <div className="text-[10px] leading-tight sm:text-sm sm:leading-snug text-slate-400">
-                    {isEn ? 'Traders struggle with psychology' : 'Obchodníků má psychické problémy'}
+                    {language === 'en' ? 'Traders struggle with psychology' : 'Obchodníků má psychické problémy'}
                   </div>
                 </div>
                 <div className="bg-slate-950 px-2 py-4 sm:px-6 sm:py-8 text-center">
@@ -257,7 +250,7 @@ export default function HomePage() {
                     <span className="text-fuchsia-500">{'↓'}</span>42%
                   </div>
                   <div className="text-[10px] leading-tight sm:text-sm sm:leading-snug text-slate-400">
-                    {isEn ? 'Less revenge trading' : 'Méně revenge tradingu'}
+                    {language === 'en' ? 'Less revenge trading' : 'Méně revenge tradingu'}
                   </div>
                 </div>
                 <div className="bg-slate-950 px-2 py-4 sm:px-6 sm:py-8 text-center">
@@ -265,55 +258,31 @@ export default function HomePage() {
                     24<span className="text-fuchsia-500">/</span>7
                   </div>
                   <div className="text-[10px] leading-tight sm:text-sm sm:leading-snug text-slate-400">
-                    {isEn ? 'AI analysis of your mindset' : 'AI analýza tvého mindsetu'}
+                    {language === 'en' ? 'AI analysis of your mindset' : 'AI analýza tvého mindsetu'}
                   </div>
                 </div>
               </motion.div>
             </motion.div>
           </div>
 
-          {/* 3 key benefits */}
-          <div className="pt-20 pb-4">
+          {/* Broker connect teaser — small, just logo + label + CTA */}
+          <div className="pt-6 sm:pt-8">
             <motion.div
-              className="grid sm:grid-cols-3 gap-4 max-w-5xl mx-auto"
+              className="max-w-md mx-auto"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
+              viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-4">
-                  <CalendarCheck className="w-5 h-5 text-blue-400" />
-                </div>
-                <h3 className="text-white font-bold mb-2">{isEn ? 'Daily Tracker' : 'Daily Tracker'}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  {isEn
-                    ? 'A real daily summary computed from your actual trades - not a staged screenshot.'
-                    : 'Skutečný denní přehled spočítaný z tvých reálných obchodů - ne nafocený mockup.'}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4">
-                  <Brain className="w-5 h-5 text-rose-400" />
-                </div>
-                <h3 className="text-white font-bold mb-2">{isEn ? 'AI Coach' : 'AI kouč'}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  {isEn
-                    ? 'An AI coach that steps in before the mistake happens - not after.'
-                    : 'AI kouč, co zasáhne dřív, než uděláš chybu - ne až potom.'}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-                <div className="flex items-center gap-2.5 mb-4">
+              <div className="relative rounded-full border border-white/10 bg-white/[0.03] pl-3 pr-1.5 py-1.5 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
                   <div
-                    className="relative flex items-center justify-center w-10 h-10 rounded-xl border border-white/15 overflow-hidden flex-shrink-0"
+                    className="relative flex items-center justify-center w-7 h-7 rounded-lg border border-white/15 overflow-hidden flex-shrink-0"
                     style={{ background: 'linear-gradient(135deg, #0d2b4e 0%, #0a1f3a 100%)' }}
                     aria-label="MetaTrader 5"
                     title="MetaTrader 5"
                   >
-                    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className="w-6 h-6">
+                    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" className="w-5 h-5">
                       <rect x="10" y="14" width="5" height="18" rx="1" fill="#e53935" />
                       <line x1="12.5" y1="10" x2="12.5" y2="36" stroke="#e53935" strokeWidth="1.3" />
                       <rect x="19" y="18" width="5" height="16" rx="1" fill="#43a047" />
@@ -321,48 +290,96 @@ export default function HomePage() {
                       <text x="36" y="32" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontWeight="900" fontSize="20" fill="#ffffff">5</text>
                     </svg>
                   </div>
+                  <span className="text-sm font-semibold tracking-tight text-white">
+                    {language === 'en' ? 'Broker' : 'Broker'}
+                  </span>
                 </div>
-                <h3 className="text-white font-bold mb-2">{isEn ? 'Connects to your broker' : 'Napojení na brokera'}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed mb-3">
-                  {isEn
-                    ? 'Syncs with MetaTrader 5 - no manual trade entry.'
-                    : 'Synchronizace s MetaTrader 5 - žádné ruční zapisování obchodů.'}
-                </p>
+
                 <Link
                   href={user ? '/account/integrations' : '/signup'}
-                  className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-[0.15em] text-slate-400 hover:text-fuchsia-300 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 font-mono text-[11px] uppercase tracking-[0.15em] text-slate-300 hover:border-fuchsia-500/40 hover:text-fuchsia-300 transition-all flex-shrink-0"
                 >
                   <ArrowRight className="w-3 h-3" />
-                  {isEn ? 'Connect' : 'Připojit'}
+                  {language === 'en' ? 'Connect' : 'Připojit'}
                 </Link>
               </div>
             </motion.div>
-
-            <div className="text-center mt-8">
-              <Link
-                href="/product"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-fuchsia-300 transition-colors"
-              >
-                {isEn ? 'See the full product tour' : 'Prohlédnout si celý produkt'}
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
           </div>
 
-          {/* Single best demo: Journal + Calendar, real computed numbers */}
-          <div className="pb-20 pt-16">
+          {/* Real proof, page by page - each section below is the actual
+              in-app component/engine for that feature, fed example data,
+              not a screenshot or a fabricated mockup. */}
+          <div className="pb-20 pt-4">
+            {/* Daily Tracker */}
             <motion.div
               className="max-w-3xl mx-auto mb-6 text-center"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-blue-400 mb-3">
+                {language === 'en' ? 'From Daily Tracker' : 'Z Daily Trackeru'}
+              </p>
+              <p className="text-xl sm:text-2xl font-bold text-white">
+                {language === 'en'
+                  ? 'Your real daily summary - computed, not staged.'
+                  : 'Tvůj skutečný denní přehled - spočítaný, ne nafocený.'}
+              </p>
+            </motion.div>
+            <motion.div
+              className="max-w-4xl mx-auto mb-20"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <DailySummaryTeaser
+                trades={DEMO_DAY_TRADES}
+                dateLabel={language === 'en' ? 'today' : 'dnes'}
+              />
+            </motion.div>
+
+            {/* AI Coach */}
+            <motion.div
+              className="max-w-3xl mx-auto mb-6 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <p className="font-mono text-xs uppercase tracking-[0.25em] text-rose-400 mb-3">
+                {language === 'en' ? 'From AI Coach' : 'Z AI Coache'}
+              </p>
+              <p className="text-xl sm:text-2xl font-bold text-white">
+                {language === 'en'
+                  ? 'An AI coach that stops you before the mistake happens.'
+                  : 'AI kouč, co tě zastaví dřív, než uděláš chybu.'}
+              </p>
+            </motion.div>
+            <motion.div
+              className="max-w-4xl mx-auto mb-20"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <AiCoachTeaser isEn={language === 'en'} />
+            </motion.div>
+
+            {/* Journal */}
+            <motion.div
+              className="max-w-3xl mx-auto mb-6 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
               <p className="font-mono text-xs uppercase tracking-[0.25em] text-amber-400 mb-3">
-                {isEn ? 'From Journal' : 'Z Journalu'}
+                {language === 'en' ? 'From Journal' : 'Z Journalu'}
               </p>
               <p className="text-xl sm:text-2xl font-bold text-white">
-                {isEn
+                {language === 'en'
                   ? 'Every mistake, priced in real money.'
                   : 'Každá chyba, se svou skutečnou cenou v penězích.'}
               </p>
@@ -372,21 +389,21 @@ export default function HomePage() {
               className="max-w-4xl mx-auto mb-6"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
+              viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <EmotionalTaxSheet trades={DEMO_TAX_TRADES} isEn={isEn} />
+              <EmotionalTaxSheet trades={DEMO_TAX_TRADES} isEn={language === 'en'} />
             </motion.div>
 
             <motion.div
               className="max-w-4xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
+              viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
               <p className="text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-3">
-                {isEn ? 'Click any day for the full breakdown · live in-app feature' : 'Klikni na den pro detailní rozbor · živá funkce z aplikace'}
+                {language === 'en' ? 'Click any day for the full breakdown · live in-app feature' : 'Klikni na den pro detailní rozbor · živá funkce z aplikace'}
               </p>
               <div className="flex flex-col md:flex-row gap-4 items-start">
                 <div className={cn('w-full transition-all duration-300', selectedDemoDay ? 'md:w-[52%]' : 'md:w-full')}>
@@ -405,155 +422,11 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          {/* Pricing */}
-          <div className="pb-20">
-            <motion.div
-              className="max-w-3xl mx-auto mb-10 text-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.6 }}
-            >
-              <p className="font-mono text-xs uppercase tracking-[0.25em] text-fuchsia-400 mb-3">
-                {isEn ? 'Pricing' : 'Ceník'}
-              </p>
-              <p className="text-2xl sm:text-3xl font-black text-white">
-                {isEn ? 'Start free. Upgrade when you feel it working.' : 'Začni zdarma. Upgraduj, až ucítíš, že to funguje.'}
-              </p>
-            </motion.div>
-
-            <motion.div
-              className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.6 }}
-            >
-              {/* Free */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 flex flex-col">
-                <h3 className="text-white font-bold text-lg mb-1">{isEn ? 'Free' : 'Free'}</h3>
-                <div className="text-3xl font-black text-white mb-4">0 Kč</div>
-                <ul className="space-y-2 mb-6 flex-1">
-                  {[
-                    isEn ? 'Daily Tracker' : 'Daily Tracker',
-                    isEn ? 'Emotional Tax Sheet' : 'Emotional Tax Sheet',
-                    isEn ? 'Discipline calendar' : 'Kalendář disciplíny',
-                  ].map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-sm text-slate-300">
-                      <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  onClick={handlePricingClick}
-                  variant="outline"
-                  className="w-full border-white/15 text-white hover:bg-white/5"
-                >
-                  {isEn ? 'Start free' : 'Začít zdarma'}
-                </Button>
-              </div>
-
-              {/* Premium */}
-              <div className="relative rounded-2xl border border-fuchsia-500/40 bg-gradient-to-b from-fuchsia-500/[0.08] to-white/[0.03] p-6 flex flex-col">
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white text-[10px] font-mono uppercase tracking-[0.15em]">
-                  {isEn ? 'Most popular' : 'Nejoblíbenější'}
-                </span>
-                <h3 className="text-white font-bold text-lg mb-1 mt-2">Premium</h3>
-                <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-3xl font-black text-white">$49.99</span>
-                  <span className="text-sm text-slate-500 line-through">$79.99</span>
-                  <span className="text-xs text-slate-400">/{isEn ? 'month' : 'měsíc'}</span>
-                </div>
-                <ul className="space-y-2 mb-6 flex-1">
-                  {[
-                    isEn ? 'Everything in Free' : 'Vše z Free',
-                    isEn ? 'MindTrader AI Pro' : 'MindTrader AI Pro',
-                    isEn ? 'Advanced analytics & reports' : 'Pokročilé analýzy a reporty',
-                    isEn ? 'Priority support' : 'Prioritní podpora',
-                  ].map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-sm text-slate-300">
-                      <Check className="w-4 h-4 text-fuchsia-400 shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  onClick={handlePricingClick}
-                  className="w-full bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white hover:from-fuchsia-400 hover:to-purple-500 font-bold"
-                >
-                  {isEn ? 'Upgrade to Premium' : 'Upgradovat na Premium'}
-                </Button>
-                <p className="text-center text-[11px] text-slate-500 mt-2">
-                  {isEn ? '7-day money-back guarantee' : '7denní garance vrácení peněz'}
-                </p>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Beta sponsorship — last urgency push right before the CTA. Honest
-              real cap (30) and a real live count of paid accounts against it,
-              no fabricated countdown. */}
-          <div className="pb-16">
-            <motion.div
-              className="max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="relative rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/[0.06] via-slate-950 to-slate-950 p-6 sm:p-10 text-center overflow-hidden">
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(239,68,68,0.12),transparent_60%)]"
-                />
-                <div className="relative">
-                  <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10">
-                    <Sparkles className="w-3.5 h-3.5 text-red-400" />
-                    <span className="text-xs font-mono uppercase tracking-[0.2em] text-red-300">
-                      {isEn ? 'Beta sponsorship' : 'Beta sponzoring'}
-                    </span>
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-white mb-3">
-                    {isEn
-                      ? 'Opening the first 30 founding-member slots'
-                      : 'Otevíráme prvních 30 slotů pro zakládající členy'}
-                  </h3>
-                  <p className="text-slate-400 max-w-xl mx-auto mb-6 leading-relaxed">
-                    {isEn
-                      ? "MindTrader is in presale. Founding members keep presale pricing and help shape what we build next — once all 30 spots are gone, that pricing is gone for good."
-                      : 'MindTrader je v předprodeji. Zakládající členové mají předprodejní cenu a přímo ovlivňují, co stavíme dál — jakmile je všech 30 míst pryč, ta cena už se nevrátí.'}
-                  </p>
-                  <div className="max-w-xs mx-auto">
-                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden mb-2">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-red-500 to-rose-500 transition-all duration-700"
-                        style={{
-                          width: presaleStats
-                            ? `${Math.max(4, (presaleStats.claimed / presaleStats.total) * 100)}%`
-                            : '4%',
-                        }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-center font-mono text-[11px] text-slate-500">
-                      <span>
-                        {presaleStats ? Math.max(0, presaleStats.total - presaleStats.claimed) : 28}{' '}
-                        {isEn
-                          ? `spots left out of ${presaleStats ? presaleStats.total : 30}`
-                          : `volných míst z ${presaleStats ? presaleStats.total : 30}`}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
           {/* Final CTA */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
+            viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className="py-24"
           >
@@ -567,7 +440,7 @@ export default function HomePage() {
               />
               <div className="relative">
                 <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-5 leading-[1.05] text-balance">
-                  {isEn ? (
+                  {language === 'en' ? (
                     <>
                       Ready to <span className="italic font-serif bg-gradient-to-r from-fuchsia-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">trade better</span>?
                     </>
@@ -578,7 +451,7 @@ export default function HomePage() {
                   )}
                 </h2>
                 <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                  {isEn
+                  {language === 'en'
                     ? 'Sign up free today. Upgrade to Premium anytime for full access to all features.'
                     : 'Zaregistruj se dnes zdarma. Upgraduj na Premium kdykoli a získej plný přístup ke všem funkcím.'}
                 </p>
@@ -587,7 +460,7 @@ export default function HomePage() {
                   onClick={handlePricingClick}
                   className="bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white hover:from-fuchsia-400 hover:to-purple-500 font-bold text-base px-8 py-6 rounded-lg shadow-lg shadow-fuchsia-500/30 border border-white/10"
                 >
-                  {isEn ? 'Get Started Free' : 'Začít zdarma'}{' '}
+                  {language === 'en' ? 'Get Started Free' : 'Začít zdarma'}{' '}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
