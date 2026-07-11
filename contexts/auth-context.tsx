@@ -350,7 +350,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log("[v0] ✅ Registrace HOTOVA - redirect na /daily-tracker")
       await new Promise((resolve) => setTimeout(resolve, 500))
-      router.push("/daily-tracker")
+      router.push("/onboarding")
       return true
     } catch (error: any) {
       console.error("[v0] ===== REGISTRACE ERROR =====")
