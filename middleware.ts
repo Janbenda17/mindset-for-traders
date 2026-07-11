@@ -44,6 +44,6 @@ export const config = {
      * - /api/cron/* (Cron jobs)
      * - Static assets (.svg, .png, .jpg, etc.)
      */
-    "/((?!_next/static|_next/image|favicon.ico|api/subscription/webhook|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|json|map|txt|woff|woff2|ttf|eot|xml)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/subscription/webhhook|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|json|map|txt|woff|woff2|ttf|eot|xml|mp4|webm|mov)$).*)",
   ],
 }
