@@ -451,11 +451,11 @@ export default function HomePage() {
                         }}
                       />
                     </div>
-                    <div className="flex items-center justify-between font-mono text-[11px] text-slate-500">
-                      <span>
-                        {presaleStats ? presaleStats.claimed : '···'} {language === 'en' ? 'claimed' : 'obsazeno'}
-                      </span>
-                      <span>{presaleStats ? presaleStats.total : 30} {language === 'en' ? 'total spots' : 'míst celkem'}</span>
+<div className="flex items-center justify-center font-mono text-[11px] text-slate-500">
+  <span>
+    {presaleStats ? Math.max(0, presaleStats.total - presaleStats.claimed) : 28} {language === 'en' ? `spots left out of ${presaleStats ? presaleStats.total : 30}` : `volných míst z ${presaleStats ? presaleStats.total : 30}`}
+  </span>
+</div>
                     </div>
                   </div>
                 </div>
