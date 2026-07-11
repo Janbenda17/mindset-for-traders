@@ -215,8 +215,8 @@ export default function HomePage() {
                   : '93% obchodníků padne kvůli psychice, ne kvůli strategii.'}
               </p>
               {/* Explainer video */}
-              <div className="max-w-3xl mx-auto mb-12">
-              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-fuchsia-500/10"><video className="w-full h-auto block" src="/videos/explainer.mp4" controls playsInline preload="metadata" /></div>
+              <div className="max-w-xs mx-auto mb-12">
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-xl group"><video className="w-full h-auto block" src="/videos/explainer.mp4" poster="/videos/explainer-poster.jpg" controls playsInline preload="metadata" onPlay={(e) => e.currentTarget.nextElementSibling?.classList.add('hidden')} /><button type="button" aria-label="Přehrát video" onClick={(e) => { const v = e.currentTarget.previousElementSibling as HTMLVideoElement; v?.play() }} className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors"><span className="w-14 h-14 rounded-full bg-white/95 flex items-center justify-center shadow-lg"><svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-fuchsia-600 ml-1"><path d="M8 5v14l11-7z"></path></svg></span></button></div>
               </div>
 
               {/* Stats */}
