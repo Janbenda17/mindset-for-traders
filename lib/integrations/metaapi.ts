@@ -160,10 +160,14 @@ export class MetaApiClient {
    * necessarily readable from every backend it operates (eventual
    * consistency), so calling /deploy immediately afterwards can 404 with
    * "Trading account with id X not found" even though the account was just
-   * created successfully. Retry a few times with a short delay before
-   * giving up - this is a timing issue, not a real error.
+   * created successfully - and in practice this has been observed to take
+   * several seconds to clear, not just one retry. Retry with a growing
+   * delay (up to ~15s total) before giving up - this is a timing issue, not
+   * a real error, and the account creation itself (the expensive/billed
+   * part) already succeeded.
    */
-  async deployAccount(accountId: string, retriesLeft = 2): Promise<void> {
+  async deployAccount(accountId: string, attempt = 0): Promise<void> {
+    const maxAttempts = 6
     const response = await fetch(`${this.provisioningBaseUrl}/users/current/accounts/${accountId}/deploy`, {
       method: 'POST',
       headers: this.authHeaders(),
@@ -172,12 +176,13 @@ export class MetaApiClient {
     if (!response.ok) {
       const errorText = await response.text()
 
-      if (response.status === 404 && retriesLeft > 0) {
+      if (response.status === 404 && attempt < maxAttempts) {
+        const delayMs = 1500 + attempt * 500
         console.warn(
-          `[v0] Deploy 404 for freshly created account ${accountId} (eventual consistency) - retrying, ${retriesLeft} attempt(s) left`,
+          `[v0] Deploy 404 for freshly created account ${accountId} (eventual consistency) - retrying in ${delayMs}ms, attempt ${attempt + 1}/${maxAttempts}`,
         )
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        return this.deployAccount(accountId, retriesLeft - 1)
+        await new Promise((resolve) => setTimeout(resolve, delayMs))
+        return this.deployAccount(accountId, attempt + 1)
       }
 
       console.error('[v0] Failed to deploy MetaApi account:', response.status, errorText)
