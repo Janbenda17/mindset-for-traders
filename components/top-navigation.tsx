@@ -33,6 +33,8 @@ import {
   ChevronDown,
   Lock,
   Zap,
+  Gift,
+  Clock,
 } from "lucide-react"
 import LiveModeToggle from "@/components/live-mode-toggle"
 import { supabase } from "@/lib/supabase/client"
@@ -45,11 +47,18 @@ interface TopNavigationProps {
   initialTheme?: string
 }
 
+// Pages that render their own marketing-style header/hero (homepage, intro,
+// resources) and manage their own top spacing independently of
+// ClientLayout's pt-* wrapper. The trial strip is skipped there so we don't
+// have to touch every marketing page's padding for a growth hook that's
+// really meant for the logged-in app experience.
+const STRIP_EXCLUDED_PATHS = new Set(["/", "/intro", "/resources"])
+
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
   const pathname = usePathname()
   const router = useRouter()
   const { isLiveMode, switchToLive } = useLiveMode()
-  const { isPremium } = useSubscription()
+  const { isPremium, isTrialing, trialDaysLeft } = useSubscription()
   const t = useT()
   const { language } = useLanguage()
   const isEn = language === "en"
@@ -177,8 +186,64 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     logout()
   }
 
+  // Growth-hook strip shown above the main nav row for logged-in users on
+  // app pages. Always renders (constant height) once authenticated so
+  // ClientLayout's top padding never has to guess whether it's visible -
+  // only the copy + CTA changes based on subscription state.
+  const showTrialStrip = isAuthenticated && !STRIP_EXCLUDED_PATHS.has(pathname || "")
+  const dayWord = (n: number) => {
+    if (isEn) return n === 1 ? "day" : "days"
+    if (n === 1) return "den"
+    if (n >= 2 && n <= 4) return "dny"
+    return "dní"
+  }
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
+      {showTrialStrip && (
+        <div
+          className={`h-8 flex items-center justify-center px-3 text-center ${
+            isTrialing
+              ? "bg-gradient-to-r from-fuchsia-600/90 to-purple-600/90"
+              : isPremium
+                ? "bg-gradient-to-r from-emerald-700/70 to-emerald-800/70"
+                : "bg-gradient-to-r from-amber-600/90 to-orange-600/90"
+          }`}
+        >
+          {isTrialing ? (
+            <Link href="/upgrade" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
+              <Gift className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">
+                {isEn
+                  ? `Your 14-day Premium trial is active — ${trialDaysLeft} ${dayWord(trialDaysLeft)} left.`
+                  : `Aktivní 14denní Premium trial — zbývá ${trialDaysLeft} ${dayWord(trialDaysLeft)}.`}
+              </span>
+              <span className="hidden sm:inline underline decoration-white/50">
+                {isEn ? "See what's unlocked" : "Zobrazit Premium"}
+              </span>
+            </Link>
+          ) : isPremium ? (
+            <Link href="/account?tab=subscription" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
+              <Crown className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">
+                {isEn ? "Premium active — thank you for your support!" : "Premium aktivní — děkujeme za podporu!"}
+              </span>
+            </Link>
+          ) : (
+            <Link href="/upgrade" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
+              <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">
+                {isEn
+                  ? "Your 14-day trial has ended. Continue with Premium for 749 Kč/month."
+                  : "Tvůj 14denní trial vypršel. Pokračuj s Premium za 749 Kč/měsíc."}
+              </span>
+              <span className="hidden sm:inline underline decoration-white/50">
+                {isEn ? "Renew Premium" : "Obnovit Premium"}
+              </span>
+            </Link>
+          )}
+        </div>
+      )}
       <div className="w-full mx-auto px-3 sm:px-4 lg:px-6">
         <div className="relative flex items-center h-14 md:h-16">
           {/* Logo and Auth Buttons Left Side */}
@@ -290,7 +355,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                   <p className="text-xs text-gray-400 px-3 py-2 font-semibold">{isEn ? 'MAIN MENU' : 'HLAVNÍ MENU'}</p>
                   {mainNavigation.map((item) => {
                     const isActive = pathname === item.href
-                    
+
                     return (
                       <DropdownMenuItem key={item.name} asChild>
                         <Link
