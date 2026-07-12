@@ -20,6 +20,7 @@ import {
   TrendingUp,
   Calendar,
   FileSpreadsheet,
+  Gift,
 } from "lucide-react"
 import DisciplineMatrix from "@/components/discipline-matrix"
 import JournalAiSearch from "@/components/journal-ai-search"
@@ -32,8 +33,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { cn } from "@/lib/utils"
 import { useData } from "@/contexts/data-context" // Fixed import path from /context/ (singular) to /contexts/ (plural)
 import { useAuth } from "@/contexts/auth-context" // Import useAuth hook
+import { useSubscription } from "@/contexts/subscription-context"
 import { generateVirtualJournalStats } from "@/lib/virtual-data-generator" // Import for virtual stats
 import { generateDemoTradingHistory } from "@/lib/demo-data"
+import Link from "next/link"
 
 
 // Demo trading history (Virtual mode) now comes from the shared generator
@@ -47,6 +50,7 @@ export default function JournalPage() {
   const [sortedJournalEntries, setSortedJournalEntries] = useState<any[]>([])
   const { getAllJournalEntries, getAllTrades, isLiveMode } = useData()
   const { user } = useAuth()
+  const { isPremium, isTrialing, trialDaysLeft } = useSubscription()
   const { language } = useLanguage()
   const [virtualStats, setVirtualStats] = useState<any>(null) // State for virtual stats
   const [highlightedDates, setHighlightedDates] = useState<Set<string> | null>(null)
@@ -519,6 +523,14 @@ export default function JournalPage() {
   const displayStats = stats
   void virtualStats
 
+  // Trial growth hook copy — reuses the same lifecycle framing as Daily
+  // Tracker's banner (trialing / expired-free), hidden for paying,
+  // non-trialing Premium users. CTA always points at /upgrade.
+  const showTrialCta = !(isPremium && !isTrialing)
+  const trialCtaText = isTrialing
+    ? `Vyzkoušej si ${txt.journalTitle.toLowerCase()} naplno na vlastních obchodech — zbývá ${trialDaysLeft} ${trialDaysLeft === 1 ? 'den' : trialDaysLeft <= 4 ? 'dny' : 'dní'} tvého free trialu.`
+    : 'Vyzkoušej si AI analýzu a Discipline Matrix na vlastních datech s 14denním free trialem.'
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-6 space-y-4 md:space-y-6">
@@ -547,6 +559,26 @@ export default function JournalPage() {
         )}
         
         </div>
+
+        {/* Trial growth hook — "try it on your own data" CTA to /upgrade. */}
+        {showTrialCta && (
+          <div className="rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/10 via-fuchsia-500/5 to-transparent p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-purple-500/15 flex-shrink-0">
+                <Gift className="h-4 w-4 text-purple-300" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">{trialCtaText}</p>
+                <p className="text-xs text-slate-400 mt-0.5">Bez platební karty. Kdykoli zrušitelné.</p>
+              </div>
+            </div>
+            <Link href="/upgrade" className="flex-shrink-0">
+              <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap">
+                {isTrialing ? "Zobrazit Premium" : "Aktivovat free trial"}
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* Behavioral Cockpit -- two dominant psychological metrics first,
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
