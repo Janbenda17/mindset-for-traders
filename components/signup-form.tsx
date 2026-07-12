@@ -25,7 +25,7 @@ const isEn = language === "en"
 const txt = {
 cardTitle: isEn ? "Create your account" : "Vytvořit účet",
 cardDesc: isEn ? "Just email and password - takes 30 seconds" : "Jen email a heslo - zabere to 30 sekund",
-trialHook: isEn ? "Sign up and unlock a 14-day free Premium trial — no card required." : "Zaregistruj se a odemkni 14denní Premium trial zdarma — bez platební karty.",
+trialHook: isEn ? "Sign up, then activate a 14-day free Premium trial (card required)." : "Zaregistruj se a pak si aktivuj 14denní Premium trial (vyžaduje platební kartu).",
 emailLabel: isEn ? "Email" : "Email",
 emailPlaceholder: isEn ? "your@email.com" : "vas@email.com",
 passwordLabel: isEn ? "Password" : "Heslo",

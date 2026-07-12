@@ -61,7 +61,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const pathname = usePathname()
   const router = useRouter()
   const { isLiveMode, switchToLive } = useLiveMode()
-  const { isPremium, isTrialing, trialDaysLeft } = useSubscription()
+  const { isPremium, isTrialing, trialDaysLeft, hasSubscribed } = useSubscription()
   const t = useT()
   const { language } = useLanguage()
   const isEn = language === "en"
@@ -224,8 +224,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               <Gift className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">
                 {isEn
-                  ? "Sign up and unlock a 14-day free Premium trial — no card required."
-                  : "Zaregistruj se a odemkni 14denní Premium trial zdarma — bez platební karty."}
+                  ? "Sign up, then activate a 14-day free Premium trial (card required)."
+                  : "Zaregistruj se a aktivuj 14denní Premium trial (vyžaduje platební kartu)."}
               </span>
               <span className="hidden sm:inline underline decoration-white/50">
                 {isEn ? "Get started" : "Začít zdarma"}
@@ -250,16 +250,28 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 {isEn ? "Premium active — thank you for your support!" : "Premium aktivní — děkujeme za podporu!"}
               </span>
             </Link>
-          ) : (
+          ) : hasSubscribed ? (
             <Link href="/upgrade" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
               <Clock className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">
                 {isEn
-                  ? "Your 14-day trial has ended. Continue with Premium for 749 Kč/month."
-                  : "Tvůj 14denní trial vypršel. Pokračuj s Premium za 749 Kč/měsíc."}
+                  ? "Your Premium trial/subscription has ended. Continue for 749 Kč/month."
+                  : "Tvůj Premium trial/předplatné skončilo. Pokračuj za 749 Kč/měsíc."}
               </span>
               <span className="hidden sm:inline underline decoration-white/50">
                 {isEn ? "Renew Premium" : "Obnovit Premium"}
+              </span>
+            </Link>
+          ) : (
+            <Link href="/upgrade" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
+              <Gift className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">
+                {isEn
+                  ? "Activate your 14-day Premium trial — card required, nothing charged for 14 days."
+                  : "Aktivuj svůj 14denní Premium trial — vyžaduje kartu, prvních 14 dní nic neplatíš."}
+              </span>
+              <span className="hidden sm:inline underline decoration-white/50">
+                {isEn ? "Activate trial" : "Aktivovat trial"}
               </span>
             </Link>
           )}
