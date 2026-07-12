@@ -112,7 +112,7 @@ export default function JournalPage() {
     excellentProfitFactor: isEn ? "Healthy profit factor" : "Zdravý profit faktor",
     profitFactorMsg: (pf: number) => isEn ? `A profit factor of ${pf.toFixed(2)} means your average win meaningfully outweighs your average loss.` : `Profit faktor ${pf.toFixed(2)} znamená, že tvá průměrná výhra výrazně převažuje průměrnou ztrátu.`,
     highDiscipline: isEn ? "High plan adherence" : "Vysoká disciplína v dodržování plánu",
-    highDisciplineMsg: (pct: number, saved: number) => isEn ? `${pct}% average discipline score. Estimated $${saved.toLocaleString("en-US")} preserved by not chasing impulsive entries — this is the strongest predictor of long-term results.` : `Průměrná disciplína ${pct}%. Odhadem $${saved.toLocaleString("en-US")} ušetřeno tím, že jsi nehonil impulzivní vstupy — to je nejsilnější predikátor dlouhodobého výsledku.`,
+    highDisciplineMsg: (pct: number, saved: number) => isEn ? `${pct}% average discipline score. Estimated $${saved.toLocaleString("en-US")} preserved by not chasing impulsive entries — this is the strongest predictor of long-term results.` : `${pct}% average discipline score. Odhadem $${saved.toLocaleString("en-US")} ušetřeno tím, že jsi nehonil impulzivní vstupy — to je nejsilnější predikátor dlouhodobého výsledku.`,
     lowDiscipline: isEn ? "Low plan adherence" : "Nízká disciplína v dodržování plánu",
     lowDisciplineMsg: (pct: number) => isEn ? `${pct}% average discipline score. Review the days marked red or orange in the calendar below to identify the specific rule being broken most often.` : `Průměrná disciplína ${pct}%. Projdi dny označené červeně nebo oranžově v kalendáři níže a urči, které pravidlo se porušuje nejčastěji.`,
     
@@ -529,7 +529,7 @@ export default function JournalPage() {
   const showTrialCta = !(isPremium && !isTrialing)
   const trialCtaText = isTrialing
     ? `Vyzkoušej si ${txt.journalTitle.toLowerCase()} naplno na vlastních obchodech — zbývá ${trialDaysLeft} ${trialDaysLeft === 1 ? 'den' : trialDaysLeft <= 4 ? 'dny' : 'dní'} tvého free trialu.`
-    : 'Vyzkoušej si AI analýzu a Discipline Matrix na vlastních datech s 14denním free trialem.'
+    : 'Aktivuj 14denní Premium trial a vyzkoušej si AI analýzu a Discipline Matrix na vlastních datech.'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16">
@@ -569,12 +569,12 @@ export default function JournalPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-white">{trialCtaText}</p>
-                <p className="text-xs text-slate-400 mt-0.5">Bez platební karty. Kdykoli zrušitelné.</p>
+                <p className="text-xs text-slate-400 mt-0.5">Vyžaduje platební kartu. Kdykoli zrušitelné.</p>
               </div>
             </div>
             <Link href="/upgrade" className="flex-shrink-0">
               <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap">
-                {isTrialing ? "Zobrazit Premium" : "Aktivovat free trial"}
+                {isTrialing ? "Zobrazit Premium" : "Aktivovat trial"}
               </Button>
             </Link>
           </div>
