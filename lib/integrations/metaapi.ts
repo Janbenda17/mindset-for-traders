@@ -111,7 +111,13 @@ export class MetaApiClient {
           platform,
           magic: Math.floor(Math.random() * 900000) + 100000,
           type: 'cloud-g2',
-          reliability: 'high',
+          // 'high' reliability requires a topped-up/funded MetaApi.cloud
+          // account and MetaApi rejects account creation with a 403
+          // ForbiddenError ("To allow high reliability please top up your
+          // account") otherwise - which is exactly what was happening for
+          // every single MT4/MT5 connection attempt in production. 'regular'
+          // reliability works on the free/pay-as-you-go MetaApi plan.
+          reliability: 'regular',
         }),
       })
 
