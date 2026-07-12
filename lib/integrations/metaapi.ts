@@ -141,7 +141,24 @@ export class MetaApiClient {
       // the account object exists but no terminal is ever started, so it
       // never actually logs into the broker and connectionStatus stays
       // DISCONNECTED forever.
-      await this.deployAccount(accountId)
+      //
+      // Deploy is best-effort here, not fatal: MetaApi's account-creation
+      // endpoint can return an id before the account is queryable from the
+      // deploy endpoint yet (eventual consistency that in practice has been
+      // observed to take longer than any reasonable synchronous retry
+      // budget). The expensive/billed step - creating the account - already
+      // succeeded, so a deploy hiccup here must not throw away the account
+      // the caller is about to persist. waitUntilConnected() below re-tries
+      // deploy on every poll while the account is still undeployed, so a
+      // slow-to-appear account still gets deployed once it settles.
+      try {
+        await this.deployAccount(accountId)
+      } catch (deployError) {
+        console.warn(
+          '[v0] Initial deploy attempt failed, will retry during connection polling:',
+          deployError instanceof Error ? deployError.message : deployError,
+        )
+      }
 
       return { accountId }
     } catch (error) {
@@ -198,6 +215,7 @@ export class MetaApiClient {
    */
   async waitUntilConnected(accountId: string, timeoutMs = 30000, intervalMs = 3000): Promise<boolean> {
     const deadline = Date.now() + timeoutMs
+    let redeployAttempted = false
 
     while (Date.now() < deadline) {
       const response = await fetch(`${this.provisioningBaseUrl}/users/current/accounts/${accountId}`, {
@@ -216,6 +234,32 @@ export class MetaApiClient {
           throw new Error(
             'MetaApi could not start the trading account. Double-check your login, password and broker server name.',
           )
+        }
+
+        // The account is now visible but the very first deploy() call (in
+        // authenticateWithCredentials) may have 404'd before it was, and
+        // that failure is deliberately swallowed there. Now that we can see
+        // the account, make one single un-retried attempt to (re)deploy it -
+        // do this once per wait to avoid hammering the endpoint every poll.
+        // A single POST /deploy is idempotent/safe to call on an account
+        // that's already deploying or deployed.
+        if (!redeployAttempted && account.state === 'UNDEPLOYED') {
+          redeployAttempted = true
+          try {
+            const deployResponse = await fetch(
+              `${this.provisioningBaseUrl}/users/current/accounts/${accountId}/deploy`,
+              { method: 'POST', headers: this.authHeaders() },
+            )
+            if (!deployResponse.ok) {
+              console.warn(
+                '[v0] Redeploy attempt during connection wait failed:',
+                deployResponse.status,
+                await deployResponse.text(),
+              )
+            }
+          } catch (redeployError) {
+            console.warn('[v0] Redeploy attempt during connection wait errored:', redeployError)
+          }
         }
       }
 
