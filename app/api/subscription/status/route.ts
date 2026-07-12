@@ -19,27 +19,11 @@ export async function GET(request: NextRequest) {
 
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("subscription_status, subscription_tier, stripe_customer_id, is_premium, created_at")
+      .select("subscription_status, subscription_tier, stripe_customer_id, is_premium, subscription_current_period_end, created_at")
       .eq("user_id", user.id)
       .maybeSingle()
 
     console.log("[v0] Subscription check for user:", user.id, "profile:", profile, "error:", error)
-
-    // 14-day free trial: every new account gets full Premium access for 14
-    // days from profile creation, no card required. This lets people
-    // actually experience the AI coach / pattern insights before paying.
-    const TRIAL_DAYS = 14
-    let isTrialing = false
-    let trialDaysLeft = 0
-    if (profile?.created_at) {
-      const createdAt = new Date(profile.created_at).getTime()
-      const msElapsed = Date.now() - createdAt
-      const daysElapsed = msElapsed / (1000 * 60 * 60 * 24)
-      if (daysElapsed < TRIAL_DAYS) {
-        isTrialing = true
-        trialDaysLeft = Math.max(0, Math.ceil(TRIAL_DAYS - daysElapsed))
-      }
-    }
 
     if (error || !profile) {
       console.log("[v0] Profile not found - returning free tier")
@@ -50,44 +34,70 @@ export async function GET(request: NextRequest) {
         isActive: false,
         isTrialing: false,
         trialDaysLeft: 0,
+        hasSubscribed: false,
         subscriptionId: null,
         customerId: null,
         status: "inactive",
       })
     }
 
-    // Check if subscription is ACTIVE
-    // Zdroj pravdy je is_premium flag v databázi, NEBO aktivní trial.
-    const isPaidPremium = profile?.is_premium === true
-    const isActive = isPaidPremium || profile?.subscription_status === "active" || isTrialing
-    const isPremium = isPaidPremium || isTrialing
+    // The 14-day trial is a REAL Stripe subscription trial now (card
+    // required up front - see /api/subscription/create-checkout), not a
+    // freebie computed from created_at. The webhook
+    // (/api/subscription/webhook) writes subscription_status="trialing"
+    // and subscription_current_period_end (= trial end while trialing) the
+    // moment Stripe confirms the trial started, so isTrialing/trialDaysLeft
+    // just read that back.
+    let isTrialing = false
+    let trialDaysLeft = 0
+    if (profile.subscription_status === "trialing" && profile.subscription_current_period_end) {
+      const periodEnd = new Date(profile.subscription_current_period_end).getTime()
+      const msLeft = periodEnd - Date.now()
+      if (msLeft > 0) {
+        isTrialing = true
+        trialDaysLeft = Math.max(1, Math.ceil(msLeft / (1000 * 60 * 60 * 24)))
+      }
+    }
 
+    // is_premium is set by the webhook whenever the Stripe subscription
+    // status is "active" or "trialing", so it already covers both a paying
+    // customer and someone mid-trial - no need to OR it with isTrialing here.
+    const isPremium = profile.is_premium === true
+    const isActive = isPremium || profile.subscription_status === "active"
     const tier = isPremium ? "premium" : "free"
+
+    // hasSubscribed = this user has gone through Stripe checkout at least
+    // once before (trialing/active/canceled/past_due). Used by the UI to
+    // tell "never started a trial" apart from "trial/subscription ended",
+    // and by create-checkout to decide whether a new checkout still gets a
+    // free trial or goes straight to a paid subscription.
+    const hasSubscribed = !!profile.subscription_status
 
     console.log(
       "[v0] Subscription status:",
       {
         user_id: user.id,
-        status: profile?.subscription_status,
-        tier: profile?.subscription_tier,
-        isPaidPremium,
+        status: profile.subscription_status,
+        tier: profile.subscription_tier,
         isTrialing,
         trialDaysLeft,
         isPremium,
         isActive,
+        hasSubscribed,
       },
     )
 
     return NextResponse.json({
-      isPremium,  // TRUE = user has premium (paid OR trial)
+      isPremium,  // TRUE = user has premium (paid OR trialing)
       tier,       // "premium" or "free"
       plan: isPremium ? "premium" : "free",
       isActive,
       isTrialing,
       trialDaysLeft,
+      hasSubscribed,
       subscriptionId: null,
-      customerId: profile?.stripe_customer_id,
-      status: profile?.subscription_status,  // "active", "canceled", etc.
+      customerId: profile.stripe_customer_id,
+      status: profile.subscription_status,  // "trialing", "active", "canceled", etc.
       cancelAtPeriodEnd: false,
     })
   } catch (error: any) {
