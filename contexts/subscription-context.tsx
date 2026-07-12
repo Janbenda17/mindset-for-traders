@@ -31,7 +31,7 @@ interface SubscriptionContextType {
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
 
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/bJe28sguAbri1noczO1B600"
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/3cI8wQ6U01QIfee8jy18601"
 const STRIPE_BILLING_PORTAL = "https://billing.stripe.com/p/login/test_00g5kFbKe1Oy8qk000"
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
