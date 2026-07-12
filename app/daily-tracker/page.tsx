@@ -360,14 +360,14 @@ export default function DailyTrackerPage() {
                 <p className="text-sm font-semibold text-white">
                   {isTrialing
                     ? `Vyzkoušej PRO funkce naplno na vlastních datech — zbývá ${trialDaysLeft} ${trialDaysLeft === 1 ? 'den' : trialDaysLeft <= 4 ? 'dny' : 'dní'} tvého free trialu.`
-                    : 'Vyzkoušej si AI kouče a pokročilé insighty na vlastních datech s 14denním free trialem.'}
+                    : 'Aktivuj 14denní Premium trial a vyzkoušej si AI kouče a pokročilé insighty na vlastních datech.'}
                 </p>
-                <p className="text-xs text-slate-400 mt-0.5">Bez platební karty. Kdykoli zrušitelné.</p>
+                <p className="text-xs text-slate-400 mt-0.5">Vyžaduje platební kartu. Kdykoli zrušitelné.</p>
               </div>
             </div>
             <Link href="/upgrade" className="flex-shrink-0">
               <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white whitespace-nowrap">
-                {isTrialing ? 'Zobrazit Premium' : 'Aktivovat free trial'}
+                {isTrialing ? 'Zobrazit Premium' : 'Aktivovat trial'}
               </Button>
             </Link>
           </motion.div>
