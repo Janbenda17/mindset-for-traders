@@ -47,12 +47,15 @@ interface TopNavigationProps {
   initialTheme?: string
 }
 
-// Pages that render their own marketing-style header/hero (homepage, intro,
-// resources) and manage their own top spacing independently of
-// ClientLayout's pt-* wrapper. The trial strip is skipped there so we don't
-// have to touch every marketing page's padding for a growth hook that's
-// really meant for the logged-in app experience.
-const STRIP_EXCLUDED_PATHS = new Set(["/", "/intro", "/resources"])
+// Pages that render their own marketing-style header/hero (intro, resources)
+// and manage their own top spacing independently of ClientLayout's pt-*
+// wrapper. The trial strip is skipped there so we don't have to touch every
+// marketing page's padding for a growth hook. The homepage ("/") is NOT in
+// this set on purpose: it renders its own TopNavigation too, but it also
+// wants the growth-hook strip (unlock-trial for logged-out visitors,
+// lifecycle messaging for logged-in ones), and reserves the extra 32px of
+// space for it directly in its own hero padding - see app/page.tsx.
+const STRIP_EXCLUDED_PATHS = new Set(["/intro", "/resources"])
 
 export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => {
   const pathname = usePathname()
@@ -186,11 +189,15 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     logout()
   }
 
-  // Growth-hook strip shown above the main nav row for logged-in users on
-  // app pages. Always renders (constant height) once authenticated so
-  // ClientLayout's top padding never has to guess whether it's visible -
-  // only the copy + CTA changes based on subscription state.
-  const showTrialStrip = isAuthenticated && !STRIP_EXCLUDED_PATHS.has(pathname || "")
+  // Growth-hook strip shown above the main nav row. For logged-in users it
+  // renders (constant height) on every app page except the marketing pages
+  // in STRIP_EXCLUDED_PATHS, so ClientLayout's top padding never has to
+  // guess whether it's visible - only the copy + CTA changes based on
+  // subscription state. For logged-out visitors it additionally renders on
+  // the homepage only, pointing them at registration instead.
+  const showTrialStrip = isAuthenticated
+    ? !STRIP_EXCLUDED_PATHS.has(pathname || "")
+    : pathname === "/"
   const dayWord = (n: number) => {
     if (isEn) return n === 1 ? "day" : "days"
     if (n === 1) return "den"
@@ -203,14 +210,28 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
       {showTrialStrip && (
         <div
           className={`h-8 flex items-center justify-center px-3 text-center ${
-            isTrialing
-              ? "bg-gradient-to-r from-fuchsia-600/90 to-purple-600/90"
-              : isPremium
-                ? "bg-gradient-to-r from-emerald-700/70 to-emerald-800/70"
-                : "bg-gradient-to-r from-amber-600/90 to-orange-600/90"
+            !isAuthenticated
+              ? "bg-gradient-to-r from-emerald-600/90 to-teal-600/90"
+              : isTrialing
+                ? "bg-gradient-to-r from-fuchsia-600/90 to-purple-600/90"
+                : isPremium
+                  ? "bg-gradient-to-r from-emerald-700/70 to-emerald-800/70"
+                  : "bg-gradient-to-r from-amber-600/90 to-orange-600/90"
           }`}
         >
-          {isTrialing ? (
+          {!isAuthenticated ? (
+            <Link href="/signup" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
+              <Gift className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">
+                {isEn
+                  ? "Sign up and unlock a 14-day free Premium trial — no card required."
+                  : "Zaregistruj se a odemkni 14denní Premium trial zdarma — bez platební karty."}
+              </span>
+              <span className="hidden sm:inline underline decoration-white/50">
+                {isEn ? "Get started" : "Začít zdarma"}
+              </span>
+            </Link>
+          ) : isTrialing ? (
             <Link href="/upgrade" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
               <Gift className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">
