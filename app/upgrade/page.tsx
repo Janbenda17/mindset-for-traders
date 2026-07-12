@@ -8,11 +8,11 @@ import { Badge } from "@/components/ui/badge"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
-import { Crown, Check, Zap, BarChart3, Brain, FileText, Download, Headphones, ArrowLeft, Gift, RefreshCw } from "lucide-react"
+import { Crown, Check, Zap, BarChart3, Brain, FileText, Download, Headphones, ArrowLeft, Gift, RefreshCw, CreditCard } from "lucide-react"
 import Link from "next/link"
 
 export default function UpgradePage() {
-  const { upgradeToPremium, isLoading, isPremium, isTrialing, trialDaysLeft, checkSubscriptionStatus } = useSubscription()
+  const { upgradeToPremium, isLoading, isPremium, isTrialing, trialDaysLeft, hasSubscribed, checkSubscriptionStatus } = useSubscription()
   const { user } = useAuth()
   const { language } = useLanguage()
   const router = useRouter()
@@ -167,8 +167,8 @@ export default function UpgradePage() {
             </h2>
             <p className="text-lg opacity-90">
               {language === 'en'
-                ? 'Full access to the AI coach, MT4/5 sync and advanced insights - no card required.'
-                : 'Plný přístup k AI koučovi, MT4/5 synchronizaci a pokročilým insightům - bez platební karty.'}
+                ? 'Full access to the AI coach, MT4/5 sync and advanced insights. Your card on file will be charged 749 Kč/month once the trial ends.'
+                : 'Plný přístup k AI koučovi, MT4/5 synchronizaci a pokročilým insightům. Po skončení trialu se z tvé karty strhne 749 Kč/měsíc.'}
             </p>
           </div>
         )}
@@ -178,7 +178,7 @@ export default function UpgradePage() {
           <div className="mb-8 p-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-center">
             <Gift className="h-12 w-12 mx-auto mb-3" />
             <h2 className="text-2xl font-bold mb-2">{language === 'en' ? `Welcome, ${user.name}! 🎉` : `Vítejte, ${user.name}! 🎉`}</h2>
-            <p className="text-lg">{language === 'en' ? 'Your account is ready. Upgrade now to unlock Premium!' : 'Váš účet je připraven. Upgradujte nyní a odemkněte Premium!'}</p>
+            <p className="text-lg">{language === 'en' ? 'Your account is ready. Activate your 14-day Premium trial below!' : 'Váš účet je připraven. Aktivujte si níže 14denní Premium trial!'}</p>
           </div>
         )}
 
@@ -193,7 +193,7 @@ export default function UpgradePage() {
                 <Zap className="h-6 w-6" />
                 <span className="text-2xl font-bold">{language === 'en' ? '14-day free trial' : '14denní zkušební verze zdarma'}</span>
               </div>
-              <p className="text-lg">{language === 'en' ? 'then 749 Kč/month, no card required to start' : 'poté 749 Kč/měsíc, bez platební karty na start'}</p>
+              <p className="text-lg">{language === 'en' ? 'then 749 Kč/month — card required to start, nothing charged for 14 days' : 'poté 749 Kč/měsíc — na start vyžaduje kartu, prvních 14 dní nic neplatíš'}</p>
               <p className="text-sm opacity-90 mt-1">{language === 'en' ? '7-day money-back guarantee' : '7denní záruka vrácení peněz'}</p>
             </div>
         </div>
@@ -261,7 +261,10 @@ export default function UpgradePage() {
                   {language === 'en' ? '14-day free trial' : '14 dní zdarma'}
                 </Badge>
               </div>
-              <p className="text-sm text-green-600 font-semibold mt-3">{language === 'en' ? 'No credit card required to start your trial' : 'Bez platební karty na start zkušební verze'}</p>
+              <p className="text-sm text-blue-700 font-semibold mt-3 flex items-center gap-1.5">
+                <CreditCard className="h-3.5 w-3.5" />
+                {language === 'en' ? 'Card required to start your trial — nothing charged for 14 days' : 'Ke startu trialu vyžaduje kartu — prvních 14 dní nic neplatíš'}
+              </p>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3 mb-6">
@@ -316,7 +319,11 @@ export default function UpgradePage() {
                     disabled={isLoading || isUpgrading}
                     className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-3"
                   >
-                    {isLoading || isUpgrading ? (language === 'en' ? "Processing..." : "Zpracovávám...") : (language === 'en' ? "Upgrade to Premium" : "Upgradovat na Premium")}
+                    {isLoading || isUpgrading
+                      ? (language === 'en' ? "Processing..." : "Zpracovávám...")
+                      : hasSubscribed
+                        ? (language === 'en' ? "Resubscribe to Premium" : "Obnovit Premium")
+                        : (language === 'en' ? "Activate 14-day trial" : "Aktivovat 14denní trial")}
                   </Button>
                 )
               ) : (
@@ -328,7 +335,7 @@ export default function UpgradePage() {
                 </Button>
               )}
 
-              <p className="text-xs text-gray-500 text-center mt-3">{language === 'en' ? "749 Kč/month after your 14-day free trial. Cancel anytime. 7-day money-back guarantee." : "749 Kč/měsíc po 14denní zkušební verzi zdarma. Kdykoli zrušitelné. 7denní záruka vrácení peněz."}</p>
+              <p className="text-xs text-gray-500 text-center mt-3">{language === 'en' ? "749 Kč/month after your 14-day free trial. Card required at signup, nothing charged until the trial ends. Cancel anytime. 7-day money-back guarantee." : "749 Kč/měsíc po 14denní zkušební verzi zdarma. Vyžaduje kartu při aktivaci, nic se nestrhne do konce trialu. Kdykoli zrušitelné. 7denní záruka vrácení peněz."}</p>
             </CardContent>
           </Card>
         </div>
