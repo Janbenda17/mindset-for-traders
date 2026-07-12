@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, EyeOff, Mail, User, Lock, Gift, Brain, Sparkles, TrendingUp, CheckCircle2, CreditCard, Zap } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, Gift, Brain, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
@@ -44,17 +44,6 @@ export function SignupForm() {
     startFree: isEn ? "Start for free" : "Start for free",
     alreadyAccount: isEn ? "Already have an account?" : "Already have an account?",
     signIn: isEn ? "Sign in" : "Sign in",
-    howItWorks: isEn ? "How does it work?" : "Jak to funguje?",
-    howItWorksSub: isEn ? "4 simple steps to better trading" : "4 jednoduché kroky k lepšímu tradingu",
-    step1Title: isEn ? "Simple Registration" : "Jednoduchá registrace",
-    step1Desc: isEn ? "Just email and password. No nonsense. You're in within 30 seconds." : "Jen email a heslo. Žádné kraviny. Za 30 sekund jsi uvnitř.",
-    step2Title: isEn ? "Virtual Mode FREE" : "Virtual režim ZDARMA",
-    step2Desc: isEn ? "Instant access to the app with demo data. Try all features without risk." : "Okamžitý přístup k aplikaci s demo daty. Vyzkoušej všechny funkce bez rizika.",
-    step2Badge: isEn ? "Free forever" : "Navždy zdarma",
-    step3Title: isEn ? "Upgrade to Live anytime" : "Upgrade na Live kdykoliv",
-    step3Desc: isEn ? "When you're ready for real trading, switch to Live mode." : "Když budeš připravený na skutečný trading, přepni do Live režimu.",
-    step4Title: isEn ? "Track your real trades" : "Trackuj své skutečné obchody",
-    step4Desc: isEn ? "In Live mode, log your real trades, get AI analyses and improve." : "V Live režimu zapisuj své reálné obchody, získej AI analýzy a zlepšuj se.",
     // Errors
     errEmail: isEn ? "Email is required" : "Email je povinný",
     errEmailFormat: isEn ? "Invalid email format" : "Neplatný formát emailu",
@@ -109,9 +98,8 @@ export function SignupForm() {
         <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-700" />
       </div>
 
-      <div className="w-full max-w-6xl relative z-10">
-        <div className="grid lg:grid-cols-2 gap-8 items-start">
-          {/* Left side - Form */}
+      <div className="w-full max-w-md relative z-10">
+        <div>
           <div>
             <div className="mb-6 p-5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl text-white shadow-2xl shadow-green-500/30 relative overflow-hidden">
               <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
@@ -225,37 +213,6 @@ export function SignupForm() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Right side - How it works */}
-          <div className="space-y-6 lg:sticky lg:top-8">
-            <div className="text-center lg:text-left mb-8">
-              <h2 className="text-3xl font-bold text-white mb-2">{txt.howItWorks}</h2>
-              <p className="text-gray-400">{txt.howItWorksSub}</p>
-            </div>
-
-            {[
-              { num: 1, color: "purple", icon: <User className="w-5 h-5 text-purple-400" />, title: txt.step1Title, desc: txt.step1Desc, badge: null },
-              { num: 2, color: "blue", icon: <Zap className="w-5 h-5 text-blue-400" />, title: txt.step2Title, desc: txt.step2Desc, badge: <div className="flex items-center gap-2 text-xs text-green-400 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20 w-fit"><CheckCircle2 className="w-4 h-4" /><span className="font-semibold">{txt.step2Badge}</span></div> },
-              { num: 3, color: "green", icon: <Brain className="w-5 h-5 text-green-400" />, title: txt.step3Title, desc: txt.step3Desc, badge: <div className="flex items-center gap-2 text-xs text-purple-400 bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/20 w-fit"><CreditCard className="w-4 h-4" /><span className="font-semibold">1499 Kč/month</span></div> },
-              { num: 4, color: "orange", icon: <TrendingUp className="w-5 h-5 text-orange-400" />, title: txt.step4Title, desc: txt.step4Desc, badge: <div className="flex flex-wrap gap-2"><span className="text-xs bg-slate-800 px-2 py-1 rounded-md text-gray-300">AI insights</span><span className="text-xs bg-slate-800 px-2 py-1 rounded-md text-gray-300">Analytics</span><span className="text-xs bg-slate-800 px-2 py-1 rounded-md text-gray-300">Team Club</span></div> },
-            ].map((step) => (
-              <Card key={step.num} className={`bg-slate-900/80 backdrop-blur-xl border-slate-700/50 relative overflow-hidden group hover:border-${step.color}-500/50 transition-all`}>
-                <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-${step.color}-500 to-${step.color === "purple" ? "pink" : step.color === "blue" ? "cyan" : step.color === "green" ? "emerald" : "red"}-500`} />
-                <CardContent className="pt-8 pb-6">
-                  <div className="flex items-start gap-4">
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-${step.color}-600 to-${step.color === "purple" ? "pink" : step.color === "blue" ? "cyan" : step.color === "green" ? "emerald" : "red"}-600 flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
-                      {step.num}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">{step.icon}{step.title}</h3>
-                      <p className="text-sm text-gray-400 mb-3">{step.desc}</p>
-                      {step.badge}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
         </div>
       </div>
