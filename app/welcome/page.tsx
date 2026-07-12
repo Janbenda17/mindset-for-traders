@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/bJe28sguAbri1noczO1B600"
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/3cI8wQ6U01QIfee8jy18601"
 
 export default function WelcomePage() {
   const { user } = useAuth()
