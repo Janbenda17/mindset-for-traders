@@ -4,7 +4,6 @@ import { useState, useEffect, type ComponentType } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
-import { supabase } from "@/lib/supabase/client"
 import {
   Brain,
   Calendar,
@@ -333,41 +332,7 @@ export function ProductTour() {
   useEffect(() => {
     if (!user?.id || (pathname && HIDDEN_PATHS.has(pathname))) return
 
-    const cacheKey = `mindtrader-tour-completed-${user.id}`
-    const forceShow = localStorage.getItem(FORCE_SHOW_KEY) === "true"
-
-    if (forceShow) {
-      localStorage.removeItem(FORCE_SHOW_KEY)
-      setCurrentPage(0)
-      setIsVisible(true)
-      return
-    }
-
-    if (localStorage.getItem(cacheKey) === "true") return
-
-    let cancelled = false
-    ;(async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("product_tour_completed")
-        .eq("user_id", user.id)
-        .maybeSingle()
-
-      if (cancelled) return
-
-      if (data?.product_tour_completed) {
-        localStorage.setItem(cacheKey, "true")
-      } else {
-        setCurrentPage(0)
-        setIsVisible(true)
-      }
-    })()
-
-    return () => {
-      cancelled = true
-    }
-    // Only re-check when the signed-in user changes, not on every route change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const forceShow = localStorage.getItem(FORCE_SHOW_KEY) === "true"; if (forceShow) { localStorage.removeItem(FORCE_SHOW_KEY); setCurrentPage(0); setIsVisible(true) }
   }, [user?.id])
 
   const tourPages = getTourPages(language === "en" ? "en" : "cs")
