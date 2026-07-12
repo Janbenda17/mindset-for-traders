@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
 
 export function SignupForm() {
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", acceptTerms: false, acceptMarketing: false })
+  const [formData, setFormData] = useState({ email: "", password: "", acceptTerms: false, acceptMarketing: false })
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
@@ -28,17 +28,13 @@ export function SignupForm() {
     tagline: isEn ? "Start your journey to success" : "Start your journey to success",
     cardTitle: isEn ? "Create Account" : "Create Account",
     cardDesc: isEn ? "Join thousands of successful traders" : "Join thousands of successful traders",
-    nameLabel: isEn ? "Full Name" : "Full Name",
-    namePlaceholder: isEn ? "John Smith" : "John Smith",
     emailLabel: isEn ? "Email" : "Email",
     emailPlaceholder: isEn ? "your@email.com" : "your@email.com",
     passwordLabel: isEn ? "Password" : "Password",
-    passwordPlaceholder: isEn ? "E.g: Trader2024" : "E.g: Trader2024",
+    passwordPlaceholder: isEn ? "E.g: trader1" : "E.g: trader1",
     passwordReqs: isEn ? "Password requirements:" : "Password requirements:",
     reqMin6: isEn ? "At least 6 characters" : "At least 6 characters",
-    reqLower: isEn ? "Lowercase letters (a-z)" : "Lowercase letters (a-z)",
-    reqUpper: isEn ? "Uppercase letters (A-Z)" : "Uppercase letters (A-Z)",
-    reqDigit: isEn ? "Digits (0-9)" : "Digits (0-9)",
+    reqDigit: isEn ? "At least 1 number" : "Alespoň 1 číslo",
     acceptTerms: isEn ? "I agree to the" : "I agree to the",
     terms: isEn ? "terms" : "terms",
     and: isEn ? "and" : "and",
@@ -51,7 +47,7 @@ export function SignupForm() {
     howItWorks: isEn ? "How does it work?" : "Jak to funguje?",
     howItWorksSub: isEn ? "4 simple steps to better trading" : "4 jednoduché kroky k lepšímu tradingu",
     step1Title: isEn ? "Simple Registration" : "Jednoduchá registrace",
-    step1Desc: isEn ? "Email, password and name. No nonsense. You're in within 30 seconds." : "Email, heslo a jméno. Žádné kraviny. Za 30 sekund jsi uvnitř.",
+    step1Desc: isEn ? "Just email and password. No nonsense. You're in within 30 seconds." : "Jen email a heslo. Žádné kraviny. Za 30 sekund jsi uvnitř.",
     step2Title: isEn ? "Virtual Mode FREE" : "Virtual režim ZDARMA",
     step2Desc: isEn ? "Instant access to the app with demo data. Try all features without risk." : "Okamžitý přístup k aplikaci s demo daty. Vyzkoušej všechny funkce bez rizika.",
     step2Badge: isEn ? "Free forever" : "Navždy zdarma",
@@ -60,11 +56,10 @@ export function SignupForm() {
     step4Title: isEn ? "Track your real trades" : "Trackuj své skutečné obchody",
     step4Desc: isEn ? "In Live mode, log your real trades, get AI analyses and improve." : "V Live režimu zapisuj své reálné obchody, získej AI analýzy a zlepšuj se.",
     // Errors
-    errName: isEn ? "Name is required" : "Jméno je povinné",
     errEmail: isEn ? "Email is required" : "Email je povinný",
     errEmailFormat: isEn ? "Invalid email format" : "Neplatný formát emailu",
     errPassword: isEn ? "Password is required" : "Heslo je povinné",
-    errPasswordReqs: isEn ? "Password must contain: lower + upper case letters + numbers (min. 6 chars)" : "Heslo musí obsahovat: malá + velká písmena + čísla (min. 6 znaků)",
+    errPasswordReqs: isEn ? "Password must be at least 6 characters and contain 1 number" : "Heslo musí mít alespoň 6 znaků a obsahovat 1 číslo",
     errTerms: isEn ? "You must agree to the terms of service" : "Musíte souhlasit s podmínkami použití",
     errRegFailed: isEn ? "Registration failed. Please try again." : "Registrace se nezdařila. Zkuste to prosím znovu.",
     errGeneral: isEn ? "An error occurred. Please try again." : "Došlo k chybě. Zkuste to prosím znovu.",
@@ -73,15 +68,12 @@ export function SignupForm() {
   const validatePassword = (password: string): string[] => {
     const errs: string[] = []
     if (password.length < 6) errs.push("min6")
-    if (!/[a-z]/.test(password)) errs.push("lower")
-    if (!/[A-Z]/.test(password)) errs.push("upper")
     if (!/[0-9]/.test(password)) errs.push("digit")
     return errs
   }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
-    if (!formData.name.trim()) newErrors.name = txt.errName
     if (!formData.email.trim()) newErrors.email = txt.errEmail
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = txt.errEmailFormat
     if (!formData.password) newErrors.password = txt.errPassword
@@ -97,7 +89,7 @@ export function SignupForm() {
     setIsLoading(true)
     setErrors({})
     try {
-      const success = await register({ name: formData.name, email: formData.email, password: formData.password })
+      const success = await register({ email: formData.email, password: formData.password })
       if (!success) { setIsLoading(false); setErrors({ general: txt.errRegFailed }) }
     } catch (error: any) {
       setIsLoading(false)
@@ -157,15 +149,6 @@ export function SignupForm() {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm font-medium text-gray-300">{txt.nameLabel}</Label>
-                    <div className="relative group">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
-                      <Input id="name" type="text" placeholder={txt.namePlaceholder} value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} className={`pl-12 h-12 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-purple-500/20 transition-all ${errors.name ? "border-red-500/50" : ""}`} disabled={isLoading} />
-                    </div>
-                    {errors.name && <p className="text-sm text-red-400">{errors.name}</p>}
-                  </div>
-
-                  <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium text-gray-300">{txt.emailLabel}</Label>
                     <div className="relative group">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
@@ -189,8 +172,6 @@ export function SignupForm() {
                         <div className="space-y-1">
                           {[
                             { check: formData.password.length >= 6, label: txt.reqMin6 },
-                            { check: /[a-z]/.test(formData.password), label: txt.reqLower },
-                            { check: /[A-Z]/.test(formData.password), label: txt.reqUpper },
                             { check: /[0-9]/.test(formData.password), label: txt.reqDigit },
                           ].map((req, i) => (
                             <div key={i} className={`flex items-center gap-2 text-xs ${req.check ? "text-green-400" : "text-gray-500"}`}>
