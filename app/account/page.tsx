@@ -1834,15 +1834,13 @@ export default function AccountPage() {
                   </CardDescription>
                   <div className="mt-6 flex items-baseline">
                     <span className="text-5xl font-extrabold text-white">
-                      {billingCycle === "monthly" ? "1499" : "1199"} Kč
+                      749 Kč
                     </span>
                     <span className="text-gray-400 ml-2 text-lg">/{language === "cs" ? "měsíc" : "month"}</span>
                   </div>
-                  {billingCycle === "yearly" && (
-                    <p className="text-sm text-green-400 font-medium mt-2">
-                      {language === "cs" ? "Ušetříte 3 600 Kč ročně" : "Save 3,600 CZK yearly"}
-                    </p>
-                  )}
+                  <p className="text-sm text-purple-300 font-medium mt-2">
+                    {language === "cs" ? "14denní zkušební verze zdarma, bez karty" : "14-day free trial, no card required"}
+                  </p>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <ul className="space-y-4">
