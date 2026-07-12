@@ -18,7 +18,7 @@ const PUBLIC_PATHS = [
   "/disclaimer",
   "/resources",
   "/pricing",
-  "/upgrade",
+  "/upgrade", "/onboarding",
   // App paths - accessible in virtual mode without auth
   "/",
   "/bonus",
