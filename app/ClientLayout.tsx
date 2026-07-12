@@ -37,10 +37,16 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     pathname === "/disclaimer" ||
     pathname === "/contact"
 
+  // TopNavigation renders an extra 32px growth-hook strip above its main
+  // row for every authenticated user (trial countdown / renew / thank-you
+  // message - see components/top-navigation.tsx). That strip is always
+  // present once logged in, so the content wrapper reserves space for it
+  // up front (pt-24 = 64px main row + 32px strip) rather than trying to
+  // track the strip's visibility here too.
   return (
     <div className="flex flex-col min-h-screen">
       {!hideNavigation && <TopNavigation />}
-      <div className={hideNavigation ? "flex-1" : "pt-16 flex-1"}>{children}</div>
+      <div className={hideNavigation ? "flex-1" : "pt-24 flex-1"}>{children}</div>
       <Footer />
       {!hideNavigation && <ProductTour />}
       <XPNotification />
