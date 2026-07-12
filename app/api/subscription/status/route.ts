@@ -19,11 +19,11 @@ export async function GET(request: NextRequest) {
 
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("subscription_status, subscription_tier, stripe_customer_id, stripe_subscription_id, is_premium, created_at")
+      .select("subscription_status, subscription_tier, stripe_customer_id, is_premium, created_at")
       .eq("user_id", user.id)
       .maybeSingle()
 
-    console.log("[v0] Subscription check for user:", user.id, "profile:", profile)
+    console.log("[v0] Subscription check for user:", user.id, "profile:", profile, "error:", error)
 
     // 14-day free trial: every new account gets full Premium access for 14
     // days from profile creation, no card required. This lets people
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       isActive,
       isTrialing,
       trialDaysLeft,
-      subscriptionId: profile?.stripe_subscription_id,
+      subscriptionId: null,
       customerId: profile?.stripe_customer_id,
       status: profile?.subscription_status,  // "active", "canceled", etc.
       cancelAtPeriodEnd: false,
