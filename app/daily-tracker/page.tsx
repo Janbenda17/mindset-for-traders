@@ -25,6 +25,7 @@ import {
   RotateCcw,
   LogOut,
   CheckCircle2,
+  Gift,
 } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -39,6 +40,7 @@ import {
 import { useData } from '@/contexts/data-context'
 import { buildDailySummary } from '@/lib/daily-summary'
 import { useGamification } from '@/contexts/gamification-context'
+import { useSubscription } from '@/contexts/subscription-context'
 
 function isSameDay(a: Date, b: Date) {
   return a.toDateString() === b.toDateString()
@@ -52,6 +54,7 @@ function fmtMoney(n: number) {
 export default function DailyTrackerPage() {
   const { getAllTrades, isLiveMode, getTradingStats, journalEntries, addJournalEntry, updateJournalEntry } = useData()
   const { data: gamification, getLevelInfo } = useGamification()
+  const { isPremium, isTrialing, trialDaysLeft } = useSubscription()
   const router = useRouter()
   const [tab, setTab] = useState('today')
   const [failLogRevealed, setFailLogRevealed] = useState(false)
@@ -316,7 +319,7 @@ export default function DailyTrackerPage() {
               </div>
             </div>
           )}
-        </motion.div>        
+        </motion.div>
 
         {allTrades.length === 0 && (
           <motion.div
@@ -337,6 +340,36 @@ export default function DailyTrackerPage() {
                 <Button size="sm" variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800">Zalogovat obchod ručně</Button>
               </Link>
             </div>
+          </motion.div>
+        )}
+
+        {/* Trial growth hook — "try it on your own data" CTA to /upgrade.
+            Hidden only for paying, non-trialing Premium users. */}
+        {!(isPremium && !isTrialing) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.05 }}
+            className="rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/15 flex-shrink-0">
+                <Gift className="h-4 w-4 text-amber-300" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">
+                  {isTrialing
+                    ? `Vyzkoušej PRO funkce naplno na vlastních datech — zbývá ${trialDaysLeft} ${trialDaysLeft === 1 ? 'den' : trialDaysLeft <= 4 ? 'dny' : 'dní'} tvého free trialu.`
+                    : 'Vyzkoušej si AI kouče a pokročilé insighty na vlastních datech s 14denním free trialem.'}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">Bez platební karty. Kdykoli zrušitelné.</p>
+              </div>
+            </div>
+            <Link href="/upgrade" className="flex-shrink-0">
+              <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white whitespace-nowrap">
+                {isTrialing ? 'Zobrazit Premium' : 'Aktivovat free trial'}
+              </Button>
+            </Link>
           </motion.div>
         )}
 
