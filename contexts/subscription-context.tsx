@@ -12,6 +12,11 @@ interface SubscriptionContextType {
   isLoading: boolean
   isTrialing: boolean
   trialDaysLeft: number
+  // True once this user has gone through Stripe checkout at least once
+  // (trialing/active/canceled/past_due) - lets the UI tell "never started a
+  // trial yet" apart from "trial or subscription already ended", since both
+  // otherwise look identical (isPremium=false, isTrialing=false).
+  hasSubscribed: boolean
   // True only after a subscription status fetch has SUCCESSFULLY completed.
   // A failed/aborted fetch leaves isActive=false, which is indistinguishable
   // from a confirmed free user — consumers (e.g. live-mode auto-revert) must
@@ -42,6 +47,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [isCanceled, setIsCanceled] = useState(false)
   const [isTrialing, setIsTrialing] = useState(false)
   const [trialDaysLeft, setTrialDaysLeft] = useState(0)
+  const [hasSubscribed, setHasSubscribed] = useState(false)
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null)
   const [customerId, setCustomerId] = useState<string | null>(null)
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
@@ -94,6 +100,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         setIsActive(data.isActive)
         setIsTrialing(!!data.isTrialing)
         setTrialDaysLeft(data.trialDaysLeft || 0)
+        setHasSubscribed(!!data.hasSubscribed)
         setStatusConfirmed(true) // status is now confirmed from a real response
         setSubscriptionStatus(data.status)
         setSubscriptionId(data.subscriptionId)
@@ -106,7 +113,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           localStorage.setItem("stripe-customer-id", data.customerId)
         }
 
-        console.log("[v0] Subscription status checked:", { plan: data.plan, isActive: data.isActive, status: data.status, isCanceled: data.status === "canceled" })
+        console.log("[v0] Subscription status checked:", { plan: data.plan, isActive: data.isActive, status: data.status, isCanceled: data.status === "canceled", hasSubscribed: data.hasSubscribed })
       }
     } catch (error: any) {
       if (error.name !== "AbortError") {
@@ -247,6 +254,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         isLoading,
         isTrialing,
         trialDaysLeft,
+        hasSubscribed,
         statusConfirmed,
         isCanceled,
         subscriptionId,
@@ -275,6 +283,7 @@ export function useSubscription() {
         isLoading: true,
         isTrialing: false,
         trialDaysLeft: 0,
+        hasSubscribed: false,
         statusConfirmed: false,
         isCanceled: false,
         subscriptionId: null,
