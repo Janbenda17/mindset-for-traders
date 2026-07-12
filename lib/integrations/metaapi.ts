@@ -155,8 +155,15 @@ export class MetaApiClient {
   /**
    * Start the MetaApi trading terminal for a freshly created account. A
    * created account is UNDEPLOYED and inert until this is called.
+   *
+   * MetaApi's account-creation endpoint returns before the new account is
+   * necessarily readable from every backend it operates (eventual
+   * consistency), so calling /deploy immediately afterwards can 404 with
+   * "Trading account with id X not found" even though the account was just
+   * created successfully. Retry a few times with a short delay before
+   * giving up - this is a timing issue, not a real error.
    */
-  async deployAccount(accountId: string): Promise<void> {
+  async deployAccount(accountId: string, retriesLeft = 2): Promise<void> {
     const response = await fetch(`${this.provisioningBaseUrl}/users/current/accounts/${accountId}/deploy`, {
       method: 'POST',
       headers: this.authHeaders(),
@@ -164,6 +171,15 @@ export class MetaApiClient {
 
     if (!response.ok) {
       const errorText = await response.text()
+
+      if (response.status === 404 && retriesLeft > 0) {
+        console.warn(
+          `[v0] Deploy 404 for freshly created account ${accountId} (eventual consistency) - retrying, ${retriesLeft} attempt(s) left`,
+        )
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        return this.deployAccount(accountId, retriesLeft - 1)
+      }
+
       console.error('[v0] Failed to deploy MetaApi account:', response.status, errorText)
       throw new Error(`Failed to deploy MT account (${response.status}): ${errorText}`)
     }
