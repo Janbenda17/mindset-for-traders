@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Brain, ArrowRight, ShieldCheck, TrendingUp, AlertTriangle, Sparkles } from 'lucide-react'
+import { Brain, ArrowRight, ShieldCheck, TrendingUp, AlertTriangle, Sparkles, Gift } from 'lucide-react'
 import { useLanguage } from '@/contexts/language-context'
 import {
   SELF_REPORT_QUESTIONS,
@@ -176,6 +176,26 @@ export default function OnboardingPage() {
             transition={{ duration: 0.5 }}
             className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8"
           >
+            {/* Trial-unlock banner — the registration-complete hook. Fires
+                the moment the quiz result renders, i.e. right after signup,
+                so it's the first thing a brand-new account sees confirming
+                their 14-day Premium trial is already live. */}
+            <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-teal-500/5 p-4 mb-6 flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-emerald-500/15 flex-shrink-0">
+                <Gift className="w-4 h-4 text-emerald-300" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">
+                  {isEn ? 'Your 14-day Premium trial is unlocked 🎉' : 'Tvůj 14denní Premium trial je odemčený 🎉'}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {isEn
+                    ? 'No credit card needed. Full access to the AI coach and advanced insights starts now.'
+                    : 'Bez platební karty. Plný přístup k AI kouči a pokročilým insightům začíná hned teď.'}
+                </p>
+              </div>
+            </div>
+
             {/* Archetype title */}
             {archetype && (
               <div className="text-center mb-6">
@@ -262,8 +282,8 @@ export default function OnboardingPage() {
               </p>
               <p className="text-sm text-slate-400 mb-4 leading-relaxed">
                 {isEn
-                  ? "This is just the surface. Your full breakdown — all 6 categories, concrete fixes, and results checked against your real trades — is unlocked with Premium."
-                  : 'Tohle je jen špička ledovce. Tvůj kompletní rozbor — všech 6 kategorií, konkrétní kroky k nápravě a ověření na reálných obchodech — je odemčený v Premium.'}
+                  ? "This is just the surface. Your full breakdown — all 6 categories, concrete fixes, and results checked against your real trades — is unlocked right now with your 14-day free Premium trial."
+                  : 'Tohle je jen špička ledovce. Tvůj kompletní rozbor — všech 6 kategorií, konkrétní kroky k nápravě a ověření na reálných obchodech — máš odemčený hned teď díky 14dennímu free Premium trialu.'}
               </p>
               <Link href="/upgrade">
                 <Button className="w-full h-11 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white font-semibold rounded-lg">
