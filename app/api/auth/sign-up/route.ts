@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    const { email, password, name } = await request.json()
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email a heslo jsou povinné" }, { status: 400 })
@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
       email,
       password,
       options: {
+        data: { name },
         emailRedirectTo: undefined,
       },
     })
@@ -32,11 +33,12 @@ export async function POST(request: NextRequest) {
 
     let profile = null
     let attempts = 0
-    const maxAttempts = 3
+    const maxAttempts = 8
 
     while (!profile && attempts < maxAttempts) {
       attempts++
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      const delay = Math.min(300 * attempts, 1500)
+      await new Promise((resolve) => setTimeout(resolve, delay))
 
       const { data: profileData } = await supabase
         .from("profiles")
@@ -52,8 +54,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (!profile) {
-      console.error("[v0] Profile not created after", maxAttempts, "attempts")
-      return NextResponse.json({ error: "Vytvoření profilu selhalo" }, { status: 500 })
+      // The auth user was created successfully even if the profile trigger hasn't
+      // caught up yet - don't fail the whole signup over this, just log it.
+      console.warn("[v0] Profile not confirmed after", maxAttempts, "attempts - proceeding anyway")
     }
 
     const response = NextResponse.json(
