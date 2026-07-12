@@ -143,7 +143,11 @@ export default function HomePage() {
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Section */}
-          <div className="pt-24 sm:pt-32 pb-4 flex items-center justify-center">
+          {/* pt-32/pt-40 (not pt-24/pt-32) - TopNavigation now renders its
+              32px growth-hook strip on this page too (unlock-trial CTA for
+              logged-out visitors, lifecycle messaging once logged in), so
+              the hero reserves that extra space up front. */}
+          <div className="pt-32 sm:pt-40 pb-4 flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
