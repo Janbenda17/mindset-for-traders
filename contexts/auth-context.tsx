@@ -16,7 +16,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
-  register: (data: { email: string; password: string; name: string }) => Promise<boolean>
+  register: (data: { email: string; password: string; name?: string }) => Promise<boolean>
   logout: () => void
   resetPassword: (email: string) => Promise<boolean>
   isLoading: boolean
@@ -216,7 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const register = async (data: { email: string; password: string; name: string }): Promise<boolean> => {
+  const register = async (data: { email: string; password: string; name?: string }): Promise<boolean> => {
     try {
       const { email, password, name } = data
 
@@ -245,7 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (result.error?.includes("already registered")) {
           errorMessage = "Tento email je již registrován. Zkuste se přihlásit."
         } else if (result.error?.includes("Password should contain")) {
-          errorMessage = "Heslo musí obsahovat: malá písmena + velká písmena + čísla (min. 6 znaků)."
+          errorMessage = "Heslo musí mít alespoň 6 znaků a obsahovat 1 číslo."
         }
 
         toast({
