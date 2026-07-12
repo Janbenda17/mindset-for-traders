@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, EyeOff, Mail, Lock, Brain } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, Brain, Gift } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
@@ -25,6 +25,7 @@ const isEn = language === "en"
 const txt = {
 cardTitle: isEn ? "Create your account" : "Vytvořit účet",
 cardDesc: isEn ? "Just email and password - takes 30 seconds" : "Jen email a heslo - zabere to 30 sekund",
+trialHook: isEn ? "Sign up and unlock a 14-day free Premium trial — no card required." : "Zaregistruj se a odemkni 14denní Premium trial zdarma — bez platební karty.",
 emailLabel: isEn ? "Email" : "Email",
 emailPlaceholder: isEn ? "your@email.com" : "vas@email.com",
 passwordLabel: isEn ? "Password" : "Heslo",
@@ -103,6 +104,14 @@ return (
 <CardDescription className="text-slate-400">{txt.cardDesc}</CardDescription>
 </CardHeader>
 <CardContent>
+{/* Trial growth hook — registering unlocks the 14-day free trial. */}
+<div className="mb-5 rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-teal-500/5 p-3 flex items-center gap-3">
+<div className="p-1.5 rounded-lg bg-emerald-500/15 flex-shrink-0">
+<Gift className="w-4 h-4 text-emerald-300" />
+</div>
+<p className="text-sm font-medium text-white">{txt.trialHook}</p>
+</div>
+
 <form onSubmit={handleSubmit} className="space-y-4">
 {errors.general && (
 <Alert className="border-red-500/50 bg-red-500/10">
