@@ -16,7 +16,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
-  register: (data: { email: string; password: string; name: string }) => Promise<boolean>
+  register: (data: { email: string; password: string; name?: string }) => Promise<boolean>
   logout: () => void
   resetPassword: (email: string) => Promise<boolean>
   isLoading: boolean
@@ -194,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       console.log("[v0] ✅ Přihlášení úspěšné - nastavuji session do Supabase client")
-      
+
       // Set the session in Supabase client so subsequent calls work
       await supabase.auth.setSession(result.session)
 
@@ -216,7 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const register = async (data: { email: string; password: string; name: string }): Promise<boolean> => {
+  const register = async (data: { email: string; password: string; name?: string }): Promise<boolean> => {
     try {
       const { email, password, name } = data
 
@@ -225,28 +225,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[v0] Name:", name)
       console.log("[v0] Password length:", password.length)
 
-      const { data: authData, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { name },
-          emailRedirectTo: undefined,
-        },
+      // Call our server-side sign-up endpoint instead of Supabase directly
+      // This avoids client-side failures in in-app browsers (Instagram/Facebook webviews etc.)
+      const response = await fetch("/api/auth/sign-up", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
       })
 
-      console.log("[v0] Response od signUp:", { hasError: !!error, hasUser: !!authData.user, hasSession: !!authData.session })
+      const result = await response.json()
 
-      if (error) {
-        console.error("[v0] ❌ SIGNUP ERROR:", {
-          message: error.message,
-          status: error.status,
-        })
+      console.log("[v0] Response od sign-up API:", { ok: response.ok, hasUser: !!result.user, hasSession: !!result.session })
 
-        let errorMessage = error.message
-        if (error.message.includes("already registered")) {
+      if (!response.ok) {
+        console.error("[v0] ❌ SIGNUP ERROR:", result.error)
+
+        let errorMessage = result.error || "Registrace se nezdařila."
+        if (result.error?.includes("already registered")) {
           errorMessage = "Tento email je již registrován. Zkuste se přihlásit."
-        } else if (error.message.includes("Password should contain")) {
-          errorMessage = "Heslo musí obsahovat: malá písmena + velká písmena + čísla (min. 6 znaků)."
+        } else if (result.error?.includes("Password should contain")) {
+          errorMessage = "Heslo musí mít alespoň 6 znaků a obsahovat 1 číslo."
         }
 
         toast({
@@ -257,7 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      if (!authData.user) {
+      if (!result.user) {
         console.error("[v0] ❌ Žádný user vrácen od signUp")
         toast({
           title: "Chyba registrace",
@@ -267,88 +266,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      console.log("[v0] ✅ User vytvořen:", authData.user.id)
-      console.log("[v0] Session status:", authData.session ? "✅ Session je" : "❌ Session chybí")
+      console.log("[v0] ✅ User vytvořen:", result.user.id)
+      console.log("[v0] Session status:", result.session ? "✅ Session je" : "❌ Session chybí")
 
       // If we have a session, set it properly
-      if (authData.session) {
+      if (result.session) {
         console.log("[v0] Nastavuji session...")
-        await supabase.auth.setSession(authData.session)
+        await supabase.auth.setSession(result.session)
       }
 
       // Set the user state immediately
-      lastUserIdRef.current = authData.user.id
+      lastUserIdRef.current = result.user.id
       setUser({
-        id: authData.user.id,
-        email: authData.user.email!,
+        id: result.user.id,
+        email: result.user.email!,
         name: name || "Trader",
       })
-
-      // Wait for profile to be created by trigger
-      console.log("[v0] Čekám na profil v databázi...")
-      let profile = null
-      let attempts = 0
-      const maxAttempts = 10
-
-      while (!profile && attempts < maxAttempts) {
-        attempts++
-        const delay = Math.min(300 * attempts, 2000)
-        await new Promise((resolve) => setTimeout(resolve, delay))
-
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("user_id, onboarding_completed")
-          .eq("user_id", authData.user.id)
-          .maybeSingle()
-
-        if (!profileError) {
-          profile = profileData
-          if (profile) {
-            console.log("[v0] ✅ Profil nalezen!")
-            break
-          }
-        }
-      }
 
       // Nový uživatel má pouze FREE verzi (bez trial)
       console.log("[v0] Nový uživatel - nastavuji FREE verzi bez trial...")
 
-            // Fire CompleteRegistration to Meta: client-side Pixel (works for
-            // visitors without ad blockers) AND server-side Conversions API
-            // (works for everyone else). Same eventId on both so Meta deduplicates
-            // instead of double-counting.
-            try {
-                      const eventId = `reg_${authData.user.id}`
-                      const fbp = document.cookie.match(/_fbp=([^;]+)/)?.[1]
-                      const fbc = document.cookie.match(/_fbc=([^;]+)/)?.[1]
+      // Fire CompleteRegistration to Meta: client-side Pixel (works for
+      // visitors without ad blockers) AND server-side Conversions API
+      // (works for everyone else). Same eventId on both so Meta deduplicates
+      // instead of double-counting.
+      try {
+        const eventId = `reg_${result.user.id}`
+        const fbp = document.cookie.match(/_fbp=([^;]+)/)?.[1]
+        const fbc = document.cookie.match(/_fbc=([^;]+)/)?.[1]
 
-                      if (typeof window !== "undefined" && (window as any).fbq) {
-                                  ;(window as any).fbq("track", "CompleteRegistration", {}, { eventID: eventId })
-                      }
-              if (typeof window !== "undefined" && (window as any).clarity) { (window as any).clarity("event", "signup_completed") }
+        if (typeof window !== "undefined" && (window as any).fbq) {
+          ;(window as any).fbq("track", "CompleteRegistration", {}, { eventID: eventId })
+        }
+        if (typeof window !== "undefined" && (window as any).clarity) { (window as any).clarity("event", "signup_completed") }
 
-                      fetch("/api/meta-capi", {
-                                  method: "POST",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({
-                                                eventName: "CompleteRegistration",
-                                                eventId,
-                                                email,
-                                                fbp,
-                                                fbc,
-                                                eventSourceUrl: window.location.href,
-                                  }),
-                      }).catch((err) => console.error("[v0] Meta CAPI call failed:", err))
-            } catch (err) {
-                      console.error("[v0] Meta tracking error:", err)
-            }
+        fetch("/api/meta-capi", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventName: "CompleteRegistration",
+            eventId,
+            email,
+            fbp,
+            fbc,
+            eventSourceUrl: window.location.href,
+          }),
+        }).catch((err) => console.error("[v0] Meta CAPI call failed:", err))
+      } catch (err) {
+        console.error("[v0] Meta tracking error:", err)
+      }
 
       toast({
         title: "Registrace úspěšná!",
         description: "Vítejte v MindTrader!",
       })
 
-      console.log("[v0] ✅ Registrace HOTOVA - redirect na /daily-tracker")
+      console.log("[v0] ✅ Registrace HOTOVA - redirect na /onboarding")
       await new Promise((resolve) => setTimeout(resolve, 500))
       router.push("/onboarding")
       return true
@@ -385,7 +358,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetPassword = async (email: string): Promise<boolean> => {
     try {
       console.log("[v0] Resetting password for:", email)
-      
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       })
