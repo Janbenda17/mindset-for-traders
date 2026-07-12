@@ -10,6 +10,8 @@ interface SubscriptionContextType {
   isActive: boolean
   isPremium: boolean
   isLoading: boolean
+  isTrialing: boolean
+  trialDaysLeft: number
   // True only after a subscription status fetch has SUCCESSFULLY completed.
   // A failed/aborted fetch leaves isActive=false, which is indistinguishable
   // from a confirmed free user — consumers (e.g. live-mode auto-revert) must
@@ -38,6 +40,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [isLoading, setIsLoading] = useState(true)
   const [statusConfirmed, setStatusConfirmed] = useState(false)
   const [isCanceled, setIsCanceled] = useState(false)
+  const [isTrialing, setIsTrialing] = useState(false)
+  const [trialDaysLeft, setTrialDaysLeft] = useState(0)
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null)
   const [customerId, setCustomerId] = useState<string | null>(null)
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
@@ -88,6 +92,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         const data = await response.json()
         setPlan(data.plan)
         setIsActive(data.isActive)
+        setIsTrialing(!!data.isTrialing)
+        setTrialDaysLeft(data.trialDaysLeft || 0)
         setStatusConfirmed(true) // status is now confirmed from a real response
         setSubscriptionStatus(data.status)
         setSubscriptionId(data.subscriptionId)
@@ -239,6 +245,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         isActive,
         isPremium,
         isLoading,
+        isTrialing,
+        trialDaysLeft,
         statusConfirmed,
         isCanceled,
         subscriptionId,
@@ -265,6 +273,8 @@ export function useSubscription() {
         isActive: false,
         isPremium: false,
         isLoading: true,
+        isTrialing: false,
+        trialDaysLeft: 0,
         statusConfirmed: false,
         isCanceled: false,
         subscriptionId: null,
