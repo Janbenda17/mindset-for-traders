@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     let customerId = null
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("stripe_customer_id")
+      .select("stripe_customer_id, subscription_status")
       .eq("user_id", user.id)
       .maybeSingle()
 
@@ -106,6 +106,17 @@ export async function POST(request: NextRequest) {
     const priceId = process.env.STRIPE_PRICE_ID || "price_1S59GOL0tgTNaSwwEqyW1brC"
     console.log("[v0] Using price ID:", priceId)
 
+    // A 14-day free trial (card required up front, first charge after the
+    // trial ends) is only granted the FIRST time a given user subscribes.
+    // profile.subscription_status is null for anyone who has never gone
+    // through Stripe checkout before; any other value (trialing/active/
+    // canceled/past_due) means they've already had their trial, so a
+    // re-subscribe goes straight to a paid, non-trial subscription -
+    // otherwise someone could cancel and immediately re-trial for
+    // unlimited free access.
+    const isFirstTimeSubscriber = !profile?.subscription_status
+    console.log("[v0] [CHECKOUT] isFirstTimeSubscriber:", isFirstTimeSubscriber, "existing status:", profile?.subscription_status)
+
     // Create checkout session with discount codes enabled
     // IMPORTANT: Include user_id in metadata AND client_reference_id for webhook to identify user
     const session = await stripe.checkout.sessions.create({
@@ -120,6 +131,7 @@ export async function POST(request: NextRequest) {
       ],
       mode: "subscription",
       subscription_data: {
+        ...(isFirstTimeSubscriber ? { trial_period_days: 14 } : {}),
         metadata: {
           plan: "premium",
           user_id: user.id,
