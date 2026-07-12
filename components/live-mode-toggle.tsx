@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Zap, Shield, Lock, Download, Crown } from "lucide-react"
 import { useLiveMode } from "@/contexts/live-mode-context"
 import { useAuth } from "@/contexts/auth-context"
-import { useSubscription } from "@/contexts/subscription-context"
 import { useToast } from "@/hooks/use-toast"
 import { offerMigration, migrateVirtualDataToLive } from "@/lib/data-migration"
 import {
@@ -24,7 +23,6 @@ const LiveModeToggle = () => {
   const router = useRouter()
   const { isLiveMode, switchToLive } = useLiveMode()
   const { user } = useAuth()
-  const { isPremium, isLoading: isPremiumLoading } = useSubscription()
   const { toast } = useToast()
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showMigrationDialog, setShowMigrationDialog] = useState(false)
@@ -45,24 +43,12 @@ const LiveModeToggle = () => {
         return
       }
 
-      // Pokud se ještě načítá subscription status, čekáme
-      if (isPremiumLoading) {
-        toast({
-          title: "Načítám tvůj subscription",
-          description: "Prosím čekej na ověření tvého předplatného...",
-        })
-        return
-      }
+      // Live Mode (real trade journaling) is available to every free
+      // account -- it's the core product loop and shouldn't be paywalled.
+      // Premium (paid or in-trial) unlocks the AI coach / advanced insights
+      // on top of it, but writing your own real data is always free.
+      console.log("[v0] Allowing live mode switch (free tier)")
 
-      // Když VÍME, že uživatel NENÍ premium, přesměruj na pricing
-      if (!isPremium) {
-        console.log("[v0] User not premium - redirecting to pricing")
-        router.push("/pricing")
-        return
-      }
-      
-      console.log("[v0] User is premium - allowing live mode switch")
-      
       // Check if user has data worth migrating
       if (user && offerMigration(user.id)) {
         setShowMigrationDialog(true)
