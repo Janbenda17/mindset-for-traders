@@ -12,7 +12,7 @@ import { Crown, Check, Zap, BarChart3, Brain, FileText, Download, Headphones, Ar
 import Link from "next/link"
 
 export default function UpgradePage() {
-  const { upgradeToPremium, isLoading, isPremium, checkSubscriptionStatus } = useSubscription()
+  const { upgradeToPremium, isLoading, isPremium, isTrialing, trialDaysLeft, checkSubscriptionStatus } = useSubscription()
   const { user } = useAuth()
   const { language } = useLanguage()
   const router = useRouter()
@@ -113,7 +113,7 @@ export default function UpgradePage() {
     }
   }
 
-  if (isPremium) {
+  if (isPremium && !isTrialing) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-4xl mx-auto px-4">
@@ -156,8 +156,25 @@ export default function UpgradePage() {
           </div>
         )}
 
+        {/* Trial status banner - shown while the 14-day free trial is active */}
+        {user && isTrialing && (
+          <div className="mb-8 p-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-center">
+            <Crown className="h-12 w-12 mx-auto mb-3" />
+            <h2 className="text-2xl font-bold mb-2">
+              {language === 'en'
+                ? `You're on a free Premium trial — ${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left`
+                : `Máš aktivní zkušební Premium — zbývá ${trialDaysLeft} ${trialDaysLeft === 1 ? 'den' : trialDaysLeft < 5 ? 'dny' : 'dní'}`}
+            </h2>
+            <p className="text-lg opacity-90">
+              {language === 'en'
+                ? 'Full access to the AI coach, MT4/5 sync and advanced insights - no card required.'
+                : 'Plný přístup k AI koučovi, MT4/5 synchronizaci a pokročilým insightům - bez platební karty.'}
+            </p>
+          </div>
+        )}
+
         {/* Welcome message for new users */}
-        {user && (
+        {user && !isTrialing && (
           <div className="mb-8 p-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-center">
             <Gift className="h-12 w-12 mx-auto mb-3" />
             <h2 className="text-2xl font-bold mb-2">{language === 'en' ? `Welcome, ${user.name}! 🎉` : `Vítejte, ${user.name}! 🎉`}</h2>
@@ -174,9 +191,9 @@ export default function UpgradePage() {
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-6 mb-8">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Zap className="h-6 w-6" />
-                <span className="text-2xl font-bold">{language === 'en' ? 'Special Offer!' : 'Speciální nabídka!'}</span>
+                <span className="text-2xl font-bold">{language === 'en' ? '14-day free trial' : '14denní zkušební verze zdarma'}</span>
               </div>
-              <p className="text-lg">{language === 'en' ? '$49.99/month' : '1499 Kč/měsíc'}</p>
+              <p className="text-lg">{language === 'en' ? 'then 749 Kč/month, no card required to start' : 'poté 749 Kč/měsíc, bez platební karty na start'}</p>
               <p className="text-sm opacity-90 mt-1">{language === 'en' ? '7-day money-back guarantee' : '7denní záruka vrácení peněz'}</p>
             </div>
         </div>
@@ -203,13 +220,21 @@ export default function UpgradePage() {
                 Free
               </CardTitle>
               <div className="text-3xl font-bold">0 Kč</div>
-              <p className="text-gray-600">{language === 'en' ? 'Virtual version' : 'Virtual verze'}</p>
+              <p className="text-gray-600">{language === 'en' ? 'Forever free' : 'Navždy zdarma'}</p>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Demo mode - virtual data' : 'Demo mode - virtuální data'}
+                  {language === 'en' ? 'Live Mode - log your real trades' : 'Live Mode - zapisuj své reálné obchody'}
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  {language === 'en' ? 'Trading calendar & basic discipline score' : 'Obchodní kalendář a základní discipline score'}
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  {language === 'en' ? 'Journal entries & notes' : 'Journal záznamy a poznámky'}
                 </li>
               </ul>
             </CardContent>
@@ -228,16 +253,15 @@ export default function UpgradePage() {
                 Premium
               </CardTitle>
               <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-sm font-medium text-gray-500 line-through">{language === 'en' ? '$79.99' : '2499 Kč'}</span>
                 <span className="text-5xl font-extrabold tracking-tight text-blue-600">
-                  {language === 'en' ? '$49.99' : '1499 Kč'}
+                  {language === 'en' ? '$32' : '749 Kč'}
                 </span>
                 <span className="text-gray-500 text-lg">{language === 'en' ? '/month' : '/měsíc'}</span>
-                <Badge className="ml-auto bg-red-100 text-red-700">
-                  {language === 'en' ? 'Save $30' : 'Ušetříte 1000 Kč'}
+                <Badge className="ml-auto bg-green-100 text-green-700">
+                  {language === 'en' ? '14-day free trial' : '14 dní zdarma'}
                 </Badge>
               </div>
-              <p className="text-sm text-green-600 font-semibold mt-3">{language === 'en' ? '40% off - limited-time offer' : 'Sleva 40% - časově omezená nabídka'}</p>
+              <p className="text-sm text-green-600 font-semibold mt-3">{language === 'en' ? 'No credit card required to start your trial' : 'Bez platební karty na start zkušební verze'}</p>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3 mb-6">
@@ -280,23 +304,31 @@ export default function UpgradePage() {
               </ul>
 
               {user ? (
-                <Button
-                  onClick={handleUpgrade}
-                  disabled={isLoading || isUpgrading}
-                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-3"
-                >
-                  {isLoading || isUpgrading ? (language === 'en' ? "Processing..." : "Zpracovávám...") : (language === 'en' ? "Upgrade to Premium" : "Upgradovat na Premium")}
-                </Button>
+                isTrialing ? (
+                  <div className="text-center text-sm text-gray-600 py-3 px-4 bg-purple-50 rounded-lg border border-purple-200">
+                    {language === 'en'
+                      ? `You already have full Premium access during your trial (${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left).`
+                      : `Během zkušební verze už máš plný Premium přístup (zbývá ${trialDaysLeft} ${trialDaysLeft === 1 ? 'den' : trialDaysLeft < 5 ? 'dny' : 'dní'}).`}
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleUpgrade}
+                    disabled={isLoading || isUpgrading}
+                    className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-3"
+                  >
+                    {isLoading || isUpgrading ? (language === 'en' ? "Processing..." : "Zpracovávám...") : (language === 'en' ? "Upgrade to Premium" : "Upgradovat na Premium")}
+                  </Button>
+                )
               ) : (
                 <Button
                   asChild
                   className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-3"
                 >
-                  <Link href="/signup">{language === 'en' ? "Sign Up & Upgrade" : "Registrovat se a upgradovat"}</Link>
+                  <Link href="/signup">{language === 'en' ? "Sign Up & Start Free Trial" : "Registrovat se a začít zkušební verzi"}</Link>
                 </Button>
               )}
 
-              <p className="text-xs text-gray-500 text-center mt-3">{language === 'en' ? "$49.99/month, billed immediately. 7-day money-back guarantee." : "1499 Kč/měsíc, účtováno ihned. 7denní záruka vrácení peněz."}</p>
+              <p className="text-xs text-gray-500 text-center mt-3">{language === 'en' ? "749 Kč/month after your 14-day free trial. Cancel anytime. 7-day money-back guarantee." : "749 Kč/měsíc po 14denní zkušební verzi zdarma. Kdykoli zrušitelné. 7denní záruka vrácení peněz."}</p>
             </CardContent>
           </Card>
         </div>
