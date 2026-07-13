@@ -982,10 +982,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: "SET_PORTFOLIO_VALUE", payload: value })
   }, [])
 
+  // Live Mode is Premium-only by design (see contexts/live-mode-context.tsx
+  // for the full rationale) - this second, independent switchToLive
+  // implementation had no such check, so components wired to useData()
+  // (locked-feature.tsx, live-mode-warning.tsx) could flip a free account
+  // into Live mode even though the equivalent function in
+  // live-mode-context.tsx now blocks it. Guarding here too closes that gap.
   const switchToLive = useCallback(() => {
+    if (!isPremium) {
+      console.log("[v0] [DataContext] Blocked switchToLive: user is not Premium")
+      toast({
+        title: "Live Mode je Premium funkce",
+        description: "Pro přepnutí do Live Mode si aktivuj Premium.",
+        variant: "destructive",
+      })
+      return
+    }
     dispatch({ type: "SET_LIVE_MODE", payload: true })
     dispatch({ type: "SET_EVER_SWITCHED_LIVE", payload: true })
-  }, [])
+  }, [isPremium])
 
   const clearAllData = useCallback(() => {
     dispatch({ type: "CLEAR_ALL_DATA" })
