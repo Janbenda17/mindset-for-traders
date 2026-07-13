@@ -696,10 +696,6 @@ export default function AccountPage() {
 
   const freeFeatures = [
     "Virtual Mode - náhled na ukázkových datech",
-    "Obchodní deník (export CSV/PDF)",
-    "Sledování nálady a disciplíny",
-    "Pokročilá analytika a risk kalkulačka",
-    "Team Club a komunita",
   ]
 
   const requestNotificationPermission = async () => {
