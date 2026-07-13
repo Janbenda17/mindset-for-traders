@@ -108,13 +108,34 @@ export async function POST(request: NextRequest) {
 
     // A 14-day free trial (card required up front, first charge after the
     // trial ends) is only granted the FIRST time a given user subscribes.
-    // profile.subscription_status is null for anyone who has never gone
-    // through Stripe checkout before; any other value (trialing/active/
-    // canceled/past_due) means they've already had their trial, so a
-    // re-subscribe goes straight to a paid, non-trial subscription -
-    // otherwise someone could cancel and immediately re-trial for
-    // unlimited free access.
-    const isFirstTimeSubscriber = !profile?.subscription_status
+    // Only these values are ever written by the Stripe webhook
+    // (app/api/subscription/webhook/route.ts) once a real subscription
+    // exists for this user - any other value means they've already had
+    // their trial, so a re-subscribe goes straight to a paid, non-trial
+    // subscription (otherwise someone could cancel and immediately
+    // re-trial for unlimited free access).
+    //
+    // IMPORTANT: this must NOT be "!profile?.subscription_status" - that
+    // column defaults to 'inactive' on profile creation (see
+    // scripts/001_create_users_and_profiles.sql), so subscription_status
+    // is NEVER null/falsy, even for a brand-new user who has never
+    // subscribed. That made isFirstTimeSubscriber false for 100% of
+    // checkouts, so trial_period_days was never applied and every single
+    // user was charged immediately instead of getting the advertised
+    // 14-day free trial - confirmed live on 2026-07-13.
+    const REAL_STRIPE_SUBSCRIPTION_STATUSES = [
+      "trialing",
+      "active",
+      "past_due",
+      "canceled",
+      "unpaid",
+      "incomplete",
+      "incomplete_expired",
+      "paused",
+    ]
+    const isFirstTimeSubscriber = !REAL_STRIPE_SUBSCRIPTION_STATUSES.includes(
+      profile?.subscription_status ?? "",
+    )
     console.log("[v0] [CHECKOUT] isFirstTimeSubscriber:", isFirstTimeSubscriber, "existing status:", profile?.subscription_status)
 
     // Create checkout session with discount codes enabled
