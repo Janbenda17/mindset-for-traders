@@ -29,6 +29,7 @@ interface SubscriptionContextType {
   subscriptionStatus: string | null
   subscribe: (plan: "free" | "premium") => Promise<boolean>
   upgradeToPremium: () => Promise<boolean>
+  endTrialNow: () => Promise<boolean>
   cancelSubscription: () => Promise<boolean>
   openBillingPortal: () => Promise<void>
   checkSubscriptionStatus: () => Promise<void>
@@ -179,6 +180,53 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }
 
+  // Ends an in-progress trial immediately so the user is charged now
+  // instead of waiting for the 14-day trial to run out. Used by the
+  // /upgrade page for isTrialing users, who previously had no way at all
+  // to convert early - see app/api/subscription/end-trial.
+  const endTrialNow = async (): Promise<boolean> => {
+    if (!user) return false
+
+    try {
+      setIsLoading(true)
+      const response = await fetch("/api/subscription/end-trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error("[v0] End trial error:", data.error)
+        toast({
+          title: "Chyba",
+          description: data.error || "Nepodařilo se ukončit zkušební verzi. Zkuste to prosím později.",
+          variant: "destructive",
+        })
+        return false
+      }
+
+      console.log("[v0] Trial ended early, new status:", data.status)
+      await checkSubscriptionStatus()
+      toast({
+        title: "Hotovo",
+        description: "Přešli jste na placené Premium. Děkujeme!",
+      })
+      return true
+    } catch (error) {
+      console.error("[v0] End trial error:", error)
+      toast({
+        title: "Chyba",
+        description: "Nepodařilo se ukončit zkušební verzi. Zkuste to prosím později.",
+        variant: "destructive",
+      })
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const cancelSubscription = async (): Promise<boolean> => {
     if (!subscriptionId) {
       toast({
@@ -262,6 +310,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         subscriptionStatus,
         subscribe,
         upgradeToPremium,
+        endTrialNow,
         cancelSubscription,
         openBillingPortal,
         checkSubscriptionStatus,
@@ -291,6 +340,7 @@ export function useSubscription() {
         subscriptionStatus: null,
         subscribe: async () => false,
         upgradeToPremium: async () => false,
+        endTrialNow: async () => false,
         cancelSubscription: async () => false,
         openBillingPortal: async () => {},
         checkSubscriptionStatus: async () => {},
