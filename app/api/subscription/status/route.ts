@@ -79,10 +79,30 @@ export async function GET(request: NextRequest) {
     // That made every brand-new user see "Your trial/subscription has
     // ended" instead of "Activate your 14-day trial" the moment they
     // finished signing up - confirmed live on 2026-07-13 with a fresh test
-    // account. stripe_customer_id is only ever written once the user starts
-    // a real Stripe checkout (see app/api/subscription/create-checkout),
-    // so it's an unambiguous signal.
-    const hasSubscribed = !!profile.stripe_customer_id
+    // account.
+    //
+    // It also must NOT be derived from stripe_customer_id: that gets
+    // written the moment a checkout session is CREATED (see
+    // app/api/subscription/create-checkout), before the user ever finishes
+    // entering card details. So a user who opens the Stripe checkout page
+    // and abandons it (closes the tab, back button, etc.) already has
+    // stripe_customer_id set despite never having had a trial or
+    // subscription - confirmed live on 2026-07-13 with the same test
+    // account right after an abandoned checkout attempt. Only a real
+    // Stripe subscription status (written by the webhook once Stripe
+    // actually creates/updates a subscription) means this user has ever
+    // truly subscribed.
+    const REAL_STRIPE_SUBSCRIPTION_STATUSES = [
+      "trialing",
+      "active",
+      "past_due",
+      "canceled",
+      "unpaid",
+      "incomplete",
+      "incomplete_expired",
+      "paused",
+    ]
+    const hasSubscribed = REAL_STRIPE_SUBSCRIPTION_STATUSES.includes(profile.subscription_status ?? "")
 
     console.log(
       "[v0] Subscription status:",
