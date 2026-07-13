@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
-import { Crown, Check, Zap, BarChart3, Brain, FileText, Download, Headphones, ArrowLeft, Gift, RefreshCw, CreditCard } from "lucide-react"
+import { Crown, Check, Zap, BarChart3, Brain, FileText, Headphones, ArrowLeft, Gift, RefreshCw, CreditCard } from "lucide-react"
 import Link from "next/link"
 
 export default function UpgradePage() {
@@ -240,11 +240,19 @@ export default function UpgradePage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Trading calendar & basic discipline score' : 'Obchodní kalendář a základní discipline score'}
+                  {language === 'en' ? 'Unlimited trading journal & notes' : 'Neomezený obchodní deník a poznámky'}
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Journal entries & notes' : 'Journal záznamy a poznámky'}
+                  {language === 'en' ? 'Trading calendar & discipline score' : 'Obchodní kalendář a discipline score'}
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  {language === 'en' ? 'Advanced analytics & risk calculator' : 'Pokročilá analytika a risk kalkulačka'}
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  {language === 'en' ? 'Export data (CSV/PDF) & Team Club' : 'Export dat (CSV/PDF) a Team Club'}
                 </li>
               </ul>
             </CardContent>
@@ -280,22 +288,8 @@ export default function UpgradePage() {
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
-                  <span className="font-medium">{language === 'en' ? 'Unlimited trading journal' : 'Neomezený obchodní deník'}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  <BarChart3 className="h-4 w-4 text-blue-600" />
-                  {language === 'en' ? 'Advanced analytics and reports' : 'Pokročilé analýzy a reporty'}
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
                   <Brain className="h-4 w-4 text-purple-600" />
-                  MindTrader AI Pro
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  <Download className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Export data and reports' : 'Export dat a reportů'}
+                  <span className="font-medium">{language === 'en' ? 'AI Report Builder - automatic AI report on your trading & psychology' : 'AI Report Builder - automatický AI report z tvého obchodování a psychologie'}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
@@ -304,15 +298,7 @@ export default function UpgradePage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Advanced psychological metrics' : 'Pokročilé psychologické metriky'}
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Risk management tools' : 'Risk management nástroje'}
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Trading pattern detection' : 'Trading pattern detection'}
+                  {language === 'en' ? 'Everything in Free' : 'Vše z Free plánu'}
                 </li>
               </ul>
 
