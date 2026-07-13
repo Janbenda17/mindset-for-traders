@@ -236,11 +236,11 @@ export default function UpgradePage() {
               <ul className="space-y-3">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Live Mode - log your real trades' : 'Live Mode - zapisuj své reálné obchody'}
+                  {language === 'en' ? 'Virtual Mode - preview on sample data' : 'Virtual Mode - náhled na ukázkových datech'}
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Unlimited trading journal & notes' : 'Neomezený obchodní deník a poznámky'}
+                  {language === 'en' ? 'Trading journal & notes' : 'Obchodní deník a poznámky'}
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
@@ -288,8 +288,13 @@ export default function UpgradePage() {
               <ul className="space-y-3 mb-6">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
+                  <Zap className="h-4 w-4 text-yellow-600" />
+                  <span className="font-medium">{language === 'en' ? 'Live Mode - trade with your real data' : 'Live Mode - obchoduj se svými reálnými daty'}</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
                   <Brain className="h-4 w-4 text-purple-600" />
-                  <span className="font-medium">{language === 'en' ? 'AI Report Builder - automatic AI report on your trading & psychology' : 'AI Report Builder - automatický AI report z tvého obchodování a psychologie'}</span>
+                  {language === 'en' ? 'AI Report Builder - automatic AI report on your trading & psychology' : 'AI Report Builder - automatický AI report z tvého obchodování a psychologie'}
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-600" />
