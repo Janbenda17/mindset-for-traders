@@ -238,22 +238,6 @@ export default function UpgradePage() {
                   <Check className="h-4 w-4 text-green-600" />
                   {language === 'en' ? 'Virtual Mode - preview on sample data' : 'Virtual Mode - náhled na ukázkových datech'}
                 </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Trading journal & notes' : 'Obchodní deník a poznámky'}
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Trading calendar & discipline score' : 'Obchodní kalendář a discipline score'}
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Advanced analytics & risk calculator' : 'Pokročilá analytika a risk kalkulačka'}
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-600" />
-                  {language === 'en' ? 'Export data (CSV/PDF) & Team Club' : 'Export dat (CSV/PDF) a Team Club'}
-                </li>
               </ul>
             </CardContent>
           </Card>
