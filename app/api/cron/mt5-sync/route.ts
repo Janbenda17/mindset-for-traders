@@ -39,7 +39,11 @@ export async function GET(request: NextRequest) {
     // Get all users with MT5 integration enabled
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('id, user_id, metaapi_token, metaapi_account_id, metaapi_broker')
+      // profiles' primary key is `user_id` - the table has no `id` column
+      // at all (see scripts/001_create_users_and_profiles.sql), so selecting
+      // `id` made Postgres reject this whole query with "column profiles.id
+      // does not exist", which is why this cron job always 500'd.
+      .select('user_id, metaapi_token, metaapi_account_id, metaapi_broker')
       .eq('trades_sync_enabled', true)
       .not('metaapi_account_id', 'is', null)
 
@@ -67,7 +71,7 @@ export async function GET(request: NextRequest) {
     // Process each user's MT5 data
     for (const profile of profiles) {
       try {
-        const userId = profile.user_id || profile.id
+        const userId = profile.user_id
         const accessToken = profile.metaapi_token
         const accountId = profile.metaapi_account_id
 
@@ -170,7 +174,7 @@ export async function GET(request: NextRequest) {
           `[v0] Synced MT5 data for user ${userId}: ${trades.length} trades, ${stats.daily_pnl.toFixed(2)} daily P&L`,
         )
       } catch (error) {
-        console.error(`[v0] Error syncing user ${profile.id}:`, error)
+        console.error(`[v0] Error syncing user ${profile.user_id}:`, error)
         errorCount++
       }
     }
