@@ -22,13 +22,18 @@ export async function GET(request: NextRequest) {
     // IMPORTANT: profiles' primary key is `user_id` - the table has no `id`
     // column at all (see scripts/001_create_users_and_profiles.sql).
     // Likewise `full_name` was never a profiles column (only `display_name`
-    // is), and `xp`/`level`/`win_rate`/`pnl` were never columns on profiles
-    // either - xp/level live on the separate `user_xp` table, and
-    // win_rate/pnl aren't stored as running totals anywhere, they're
-    // derived from journal_entries below. Selecting any of those
-    // nonexistent columns makes Postgres reject the entire query with
-    // "column profiles.id does not exist", which is why this endpoint
-    // 500'd on every request.
+    // is). `win_rate`/`pnl` aren't stored as running totals anywhere either,
+    // they're derived from journal_entries below.
+    //
+    // xp/level: profiles DOES have its own xp/level columns (added by
+    // scripts/add-xp-system.sql) and that's the column pair every other part
+    // of the app actually writes to and reads from (see app/api/xp/award and
+    // app/api/leaderboard). There is also a separate, unrelated `user_xp`
+    // table from the original schema, but nothing in the codebase ever
+    // writes to it, so it's permanently stuck at defaults - an earlier
+    // version of this route pulled xp/level from that dead table, which
+    // silently showed 0 XP / level 1 for every user instead of their real
+    // numbers. Select xp/level straight off profiles instead.
     const { data: profiles, error: usersError } = await getSupabase()
       .from("profiles")
       .select(`
@@ -36,7 +41,9 @@ export async function GET(request: NextRequest) {
         email,
         display_name,
         avatar_url,
-        created_at
+        created_at,
+        xp,
+        level
       `)
       .order("created_at", { ascending: false })
 
@@ -44,10 +51,6 @@ export async function GET(request: NextRequest) {
       console.error("[v0] Error fetching community users:", usersError)
       return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
     }
-
-    // xp/level live on their own table, keyed by the same user_id.
-    const { data: xpRows } = await getSupabase().from("user_xp").select("user_id, xp, level")
-    const xpByUser = new Map((xpRows || []).map((row: any) => [row.user_id, row]))
 
     // Trade count, win rate and total P&L aren't stored as running totals
     // anywhere - they're derived here from each user's trade-type journal
@@ -65,15 +68,14 @@ export async function GET(request: NextRequest) {
         const winningTrades = closedTrades.filter((t: any) => t.pnl > 0)
         const totalPnl = closedTrades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0)
         const winRate = closedTrades.length > 0 ? (winningTrades.length / closedTrades.length) * 100 : 0
-        const xpInfo = xpByUser.get(profile.user_id)
 
         return {
           id: profile.user_id,
           name: profile.display_name || "Unknown",
           avatar: profile.avatar_url || null,
           email: profile.email || "",
-          xp: xpInfo?.xp || 0,
-          level: xpInfo?.level || 1,
+          xp: profile.xp || 0,
+          level: profile.level || 1,
           winRate,
           pnl: totalPnl,
           totalTrades: tradeList.length,
