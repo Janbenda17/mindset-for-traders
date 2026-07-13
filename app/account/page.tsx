@@ -689,24 +689,16 @@ export default function AccountPage() {
   }
 
   const premiumFeatures = [
-    "Switch to Live Mode",
-    "Real-time statistics and trading",
-    "Advanced analytics & charts",
-    "AI MindTrader coach (Unlimited)",
-    "Detailed trading journal with photos",
-    "Export data (CSV, PDF)",
-    "In-depth emotional analysis",
-    "Risk management calculator",
-    "Priority support 24/7",
-    "Team Club premium features",
+    "AI Report Builder - automatický AI report z tvého obchodování a psychologie",
+    "Prioritní podpora",
   ]
 
   const freeFeatures = [
-    "Virtual Mode Only",
-    "Interface and feature exploration",
-    "Basic journal (Virtual data)",
-    "Basic mood tracking",
-    "Community access",
+    "Live Mode i Virtual Mode",
+    "Neomezený obchodní deník (export CSV/PDF)",
+    "Sledování nálady a disciplíny",
+    "Pokročilá analytika a risk kalkulačka",
+    "Team Club a komunita",
   ]
 
   const requestNotificationPermission = async () => {
@@ -1754,7 +1746,7 @@ export default function AccountPage() {
               {/* Free Plan */}
               <Card
                 className={`relative flex flex-col border-2 transition-all duration-300 hover:shadow-xl ${
-                  subscription?.plan !== "premium"
+                  !isPremium
                     ? "border-blue-500/50 bg-slate-900"
                     : "border-slate-700/50 bg-slate-900/60"
                 } backdrop-blur-xl`}
@@ -1762,7 +1754,7 @@ export default function AccountPage() {
                 <CardHeader className="pb-8">
                   <div className="flex items-center justify-between mb-4">
                     <CardTitle className="text-2xl font-bold text-white">Starter</CardTitle>
-                    {subscription?.plan !== "premium" && (
+                    {!isPremium && (
                       <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
                         {language === "cs" ? "Aktuální plán" : "Current Plan"}
                       </Badge>
@@ -1792,9 +1784,9 @@ export default function AccountPage() {
                   <Button
                     variant="outline"
                     className="w-full h-12 text-lg font-medium border-2 border-slate-600 text-gray-300 hover:bg-slate-800 bg-transparent"
-                    disabled={subscription?.plan !== "premium"}
+                    disabled={!isPremium}
                   >
-                    {subscription?.plan !== "premium"
+                    {!isPremium
                       ? language === "cs"
                         ? "Váš aktuální plán"
                         : "Your Current Plan"
@@ -1808,7 +1800,7 @@ export default function AccountPage() {
               {/* Premium Plan */}
               <Card
                 className={`relative flex flex-col border-2 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl ${
-                  subscription?.plan === "premium"
+                  isPremium
                     ? "border-yellow-500/50 shadow-yellow-500/10 bg-gradient-to-br from-purple-900/60 via-purple-800/40 to-pink-900/60"
                     : "border-blue-600 shadow-blue-600/10 bg-slate-900"
                 } backdrop-blur-xl`}
@@ -1825,7 +1817,7 @@ export default function AccountPage() {
                       <Crown className="h-6 w-6 mr-2 text-yellow-500 fill-yellow-500" />
                       Pro Trader
                     </CardTitle>
-                    {subscription?.plan === "premium" && (
+                    {isPremium && (
                       <Badge className="bg-green-500 text-white">{language === "cs" ? "Aktivní" : "Active"}</Badge>
                     )}
                   </div>
