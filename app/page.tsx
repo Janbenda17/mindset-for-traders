@@ -148,12 +148,7 @@ export default function HomePage() {
               logged-out visitors, lifecycle messaging once logged in), so
               the hero reserves that extra space up front. */}
           <div className="pt-32 sm:pt-40 pb-4 flex items-center justify-center">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-center"
-            >
+            <div className="text-center">
               {/* Badge */}
               <motion.div
                 className="inline-flex items-center gap-2 mb-8 px-3 py-1.5 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/5 backdrop-blur-sm"
@@ -249,7 +244,7 @@ export default function HomePage() {
                   </div>
                 </div>
               </motion.div>
-              {/* Trust bar — honest signals, not fabricated numbers */} <motion.div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl mx-auto mt-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.6 }}><div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3"><ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" /><span className="text-sm text-slate-300 text-left">{language === 'en' ? 'Free account, no card needed' : 'Účet zdarma, bez kreditky'}</span></div><div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3"><Sparkles className="w-5 h-5 text-fuchsia-400 shrink-0" /><span className="text-sm text-slate-300 text-left">{language === 'en' ? 'Every number below is computed live, not staged' : 'Každé číslo níže je spočítané naživo, ne nafocené'}</span></div><div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3"><RotateCcw className="w-5 h-5 text-blue-400 shrink-0" /><span className="text-sm text-slate-300 text-left">{language === 'en' ? '7-day money-back guarantee on Premium' : '7denní garance vrácení peněz na Premium'}</span></div></motion.div></motion.div></div>
+              {/* Trust bar — honest signals, not fabricated numbers */} <motion.div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl mx-auto mt-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.6 }}><div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3"><ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" /><span className="text-sm text-slate-300 text-left">{language === 'en' ? 'Free account, no card needed' : 'Účet zdarma, bez kreditky'}</span></div><div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3"><Sparkles className="w-5 h-5 text-fuchsia-400 shrink-0" /><span className="text-sm text-slate-300 text-left">{language === 'en' ? 'Every number below is computed live, not staged' : 'Každé číslo níže je spočítané naživo, ne nafocené'}</span></div><div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3"><RotateCcw className="w-5 h-5 text-blue-400 shrink-0" /><span className="text-sm text-slate-300 text-left">{language === 'en' ? '7-day money-back guarantee on Premium' : '7denní garance vrácení peněz na Premium'}</span></div></motion.div></div></div>
 
           {/* Broker connect teaser — small, just logo + label + CTA */}
           <div className="pt-6 sm:pt-8">
