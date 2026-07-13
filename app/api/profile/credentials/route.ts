@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
@@ -12,6 +13,31 @@ function getSupabase() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
   return supabaseInstance
+}
+
+// Verify the caller is logged in and only ever acting on their own userId.
+//
+// Both handlers used to trust a `userId` passed straight from the request
+// body/query string with no check at all - anyone could read or overwrite
+// ANY user's encrypted broker (MT4/MT5) login+password just by passing a
+// different UUID. This checks the real signed-in user (from the Supabase
+// session cookie, not anything the client can fake) and rejects the request
+// unless it matches the userId being acted on.
+async function requireOwnUser(requestedUserId: string) {
+  const supabase = await createServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { ok: false as const, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+  }
+
+  if (user.id !== requestedUserId) {
+    return { ok: false as const, response: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
+  }
+
+  return { ok: true as const }
 }
 
 // Encrypt credentials using encryption key
@@ -55,7 +81,7 @@ function decryptCredentials(encryptedData: string, encryptionKey: string): { log
 export async function POST(request: NextRequest) {
   try {
     const { userId, broker, login, password } = await request.json()
-    
+
     // Validate inputs
     if (!userId || !broker || !login || !password) {
       return NextResponse.json(
@@ -63,6 +89,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    const auth = await requireOwnUser(userId)
+    if (!auth.ok) return auth.response
 
     const encryptionKey = process.env.ENCRYPTION_KEY
     if (!encryptionKey) {
@@ -128,6 +157,9 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    const auth = await requireOwnUser(userId)
+    if (!auth.ok) return auth.response
 
     const { data, error } = await getSupabase()
       .from('profiles')
