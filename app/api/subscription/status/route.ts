@@ -71,7 +71,18 @@ export async function GET(request: NextRequest) {
     // tell "never started a trial" apart from "trial/subscription ended",
     // and by create-checkout to decide whether a new checkout still gets a
     // free trial or goes straight to a paid subscription.
-    const hasSubscribed = !!profile.subscription_status
+    //
+    // IMPORTANT: this must NOT be derived from subscription_status - that
+    // column defaults to 'inactive' on profile creation (see
+    // scripts/001_create_users_and_profiles.sql), so !!profile.subscription_status
+    // was true for every single new signup, before they ever touched Stripe.
+    // That made every brand-new user see "Your trial/subscription has
+    // ended" instead of "Activate your 14-day trial" the moment they
+    // finished signing up - confirmed live on 2026-07-13 with a fresh test
+    // account. stripe_customer_id is only ever written once the user starts
+    // a real Stripe checkout (see app/api/subscription/create-checkout),
+    // so it's an unambiguous signal.
+    const hasSubscribed = !!profile.stripe_customer_id
 
     console.log(
       "[v0] Subscription status:",
