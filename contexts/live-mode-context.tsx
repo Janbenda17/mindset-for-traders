@@ -155,7 +155,19 @@ export function LiveModeProvider({ children }: { children: ReactNode }) {
   const switchToLive = async () => {
     try {
       console.log(`[v0] [LiveMode] 🔄 Starting switch to LIVE mode for user: ${user?.id}`)
-      
+
+      // Live Mode (real trading, real data) is a Premium-only feature by
+      // design - Free accounts only ever see Virtual Mode (a preview on
+      // sample data). This was previously unenforced here, so any logged-in
+      // free user could flip themselves into Live mode via the account page
+      // toggle even though the pricing pages advertise Live Mode as
+      // Premium-exclusive. isPremium already covers both paid and trialing
+      // users (see contexts/subscription-context.tsx).
+      if (!isPremium) {
+        console.log("[v0] [LiveMode] ✗ Blocked: user is not Premium, cannot switch to Live Mode")
+        throw new Error("Live Mode je dostupný pouze pro Premium uživatele.")
+      }
+
       if (!user) {
         console.log("[v0] [LiveMode] Switching to LIVE mode (demo mode)")
         localStorage.setItem("trader-mindset-demo-mode", "live")
