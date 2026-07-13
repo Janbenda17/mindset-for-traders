@@ -12,11 +12,12 @@ import { Crown, Check, Zap, BarChart3, Brain, FileText, Download, Headphones, Ar
 import Link from "next/link"
 
 export default function UpgradePage() {
-  const { upgradeToPremium, isLoading, isPremium, isTrialing, trialDaysLeft, hasSubscribed, checkSubscriptionStatus } = useSubscription()
+  const { upgradeToPremium, endTrialNow, isLoading, isPremium, isTrialing, trialDaysLeft, hasSubscribed, checkSubscriptionStatus } = useSubscription()
   const { user } = useAuth()
   const { language } = useLanguage()
   const router = useRouter()
   const [isUpgrading, setIsUpgrading] = useState(false)
+  const [isEndingTrial, setIsEndingTrial] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [isChecking, setIsChecking] = useState(false)
   const [pollCount, setPollCount] = useState(0)
@@ -75,6 +76,15 @@ export default function UpgradePage() {
     setCheckoutOpen(true)
     await upgradeToPremium()
     setIsUpgrading(false)
+  }
+
+  const handleEndTrialNow = async () => {
+    setIsEndingTrial(true)
+    const ok = await endTrialNow()
+    setIsEndingTrial(false)
+    if (ok) {
+      router.push("/")
+    }
   }
 
   const handleManualCheck = async () => {
@@ -308,10 +318,26 @@ export default function UpgradePage() {
 
               {user ? (
                 isTrialing ? (
-                  <div className="text-center text-sm text-gray-600 py-3 px-4 bg-purple-50 rounded-lg border border-purple-200">
-                    {language === 'en'
-                      ? `You already have full Premium access during your trial (${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left).`
-                      : `Během zkušební verze už máš plný Premium přístup (zbývá ${trialDaysLeft} ${trialDaysLeft === 1 ? 'den' : trialDaysLeft < 5 ? 'dny' : 'dní'}).`}
+                  <div className="space-y-3">
+                    <div className="text-center text-sm text-gray-600 py-3 px-4 bg-purple-50 rounded-lg border border-purple-200">
+                      {language === 'en'
+                        ? `You already have full Premium access during your trial (${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} left).`
+                        : `Během zkušební verze už máš plný Premium přístup (zbývá ${trialDaysLeft} ${trialDaysLeft === 1 ? 'den' : trialDaysLeft < 5 ? 'dny' : 'dní'}).`}
+                    </div>
+                    <Button
+                      onClick={handleEndTrialNow}
+                      disabled={isLoading || isEndingTrial}
+                      className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-3"
+                    >
+                      {isEndingTrial
+                        ? (language === 'en' ? "Processing..." : "Zpracovávám...")
+                        : (language === 'en' ? "Skip trial & pay now" : "Přejít na placený Premium hned")}
+                    </Button>
+                    <p className="text-xs text-gray-500 text-center">
+                      {language === 'en'
+                        ? "Ends your trial immediately and charges the card on file today."
+                        : "Okamžitě ukončí zkušební verzi a dnes strhne platbu z karty na účtu."}
+                    </p>
                   </div>
                 ) : (
                   <Button
