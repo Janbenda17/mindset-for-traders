@@ -689,13 +689,14 @@ export default function AccountPage() {
   }
 
   const premiumFeatures = [
+    "Live Mode - reálné obchodování se skutečnými daty",
     "AI Report Builder - automatický AI report z tvého obchodování a psychologie",
     "Prioritní podpora",
   ]
 
   const freeFeatures = [
-    "Live Mode i Virtual Mode",
-    "Neomezený obchodní deník (export CSV/PDF)",
+    "Virtual Mode - náhled na ukázkových datech",
+    "Obchodní deník (export CSV/PDF)",
     "Sledování nálady a disciplíny",
     "Pokročilá analytika a risk kalkulačka",
     "Team Club a komunita",
@@ -1693,7 +1694,10 @@ export default function AccountPage() {
 
           {/* SUBSCRIPTION TAB */}
           <TabsContent value="subscription" className="space-y-8">
-            {/* Live Mode Toggle - Skryto pro premium uživatele */}
+            {/* Live Mode upsell - shown to non-premium users. Live Mode itself
+                is gated behind isPremium (see contexts/live-mode-context.tsx),
+                so free accounts get a prompt to upgrade here, not a toggle
+                that would fail. */}
             {!isPremium && (
             <div className="flex items-center justify-center space-x-4 p-6 border border-yellow-500/20 rounded-xl bg-yellow-900/10 backdrop-blur-lg">
               <div className="flex items-center gap-3">
@@ -1701,20 +1705,19 @@ export default function AccountPage() {
                 <h3 className="text-lg font-bold text-yellow-400">{language === "cs" ? "Režim Live" : "Live Mode"}</h3>
               </div>
               <Separator orientation="vertical" className="bg-yellow-500/30 h-8" />
-              <div className="flex items-center gap-2">
-                <p className={`font-medium transition-colors ${isLiveMode ? "text-white" : "text-gray-400"}`}>
-                  {language === "cs" ? "Vypnuto" : "Off"}
-                </p>
-                <Switch checked={isLiveMode} onCheckedChange={switchToLive} />
-                <p className={`font-medium transition-colors ${isLiveMode ? "text-white" : "text-gray-400"}`}>
-                  {language === "cs" ? "Zapnuto" : "On"}
-                </p>
-              </div>
-              <p className="text-xs text-yellow-500/80 ml-4">
+              <p className="text-sm text-yellow-500/90">
                 {language === "cs"
-                  ? "Přepněte do Live režimu pro reálné obchodování a statistiky."
-                  : "Switch to Live mode for real trading and statistics."}
+                  ? "Zatím pracuješ ve Virtual režimu (náhled na ukázkových datech)."
+                  : "You're currently in Virtual mode (a preview on sample data)."}
               </p>
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
+                onClick={handleUpgrade}
+                disabled={isUpgrading || subscriptionLoading}
+              >
+                {language === "cs" ? "Odemknout Live Mode" : "Unlock Live Mode"}
+              </Button>
             </div>
             )}
 
