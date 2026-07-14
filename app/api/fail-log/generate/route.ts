@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const today = new Date().toISOString().split('T')[0]
 
     const message = await getClient().messages.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-5-20250929",
       max_tokens: 2000,
       system: `Jsi trading psycholog a analytik se specializací na analýzu chyb v obchodování.
 Tvé analýzy jsou důkladné, konkrétní a vedou k reálnému zlepšení.
