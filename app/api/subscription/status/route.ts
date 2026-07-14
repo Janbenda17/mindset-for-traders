@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("subscription_status, subscription_tier, stripe_customer_id, is_premium, subscription_current_period_end, created_at")
+      .select("subscription_status, subscription_tier, stripe_customer_id, stripe_subscription_id, is_premium, subscription_current_period_end, created_at")
       .eq("user_id", user.id)
       .maybeSingle()
 
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
       isTrialing,
       trialDaysLeft,
       hasSubscribed,
-      subscriptionId: null,
+      subscriptionId: profile.stripe_subscription_id ?? null,
       customerId: profile.stripe_customer_id,
       status: profile.subscription_status,  // "trialing", "active", "canceled", etc.
       cancelAtPeriodEnd: false,
