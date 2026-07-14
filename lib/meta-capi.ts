@@ -33,6 +33,14 @@ fbc?: string
 value?: number
 currency?: string
 testEventCode?: string
+// Extra identifiers - none are required, but each one Meta can match
+// against its own user graph raises "event match quality" and directly
+// improves ad delivery/optimization (Meta flags low match quality in
+// Events Manager as "affected ad spend").
+externalId?: string
+firstName?: string
+lastName?: string
+phone?: string
 }
 
 export async function sendMetaConversionEvent(params: SendMetaEventParams) {
@@ -49,6 +57,15 @@ if (params.clientIp) userData.client_ip_address = params.clientIp
 if (params.userAgent) userData.client_user_agent = params.userAgent
 if (params.fbp) userData.fbp = params.fbp
 if (params.fbc) userData.fbc = params.fbc
+// Our own internal user id - hashed per Meta's convention for the eid field.
+if (params.externalId) userData.external_id = [sha256(params.externalId)]
+if (params.firstName) userData.fn = [sha256(params.firstName)]
+if (params.lastName) userData.ln = [sha256(params.lastName)]
+if (params.phone) {
+// Meta expects digits only (plus leading country code, no symbols).
+const digitsOnly = params.phone.replace(/[^0-9]/g, "")
+if (digitsOnly) userData.ph = [sha256(digitsOnly)]
+}
 
 const customData: Record<string, any> = {}
 if (params.value !== undefined) customData.value = params.value
