@@ -300,6 +300,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         if (typeof window !== "undefined" && (window as any).clarity) { (window as any).clarity("event", "signup_completed") }
 
+        const [firstName, ...restName] = (name || "").trim().split(/\s+/).filter(Boolean)
+        const lastName = restName.join(" ") || undefined
+
         fetch("/api/meta-capi", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -310,6 +313,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fbp,
             fbc,
             eventSourceUrl: window.location.href,
+            externalId: result.user.id,
+            firstName: firstName || undefined,
+            lastName,
           }),
         }).catch((err) => console.error("[v0] Meta CAPI call failed:", err))
       } catch (err) {
