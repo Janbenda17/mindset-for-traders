@@ -100,10 +100,21 @@ function ctaButton(text: string, url: string): string {
 }
 
 const UPGRADE_URL = "https://mindtrader.cz/upgrade"
+const ACCOUNT_URL = "https://mindtrader.cz/account"
 
 /**
  * Trial ending soon (fires from customer.subscription.trial_will_end,
  * which Stripe sends ~3 days before the trial converts or lapses).
+ *
+ * IMPORTANT: the checkout flow (app/api/subscription/create-checkout/route.ts)
+ * requires a card up front and Stripe's default trial_settings are in
+ * effect (no trial_settings.end_behavior override anywhere in this repo),
+ * so when the trial ends Stripe automatically charges the card on file and
+ * converts the subscription to active - there is NO automatic revert to
+ * Free. The previous version of this email said the opposite ("nic ti
+ * nebudeme účtovat"), which was false and could have caused disputed
+ * charges. Cancelling only happens if the user explicitly cancels from
+ * /account (cancelSubscription(), which sets cancel_at_period_end).
  */
 export function trialEndingEmail(params: { daysLeft: number; displayName?: string }): { subject: string; html: string } {
   const name = params.displayName ? params.displayName : "ahoj"
@@ -118,16 +129,17 @@ export function trialEndingEmail(params: { daysLeft: number; displayName?: strin
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">${name.charAt(0).toUpperCase() + name.slice(1)},</p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
       za <strong>${params.daysLeft} ${dayWord}</strong> ti končí zkušební verze Premium. Pokud nic neuděláš,
-      přejdeš zpátky do Virtual režimu (náhled na ukázkových datech) a přijdeš o Live Mode, AI Report Builder
-      a prioritní podporu.
+      <strong>automaticky se strhne platba</strong> z karty, kterou jsi zadal/a při registraci, a předplatné
+      pokračuje na placené verzi Premium.
     </p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 24px 0;">
-      Chceš pokračovat v reálném obchodování bez přerušení? Stačí kliknout níže.
+      Chceš pokračovat v reálném obchodování bez přerušení? Nemusíš dělat nic. Pokud pokračovat nechceš,
+      zruš předplatné ve svém účtu ještě před koncem zkušební doby.
     </p>
-    <div style="margin:0 0 24px 0;">${ctaButton("Pokračovat v Premium", UPGRADE_URL)}</div>
+    <div style="margin:0 0 24px 0;">${ctaButton("Spravovat předplatné", ACCOUNT_URL)}</div>
     <p style="color:#6b7280;font-size:13px;line-height:1.5;margin:0;">
-      Nechceš pokračovat? Nic se neděje, tvůj účet se automaticky přepne zpět na Free (Virtual Mode) - nic ti
-      nebudeme účtovat.
+      Předplatné můžeš kdykoliv zrušit v nastavení účtu - stačí to udělat před koncem zkušební doby, aby ti
+      nebyla naúčtovaná žádná platba.
     </p>
   `)
 
@@ -152,6 +164,59 @@ export function paymentFailedEmail(params: { displayName?: string }): { subject:
       Aktualizuj platební metodu a pokračuj tam, kde jsi skončil/a.
     </p>
     <div style="margin:0 0 24px 0;">${ctaButton("Aktualizovat platbu", UPGRADE_URL)}</div>
+  `)
+
+  return { subject, html }
+}
+
+/**
+ * Signup funnel email #1 - sent ~24h after registration to users who have
+ * not started the free trial (profiles.subscription_status is still the
+ * default 'inactive', i.e. they never completed Stripe checkout).
+ * Triggered by the daily cron at app/api/cron/signup-funnel-emails/route.ts.
+ */
+export function trialNotStartedEmail(params: { displayName?: string }): { subject: string; html: string } {
+  const name = params.displayName ? params.displayName : "ahoj"
+
+  const subject = "Ještě sis nevyzkoušel/a MindTrader Premium naživo"
+
+  const html = emailShell(`
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">${name.charAt(0).toUpperCase() + name.slice(1)},</p>
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
+      všiml jsem si, že sis založil/a účet, ale zatím jsi nezačal/a 14denní zkušební verzi Premium. Zatím
+      vidíš jen Virtual Mode - náhled na ukázkových datech.
+    </p>
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 24px 0;">
+      S Premium získáš Live Mode s vlastními obchody, AI Report Builder a pokročilou analytiku a risk
+      kalkulačku - 14 dní zdarma, zrušit můžeš kdykoliv.
+    </p>
+    <div style="margin:0 0 24px 0;">${ctaButton("Vyzkoušet Premium zdarma", UPGRADE_URL)}</div>
+  `)
+
+  return { subject, html }
+}
+
+/**
+ * Signup funnel email #2 - reminder sent ~3 days after registration to
+ * users who still have not started the free trial.
+ */
+export function trialNotStartedReminderEmail(params: { displayName?: string }): { subject: string; html: string } {
+  const name = params.displayName ? params.displayName : "ahoj"
+
+  const subject = "Poslední připomínka: 14 dní Premium zdarma na tebe čeká"
+
+  const html = emailShell(`
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">${name.charAt(0).toUpperCase() + name.slice(1)},</p>
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
+      pár dní zpátky ses zaregistroval/a do MindTrader, ale ještě jsi nezačal/a zkušební verzi Premium.
+      Naposledy ti chci připomenout, co s ní získáš: Live Mode s vlastními obchody, sledování nálady a
+      disciplíny, AI Report Builder a risk kalkulačku.
+    </p>
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 24px 0;">
+      14 dní zdarma, platební karta se strhne až po skončení zkušební doby a zrušit můžeš kdykoliv
+      v nastavení účtu.
+    </p>
+    <div style="margin:0 0 24px 0;">${ctaButton("Vyzkoušet Premium zdarma", UPGRADE_URL)}</div>
   `)
 
   return { subject, html }
