@@ -143,7 +143,13 @@ async function handleCheckoutCompleted(
                 const subscription = await stripe.subscriptions.retrieve(subscriptionId)
                 isPremium = subscription.status === "active" || subscription.status === "trialing"
                 subscriptionStatus = subscription.status
-                periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+                // Guard against missing current_period_end (see handleSubscription
+                // for the same fix) so a subscription without it still gets its
+                // real status/isPremium recorded instead of the true/"active" default.
+                periodEnd =
+                        typeof subscription.current_period_end === "number"
+                                ? new Date(subscription.current_period_end * 1000).toISOString()
+                                : null
                 console.log("[WEBHOOK] Retrieved subscription, status:", subscriptionStatus)
         } catch (err) {
                 console.error("[WEBHOOK] ERROR retrieving subscription:", err)
@@ -201,6 +207,7 @@ async function handleCheckoutCompleted(
                                     email,
                                     value: amount,
                                     currency,
+                                    externalId: data[0].user_id,
                         })
                         console.log("[WEBHOOK] ✓ Meta Purchase CAPI event sent")
               } catch (metaErr) {
@@ -241,7 +248,14 @@ async function handleSubscription(
   }
 
   const isPremium = subscription.status === "active" || subscription.status === "trialing"
-    const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+    // current_period_end is occasionally missing/undefined on some Stripe
+    // subscription payloads (e.g. incomplete/paused subscriptions). Guard
+    // against that instead of letting `new Date(NaN).toISOString()` throw
+    // "Invalid time value" and abort processing of the whole webhook event.
+    const periodEnd =
+        typeof subscription.current_period_end === "number"
+            ? new Date(subscription.current_period_end * 1000).toISOString()
+            : null
 
   console.log("[WEBHOOK] Updating user_id:", profile.user_id, "isPremium:", isPremium)
 
