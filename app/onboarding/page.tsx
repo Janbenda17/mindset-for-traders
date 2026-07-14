@@ -67,7 +67,7 @@ export default function OnboardingPage() {
   } as const
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 overflow-hidden relative">
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 py-10 overflow-y-auto relative">
       {/* Background glow, consistent with rest of app */}
       <div className="fixed inset-0 w-full h-full pointer-events-none">
         <div className="absolute inset-0 bg-slate-950" />
@@ -152,7 +152,7 @@ export default function OnboardingPage() {
                           key={i}
                           onClick={() => handleAnswer(i)}
                           className="w-full text-left px-4 py-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-slate-200 font-medium hover:border-cyan-500/50 hover:bg-cyan-500/[0.06] hover:text-white transition-all"
-                        >
+                      >
                           {label}
                         </button>
                       ))
@@ -161,7 +161,7 @@ export default function OnboardingPage() {
                           key={i}
                           onClick={() => handleAnswer(i)}
                           className="w-full text-left px-4 py-3.5 rounded-xl border border-slate-700 bg-slate-800/40 text-slate-200 font-medium hover:border-fuchsia-500/50 hover:bg-fuchsia-500/[0.06] hover:text-white transition-all"
-                        >
+                      >
                           {isEn ? opt.labelEn : opt.labelCz}
                         </button>
                       ))}
@@ -196,7 +196,7 @@ export default function OnboardingPage() {
                 <p className="text-xs text-slate-400 mt-0.5">
                   {isEn
                     ? 'Card required, nothing charged for 14 days. Full access to the AI coach and advanced insights.'
-                    : 'Vyžaduje platební kartu, prvních 14 dní nic neplatíš. Plný přístup k AI kouči a pokročilým insightům.'}
+                    : 'Vyžaduje platební kartu, prvních 14 dní nic neplatíš. Plný přístup k AI kouči a pokročilým insightůŮ.'}
                 </p>
               </div>
             </Link>
