@@ -2,6 +2,7 @@ import Stripe from "stripe"
 import { type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendMetaConversionEvent } from "@/lib/meta-capi"
+import { sendEmail, trialEndingEmail, paymentFailedEmail } from "@/lib/email"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -79,6 +80,9 @@ export async function POST(req: NextRequest) {
                   break
         case "customer.subscription.deleted":
                   await handleSubscriptionDeleted(event.data.object as Stripe.Subscription, supabase)
+                  break
+        case "customer.subscription.trial_will_end":
+                  await handleTrialWillEnd(event.data.object as Stripe.Subscription, supabase)
                   break
         case "invoice.paid":
                   await handleInvoicePaid(event.data.object as Stripe.Invoice, supabase)
@@ -312,6 +316,55 @@ async function handleSubscriptionDeleted(
 }
 
 /**
+ * Handle customer.subscription.trial_will_end - Stripe fires this
+ * automatically about 3 days before a trial converts or lapses. This is
+ * our one shot to email the user before they either get charged (nothing
+ * to do) or silently fall back to Free - a nudge here is what turns a
+ * forgotten trial into a paying customer instead of a lost one.
+ */
+async function handleTrialWillEnd(
+    subscription: Stripe.Subscription,
+    supabase: ReturnType<typeof createAdminClient>
+  ) {
+    console.log("[WEBHOOK] >> handleTrialWillEnd: id:", subscription.id)
+
+  const customerId = typeof subscription.customer === "string" ? subscription.customer : null
+
+  if (!customerId) {
+        console.error("[WEBHOOK] ERROR: Missing customerId")
+        return
+  }
+
+  const { data: profile, error: findErr } = await supabase
+      .from("profiles")
+      .select("email, display_name")
+      .eq("stripe_customer_id", customerId)
+      .maybeSingle()
+
+  if (findErr || !profile?.email) {
+        console.error("[WEBHOOK] ERROR: No profile/email found for customerId:", customerId)
+        return
+  }
+
+  if (!subscription.trial_end) {
+        console.log("[WEBHOOK] No trial_end on subscription - skipping email")
+        return
+  }
+
+  const daysLeft = Math.max(1, Math.round((subscription.trial_end * 1000 - Date.now()) / (24 * 60 * 60 * 1000)))
+
+  const { subject, html } = trialEndingEmail({ daysLeft, displayName: profile.display_name || undefined })
+
+  const result = await sendEmail({ to: profile.email, subject, html })
+
+  if (result.success) {
+        console.log("[WEBHOOK] ✓ Trial-ending email sent to:", profile.email)
+  } else {
+        console.error("[WEBHOOK] Trial-ending email failed:", result.error)
+  }
+}
+
+/**
  * Handle invoice paid
  */
 async function handleInvoicePaid(
@@ -368,7 +421,7 @@ async function handlePaymentFailed(
 
   const { data: profile, error: findErr } = await supabase
       .from("profiles")
-      .select("user_id")
+      .select("user_id, email, display_name")
       .eq("stripe_customer_id", customerId)
       .maybeSingle()
 
@@ -387,5 +440,15 @@ async function handlePaymentFailed(
         console.error("[WEBHOOK] ERROR:", error.message)
   } else {
         console.log("[WEBHOOK] ✓ Marked past_due")
+  }
+
+  if (profile.email) {
+        const { subject, html } = paymentFailedEmail({ displayName: profile.display_name || undefined })
+        const result = await sendEmail({ to: profile.email, subject, html })
+        if (result.success) {
+              console.log("[WEBHOOK] ✓ Payment-failed email sent to:", profile.email)
+        } else {
+              console.error("[WEBHOOK] Payment-failed email failed:", result.error)
+        }
   }
 }
