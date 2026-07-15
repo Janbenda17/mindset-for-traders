@@ -3,9 +3,6 @@ import { createClient } from "@/lib/supabase/server"
 
 export const runtime = "nodejs"
 
-// Simple in-memory cache to avoid repeated API calls during rate limiting
-const loginCache = new Map<string, { token: string; expiresAt: number }>()
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -16,18 +13,6 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("[v0] [AUTH-LOGIN] Attempting login for:", email)
-
-    // Check if we have a cached successful login for this email
-    const cacheKey = `${email}:${password}`
-    const cached = loginCache.get(cacheKey)
-    
-    if (cached && cached.expiresAt > Date.now()) {
-      console.log("[v0] [AUTH-LOGIN] Using cached login token")
-      return NextResponse.json({
-        success: true,
-        message: "Logged in from cache",
-      })
-    }
 
     // Use server Supabase client which handles session cookies
     const supabase = await createClient()
@@ -56,12 +41,6 @@ export async function POST(request: NextRequest) {
     if (!data.user || !data.session) {
       return NextResponse.json({ error: "Login failed" }, { status: 401 })
     }
-
-    // Cache successful login for 5 minutes
-    loginCache.set(cacheKey, {
-      token: data.session.access_token,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-    })
 
     console.log("[v0] [AUTH-LOGIN] Login successful:", email)
 
