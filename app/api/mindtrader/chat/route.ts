@@ -308,7 +308,7 @@ function generateEnhancedMockResponse(request: ChatRequest): string {
         "Problem neni plan ale exekuce. Reseni: Po kazdém obchodu si dej score 1-10 jak moc jsi dodržel plan. Cil: 8+ prumer za tyden. Nezameruj se na P&L ale na compliance score. Ziskovost je vedlejsi produkt dodrzovani planu.",
       ],
       revenge: [
-        "Revenge trading je biologicka reakce - loss aversion v mozku. Okamzite reseni: Pravidlo '2 ztráty = konec dne'. Zadne vyjimky. Zapís si to jako neporušitelne pravidlo. Po 30 dnech vyhodnoť kolik ti to ušetřilo.",
+        "Revenge trading je biologicka reakce - loss aversion v mozkx. Okamzite reseni: Pravidlo '2 ztráty = konec dne'. Zadne vyjimky. Zapís si to jako neporušitelne pravidlo. Po 30 dnech vyhodnoť kolik ti to ušetřilo.",
         "Po ztrate mas 15 minut kdy je pravdepodobnost spatneho rozhodnuti nejvyssi. Pravidlo: Po KAZDE ztrate povinná 15min pauza. Behem ni: jdi od PC, dychej, napíš co se stalo do journalu. Pak se vrat a rozhoduj znovu.",
         "Revenge trading stoji prumerneho tradera 30-40% jeho ztrat. Postup: 1) Oznac kazdy trade jako 'planovany' nebo 'neplanovany'. 2) Po mesici porovnej P&L obou skupin. Data ti ukazou presne kolik te revenge stoji.",
       ],
@@ -688,7 +688,7 @@ KRITICKA PRAVIDLA (PORUSENI = FAIL):
 
     try {
       const message = await getClient().messages.create({
-        model: "claude-3-5-sonnet-20241022",
+        model: "claude-sonnet-4-5-20250929",
         max_tokens: 500,
         temperature: 0.35,
         system: MODE_PROMPTS[mode] + personalityInstructions[personality],
