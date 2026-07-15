@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const prompt = buildEnhancedAnalysisPrompt(dataSummary, psychPatterns, advancedMetrics, type)
 
     const message = await getClient().messages.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-5-20250929",
       max_tokens: 3000,
       messages: [
         {
