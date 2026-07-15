@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   try {
     console.log("[WEBHOOK] Attempting to verify webhook signature...")
     console.log("[WEBHOOK] Using webhook secret:", webhookSecret.substring(0, 10) + "...")
-    
+
     // Verify webhook signature using RAW body
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
     console.log("[WEBHOOK] ✓ Signature verified - event.type:", event.type)
@@ -113,7 +113,7 @@ async function handleCheckoutCompleted(
   console.log("[WEBHOOK]    session.mode:", session.mode)
 
   // Extract email - most reliable identifier
-  const email = session.customer_details?.email || 
+  const email = session.customer_details?.email ||
     (typeof session.customer_email === "string" ? session.customer_email : null)
 
   const customerId = typeof session.customer === "string" ? session.customer : null
@@ -138,7 +138,10 @@ async function handleCheckoutCompleted(
       const subscription = await stripe.subscriptions.retrieve(subscriptionId)
       isPremium = subscription.status === "active" || subscription.status === "trialing"
       subscriptionStatus = subscription.status
-      periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+      periodEnd =
+        typeof subscription.current_period_end === "number"
+          ? new Date(subscription.current_period_end * 1000).toISOString()
+          : null
       console.log("[WEBHOOK]    Retrieved subscription, status:", subscriptionStatus)
     } catch (err) {
       console.error("[WEBHOOK]    ERROR retrieving subscription:", err)
@@ -216,7 +219,10 @@ async function handleSubscription(
   }
 
   const isPremium = subscription.status === "active" || subscription.status === "trialing"
-  const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+  const periodEnd =
+    typeof subscription.current_period_end === "number"
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null
 
   console.log("[WEBHOOK]    Updating user_id:", profile.user_id, "isPremium:", isPremium)
 
