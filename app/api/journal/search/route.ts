@@ -86,7 +86,7 @@ Můžeš použít POUZE tyto hodnoty:
 Odpověz POUZE validním JSON objektem s těmito 4 klíči, nic jiného (žádné markdown, žádné vysvětlení).`
 
   const msg = await getClient().messages.create({
-    model: "claude-3-5-sonnet-20241022",
+    model: "claude-sonnet-4-5-20250929",
     max_tokens: 200,
     temperature: 0,
     system,
