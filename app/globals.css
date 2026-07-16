@@ -385,3 +385,16 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Belt-and-suspenders for the viewport lock in app/layout.tsx: iOS Safari
+   auto-zooms the page on focus of any input/select/textarea whose computed
+   font-size is under 16px, regardless of the viewport meta tag. Forcing
+   16px here (mobile only, so desktop text sizes are untouched) removes the
+   trigger entirely instead of just suppressing the zoom after the fact. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

@@ -5,6 +5,7 @@ import { TopNavigation } from '@/components/top-navigation'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
+import { useSubscription } from '@/contexts/subscription-context'
 import { useLanguage } from '@/contexts/language-context'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
@@ -14,6 +15,7 @@ import DisciplineMatrix from '@/components/discipline-matrix'
 import DayDetailPanel from '@/components/day-detail-panel'
 import DailySummaryTeaser from '@/components/daily-summary-teaser'
 import AiCoachTeaser from '@/components/ai-coach-teaser'
+import { LiveUsersBadge } from '@/components/live-users-badge'
 import type { DisciplineDay } from '@/lib/discipline-matrix'
 import { cn } from '@/lib/utils'
 
@@ -70,16 +72,34 @@ const DEMO_DAY_TRADES = [
 export default function HomePage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { isPremium, isTrialing, hasTrialEnded } = useSubscription()
   const { language } = useLanguage()
 
   const [selectedDemoDay, setSelectedDemoDay] = useState<DisciplineDay | null>(null)
 
+  // Bottom CTA target: logged out -> signup, logged in with nothing going
+  // on yet -> broker connect (the real activation step), trial spent and
+  // unpaid -> upgrade, already premium/mid-trial -> straight to the app.
+  // Previously this always said "Get Started Free" -> /upgrade even for a
+  // paying user, which read as broken/confusing once someone was logged in.
+  const ctaTarget = !user
+    ? '/signup'
+    : hasTrialEnded && !isPremium
+      ? '/upgrade'
+      : !isTrialing && !isPremium
+        ? '/account/integrations'
+        : '/daily-tracker'
+
+  const ctaLabel = !user
+    ? (language === 'en' ? 'Get Started Free' : 'Začít zdarma')
+    : hasTrialEnded && !isPremium
+      ? (language === 'en' ? 'Upgrade to Premium' : 'Upgradovat na Premium')
+      : !isTrialing && !isPremium
+        ? (language === 'en' ? 'Connect your broker' : 'Připojit brokera')
+        : (language === 'en' ? 'Go to dashboard' : 'Přejít do appky')
+
   const handlePricingClick = () => {
-    if (!user) {
-      router.push('/signup')
-    } else {
-      router.push('/upgrade')
-    }
+    router.push(ctaTarget)
   }
 
   return (
@@ -211,6 +231,16 @@ export default function HomePage() {
                   </button>
                 </div>
               </div>
+
+              {/* Live users social proof badge */}
+              <motion.div
+                className="flex justify-center max-w-3xl mx-auto mb-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15, duration: 0.6 }}
+              >
+                <LiveUsersBadge isEn={language === 'en'} />
+              </motion.div>
 
               {/* Stats */}
               <motion.div
@@ -441,7 +471,7 @@ export default function HomePage() {
                   onClick={handlePricingClick}
                   className="bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white hover:from-fuchsia-400 hover:to-purple-500 font-bold text-base px-8 py-6 rounded-lg shadow-lg shadow-fuchsia-500/30 border border-white/10"
                 >
-                  {language === 'en' ? 'Get Started Free' : 'Začít zdarma'}{' '}
+                  {ctaLabel}{' '}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>

@@ -39,8 +39,15 @@ other: {
 export const viewport: Viewport = {
 width: "device-width",
 initialScale: 1,
-maximumScale: 5,
-userScalable: true,
+// Locked down: mobile browsers (esp. iOS Safari) were auto-zooming in
+// whenever a form input got focus (any input with font-size < 16px
+// triggers this) and then staying zoomed in, making the whole layout
+// look like it "keeps shifting" until the user manually pinch-zoomed
+// back out. maximumScale: 1 + userScalable: false stops that zoom from
+// ever engaging, so the layout stays put. See globals.css for the
+// matching 16px input font-size floor (belt-and-suspenders fix).
+maximumScale: 1,
+userScalable: false,
 themeColor: "#0f172a",
 }
 
