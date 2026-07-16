@@ -61,7 +61,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const pathname = usePathname()
   const router = useRouter()
   const { isLiveMode, switchToLive } = useLiveMode()
-  const { isPremium, isTrialing, trialDaysLeft, hasSubscribed } = useSubscription()
+  const { isPremium, isTrialing, trialDaysLeft, trialEndsAt, trialType, hasTrialEnded, hasSubscribed } = useSubscription()
   const t = useT()
   const { language } = useLanguage()
   const isEn = language === "en"
@@ -205,6 +205,29 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     return "dní"
   }
 
+  // Live countdown for the 3-day app trial. The strip re-renders every
+  // minute so the remaining time ("2 d 14 h" / "5 h 32 min") stays honest
+  // without needing a per-second timer.
+  const [nowTs, setNowTs] = useState(() => Date.now())
+  useEffect(() => {
+    if (!isTrialing || trialType !== "app" || !trialEndsAt) return
+    const id = setInterval(() => setNowTs(Date.now()), 60_000)
+    return () => clearInterval(id)
+  }, [isTrialing, trialType, trialEndsAt])
+
+  const trialCountdown = (() => {
+    if (!trialEndsAt) return ""
+    const msLeft = new Date(trialEndsAt).getTime() - nowTs
+    if (msLeft <= 0) return isEn ? "0 min" : "0 min"
+    const totalMinutes = Math.floor(msLeft / 60_000)
+    const d = Math.floor(totalMinutes / (60 * 24))
+    const h = Math.floor((totalMinutes % (60 * 24)) / 60)
+    const m = totalMinutes % 60
+    if (d > 0) return isEn ? `${d}d ${h}h` : `${d} d ${h} h`
+    if (h > 0) return isEn ? `${h}h ${m}min` : `${h} h ${m} min`
+    return isEn ? `${m} min` : `${m} min`
+  })()
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
       {showTrialStrip && (
@@ -224,11 +247,23 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               <Gift className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">
                 {isEn
-                  ? "Sign up, then activate a 14-day free Premium trial (card required)."
-                  : "Zaregistruj se a aktivuj 14denní Premium trial (vyžaduje platební kartu)."}
+                  ? "Sign up, connect your broker and get 3 days of full access — no card needed."
+                  : "Zaregistruj se, připoj brokera a získej 3 dny plného přístupu — bez karty."}
               </span>
               <span className="hidden sm:inline underline decoration-white/50">
                 {isEn ? "Get started" : "Začít zdarma"}
+              </span>
+            </Link>
+          ) : isTrialing && trialType === "app" ? (
+            <Link href="/upgrade" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
+              <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">
+                {isEn
+                  ? `Full access active — ${trialCountdown} left. Then 749 Kč/month.`
+                  : `Plný přístup aktivní — zbývá ${trialCountdown}. Poté 749 Kč/měsíc.`}
+              </span>
+              <span className="hidden sm:inline underline decoration-white/50">
+                {isEn ? "Keep Premium" : "Zachovat Premium"}
               </span>
             </Link>
           ) : isTrialing ? (
@@ -236,8 +271,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               <Gift className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">
                 {isEn
-                  ? `Your 14-day Premium trial is active — ${trialDaysLeft} ${dayWord(trialDaysLeft)} left.`
-                  : `Aktivní 14denní Premium trial — zbývá ${trialDaysLeft} ${dayWord(trialDaysLeft)}.`}
+                  ? `Your Premium trial is active — ${trialDaysLeft} ${dayWord(trialDaysLeft)} left.`
+                  : `Aktivní Premium trial — zbývá ${trialDaysLeft} ${dayWord(trialDaysLeft)}.`}
               </span>
               <span className="hidden sm:inline underline decoration-white/50">
                 {isEn ? "See what's unlocked" : "Zobrazit Premium"}
@@ -250,28 +285,28 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 {isEn ? "Premium active — thank you for your support!" : "Premium aktivní — děkujeme za podporu!"}
               </span>
             </Link>
-          ) : hasSubscribed ? (
+          ) : hasTrialEnded || hasSubscribed ? (
             <Link href="/upgrade" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
               <Clock className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">
                 {isEn
-                  ? "Your Premium trial/subscription has ended. Continue for 749 Kč/month."
-                  : "Tvůj Premium trial/předplatné skončilo. Pokračuj za 749 Kč/měsíc."}
+                  ? "Your free access has ended. Continue for 749 Kč/month."
+                  : "Tvůj přístup zdarma skončil. Pokračuj za 749 Kč/měsíc."}
               </span>
               <span className="hidden sm:inline underline decoration-white/50">
                 {isEn ? "Renew Premium" : "Obnovit Premium"}
               </span>
             </Link>
           ) : (
-            <Link href="/upgrade" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
+            <Link href="/account/integrations" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
               <Gift className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">
                 {isEn
-                  ? "Activate your 14-day Premium trial — card required, nothing charged for 14 days."
-                  : "Aktivuj svůj 14denní Premium trial — vyžaduje kartu, prvních 14 dní nic neplatíš."}
+                  ? "Connect your broker and unlock 3 days of full access — no card needed."
+                  : "Připoj brokera a odemkni 3 dny plného přístupu — bez karty."}
               </span>
               <span className="hidden sm:inline underline decoration-white/50">
-                {isEn ? "Activate trial" : "Aktivovat trial"}
+                {isEn ? "Connect broker" : "Připojit brokera"}
               </span>
             </Link>
           )}
