@@ -12,6 +12,15 @@ interface SubscriptionContextType {
   isLoading: boolean
   isTrialing: boolean
   trialDaysLeft: number
+  // ISO timestamp of when the current (or already consumed) trial ends.
+  // Powers the live countdown strip in TopNavigation.
+  trialEndsAt: string | null
+  // "app" = the 3-day no-card trial started by connecting a broker,
+  // "stripe" = a Stripe subscription trial, null = no trial ever started.
+  trialType: "app" | "stripe" | null
+  // True = the trial was consumed and there is no active access left.
+  // ClientLayout uses this for the hard paywall redirect to /upgrade.
+  hasTrialEnded: boolean
   // True once this user has gone through Stripe checkout at least once
   // (trialing/active/canceled/past_due) - lets the UI tell "never started a
   // trial yet" apart from "trial or subscription already ended", since both
@@ -48,6 +57,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [isCanceled, setIsCanceled] = useState(false)
   const [isTrialing, setIsTrialing] = useState(false)
   const [trialDaysLeft, setTrialDaysLeft] = useState(0)
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
+  const [trialType, setTrialType] = useState<"app" | "stripe" | null>(null)
+  const [hasTrialEnded, setHasTrialEnded] = useState(false)
   const [hasSubscribed, setHasSubscribed] = useState(false)
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null)
   const [customerId, setCustomerId] = useState<string | null>(null)
@@ -101,6 +113,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         setIsActive(data.isActive)
         setIsTrialing(!!data.isTrialing)
         setTrialDaysLeft(data.trialDaysLeft || 0)
+        setTrialEndsAt(data.trialEndsAt || null)
+        setTrialType(data.trialType || null)
+        setHasTrialEnded(!!data.hasTrialEnded)
         setHasSubscribed(!!data.hasSubscribed)
         setStatusConfirmed(true) // status is now confirmed from a real response
         setSubscriptionStatus(data.status)
@@ -302,6 +317,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         isLoading,
         isTrialing,
         trialDaysLeft,
+        trialEndsAt,
+        trialType,
+        hasTrialEnded,
         hasSubscribed,
         statusConfirmed,
         isCanceled,
@@ -332,6 +350,9 @@ export function useSubscription() {
         isLoading: true,
         isTrialing: false,
         trialDaysLeft: 0,
+        trialEndsAt: null,
+        trialType: null,
+        hasTrialEnded: false,
         hasSubscribed: false,
         statusConfirmed: false,
         isCanceled: false,
