@@ -481,15 +481,63 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               </div>
             )}
 
-            {/* Get Started Button - Mobile only */}
-            <Link href="/signup" className="md:hidden">
-              <Button
-                size="sm"
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
-              >
-                {t('free_trial')}
-              </Button>
-            </Link>
+            {/* Connect broker / Upgrade nudge - Desktop, authenticated only.
+                Mirrors the mobile logic below: once logged in with no trial
+                running and nothing paid, the nav keeps pointing at the real
+                activation step instead of going quiet. */}
+            {isAuthenticated && !isTrialing && !isPremium && (
+              <div className="hidden md:flex items-center">
+                <Link href={hasTrialEnded ? '/upgrade' : '/account/integrations'}>
+                  <Button
+                    size="sm"
+                    className={
+                      hasTrialEnded
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white h-8 px-3 text-sm font-semibold"
+                        : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white h-8 px-3 text-sm font-semibold"
+                    }
+                  >
+                    {hasTrialEnded ? (isEn ? 'Upgrade' : 'Upgradovat') : (isEn ? 'Connect broker' : 'Připojit brokera')}
+                  </Button>
+                </Link>
+              </div>
+            )}
+
+            {/* Get Started / Connect broker / Upgrade - Mobile only.
+                BUG FIXED: this used to render unconditionally, so a logged-in
+                user kept seeing "Start Free" -> /signup forever, even mid-
+                trial or after paying. Now it mirrors auth + trial state:
+                logged out -> Start Free, logged in with nothing going on ->
+                Connect broker (the real activation step), trial running or
+                already Premium -> hidden (the strip above + profile menu
+                already cover it), trial spent and unpaid -> Upgrade. */}
+            {!isAuthenticated ? (
+              <Link href="/signup" className="md:hidden">
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
+                >
+                  {t('free_trial')}
+                </Button>
+              </Link>
+            ) : hasTrialEnded && !isPremium ? (
+              <Link href="/upgrade" className="md:hidden">
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold"
+                >
+                  {isEn ? 'Upgrade' : 'Upgradovat'}
+                </Button>
+              </Link>
+            ) : !isTrialing && !isPremium ? (
+              <Link href="/account/integrations" className="md:hidden">
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
+                >
+                  {isEn ? 'Connect broker' : 'Připojit brokera'}
+                </Button>
+              </Link>
+            ) : null}
 
             {/* Virtual/Live Mode Toggle Button - show if authenticated, premium, and not in live mode */}
             {isAuthenticated && isPremium && !isLiveMode && (
