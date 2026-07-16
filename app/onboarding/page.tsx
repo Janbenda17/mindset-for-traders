@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Brain, ArrowRight, ShieldCheck, TrendingUp, AlertTriangle, Sparkles, Gift } from 'lucide-react'
+import { Brain, ArrowRight, ShieldCheck, TrendingUp, AlertTriangle, Sparkles, Gift, Eye } from 'lucide-react'
 import { useLanguage } from '@/contexts/language-context'
 import {
   SELF_REPORT_QUESTIONS,
@@ -176,34 +176,42 @@ export default function OnboardingPage() {
             transition={{ duration: 0.5 }}
             className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8"
           >
-            {/* Broker-connect banner — the registration-complete hook. Fires
-                the moment the quiz result renders, i.e. right after signup.
-                Connecting a broker (/account/integrations) starts the 3-day
-                no-card full-access trial and flips the account to LIVE mode
-                (see app/account/integrations/actions.ts), so this invites
-                the user to the real activation moment instead of a paywall. */}
+            {/* Tour-first banner — the registration-complete hook. Fires the
+                moment the quiz result renders, i.e. right after signup.
+                Sends the user straight to /daily-tracker, which already
+                renders with realistic sample data by default (Virtual Mode,
+                see contexts/live-mode-context.tsx + lib/virtual-data-generator.ts)
+                and sets the ProductTour force-show flag so the 4-slide guided
+                walkthrough (components/product-tour.tsx) plays immediately.
+                Broker connect — the real activation moment that starts the
+                3-day no-card trial — is offered below as the upgrade path
+                AFTER they've seen what the app actually looks like, instead
+                of gating everything behind it right after signup. */}
             <Link
-              href="/account/integrations"
+              href="/daily-tracker"
               onClick={() => {
                 try {
-                  if (typeof window !== 'undefined' && (window as any).clarity) {
-                    ;(window as any).clarity('event', 'onboarding_connect_cta_top')
+                  if (typeof window !== 'undefined') {
+                    window.localStorage.setItem('mindtrader-show-tour', 'true')
+                    if ((window as any).clarity) {
+                      ;(window as any).clarity('event', 'onboarding_tour_cta_top')
+                    }
                   }
                 } catch {}
               }}
-              className="rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-teal-500/5 p-4 mb-6 flex items-start gap-3 hover:border-emerald-500/50 transition-colors"
+              className="rounded-xl border border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-blue-500/5 p-4 mb-6 flex items-start gap-3 hover:border-cyan-500/50 transition-colors"
             >
-              <div className="p-2 rounded-lg bg-emerald-500/15 flex-shrink-0">
-                <Gift className="w-4 h-4 text-emerald-300" />
+              <div className="p-2 rounded-lg bg-cyan-500/15 flex-shrink-0">
+                <Eye className="w-4 h-4 text-cyan-300" />
               </div>
               <div>
                 <p className="text-sm font-bold text-white">
-                  {isEn ? 'Connect your broker → 3 days of full access, free 🎁' : 'Připoj brokera → 3 dny plného přístupu zdarma 🎁'}
+                  {isEn ? 'See your dashboard, based on your type →' : 'Podívej se na svou appku podle tvého typu →'}
                 </p>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {isEn
-                    ? 'No card needed. MT4/MT5 connects in 2 minutes and the AI analyzes your real trades right away.'
-                    : 'Bez platební karty. MT4/MT5 připojíš za 2 minuty a AI hned analyzuje tvoje reálné obchody.'}
+                    ? 'No broker needed yet — a quick guided tour with sample data, so you know what you\'re signing up for.'
+                    : 'Zatím bez brokera — rychlá prohlídka na ukázkových datech, ať víš, do čeho jdeš.'}
                 </p>
               </div>
             </Link>
@@ -294,8 +302,8 @@ export default function OnboardingPage() {
               </p>
               <p className="text-sm text-slate-400 mb-4 leading-relaxed">
                 {isEn
-                  ? 'This is just the surface. Connect your MT4/MT5 account and unlock everything for 3 days, free — no card. Your full breakdown, the AI coach and live analysis of your real trades start the moment you connect.'
-                  : 'Tohle je jen špička ledovce. Připoj svůj MT4/MT5 účet a odemkni všechno na 3 dny zdarma — bez karty. Tvůj kompletní rozbor, AI kouč a živá analýza reálných obchodů startují hned po připojení.'}
+                  ? 'The dashboard above runs on sample data. Connect your MT4/MT5 account and get the same thing with your real trades for 3 days, free — no card. The AI coach and live analysis switch on the moment you connect.'
+                  : 'Appka nahoře běží na ukázkových datech. Připoj svůj MT4/MT5 účet a dostaneš to samé se svými reálnými obchody na 3 dny zdarma — bez karty. AI kouč a živá analýza se zapnou hned po připojení.'}
               </p>
               <Link
                 href="/account/integrations"
@@ -319,7 +327,7 @@ export default function OnboardingPage() {
                 onClick={skip}
                 className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
               >
-                {isEn ? 'First, let me just try the app' : 'Nejdřív chci appku jen vyzkoušet'}
+                {isEn ? 'Skip the tour, go straight to the dashboard' : 'Přeskočit prohlídku, jít rovnou do appky'}
               </button>
             </div>
           </motion.div>
