@@ -136,12 +136,38 @@ export default function IntegrationsPage() {
       setMetaApiLogin('')
       setMetaApiPassword('')
       setMetaApiBroker('')
-      setSuccess(
-        result.connected
-          ? 'Account connected! Trades will sync automatically once a day.'
-          : 'Account created and logging into your broker - this can take a minute on first connect. Trades will start syncing automatically once it finishes.',
-      )
-      setTimeout(() => setSuccess(''), 8000)
+
+      // Track the two most important funnel moments in Clarity.
+      try {
+        if (typeof window !== 'undefined' && (window as any).clarity) {
+          ;(window as any).clarity('event', 'broker_connected')
+          if ((result as any).trialStarted) {
+            ;(window as any).clarity('event', 'trial_started')
+          }
+        }
+      } catch {}
+
+      if ((result as any).trialStarted) {
+        // Broker connect just started the 3-day full-access trial and
+        // switched the account to LIVE mode. Take the user straight into
+        // the app with the product tour queued up (see components/
+        // product-tour.tsx FORCE_SHOW_KEY) so the first thing they
+        // experience is their own data, not a settings page.
+        setSuccess('Connected! Your 3-day full access just started — taking you to your dashboard...')
+        try {
+          localStorage.setItem('mindtrader-show-tour', 'true')
+        } catch {}
+        setTimeout(() => {
+          window.location.href = '/daily-tracker'
+        }, 1500)
+      } else {
+        setSuccess(
+          result.connected
+            ? 'Account connected! Trades will sync automatically once a day.'
+            : 'Account created and logging into your broker - this can take a minute on first connect. Trades will start syncing automatically once it finishes.',
+        )
+        setTimeout(() => setSuccess(''), 8000)
+      }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to connect your account'
       setError(errorMsg)

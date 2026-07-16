@@ -134,6 +134,49 @@ export async function connectMetaApi(
       return { success: false, error: error.message || 'Failed to save MetaApi connection' }
     }
 
+    // Connecting a broker is THE activation moment, so it starts the 3-day
+    // full-access trial (no card) and flips the account straight into LIVE
+    // mode - the user never has to touch the virtual/live switch. The trial
+    // is granted only once per user: if trial_ends_at was ever set before,
+    // or the user already has a real Stripe subscription history, nothing
+    // changes here. See /api/subscription/status for how trial_ends_at is
+    // read back as isTrialing/hasTrialEnded.
+    let trialStarted = false
+    try {
+      const { data: prof } = await getSupabase()
+        .from('profiles')
+        .select('trial_ends_at, subscription_status, is_premium')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      const REAL_STRIPE_SUBSCRIPTION_STATUSES = [
+        'trialing', 'active', 'past_due', 'canceled', 'unpaid',
+        'incomplete', 'incomplete_expired', 'paused',
+      ]
+      const hasStripeHistory = REAL_STRIPE_SUBSCRIPTION_STATUSES.includes(prof?.subscription_status ?? '')
+      const alreadyHadTrial = !!prof?.trial_ends_at
+
+      const updates: Record<string, unknown> = { trading_mode: 'live' }
+      if (!alreadyHadTrial && !hasStripeHistory && !prof?.is_premium) {
+        const trialEndsAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+        updates.trial_ends_at = trialEndsAt
+        trialStarted = true
+        console.log('[v0] Starting 3-day app trial (no card) for user:', userId, 'ends:', trialEndsAt)
+      }
+
+      const { error: trialError } = await getSupabase()
+        .from('profiles')
+        .update(updates)
+        .eq('user_id', userId)
+
+      if (trialError) {
+        console.error('[v0] Error starting app trial / enabling live mode:', trialError)
+        trialStarted = false
+      }
+    } catch (trialErr) {
+      console.error('[v0] Exception starting app trial:', trialErr)
+    }
+
     // Best-effort short wait just to tell the user whether the broker login
     // already finished. Its outcome doesn't affect what's saved above - the
     // background sync job will pick up the connection once it goes CONNECTED
@@ -149,8 +192,8 @@ export async function connectMetaApi(
       console.warn('[v0] MetaApi account saved but broker login check failed:', waitErr)
     }
 
-    console.log('[v0] MetaApi connected successfully with account:', accountId, 'connected:', connected)
-    return { success: true, accountId, connected }
+    console.log('[v0] MetaApi connected successfully with account:', accountId, 'connected:', connected, 'trialStarted:', trialStarted)
+    return { success: true, accountId, connected, trialStarted }
   } catch (err) {
     console.error('[v0] Error in connectMetaApi:', err)
     return { success: false, error: err instanceof Error ? err.message : 'Failed to connect MetaApi. Check your credentials.' }
