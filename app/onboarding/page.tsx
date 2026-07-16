@@ -176,14 +176,21 @@ export default function OnboardingPage() {
             transition={{ duration: 0.5 }}
             className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8"
           >
-            {/* Trial-invite banner — the registration-complete hook. Fires
+            {/* Broker-connect banner — the registration-complete hook. Fires
                 the moment the quiz result renders, i.e. right after signup.
-                The 14-day trial itself is only activated once the trader
-                clicks through to /upgrade and adds a card (Stripe
-                subscription trial, see /api/subscription/create-checkout),
-                so this invites rather than declares it already active. */}
+                Connecting a broker (/account/integrations) starts the 3-day
+                no-card full-access trial and flips the account to LIVE mode
+                (see app/account/integrations/actions.ts), so this invites
+                the user to the real activation moment instead of a paywall. */}
             <Link
-              href="/upgrade"
+              href="/account/integrations"
+              onClick={() => {
+                try {
+                  if (typeof window !== 'undefined' && (window as any).clarity) {
+                    ;(window as any).clarity('event', 'onboarding_connect_cta_top')
+                  }
+                } catch {}
+              }}
               className="rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-teal-500/5 p-4 mb-6 flex items-start gap-3 hover:border-emerald-500/50 transition-colors"
             >
               <div className="p-2 rounded-lg bg-emerald-500/15 flex-shrink-0">
@@ -191,12 +198,12 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <p className="text-sm font-bold text-white">
-                  {isEn ? 'Unlock your 14-day Premium trial 🎁' : 'Odemkni si 14denní Premium trial 🎁'}
+                  {isEn ? 'Connect your broker → 3 days of full access, free 🎁' : 'Připoj brokera → 3 dny plného přístupu zdarma 🎁'}
                 </p>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {isEn
-                    ? 'Card required, nothing charged for 14 days. Full access to the AI coach and advanced insights.'
-                    : 'Vyžaduje platební kartu, prvních 14 dní nic neplatíš. Plný přístup k AI kouči a pokročilým insightůŮ.'}
+                    ? 'No card needed. MT4/MT5 connects in 2 minutes and the AI analyzes your real trades right away.'
+                    : 'Bez platební karty. MT4/MT5 připojíš za 2 minuty a AI hned analyzuje tvoje reálné obchody.'}
                 </p>
               </div>
             </Link>
@@ -287,12 +294,21 @@ export default function OnboardingPage() {
               </p>
               <p className="text-sm text-slate-400 mb-4 leading-relaxed">
                 {isEn
-                  ? 'This is just the surface. Your full breakdown — all 6 categories, concrete fixes, and results checked against your real trades — unlocks with a 14-day free Premium trial (card required, nothing charged for 14 days).'
-                  : 'Tohle je jen špička ledovce. Tvůj kompletní rozbor — všech 6 kategorií, konkrétní kroky k nápravě a ověření na reálných obchodech — odemkneš 14denním free Premium trialem (vyžaduje platební kartu, prvních 14 dní nic neplatíš).'}
+                  ? 'This is just the surface. Connect your MT4/MT5 account and unlock everything for 3 days, free — no card. Your full breakdown, the AI coach and live analysis of your real trades start the moment you connect.'
+                  : 'Tohle je jen špička ledovce. Připoj svůj MT4/MT5 účet a odemkni všechno na 3 dny zdarma — bez karty. Tvůj kompletní rozbor, AI kouč a živá analýza reálných obchodů startují hned po připojení.'}
               </p>
-              <Link href="/upgrade">
+              <Link
+                href="/account/integrations"
+                onClick={() => {
+                  try {
+                    if (typeof window !== 'undefined' && (window as any).clarity) {
+                      ;(window as any).clarity('event', 'onboarding_connect_cta')
+                    }
+                  } catch {}
+                }}
+              >
                 <Button className="w-full h-11 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700 text-white font-semibold rounded-lg">
-                  {isEn ? 'Uncover all my mistakes' : 'Odhalit všechny moje chyby'}
+                  {isEn ? 'Connect broker & unlock everything' : 'Připojit brokera a odemknout vše'}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
