@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("subscription_status, subscription_tier, stripe_customer_id, stripe_subscription_id, is_premium, subscription_current_period_end, created_at")
+      .select("subscription_status, subscription_tier, stripe_customer_id, stripe_subscription_id, is_premium, subscription_current_period_end, trial_ends_at, created_at")
       .eq("user_id", user.id)
       .maybeSingle()
 
@@ -34,6 +34,9 @@ export async function GET(request: NextRequest) {
         isActive: false,
         isTrialing: false,
         trialDaysLeft: 0,
+        trialEndsAt: null,
+        trialType: null,
+        hasTrialEnded: false,
         hasSubscribed: false,
         subscriptionId: null,
         customerId: null,
@@ -50,21 +53,69 @@ export async function GET(request: NextRequest) {
     // just read that back.
     let isTrialing = false
     let trialDaysLeft = 0
+    let trialEndsAt: string | null = null
+    let trialType: "stripe" | "app" | null = null
     if (profile.subscription_status === "trialing" && profile.subscription_current_period_end) {
       const periodEnd = new Date(profile.subscription_current_period_end).getTime()
       const msLeft = periodEnd - Date.now()
       if (msLeft > 0) {
         isTrialing = true
         trialDaysLeft = Math.max(1, Math.ceil(msLeft / (1000 * 60 * 60 * 24)))
+        trialEndsAt = new Date(periodEnd).toISOString()
+        trialType = "stripe"
+      }
+    }
+
+    // 3-day APP trial (no card): granted the moment the user connects a
+    // broker (see app/account/integrations/actions.ts), stored in
+    // profiles.trial_ends_at. It exists completely apart from Stripe -
+    // there is no Stripe object behind it - so it must never be confused
+    // with the Stripe "trialing" status above. While it runs the user gets
+    // full premium access + LIVE mode; once it expires access drops away
+    // and the UI sends them to /upgrade to pay directly.
+    const REAL_STRIPE_SUBSCRIPTION_STATUSES = [
+      "trialing",
+      "active",
+      "past_due",
+      "canceled",
+      "unpaid",
+      "incomplete",
+      "incomplete_expired",
+      "paused",
+    ]
+    const hasStripeHistory = REAL_STRIPE_SUBSCRIPTION_STATUSES.includes(profile.subscription_status ?? "")
+
+    let appTrialActive = false
+    let appTrialEnded = false
+    if (!hasStripeHistory && profile.trial_ends_at) {
+      const appTrialEnd = new Date(profile.trial_ends_at).getTime()
+      const msLeft = appTrialEnd - Date.now()
+      if (msLeft > 0) {
+        appTrialActive = true
+        isTrialing = true
+        trialDaysLeft = Math.max(1, Math.ceil(msLeft / (1000 * 60 * 60 * 24)))
+        trialEndsAt = new Date(appTrialEnd).toISOString()
+        trialType = "app"
+      } else {
+        appTrialEnded = true
+        trialEndsAt = new Date(appTrialEnd).toISOString()
+        trialType = "app"
       }
     }
 
     // is_premium is set by the webhook whenever the Stripe subscription
     // status is "active" or "trialing", so it already covers both a paying
-    // customer and someone mid-trial - no need to OR it with isTrialing here.
-    const isPremium = profile.is_premium === true
+    // customer and someone mid-trial. The app trial is not in the DB flag,
+    // so it's OR-ed in here - during those 3 days the user is treated as
+    // premium everywhere (feature gates, auto LIVE mode).
+    const isPremium = profile.is_premium === true || appTrialActive
     const isActive = isPremium || profile.subscription_status === "active"
     const tier = isPremium ? "premium" : "free"
+
+    // hasTrialEnded drives the hard paywall: the user consumed their 3-day
+    // app trial (or their Stripe subscription ended) and has no active
+    // access left - the app UI redirects them to /upgrade to pay.
+    const hasTrialEnded = !isPremium && (appTrialEnded || (hasStripeHistory && profile.subscription_status !== "active" && profile.subscription_status !== "trialing"))
 
     // hasSubscribed = this user has gone through Stripe checkout at least
     // once before (trialing/active/canceled/past_due). Used by the UI to
@@ -92,17 +143,7 @@ export async function GET(request: NextRequest) {
     // Stripe subscription status (written by the webhook once Stripe
     // actually creates/updates a subscription) means this user has ever
     // truly subscribed.
-    const REAL_STRIPE_SUBSCRIPTION_STATUSES = [
-      "trialing",
-      "active",
-      "past_due",
-      "canceled",
-      "unpaid",
-      "incomplete",
-      "incomplete_expired",
-      "paused",
-    ]
-    const hasSubscribed = REAL_STRIPE_SUBSCRIPTION_STATUSES.includes(profile.subscription_status ?? "")
+    const hasSubscribed = hasStripeHistory
 
     console.log(
       "[v0] Subscription status:",
@@ -125,6 +166,9 @@ export async function GET(request: NextRequest) {
       isActive,
       isTrialing,
       trialDaysLeft,
+      trialEndsAt,   // ISO timestamp of trial end (app or Stripe), null if none
+      trialType,     // "app" (3-day, no card) | "stripe" | null
+      hasTrialEnded, // TRUE = trial consumed & no access left -> hard paywall
       hasSubscribed,
       subscriptionId: profile.stripe_subscription_id ?? null,
       customerId: profile.stripe_customer_id,
