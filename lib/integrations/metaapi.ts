@@ -208,10 +208,59 @@ export class MetaApiClient {
   }
 
   /**
+   * Single, fast status check - one GET request, no polling loop. Used by
+   * the client-side polling in app/account/integrations/actions.ts
+   * (confirmBrokerConnection) so connection verification never has to run
+   * inside one long-lived serverless invocation. A first-time demo
+   * connection typically takes 10-40s to go CONNECTED; a genuinely bad
+   * login/password/server usually surfaces as DEPLOY_FAILED well before
+   * that. Returns null if the account can't be read at all (transient
+   * MetaApi/network error - caller should treat this as "still pending",
+   * not as a failure).
+   */
+  async getConnectionState(accountId: string): Promise<{ connectionStatus: string; state: string } | null> {
+    try {
+      const response = await fetch(`${this.provisioningBaseUrl}/users/current/accounts/${accountId}`, {
+        method: 'GET',
+        headers: this.authHeaders(),
+      })
+
+      if (!response.ok) return null
+
+      const account = await response.json()
+
+      // Same one-shot redeploy safety net as waitUntilConnected below: a
+      // fresh account can still be UNDEPLOYED if the very first deploy()
+      // call 404'd on eventual-consistency grounds. Firing a redeploy here
+      // too means accounts get unstuck even if every waitUntilConnected
+      // caller is gone and only client-side polling is checking on them.
+      if (account.state === 'UNDEPLOYED') {
+        fetch(`${this.provisioningBaseUrl}/users/current/accounts/${accountId}/deploy`, {
+          method: 'POST',
+          headers: this.authHeaders(),
+        }).catch(() => {})
+      }
+
+      return { connectionStatus: account.connectionStatus, state: account.state }
+    } catch {
+      return null
+    }
+  }
+
+  /**
    * Poll the account until MetaApi reports it as actually logged into the
    * broker, or bail out after the timeout. A first-time demo connection
    * typically takes 10-40s; a genuinely bad login/password/server usually
    * surfaces as a DEPLOY_FAILED state well before the timeout.
+   *
+   * NOTE: not called from the broker-connect flow anymore (see
+   * app/account/integrations/actions.ts) - a single synchronous wait inside
+   * one server action can't reliably cover a 10-40s connect without hitting
+   * Vercel's serverless function timeout, which was the root cause of the
+   * "trial starts even on a failed broker login" bug (the old 6s wait would
+   * time out, get swallowed, and the trial had already been granted
+   * unconditionally beforehand). Kept for any future server-side/background
+   * caller that genuinely runs long enough to use it (e.g. a cron).
    */
   async waitUntilConnected(accountId: string, timeoutMs = 30000, intervalMs = 3000): Promise<boolean> {
     const deadline = Date.now() + timeoutMs
