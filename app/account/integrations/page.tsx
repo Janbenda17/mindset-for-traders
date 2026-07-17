@@ -7,9 +7,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowRight, Check, AlertCircle, Loader, X, Plug, Lock, Hash, Server, ShieldCheck, Zap } from 'lucide-react'
+import { ArrowRight, Check, AlertCircle, Loader, X, Plug, Lock, Hash, Server, ShieldCheck, Zap, Sparkles, Users } from 'lucide-react'
 import Link from 'next/link'
-import { connectMetaApi, disconnectMetaApi, confirmBrokerConnection } from './actions'
+import { connectMetaApi, disconnectMetaApi, confirmBrokerConnection, getConnectedTradersCount } from './actions'
 
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 
@@ -41,6 +41,18 @@ export default function IntegrationsPage() {
   // gets granted once this resolves to a genuine CONNECTED state, never
   // optimistically).
   const [verifying, setVerifying] = useState(false)
+  // Real count of profiles that have ever connected a broker - see
+  // getConnectedTradersCount in ./actions. Rendered as an honest social-proof
+  // line instead of a fabricated countdown/reserved-slot claim (that framing
+  // was considered and rejected for this page - see conversation history -
+  // because a fake deadline for something with no real deadline is a dark
+  // pattern under EU/Czech consumer law). null while loading or on fetch
+  // failure, in which case the badge just doesn't render.
+  const [connectedTradersCount, setConnectedTradersCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    getConnectedTradersCount().then(setConnectedTradersCount).catch(() => setConnectedTradersCount(null))
+  }, [])
 
   // Handle OAuth callback messages
   useEffect(() => {
@@ -310,6 +322,29 @@ export default function IntegrationsPage() {
           </div>
         )}
 
+        {/* Psychological reframing: connecting a broker isn't presented as a
+            settings chore, it's presented as the one step standing between
+            the user and the AI audit they just signed up for. Every claim
+            here is literally true - the 3-day trial and the AI analysis
+            genuinely do start the moment MetaApi confirms the connection
+            (see confirmBrokerConnection in ./actions) - nothing here is a
+            fabricated deadline or a threat. */}
+        {!metaApiConnected && (
+          <div className="rounded-xl border border-fuchsia-500/30 bg-gradient-to-r from-fuchsia-500/10 to-purple-500/5 p-4 flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-fuchsia-500/20 flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-fuchsia-300" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">Your 3-day AI audit is ready.</p>
+              <p className="text-sm text-slate-400 mt-0.5 leading-relaxed">
+                The system is waiting for your trade data to show you exactly which days and hours you're losing
+                the most money to emotional decisions. Connecting your account below starts the analysis and your
+                3 days of full access — free, no card.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Single unified MetaTrader connect flow */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -508,6 +543,16 @@ export default function IntegrationsPage() {
                     <Lock className="w-3 h-3" />
                     Read-only · Secured connection · Powered by MetaApi
                   </p>
+                  {/* Honest urgency: a real COUNT() of profiles that have ever
+                      connected a broker (see getConnectedTradersCount in
+                      ./actions), not a simulated or fabricated number. Only
+                      renders once the real count has loaded. */}
+                  {connectedTradersCount !== null && connectedTradersCount > 0 && (
+                    <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500 mt-2">
+                      <Users className="w-3 h-3" />
+                      {connectedTradersCount} {connectedTradersCount === 1 ? 'trader has' : 'traders have'} already connected their account
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>

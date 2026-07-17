@@ -14,6 +14,32 @@ function getSupabase() {
   return supabaseInstance
 }
 
+/**
+ * Real count of profiles that have ever connected a broker (metaapi_account_id
+ * is set). Used for an honest social-proof line on the integrations page -
+ * "X traders have already connected their account" - as an alternative to a
+ * fabricated countdown/reserved-slot claim. This is a genuine COUNT() against
+ * the profiles table, not a simulated or illustrative number.
+ */
+export async function getConnectedTradersCount(): Promise<number | null> {
+  try {
+    const { count, error } = await getSupabase()
+      .from('profiles')
+      .select('user_id', { count: 'exact', head: true })
+      .not('metaapi_account_id', 'is', null)
+
+    if (error) {
+      console.error('[v0] Error counting connected traders:', error)
+      return null
+    }
+
+    return count ?? null
+  } catch (err) {
+    console.error('[v0] Exception counting connected traders:', err)
+    return null
+  }
+}
+
 export async function ensureProfileExists(userId: string) {
   try {
     console.log('[v0] Ensuring profile exists for user:', userId)
