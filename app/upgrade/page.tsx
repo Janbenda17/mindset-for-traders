@@ -230,7 +230,6 @@ export default function UpgradePage() {
                 <span className="text-2xl font-bold">{language === 'en' ? '1149 Kč/month' : '1149 Kč/měsíc'}</span>
               </div>
               <p className="text-lg">{language === 'en' ? 'Full access starts immediately after payment. Cancel anytime.' : 'Plný přístup ihned po zaplacení. Kdykoli zrušitelné.'}</p>
-              <p className="text-sm opacity-90 mt-1">{language === 'en' ? '7-day money-back guarantee' : '7denní záruka vrácení peněz'}</p>
             </div>
         </div>
 
@@ -376,7 +375,7 @@ export default function UpgradePage() {
                 </Button>
               )}
 
-              <p className="text-xs text-gray-500 text-center mt-3">{language === 'en' ? "1149 Kč/month, billed immediately. Cancel anytime. 7-day money-back guarantee." : "1149 Kč/měsíc, účtováno ihned. Kdykoli zrušitelné. 7denní záruka vrácení peněz."}</p>
+              <p className="text-xs text-gray-500 text-center mt-3">{language === 'en' ? "1149 Kč/month, billed immediately. Cancel anytime." : "1149 Kč/měsíc, účtováno ihned. Kdykoli zrušitelné."}</p>
             </CardContent>
           </Card>
         </div>
