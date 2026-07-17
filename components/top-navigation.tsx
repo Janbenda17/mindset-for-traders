@@ -213,27 +213,31 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
     return "dní"
   }
 
-  // Live countdown for the 3-day app trial. The strip re-renders every
-  // minute so the remaining time ("2 d 14 h" / "5 h 32 min") stays honest
-  // without needing a per-second timer.
+  // Live countdown for the 3-day app trial. Ticks every second - trialEndsAt
+  // is the real timestamp confirmBrokerConnection() wrote when MetaApi
+  // confirmed the broker login (app/account/integrations/actions.ts), so
+  // this is a genuine countdown to a real deadline, not a fabricated one.
+  // Scoped to isTrialing && trialType === "app" only - there is no real
+  // per-second deadline to show before a broker is connected (see the Hard
+  // Wall / ClientLayout.tsx), so nothing ticks pre-connect.
   const [nowTs, setNowTs] = useState(() => Date.now())
   useEffect(() => {
     if (!isTrialing || trialType !== "app" || !trialEndsAt) return
-    const id = setInterval(() => setNowTs(Date.now()), 60_000)
+    const id = setInterval(() => setNowTs(Date.now()), 1_000)
     return () => clearInterval(id)
   }, [isTrialing, trialType, trialEndsAt])
 
-  const trialCountdown = (() => {
-    if (!trialEndsAt) return ""
+  // HH:MM:SS format for the ticking app-trial strip specifically.
+  const trialCountdownHMS = (() => {
+    if (!trialEndsAt) return "00:00:00"
     const msLeft = new Date(trialEndsAt).getTime() - nowTs
-    if (msLeft <= 0) return isEn ? "0 min" : "0 min"
-    const totalMinutes = Math.floor(msLeft / 60_000)
-    const d = Math.floor(totalMinutes / (60 * 24))
-    const h = Math.floor((totalMinutes % (60 * 24)) / 60)
-    const m = totalMinutes % 60
-    if (d > 0) return isEn ? `${d}d ${h}h` : `${d} d ${h} h`
-    if (h > 0) return isEn ? `${h}h ${m}min` : `${h} h ${m} min`
-    return isEn ? `${m} min` : `${m} min`
+    if (msLeft <= 0) return "00:00:00"
+    const totalSeconds = Math.floor(msLeft / 1000)
+    const h = Math.floor(totalSeconds / 3600)
+    const m = Math.floor((totalSeconds % 3600) / 60)
+    const s = totalSeconds % 60
+    const pad = (n: number) => String(n).padStart(2, "0")
+    return `${pad(h)}:${pad(m)}:${pad(s)}`
   })()
 
   return (
@@ -243,11 +247,13 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
           className={`h-8 flex items-center justify-center px-3 text-center ${
             !isAuthenticated
               ? "bg-gradient-to-r from-emerald-600/90 to-teal-600/90"
-              : isTrialing
-                ? "bg-gradient-to-r from-fuchsia-600/90 to-purple-600/90"
-                : isPremium
-                  ? "bg-gradient-to-r from-emerald-700/70 to-emerald-800/70"
-                  : "bg-gradient-to-r from-amber-600/90 to-orange-600/90"
+              : isTrialing && trialType === "app"
+                ? "bg-gradient-to-r from-red-600/90 to-orange-600/90"
+                : isTrialing
+                  ? "bg-gradient-to-r from-fuchsia-600/90 to-purple-600/90"
+                  : isPremium
+                    ? "bg-gradient-to-r from-emerald-700/70 to-emerald-800/70"
+                    : "bg-gradient-to-r from-amber-600/90 to-orange-600/90"
           }`}
         >
           {!isAuthenticated ? (
@@ -266,9 +272,9 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
             <Link href="/upgrade" className="flex items-center gap-1.5 text-xs font-medium text-white hover:underline truncate">
               <Clock className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">
-                {isEn
-                  ? `Full access active — ${trialCountdown} left. Then 1149 Kč/month.`
-                  : `Plný přístup aktivní — zbývá ${trialCountdown}. Poté 1149 Kč/měsíc.`}
+                {isEn ? "Full access active — " : "Plný přístup aktivní — zbývá "}
+                <span className="font-mono font-bold tabular-nums">{trialCountdownHMS}</span>
+                {isEn ? " left. Then 1149 Kč/month." : ". Poté 1149 Kč/měsíc."}
               </span>
               <span className="hidden sm:inline underline decoration-white/50">
                 {isEn ? "Keep Premium" : "Zachovat Premium"}
