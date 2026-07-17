@@ -1830,7 +1830,12 @@ export default function AccountPage() {
                     <span className="text-gray-400 ml-2 text-lg">/{language === "cs" ? "měsíc" : "month"}</span>
                   </div>
                   <p className="text-sm text-purple-300 font-medium mt-2">
-                    {language === "cs" ? "14denní zkušební verze zdarma, bez karty" : "14-day free trial, no card required"}
+                    {/* Was "14denní zkušební verze zdarma, bez karty" - stale
+                        from the old Stripe-trial model. Checkout now charges
+                        immediately with no Stripe trial (see /upgrade); the
+                        only free trial is the separate 3-day no-card app
+                        trial granted on broker connect. */}
+                    {language === "cs" ? "Plný přístup ihned po zaplacení. Kdykoli zrušitelné." : "Full access starts immediately after payment. Cancel anytime."}
                   </p>
                 </CardHeader>
                 <CardContent className="flex-grow">
