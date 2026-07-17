@@ -320,12 +320,29 @@ export default function IntegrationsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                  <ShieldCheck className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                  <p className="text-xs text-slate-400">
-                    Enter your {platform === 'mt5' ? 'MT5' : 'MT4'} credentials. Connection is encrypted
-                    end-to-end via MetaApi — your password is never stored in plain text.
-                  </p>
+                {/* Trust bar — this is the highest-stakes moment in the whole
+                    funnel (handing over broker credentials to an app they
+                    signed up for minutes ago), so the reassurance is made
+                    explicit and concrete instead of a single generic line.
+                    Goal: nobody should have a reason to think "I'll do this
+                    later, let me research it first" — the answer to every
+                    likely hesitation is already on the page. */}
+                <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 divide-y divide-blue-500/10">
+                  <div className="flex items-center gap-2 px-3 py-2.5">
+                    <ShieldCheck className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                    <p className="text-xs text-slate-400">
+                      Read-only connection — MindTrader can see your trades to analyze them, but can never place
+                      trades or withdraw funds. Encrypted end-to-end via MetaApi, your password is never stored
+                      in plain text.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-2.5">
+                    <Zap className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                    <p className="text-xs text-slate-400">
+                      Takes about 2 minutes. Your 3 days of full access start the moment this connects — the
+                      sooner you do it, the more of it you get.
+                    </p>
+                  </div>
                 </div>
 
                 <div>
@@ -352,12 +369,27 @@ export default function IntegrationsPage() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <Input
                       type="password"
-                      placeholder="Your trading account password"
+                      placeholder="Your investor (read-only) password"
                       value={metaApiPassword}
                       onChange={(e) => setMetaApiPassword(e.target.value)}
                       className="bg-slate-800 border-slate-700 text-white pl-10 h-11 focus-visible:ring-blue-500/40 focus-visible:border-blue-500/50"
                     />
                   </div>
+                  <details className="mt-1.5 group">
+                    <summary className="text-xs text-blue-400 hover:text-blue-300 cursor-pointer select-none list-none flex items-center gap-1">
+                      <span className="inline-block transition-transform group-open:rotate-90">›</span>
+                      Use the investor password, not your trading password — here's why
+                    </summary>
+                    <div className="mt-2 text-xs text-slate-400 leading-relaxed bg-slate-950/60 rounded-lg p-3 border border-slate-800">
+                      Every MT4/MT5 account has two passwords: a{' '}
+                      <span className="text-slate-300 font-medium">trading password</span> (can open/close trades)
+                      and an <span className="text-slate-300 font-medium">investor/read-only password</span> (can
+                      only view). We only need to read your trades, so use the investor password — that way this
+                      app physically cannot trade or move money on your account, even in theory. Don't have one
+                      set? Open MT4/MT5 → right-click your account in the Navigator panel → Properties → set an
+                      investor password there (takes 30 seconds, no broker contact needed).
+                    </div>
+                  </details>
                 </div>
 
                 <div>
@@ -374,6 +406,18 @@ export default function IntegrationsPage() {
                       className="bg-slate-800 border-slate-700 text-white pl-10 h-11 focus-visible:ring-blue-500/40 focus-visible:border-blue-500/50"
                     />
                   </div>
+                  <details className="mt-1.5 group">
+                    <summary className="text-xs text-blue-400 hover:text-blue-300 cursor-pointer select-none list-none flex items-center gap-1">
+                      <span className="inline-block transition-transform group-open:rotate-90">›</span>
+                      Not sure what your broker server is called?
+                    </summary>
+                    <div className="mt-2 text-xs text-slate-400 leading-relaxed bg-slate-950/60 rounded-lg p-3 border border-slate-800">
+                      Open MT4/MT5 → find your account in the Navigator panel (left side) → right-click it →
+                      Properties. The server name is shown right there (e.g. "ICMarketsSC-Demo"). It's also on the
+                      login screen you used the very first time you opened MT4/MT5, and in the welcome email your
+                      broker sent when you opened the account.
+                    </div>
+                  </details>
                 </div>
 
                 <div className="pt-2">
@@ -396,7 +440,7 @@ export default function IntegrationsPage() {
                   </Button>
                   <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500 mt-3">
                     <Lock className="w-3 h-3" />
-                    Secured connection · Powered by MetaApi
+                    Read-only · Secured connection · Powered by MetaApi
                   </p>
                 </div>
               </CardContent>
