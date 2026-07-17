@@ -472,6 +472,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 {/* The mobile "Connect broker" CTA below (outside this
                     dropdown) already covers the never-activated case, so no
                     duplicate entry is needed here. */}
+              </DropdownMenuContent>
             </DropdownMenu>
           </div>
 
