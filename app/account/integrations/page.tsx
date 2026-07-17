@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Check, AlertCircle, Loader, X, Plug, Lock, Hash, Server, ShieldCheck, Zap } from 'lucide-react'
 import Link from 'next/link'
-import { connectMetaApi, disconnectMetaApi } from './actions'
+import { connectMetaApi, disconnectMetaApi, confirmBrokerConnection } from './actions'
 
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 
@@ -36,6 +36,11 @@ export default function IntegrationsPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [checking, setChecking] = useState(true)
+  // True while we're polling MetaApi to confirm the broker login actually
+  // succeeded (see confirmBrokerConnection in ./actions - the trial only
+  // gets granted once this resolves to a genuine CONNECTED state, never
+  // optimistically).
+  const [verifying, setVerifying] = useState(false)
 
   // Handle OAuth callback messages
   useEffect(() => {
@@ -75,7 +80,7 @@ export default function IntegrationsPage() {
 
         const { data, error } = await getSupabase()
           .from('profiles')
-          .select('metaapi_token, metaapi_account_id, metaapi_broker')
+          .select('metaapi_token, metaapi_account_id, metaapi_broker, trial_ends_at')
           .eq('user_id', user.id)
           .maybeSingle()
 
@@ -88,6 +93,21 @@ export default function IntegrationsPage() {
           console.log('[v0] Profile found:', data)
           setMetaApiConnected(!!data.metaapi_token && !!data.metaapi_account_id)
           setConnectedBroker(data.metaapi_broker || null)
+
+          // Self-heal: if an account was saved but we never got to confirm
+          // the login (tab closed mid-poll, browser crash, etc.), silently
+          // re-check it now in the background. This either finally grants
+          // the trial for a connection that succeeded after the user left,
+          // or clears out a broken account so a retry isn't blocked -
+          // instead of leaving it stuck forever in limbo.
+          if (data.metaapi_account_id && !data.trial_ends_at) {
+            confirmBrokerConnection(user.id, data.metaapi_account_id).then((result) => {
+              if (result.failed) {
+                setMetaApiConnected(false)
+                setConnectedBroker(null)
+              }
+            }).catch(() => {})
+          }
         }
       } catch (err) {
         console.error('[v0] Error checking integration status:', err)
@@ -131,42 +151,88 @@ export default function IntegrationsPage() {
         return
       }
 
+      const accountId = (result as any).accountId as string
       setMetaApiConnected(true)
       setConnectedBroker(metaApiBroker)
       setMetaApiLogin('')
       setMetaApiPassword('')
       setMetaApiBroker('')
 
-      // Track the two most important funnel moments in Clarity.
       try {
         if (typeof window !== 'undefined' && (window as any).clarity) {
           ;(window as any).clarity('event', 'broker_connected')
-          if ((result as any).trialStarted) {
-            ;(window as any).clarity('event', 'trial_started')
-          }
         }
       } catch {}
 
-      if ((result as any).trialStarted) {
-        // Broker connect just started the 3-day full-access trial and
-        // switched the account to LIVE mode. Take the user straight into
-        // the app with the product tour queued up (see components/
-        // product-tour.tsx FORCE_SHOW_KEY) so the first thing they
-        // experience is their own data, not a settings page.
-        setSuccess('Connected! Your 3-day full access just started — taking you to your dashboard...')
-        try {
-          localStorage.setItem('mindtrader-show-tour', 'true')
-        } catch {}
-        setTimeout(() => {
-          window.location.href = '/daily-tracker'
-        }, 1500)
-      } else {
+      // The account is saved, but MetaApi hasn't confirmed the broker login
+      // yet - it can take up to 10-40s, and a wrong password/server only
+      // shows up as a failure in that window. Poll a few seconds at a time
+      // (each check is a fast, independent request, so this can safely run
+      // as long as it needs to without risking a server timeout) instead of
+      // granting the trial optimistically.
+      setVerifying(true)
+      setSuccess('Logging into your broker - this can take up to a minute on first connect...')
+
+      const maxAttempts = 20 // ~60s at 3s intervals
+      let attempt = 0
+      let settled = false
+
+      while (attempt < maxAttempts && !settled) {
+        await new Promise((resolve) => setTimeout(resolve, 3000))
+        attempt++
+
+        const confirmResult = await confirmBrokerConnection(user.id, accountId)
+
+        if (confirmResult.failed) {
+          settled = true
+          setVerifying(false)
+          setMetaApiConnected(false)
+          setConnectedBroker(null)
+          setSuccess('')
+          setError(confirmResult.error || 'Could not connect to your broker. Check your details and try again.')
+          setTimeout(() => setError(''), 8000)
+          break
+        }
+
+        if (confirmResult.connected) {
+          settled = true
+          setVerifying(false)
+
+          try {
+            if (confirmResult.trialStarted && typeof window !== 'undefined' && (window as any).clarity) {
+              ;(window as any).clarity('event', 'trial_started')
+            }
+          } catch {}
+
+          if (confirmResult.trialStarted) {
+            // Broker connect just started the 3-day full-access trial and
+            // switched the account to LIVE mode. Take the user straight
+            // into the app with the product tour queued up (see
+            // components/product-tour.tsx FORCE_SHOW_KEY) so the first
+            // thing they experience is their own data, not a settings page.
+            setSuccess('Connected! Your 3-day full access just started — taking you to your dashboard...')
+            try {
+              localStorage.setItem('mindtrader-show-tour', 'true')
+            } catch {}
+            setTimeout(() => {
+              window.location.href = '/daily-tracker'
+            }, 1500)
+          } else {
+            setSuccess('Account connected! Trades will sync automatically once a day.')
+            setTimeout(() => setSuccess(''), 8000)
+          }
+          break
+        }
+        // Still pending - keep polling.
+      }
+
+      if (!settled) {
+        // Gave up on active polling, but the account is still trying to
+        // connect in the background - don't tell the user it failed.
+        setVerifying(false)
         setSuccess(
-          result.connected
-            ? 'Account connected! Trades will sync automatically once a day.'
-            : 'Account created and logging into your broker - this can take a minute on first connect. Trades will start syncing automatically once it finishes.',
+          "Still connecting to your broker - this is taking longer than usual. Refresh this page in a minute; we'll keep checking.",
         )
-        setTimeout(() => setSuccess(''), 8000)
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to connect your account'

@@ -134,13 +134,92 @@ export async function connectMetaApi(
       return { success: false, error: error.message || 'Failed to save MetaApi connection' }
     }
 
-    // Connecting a broker is THE activation moment, so it starts the 3-day
-    // full-access trial (no card) and flips the account straight into LIVE
-    // mode - the user never has to touch the virtual/live switch. The trial
-    // is granted only once per user: if trial_ends_at was ever set before,
-    // or the user already has a real Stripe subscription history, nothing
-    // changes here. See /api/subscription/status for how trial_ends_at is
-    // read back as isTrialing/hasTrialEnded.
+    // IMPORTANT: the trial used to be started right here, unconditionally,
+    // the instant the account was saved - before we had any idea whether
+    // the broker login actually succeeded. A bad login/password/server only
+    // surfaces as MetaApi's DEPLOY_FAILED state after 10-40s, which is far
+    // longer than a single server action can safely block for (Vercel's
+    // Hobby plan kills serverless functions at 10s, and this file can't
+    // export maxDuration since Next.js only allows that from route/page
+    // files, not 'use server' action files). The old code's synchronous
+    // 6-second wait would time out long before a real failure could show
+    // up, the timeout was silently swallowed, and the trial had *already*
+    // been granted above regardless - so a mistyped password or wrong
+    // broker server name burned a user's one-time 3-day trial for nothing.
+    //
+    // Fix: this action now only creates + saves the account and returns
+    // immediately (fast, well within the timeout). Trial activation moved
+    // to confirmBrokerConnection() below, which the client
+    // (app/account/integrations/page.tsx) calls repeatedly every few
+    // seconds via its own short-lived requests - each poll is fast, so
+    // there's no function-timeout risk no matter how long the broker takes
+    // to actually connect. The trial is granted only once MetaApi confirms
+    // connectionStatus === 'CONNECTED'.
+    console.log('[v0] MetaApi account saved, pending connection confirmation:', accountId)
+    return { success: true, accountId, pending: true }
+  } catch (err) {
+    console.error('[v0] Error in connectMetaApi:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to connect MetaApi. Check your credentials.' }
+  }
+}
+
+/**
+ * Poll-friendly, single-shot connection check. Called repeatedly from the
+ * client (every few seconds, see app/account/integrations/page.tsx) right
+ * after connectMetaApi() returns, until MetaApi reports the account as
+ * CONNECTED or DEPLOY_FAILED (or the client gives up after its own
+ * timeout). Each call is a single fast MetaApi GET request, so there's no
+ * risk of hitting a serverless function timeout no matter how long the
+ * broker takes to actually log in.
+ *
+ * The 3-day app trial (no card) is granted here, and ONLY here, and ONLY
+ * once connectionStatus is genuinely 'CONNECTED' - never on a timeout,
+ * never optimistically. See the long comment in connectMetaApi() above for
+ * why this moved out of that action.
+ */
+export async function confirmBrokerConnection(userId: string, accountId: string) {
+  try {
+    const state = await metaApiClient.getConnectionState(accountId)
+
+    // Transient read failure (network blip, MetaApi hiccup) - tell the
+    // client to keep polling rather than surfacing a scary error for
+    // something that isn't actually a connection failure.
+    if (!state) {
+      return { connected: false, failed: false, pending: true }
+    }
+
+    if (state.state === 'DEPLOY_FAILED') {
+      console.warn('[v0] MetaApi account failed to deploy (bad credentials/server):', accountId)
+
+      // Clear the broken credentials so the user gets a clean retry instead
+      // of being stuck looking "connected" with an account that will never
+      // come online.
+      await getSupabase()
+        .from('profiles')
+        .update({
+          metaapi_account_id: null,
+          metaapi_token: null,
+          metaapi_broker: null,
+          trades_sync_enabled: false,
+        })
+        .eq('user_id', userId)
+
+      return {
+        connected: false,
+        failed: true,
+        error: 'Could not log into your broker with those details. Double-check your account number, investor password and broker server name, then try again.',
+      }
+    }
+
+    if (state.connectionStatus !== 'CONNECTED') {
+      return { connected: false, failed: false, pending: true }
+    }
+
+    // Genuinely connected - now, and only now, grant the one-time 3-day app
+    // trial (no card) and flip the account into LIVE mode. Same "already
+    // had a trial / has real Stripe history / already premium" guard as
+    // before so this never re-grants a trial. See /api/subscription/status
+    // for how trial_ends_at is read back as isTrialing/hasTrialEnded.
     let trialStarted = false
     try {
       const { data: prof } = await getSupabase()
@@ -161,7 +240,7 @@ export async function connectMetaApi(
         const trialEndsAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
         updates.trial_ends_at = trialEndsAt
         trialStarted = true
-        console.log('[v0] Starting 3-day app trial (no card) for user:', userId, 'ends:', trialEndsAt)
+        console.log('[v0] Starting 3-day app trial (no card) for user:', userId, 'ends:', trialEndsAt, '- confirmed CONNECTED')
       }
 
       const { error: trialError } = await getSupabase()
@@ -177,25 +256,12 @@ export async function connectMetaApi(
       console.error('[v0] Exception starting app trial:', trialErr)
     }
 
-    // Best-effort short wait just to tell the user whether the broker login
-    // already finished. Its outcome doesn't affect what's saved above - the
-    // background sync job will pick up the connection once it goes CONNECTED
-    // even if this wait times out first. Kept short (well under Vercel's
-    // default 10s serverless timeout on the Hobby plan) since this file
-    // can't export maxDuration - Next.js only allows async function exports
-    // from a 'use server' file, so there's no way to extend this action's
-    // own time budget.
-    let connected = false
-    try {
-      connected = await metaApiClient.waitUntilConnected(accountId, 6000, 2000)
-    } catch (waitErr) {
-      console.warn('[v0] MetaApi account saved but broker login check failed:', waitErr)
-    }
-
-    console.log('[v0] MetaApi connected successfully with account:', accountId, 'connected:', connected, 'trialStarted:', trialStarted)
-    return { success: true, accountId, connected, trialStarted }
+    return { connected: true, failed: false, trialStarted }
   } catch (err) {
-    console.error('[v0] Error in connectMetaApi:', err)
-    return { success: false, error: err instanceof Error ? err.message : 'Failed to connect MetaApi. Check your credentials.' }
+    console.error('[v0] Error in confirmBrokerConnection:', err)
+    // Treat unexpected errors as "keep polling" rather than a hard failure -
+    // don't want a transient exception to falsely tell the user their login
+    // was wrong.
+    return { connected: false, failed: false, pending: true }
   }
 }
