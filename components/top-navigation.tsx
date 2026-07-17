@@ -340,11 +340,14 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
             </Link>
           </div>
 
-          {/* Main Navigation - hidden entirely for never-activated users: every
-              item here points at an app page ClientLayout's Hard Wall will
-              immediately bounce them out of, so showing it just teaches
-              people to expect a redirect. */}
-          {!neverActivated && (
+          {/* Main Navigation - always shown now, even for never-activated
+              users. Hiding it used to make clicking a product feel like a
+              bug (link works fine, then ClientLayout's Hard Wall silently
+              bounces you to /account/integrations with no explanation).
+              Instead, each product tile below shows a visible lock + routes
+              straight to /account/integrations when a broker isn't
+              connected yet, so the "why can't I open this" answer is on the
+              tile itself instead of happening invisibly after the click. */}
           <div className="hidden md:flex items-center gap-6 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             {/* Products dropdown */}
             <div
@@ -371,19 +374,31 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                       <div className="grid grid-cols-6 gap-3 w-fit">
                         {mainNavigation.map((item) => {
                           const isActive = pathname === item.href
+                          const locked = neverActivated
 
                           return (
-                            <Link key={item.name} href={item.href} onClick={() => setIsProductsOpen(false)}>
-                              <div className={`flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all w-24 h-28 ${
-                                isActive
-                                  ? "bg-purple-600/30 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20"
-                                  : "hover:bg-slate-800/50 border-2 border-slate-700/50 hover:border-slate-600/50"
+                            <Link
+                              key={item.name}
+                              href={locked ? "/account/integrations" : item.href}
+                              onClick={() => setIsProductsOpen(false)}
+                            >
+                              <div className={`relative flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-all w-24 h-28 ${
+                                locked
+                                  ? "opacity-50 hover:opacity-80 border-2 border-slate-700/50"
+                                  : isActive
+                                    ? "bg-purple-600/30 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20"
+                                    : "hover:bg-slate-800/50 border-2 border-slate-700/50 hover:border-slate-600/50"
                               }`}>
-                                <item.icon className={`w-6 h-6 ${isActive ? "text-purple-400" : "text-gray-300"}`} />
-                                <span className={`text-xs text-center font-medium line-clamp-2 ${isActive ? "text-purple-300" : "text-white"}`}>
+                                {locked && (
+                                  <div className="absolute top-1 right-1 p-1 bg-slate-950 rounded-full border border-slate-700">
+                                    <Lock className="w-3 h-3 text-slate-400" />
+                                  </div>
+                                )}
+                                <item.icon className={`w-6 h-6 ${locked ? "text-gray-500" : isActive ? "text-purple-400" : "text-gray-300"}`} />
+                                <span className={`text-xs text-center font-medium line-clamp-2 ${locked ? "text-gray-500" : isActive ? "text-purple-300" : "text-white"}`}>
                                   {item.name}
                                 </span>
-                                {item.badge && (
+                                {item.badge && !locked && (
                                   <Badge className="text-xs px-1.5 py-0.5 h-5 bg-green-500/30 text-green-300 border border-green-500/50">
                                     {item.badge}
                                   </Badge>
@@ -427,7 +442,6 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               </Button>
             </Link>
           </div>
-          )}
 
           {/* Mobile Menu */}
           <div className="flex md:hidden items-center">
@@ -438,29 +452,33 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-64 bg-slate-900/95 backdrop-blur-md border-slate-700" align="end">
-                {/* Same Hard Wall reasoning as the desktop nav above - don't
-                    list app pages a never-activated user will just get
-                    redirected out of. */}
-                {!neverActivated && (
+                {/* Same reasoning as the desktop nav above: always show the
+                    menu, but lock individual items (and route them to
+                    /account/integrations) when a broker isn't connected yet,
+                    instead of hiding them and letting ClientLayout's Hard
+                    Wall silently redirect after the tap. */}
                 <div className="p-2">
                   <p className="text-xs text-gray-400 px-3 py-2 font-semibold">{isEn ? 'MAIN MENU' : 'HLAVNÍ MENU'}</p>
                   {mainNavigation.map((item) => {
                     const isActive = pathname === item.href
+                    const locked = neverActivated
 
                     return (
                       <DropdownMenuItem key={item.name} asChild>
                         <Link
-                          href={item.href}
+                          href={locked ? "/account/integrations" : item.href}
                           onClick={() => setIsMobileMenuOpen(false)}
                           className={`flex items-center space-x-3 px-3 py-2.5 hover:bg-slate-800/50 rounded-lg cursor-pointer ${
                             isActive ? "bg-purple-600/20" : ""
-                          }`}
+                          } ${locked ? "opacity-60" : ""}`}
                         >
-                          <item.icon className={`w-4 h-4 ${isActive ? "text-purple-400" : "text-gray-400"}`} />
-                          <span className={`flex-1 text-sm ${isActive ? "text-purple-300 font-medium" : "text-white"}`}>
+                          <item.icon className={`w-4 h-4 ${locked ? "text-gray-500" : isActive ? "text-purple-400" : "text-gray-400"}`} />
+                          <span className={`flex-1 text-sm ${locked ? "text-gray-500" : isActive ? "text-purple-300 font-medium" : "text-white"}`}>
                             {item.name}
                           </span>
-                          {item.badge && (
+                          {locked ? (
+                            <Lock className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                          ) : item.badge ? (
                             <Badge
                               className={`text-xs px-1.5 py-0 h-5 ${
                                 item.badge === "AI" ? "bg-purple-500/20 text-purple-300 border-purple-500/30" : ""
@@ -468,13 +486,12 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                             >
                               {item.badge}
                             </Badge>
-                          )}
+                          ) : null}
                         </Link>
                       </DropdownMenuItem>
                     )
                   })}
                 </div>
-                )}
                 {/* The mobile "Connect broker" CTA below (outside this
                     dropdown) already covers the never-activated case, so no
                     duplicate entry is needed here. */}
