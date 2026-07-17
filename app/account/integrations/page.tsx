@@ -1,5 +1,6 @@
 'use client'
 
+import type React from 'react'
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
@@ -7,9 +8,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowRight, Check, AlertCircle, Loader, X, Plug, Lock, Hash, Server, ShieldCheck, Zap, Sparkles, Users } from 'lucide-react'
+import { ArrowRight, Check, AlertCircle, Loader, X, Plug, Lock, Hash, Server, ShieldCheck, Zap, Sparkles, Users, Upload, FileText } from 'lucide-react'
 import Link from 'next/link'
-import { connectMetaApi, disconnectMetaApi, confirmBrokerConnection, getConnectedTradersCount } from './actions'
+import { connectMetaApi, disconnectMetaApi, confirmBrokerConnection, getConnectedTradersCount, uploadTradeHistoryCsv } from './actions'
 
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 
@@ -20,6 +21,47 @@ function getSupabase() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
   return supabaseInstance
+}
+
+// Purely decorative, blurred behind the Hard Wall card - gives a preview
+// that the app is real and full-featured without revealing (or letting
+// anyone interact with) anything real. pointer-events-none + select-none +
+// aria-hidden so it can never be clicked, tabbed to, or mistaken for real
+// data by a screen reader.
+function DashboardMockup() {
+  const bars = [40, 65, 35, 80, 55, 90, 45, 70, 60, 85, 50, 75]
+  return (
+    <div aria-hidden="true" className="p-6 sm:p-8">
+      <div className="flex items-center justify-between mb-6">
+        <div className="h-6 w-32 rounded bg-slate-700/60" />
+        <div className="flex gap-2">
+          <div className="h-8 w-20 rounded-lg bg-fuchsia-600/40" />
+          <div className="h-8 w-8 rounded-full bg-slate-700/60" />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        {['+18.4%', '2 341 Kč', '76%'].map((val, i) => (
+          <div key={i} className="rounded-xl bg-slate-800/70 border border-slate-700/60 p-3">
+            <div className="h-2.5 w-16 rounded bg-slate-600/60 mb-2" />
+            <div className="h-5 w-20 rounded bg-emerald-500/40 text-transparent select-none">{val}</div>
+          </div>
+        ))}
+      </div>
+      <div className="rounded-xl bg-slate-800/70 border border-slate-700/60 p-4 h-40 flex items-end gap-1.5">
+        {bars.map((h, i) => (
+          <div
+            key={i}
+            className="flex-1 rounded-t bg-gradient-to-t from-fuchsia-600/50 to-purple-500/40"
+            style={{ height: `${h}%` }}
+          />
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-3 mt-4">
+        <div className="rounded-xl bg-slate-800/70 border border-slate-700/60 p-3 h-16" />
+        <div className="rounded-xl bg-slate-800/70 border border-slate-700/60 p-3 h-16" />
+      </div>
+    </div>
+  )
 }
 
 export default function IntegrationsPage() {
@@ -49,6 +91,13 @@ export default function IntegrationsPage() {
   // pattern under EU/Czech consumer law). null while loading or on fetch
   // failure, in which case the badge just doesn't render.
   const [connectedTradersCount, setConnectedTradersCount] = useState<number | null>(null)
+
+  // CSV escape hatch - for anyone who won't hand over even a read-only
+  // investor password. Collapsed by default so it doesn't compete with the
+  // primary broker-connect path, but always available.
+  const [showCsvUpload, setShowCsvUpload] = useState(false)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [csvUploading, setCsvUploading] = useState(false)
 
   useEffect(() => {
     getConnectedTradersCount().then(setConnectedTradersCount).catch(() => setConnectedTradersCount(null))
@@ -141,7 +190,7 @@ export default function IntegrationsPage() {
 
   const handleConnect = async () => {
     if (!metaApiLogin || !metaApiPassword || !metaApiBroker) {
-      setError('Please fill in all fields')
+      setError('Vyplň prosím všechna pole')
       setTimeout(() => setError(''), 3000)
       return
     }
@@ -158,7 +207,7 @@ export default function IntegrationsPage() {
       })
 
       if (!result?.success) {
-        setError(result?.error || 'Failed to connect your MetaTrader account')
+        setError(result?.error || 'Nepodařilo se připojit tvůj MetaTrader účet')
         setTimeout(() => setError(''), 6000)
         return
       }
@@ -183,7 +232,7 @@ export default function IntegrationsPage() {
       // as long as it needs to without risking a server timeout) instead of
       // granting the trial optimistically.
       setVerifying(true)
-      setSuccess('Logging into your broker - this can take up to a minute on first connect...')
+      setSuccess('Přihlašuji se k tvému brokerovi - první připojení může trvat až minutu...')
 
       const maxAttempts = 20 // ~60s at 3s intervals
       let attempt = 0
@@ -201,7 +250,7 @@ export default function IntegrationsPage() {
           setMetaApiConnected(false)
           setConnectedBroker(null)
           setSuccess('')
-          setError(confirmResult.error || 'Could not connect to your broker. Check your details and try again.')
+          setError(confirmResult.error || 'Nepodařilo se připojit k tvému brokerovi. Zkontroluj údaje a zkus to znovu.')
           setTimeout(() => setError(''), 8000)
           break
         }
@@ -222,7 +271,7 @@ export default function IntegrationsPage() {
             // into the app with the product tour queued up (see
             // components/product-tour.tsx FORCE_SHOW_KEY) so the first
             // thing they experience is their own data, not a settings page.
-            setSuccess('Connected! Your 3-day full access just started — taking you to your dashboard...')
+            setSuccess('Připojeno! Tvůj 3denní plný přístup právě začal - přesměrovávám tě na dashboard...')
             try {
               localStorage.setItem('mindtrader-show-tour', 'true')
             } catch {}
@@ -230,7 +279,7 @@ export default function IntegrationsPage() {
               window.location.href = '/daily-tracker'
             }, 1500)
           } else {
-            setSuccess('Account connected! Trades will sync automatically once a day.')
+            setSuccess('Účet připojen! Obchody se budou synchronizovat automaticky jednou denně.')
             setTimeout(() => setSuccess(''), 8000)
           }
           break
@@ -243,11 +292,11 @@ export default function IntegrationsPage() {
         // connect in the background - don't tell the user it failed.
         setVerifying(false)
         setSuccess(
-          "Still connecting to your broker - this is taking longer than usual. Refresh this page in a minute; we'll keep checking.",
+          'Stále se připojuji k tvému brokerovi - trvá to déle než obvykle. Obnov tuto stránku za minutu, mezitím budeme dál kontrolovat.',
         )
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to connect your account'
+      const errorMsg = err instanceof Error ? err.message : 'Nepodařilo se připojit tvůj účet'
       setError(errorMsg)
       console.error('[v0] Connection error:', err)
     } finally {
@@ -274,6 +323,52 @@ export default function IntegrationsPage() {
       console.error('[v0] Disconnect error:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCsvFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    setCsvFile(file || null)
+  }
+
+  const handleCsvUpload = async () => {
+    if (!csvFile) return
+
+    setCsvUploading(true)
+    setError('')
+    try {
+      const text = await csvFile.text()
+      const result = await uploadTradeHistoryCsv(user.id, text)
+
+      if (!result.success) {
+        setError(result.error || 'Nepodařilo se zpracovat soubor')
+        setTimeout(() => setError(''), 8000)
+        return
+      }
+
+      try {
+        if (typeof window !== 'undefined' && (window as any).clarity) {
+          ;(window as any).clarity('event', 'csv_trade_import')
+        }
+      } catch {}
+
+      if (result.trialStarted) {
+        setSuccess(`Nahráno ${result.importedCount} obchodů! Tvůj 3denní plný přístup právě začal - přesměrovávám tě na dashboard...`)
+        try {
+          localStorage.setItem('mindtrader-show-tour', 'true')
+        } catch {}
+        setTimeout(() => {
+          window.location.href = '/daily-tracker'
+        }, 1500)
+      } else {
+        setSuccess(`Nahráno ${result.importedCount} obchodů!`)
+        setTimeout(() => setSuccess(''), 6000)
+      }
+    } catch (err) {
+      setError('Nepodařilo se přečíst soubor')
+      console.error('[v0] CSV upload error:', err)
+    } finally {
+      setCsvUploading(false)
     }
   }
 
@@ -322,44 +417,19 @@ export default function IntegrationsPage() {
           </div>
         )}
 
-        {/* Psychological reframing: connecting a broker isn't presented as a
-            settings chore, it's presented as the one step standing between
-            the user and the AI audit they just signed up for. Every claim
-            here is literally true - the 3-day trial and the AI analysis
-            genuinely do start the moment MetaApi confirms the connection
-            (see confirmBrokerConnection in ./actions) - nothing here is a
-            fabricated deadline or a threat. */}
-        {!metaApiConnected && (
-          <div className="rounded-xl border border-fuchsia-500/30 bg-gradient-to-r from-fuchsia-500/10 to-purple-500/5 p-4 flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-fuchsia-500/20 flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-fuchsia-300" />
+        {metaApiConnected ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex-shrink-0">
+                <Zap className="w-4 h-4 text-blue-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">MetaTrader Account</h2>
+                <p className="text-sm text-slate-400 mt-0.5">
+                  Connect your MT4 or MT5 account to sync trades automatically via MetaApi.
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-bold text-white">Your 3-day AI audit is ready.</p>
-              <p className="text-sm text-slate-400 mt-0.5 leading-relaxed">
-                The system is waiting for your trade data to show you exactly which days and hours you're losing
-                the most money to emotional decisions. Connecting your account below starts the analysis and your
-                3 days of full access — free, no card.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Single unified MetaTrader connect flow */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex-shrink-0">
-              <Zap className="w-4 h-4 text-blue-400" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">MetaTrader Account</h2>
-              <p className="text-sm text-slate-400 mt-0.5">
-                Connect your MT4 or MT5 account to sync trades automatically via MetaApi.
-              </p>
-            </div>
-          </div>
-
-          {metaApiConnected ? (
             <Card className="bg-gradient-to-br from-emerald-900/20 to-slate-900/50 border-emerald-600/50 overflow-hidden">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
@@ -388,12 +458,59 @@ export default function IntegrationsPage() {
                 </div>
               </CardContent>
             </Card>
-          ) : (
-            <Card className="bg-slate-900 border-slate-700 shadow-xl shadow-black/20">
-              <CardContent className="pt-6 space-y-5">
+          </div>
+        ) : (
+          <div className="relative">
+            {/* Blurred dashboard preview - purely decorative background, never
+                interactive. Gives a sense that there's a real, full app
+                waiting on the other side of this step without resurrecting
+                the old navigable sample-data mode (that was deliberately
+                removed - see app/onboarding/page.tsx - because it gave
+                never-activated users a dead-end place to wander instead of
+                activating). This is just a static mockup, not a route. */}
+            <div className="absolute inset-0 -z-10 overflow-hidden rounded-2xl blur-md opacity-30 pointer-events-none select-none">
+              <DashboardMockup />
+            </div>
+            <div className="absolute inset-0 -z-10 bg-gradient-to-b from-slate-950/70 via-slate-950/85 to-slate-950 pointer-events-none rounded-2xl" />
+
+            {/* Hard Wall card */}
+            <div className="relative rounded-2xl border-2 border-fuchsia-500/40 shadow-2xl shadow-fuchsia-900/20 p-1">
+              <div className="rounded-xl bg-slate-950/90 backdrop-blur-xl p-5 sm:p-7 space-y-5">
+                <div className="text-center">
+                  <div className="inline-flex p-2.5 rounded-xl bg-fuchsia-500/20 mb-3">
+                    <Sparkles className="w-5 h-5 text-fuchsia-300" />
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-bold text-white">Tvůj MindTrader účet je připraven.</h2>
+                  <p className="text-sm text-slate-400 mt-1.5 max-w-md mx-auto leading-relaxed">
+                    Systém teď čeká na tvá data, aby vygeneroval tvůj osobní AI audit disciplíny. Nahráním obchodů
+                    okamžitě odemkneš svůj dashboard - zdarma, na 3 dny, bez karty.
+                  </p>
+                </div>
+
+                {/* Live simulation - removes the "what happens if I click
+                    this" uncertainty that keeps people from ever starting. */}
+                <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/20 divide-y divide-emerald-500/10">
+                  <div className="flex items-center gap-2.5 px-3 py-2.5">
+                    <span className="text-sm leading-none flex-shrink-0">🟢</span>
+                    <p className="text-xs text-slate-300">MindTrader se bezpečně spojí se serverem tvého brokera.</p>
+                  </div>
+                  <div className="flex items-center gap-2.5 px-3 py-2.5">
+                    <span className="text-sm leading-none flex-shrink-0">🟢</span>
+                    <p className="text-xs text-slate-300">
+                      Stáhne se pouze historie tvých uzavřených obchodů - žádné osobní údaje.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2.5 px-3 py-2.5">
+                    <span className="text-sm leading-none flex-shrink-0">🟢</span>
+                    <p className="text-xs text-slate-300">
+                      AI algoritmus spočítá tvé psychologické statistiky a rovnou odemkne dashboard.
+                    </p>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                    Platform
+                    Platforma
                   </label>
                   <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-950 border border-slate-800">
                     <button
@@ -421,40 +538,32 @@ export default function IntegrationsPage() {
                   </div>
                 </div>
 
-                {/* Trust bar — this is the highest-stakes moment in the whole
-                    funnel (handing over broker credentials to an app they
-                    signed up for minutes ago), so the reassurance is made
-                    explicit and concrete instead of a single generic line.
-                    Goal: nobody should have a reason to think "I'll do this
-                    later, let me research it first" — the answer to every
-                    likely hesitation is already on the page. */}
                 <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 divide-y divide-blue-500/10">
                   <div className="flex items-center gap-2 px-3 py-2.5">
                     <ShieldCheck className="w-4 h-4 text-blue-400 flex-shrink-0" />
                     <p className="text-xs text-slate-400">
-                      Read-only connection — MindTrader can see your trades to analyze them, but can never place
-                      trades or withdraw funds. Encrypted end-to-end via MetaApi, your password is never stored
-                      in plain text.
+                      Pouze pro čtení - MindTrader vidí tvé obchody kvůli analýze, ale nikdy nemůže zadat obchod ani
+                      vybrat peníze. Šifrováno end-to-end přes MetaApi, tvé heslo se nikdy neukládá jako čistý text.
                     </p>
                   </div>
                   <div className="flex items-center gap-2 px-3 py-2.5">
                     <Zap className="w-4 h-4 text-blue-400 flex-shrink-0" />
                     <p className="text-xs text-slate-400">
-                      Takes about 2 minutes. Your 3 days of full access start the moment this connects — the
-                      sooner you do it, the more of it you get.
+                      Zabere to asi 2 minuty. Tvé 3 dny plného přístupu začínají ve chvíli, kdy se toto připojí - čím
+                      dřív to uděláš, tím víc z toho dostaneš.
                     </p>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                    Login (Account Number)
+                    Přihlášení (číslo účtu)
                   </label>
                   <div className="relative">
                     <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <Input
                       type="text"
-                      placeholder="e.g., 123456789"
+                      placeholder="např. 123456789"
                       value={metaApiLogin}
                       onChange={(e) => setMetaApiLogin(e.target.value)}
                       className="bg-slate-800 border-slate-700 text-white pl-10 h-11 focus-visible:ring-blue-500/40 focus-visible:border-blue-500/50"
@@ -464,44 +573,49 @@ export default function IntegrationsPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                    Password
+                    Heslo
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <Input
                       type="password"
-                      placeholder="Your investor (read-only) password"
+                      placeholder="Tvé investorské (read-only) heslo"
                       value={metaApiPassword}
                       onChange={(e) => setMetaApiPassword(e.target.value)}
                       className="bg-slate-800 border-slate-700 text-white pl-10 h-11 focus-visible:ring-blue-500/40 focus-visible:border-blue-500/50"
                     />
                   </div>
-                  <details className="mt-1.5 group">
-                    <summary className="text-xs text-blue-400 hover:text-blue-300 cursor-pointer select-none list-none flex items-center gap-1">
-                      <span className="inline-block transition-transform group-open:rotate-90">›</span>
-                      Use the investor password, not your trading password — here's why
-                    </summary>
-                    <div className="mt-2 text-xs text-slate-400 leading-relaxed bg-slate-950/60 rounded-lg p-3 border border-slate-800">
-                      Every MT4/MT5 account has two passwords: a{' '}
-                      <span className="text-slate-300 font-medium">trading password</span> (can open/close trades)
-                      and an <span className="text-slate-300 font-medium">investor/read-only password</span> (can
-                      only view). We only need to read your trades, so use the investor password — that way this
-                      app physically cannot trade or move money on your account, even in theory. Don't have one
-                      set? Open MT4/MT5 → right-click your account in the Navigator panel → Properties → set an
-                      investor password there (takes 30 seconds, no broker contact needed).
-                    </div>
-                  </details>
+                  {/* Always visible, not tucked behind a click-to-expand
+                      disclosure - this is the single biggest source of
+                      hesitation on this whole page, so the reassurance has
+                      to be impossible to miss, right where the fear shows
+                      up. */}
+                  <p className="mt-2 text-xs text-slate-400 leading-relaxed bg-slate-900/60 rounded-lg p-3 border border-slate-800">
+                    💡 Zadáváš Investorské (Read-Only) heslo. Toto heslo slouží výhradně pro čtení historie. Nikdo -
+                    ani ty, ani MindTrader - nemůže přes toto heslo zadávat obchody nebo vybírat peníze. Tvoje hlavní
+                    heslo (Master password) nikdy nepožadujeme.
+                    <details className="mt-1.5 group">
+                      <summary className="text-blue-400 hover:text-blue-300 cursor-pointer select-none list-none inline-flex items-center gap-1">
+                        <span className="inline-block transition-transform group-open:rotate-90">›</span>
+                        Nemáš investorské heslo nastavené?
+                      </summary>
+                      <p className="mt-1.5 text-slate-400">
+                        Otevři MT4/MT5 → klikni pravým na svůj účet v panelu Navigator → Vlastnosti → nastav si tam
+                        investorské heslo (30 vteřin, není potřeba kontaktovat brokera).
+                      </p>
+                    </details>
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                    Broker Server
+                    Broker server
                   </label>
                   <div className="relative">
                     <Server className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <Input
                       type="text"
-                      placeholder="e.g., ICMarketsSC-Demo, Pepperstone-Live"
+                      placeholder="např. ICMarketsSC-Demo, Pepperstone-Live"
                       value={metaApiBroker}
                       onChange={(e) => setMetaApiBroker(e.target.value)}
                       className="bg-slate-800 border-slate-700 text-white pl-10 h-11 focus-visible:ring-blue-500/40 focus-visible:border-blue-500/50"
@@ -510,13 +624,12 @@ export default function IntegrationsPage() {
                   <details className="mt-1.5 group">
                     <summary className="text-xs text-blue-400 hover:text-blue-300 cursor-pointer select-none list-none flex items-center gap-1">
                       <span className="inline-block transition-transform group-open:rotate-90">›</span>
-                      Not sure what your broker server is called?
+                      Nevíš, jak se jmenuje tvůj broker server?
                     </summary>
                     <div className="mt-2 text-xs text-slate-400 leading-relaxed bg-slate-950/60 rounded-lg p-3 border border-slate-800">
-                      Open MT4/MT5 → find your account in the Navigator panel (left side) → right-click it →
-                      Properties. The server name is shown right there (e.g. "ICMarketsSC-Demo"). It's also on the
-                      login screen you used the very first time you opened MT4/MT5, and in the welcome email your
-                      broker sent when you opened the account.
+                      Otevři MT4/MT5 → najdi svůj účet v panelu Navigator (vlevo) → klikni pravým → Vlastnosti. Název
+                      serveru je přímo tam (např. "ICMarketsSC-Demo"). Najdeš ho i na přihlašovací obrazovce, kterou
+                      jsi použil/a při prvním spuštění MT4/MT5, a v uvítacím emailu od brokera.
                     </div>
                   </details>
                 </div>
@@ -530,18 +643,18 @@ export default function IntegrationsPage() {
                     {loading ? (
                       <>
                         <Loader className="w-4 h-4 animate-spin mr-2" />
-                        Connecting...
+                        Připojuji...
                       </>
                     ) : (
                       <>
-                        Connect Account
+                        Připojit účet
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </>
                     )}
                   </Button>
                   <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500 mt-3">
                     <Lock className="w-3 h-3" />
-                    Read-only · Secured connection · Powered by MetaApi
+                    Pouze pro čtení · Zabezpečené připojení · Powered by MetaApi
                   </p>
                   {/* Honest urgency: a real COUNT() of profiles that have ever
                       connected a broker (see getConnectedTradersCount in
@@ -550,14 +663,64 @@ export default function IntegrationsPage() {
                   {connectedTradersCount !== null && connectedTradersCount > 0 && (
                     <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500 mt-2">
                       <Users className="w-3 h-3" />
-                      {connectedTradersCount} {connectedTradersCount === 1 ? 'trader has' : 'traders have'} already connected their account
+                      {connectedTradersCount} {connectedTradersCount === 1 ? 'trader už připojil' : 'traderů už připojilo'} svůj účet
                     </p>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+
+                {/* CSV escape hatch - for the most trust-averse visitors.
+                    Deliberately understated (a text link, not a button) so
+                    it doesn't compete with the primary broker-connect path,
+                    but it's always right there instead of hidden in a menu
+                    somewhere. */}
+                <div className="pt-3 border-t border-slate-800 text-center">
+                  {!showCsvUpload ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowCsvUpload(true)}
+                      className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors"
+                    >
+                      Nechceš zadávat údaje? Nahraj historii ručně přes CSV/Excel
+                    </button>
+                  ) : (
+                    <div className="rounded-lg bg-slate-900/60 border border-slate-800 p-4 space-y-3 text-left">
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Exportuj si historii uzavřených obchodů přímo ze své platformy (Terminal → History → pravý
+                        klik → Save as Report) jako CSV a nahraj soubor sem. Žádná hesla, žádné propojování účtu -
+                        čistá anonymní data.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <label className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs cursor-pointer hover:border-slate-600 transition-colors">
+                          <Upload className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                          <span className="truncate flex-1">
+                            {csvFile ? csvFile.name : 'Vybrat CSV soubor...'}
+                          </span>
+                          <input type="file" accept=".csv" onChange={handleCsvFileSelect} className="hidden" />
+                        </label>
+                        {csvFile && <FileText className="w-4 h-4 text-emerald-400 flex-shrink-0" />}
+                      </div>
+                      <Button
+                        onClick={handleCsvUpload}
+                        disabled={!csvFile || csvUploading}
+                        variant="outline"
+                        className="w-full h-10 border-slate-700 text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                      >
+                        {csvUploading ? (
+                          <>
+                            <Loader className="w-4 h-4 animate-spin mr-2" />
+                            Zpracovávám...
+                          </>
+                        ) : (
+                          'Nahrát a odemknout dashboard'
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
