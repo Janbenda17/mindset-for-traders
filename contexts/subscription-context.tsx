@@ -37,7 +37,9 @@ interface SubscriptionContextType {
   customerId: string | null
   subscriptionStatus: string | null
   subscribe: (plan: "free" | "premium") => Promise<boolean>
-  upgradeToPremium: () => Promise<boolean>
+  // billingCycle defaults to "monthly" when omitted, so existing callers
+  // that don't care about the new quarterly plan keep working unchanged.
+  upgradeToPremium: (billingCycle?: "monthly" | "quarterly") => Promise<boolean>
   endTrialNow: () => Promise<boolean>
   cancelSubscription: () => Promise<boolean>
   openBillingPortal: () => Promise<void>
@@ -146,7 +148,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     return true
   }
 
-  const upgradeToPremium = async (): Promise<boolean> => {
+  const upgradeToPremium = async (billingCycle: "monthly" | "quarterly" = "monthly"): Promise<boolean> => {
     if (!user) {
       console.log("[v0] Upgrade: User not authenticated")
       return false
@@ -154,15 +156,16 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
     try {
       setIsLoading(true)
-      console.log("[v0] Upgrade: Creating checkout session for", user.email)
-      
+      console.log("[v0] Upgrade: Creating checkout session for", user.email, "cycle:", billingCycle)
+
       // Call the create-checkout endpoint to get redirect URL
       const response = await fetch("/api/subscription/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ 
-          plan: "premium"
+        body: JSON.stringify({
+          plan: "premium",
+          billingCycle
         })
       })
 
