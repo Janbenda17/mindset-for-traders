@@ -42,11 +42,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
 
-    const { plan } = await request.json()
+    const { plan, billingCycle } = await request.json()
 
     if (plan !== "premium") {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
+
+    // billingCycle is optional and defaults to "monthly" for backward
+    // compatibility with any caller that doesn't send it yet.
+    const cycle = billingCycle === "quarterly" ? "quarterly" : "monthly"
 
     console.log("[v0] Creating checkout for user:", user.id, user.email)
 
@@ -103,11 +107,16 @@ export async function POST(request: NextRequest) {
 
     // IMPORTANT: Find correct price ID from YOUR account
     // You can find this by running: stripe prices list --product prod_***
-    // Live checkout price is set via the STRIPE_PRICE_ID env var (Vercel
-    // project settings) - this fallback is only used if that's unset.
+    // Live checkout prices are set via env vars (Vercel project settings) -
+    // these fallbacks are only used if the env vars are unset.
     // Currently: price_1Tu1SLL0tgTNaSww79W2CPpl = 1149 Kč/month (Jul 2026).
-    const priceId = process.env.STRIPE_PRICE_ID || "price_1Tu1SLL0tgTNaSww79W2CPpl"
-    console.log("[v0] Using price ID:", priceId)
+    // price_1TuKbIL0tgTNaSwwg2WCT0yt = 2930 Kč/3 months, i.e. 15% off the
+    // monthly rate (3 x 1149 = 3447, minus 15% = 2929.95 -> 2930).
+    const priceId =
+      cycle === "quarterly"
+        ? process.env.STRIPE_PRICE_ID_QUARTERLY || "price_1TuKbIL0tgTNaSwwg2WCT0yt"
+        : process.env.STRIPE_PRICE_ID || "price_1Tu1SLL0tgTNaSww79W2CPpl"
+    console.log("[v0] Using price ID:", priceId, "for cycle:", cycle)
 
     // NO Stripe trial anymore. The free-trial phase is now the 3-day
     // no-card app trial started by connecting a broker (see
@@ -133,6 +142,7 @@ export async function POST(request: NextRequest) {
 
         metadata: {
           plan: "premium",
+          billing_cycle: cycle,
           user_id: user.id,
           user_email: user.email || "",
         },
@@ -141,6 +151,7 @@ export async function POST(request: NextRequest) {
       cancel_url: `${baseUrl}/upgrade`,
       metadata: {
         plan: "premium",
+        billing_cycle: cycle,
         user_id: user.id,
         user_email: user.email || "",
       },
