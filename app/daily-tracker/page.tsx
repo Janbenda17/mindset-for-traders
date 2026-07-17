@@ -360,14 +360,22 @@ export default function DailyTrackerPage() {
                 <p className="text-sm font-semibold text-white">
                   {isTrialing
                     ? `Vyzkoušej PRO funkce naplno na vlastních datech — zbývá ${trialDaysLeft} ${trialDaysLeft === 1 ? 'den' : trialDaysLeft <= 4 ? 'dny' : 'dní'} tvého free trialu.`
-                    : 'Aktivuj 14denní Premium trial a vyzkoušej si AI kouče a pokročilé insighty na vlastních datech.'}
+                    : 'Propoj brokera a získej 3 dny plného přístupu zdarma, bez karty — vyzkoušej si AI kouče a pokročilé insighty na vlastních datech.'}
                 </p>
-                <p className="text-xs text-slate-400 mt-0.5">Vyžaduje platební kartu. Kdykoli zrušitelné.</p>
+                {/* Was unconditionally "Vyžaduje platební kartu" pointing at
+                    /upgrade even for users who'd never connected a broker -
+                    the real no-card app trial lives at /account/integrations,
+                    not behind a card-required checkout. Only the isTrialing
+                    branch (which genuinely links to the paid /upgrade page)
+                    should mention cancellation terms. */}
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {isTrialing ? 'Kdykoli zrušitelné.' : 'Bez karty. Trvá asi 2 minuty.'}
+                </p>
               </div>
             </div>
-            <Link href="/upgrade" className="flex-shrink-0">
+            <Link href={isTrialing ? '/upgrade' : '/account/integrations'} className="flex-shrink-0">
               <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white whitespace-nowrap">
-                {isTrialing ? 'Zobrazit Premium' : 'Aktivovat trial'}
+                {isTrialing ? 'Zobrazit Premium' : 'Připojit brokera'}
               </Button>
             </Link>
           </motion.div>
