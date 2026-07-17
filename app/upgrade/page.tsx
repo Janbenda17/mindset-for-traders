@@ -178,11 +178,11 @@ export default function UpgradePage() {
             <p className="text-lg opacity-90">
               {trialType === 'app'
                 ? language === 'en'
-                  ? 'AI coach, MT4/5 live sync and advanced insights — all unlocked, no card. To keep everything after your free days, activate Premium for 749 Kč/month below.'
-                  : 'AI kouč, MT4/5 live synchronizace a pokročilé insighty — vše odemčeno, bez karty. Aby ti přístup nezmizel, aktivuj si níže Premium za 749 Kč/měsíc.'
+                  ? 'AI coach, MT4/5 live sync and advanced insights — all unlocked, no card. To keep everything after your free days, activate Premium for 1149 Kč/month below.'
+                  : 'AI kouč, MT4/5 live synchronizace a pokročilé insighty — vše odemčeno, bez karty. Aby ti přístup nezmizel, aktivuj si níže Premium za 1149 Kč/měsíc.'
                 : language === 'en'
-                  ? 'Full access to the AI coach, MT4/5 sync and advanced insights. Your card on file will be charged 749 Kč/month once the trial ends.'
-                  : 'Plný přístup k AI koučovi, MT4/5 synchronizaci a pokročilým insightům. Po skončení trialu se z tvé karty strhne 749 Kč/měsíc.'}
+                  ? 'Full access to the AI coach, MT4/5 sync and advanced insights. Your card on file will be charged 1149 Kč/month once the trial ends.'
+                  : 'Plný přístup k AI koučovi, MT4/5 synchronizaci a pokročilým insightům. Po skončení trialu se z tvé karty strhne 1149 Kč/měsíc.'}
             </p>
           </div>
         )}
@@ -227,7 +227,7 @@ export default function UpgradePage() {
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-6 mb-8">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Zap className="h-6 w-6" />
-                <span className="text-2xl font-bold">{language === 'en' ? '749 Kč/month' : '749 Kč/měsíc'}</span>
+                <span className="text-2xl font-bold">{language === 'en' ? '1149 Kč/month' : '1149 Kč/měsíc'}</span>
               </div>
               <p className="text-lg">{language === 'en' ? 'Full access starts immediately after payment. Cancel anytime.' : 'Plný přístup ihned po zaplacení. Kdykoli zrušitelné.'}</p>
               <p className="text-sm opacity-90 mt-1">{language === 'en' ? '7-day money-back guarantee' : '7denní záruka vrácení peněz'}</p>
@@ -282,7 +282,7 @@ export default function UpgradePage() {
               </CardTitle>
               <div className="mt-4 flex items-baseline gap-2">
                 <span className="text-5xl font-extrabold tracking-tight text-blue-600">
-                  {language === 'en' ? '$32' : '749 Kč'}
+                  {language === 'en' ? '$49' : '1149 Kč'}
                 </span>
                 <span className="text-gray-500 text-lg">{language === 'en' ? '/month' : '/měsíc'}</span>
               </div>
@@ -329,7 +329,7 @@ export default function UpgradePage() {
                     >
                       {isLoading || isUpgrading
                         ? (language === 'en' ? "Processing..." : "Zpracovávám...")
-                        : (language === 'en' ? "Keep my access — 749 Kč/month" : "Zachovat přístup — 749 Kč/měsíc")}
+                        : (language === 'en' ? "Keep my access — 1149 Kč/month" : "Zachovat přístup — 1149 Kč/měsíc")}
                     </Button>
                   </div>
                 ) : isTrialing ? (
@@ -364,7 +364,7 @@ export default function UpgradePage() {
                       ? (language === 'en' ? "Processing..." : "Zpracovávám...")
                       : hasSubscribed
                         ? (language === 'en' ? "Resubscribe to Premium" : "Obnovit Premium")
-                        : (language === 'en' ? "Activate Premium — 749 Kč/month" : "Aktivovat Premium — 749 Kč/měsíc")}
+                        : (language === 'en' ? "Activate Premium — 1149 Kč/month" : "Aktivovat Premium — 1149 Kč/měsíc")}
                   </Button>
                 )
               ) : (
@@ -376,7 +376,7 @@ export default function UpgradePage() {
                 </Button>
               )}
 
-              <p className="text-xs text-gray-500 text-center mt-3">{language === 'en' ? "749 Kč/month, billed immediately. Cancel anytime. 7-day money-back guarantee." : "749 Kč/měsíc, účtováno ihned. Kdykoli zrušitelné. 7denní záruka vrácení peněz."}</p>
+              <p className="text-xs text-gray-500 text-center mt-3">{language === 'en' ? "1149 Kč/month, billed immediately. Cancel anytime. 7-day money-back guarantee." : "1149 Kč/měsíc, účtováno ihned. Kdykoli zrušitelné. 7denní záruka vrácení peněz."}</p>
             </CardContent>
           </Card>
         </div>
