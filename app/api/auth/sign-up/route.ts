@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { sendEmail, trialWaitingEmail } from "@/lib/email"
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,6 +58,29 @@ export async function POST(request: NextRequest) {
       // The auth user was created successfully even if the profile trigger hasn't
       // caught up yet - don't fail the whole signup over this, just log it.
       console.warn("[v0] Profile not confirmed after", maxAttempts, "attempts - proceeding anyway")
+    }
+
+    // Signup funnel email #0 (see lib/email.ts trialWaitingEmail) - sent
+    // synchronously here rather than waiting for the daily cron, so the
+    // user gets it within seconds of registering instead of up to 24h
+    // later. Awaited (not truly fire-and-forget) because Vercel serverless
+    // functions can be frozen/killed once the response is sent, so an
+    // un-awaited send could simply never go out. Wrapped in its own
+    // try/catch so a Resend outage or missing API key never fails the
+    // signup itself - the daily cron's email #1 is a fallback if this one
+    // doesn't land anyway. No *_sent_at tracking column needed: signUp only
+    // succeeds once per email address, so this can only fire once per real
+    // registration.
+    try {
+      if (data.user.email) {
+        const { subject, html } = trialWaitingEmail({ displayName: name || undefined })
+        const result = await sendEmail({ to: data.user.email, subject, html })
+        if (!result.success) {
+          console.error("[v0] trialWaitingEmail send failed:", result.error)
+        }
+      }
+    } catch (emailErr) {
+      console.error("[v0] Exception sending trialWaitingEmail:", emailErr)
     }
 
     const response = NextResponse.json(
