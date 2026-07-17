@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Brain, ArrowRight, ShieldCheck, TrendingUp, AlertTriangle, Sparkles, Gift, Eye } from 'lucide-react'
+import { Brain, ArrowRight, ShieldCheck, TrendingUp, AlertTriangle, Sparkles, Gift } from 'lucide-react'
 import { useLanguage } from '@/contexts/language-context'
 import {
   SELF_REPORT_QUESTIONS,
@@ -58,7 +58,12 @@ export default function OnboardingPage() {
     }
   }
 
-  const skip = () => router.push('/daily-tracker')
+  // Used to send the user to /daily-tracker for a sample-data tour. Now that
+  // ClientLayout's Hard Wall redirects any never-activated user (no broker
+  // connected, no subscription) straight back out of every app page except
+  // /account/integrations, that destination no longer works - so "skipping"
+  // the quiz now goes straight to the real activation step instead.
+  const skip = () => router.push('/account/integrations')
 
   const colorClasses = {
     emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30' },
@@ -206,41 +211,14 @@ export default function OnboardingPage() {
               </div>
             </Link>
 
-            {/* Tour-first banner — a softer fallback right below the unlock
-                hook, for anyone not ready to connect a broker yet. Sends the
-                user to /daily-tracker, which already renders with realistic
-                sample data by default (Virtual Mode, see
-                contexts/live-mode-context.tsx + lib/virtual-data-generator.ts)
-                and sets the ProductTour force-show flag so the 4-slide guided
-                walkthrough (components/product-tour.tsx) plays immediately. */}
-            <Link
-              href="/daily-tracker"
-              onClick={() => {
-                try {
-                  if (typeof window !== 'undefined') {
-                    window.localStorage.setItem('mindtrader-show-tour', 'true')
-                    if ((window as any).clarity) {
-                      ;(window as any).clarity('event', 'onboarding_tour_cta_top')
-                    }
-                  }
-                } catch {}
-              }}
-              className="rounded-xl border border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-blue-500/5 p-4 mb-6 flex items-start gap-3 hover:border-cyan-500/50 transition-colors"
-            >
-              <div className="p-2 rounded-lg bg-cyan-500/15 flex-shrink-0">
-                <Eye className="w-4 h-4 text-cyan-300" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white">
-                  {isEn ? 'See your dashboard, based on your type →' : 'Podívej se na svou appku podle tvého typu →'}
-                </p>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {isEn
-                    ? 'No broker needed yet — a quick guided tour with sample data, so you know what you\'re signing up for.'
-                    : 'Zatím bez brokera — rychlá prohlídka na ukázkových datech, ať víš, do čeho jdeš.'}
-                </p>
-              </div>
-            </Link>
+            {/* The "See your dashboard, based on your type" sample-data tour
+                banner that used to live here sent users to /daily-tracker in
+                Virtual Mode. It's removed: ClientLayout's Hard Wall now
+                redirects any never-activated user (no broker connected, no
+                subscription) out of every app page except
+                /account/integrations, so that link would just bounce them
+                straight back here. The unlock-trial banner above and the
+                connect CTA below are the only two forward paths now. */}
 
             {/* Archetype title */}
             {archetype && (
@@ -348,14 +326,12 @@ export default function OnboardingPage() {
               </Link>
             </div>
 
-            <div className="text-center">
-              <button
-                onClick={skip}
-                className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
-              >
-                {isEn ? 'Skip the tour, go straight to the dashboard' : 'Přeskočit prohlídku, jít rovnou do appky'}
-              </button>
-            </div>
+            {/* The old "Skip the tour, go straight to the dashboard" link
+                that lived here also pointed at /daily-tracker and is removed
+                for the same reason as the tour banner above - the dashboard
+                isn't reachable pre-broker-connect anymore, and it was
+                redundant with the "Connect broker & unlock everything"
+                button right above it, which is now the only way forward. */}
           </motion.div>
         )}
       </div>
