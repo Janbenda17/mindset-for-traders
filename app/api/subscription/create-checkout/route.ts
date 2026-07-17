@@ -103,7 +103,10 @@ export async function POST(request: NextRequest) {
 
     // IMPORTANT: Find correct price ID from YOUR account
     // You can find this by running: stripe prices list --product prod_***
-    const priceId = process.env.STRIPE_PRICE_ID || "price_1S59GOL0tgTNaSwwEqyW1brC"
+    // Live checkout price is set via the STRIPE_PRICE_ID env var (Vercel
+    // project settings) - this fallback is only used if that's unset.
+    // Currently: price_1Tu1SLL0tgTNaSww79W2CPpl = 1149 Kč/month (Jul 2026).
+    const priceId = process.env.STRIPE_PRICE_ID || "price_1Tu1SLL0tgTNaSww79W2CPpl"
     console.log("[v0] Using price ID:", priceId)
 
     // NO Stripe trial anymore. The free-trial phase is now the 3-day
