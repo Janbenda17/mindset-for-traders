@@ -170,13 +170,49 @@ export function paymentFailedEmail(params: { displayName?: string }): { subject:
 }
 
 /**
+ * Signup funnel email #0 - sent synchronously from app/api/auth/sign-up/
+ * route.ts the moment registration succeeds, before the daily cron ever
+ * runs. Framing is deliberately "ready and waiting", not "started" or
+ * "active" - the 3-day trial genuinely has not begun yet at this point (it
+ * only starts once confirmBrokerConnection() in
+ * app/account/integrations/actions.ts confirms the broker login), so this
+ * copy must not imply otherwise. No tracking column: signUp only succeeds
+ * once per email, so this can only fire once per real registration.
+ */
+export function trialWaitingEmail(params: { displayName?: string }): { subject: string; html: string } {
+  const name = params.displayName ? params.displayName : "ahoj"
+
+  const subject = "Připraveno: 3 dny AI analýzy tvého účtu zdarma"
+
+  const html = emailShell(`
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">${name.charAt(0).toUpperCase() + name.slice(1)},</p>
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
+      účet je založený. Zbývá jediný krok, než se AI kouč pustí do tvých dat: připoj svého MT4/MT5 brokera -
+      trvá to asi 2 minuty a stačí investorské (read-only) heslo, appka s tvými penězi nemůže nic dělat.
+    </p>
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 24px 0;">
+      Jakmile se broker připojí, spustí se tvé <strong>3 dny plného přístupu zdarma, bez karty</strong> - a
+      uvidíš přesně, ve kterých dnech a hodinách tě emoce v obchodování nejvíc stojí peníze.
+    </p>
+    <div style="margin:0 0 24px 0;">${ctaButton("Připojit brokera a spustit analýzu", INTEGRATIONS_URL)}</div>
+  `)
+
+  return { subject, html }
+}
+
+/**
  * Signup funnel email #1 - sent ~24h after registration to users who have
  * not started the free trial (profiles.subscription_status is still the
  * default 'inactive', i.e. they never completed Stripe checkout).
  * Triggered by the daily cron at app/api/cron/signup-funnel-emails/route.ts.
  *
- * Points at broker connect (INTEGRATIONS_URL), not /upgrade - the free,
- * no-card 3-day trial starts by connecting a broker
+ * The urgency here ("it's been 24 hours") is a real, verifiable fact - the
+ * cron only queries profiles whose created_at is 24h+ in the past - not a
+ * fabricated countdown. There is deliberately no invented deadline like
+ * "48 hours left": no such deadline exists before a broker is connected
+ * (the 3-day trial clock hasn't started yet), so claiming one would be
+ * false. Points at broker connect (INTEGRATIONS_URL), not /upgrade - the
+ * free, no-card 3-day trial starts by connecting a broker
  * (app/account/integrations). /upgrade is a straight paid checkout now
  * (charged immediately, no Stripe trial), so it would be wrong to promise
  * "free" there.
@@ -184,19 +220,20 @@ export function paymentFailedEmail(params: { displayName?: string }): { subject:
 export function trialNotStartedEmail(params: { displayName?: string }): { subject: string; html: string } {
   const name = params.displayName ? params.displayName : "ahoj"
 
-  const subject = "Ještě sis nevyzkoušel/a MindTrader naživo"
+  const subject = "Už je to den a tvůj AI audit pořád čeká na data"
 
   const html = emailShell(`
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">${name.charAt(0).toUpperCase() + name.slice(1)},</p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
-      všiml jsem si, že sis založil/a účet, ale zatím sis nepřipojil/a svého brokera. Zatím vidíš jen
-      Virtual Mode - náhled na ukázkových datech.
+      je to už 24 hodin od registrace a účet pořád běží jen na ukázkových datech (Virtual Mode). Tvůj
+      skutečný AI audit - kde přesně tě obchodování stojí peníze kvůli emocím - čeká, dokud nepřipojíš
+      brokera.
     </p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 24px 0;">
-      Připoj MT4/MT5 účet a získej <strong>3 dny zdarma bez karty</strong> - živé obchody, AI kouč a
-      pokročilou analytiku na tvých vlastních datech. Trvá to asi 2 minuty.
+      Žádná platební karta, žádné riziko - appka vidí jen tvoje obchody, nemůže s nimi nic dělat (read-only
+      připojení). Trvá to 2 minuty a získáš <strong>3 dny plného přístupu zdarma</strong>.
     </p>
-    <div style="margin:0 0 24px 0;">${ctaButton("Připojit brokera zdarma", INTEGRATIONS_URL)}</div>
+    <div style="margin:0 0 24px 0;">${ctaButton("Připojit brokera a spustit audit", INTEGRATIONS_URL)}</div>
   `)
 
   return { subject, html }
@@ -245,24 +282,38 @@ export function winBackEmail(params: { displayName?: string }): { subject: strin
 /**
  * Signup funnel email #2 - reminder sent ~3 days after registration to
  * users who still have not started the free trial. Same broker-connect
- * framing as email #1, see comment above.
+ * framing and same "real elapsed time, not a fabricated deadline" rule as
+ * email #1, see comment above.
+ *
+ * Explicitly does NOT claim this is the last email the user will ever get
+ * about their account - the separate win-back cron
+ * (app/api/cron/winback-emails/route.ts) still reaches inactive users at
+ * 7+ days with a discount offer. It's only the last email in *this*
+ * 3-email welcome series, which is what the copy says. It also does not
+ * threaten data deletion or account closure - no such thing happens, and
+ * an earlier draft of this sequence that included that threat was
+ * rejected before being written to this file (see conversation history).
  */
 export function trialNotStartedReminderEmail(params: { displayName?: string }): { subject: string; html: string } {
   const name = params.displayName ? params.displayName : "ahoj"
 
-  const subject = "Poslední připomínka: 3 dny zdarma na tebe čekají"
+  const subject = "Poslední připomínka: tvůj AI audit stále čeká (3 dny zdarma)"
 
   const html = emailShell(`
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">${name.charAt(0).toUpperCase() + name.slice(1)},</p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
-      pár dní zpátky ses zaregistroval/a do MindTrader, ale ještě sis nepřipojil/a brokera. Naposledy ti
-      chci připomenout, co tím získáš: Live Mode s vlastními obchody, sledování nálady a disciplíny, AI
-      Report Builder a risk kalkulačku.
+      před 3 dny sis založil/a účet u MindTrader, ale ještě sis nepřipojil/a brokera. Tohle je poslední
+      připomínka v uvítací sérii - dál už tě kvůli tomuhle kroku nebudu zahlcovat maily.
+    </p>
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
+      Fakta zůstávají stejná: <strong>3 dny plného přístupu zdarma</strong>, žádná karta, 2 minuty na
+      připojení, appka nemůže s tvými penězi nic udělat (read-only). Jediné, co ti chybí, je vidět, kolik tě
+      emoce v obchodování reálně stojí.
     </p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 24px 0;">
-      <strong>3 dny zdarma, žádná karta potřeba.</strong> Připojení trvá asi 2 minuty.
+      Pokud teď není vhodná chvíle, není problém - účet i nabídka na tebe počkají.
     </p>
-    <div style="margin:0 0 24px 0;">${ctaButton("Připojit brokera zdarma", INTEGRATIONS_URL)}</div>
+    <div style="margin:0 0 24px 0;">${ctaButton("Připojit brokera a spustit audit", INTEGRATIONS_URL)}</div>
   `)
 
   return { subject, html }
