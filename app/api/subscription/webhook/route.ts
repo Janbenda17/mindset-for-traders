@@ -1,6 +1,7 @@
 import Stripe from "stripe"
 import { type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { sendEmail, paymentFailedEmail } from "@/lib/email"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -353,7 +354,7 @@ async function handlePaymentFailed(
 
   const { data: profile, error: findErr } = await supabase
     .from("profiles")
-    .select("user_id")
+    .select("user_id, email, display_name")
     .eq("stripe_customer_id", customerId)
     .maybeSingle()
 
@@ -372,5 +373,15 @@ async function handlePaymentFailed(
     console.error("[WEBHOOK]    ERROR:", error.message)
   } else {
     console.log("[WEBHOOK]    ✓ Marked past_due")
+  }
+
+  if (profile.email) {
+    const { subject, html } = paymentFailedEmail({ displayName: profile.display_name || undefined })
+    const result = await sendEmail({ to: profile.email, subject, html })
+    if (result.success) {
+      console.log("[WEBHOOK]    ✓ Payment-failed email sent to", profile.email)
+    } else {
+      console.error("[WEBHOOK]    Payment-failed email failed to send:", result.error)
+    }
   }
 }
