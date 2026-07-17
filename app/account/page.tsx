@@ -124,7 +124,7 @@ export default function AccountPage() {
 
   const [activeTab, setActiveTab] = useState("profile")
   const [loading, setLoading] = useState(false)
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly">("monthly")
   const [isUpgrading, setIsUpgrading] = useState(false)
 
   // Profile State
@@ -625,7 +625,7 @@ export default function AccountPage() {
   const handleUpgrade = async () => {
     setIsUpgrading(true)
     try {
-      await upgradeToPremium()
+      await upgradeToPremium(billingCycle)
     } catch (error) {
       toast({
         title: "Error",
@@ -960,43 +960,49 @@ export default function AccountPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-slate-900/80 border border-slate-700/50 p-1 backdrop-blur-xl">
-            <TabsTrigger
-              value="profile"
-              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
-            >
-              <User className="w-4 h-4 mr-2" />
-  Profil
-            </TabsTrigger>
-            <TabsTrigger
-              value="notifications"
-              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
-            >
-              <Bell className="w-4 h-4 mr-2" />
-  Notifikace
-            </TabsTrigger>
-            <TabsTrigger
-              value="security"
-              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
-            >
-              <Shield className="w-4 h-4 mr-2" />
-  Zabezpečení
-            </TabsTrigger>
-            <TabsTrigger
-              value="subscription"
-              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
-            >
-              <Crown className="w-4 h-4 mr-2" />
-  Předplatné
-            </TabsTrigger>
-            <TabsTrigger
-              value="integrations"
-              className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400"
-            >
-              <Plug className="w-4 h-4 mr-2" />
-  Integrace
-            </TabsTrigger>
-          </TabsList>
+          {/* Horizontally scrollable on mobile instead of squeezing 5 tabs
+              into the viewport width - that's what was causing the mangled
+              layout on phones (labels wrapping/overlapping the icons). The
+              row itself doesn't grow, so nothing else shifts around it. */}
+          <div className="-mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto">
+            <TabsList className="bg-slate-900/80 border border-slate-700/50 p-1 backdrop-blur-xl inline-flex w-max min-w-full sm:w-auto">
+              <TabsTrigger
+                value="profile"
+                className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400 whitespace-nowrap"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Profil
+              </TabsTrigger>
+              <TabsTrigger
+                value="notifications"
+                className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400 whitespace-nowrap"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Notifikace
+              </TabsTrigger>
+              <TabsTrigger
+                value="security"
+                className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400 whitespace-nowrap"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Zabezpečení
+              </TabsTrigger>
+              <TabsTrigger
+                value="subscription"
+                className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400 whitespace-nowrap"
+              >
+                <Crown className="w-4 h-4 mr-2" />
+                Předplatné
+              </TabsTrigger>
+              <TabsTrigger
+                value="integrations"
+                className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-gray-400 whitespace-nowrap"
+              >
+                <Plug className="w-4 h-4 mr-2" />
+                Integrace
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* PROFILE TAB */}
           <TabsContent value="profile" className="space-y-8">
@@ -1695,12 +1701,17 @@ export default function AccountPage() {
                 so free accounts get a prompt to upgrade here, not a toggle
                 that would fail. */}
             {!isPremium && (
-            <div className="flex items-center justify-center space-x-4 p-6 border border-yellow-500/20 rounded-xl bg-yellow-900/10 backdrop-blur-lg">
-              <div className="flex items-center gap-3">
-                <Award className="h-6 w-6 text-yellow-400" />
+            // flex-col on mobile (each piece stacks and can wrap/wrap its own
+            // text), row from sm: up - the old single non-wrapping flex row
+            // is what forced the icon+title+divider+paragraph+button onto
+            // one line on phones, which is what actually looked broken.
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 p-6 border border-yellow-500/20 rounded-xl bg-yellow-900/10 backdrop-blur-lg text-center sm:text-left">
+              <div className="flex items-center justify-center gap-3">
+                <Award className="h-6 w-6 text-yellow-400 flex-shrink-0" />
                 <h3 className="text-lg font-bold text-yellow-400">{language === "cs" ? "Režim Live" : "Live Mode"}</h3>
               </div>
-              <Separator orientation="vertical" className="bg-yellow-500/30 h-8" />
+              <Separator orientation="horizontal" className="bg-yellow-500/30 sm:hidden" />
+              <Separator orientation="vertical" className="bg-yellow-500/30 h-8 hidden sm:block" />
               <p className="text-sm text-yellow-500/90">
                 {language === "cs"
                   ? "Zatím pracuješ ve Virtual režimu (náhled na ukázkových datech)."
@@ -1708,7 +1719,7 @@ export default function AccountPage() {
               </p>
               <Button
                 size="sm"
-                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white"
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white w-full sm:w-auto"
                 onClick={handleUpgrade}
                 disabled={isUpgrading || subscriptionLoading}
               >
@@ -1717,26 +1728,26 @@ export default function AccountPage() {
             </div>
             )}
 
-            {/* Billing Toggle */}
-            <div className="flex items-center justify-center space-x-4">
+            {/* Billing Toggle - monthly vs. pay-quarterly-and-save-15% */}
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               <span
                 className={`text-sm font-medium transition-colors ${billingCycle === "monthly" ? "text-white" : "text-gray-500"}`}
               >
                 {language === "cs" ? "Měsíčně" : "Monthly"}
               </span>
               <button
-                onClick={() => setBillingCycle((prev) => (prev === "monthly" ? "yearly" : "monthly"))}
-                className="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => setBillingCycle((prev) => (prev === "monthly" ? "quarterly" : "monthly"))}
+                className="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0"
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${billingCycle === "yearly" ? "translate-x-6" : "translate-x-1"}`}
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${billingCycle === "quarterly" ? "translate-x-6" : "translate-x-1"}`}
                 />
               </button>
               <span
-                className={`text-sm font-medium transition-colors ${billingCycle === "yearly" ? "text-white" : "text-gray-500"}`}
+                className={`text-sm font-medium transition-colors ${billingCycle === "quarterly" ? "text-white" : "text-gray-500"}`}
               >
-                {language === "cs" ? "Ročně" : "Yearly"}{" "}
-                <span className="text-green-400 text-xs ml-1 font-bold">(-20%)</span>
+                {language === "cs" ? "Na 3 měsíce" : "Every 3 months"}{" "}
+                <span className="text-green-400 text-xs ml-1 font-bold">(-15%)</span>
               </span>
             </div>
 
@@ -1823,12 +1834,19 @@ export default function AccountPage() {
                   <CardDescription className="text-gray-300">
                     {language === "cs" ? "Odemkněte Live Režim a všechny funkce" : "Unlock Live Mode and all features"}
                   </CardDescription>
-                  <div className="mt-6 flex items-baseline">
+                  <div className="mt-6 flex items-baseline flex-wrap gap-x-2">
                     <span className="text-5xl font-extrabold text-white">
-                      1149 Kč
+                      {billingCycle === "quarterly" ? "2930 Kč" : "1149 Kč"}
                     </span>
-                    <span className="text-gray-400 ml-2 text-lg">/{language === "cs" ? "měsíc" : "month"}</span>
+                    <span className="text-gray-400 text-lg">
+                      /{billingCycle === "quarterly" ? (language === "cs" ? "3 měsíce" : "3 months") : language === "cs" ? "měsíc" : "month"}
+                    </span>
                   </div>
+                  {billingCycle === "quarterly" && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {language === "cs" ? "= 977 Kč/měsíc, o 15 % míň než měsíční plán" : "= 977 Kč/month, 15% less than the monthly plan"}
+                    </p>
+                  )}
                   <p className="text-sm text-purple-300 font-medium mt-2">
                     {/* Was "14denní zkušební verze zdarma, bez karty" - stale
                         from the old Stripe-trial model. Checkout now charges
@@ -1892,7 +1910,13 @@ export default function AccountPage() {
                         </>
                       ) : (
                         <>
-                          {language === "cs" ? "Upgradovat na Premium" : "Upgrade to Premium"}
+                          {billingCycle === "quarterly"
+                            ? language === "cs"
+                              ? "Upgradovat — 2930 Kč / 3 měsíce"
+                              : "Upgrade — 2930 Kč / 3 months"
+                            : language === "cs"
+                              ? "Upgradovat na Premium"
+                              : "Upgrade to Premium"}
                           <ArrowRight className="ml-2 h-5 w-5" />
                         </>
                       )}
