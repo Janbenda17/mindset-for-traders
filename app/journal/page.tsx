@@ -529,7 +529,7 @@ export default function JournalPage() {
   const showTrialCta = !(isPremium && !isTrialing)
   const trialCtaText = isTrialing
     ? `Vyzkoušej si ${txt.journalTitle.toLowerCase()} naplno na vlastních obchodech — zbývá ${trialDaysLeft} ${trialDaysLeft === 1 ? 'den' : trialDaysLeft <= 4 ? 'dny' : 'dní'} tvého free trialu.`
-    : 'Aktivuj 14denní Premium trial a vyzkoušej si AI analýzu a Discipline Matrix na vlastních datech.'
+    : 'Propoj brokera a získej 3 dny plného přístupu zdarma, bez karty — vyzkoušej si AI analýzu a Discipline Matrix na vlastních datech.'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-16">
@@ -569,12 +569,18 @@ export default function JournalPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-white">{trialCtaText}</p>
-                <p className="text-xs text-slate-400 mt-0.5">Vyžaduje platební kartu. Kdykoli zrušitelné.</p>
+                {/* Was unconditionally "Vyžaduje platební kartu" pointing at
+                    /upgrade even for users who'd never connected a broker -
+                    the real no-card app trial lives at /account/integrations,
+                    not behind a card-required checkout. */}
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {isTrialing ? 'Kdykoli zrušitelné.' : 'Bez karty. Trvá asi 2 minuty.'}
+                </p>
               </div>
             </div>
-            <Link href="/upgrade" className="flex-shrink-0">
+            <Link href={isTrialing ? '/upgrade' : '/account/integrations'} className="flex-shrink-0">
               <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap">
-                {isTrialing ? "Zobrazit Premium" : "Aktivovat trial"}
+                {isTrialing ? "Zobrazit Premium" : "Připojit brokera"}
               </Button>
             </Link>
           </div>
