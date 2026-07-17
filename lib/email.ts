@@ -101,20 +101,23 @@ function ctaButton(text: string, url: string): string {
 
 const UPGRADE_URL = "https://mindtrader.cz/upgrade"
 const ACCOUNT_URL = "https://mindtrader.cz/account"
+const INTEGRATIONS_URL = "https://mindtrader.cz/account/integrations"
 
 /**
- * Trial ending soon (fires from customer.subscription.trial_will_end,
- * which Stripe sends ~3 days before the trial converts or lapses).
+ * NOT CURRENTLY WIRED UP anywhere - kept for reference only, do not delete
+ * without reading this first.
  *
- * IMPORTANT: the checkout flow (app/api/subscription/create-checkout/route.ts)
- * requires a card up front and Stripe's default trial_settings are in
- * effect (no trial_settings.end_behavior override anywhere in this repo),
- * so when the trial ends Stripe automatically charges the card on file and
- * converts the subscription to active - there is NO automatic revert to
- * Free. The previous version of this email said the opposite ("nic ti
- * nebudeme účtovat"), which was false and could have caused disputed
- * charges. Cancelling only happens if the user explicitly cancels from
- * /account (cancelSubscription(), which sets cancel_at_period_end).
+ * Originally meant to fire from customer.subscription.trial_will_end.
+ * That event no longer applies to this app: checkout
+ * (app/api/subscription/create-checkout/route.ts) does not set
+ * trial_period_days anymore - "NO Stripe trial anymore" per that file's own
+ * comment. The free-trial phase today is the 3-day no-card trial that
+ * starts when a user connects a broker (app/account/integrations), not a
+ * Stripe-side trial, so Stripe will simply never send trial_will_end for
+ * these subscriptions. Wiring this to the webhook as-is would be dead code.
+ * If you want a "your 3-day broker trial is ending" email, that needs new
+ * infrastructure (a trial_started_at timestamp set on broker connect + a
+ * cron that checks it, similar to signup-funnel-emails), not this event.
  */
 export function trialEndingEmail(params: { daysLeft: number; displayName?: string }): { subject: string; html: string } {
   const name = params.displayName ? params.displayName : "ahoj"
@@ -174,23 +177,29 @@ export function paymentFailedEmail(params: { displayName?: string }): { subject:
  * not started the free trial (profiles.subscription_status is still the
  * default 'inactive', i.e. they never completed Stripe checkout).
  * Triggered by the daily cron at app/api/cron/signup-funnel-emails/route.ts.
+ *
+ * Points at broker connect (INTEGRATIONS_URL), not /upgrade - the free,
+ * no-card 3-day trial starts by connecting a broker
+ * (app/account/integrations). /upgrade is a straight paid checkout now
+ * (charged immediately, no Stripe trial), so it would be wrong to promise
+ * "free" there.
  */
 export function trialNotStartedEmail(params: { displayName?: string }): { subject: string; html: string } {
   const name = params.displayName ? params.displayName : "ahoj"
 
-  const subject = "Ještě sis nevyzkoušel/a MindTrader Premium naživo"
+  const subject = "Ještě sis nevyzkoušel/a MindTrader naživo"
 
   const html = emailShell(`
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">${name.charAt(0).toUpperCase() + name.slice(1)},</p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
-      všiml jsem si, že sis založil/a účet, ale zatím jsi nezačal/a 14denní zkušební verzi Premium. Zatím
-      vidíš jen Virtual Mode - náhled na ukázkových datech.
+      všiml jsem si, že sis založil/a účet, ale zatím sis nepřipojil/a svého brokera. Zatím vidíš jen
+      Virtual Mode - náhled na ukázkových datech.
     </p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 24px 0;">
-      S Premium získáš Live Mode s vlastními obchody, AI Report Builder a pokročilou analytiku a risk
-      kalkulačku - 14 dní zdarma, zrušit můžeš kdykoliv.
+      Připoj MT4/MT5 účet a získej <strong>3 dny zdarma bez karty</strong> - živé obchody, AI kouč a
+      pokročilou analytiku na tvých vlastních datech. Trvá to asi 2 minuty.
     </p>
-    <div style="margin:0 0 24px 0;">${ctaButton("Vyzkoušet Premium zdarma", UPGRADE_URL)}</div>
+    <div style="margin:0 0 24px 0;">${ctaButton("Připojit brokera zdarma", INTEGRATIONS_URL)}</div>
   `)
 
   return { subject, html }
@@ -198,25 +207,25 @@ export function trialNotStartedEmail(params: { displayName?: string }): { subjec
 
 /**
  * Signup funnel email #2 - reminder sent ~3 days after registration to
- * users who still have not started the free trial.
+ * users who still have not started the free trial. Same broker-connect
+ * framing as email #1, see comment above.
  */
 export function trialNotStartedReminderEmail(params: { displayName?: string }): { subject: string; html: string } {
   const name = params.displayName ? params.displayName : "ahoj"
 
-  const subject = "Poslední připomínka: 14 dní Premium zdarma na tebe čeká"
+  const subject = "Poslední připomínka: 3 dny zdarma na tebe čekají"
 
   const html = emailShell(`
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">${name.charAt(0).toUpperCase() + name.slice(1)},</p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
-      pár dní zpátky ses zaregistroval/a do MindTrader, ale ještě jsi nezačal/a zkušební verzi Premium.
-      Naposledy ti chci připomenout, co s ní získáš: Live Mode s vlastními obchody, sledování nálady a
-      disciplíny, AI Report Builder a risk kalkulačku.
+      pár dní zpátky ses zaregistroval/a do MindTrader, ale ještě sis nepřipojil/a brokera. Naposledy ti
+      chci připomenout, co tím získáš: Live Mode s vlastními obchody, sledování nálady a disciplíny, AI
+      Report Builder a risk kalkulačku.
     </p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 24px 0;">
-      14 dní zdarma, platební karta se strhne až po skončení zkušební doby a zrušit můžeš kdykoliv
-      v nastavení účtu.
+      <strong>3 dny zdarma, žádná karta potřeba.</strong> Připojení trvá asi 2 minuty.
     </p>
-    <div style="margin:0 0 24px 0;">${ctaButton("Vyzkoušet Premium zdarma", UPGRADE_URL)}</div>
+    <div style="margin:0 0 24px 0;">${ctaButton("Připojit brokera zdarma", INTEGRATIONS_URL)}</div>
   `)
 
   return { subject, html }
