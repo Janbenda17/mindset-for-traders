@@ -25,7 +25,7 @@ const isEn = language === "en"
 const txt = {
 cardTitle: isEn ? "Create your account" : "Vytvořit účet",
 cardDesc: isEn ? "Just email and password - takes 30 seconds" : "Jen email a heslo - zabere to 30 sekund",
-trialHook: isEn ? "Sign up, then activate a 14-day free Premium trial (card required)." : "Zaregistruj se a pak si aktivuj 14denní Premium trial (vyžaduje platební kartu).",
+trialHook: isEn ? "Sign up, connect your broker and unlock 3 days of full access — free, no card needed." : "Zaregistruj se, propoj brokera a odemkni 3 dny plného přístupu — zdarma, bez karty.",
 emailLabel: isEn ? "Email" : "Email",
 emailPlaceholder: isEn ? "your@email.com" : "vas@email.com",
 passwordLabel: isEn ? "Password" : "Heslo",
@@ -104,7 +104,12 @@ return (
 <CardDescription className="text-slate-400">{txt.cardDesc}</CardDescription>
 </CardHeader>
 <CardContent>
-{/* Trial growth hook — registering unlocks the 14-day free trial. */}
+{/* Trial growth hook — registering itself doesn't start anything; the
+    real 3-day no-card trial starts once the user connects a broker
+    (see app/account/integrations/actions.ts). This used to claim a
+    "14-day trial, card required" here, which stopped being true when
+    the trial model changed to the 3-day no-card app trial - fixed
+    2026-07-17 after finding the same stale claim in lib/email.ts. */}
 <div className="mb-5 rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-teal-500/5 p-3 flex items-center gap-3">
 <div className="p-1.5 rounded-lg bg-emerald-500/15 flex-shrink-0">
 <Gift className="w-4 h-4 text-emerald-300" />
