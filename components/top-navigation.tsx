@@ -95,6 +95,14 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
   const { logout, user: authUser } = useAuth()
   const isAuthenticated = !!authUser
 
+  // Hard Wall state: signed up, never connected a broker, never subscribed.
+  // These users have no data anywhere in the app, so the Products/Pricing/
+  // About nav (which all lead to pages ClientLayout will bounce them out of
+  // anyway) is hidden rather than shown and then immediately redirected
+  // away from - the profile menu (Profile/Settings/Subscription/Logout)
+  // stays available since /account is exempt from the wall.
+  const neverActivated = isAuthenticated && !isPremium && !isTrialing && !hasTrialEnded && !hasSubscribed
+
   // Populated straight from the already-resolved AuthProvider session (no
   // network round trip), so the nav can render real content immediately
   // instead of blanking out. The richer fields below (avatar, level,
@@ -326,7 +334,11 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
             </Link>
           </div>
 
-          {/* Main Navigation */}
+          {/* Main Navigation - hidden entirely for never-activated users: every
+              item here points at an app page ClientLayout's Hard Wall will
+              immediately bounce them out of, so showing it just teaches
+              people to expect a redirect. */}
+          {!neverActivated && (
           <div className="hidden md:flex items-center gap-6 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             {/* Products dropdown */}
             <div
@@ -409,6 +421,7 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               </Button>
             </Link>
           </div>
+          )}
 
           {/* Mobile Menu */}
           <div className="flex md:hidden items-center">
@@ -419,6 +432,10 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-64 bg-slate-900/95 backdrop-blur-md border-slate-700" align="end">
+                {/* Same Hard Wall reasoning as the desktop nav above - don't
+                    list app pages a never-activated user will just get
+                    redirected out of. */}
+                {!neverActivated && (
                 <div className="p-2">
                   <p className="text-xs text-gray-400 px-3 py-2 font-semibold">{isEn ? 'MAIN MENU' : 'HLAVNÍ MENU'}</p>
                   {mainNavigation.map((item) => {
@@ -451,7 +468,10 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
                     )
                   })}
                 </div>
-              </DropdownMenuContent>
+                )}
+                {/* The mobile "Connect broker" CTA below (outside this
+                    dropdown) already covers the never-activated case, so no
+                    duplicate entry is needed here. */}
             </DropdownMenu>
           </div>
 
