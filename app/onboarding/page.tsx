@@ -176,17 +176,43 @@ export default function OnboardingPage() {
             transition={{ duration: 0.5 }}
             className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8"
           >
-            {/* Tour-first banner — the registration-complete hook. Fires the
-                moment the quiz result renders, i.e. right after signup.
-                Sends the user straight to /daily-tracker, which already
-                renders with realistic sample data by default (Virtual Mode,
-                see contexts/live-mode-context.tsx + lib/virtual-data-generator.ts)
+            {/* Unlocked-trial hook — the very first thing they see when the
+                quiz result renders. Frames broker connect as a reward they
+                just earned for finishing the quiz (gamified "you unlocked X"
+                framing), not a demand. Links straight to broker connect. */}
+            <Link
+              href="/account/integrations"
+              onClick={() => {
+                try {
+                  if (typeof window !== 'undefined' && (window as any).clarity) {
+                    ;(window as any).clarity('event', 'onboarding_unlock_banner_cta')
+                  }
+                } catch {}
+              }}
+              className="rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/15 to-orange-500/5 p-4 mb-4 flex items-start gap-3 hover:border-amber-500/50 transition-colors"
+            >
+              <div className="p-2 rounded-lg bg-amber-500/20 flex-shrink-0">
+                <Gift className="w-4 h-4 text-amber-300" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">
+                  {isEn ? "You've unlocked a 3-day free trial →" : 'Právě jsi odemkl/a 3denní free trial →'}
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {isEn
+                    ? 'Connect your broker and try the software on your own trades — free, no card needed.'
+                    : 'Napoj brokera a vyzkoušej si software na vlastních datech — zdarma, bez karty.'}
+                </p>
+              </div>
+            </Link>
+
+            {/* Tour-first banner — a softer fallback right below the unlock
+                hook, for anyone not ready to connect a broker yet. Sends the
+                user to /daily-tracker, which already renders with realistic
+                sample data by default (Virtual Mode, see
+                contexts/live-mode-context.tsx + lib/virtual-data-generator.ts)
                 and sets the ProductTour force-show flag so the 4-slide guided
-                walkthrough (components/product-tour.tsx) plays immediately.
-                Broker connect — the real activation moment that starts the
-                3-day no-card trial — is offered below as the upgrade path
-                AFTER they've seen what the app actually looks like, instead
-                of gating everything behind it right after signup. */}
+                walkthrough (components/product-tour.tsx) plays immediately. */}
             <Link
               href="/daily-tracker"
               onClick={() => {
