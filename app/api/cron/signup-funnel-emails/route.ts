@@ -7,10 +7,13 @@ import { sendEmail, trialNotStartedEmail, trialNotStartedReminderEmail } from "@
  * Vercel Cron Job - runs once a day (see vercel.json). Vercel's Hobby plan
  * rejects any cron schedule that would fire more than once per day.
  *
- * Sends two onboarding emails to users who registered but never started
- * the 14-day free trial (profiles.subscription_status stays the default
- * 'inactive' until Stripe checkout completes - see
- * scripts/001_create_users_and_profiles.sql):
+ * Sends two onboarding emails to users who registered but never completed
+ * Stripe checkout (profiles.subscription_status stays the default
+ * 'inactive' until then - see scripts/001_create_users_and_profiles.sql).
+ * Both emails point at connecting a broker for the free, no-card 3-day
+ * trial (app/account/integrations), not at /upgrade directly - see the
+ * comments on trialNotStartedEmail/trialNotStartedReminderEmail in
+ * lib/email.ts for why:
  *   - email 1, ~24h after signup
  *   - email 2 (reminder), ~3 days after signup
  *
