@@ -203,6 +203,46 @@ export function trialNotStartedEmail(params: { displayName?: string }): { subjec
 }
 
 /**
+ * Win-back - 30% off the first month, code WINBACK30 (Stripe coupon
+ * wC02EZEQ, created directly in the Stripe Dashboard: Percentage off, 30%,
+ * duration "Once" so it only discounts the first invoice after redemption).
+ * Sent by the daily cron at app/api/cron/winback-emails/route.ts to users
+ * who've been inactive for 7+ days - never connected a broker, their 3-day
+ * app trial expired without converting, or they subscribed once and later
+ * canceled. At most once per user (profiles.winback_email_sent_at,
+ * scripts/108_add_winback_email_tracking.sql).
+ *
+ * Checkout already has allow_promotion_codes: true (see
+ * /api/subscription/create-checkout), so WINBACK30 works at checkout with
+ * no code changes there - this template just needs to tell the user the
+ * code exists and where to enter it.
+ */
+export function winBackEmail(params: { displayName?: string }): { subject: string; html: string } {
+  const name = params.displayName ? params.displayName : "ahoj"
+
+  const subject = "30 % sleva na návrat do MindTrader"
+
+  const html = emailShell(`
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">${name.charAt(0).toUpperCase() + name.slice(1)},</p>
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
+      všiml jsem si, že jsi u MindTrader nějakou dobu neaktivní/a. Chci ti dát důvod to zkusit znovu -
+      připravil jsem pro tebe <strong>30% slevu na první měsíc Premium</strong>.
+    </p>
+    <div style="margin:0 0 20px 0;padding:16px;background:#0f1115;border:1px dashed #eab308;border-radius:10px;text-align:center;">
+      <p style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 6px 0;">Slevový kód</p>
+      <p style="color:#facc15;font-size:22px;font-weight:800;letter-spacing:0.05em;margin:0;">WINBACK30</p>
+    </div>
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 24px 0;">
+      Zadej kód při platbě na stránce Premium - živé obchody, AI kouč a pokročilá analytika na tvých
+      vlastních datech, o 30 % levněji za první měsíc.
+    </p>
+    <div style="margin:0 0 24px 0;">${ctaButton("Aktivovat s 30% slevou", UPGRADE_URL)}</div>
+  `)
+
+  return { subject, html }
+}
+
+/**
  * Signup funnel email #2 - reminder sent ~3 days after registration to
  * users who still have not started the free trial. Same broker-connect
  * framing as email #1, see comment above.
