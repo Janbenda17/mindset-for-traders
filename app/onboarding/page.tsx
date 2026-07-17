@@ -86,13 +86,25 @@ export default function OnboardingPage() {
       </div>
 
       <div className="relative w-full max-w-lg">
+        {/* In-flow, not absolutely positioned above the card - the old
+            `absolute -top-10` placement could land underneath ClientLayout's
+            fixed top nav (z-50) on shorter/mobile viewports, where the card
+            renders closer to the top of the screen. That made the button
+            invisible and unclickable (a dead click) instead of just
+            unclickable-looking - Clarity recordings flagged repeated dead
+            clicks on this page, and this negative-offset absolute button was
+            the only element positioned in a way that could actually overlap
+            the fixed nav. Keeping it in normal flow guarantees it always
+            renders below the pt-24 spacer ClientLayout reserves for the nav. */}
         {!profile && (
-          <button
-            onClick={skip}
-            className="absolute -top-10 right-0 text-xs text-slate-500 hover:text-slate-300 transition-colors font-mono uppercase tracking-wide"
-          >
-            {isEn ? 'Skip' : 'Přeskočit'}
-          </button>
+          <div className="flex justify-end mb-2">
+            <button
+              onClick={skip}
+              className="text-xs text-slate-500 hover:text-slate-300 transition-colors font-mono uppercase tracking-wide"
+            >
+              {isEn ? 'Skip' : 'Přeskočit'}
+            </button>
+          </div>
         )}
 
         <div className="text-center mb-8">
@@ -306,8 +318,8 @@ export default function OnboardingPage() {
               </p>
               <p className="text-sm text-slate-400 mb-4 leading-relaxed">
                 {isEn
-                  ? 'The dashboard above runs on sample data. Connect your MT4/MT5 account and get the same thing with your real trades for 3 days, free — no card. The AI coach and live analysis switch on the moment you connect.'
-                  : 'Appka nahoře běží na ukázkových datech. Připoj svůj MT4/MT5 účet a dostaneš to samé se svými reálnými obchody na 3 dny zdarma — bez karty. AI kouč a živá analýza se zapnou hned po připojení.'}
+                  ? 'This result is based on your quiz answers. Connect your MT4/MT5 account and get the same kind of analysis on your real trades for 3 days, free — no card. The AI coach and live analysis switch on the moment you connect.'
+                  : 'Tenhle výsledek vychází z tvých odpovědí v kvízu. Připoj svůj MT4/MT5 účet a dostaneš stejnou analýzu na svých reálných obchodech na 3 dny zdarma — bez karty. AI kouč a živá analýza se zapnou hned po připojení.'}
               </p>
               <Link
                 href="/account/integrations"
