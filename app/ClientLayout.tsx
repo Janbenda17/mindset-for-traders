@@ -32,11 +32,34 @@ const PAYWALL_EXEMPT_PREFIXES = [
   "/system-status",
 ]
 
+// Pages a user who has NEVER activated (never connected a broker, never
+// subscribed) may still visit before the Hard Wall sends them to
+// /account/integrations. Kept deliberately small - the whole point of the
+// wall is that nothing else in the app is reachable until they connect.
+const ACTIVATION_EXEMPT_PREFIXES = [
+  "/account",
+  "/upgrade",
+  "/pricing",
+  "/checkout-success",
+  "/subscription",
+  "/auth",
+  "/login",
+  "/signup",
+  "/sign-up",
+  "/intro",
+  "/contact",
+  "/terms",
+  "/privacy",
+  "/disclaimer",
+  "/system-status",
+  "/onboarding",
+]
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, authReady } = useAuth()
-  const { isPremium, hasTrialEnded, statusConfirmed } = useSubscription()
+  const { isPremium, isTrialing, hasTrialEnded, hasSubscribed, statusConfirmed } = useSubscription()
 
   // Initialize global translation
   useGlobalTranslation()
@@ -58,6 +81,23 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     console.log("[v0] [Paywall] Free access ended - redirecting to /upgrade from", path)
     router.replace("/upgrade")
   }, [authReady, user, statusConfirmed, isPremium, hasTrialEnded, pathname, router])
+
+  // HARD WALL: a user who signed up but has never connected a broker and
+  // never subscribed has no data for the app to show - every page redirects
+  // to /account/integrations until they connect. This only fires for the
+  // "never activated" state (isTrialing/hasTrialEnded/hasSubscribed all
+  // false) - it never touches someone mid-trial or already paying, and it
+  // never fabricates a deadline: the trial itself still only starts once
+  // they connect (per product decision - trial start stays tied to broker
+  // connect, not signup).
+  useEffect(() => {
+    if (!authReady || !user || !statusConfirmed) return
+    if (isPremium || isTrialing || hasTrialEnded || hasSubscribed) return
+    const path = pathname || "/"
+    if (path === "/" || ACTIVATION_EXEMPT_PREFIXES.some((p) => path === p || path.startsWith(p + "/"))) return
+    console.log("[v0] [HardWall] Never activated - redirecting to /account/integrations from", path)
+    router.replace("/account/integrations")
+  }, [authReady, user, statusConfirmed, isPremium, isTrialing, hasTrialEnded, hasSubscribed, pathname, router])
 
   const hideNavigation =
     pathname?.startsWith("/auth/") ||
