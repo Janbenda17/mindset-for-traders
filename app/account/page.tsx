@@ -1825,7 +1825,7 @@ export default function AccountPage() {
                   </CardDescription>
                   <div className="mt-6 flex items-baseline">
                     <span className="text-5xl font-extrabold text-white">
-                      749 Kč
+                      1149 Kč
                     </span>
                     <span className="text-gray-400 ml-2 text-lg">/{language === "cs" ? "měsíc" : "month"}</span>
                   </div>
