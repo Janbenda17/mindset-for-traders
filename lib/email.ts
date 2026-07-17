@@ -104,20 +104,21 @@ const ACCOUNT_URL = "https://mindtrader.cz/account"
 const INTEGRATIONS_URL = "https://mindtrader.cz/account/integrations"
 
 /**
- * NOT CURRENTLY WIRED UP anywhere - kept for reference only, do not delete
- * without reading this first.
+ * App trial ending soon - the free, no-card 3-day trial that starts when a
+ * user connects a broker (app/account/integrations/actions.ts), stored in
+ * profiles.trial_ends_at. Sent by the daily cron at
+ * app/api/cron/trial-ending-emails/route.ts, at most once per user
+ * (profiles.trial_ending_soon_email_sent_at,
+ * scripts/107_add_trial_ending_email_tracking.sql), for anyone whose trial
+ * ends within the next 24h.
  *
- * Originally meant to fire from customer.subscription.trial_will_end.
- * That event no longer applies to this app: checkout
- * (app/api/subscription/create-checkout/route.ts) does not set
- * trial_period_days anymore - "NO Stripe trial anymore" per that file's own
- * comment. The free-trial phase today is the 3-day no-card trial that
- * starts when a user connects a broker (app/account/integrations), not a
- * Stripe-side trial, so Stripe will simply never send trial_will_end for
- * these subscriptions. Wiring this to the webhook as-is would be dead code.
- * If you want a "your 3-day broker trial is ending" email, that needs new
- * infrastructure (a trial_started_at timestamp set on broker connect + a
- * cron that checks it, similar to signup-funnel-emails), not this event.
+ * IMPORTANT: unlike the old Stripe trial this replaced, there is NO card on
+ * file and NOTHING gets charged automatically when this trial ends - the
+ * user just loses Live Mode / AI coach access and drops back to Virtual
+ * Mode (sample data), with a hard paywall redirect to /upgrade (see
+ * app/ClientLayout.tsx and hasTrialEnded in
+ * app/api/subscription/status/route.ts). This copy must not imply an
+ * automatic charge - that was the bug in the previous version of this file.
  */
 export function trialEndingEmail(params: { daysLeft: number; displayName?: string }): { subject: string; html: string } {
   const name = params.displayName ? params.displayName : "ahoj"
@@ -125,25 +126,21 @@ export function trialEndingEmail(params: { daysLeft: number; displayName?: strin
 
   const subject =
     params.daysLeft <= 1
-      ? "Tvoje zkušební verze MindTrader končí zítra"
-      : `Tvoje zkušební verze MindTrader končí za ${params.daysLeft} ${dayWord}`
+      ? "Tvůj bezplatný trial MindTrader končí zítra"
+      : `Tvůj bezplatný trial MindTrader končí za ${params.daysLeft} ${dayWord}`
 
   const html = emailShell(`
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">${name.charAt(0).toUpperCase() + name.slice(1)},</p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
-      za <strong>${params.daysLeft} ${dayWord}</strong> ti končí zkušební verze Premium. Pokud nic neuděláš,
-      <strong>automaticky se strhne platba</strong> z karty, kterou jsi zadal/a při registraci, a předplatné
-      pokračuje na placené verzi Premium.
+      za <strong>${params.daysLeft} ${dayWord}</strong> ti končí bezplatný trial s tvými reálnými obchody a AI
+      koučem. Žádnou kartu jsme si neuložili, takže se ti nic samo nestrhne - ale appka se ti bez upgradu
+      přepne zpátky do Virtual Mode (ukázková data) a přijdeš o živou analytiku.
     </p>
     <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 24px 0;">
-      Chceš pokračovat v reálném obchodování bez přerušení? Nemusíš dělat nic. Pokud pokračovat nechceš,
-      zruš předplatné ve svém účtu ještě před koncem zkušební doby.
+      Chceš pokračovat bez přerušení na vlastních datech? Aktivuj Premium za 1149 Kč/měsíc - kdykoliv
+      zrušitelné.
     </p>
-    <div style="margin:0 0 24px 0;">${ctaButton("Spravovat předplatné", ACCOUNT_URL)}</div>
-    <p style="color:#6b7280;font-size:13px;line-height:1.5;margin:0;">
-      Předplatné můžeš kdykoliv zrušit v nastavení účtu - stačí to udělat před koncem zkušební doby, aby ti
-      nebyla naúčtovaná žádná platba.
-    </p>
+    <div style="margin:0 0 24px 0;">${ctaButton("Aktivovat Premium", UPGRADE_URL)}</div>
   `)
 
   return { subject, html }
