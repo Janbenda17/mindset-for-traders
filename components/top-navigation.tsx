@@ -259,8 +259,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               <Clock className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">
                 {isEn
-                  ? `Full access active — ${trialCountdown} left. Then 749 Kč/month.`
-                  : `Plný přístup aktivní — zbývá ${trialCountdown}. Poté 749 Kč/měsíc.`}
+                  ? `Full access active — ${trialCountdown} left. Then 1149 Kč/month.`
+                  : `Plný přístup aktivní — zbývá ${trialCountdown}. Poté 1149 Kč/měsíc.`}
               </span>
               <span className="hidden sm:inline underline decoration-white/50">
                 {isEn ? "Keep Premium" : "Zachovat Premium"}
@@ -290,8 +290,8 @@ export const TopNavigation = ({ initialTheme = "dark" }: TopNavigationProps) => 
               <Clock className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate">
                 {isEn
-                  ? "Your free access has ended. Continue for 749 Kč/month."
-                  : "Tvůj přístup zdarma skončil. Pokračuj za 749 Kč/měsíc."}
+                  ? "Your free access has ended. Continue for 1149 Kč/month."
+                  : "Tvůj přístup zdarma skončil. Pokračuj za 1149 Kč/měsíc."}
               </span>
               <span className="hidden sm:inline underline decoration-white/50">
                 {isEn ? "Renew Premium" : "Obnovit Premium"}
