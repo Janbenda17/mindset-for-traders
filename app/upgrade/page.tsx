@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { useSubscription } from "@/contexts/subscription-context"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
-import { Crown, Check, Zap, BarChart3, Brain, FileText, Headphones, ArrowLeft, Gift, RefreshCw, CreditCard } from "lucide-react"
+import { Crown, Check, Zap, BarChart3, Brain, FileText, Headphones, ArrowLeft, Gift, RefreshCw, CreditCard, Flame } from "lucide-react"
 import Link from "next/link"
 
 export default function UpgradePage() {
@@ -244,6 +244,65 @@ export default function UpgradePage() {
             <RefreshCw className={`h-4 w-4 ${isChecking ? "animate-spin" : ""}`} />
             {isChecking ? (language === 'en' ? "Checking..." : "Kontroluji...") : (language === 'en' ? "Check subscription" : "Zkontrolovat předplatné")}
           </Button>
+        </div>
+
+        {/* Loss-aversion math block - the core "1149 Kč isn't expensive" argument.
+            The $3,428 figure is a commonly cited industry number for average
+            retail trading losses tied to discipline errors/overtrading - it's
+            presented as an external market benchmark (marked with * and
+            explained in the footnote), not an internal MindTrader statistic
+            or a promise about any individual user's results. Kept consistent
+            with the disclaimer already required across the app: this is a
+            statistical overview tool, not financial advice or a profit/loss
+            guarantee. */}
+        <div className="mb-12 rounded-2xl bg-gradient-to-br from-gray-900 via-gray-900 to-red-950 border border-red-900/40 p-8 sm:p-10 shadow-2xl">
+          <div className="flex items-center gap-3 mb-4">
+            <Flame className="h-7 w-7 text-orange-500 flex-shrink-0" />
+            <h2 className="text-2xl sm:text-3xl font-bold text-white">
+              {language === 'en' ? 'The math traders face every day' : 'Matematika, kterou vidíš na trhu každý den'}
+            </h2>
+          </div>
+          <p className="text-gray-300 leading-relaxed mb-4">
+            {language === 'en'
+              ? 'Industry data puts average retail trader losses from discipline errors and overtrading at up to $3,428. One emotional minute is all it takes to put your whole account in the red.'
+              : 'Podle globálních statistik spálí průměrný retailový trader kvůli chybám v disciplíně a overtradingu až 3 428 $. Stačí jedna emoční minuta a celý tvůj účet je v červených číslech.'}
+          </p>
+          <p className="text-gray-300 leading-relaxed mb-4">
+            {language === 'en'
+              ? "MindTrader Premium gives you an instant AI audit of your mistakes and shows you exactly where you're burning money. The one trade you handle with a cool head because of it can pay for this subscription a year in advance."
+              : 'MindTrader Premium ti dává okamžitý AI audit tvých chyb a přesně ti ukáže, kde pálíš prachy. Jeden jediný trade, který díky tomu zvládneš s chladnou hlavou, ti zaplatí tohle předplatné na celý rok dopředu.'}
+          </p>
+          <p className="text-white font-semibold leading-relaxed mb-6">
+            {language === 'en'
+              ? 'Do you invest $49 to expose your biggest trading mistakes — or bet your account that you’ll handle your emotions on your own this time?'
+              : 'Investuješ 1 149 Kč do odhalení svých největších tradingových failů, nebo radši vsadíš svůj účet na to, že tvé emoce tentokrát zvládneš sám?'}
+          </p>
+
+          <div className="grid grid-cols-3 items-center gap-3 sm:gap-4 rounded-xl bg-black/30 border border-white/10 p-4 sm:p-5">
+            <div className="text-center">
+              <div className="text-2xl sm:text-3xl font-extrabold text-red-400">
+                {language === 'en' ? '$3,428' : '3 428 $'}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">
+                {language === 'en' ? 'avg. loss to trading mistakes*' : 'průměrná ztráta na chybách*'}
+              </div>
+            </div>
+            <div className="text-center text-gray-500 text-xl font-medium">vs</div>
+            <div className="text-center">
+              <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400">
+                {language === 'en' ? '$49' : '1 149 Kč'}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">
+                {language === 'en' ? 'Premium, per month' : 'Premium, měsíčně'}
+              </div>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-gray-500 mt-4 leading-relaxed">
+            {language === 'en'
+              ? '* Industry figure on retail trading losses, not a MindTrader statistic or a guarantee for any individual account. The app provides a statistical overview of your historical trades and is not financial advice or a guarantee of profit or loss prevention.'
+              : '* Obecně uváděné číslo o ztrátách retailových traderů, nejde o interní statistiku MindTraderu ani záruku pro konkrétní účet. Aplikace poskytuje statistický přehled tvých historických obchodů a neslouží jako finanční poradenství ani garance zisku či zamezení ztrát.'}
+          </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 mb-12">
