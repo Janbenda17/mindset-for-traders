@@ -94,7 +94,7 @@ export default function WelcomePage() {
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
                 <CheckCircle className="w-6 h-6 text-white mx-auto mb-2" />
-                <p className="text-white font-semibold text-sm">749 Kč/měsíc</p>
+                <p className="text-white font-semibold text-sm">1149 Kč/měsíc</p>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
