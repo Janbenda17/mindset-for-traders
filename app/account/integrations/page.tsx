@@ -6,11 +6,30 @@ import { createClient } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowRight, Check, AlertCircle, Loader, X, Plug, Lock, Hash, Server, Zap, Sparkles, Upload, FileText } from 'lucide-react'
+import { ArrowRight, Check, AlertCircle, Loader, X, Plug, Lock, Hash, Server, Zap, Sparkles, Upload, FileText, Mail } from 'lucide-react'
 import Link from 'next/link'
-import { connectMetaApi, disconnectMetaApi, confirmBrokerConnection, uploadTradeHistoryCsv } from './actions'
+import { connectMetaApi, disconnectMetaApi, confirmBrokerConnection, uploadTradeHistoryCsv, sendFinishSetupEmail } from './actions'
+
+// Best-guess default MT4/5 live-server names for the brokers most commonly
+// used by CZ/SK retail traders. Picking one just pre-fills the "Broker
+// server" field with a reasonable starting point instead of a blank box -
+// the field stays editable, since brokers often run several numbered
+// servers (Live01, Live02, ...) and the exact one depends on which account
+// the trader was assigned. This is a starting guess, not a promise of an
+// exact match.
+const COMMON_BROKERS: { label: string; server: string }[] = [
+  { label: 'XTB', server: 'XTB-Real' },
+  { label: 'Purple Trading', server: 'PurpleTradingSC-Live' },
+  { label: 'IC Markets', server: 'ICMarketsSC-Live01' },
+  { label: 'Pepperstone', server: 'Pepperstone-Live01' },
+  { label: 'Admirals (Admiral Markets)', server: 'AdmiralsGroup-Live' },
+  { label: 'RoboForex', server: 'RoboForex-ECN' },
+  { label: 'FTMO', server: 'FTMO-Server' },
+  { label: 'FXTM', server: 'FXTM-Live' },
+]
 
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 
@@ -90,6 +109,15 @@ export default function IntegrationsPage() {
   const [showCsvUpload, setShowCsvUpload] = useState(false)
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [csvUploading, setCsvUploading] = useState(false)
+
+  // "Email me a link to finish later" - for anyone who lands here without
+  // their MT4/5 investor password or broker server name handy right now
+  // (very common on mobile, away from the desktop terminal where that info
+  // actually lives). Fires immediately on click, separate from the
+  // automatic 24h/72h signup-funnel reminder emails.
+  const [selectedBrokerLabel, setSelectedBrokerLabel] = useState('')
+  const [sendingFinishEmail, setSendingFinishEmail] = useState(false)
+  const [finishEmailSent, setFinishEmailSent] = useState(false)
 
   // Handle OAuth callback messages
   useEffect(() => {
@@ -360,6 +388,31 @@ export default function IntegrationsPage() {
     }
   }
 
+  const handleSendFinishEmail = async () => {
+    if (!user.email) return
+    setSendingFinishEmail(true)
+    setError('')
+    try {
+      const result = await sendFinishSetupEmail(user.id, user.email, user.name)
+      if (!result?.success) {
+        setError(result?.error || 'Nepodařilo se odeslat email')
+        setTimeout(() => setError(''), 6000)
+        return
+      }
+      setFinishEmailSent(true)
+      try {
+        if (typeof window !== 'undefined' && (window as any).clarity) {
+          ;(window as any).clarity('event', 'finish_setup_email_sent')
+        }
+      } catch {}
+    } catch (err) {
+      setError('Nepodařilo se odeslat email')
+      console.error('[v0] Send finish-setup email error:', err)
+    } finally {
+      setSendingFinishEmail(false)
+    }
+  }
+
   if (checking) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -546,6 +599,32 @@ export default function IntegrationsPage() {
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                     Broker server
                   </label>
+
+                  {/* Nevíš přesný název serveru? Vyber svého brokera a
+                      předvyplníme nejběžnější variantu - pole zůstává
+                      editovatelné, protože brokeři mívají víc očíslovaných
+                      serverů (Live01, Live02...) a přesný název záleží na
+                      tvém konkrétním účtu. */}
+                  <Select
+                    value={selectedBrokerLabel}
+                    onValueChange={(label) => {
+                      setSelectedBrokerLabel(label)
+                      const broker = COMMON_BROKERS.find((b) => b.label === label)
+                      if (broker) setMetaApiBroker(broker.server)
+                    }}
+                  >
+                    <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-300 h-10 mb-2 text-sm">
+                      <SelectValue placeholder="Nevíš přesný server? Vyber svého brokera" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700 text-slate-200">
+                      {COMMON_BROKERS.map((b) => (
+                        <SelectItem key={b.label} value={b.label}>
+                          {b.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
                   <div className="relative">
                     <Server className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <Input
@@ -556,6 +635,9 @@ export default function IntegrationsPage() {
                       className="bg-slate-800 border-slate-700 text-white pl-10 h-11 focus-visible:ring-blue-500/40 focus-visible:border-blue-500/50"
                     />
                   </div>
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    Přesný název najdeš v MT4/5 terminálu na přihlašovací obrazovce - klidně uprav, pokud se liší.
+                  </p>
                 </div>
 
                 <div className="pt-2">
@@ -580,6 +662,32 @@ export default function IntegrationsPage() {
                     <Lock className="w-3 h-3" />
                     Pouze pro čtení · Zabezpečené přes MetaApi
                   </p>
+
+                  {/* For anyone who lands here without their investor
+                      password / broker server name at hand right now -
+                      common on mobile, away from the desktop terminal.
+                      Sends an immediate reminder link instead of losing
+                      them outright. */}
+                  <div className="mt-3 text-center">
+                    {finishEmailSent ? (
+                      <p className="text-xs text-emerald-400 flex items-center justify-center gap-1.5">
+                        <Check className="w-3.5 h-3.5" />
+                        Odkaz odeslán na tvůj email
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSendFinishEmail}
+                        disabled={sendingFinishEmail}
+                        className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        <Mail className="w-3 h-3" />
+                        {sendingFinishEmail
+                          ? 'Odesílám...'
+                          : 'Nemáš teď údaje po ruce? Pošli si odkaz emailem'}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* CSV escape hatch - for the most trust-averse visitors.

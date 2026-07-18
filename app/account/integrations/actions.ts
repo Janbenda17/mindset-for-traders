@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { metaApiClient } from '@/lib/integrations/metaapi'
+import { sendEmail, finishSetupLinkEmail } from '@/lib/email'
 
 let supabaseInstance: ReturnType<typeof createClient> | null = null
 
@@ -468,5 +469,40 @@ export async function uploadTradeHistoryCsv(userId: string, csvText: string) {
   } catch (err) {
     console.error('[v0] Error in uploadTradeHistoryCsv:', err)
     return { success: false, error: err instanceof Error ? err.message : 'Failed to process your file.' }
+  }
+}
+
+/**
+ * On-demand "email me a link to finish this later" - called from the
+ * "Pošli mi odkaz emailem" button on the broker-connect step. Separate from
+ * the automatic signup-funnel cron reminders (which fire on a delay,
+ * 24h/72h after registration); this one fires immediately at the user's
+ * own request, for the common case of landing on this page without the
+ * MT4/5 investor password or broker server name at hand (e.g. on mobile,
+ * away from the desktop terminal).
+ */
+export async function sendFinishSetupEmail(
+  userId: string,
+  email: string,
+  displayName?: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!email) {
+      return { success: false, error: 'Missing email address' }
+    }
+
+    const { subject, html } = finishSetupLinkEmail({ displayName })
+    const result = await sendEmail({ to: email, subject, html })
+
+    if (!result.success) {
+      console.error('[v0] Failed to send finish-setup email for user:', userId, result.error)
+      return { success: false, error: result.error || 'Failed to send email' }
+    }
+
+    console.log('[v0] Finish-setup link emailed to user:', userId)
+    return { success: true }
+  } catch (err) {
+    console.error('[v0] Error in sendFinishSetupEmail:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to send email' }
   }
 }
