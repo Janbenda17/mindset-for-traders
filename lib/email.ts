@@ -318,3 +318,35 @@ export function trialNotStartedReminderEmail(params: { displayName?: string }): 
 
   return { subject, html }
 }
+
+/**
+ * On-demand "finish this later" link - sent immediately when a user clicks
+ * "Send me a link" on the broker-connect step (app/account/integrations),
+ * not on a delay like the cron reminders above. For the common case of
+ * someone landing on that page without their MT4/5 login handy (e.g. on
+ * their phone, away from the desktop terminal where the investor password
+ * and broker server name actually live) - instead of losing them
+ * completely, they get a direct link back to pick up exactly where they
+ * left off once they do have that info in front of them.
+ */
+export function finishSetupLinkEmail(params: { displayName?: string }): { subject: string; html: string } {
+  const name = params.displayName ? params.displayName : "ahoj"
+
+  const subject = "Tvůj odkaz na dokončení připojení brokera"
+
+  const html = emailShell(`
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">${name.charAt(0).toUpperCase() + name.slice(1)},</p>
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 16px 0;">
+      tady je odkaz zpátky na připojení brokera, až budeš mít po ruce přihlašovací údaje z MT4/MT5 (investorské
+      read-only heslo a název broker serveru - obojí najdeš ve svém terminálu pod Nástroje &rarr; Možnosti &rarr;
+      Server, nebo přímo na přihlašovací obrazovce terminálu).
+    </p>
+    <p style="color:#e5e7eb;font-size:16px;line-height:1.5;margin:0 0 24px 0;">
+      Trvá to asi 2 minuty. Žádná karta, appka nemůže s penězi nic dělat (jen čtení) a jakmile se broker
+      připojí, spustí se tvé <strong>3 dny plného přístupu zdarma</strong>.
+    </p>
+    <div style="margin:0 0 24px 0;">${ctaButton("Dokončit připojení brokera", INTEGRATIONS_URL)}</div>
+  `)
+
+  return { subject, html }
+}
