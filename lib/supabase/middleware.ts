@@ -118,7 +118,7 @@ export async function updateSession(request: NextRequest) {
   // Get user - this refreshes the session if needed
   let user = null
   try {
-    const { data, error } = await supabase.auth.getUser()
+    let { data, error } = await supabase.auth.getUser(); if (error?.code === "refresh_token_already_used") { await new Promise((resolve) => setTimeout(resolve, 250)); ({ data, error } = await supabase.auth.getUser()) }
     if (!error) {
       user = data.user
     }
