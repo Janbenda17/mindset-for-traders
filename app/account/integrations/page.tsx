@@ -229,8 +229,7 @@ export default function IntegrationsPage() {
       }
 
       const accountId = (result as any).accountId as string
-      setMetaApiConnected(true)
-      setConnectedBroker(metaApiBroker)
+      const connectingBroker = metaApiBroker
       setMetaApiLogin('')
       setMetaApiPassword('')
       setMetaApiBroker('')
@@ -274,6 +273,8 @@ export default function IntegrationsPage() {
         if (confirmResult.connected) {
           settled = true
           setVerifying(false)
+          setMetaApiConnected(true)
+          setConnectedBroker(connectingBroker)
 
           try {
             if (confirmResult.trialStarted && typeof window !== 'undefined' && (window as any).clarity) {
