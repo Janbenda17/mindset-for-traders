@@ -211,6 +211,19 @@ export default function IntegrationsPage() {
       return
     }
 
+    // MetaApi requires the numeric MT4/MT5 account login (not an email) - it
+    // rejects anything else with "Login should consists of digits only".
+    // Users very commonly type their MindTrader email here out of habit
+    // (this is the single most common real-world broker-connect failure in
+    // production logs), so catch it client-side with an immediate, specific
+    // message instead of letting it round-trip to MetaApi and come back as a
+    // confusing generic connection error.
+    if (!/^\d+$/.test(metaApiLogin.trim())) {
+      setError('Číslo účtu smí obsahovat pouze číslice (najdeš ho ve svém MT4/MT5 terminálu) - ne svůj email.')
+      setTimeout(() => setError(''), 6000)
+      return
+    }
+
     setLoading(true)
     setError('')
     try {
