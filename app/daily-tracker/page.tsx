@@ -321,7 +321,18 @@ export default function DailyTrackerPage() {
           )}
         </motion.div>
 
-        {allTrades.length === 0 && (
+        {/* Empty-state welcome card. Its own copy promises to go away
+            "as soon as you log a trade OR connect MetaTrader" - but it used
+            to only ever check allTrades.length, so a freshly-connected
+            account (trades sync once a day, so allTrades can stay empty for
+            up to 24h) kept seeing this card telling them to do the thing
+            they just did. isLiveMode flips true the moment a broker
+            connects (see grantAppTrialIfEligible in
+            app/account/integrations/actions.ts, which sets trading_mode:
+            'live' as soon as MetaApi confirms CONNECTED, well before any
+            trade has synced), so checking it here makes the card actually
+            match what it says. */}
+        {allTrades.length === 0 && !isLiveMode && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
