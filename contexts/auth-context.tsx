@@ -193,10 +193,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("NO_USER_OR_SESSION")
       }
 
-      console.log("[v0] ✅ Přihlášení úspěšné - nastavuji session do Supabase client")
+      console.log("[v0] ✅ Přihlášení úspěšné - session je nastavena serverem přes cookie")
 
-      // Set the session in Supabase client so subsequent calls work
-      await supabase.auth.setSession(result.session)
+      // NOTE: We deliberately do NOT call `await supabase.auth.setSession(result.session)`
+      // here anymore. The server-side /api/auth/login route already establishes the
+      // canonical session via the @supabase/ssr cookie adapter (createClient() in
+      // lib/supabase/server.ts persists it to the `sb-<project-ref>-auth-token` cookie
+      // as part of signInWithPassword()). Calling setSession() again on the browser
+      // client forces a second, redundant token refresh using the same refresh_token
+      // that was just minted - if that races against the browser client's own
+      // background autoRefreshToken timer (or a near-simultaneous duplicate submit),
+      // one of the two refresh calls loses the race and fails with Supabase's
+      // "Invalid Refresh Token: Already Used" error. Because that failure happens
+      // inside supabase-js's internal refresh lock, the promise can hang instead of
+      // rejecting, which is exactly the "Přihlašuji..." spinner that never resolves
+      // seen in production - the request cookie is already correct, so this call was
+      // pure risk with no upside. We still fire a best-effort, non-blocking
+      // getSession() so the in-memory browser client is warm for realtime/other
+      // calls, but it must never be able to block or fail the login itself.
+      supabase.auth.getSession().catch((err) => {
+        console.warn("[v0] Non-blocking post-login getSession() warm-up failed (safe to ignore):", err)
+      })
 
       const userData = {
         id: result.user.id,
