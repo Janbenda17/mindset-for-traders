@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { metaApiClient } from '@/lib/integrations/metaapi'
+import { syncMetaApiAccount } from '@/lib/integrations/sync-account'
 import { sendEmail, finishSetupLinkEmail } from '@/lib/email'
 
 let supabaseInstance: ReturnType<typeof createClient> | null = null
@@ -331,7 +332,26 @@ export async function confirmBrokerConnection(userId: string, accountId: string)
     // trial (no card) and flip the account into LIVE mode.
     const { trialStarted } = await grantAppTrialIfEligible(userId)
 
-    return { connected: true, failed: false, trialStarted }
+    // Backfill trade history right away instead of leaving the user staring
+    // at an empty dashboard until the next once-a-day cron sync
+    // (app/api/cron/mt5-sync). This is the same import the cron runs, just
+    // triggered immediately on first confirmed connection. Best-effort: a
+    // MetaApi/DB hiccup here must not turn a genuinely successful broker
+    // connection into a reported failure - the account is connected either
+    // way, so we log and move on, and the cron will pick up anything missed
+    // on its next run.
+    let importedCount = 0
+    try {
+      const syncResult = await syncMetaApiAccount(getSupabase(), userId, accountId, {
+        closedTradesDaysBack: 730,
+        closedTradesLimit: 500,
+      })
+      importedCount = syncResult.importedCount
+    } catch (syncErr) {
+      console.error('[v0] Trade history backfill failed after connect (non-fatal):', syncErr)
+    }
+
+    return { connected: true, failed: false, trialStarted, importedCount }
   } catch (err) {
     console.error('[v0] Error in confirmBrokerConnection:', err)
     // Treat unexpected errors as "keep polling" rather than a hard failure -

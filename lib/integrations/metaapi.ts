@@ -36,6 +36,28 @@ export interface MetaApiTrade {
   status: 'OPEN' | 'CLOSED'
 }
 
+/**
+ * Raw MetaApi "deal" record from the history-deals endpoint. A deal is a
+ * single ledger entry (open a position, close a position, partial close,
+ * balance adjustment, etc) - NOT the same thing as a "trade". A closed
+ * trade has to be reconstructed by pairing a DEAL_ENTRY_IN deal (the open)
+ * with the DEAL_ENTRY_OUT deal that closed the same positionId. See
+ * getClosedTrades() below.
+ */
+interface MetaApiDeal {
+  id: string
+  positionId?: string
+  type?: string
+  entryType?: string
+  symbol?: string
+  volume?: number
+  price?: number
+  commission?: number
+  swap?: number
+  profit?: number
+  time: string
+}
+
 interface MetaApiConnection {
   account_id: string
   api_key: string
@@ -380,11 +402,9 @@ export class MetaApiClient {
   }
 
   /**
-   * Fetch open positions for an account.
-   * NOTE: not currently called from any route/component in this app - kept
-   * for future use. MetaApi's real history (closed trades) lives behind a
-   * separate "deals by time range" endpoint, not a single /trades list; if
-   * this is wired up later it needs both open-positions and deals calls.
+   * Fetch open positions for an account. This only ever returns positions
+   * that are still open right now - see getClosedTrades() above for actual
+   * trade history.
    */
   async getTrades(accountId: string, limit = 50): Promise<MetaApiTrade[]> {
     try {
@@ -422,6 +442,96 @@ export class MetaApiClient {
       console.error('[v0] Failed to fetch trades from MetaApi:', error)
       throw error
     }
+  }
+
+  /**
+   * Fetch raw deals (the ledger entries behind MT4/5 history) for an
+   * account within a time range. This is the real "trade history" endpoint
+   * - getTrades() above only ever returns currently-open positions, never
+   * anything closed, which is why connecting a broker never backfilled a
+   * user's past trades before this. One page per call (MetaApi caps at
+   * 1000); callers that need more than that should page with `offset`.
+   */
+  async getHistoryDeals(
+    accountId: string,
+    startTime: Date,
+    endTime: Date,
+    offset = 0,
+    limit = 1000,
+  ): Promise<MetaApiDeal[]> {
+    try {
+      const path = `${this.clientBaseUrl}/users/current/accounts/${accountId}/history-deals/time/${startTime.toISOString()}/${endTime.toISOString()}`
+      const response = await fetch(`${path}?offset=${offset}&limit=${limit}`, {
+        method: 'GET',
+        headers: this.authHeaders(),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch history deals: ${response.status} ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      return Array.isArray(data) ? data : []
+    } catch (error) {
+      console.error('[v0] Failed to fetch history deals from MetaApi:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Reconstruct closed trades from the raw deal history, so a user's
+   * previously-made trades show up as soon as they connect their broker
+   * instead of only ever seeing trades made after connecting. A closed
+   * trade in MT4/5 is really two ledger deals - a DEAL_ENTRY_IN (opened
+   * the position) and a DEAL_ENTRY_OUT (closed it), linked by
+   * `positionId`. The OUT deal carries the realized profit for that close,
+   * which is what matters most for a trading journal; entry price/time
+   * come from the matching IN deal when it's found within the same fetched
+   * window (a position opened before `daysBack` won't have its IN deal in
+   * range - in that case we fall back to the OUT deal's own price/time so
+   * the trade still imports with the correct P&L, just without an accurate
+   * open price). Deals with no symbol (balance adjustments, credits,
+   * pure commission entries) are skipped - they aren't trades.
+   */
+  async getClosedTrades(accountId: string, daysBack = 730, limit = 1000): Promise<MetaApiTrade[]> {
+    const endTime = new Date()
+    const startTime = new Date(endTime.getTime() - daysBack * 24 * 60 * 60 * 1000)
+
+    const deals = await this.getHistoryDeals(accountId, startTime, endTime, 0, limit)
+
+    const openByPosition = new Map<string, MetaApiDeal>()
+    for (const deal of deals) {
+      if (deal.entryType === 'DEAL_ENTRY_IN' && deal.positionId) {
+        openByPosition.set(deal.positionId, deal)
+      }
+    }
+
+    const closingDeals = deals.filter(
+      (deal) =>
+        deal.symbol &&
+        (deal.entryType === 'DEAL_ENTRY_OUT' || deal.entryType === 'DEAL_ENTRY_OUT_BY'),
+    )
+
+    return closingDeals.map((deal): MetaApiTrade => {
+      const openDeal = deal.positionId ? openByPosition.get(deal.positionId) : undefined
+      // Commission/swap are usually posted on the closing deal - fold them
+      // into the realized P&L so it matches what the terminal shows.
+      const profit = (deal.profit || 0) + (deal.commission || 0) + (deal.swap || 0)
+
+      return {
+        id: deal.positionId || deal.id,
+        symbol: deal.symbol || '',
+        type: deal.type === 'DEAL_TYPE_SELL' ? 'SELL' : 'BUY',
+        volume: deal.volume || openDeal?.volume || 0,
+        entry_price: openDeal?.price ?? deal.price ?? 0,
+        current_price: deal.price || 0,
+        profit,
+        profit_pips: 0,
+        entry_time: openDeal ? new Date(openDeal.time).toISOString() : new Date(deal.time).toISOString(),
+        exit_time: new Date(deal.time).toISOString(),
+        status: 'CLOSED',
+      }
+    })
   }
 
   /**

@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
-import { metaApiClient } from '@/lib/integrations/metaapi'
+import { syncMetaApiAccount } from '@/lib/integrations/sync-account'
 
 /**
  * GET /api/cron/mt5-sync
@@ -68,115 +68,29 @@ export async function GET(request: NextRequest) {
     let syncedCount = 0
     let errorCount = 0
 
-    // Process each user's MT5 data
+    // Process each user's MT5 data. Shared with the connect flow (see
+    // confirmBrokerConnection in app/account/integrations/actions.ts) via
+    // syncMetaApiAccount - that one runs once immediately on connect to
+    // backfill history right away, this cron keeps everyone's data current
+    // afterwards. Uses a wider history window than the connect-time sync
+    // since this isn't blocking a user-facing request.
     for (const profile of profiles) {
-      try {
-        const userId = profile.user_id
-        const accessToken = profile.metaapi_token
-        const accountId = profile.metaapi_account_id
+      const userId = profile.user_id
+      const accountId = profile.metaapi_account_id
 
-        // Fetch account info using access token
-        const accountInfo = await metaApiClient.getAccountInfo(accountId)
+      const result = await syncMetaApiAccount(supabase, userId, accountId, {
+        closedTradesDaysBack: 730,
+        closedTradesLimit: 1000,
+      })
 
-        // Fetch trades
-        const trades = await metaApiClient.getTrades(accountId)
-
-        // Fetch stats
-        const stats = await metaApiClient.getAccountStats(accountId)
-
-        // Upsert account balance to trades table (or create separate account_stats)
-        const nowIso = new Date().toISOString()
-        const { error: accountError } = await supabase
-          .from('mt4_trades')
-          .upsert(
-            {
-              user_id: userId,
-              trade_id: '_ACCOUNT_',
-              symbol: '_ACCOUNT_',
-              trade_type: 'ACCOUNT',
-              volume: 0,
-              entry_price: accountInfo.balance,
-              exit_price: accountInfo.equity,
-              entry_time: nowIso,
-              exit_time: nowIso,
-              date: nowIso.slice(0, 10),
-              profit_loss: accountInfo.profit,
-              duration_seconds: 0,
-              source: 'metaapi',
-              created_at: nowIso,
-            },
-            {
-              onConflict: 'user_id,trade_id',
-            },
-          )
-
-        if (accountError) {
-          console.error(
-            `[v0] Failed to upsert account data for user ${userId}:`,
-            accountError,
-          )
-          errorCount++
-          continue
-        }
-
-        // Upsert trades
-        const { error: tradesError } = await supabase
-          .from('mt4_trades')
-          .upsert(
-            trades.map((trade) => ({
-              user_id: userId,
-              trade_id: trade.id,
-              symbol: trade.symbol,
-              trade_type: trade.type,
-              volume: trade.volume,
-              entry_price: trade.entry_price,
-              exit_price: trade.current_price,
-              entry_time: trade.entry_time,
-              exit_time: trade.exit_time ?? null,
-              date: (trade.entry_time || new Date().toISOString()).slice(0, 10),
-              status: trade.status,
-              profit_loss: trade.profit,
-              profit_loss_pips: trade.profit_pips,
-              duration_seconds: trade.exit_time
-                ? Math.round(
-                    (new Date(trade.exit_time).getTime() -
-                      new Date(trade.entry_time).getTime()) /
-                      1000,
-                  )
-                : 0,
-              source: 'metaapi',
-              created_at: new Date().toISOString(),
-            })),
-            {
-              onConflict: 'user_id,trade_id',
-            },
-          )
-
-        if (tradesError) {
-          console.error(
-            `[v0] Failed to upsert trades for user ${userId}:`,
-            tradesError,
-          )
-          errorCount++
-          continue
-        }
-
-        // Update last sync timestamp
-        await supabase
-          .from('profiles')
-          .update({
-            last_trades_sync: new Date().toISOString(),
-          })
-          .eq('user_id', userId)
-
-        syncedCount++
-        console.log(
-          `[v0] Synced MT5 data for user ${userId}: ${trades.length} trades, ${stats.daily_pnl.toFixed(2)} daily P&L`,
-        )
-      } catch (error) {
-        console.error(`[v0] Error syncing user ${profile.user_id}:`, error)
+      if (!result.success) {
+        console.error(`[v0] Failed to sync user ${userId}:`, result.error)
         errorCount++
+        continue
       }
+
+      syncedCount++
+      console.log(`[v0] Synced MT5 data for user ${userId}: ${result.importedCount} closed trades`)
     }
 
     return NextResponse.json(

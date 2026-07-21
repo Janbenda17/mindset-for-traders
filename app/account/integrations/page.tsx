@@ -324,13 +324,24 @@ export default function IntegrationsPage() {
             }
           } catch {}
 
+          // confirmBrokerConnection() imports past closed trades from
+          // MetaApi's history the moment the connection is confirmed (see
+          // syncMetaApiAccount), so this message reflects what the user is
+          // about to see rather than making them wait for the next daily
+          // sync to notice anything happened.
+          const importedCount = (confirmResult as any).importedCount as number | undefined
+          const importedNote =
+            importedCount && importedCount > 0
+              ? ` Naimportovali jsme ${importedCount} ${importedCount === 1 ? 'předchozí obchod' : importedCount < 5 ? 'předchozí obchody' : 'předchozích obchodů'} z historie.`
+              : ''
+
           if (confirmResult.trialStarted) {
             // Broker connect just started the 3-day full-access trial and
             // switched the account to LIVE mode. Take the user straight
             // into the app with the product tour queued up (see
             // components/product-tour.tsx FORCE_SHOW_KEY) so the first
             // thing they experience is their own data, not a settings page.
-            setSuccess('Připojeno! Tvůj 3denní plný přístup právě začal - přesměrovávám tě na dashboard...')
+            setSuccess(`Připojeno! Tvůj 3denní plný přístup právě začal.${importedNote} Přesměrovávám tě na dashboard...`)
             try {
               localStorage.setItem('mindtrader-show-tour', 'true')
             } catch {}
@@ -338,7 +349,7 @@ export default function IntegrationsPage() {
               window.location.href = '/daily-tracker'
             }, 1500)
           } else {
-            setSuccess('Účet připojen! Obchody se budou synchronizovat automaticky jednou denně.')
+            setSuccess(`Účet připojen!${importedNote} Nové obchody se budou synchronizovat automaticky jednou denně.`)
             setTimeout(() => setSuccess(''), 8000)
           }
           break
