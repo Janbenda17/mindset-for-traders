@@ -81,6 +81,46 @@ export async function ensureProfileExists(userId: string) {
   }
 }
 
+/**
+ * Server-side read of this user's current MetaApi connection status, used
+ * by the integrations page on mount/refresh. Deliberately NOT done as a
+ * direct client-side Supabase query (which is how this used to work) -
+ * that query ran through a bare anon-key client with no auth session
+ * attached, so the `profiles` table's RLS policy (auth.uid() = user_id)
+ * silently returned zero rows instead of erroring. The write side
+ * (connectMetaApi below) already goes through the service-role client and
+ * always saved correctly - only the read-back on refresh was broken, which
+ * made a genuinely-connected account look disconnected the moment the page
+ * reloaded. Routing the read through the same service-role client used for
+ * writes removes the RLS dependency entirely instead of just papering over
+ * one broken policy.
+ */
+export async function getIntegrationStatus(userId: string) {
+  try {
+    const { data, error } = await getSupabase()
+      .from('profiles')
+      .select('metaapi_token, metaapi_account_id, metaapi_broker, trial_ends_at')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('[v0] Error checking integration status:', error)
+      return { success: false as const, error: error.message }
+    }
+
+    return {
+      success: true as const,
+      connected: !!data?.metaapi_token && !!data?.metaapi_account_id,
+      connectedBroker: data?.metaapi_broker ?? null,
+      metaapiAccountId: data?.metaapi_account_id ?? null,
+      trialEndsAt: data?.trial_ends_at ?? null,
+    }
+  } catch (err) {
+    console.error('[v0] Exception checking integration status:', err)
+    return { success: false as const, error: err instanceof Error ? err.message : 'Failed to check integration status' }
+  }
+}
+
 export async function disconnectMetaApi(userId: string) {
   try {
     console.log('[v0] Disconnecting MetaApi for user:', userId)
