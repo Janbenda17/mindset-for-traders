@@ -2,16 +2,23 @@
 
 import type React from 'react'
 import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/contexts/auth-context'
+import { useSubscription } from '@/contexts/subscription-context'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Check, AlertCircle, Loader, X, Plug, Lock, Hash, Server, Zap, Sparkles, Upload, FileText, Mail } from 'lucide-react'
 import Link from 'next/link'
-import { connectMetaApi, disconnectMetaApi, confirmBrokerConnection, uploadTradeHistoryCsv, sendFinishSetupEmail } from './actions'
+import {
+  connectMetaApi,
+  disconnectMetaApi,
+  confirmBrokerConnection,
+  getIntegrationStatus,
+  uploadTradeHistoryCsv,
+  sendFinishSetupEmail,
+} from './actions'
 
 // Best-guess default MT4/5 live-server names for the brokers most commonly
 // used by CZ/SK retail traders. Picking one just pre-fills the "Broker
@@ -31,22 +38,25 @@ const COMMON_BROKERS: { label: string; server: string }[] = [
   { label: 'FXTM', server: 'FXTM-Live' },
 ]
 
-let supabaseInstance: ReturnType<typeof createClient> | null = null
-
-function getSupabase() {
-  if (supabaseInstance) return supabaseInstance
-  supabaseInstance = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-  return supabaseInstance
-}
-
 // Purely decorative, blurred behind the Hard Wall card - gives a preview
 // that the app is real and full-featured without revealing (or letting
 // anyone interact with) anything real. pointer-events-none + select-none +
 // aria-hidden so it can never be clicked, tabbed to, or mistaken for real
 // data by a screen reader.
+// Rotates the "connecting..." status message through a few honest progress
+// steps instead of leaving one static sentence on screen for up to a
+// minute. `attempt` is the number of completed 3s poll cycles (0 = right
+// after submit, before the first check). This is purely cosmetic - it
+// doesn't know anything the polling loop doesn't already know - but a
+// message that visibly moves reads as "still working" instead of "stuck",
+// which is what was actually causing people to bail during the wait.
+function connectProgressMessage(attempt: number): string {
+  if (attempt <= 0) return 'Ověřuji přihlašovací údaje u brokera...'
+  if (attempt < 3) return 'Připojuji se k serveru tvého brokera...'
+  if (attempt < 7) return 'První přihlášení bývá pomalejší, díky za trpělivost...'
+  return 'Stále se připojuji - u některých brokerů to trvá i přes minutu...'
+}
+
 function DashboardMockup() {
   const bars = [40, 65, 35, 80, 55, 90, 45, 70, 60, 85, 50, 75]
   return (
@@ -85,6 +95,7 @@ function DashboardMockup() {
 
 export default function IntegrationsPage() {
   const { user, authReady } = useAuth()
+  const { checkSubscriptionStatus } = useSubscription()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
@@ -155,36 +166,40 @@ export default function IntegrationsPage() {
         setChecking(true)
         console.log('[v0] Checking integration status for user:', user.id)
 
-        const { data, error } = await getSupabase()
-          .from('profiles')
-          .select('metaapi_token, metaapi_account_id, metaapi_broker, trial_ends_at')
-          .eq('user_id', user.id)
-          .maybeSingle()
+        // Server action, backed by the service-role client - see
+        // getIntegrationStatus in ./actions for why this can't be a direct
+        // client-side Supabase query (RLS silently hid a genuinely-saved
+        // connection on refresh when read through an unauthenticated anon
+        // client).
+        const result = await getIntegrationStatus(user.id)
 
-        if (error) {
-          console.error('[v0] Error checking profile:', error)
+        if (!result.success) {
+          console.error('[v0] Error checking profile:', result.error)
           return
         }
 
-        if (data) {
-          console.log('[v0] Profile found:', data)
-          setMetaApiConnected(!!data.metaapi_token && !!data.metaapi_account_id)
-          setConnectedBroker(data.metaapi_broker || null)
+        console.log('[v0] Profile found:', result)
+        setMetaApiConnected(result.connected)
+        setConnectedBroker(result.connectedBroker)
 
-          // Self-heal: if an account was saved but we never got to confirm
-          // the login (tab closed mid-poll, browser crash, etc.), silently
-          // re-check it now in the background. This either finally grants
-          // the trial for a connection that succeeded after the user left,
-          // or clears out a broken account so a retry isn't blocked -
-          // instead of leaving it stuck forever in limbo.
-          if (data.metaapi_account_id && !data.trial_ends_at) {
-            confirmBrokerConnection(user.id, data.metaapi_account_id).then((result) => {
-              if (result.failed) {
-                setMetaApiConnected(false)
-                setConnectedBroker(null)
-              }
-            }).catch(() => {})
-          }
+        // Self-heal: if an account was saved but we never got to confirm
+        // the login (tab closed mid-poll, browser crash, etc.), silently
+        // re-check it now in the background. This either finally grants
+        // the trial for a connection that succeeded after the user left,
+        // or clears out a broken account so a retry isn't blocked -
+        // instead of leaving it stuck forever in limbo.
+        if (result.metaapiAccountId && !result.trialEndsAt) {
+          confirmBrokerConnection(user.id, result.metaapiAccountId).then((confirmResult) => {
+            if (confirmResult.failed) {
+              setMetaApiConnected(false)
+              setConnectedBroker(null)
+            } else if (confirmResult.connected) {
+              // Trial may have just been granted by this background check -
+              // refresh the subscription context so the top nav banner
+              // updates without needing a manual reload.
+              checkSubscriptionStatus()
+            }
+          }).catch(() => {})
         }
       } catch (err) {
         console.error('[v0] Error checking integration status:', err)
@@ -259,17 +274,22 @@ export default function IntegrationsPage() {
       // (each check is a fast, independent request, so this can safely run
       // as long as it needs to without risking a server timeout) instead of
       // granting the trial optimistically.
+      //
+      // UX: the very first check now fires immediately (no upfront 3s
+      // delay) so a fast broker login feels fast, and the status message
+      // rotates every cycle instead of sitting on one static line for up to
+      // a minute - real-world testing showed people bouncing off what
+      // looked like a frozen "Přihlašuji..." spinner well before MetaApi
+      // actually finished, even though the connection was still working
+      // fine in the background.
       setVerifying(true)
-      setSuccess('Přihlašuji se k tvému brokerovi - první připojení může trvat až minutu...')
+      setSuccess(connectProgressMessage(0))
 
-      const maxAttempts = 20 // ~60s at 3s intervals
+      const maxAttempts = 20 // ~60s total
       let attempt = 0
       let settled = false
 
       while (attempt < maxAttempts && !settled) {
-        await new Promise((resolve) => setTimeout(resolve, 3000))
-        attempt++
-
         const confirmResult = await confirmBrokerConnection(user.id, accountId)
 
         if (confirmResult.failed) {
@@ -288,6 +308,15 @@ export default function IntegrationsPage() {
           setVerifying(false)
           setMetaApiConnected(true)
           setConnectedBroker(connectingBroker)
+
+          // Refresh subscription/trial state right away so the "Připoj
+          // brokera" strip in the top nav updates immediately - it reads
+          // from SubscriptionContext, which only fetches on mount/user
+          // change, so without this it kept showing the old pre-connect
+          // state until a full page reload happened to occur (or forever,
+          // in the common case where trialStarted is false because this
+          // account already used its trial before, e.g. a reconnect).
+          checkSubscriptionStatus()
 
           try {
             if (confirmResult.trialStarted && typeof window !== 'undefined' && (window as any).clarity) {
@@ -314,7 +343,14 @@ export default function IntegrationsPage() {
           }
           break
         }
-        // Still pending - keep polling.
+
+        // Still pending - update the progress message so it's visibly
+        // moving, then wait before the next check.
+        attempt++
+        setSuccess(connectProgressMessage(attempt))
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 3000))
+        }
       }
 
       if (!settled) {
@@ -460,7 +496,11 @@ export default function IntegrationsPage() {
         {/* Status Messages */}
         {success && (
           <div className="p-4 bg-emerald-900/30 border border-emerald-600/50 rounded-lg flex gap-3 items-start backdrop-blur-sm">
-            <Check className="w-5 h-5 text-emerald-300 flex-shrink-0 mt-0.5" />
+            {verifying ? (
+              <Loader className="w-5 h-5 text-emerald-300 flex-shrink-0 mt-0.5 animate-spin" />
+            ) : (
+              <Check className="w-5 h-5 text-emerald-300 flex-shrink-0 mt-0.5" />
+            )}
             <p className="text-emerald-300 text-sm font-medium">{success}</p>
           </div>
         )}
